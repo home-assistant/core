@@ -23,20 +23,17 @@ from homeassistant.core import (
     async_noop,
     callback as hass_callback,
 )
+from homeassistant.generated.usb import SERIAL_PORT_SELECTOR_INTEGRATIONS
 from homeassistant.helpers import config_validation as cv, discovery_flow
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import USBMatcher, async_get_usb
+from homeassistant.loader import USBMatcher, async_get_custom_components, async_get_usb
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
-from .consumers import (
-    UNSCANNABLE_PORT_SCHEMES,
-    async_get_serial_integrations,
-    async_get_serial_port_consumers,
-)
+from .consumers import UNSCANNABLE_PORT_SCHEMES, async_get_serial_port_consumers
 from .models import SerialDevice, SerialPortConsumer, USBDevice
 from .serial_proxy_stub import register_serialx_transport
 from .utils import (
@@ -667,5 +664,13 @@ async def websocket_usb_list_serial_integrations(
     connection: ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """List the domains of integrations configurable with a serial port."""
-    connection.send_result(msg["id"], sorted(await async_get_serial_integrations(hass)))
+    """List the core integrations whose config flow uses SerialPortSelector."""
+    custom_components = await async_get_custom_components(hass)
+    connection.send_result(
+        msg["id"],
+        [
+            domain
+            for domain in SERIAL_PORT_SELECTOR_INTEGRATIONS
+            if domain not in custom_components
+        ],
+    )

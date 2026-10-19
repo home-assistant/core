@@ -1,6 +1,7 @@
 {
   "domain": "todoist",
   "name": "Todoist",
+  "categories": ["productivity_information.calendars_todos"],
   "codeowners": ["@boralyl"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/todoist",

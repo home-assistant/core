@@ -1,6 +1,10 @@
 {
   "domain": "wolflink",
   "name": "Wolf SmartSet Service",
+  "categories": [
+    "climate.thermostats_heating",
+    "climate.heat_pumps_air_conditioning"
+  ],
   "codeowners": ["@adamkrol93", "@EnjoyingM"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/wolflink",

@@ -1,6 +1,7 @@
 {
   "domain": "local_todo",
   "name": "Local to-do",
+  "categories": ["productivity_information.calendars_todos"],
   "codeowners": ["@allenporter"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/local_todo",

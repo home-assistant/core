@@ -1,7 +1,9 @@
 """Tests for the Anthropic integration."""
 
-from typing import TypedDict
-from unittest.mock import patch
+from datetime import UTC, datetime
+from functools import partial
+from typing import Literal, TypedDict
+from unittest.mock import AsyncMock, patch
 
 from anthropic import (
     APIConnectionError,
@@ -10,13 +12,19 @@ from anthropic import (
     AuthenticationError,
     BadRequestError,
 )
+from anthropic.pagination import AsyncPage
+from anthropic.types import ModelInfo
 import attr
 import httpx2
 from httpx2 import URL, Request, Response
 import pytest
 
 from homeassistant.components.anthropic.config_flow import AnthropicConfigFlow
-from homeassistant.components.anthropic.const import DOMAIN
+from homeassistant.components.anthropic.const import (
+    CONF_CHAT_MODEL,
+    CONF_RECOMMENDED,
+    DOMAIN,
+)
 from homeassistant.config_entries import (
     ConfigEntryDisabler,
     ConfigEntryState,
@@ -24,6 +32,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -32,6 +41,8 @@ from homeassistant.helpers import (
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.setup import async_setup_component
+
+from . import model_list
 
 from tests.common import MockConfigEntry
 
@@ -45,6 +56,19 @@ class ConversationSubentryExpectation(TypedDict):
     device_disabled_by: DeviceEntryDisabler | None
     entity_disabled_by: RegistryEntryDisabler | None
     device: int
+
+
+def _model_page(
+    models: list[ModelInfo],
+    *,
+    lifecycle: list[Literal["active", "deprecated", "retired"]],
+    timeout: float,
+) -> AsyncPage[ModelInfo]:
+    """Return models matching the requested lifecycle stages."""
+    return AsyncPage(
+        data=[model for model in models if model.lifecycle in lifecycle],
+        has_more=False,
+    )
 
 
 @pytest.mark.parametrize(
@@ -109,23 +133,122 @@ async def test_init_auth_error(
         assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    ("lifecycle", "retires_at", "chat_model", "expected_issue"),
+    [
+        pytest.param("active", None, "claude-test-9", False, id="active"),
+        pytest.param(
+            "active",
+            datetime(2025, 1, 1, tzinfo=UTC),
+            "claude-test-9",
+            False,
+            id="active_with_past_retirement_date",
+        ),
+        pytest.param(
+            "deprecated",
+            datetime(2030, 1, 1, tzinfo=UTC),
+            "claude-test-9",
+            True,
+            id="deprecated",
+        ),
+        pytest.param(
+            "deprecated",
+            datetime(2025, 1, 1, tzinfo=UTC),
+            "claude-test-9",
+            True,
+            id="deprecated_with_overdue_retirement",
+        ),
+        pytest.param(
+            "deprecated", None, "claude-test-9", True, id="no_retirement_date"
+        ),
+        pytest.param(
+            "retired",
+            datetime(2025, 1, 1, tzinfo=UTC),
+            "claude-test-9",
+            True,
+            id="retired",
+        ),
+        pytest.param(
+            "deprecated",
+            None,
+            "claude-test-9-20261001",
+            True,
+            id="dated_model",
+        ),
+        pytest.param(
+            "deprecated", None, "claude-unknown-model", False, id="missing_model"
+        ),
+    ],
+)
 async def test_init_repair_issue(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_model_list: AsyncMock,
     issue_registry: ir.IssueRegistry,
+    lifecycle: Literal["active", "deprecated", "retired"],
+    retires_at: datetime | None,
+    chat_model: str,
+    expected_issue: bool,
 ) -> None:
-    """Test that repair issue is created on deprecated model."""
+    """Use API lifecycle rather than model names or retirement dates for repairs."""
+    model_info = model_list[0].model_copy(
+        update={
+            "id": "claude-test-9",
+            "lifecycle": lifecycle,
+            "deprecated_at": datetime(2024, 1, 1, tzinfo=UTC),
+            "retires_at": retires_at,
+        }
+    )
     hass.config_entries.async_update_subentry(
         mock_config_entry,
         next(iter(mock_config_entry.subentries.values())),
-        data={
-            "chat_model": "claude-opus-4-20250514",
-        },
+        data={"chat_model": chat_model},
     )
+    mock_model_list.side_effect = partial(_model_page, [model_info])
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated")
+    assert (
+        issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
+    ) is expected_issue
+
+
+async def test_reconfigure_deprecated_model_repair(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_model_list: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Reconfiguring a subentry reloads its parent and creates a repair."""
+    deprecated_model = model_list[0].model_copy(
+        update={"id": "claude-test-deprecated", "lifecycle": "deprecated"}
+    )
+    mock_model_list.side_effect = partial(_model_page, [*model_list, deprecated_model])
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    coordinator = mock_config_entry.runtime_data
+    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is None
+
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_RECOMMENDED: False}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_CHAT_MODEL: deprecated_model.id}
+    )
+    assert result["step_id"] == "model"
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.runtime_data is not coordinator
+    assert subentry.data[CONF_CHAT_MODEL] == deprecated_model.id
+    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
