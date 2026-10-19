@@ -12,6 +12,7 @@ from pytest_homeassistant import _paths
 from pytest_homeassistant.common import get_fixture_path
 import pytest_socket
 
+from homeassistant import loader
 from homeassistant.core import HomeAssistant, async_get_hass
 from homeassistant.helpers import translation
 from homeassistant.helpers.http import HomeAssistantView
@@ -84,6 +85,20 @@ async def test_hass_cv(hass: HomeAssistant) -> None:
     in the fixture and that async_get_hass() works correctly.
     """
     assert async_get_hass() is hass
+
+
+async def test_custom_integrations_disabled(hass: HomeAssistant) -> None:
+    """Test the default custom integration policy."""
+    with pytest.raises(loader.IntegrationNotFound):
+        await loader.async_get_integration(hass, "test_package")
+
+
+@pytest.mark.parametrize("custom_integrations_enabled", [True])
+async def test_custom_integrations_enabled(hass: HomeAssistant) -> None:
+    """Load a custom integration using the enabling policy."""
+    integration = await loader.async_get_integration(hass, "test_package")
+    assert not integration.is_built_in
+    assert await async_setup_component(hass, "test_package", {})
 
 
 def register_view(hass: HomeAssistant) -> None:
