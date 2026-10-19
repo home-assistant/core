@@ -20,7 +20,7 @@ from renault_api.renault_account import RenaultAccount
 from renault_api.renault_client import RenaultClient
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -288,11 +288,10 @@ class RenaultHub:
             )
             if not new_vehicle_links:
                 return
-            await self._async_add_vehicles(new_vehicle_links)
-            for vehicle_link in new_vehicle_links:
-                vehicle = self._vehicles[str(vehicle_link.vin)]
-                for add_vehicle in self._vehicle_listeners:
-                    add_vehicle(vehicle)
+            try:
+                await self._async_add_vehicles(new_vehicle_links)
+            except ConfigEntryAuthFailed:
+                self._config_entry.async_start_reauth(self._hass)
 
     @callback
     def _async_remove_stale_devices(
@@ -350,6 +349,8 @@ class RenaultHub:
             sw_version=None,  # cleanup from PR #125399
         )
         self._vehicles[vehicle_link.vin] = vehicle
+        for add_vehicle in self._vehicle_listeners:
+            add_vehicle(vehicle)
 
     async def get_account_ids(self) -> list[str]:
         """Get Kamereon account ids."""

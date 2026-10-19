@@ -21,6 +21,7 @@ from homeassistant.components.renault.const import (
     VEHICLE_LIST_SCAN_INTERVAL,
     RenaultConfigurationKeys,
 )
+from homeassistant.components.renault.renault_vehicle import RenaultVehicleProxy
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_USER,
@@ -29,6 +30,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -518,6 +520,7 @@ async def test_registry_cleanup(
 
 ZOE_VIN = "VF1ZOE40VIN"
 CAPTUR_VIN = "VF1CAPTURFUELVIN"
+ZOE_50_VIN = "VF1ZOE50VIN"
 # Listed in the zoe_40 fixture, without vehicle details.
 MISSING_DETAILS_VIN = "VYSP0100875XXXXXX"
 
@@ -532,8 +535,10 @@ def _get_vehicles(*vins: str) -> models.KamereonVehiclesResponse:
     links = [
         *(response.vehicleLinks or []),
         *(
-            schemas.KamereonVehiclesResponseSchema.loads(
-                load_fixture("renault/vehicle_captur_fuel.json")
+            link
+            for fixture in ("captur_fuel", "zoe_50")
+            for link in schemas.KamereonVehiclesResponseSchema.loads(
+                load_fixture(f"renault/vehicle_{fixture}.json")
             ).vehicleLinks
             or []
         ),
@@ -613,6 +618,47 @@ async def test_vehicle_added(
     )
     assert entities
     assert all(hass.states.get(entity.entity_id) for entity in entities)
+
+
+@pytest.mark.usefixtures(
+    "patch_renault_account", "fixtures_with_data", "sensor_platform"
+)
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+async def test_vehicle_added_with_failed_sibling(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_get_vehicles: AsyncMock,
+) -> None:
+    """Test a vehicle added to the account gets its entities when another fails."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    original_initialise = RenaultVehicleProxy.async_initialise
+
+    async def _async_initialise(vehicle: RenaultVehicleProxy) -> None:
+        if vehicle.details.vin == ZOE_50_VIN:
+            raise ConfigEntryAuthFailed
+        await original_initialise(vehicle)
+
+    mock_get_vehicles.return_value = _get_vehicles(ZOE_VIN, CAPTUR_VIN, ZOE_50_VIN)
+    with patch.object(
+        RenaultVehicleProxy, "async_initialise", autospec=True
+    ) as mock_initialise:
+        mock_initialise.side_effect = _async_initialise
+        await _async_poll_vehicle_list(hass, freezer)
+
+    assert set(config_entry.runtime_data.vehicles) == {ZOE_VIN, CAPTUR_VIN}
+    entities = _vehicle_entities(
+        device_registry, entity_registry, config_entry, CAPTUR_VIN
+    )
+    assert entities
+    assert all(hass.states.get(entity.entity_id) for entity in entities)
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
 
 
 @pytest.mark.usefixtures(
