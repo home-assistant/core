@@ -28,8 +28,8 @@
       },
       "user": {
         "menu_options": {
-          "app": "Simplepush app (API token)",
-          "legacy": "Old Simplepush app (device key)"
+          "app": "Simplepush app (v1.0.0 or later)",
+          "legacy": "Legacy Simplepush app (before v1.0.0)"
         }
       }
     }
