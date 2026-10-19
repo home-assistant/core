@@ -17,7 +17,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import LOGGER
 from .coordinator import HpPrinterConfigEntry, HpPrinterDataUpdateCoordinator
 from .entity import HpPrinterEntity
 
@@ -45,16 +44,6 @@ CONSUMABLE_COLORS = {
 }
 
 
-def _device_status(data: HpPrinterData) -> str | None:
-    """Return the device status, if it is one of the known statuses."""
-    if data.status is None or data.status.device_status is None:
-        return None
-    if (status := data.status.device_status) not in DEVICE_STATUSES:
-        LOGGER.debug("Unknown device status: %s", status)
-        return None
-    return DEVICE_STATUSES[status]
-
-
 @dataclass(frozen=True, kw_only=True)
 class HpPrinterSensorEntityDescription(SensorEntityDescription):
     """Describes an HP Printer sensor entity."""
@@ -78,7 +67,11 @@ SENSORS: tuple[HpPrinterSensorEntityDescription, ...] = (
         options=list(DEVICE_STATUSES.values()),
         # Unknown statuses are reported as None, which must not hide the sensor.
         always_create=True,
-        value_fn=_device_status,
+        value_fn=lambda data: (
+            DEVICE_STATUSES.get(data.status.device_status)
+            if data.status is not None and data.status.device_status is not None
+            else None
+        ),
     ),
     HpPrinterSensorEntityDescription(
         key="total_pages",
