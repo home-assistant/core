@@ -72,6 +72,10 @@ class ForecaConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass.config.longitude,
             )
             if not errors:
+                # Another flow may have set the key up while this one checked it.
+                self._async_abort_entries_match(
+                    {CONF_API_KEY: user_input[CONF_API_KEY]}
+                )
                 return self.async_create_entry(
                     title="Foreca",
                     data={CONF_API_KEY: user_input[CONF_API_KEY]},
