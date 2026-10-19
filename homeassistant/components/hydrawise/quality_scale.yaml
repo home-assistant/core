@@ -76,7 +76,5 @@ rules:
 
   # Platinum
   async-dependency: done
-  inject-websession:
-    status: todo
-    comment: The pydrawise library does not accept a websession yet.
+  inject-websession: done
   strict-typing: done
