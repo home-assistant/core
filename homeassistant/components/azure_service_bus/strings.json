@@ -1,0 +1,7 @@
+{
+  "exceptions": {
+    "send_message_failed": {
+      "message": "Could not send Service Bus notification to {target}."
+    }
+  }
+}

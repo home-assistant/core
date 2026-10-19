@@ -1,6 +1,7 @@
 {
   "domain": "nibe_heatpump",
   "name": "Nibe Heat Pump",
+  "categories": ["climate.heat_pumps_air_conditioning"],
   "codeowners": ["@elupus"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nibe_heatpump",

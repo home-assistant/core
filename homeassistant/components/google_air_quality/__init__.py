@@ -34,7 +34,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: GoogleAirQualityConfigEntry
-) -> bool:
+) -> None:
     """Set up Google Air Quality from a config entry."""
     session = async_get_clientsession(hass)
     api_key = entry.data[CONF_API_KEY]
@@ -58,14 +58,13 @@ async def async_setup_entry(
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_update_options))
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: GoogleAirQualityConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_update_options(

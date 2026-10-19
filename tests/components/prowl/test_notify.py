@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 import prowlpy
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import notify
 from homeassistant.components.prowl.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import ENTITY_ID, TEST_API_KEY
-
-from tests.common import MockConfigEntry
 
 SERVICE_DATA = {"message": "Test Notification", "title": "Test Title"}
 

@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from pushover_complete import BadAPIRequestError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import requests_mock
 from urllib3.exceptions import MaxRetryError
 
@@ -12,8 +13,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_CONFIG
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=False)

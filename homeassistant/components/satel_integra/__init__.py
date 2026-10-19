@@ -44,7 +44,7 @@ PLATFORMS = [
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> None:
     """Set up  Satel Integra from a config entry."""
 
     client = SatelClient(hass, entry)
@@ -104,17 +104,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> None:
     """Unloading the Satel platforms."""
 
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        runtime_data = entry.runtime_data
-        await runtime_data.client.async_close()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    runtime_data = entry.runtime_data
+    await runtime_data.client.async_close()
 
 
 async def update_listener(hass: HomeAssistant, entry: SatelConfigEntry) -> None:
@@ -124,7 +120,7 @@ async def update_listener(hass: HomeAssistant, entry: SatelConfigEntry) -> None:
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: SatelConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating configuration from version %s.%s",
@@ -191,5 +187,3 @@ async def async_migrate_entry(
         config_entry.version,
         config_entry.minor_version,
     )
-
-    return True

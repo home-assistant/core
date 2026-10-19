@@ -44,7 +44,11 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     discovery_flow,
@@ -103,11 +107,11 @@ CONFIG_SCHEMA = probatio.Schema(
                         CONF_DEBUG_UI, DOMAIN, DEBUG_UI_URL_MESSAGE
                     ): cv.boolean,
                     probatio.Inclusive(CONF_USERNAME, _AUTH): probatio.All(
-                        cv.string, probatio.Length(min=1)
+                        cv.string, probatio.NonEmpty()
                     ),
                     probatio.Inclusive(
                         probatio.Secret(CONF_PASSWORD), _AUTH
-                    ): probatio.All(cv.string, probatio.Length(min=1)),
+                    ): probatio.All(cv.string, probatio.NonEmpty()),
                 }
             ),
             _validate_auth,
@@ -206,7 +210,7 @@ async def _remove_go2rtc_entries(hass: HomeAssistant) -> None:
         await hass.config_entries.async_remove(entry.entry_id)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> None:
     """Set up go2rtc from a config entry."""
 
     config = hass.data[_DATA_GO2RTC]
@@ -221,6 +225,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bo
                 hass,
                 DOMAIN,
                 "recommended_version",
+                config_entry_id=entry.entry_id,
                 is_fixable=False,
                 is_persistent=False,
                 severity=ir.IssueSeverity.WARNING,
@@ -235,13 +240,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bo
             raise ConfigEntryNotReady(
                 f"Could not connect to go2rtc instance on {url}"
             ) from err
-        _LOGGER.warning("Could not connect to go2rtc instance on %s (%s)", url, err)
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"url": url},
+        ) from err
     except Go2RtcVersionError as err:
         ir.async_create_issue(
             hass,
             DOMAIN,
             "unsupported_version",
+            config_entry_id=entry.entry_id,
             is_fixable=False,
             is_persistent=False,
             severity=ir.IssueSeverity.ERROR,
@@ -251,22 +260,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bo
         raise ConfigEntryNotReady(
             f"The go2rtc server version is not supported, {err}"
         ) from err
-    except Exception as err:  # noqa: BLE001
-        _LOGGER.warning("Could not connect to go2rtc instance on %s (%s)", url, err)
-        return False
+    except Exception as err:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"url": url},
+        ) from err
 
     ir.async_delete_issue(hass, DOMAIN, "unsupported_version")
 
     provider = entry.runtime_data = WebRTCProvider(hass, url, session, client)
     await provider.initialize()
     entry.async_on_unload(async_register_webrtc_provider(hass, provider))
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> None:
     """Unload a go2rtc config entry."""
     await entry.runtime_data.teardown()
-    return True
 
 
 async def _get_binary(hass: HomeAssistant) -> str | None:
