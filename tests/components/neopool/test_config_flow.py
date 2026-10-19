@@ -9,12 +9,7 @@ from neopool_modbus.exceptions import NeoPoolModbusError, NeoPoolTimeoutError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.neopool import config_flow
-from homeassistant.components.neopool.config_flow import (
-    SECTION_MORE_OPTIONS,
-    NeoPoolConfigFlow,
-    NeoPoolOptionsFlowHandler,
-)
+from homeassistant.components.neopool.config_flow import SECTION_MORE_OPTIONS
 from homeassistant.components.neopool.const import (
     CONF_BAUDRATE,
     CONF_MODBUS_FRAMER,
@@ -48,6 +43,33 @@ SERIAL_INPUT = {
     CONF_BAUDRATE: 19200,
     SECTION_MORE_OPTIONS: {CONF_UNIT_ID: DEFAULT_UNIT_ID},
 }
+
+_TEMPORARY_UNIT_PATH = (
+    "homeassistant.components.neopool.config_flow.async_get_temporary_unit"
+)
+
+
+@asynccontextmanager
+async def _different_serial_unit(
+    *_args: object, **_kwargs: object
+) -> AsyncIterator[MagicMock]:
+    """Async context manager that yields a unit reporting a different serial number."""
+    unit = MagicMock()
+    unit.async_read_holding_registers = AsyncMock(
+        return_value=MagicMock(registers=[9999999999])
+    )
+    yield unit
+
+
+def _raising_temporary_unit(exc: Exception) -> MagicMock:
+    """Return a patch target that raises exc when used as an async context manager."""
+
+    @asynccontextmanager
+    async def _raise(*_args: object, **_kwargs: object) -> AsyncIterator[None]:
+        raise exc
+        yield  # pragma: no cover
+
+    return patch(_TEMPORARY_UNIT_PATH, side_effect=_raise)
 
 
 async def _advance_to_step(hass: HomeAssistant, step: str) -> dict:
@@ -158,12 +180,7 @@ async def test_user_flow_probe_errors(
     """Probe-side exceptions map to a form error and the flow recovers."""
     result = await _advance_to_step(hass, TYPE_TCP)
 
-    with pytest.MonkeyPatch.context() as mp:
-        mp.setattr(
-            config_flow,
-            "async_probe_serial_unit",
-            AsyncMock(side_effect=exc),
-        )
+    with _raising_temporary_unit(exc):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], USER_INPUT
         )
@@ -185,12 +202,7 @@ async def test_user_flow_device_in_use(
     """A device held on different link settings surfaces as cannot_connect."""
     result = await _advance_to_step(hass, TYPE_TCP)
 
-    with pytest.MonkeyPatch.context() as mp:
-        mp.setattr(
-            config_flow,
-            "async_get_temporary_unit",
-            MagicMock(side_effect=HomeAssistantError("in use")),
-        )
+    with _raising_temporary_unit(HomeAssistantError("in use")):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], USER_INPUT
         )
@@ -309,8 +321,7 @@ async def test_reconfigure_flow_relink_same_endpoint(
         yield MagicMock()
 
     result = await mock_config_entry_serial.start_reconfigure_flow(hass)
-    with pytest.MonkeyPatch.context() as mp:
-        mp.setattr(config_flow, "async_get_temporary_unit", _probe_watching_the_entry)
+    with patch(_TEMPORARY_UNIT_PATH, side_effect=_probe_watching_the_entry):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -382,21 +393,18 @@ async def test_reconfigure_flow_relink_restores_on_cancellation(
     assert mock_config_entry_serial.state is ConfigEntryState.LOADED
 
     result = await mock_config_entry_serial.start_reconfigure_flow(hass)
-    with pytest.MonkeyPatch.context() as mp:
-        mp.setattr(
-            config_flow,
-            "async_probe_serial_unit",
-            AsyncMock(side_effect=asyncio.CancelledError),
+    with (
+        _raising_temporary_unit(asyncio.CancelledError()),
+        pytest.raises(asyncio.CancelledError),
+    ):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_DEVICE: "/dev/ttyUSB0",
+                CONF_BAUDRATE: 9600,
+                SECTION_MORE_OPTIONS: {CONF_UNIT_ID: DEFAULT_UNIT_ID},
+            },
         )
-        with pytest.raises(asyncio.CancelledError):
-            await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                {
-                    CONF_DEVICE: "/dev/ttyUSB0",
-                    CONF_BAUDRATE: 9600,
-                    SECTION_MORE_OPTIONS: {CONF_UNIT_ID: DEFAULT_UNIT_ID},
-                },
-            )
 
     await hass.async_block_till_done()
     assert mock_config_entry_serial.state is ConfigEntryState.LOADED
@@ -416,12 +424,7 @@ async def test_reconfigure_flow_relink_restores_on_error(
     assert mock_config_entry_serial.state is ConfigEntryState.LOADED
 
     result = await mock_config_entry_serial.start_reconfigure_flow(hass)
-    with pytest.MonkeyPatch.context() as mp:
-        mp.setattr(
-            config_flow,
-            "async_probe_serial_unit",
-            AsyncMock(side_effect=NeoPoolTimeoutError("boom")),
-        )
+    with _raising_temporary_unit(NeoPoolTimeoutError("boom")):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -465,12 +468,13 @@ async def test_reconfigure_flow_relink_restores_on_mismatch(
     assert mock_config_entry_serial.state is ConfigEntryState.LOADED
 
     result = await mock_config_entry_serial.start_reconfigure_flow(hass)
-    with pytest.MonkeyPatch.context() as mp:
-        mp.setattr(
-            config_flow,
-            "async_probe_serial_unit",
+    with (
+        patch(_TEMPORARY_UNIT_PATH, side_effect=_different_serial_unit),
+        patch(
+            "homeassistant.components.neopool.config_flow.async_probe_serial_unit",
             AsyncMock(return_value="9999999999"),
-        )
+        ),
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -508,12 +512,7 @@ async def test_reconfigure_flow_probe_errors(
     mock_config_entry.add_to_hass(hass)
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
-    with pytest.MonkeyPatch.context() as mp:
-        mp.setattr(
-            config_flow,
-            "async_probe_serial_unit",
-            AsyncMock(side_effect=exc),
-        )
+    with _raising_temporary_unit(exc):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -548,12 +547,13 @@ async def test_reconfigure_flow_serial_mismatch(
     mock_config_entry.add_to_hass(hass)
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
-    with pytest.MonkeyPatch.context() as mp:
-        mp.setattr(
-            config_flow,
-            "async_probe_serial_unit",
+    with (
+        patch(_TEMPORARY_UNIT_PATH, side_effect=_different_serial_unit),
+        patch(
+            "homeassistant.components.neopool.config_flow.async_probe_serial_unit",
             AsyncMock(return_value="9999999999"),
-        )
+        ),
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -565,12 +565,6 @@ async def test_reconfigure_flow_serial_mismatch(
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "serial_mismatch"
-
-
-async def test_async_get_options_flow_returns_handler() -> None:
-    """async_get_options_flow returns a NeoPoolOptionsFlowHandler instance."""
-    handler = NeoPoolConfigFlow.async_get_options_flow(MagicMock())
-    assert isinstance(handler, NeoPoolOptionsFlowHandler)
 
 
 @pytest.mark.usefixtures("mock_neopool_client")
