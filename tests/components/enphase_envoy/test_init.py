@@ -186,6 +186,7 @@ async def test_almost_expired_token_with_manual_token(
     mock_envoy: AsyncMock,
     config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test coordinator with token within warning time in config and manual token option on."""
     caplog.set_level(logging.DEBUG)
@@ -214,9 +215,16 @@ async def test_almost_expired_token_with_manual_token(
         "domain": DOMAIN,
         "issue_id": f"{TOKEN_REPAIR_ID}_1234",
     }
+    issue = issue_registry.async_get_issue(DOMAIN, f"{TOKEN_REPAIR_ID}_1234")
+    assert issue is not None
+    assert issue.config_entry_id == config_entry.entry_id
 
     assert (entity_state := hass.states.get("sensor.inverter_1"))
     assert entity_state.state == "116"
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, f"{TOKEN_REPAIR_ID}_1234") is None
 
 
 @pytest.mark.parametrize(

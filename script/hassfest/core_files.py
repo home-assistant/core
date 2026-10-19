@@ -16,11 +16,8 @@ EXTRA_BASE_PLATFORMS = {"diagnostics"}
 MISSING_ALL = {
     "configurator",
     "input_boolean",
-    "input_select",
     "llm",
-    "person",
     "sun",
-    "zone",
 }
 
 _COMPONENT_RE = re.compile(r"homeassistant/components/([^/]+)/\*\*")
