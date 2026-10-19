@@ -1,25 +1,19 @@
 """Offer API to configure the Home Assistant auth provider."""
 
-import asyncio
 from typing import Any
 
 import probatio
 
+from homeassistant.auth import CredentialsExistError
 from homeassistant.auth.providers import homeassistant as auth_ha
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
-from homeassistant.util.hass_dict import HassKey
-
-CREATE_LOCK: HassKey[asyncio.Lock] = HassKey(
-    "config_auth_provider_homeassistant_create_lock"
-)
 
 
 @callback
 def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Home Assistant views."""
-    hass.data[CREATE_LOCK] = asyncio.Lock()
     websocket_api.async_register_command(hass, websocket_create)
     websocket_api.async_register_command(hass, websocket_delete)
     websocket_api.async_register_command(hass, websocket_change_password)
@@ -61,28 +55,32 @@ async def websocket_create(
     if user.is_owner and not connection.user.is_owner:
         raise Unauthorized(context=connection.context(msg))
 
-    # Serialize the check with the link so concurrent requests can't both
-    # pass it and attach two passwords.
-    async with hass.data[CREATE_LOCK]:
-        # A second password would let an admin log in as the user without
-        # going through the owner-only admin_change_password command.
-        if any(
-            credential.auth_provider_type == provider.type
-            for credential in user.credentials
-        ):
-            connection.send_error(
-                msg["id"],
-                "credentials_exist",
-                "User already has credentials for this provider",
-            )
-            return
-
-        await provider.async_add_auth(msg["username"], msg["password"])
-
-        credentials = await provider.async_get_or_create_credentials(
-            {"username": msg["username"]}
+    # Checked up front to not store a password that can't be linked.
+    if not hass.auth.async_can_link_credentials(user, provider):
+        connection.send_error(
+            msg["id"],
+            "credentials_exist",
+            "User already has credentials for this provider",
         )
+        return
+
+    await provider.async_add_auth(msg["username"], msg["password"])
+
+    credentials = await provider.async_get_or_create_credentials(
+        {"username": msg["username"]}
+    )
+    try:
         await hass.auth.async_link_user(user, credentials)
+    except CredentialsExistError:
+        # Another request linked a password first, so this one must not stay
+        # behind as a login of its own.
+        await provider.async_remove_auth(msg["username"])
+        connection.send_error(
+            msg["id"],
+            "credentials_exist",
+            "User already has credentials for this provider",
+        )
+        return
 
     connection.send_result(msg["id"])
 

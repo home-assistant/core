@@ -201,6 +201,34 @@ async def test_link_user_already_linked_other_user(
     assert len(another_user.credentials) == 0
 
 
+async def test_link_user_with_credentials_of_the_same_provider(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test a user can't link a second credential of the same provider."""
+    info = await async_get_code(hass, aiohttp_client)
+    client = info["client"]
+    user = info["user"]
+    provider = hass.auth.get_auth_provider("insecure_example", "2nd auth")
+    assert provider is not None
+    await hass.auth.async_link_user(
+        user, provider.async_create_credentials({"username": "first-user"})
+    )
+
+    resp = await client.post(
+        "/auth/link_user",
+        json={"client_id": CLIENT_ID, "code": info["code"]},
+        headers={"authorization": f"Bearer {info['access_token']}"},
+    )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    assert await resp.json() == {
+        "message": "User already has credentials for this provider"
+    }
+    assert [credential.data["username"] for credential in user.credentials] == [
+        "first-user"
+    ]
+
+
 async def test_link_user_rejects_pkce_code(
     hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
 ) -> None:

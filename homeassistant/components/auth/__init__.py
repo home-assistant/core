@@ -141,7 +141,7 @@ from aiohttp import web
 from multidict import MultiDictProxy
 import probatio
 
-from homeassistant.auth import InvalidAuthError
+from homeassistant.auth import CredentialsExistError, InvalidAuthError
 from homeassistant.auth.models import (
     TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
     Credentials,
@@ -522,7 +522,13 @@ class LinkUserView(HomeAssistantView):
 
         # No-op if credential is already linked to the user it will be linked to
         if linked_user != user:
-            await hass.auth.async_link_user(user, entry.credentials)
+            try:
+                await hass.auth.async_link_user(user, entry.credentials)
+            except CredentialsExistError:
+                return self.json_message(
+                    "User already has credentials for this provider",
+                    status_code=HTTPStatus.BAD_REQUEST,
+                )
         return self.json_message("User linked")
 
 

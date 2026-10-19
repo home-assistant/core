@@ -113,7 +113,9 @@ async def test_create_auth_user_already_credentials(
 
 
 async def test_create_auth_concurrent(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    auth_provider: prov_ha.HassAuthProvider,
 ) -> None:
     """Test concurrent creates for the same user attach only one credential."""
     client = await hass_ws_client(hass)
@@ -134,10 +136,15 @@ async def test_create_auth_concurrent(
         result["id"]: result
         for result in (await client.receive_json(), await client.receive_json())
     }
-    assert results[5]["success"], results[5]
-    assert not results[6]["success"], results[6]
-    assert results[6]["error"]["code"] == "credentials_exist"
+    # Either request can win, depending on which password is hashed first.
+    assert sorted(result["success"] for result in results.values()) == [False, True]
+    failed = next(result for result in results.values() if not result["success"])
+    assert failed["error"]["code"] == "credentials_exist"
     assert len(user.credentials) == 1
+    (left_out,) = {"test-user2", "test-user3"} - {user.credentials[0].data["username"]}
+    # The password that lost doesn't stay behind as a login of its own.
+    with pytest.raises(prov_ha.InvalidAuth):
+        await auth_provider.async_validate_login(left_out, "test-pass")
 
 
 async def test_create_auth_owner_not_owner(

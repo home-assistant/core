@@ -52,6 +52,10 @@ class InvalidProvider(Exception):
     """Authentication provider not found."""
 
 
+class CredentialsExistError(Exception):
+    """Raised when a user already has credentials of an auth provider."""
+
+
 async def auth_manager_from_config(
     hass: HomeAssistant,
     provider_configs: list[dict[str, Any]],
@@ -340,8 +344,26 @@ class AuthManager:
             return
         if linked_user is not None:
             raise ValueError("Credential is already linked to a user")
+        # Enforced here to cover every way of linking credentials.
+        if (
+            provider := self._async_get_auth_provider(credentials)
+        ) is not None and not self.async_can_link_credentials(user, provider):
+            raise CredentialsExistError(
+                f"User already has credentials of auth provider {provider.type}"
+            )
 
         await self._store.async_link_user(user, credentials)
+
+    @callback
+    def async_can_link_credentials(
+        self, user: models.User, provider: AuthProvider
+    ) -> bool:
+        """Return if credentials of the auth provider can be linked to the user."""
+        return not any(
+            credential.auth_provider_type == provider.type
+            and credential.auth_provider_id == provider.id
+            for credential in user.credentials
+        )
 
     async def async_remove_user(self, user: models.User) -> None:
         """Remove a user."""

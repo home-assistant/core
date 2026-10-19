@@ -309,6 +309,40 @@ async def test_linking_user_to_two_auth_providers(
     assert len(user_2.credentials) == 0
 
 
+async def test_link_one_credential_per_provider(mock_hass: HomeAssistant) -> None:
+    """Test a user can only have one credential of each auth provider."""
+    manager = await auth.auth_manager_from_config(
+        mock_hass,
+        [
+            {"type": "insecure_example", "users": []},
+            {"type": "insecure_example", "id": "another-provider", "users": []},
+        ],
+        [],
+    )
+    provider = manager.get_auth_provider("insecure_example", None)
+    other_provider = manager.get_auth_provider("insecure_example", "another-provider")
+    assert provider is not None
+    assert other_provider is not None
+    user = await manager.async_create_user("Alice")
+    await manager.async_link_user(
+        user, provider.async_create_credentials({"username": "alice"})
+    )
+    # The limit is per provider.
+    await manager.async_link_user(
+        user, other_provider.async_create_credentials({"username": "alice"})
+    )
+
+    assert manager.async_can_link_credentials(user, provider) is False
+    with pytest.raises(auth.CredentialsExistError):
+        await manager.async_link_user(
+            user, provider.async_create_credentials({"username": "alice-2"})
+        )
+    assert [
+        (credential.auth_provider_id, credential.data["username"])
+        for credential in user.credentials
+    ] == [(None, "alice"), ("another-provider", "alice")]
+
+
 async def test_saving_loading(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
