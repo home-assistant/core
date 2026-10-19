@@ -457,6 +457,7 @@ async def test_persistent_auth_failure_repair_issue(
     mock_powerfox_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a persistent authentication error creates and clears a repair issue."""
     await setup_integration(hass, mock_config_entry)
@@ -476,7 +477,7 @@ async def test_persistent_auth_failure_repair_issue(
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
 
-    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
     # The next authentication error reaches the threshold.
     freezer.tick(timedelta(seconds=1))
@@ -484,12 +485,12 @@ async def test_persistent_auth_failure_repair_issue(
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
 
-    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is not None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
     # Restore the original successful device response.
     mock_powerfox_client.device.side_effect = None
 
     await coordinator._async_update_data()
 
-    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
     assert coordinator.auth_state.failure_since is None
