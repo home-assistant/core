@@ -1137,7 +1137,7 @@ geniushub-client==0.7.4
 geocachingapi==0.3.0
 
 # homeassistant.components.aprs
-geopy==2.3.0
+geopy==2.5.0
 
 # homeassistant.components.geo_rss_events
 georss-generic-client==0.8
@@ -1555,6 +1555,9 @@ libsoundtouch==0.8
 
 # homeassistant.components.lifx
 lifx-async==7.10.1
+
+# homeassistant.components.steamvr_base_station
+lighthouse-ble==0.2.0
 
 # homeassistant.components.osramlightify
 lightify==1.0.7.3
