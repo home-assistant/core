@@ -178,6 +178,20 @@ def _async_refresh_on_home_move(
 ) -> None:
     """Refresh when Home Assistant's location moves, for an entry following it."""
     coordinator = entry.runtime_data
+
+    @callback
+    def _async_home_moved() -> bool:
+        forecast = coordinator.forecast
+        return (hass.config.latitude, hass.config.longitude) != (
+            forecast.latitude,
+            forecast.longitude,
+        )
+
+    async def _async_refresh_if_moved() -> None:
+        # A periodic update may have fetched the new location while this was queued.
+        if _async_home_moved():
+            await coordinator.async_refresh()
+
     # Home may move on every GPS fix; this costs at most one extra request per
     # update interval, so the rate limit isn't spent on a camper on the road.
     debouncer = Debouncer(
@@ -185,17 +199,13 @@ def _async_refresh_on_home_move(
         LOGGER,
         cooldown=cast(timedelta, coordinator.update_interval).total_seconds(),
         immediate=True,
-        function=coordinator.async_refresh,
+        function=_async_refresh_if_moved,
     )
 
     @callback
     def _async_core_config_updated(_event: Event) -> None:
-        forecast = coordinator.forecast
         # Other core config changes don't spend a request.
-        if (hass.config.latitude, hass.config.longitude) != (
-            forecast.latitude,
-            forecast.longitude,
-        ):
+        if _async_home_moved():
             debouncer.async_schedule_call()
 
     entry.async_on_unload(debouncer.async_shutdown)

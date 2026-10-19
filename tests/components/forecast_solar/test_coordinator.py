@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.forecast_solar.const import (
     CONF_AZIMUTH,
@@ -17,14 +17,20 @@ from homeassistant.components.forecast_solar.const import (
     DOMAIN,
     SUBENTRY_TYPE_PLANE,
 )
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOME_ASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from . import async_next_update
 
@@ -302,6 +308,48 @@ async def test_coordinator_follows_home_location(
     forecast = entry.runtime_data.forecast
     assert (forecast.latitude, forecast.longitude) == location
     assert mock_forecast_solar.estimate.call_count == estimate_calls + extra_calls
+
+
+async def test_coordinator_skips_queued_refresh_after_periodic_update(
+    hass: HomeAssistant,
+    mock_forecast_solar: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a move queued during cooldown is not fetched twice."""
+    await hass.config.async_update(latitude=51.5, longitude=-0.1)
+    entry = _config_entry(
+        {CONF_DECLINATION: 30, CONF_AZIMUTH: 190, CONF_MODULES_POWER: 5100},
+        entry_data={},
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    estimate_calls = mock_forecast_solar.estimate.call_count
+
+    await hass.config.async_update(latitude=48.85, longitude=2.35)
+    await hass.async_block_till_done()
+    # Queued behind the cooldown of the refresh above.
+    await hass.config.async_update(latitude=48.86, longitude=2.35)
+    await hass.async_block_till_done()
+    # Another refresh fetches the new location mid-cooldown.
+    freezer.tick(entry.runtime_data.update_interval / 2)
+    await async_setup_component(hass, HOME_ASSISTANT_DOMAIN, {})
+    await hass.services.async_call(
+        HOME_ASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: "sensor.energy_production_today"},
+        blocking=True,
+    )
+    assert mock_forecast_solar.estimate.call_count == estimate_calls + 2
+
+    # Ends the cooldown, but not the interval since the refresh above.
+    freezer.tick(entry.runtime_data.update_interval / 2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    forecast = entry.runtime_data.forecast
+    assert (forecast.latitude, forecast.longitude) == (48.86, 2.35)
+    assert mock_forecast_solar.estimate.call_count == estimate_calls + 2
 
 
 @pytest.mark.usefixtures("mock_forecast_solar")
