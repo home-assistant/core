@@ -308,6 +308,29 @@ async def install_humidifier_device(
     await hass.async_block_till_done()
 
 
+@pytest.fixture(name="humidifier_600s_config_entry")
+async def humidifier_600s_config_entry(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, config
+) -> MockConfigEntry:
+    """Create a mock VeSync config entry for `Humidifier 600S`."""
+    entry = MockConfigEntry(
+        title="VeSync",
+        domain=DOMAIN,
+        data=config[DOMAIN],
+        unique_id="TESTACCOUNTID",
+        version=1,
+        minor_version=3,
+    )
+    entry.add_to_hass(hass)
+
+    device_name = "Humidifier 600S"
+    mock_multiple_device_responses(aioclient_mock, [device_name])
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    return entry
+
+
 @pytest.fixture(name="fan_config_entry")
 async def fan_config_entry(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, config
