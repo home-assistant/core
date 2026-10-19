@@ -1,1 +1,1 @@
-"""Shared Home Assistant test helpers."""
+"""Helpers and historical schemas for Recorder tests."""

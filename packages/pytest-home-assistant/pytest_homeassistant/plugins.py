@@ -1,4 +1,4 @@
-"""Set up some common test helper things."""
+"""Shared pytest fixtures and hooks for Home Assistant integrations."""
 
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator, Sequence
@@ -378,13 +378,7 @@ def expected_lingering_timers() -> bool:
 
 @pytest.fixture
 def wait_for_stop_scripts_after_shutdown() -> bool:
-    """Add ability to bypass _schedule_stop_scripts_after_shutdown.
-
-    _schedule_stop_scripts_after_shutdown leaves a lingering timer.
-
-    Parametrize to True to bypass the pytest failure.
-    @pytest.mark.parametrize("wait_for_stop_scripts_at_shutdown", [True])
-    """
+    """Control whether shutdown waits for pending scripts."""
     return False
 
 
@@ -392,7 +386,7 @@ def wait_for_stop_scripts_after_shutdown() -> bool:
 def skip_stop_scripts(
     wait_for_stop_scripts_after_shutdown: bool,
 ) -> Generator[None]:
-    """Add ability to bypass _schedule_stop_scripts_after_shutdown."""
+    """Control whether scripts are stopped during shutdown."""
     if wait_for_stop_scripts_after_shutdown:
         yield
         return
@@ -711,7 +705,7 @@ def hass_config_dir() -> str:
 
 @pytest.fixture
 def entity_registry_enabled_by_default() -> Generator[None]:
-    """Test fixture that ensures all entities are enabled in the registry."""
+    """Enable entities by default in the entity registry."""
     with (
         patch(
             "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
@@ -902,7 +896,7 @@ async def hass_access_token(
 def hass_owner_user(
     hass: HomeAssistant, local_auth: homeassistant.HassAuthProvider
 ) -> MockUser:
-    """Return a Home Assistant admin user."""
+    """Return a Home Assistant owner user."""
     return MockUser(is_owner=True).add_to_hass(hass)
 
 
@@ -930,7 +924,7 @@ async def hass_read_only_access_token(
     hass_read_only_user: MockUser,
     local_auth: homeassistant.HassAuthProvider,
 ) -> str:
-    """Return a Home Assistant read only user."""
+    """Return an access token for a read-only user."""
     credential = Credentials(
         id="mock-readonly-credential-id",
         auth_provider_type="homeassistant",
@@ -1876,7 +1870,7 @@ async def async_test_recorder(
     enable_migrate_entity_ids: bool,
     enable_migrate_event_ids: bool,
 ) -> AsyncGenerator[RecorderInstanceContextManager]:
-    """Yield context manager to setup recorder instance."""
+    """Provide a context manager for a Recorder instance."""
     from homeassistant.components import recorder  # noqa: PLC0415
     from homeassistant.components.recorder import migration  # noqa: PLC0415
 
@@ -2040,7 +2034,7 @@ async def async_test_recorder(
 async def async_setup_recorder_instance(
     async_test_recorder: RecorderInstanceContextManager,
 ) -> AsyncGenerator[RecorderInstanceGenerator]:
-    """Yield callable to setup recorder instance."""
+    """Provide a callable for setting up Recorder."""
 
     async with AsyncExitStack() as stack:
 
@@ -2311,7 +2305,7 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
 def hassio_env(
     supervisor_is_connected: AsyncMock, supervisor_root_info: AsyncMock
 ) -> Generator[None]:
-    """Fixture to inject hassio env."""
+    """Provide a mocked Supervisor environment."""
     from aiohasupervisor import SupervisorError  # noqa: PLC0415
 
     from .components.hassio import SUPERVISOR_TOKEN  # noqa: PLC0415
@@ -2333,7 +2327,7 @@ async def hassio_stubs(
     supervisor_client: AsyncMock,
     ingress_panels: AsyncMock,
 ) -> None:
-    """Create mock hassio http client."""
+    """Set up the Supervisor integration with mocked services."""
     with patch(
         "homeassistant.components.hassio.coordinator.SupervisorIssuesCoordinator.async_refresh",
     ):

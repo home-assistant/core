@@ -1,4 +1,4 @@
-"""Aiohttp test utils."""
+"""Mocks for aiohttp clients, requests, and responses."""
 
 import asyncio
 from collections.abc import Iterator

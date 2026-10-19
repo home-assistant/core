@@ -1,4 +1,4 @@
-"""Load Home Assistant's fixtures after third-party pytest plugins."""
+"""Register Home Assistant fixtures and initialize test paths."""
 
 import pytest
 

@@ -1,4 +1,4 @@
-"""Test the helper method for writing tests."""
+"""Shared helpers for testing Home Assistant integrations."""
 
 import asyncio
 from collections.abc import (
@@ -193,7 +193,7 @@ def threadsafe_coroutine_factory(func):
 
 
 def get_test_config_dir(*add_path):
-    """Return a path to a test config dir."""
+    """Return a path within the test configuration directory."""
     return os.path.join(
         _paths.CONFIG_DIR or _paths.TESTS_DIR / "testing_config", *add_path
     )
@@ -223,7 +223,7 @@ async def async_test_home_assistant(
     config_dir: str | None = None,
     initial_state: CoreState = CoreState.running,
 ) -> AsyncGenerator[HomeAssistant]:
-    """Return a Home Assistant object pointing at test config dir."""
+    """Create a Home Assistant instance for testing."""
     hass = HomeAssistant(config_dir or get_test_config_dir())
     store = auth_store.AuthStore(hass)
     hass.auth = auth.AuthManager(hass, store, {}, {})
@@ -566,7 +566,7 @@ fire_time_changed = threadsafe_callback_factory(async_fire_time_changed)
 
 
 def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.Path:
-    """Get path of fixture."""
+    """Resolve a fixture file path."""
     if (
         integration is None
         and "/" in filename
@@ -583,20 +583,20 @@ def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.P
 
 @lru_cache
 def load_fixture_bytes(filename: str, integration: str | None = None) -> bytes:
-    """Load a fixture."""
+    """Load a fixture as bytes."""
     return get_fixture_path(filename, integration).read_bytes()
 
 
 @lru_cache
 def load_fixture(filename: str, integration: str | None = None) -> str:
-    """Load a fixture."""
+    """Load a fixture as text."""
     return get_fixture_path(filename, integration).read_text(encoding="utf8")
 
 
 async def async_load_fixture(
     hass: HomeAssistant, filename: str, integration: str | None = None
 ) -> str:
-    """Load a fixture."""
+    """Load a text fixture without blocking the event loop."""
     return await hass.async_add_executor_job(load_fixture, filename, integration)
 
 
@@ -617,7 +617,7 @@ def load_json_array_fixture(
 async def async_load_json_array_fixture(
     hass: HomeAssistant, filename: str, integration: str | None = None
 ) -> JsonArrayType:
-    """Load a JSON object from a fixture."""
+    """Load a JSON array from a fixture."""
     return json_loads_array(await async_load_fixture(hass, filename, integration))
 
 
@@ -794,11 +794,11 @@ class MockGroup(auth_models.Group):
         super().__init__(**kwargs)
 
     def add_to_hass(self, hass: HomeAssistant) -> MockGroup:
-        """Test helper to add entry to hass."""
+        """Add the group to Home Assistant."""
         return self.add_to_auth_manager(hass.auth)
 
     def add_to_auth_manager(self, auth_mgr: auth.AuthManager) -> MockGroup:
-        """Test helper to add entry to hass."""
+        """Add the group to an authentication manager."""
         ensure_auth_manager_loaded(auth_mgr)
         auth_mgr._store._groups[self.id] = self
         return self
@@ -830,11 +830,11 @@ class MockUser(auth_models.User):
         super().__init__(**kwargs)
 
     def add_to_hass(self, hass: HomeAssistant) -> MockUser:
-        """Test helper to add entry to hass."""
+        """Add the user to Home Assistant."""
         return self.add_to_auth_manager(hass.auth)
 
     def add_to_auth_manager(self, auth_mgr: auth.AuthManager) -> MockUser:
-        """Test helper to add entry to hass."""
+        """Add the user to an authentication manager."""
         ensure_auth_manager_loaded(auth_mgr)
         auth_mgr._store._users[self.id] = self
         return self
@@ -1467,7 +1467,7 @@ class MockEntity(entity.Entity):
 
     @property
     def should_poll(self) -> bool:
-        """Return the ste of the polling."""
+        """Return whether the entity should be polled."""
         return self._handle("should_poll")
 
     @property

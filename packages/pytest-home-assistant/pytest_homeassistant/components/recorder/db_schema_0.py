@@ -1,8 +1,4 @@
-"""Models for SQLAlchemy.
-
-This file contains the original models definitions before schema tracking was
-implemented. It is used to test the schema migration logic.
-"""
+"""Historical Recorder models for migration tests."""
 
 import json
 import logging

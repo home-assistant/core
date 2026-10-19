@@ -1,4 +1,4 @@
-"""Paths for test fixtures and the default Home Assistant configuration."""
+"""Resolve test resource locations."""
 
 from pathlib import Path
 
@@ -9,7 +9,7 @@ CONFIG_DIR: Path | None = None
 
 
 def configure(config: pytest.Config) -> None:
-    """Resolve test paths relative to the consuming project's configuration."""
+    """Resolve fixture and configuration paths from pytest settings."""
     global TESTS_DIR, CONFIG_DIR  # noqa: PLW0603  # pylint: disable=global-statement
     TESTS_DIR = config.rootpath / config.getini("ha_test_root")
     CONFIG_DIR = (

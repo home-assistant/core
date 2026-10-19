@@ -1,4 +1,4 @@
-"""Tests for the repairs integration."""
+"""Helpers for testing repair issues and flows."""
 
 from http import HTTPStatus
 from typing import Any
@@ -19,7 +19,7 @@ async def get_repairs(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
 ):
-    """Return the repairs list of issues."""
+    """Return the current repair issues."""
     assert await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_ws_client(hass)
@@ -51,7 +51,7 @@ async def start_repair_fix_flow(
 async def process_repair_fix_flow(
     client: TestClient, flow_id: str, json: dict[str, Any] | None = None
 ) -> dict[str, Any]:
-    """Return the repairs list of issues."""
+    """Submit user input to a repair flow."""
     url = RepairsFlowResourceView.url.format(flow_id=flow_id)
     resp = await client.post(url, json=json)
     assert resp.status == HTTPStatus.OK, f"Error: {resp.status}, {await resp.text()}"

@@ -1,8 +1,4 @@
-"""Models for SQLAlchemy.
-
-This file contains the model definitions for schema version 48.
-It is used to test the schema migration logic.
-"""
+"""Historical Recorder models for migration tests."""
 
 from collections.abc import Callable
 from datetime import datetime, timedelta

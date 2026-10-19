@@ -1,4 +1,4 @@
-"""Common test objects."""
+"""MQTT mocks, message helpers, and shared assertions."""
 
 from collections.abc import Iterable
 from contextlib import suppress

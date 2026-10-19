@@ -1,4 +1,4 @@
-"""Models for SQLAlchemy."""
+"""Historical Recorder models for migration tests."""
 
 from datetime import datetime, timedelta
 import json

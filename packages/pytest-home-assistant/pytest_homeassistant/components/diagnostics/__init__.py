@@ -1,4 +1,4 @@
-"""Tests for the Diagnostics integration."""
+"""Helpers for retrieving integration and device diagnostics."""
 
 from http import HTTPStatus
 from typing import cast
@@ -17,7 +17,7 @@ async def _get_diagnostics_for_config_entry(
     hass_client: ClientSessionGenerator,
     config_entry: ConfigEntry,
 ) -> JsonObjectType:
-    """Return the diagnostics config entry for the specified domain."""
+    """Return the diagnostics response for a configuration entry."""
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
@@ -34,7 +34,7 @@ async def get_diagnostics_for_config_entry(
     hass_client: ClientSessionGenerator,
     config_entry: ConfigEntry,
 ) -> JsonObjectType:
-    """Return the diagnostics config entry for the specified domain."""
+    """Return diagnostics data for a configuration entry."""
     data = await _get_diagnostics_for_config_entry(hass, hass_client, config_entry)
     return cast(JsonObjectType, data["data"])
 
@@ -45,7 +45,7 @@ async def _get_diagnostics_for_device(
     config_entry: ConfigEntry,
     device: DeviceEntry,
 ) -> JsonObjectType:
-    """Return the diagnostics for the specified device."""
+    """Return the diagnostics response for a device."""
     assert await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_client()
@@ -62,6 +62,6 @@ async def get_diagnostics_for_device(
     config_entry: ConfigEntry,
     device: DeviceEntry,
 ) -> JsonObjectType:
-    """Return the diagnostics for the specified device."""
+    """Return diagnostics data for a device."""
     data = await _get_diagnostics_for_device(hass, hass_client, config_entry, device)
     return cast(JsonObjectType, data["data"])

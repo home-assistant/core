@@ -1,10 +1,4 @@
-"""Models for SQLAlchemy.
-
-This file contains the model definitions for schema version 18,
-used by Home Assistant Core 2021.7.0, which did a major refactoring
-of long term statistics database models.
-It is used to test the schema migration logic.
-"""
+"""Historical Recorder models for migration tests."""
 
 import json
 import logging

@@ -1,1 +1,1 @@
-"""Shared Home Assistant test helpers."""
+"""Custom integrations used by test helpers."""
