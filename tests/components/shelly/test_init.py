@@ -206,10 +206,13 @@ async def test_device_unsupported_firmware(
 
     entry = await init_integration(hass, gen)
     assert entry.state is ConfigEntryState.SETUP_RETRY
-    assert (
-        DOMAIN,
-        "firmware_unsupported_123456789ABC",
-    ) in issue_registry.issues
+    issue_id = "firmware_unsupported_123456789ABC"
+    assert (issue := issue_registry.async_get_issue(DOMAIN, issue_id))
+    assert issue.config_entry_id == entry.entry_id
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
 @pytest.mark.parametrize("gen", [1, 2, 3])

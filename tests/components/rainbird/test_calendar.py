@@ -24,6 +24,10 @@ from tests.typing import ClientSessionGenerator
 TEST_ENTITY = "calendar.rain_bird_controller"
 type GetEventsFn = Callable[[str, str], Awaitable[dict[str, Any]]]
 
+PGM_A_DESCRIPTION = (
+    "Zone 1: 25 min\nZone 2: 20 min\nZone 3: 7 min\nZone 4: 20 min\nZone 5: 10 min"
+)
+
 SCHEDULE_RESPONSES = [
     # Current controller status
     "A0000000000000",
@@ -125,7 +129,10 @@ def get_events_fixture(
         )
         assert response.status == HTTPStatus.OK
         results = await response.json()
-        return [{k: event[k] for k in ("summary", "start", "end")} for event in results]
+        return [
+            {k: event[k] for k in ("summary", "start", "end", "description")}
+            for event in results
+        ]
 
     return _fetch
 
@@ -141,24 +148,28 @@ async def test_get_events(hass: HomeAssistant, get_events: GetEventsFn) -> None:
             "summary": "PGM A",
             "start": {"dateTime": "2023-01-23T04:00:00-06:00"},
             "end": {"dateTime": "2023-01-23T05:22:00-06:00"},
+            "description": PGM_A_DESCRIPTION,
         },
         # Tuesday
         {
             "summary": "PGM A",
             "start": {"dateTime": "2023-01-24T04:00:00-06:00"},
             "end": {"dateTime": "2023-01-24T05:22:00-06:00"},
+            "description": PGM_A_DESCRIPTION,
         },
         # Monday
         {
             "summary": "PGM A",
             "start": {"dateTime": "2023-01-30T04:00:00-06:00"},
             "end": {"dateTime": "2023-01-30T05:22:00-06:00"},
+            "description": PGM_A_DESCRIPTION,
         },
         # Tuesday
         {
             "summary": "PGM A",
             "start": {"dateTime": "2023-01-31T04:00:00-06:00"},
             "end": {"dateTime": "2023-01-31T05:22:00-06:00"},
+            "description": PGM_A_DESCRIPTION,
         },
     ]
 
@@ -200,7 +211,7 @@ async def test_event_state(
         "start_time": "2023-01-23 04:00:00",
         "end_time": "2023-01-23 05:22:00",
         "all_day": False,
-        "description": "",
+        "description": PGM_A_DESCRIPTION,
         "location": "",
         "friendly_name": "Rain Bird Controller",
     }

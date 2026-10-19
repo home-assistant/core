@@ -22,9 +22,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-from tests.components.tts.conftest import (
-    mock_tts_cache_dir_fixture_autouse,  # noqa: F401
-)
+from tests.components.tts.conftest import mock_tts_cache_dir_fixture_autouse  # noqa: F401
 
 
 @pytest.fixture(autouse=True)

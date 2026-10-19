@@ -158,7 +158,7 @@ def mock_create_stream_fixture() -> Generator[Mock]:
     mock_stream.set_update_callback = Mock()
     mock_stream.available = True
     with patch(
-        "homeassistant.components.camera.create_stream",
+        "homeassistant.components.camera.entity.create_stream",
         return_value=mock_stream,
     ):
         yield mock_stream

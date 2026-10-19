@@ -485,6 +485,7 @@ async def test_cloud_api_repair(
     # Check that both expected device names are present, regardless of order
     assert all(
         issue.translation_key == "cloud_api_used"
+        and issue.config_entry_id == mock_roborock_entry.entry_id
         for issue in issue_registry.issues.values()
     )
     names = {

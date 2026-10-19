@@ -102,6 +102,7 @@ def controller() -> Controller:
         ),
         last_contact_time=datetime.fromtimestamp(1693292420),
         online=True,
+        software_version="2.05",
         sensors=[],
     )
 

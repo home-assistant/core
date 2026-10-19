@@ -1,4 +1,4 @@
-"""Shared lifecycle for entities backed by LoRaWAN device models."""
+"""Base entity for LoRaWAN integrations."""
 
 from typing import override
 
