@@ -30,7 +30,6 @@
   "entity": {
     "event": {
       "button": {
-        "name": "Button",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -84,7 +83,6 @@
         }
       },
       "button_twist": {
-        "name": "[%key:component::flic_button::entity::event::button::name%]",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -101,7 +99,6 @@
         }
       },
       "button_twist_default": {
-        "name": "[%key:component::flic_button::entity::event::button::name%]",
         "state_attributes": {
           "event_type": {
             "state": {
