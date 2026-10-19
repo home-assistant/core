@@ -6,8 +6,8 @@ from typing import Any, override
 from pyfenixcontrol import Device, FenixControlError, HvacState, PresetMode
 
 from homeassistant.components.climate import (
-    PRESET_COMFORT,
-    PRESET_ECO,
+    PRESET_AWAY,
+    PRESET_BOOST,
     PRESET_HOME,
     ClimateEntity,
     ClimateEntityFeature,
@@ -34,8 +34,8 @@ HVAC_MODE_TO_PRESET_MODE: dict[HVACMode, PresetMode] = {
 
 PRESET_TO_PRESET_MODE: dict[str, PresetMode] = {
     PRESET_HOME: PresetMode.PROGRAM,
-    PRESET_ECO: PresetMode.DEFROST,
-    PRESET_COMFORT: PresetMode.BOOST,
+    PRESET_AWAY: PresetMode.DEFROST,
+    PRESET_BOOST: PresetMode.BOOST,
 }
 PRESET_MODE_TO_PRESET: dict[int, str] = {
     mode: preset for preset, mode in PRESET_TO_PRESET_MODE.items()

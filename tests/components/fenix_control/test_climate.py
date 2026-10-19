@@ -14,8 +14,8 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODES,
     ATTR_PRESET_MODE,
     DOMAIN as CLIMATE_DOMAIN,
-    PRESET_COMFORT,
-    PRESET_ECO,
+    PRESET_AWAY,
+    PRESET_BOOST,
     PRESET_HOME,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
@@ -132,8 +132,8 @@ async def test_set_hvac_mode(
     ("preset", "preset_mode"),
     [
         (PRESET_HOME, PresetMode.PROGRAM),
-        (PRESET_ECO, PresetMode.DEFROST),
-        (PRESET_COMFORT, PresetMode.BOOST),
+        (PRESET_AWAY, PresetMode.DEFROST),
+        (PRESET_BOOST, PresetMode.BOOST),
     ],
 )
 async def test_set_preset_mode(
@@ -176,7 +176,7 @@ async def test_set_preset_mode(
         ),
         pytest.param(
             SERVICE_SET_PRESET_MODE,
-            {ATTR_PRESET_MODE: PRESET_ECO},
+            {ATTR_PRESET_MODE: PRESET_AWAY},
             "set_preset_mode",
             "set_preset_mode_failed",
             id="preset",
