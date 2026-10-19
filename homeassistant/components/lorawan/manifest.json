@@ -1,6 +1,7 @@
 {
   "domain": "lorawan",
   "name": "LoRaWAN",
+  "categories": ["hubs_protocols.wireless_protocols"],
   "codeowners": ["@balloob"],
   "documentation": "https://www.home-assistant.io/integrations/lorawan",
   "integration_type": "service",

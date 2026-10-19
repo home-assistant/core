@@ -6,6 +6,7 @@ from unittest.mock import patch
 from freezegun import freeze_time
 import probatio
 import pytest
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 
 from homeassistant import config as hass_config, core as ha
 from homeassistant.components.history_stats.const import (
@@ -34,7 +35,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed, get_fixture_path
-from tests.components.recorder.common import async_wait_recording_done
 from tests.typing import RecorderInstanceGenerator
 
 
