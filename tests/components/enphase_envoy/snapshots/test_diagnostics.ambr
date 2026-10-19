@@ -5042,7 +5042,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -5082,7 +5082,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,
@@ -18413,7 +18413,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': dict({
@@ -18453,7 +18453,7 @@
           dict({
             'entity': dict({
               'aliases': list([
-                0,
+                None,
               ]),
               'area_id': None,
               'capabilities': None,

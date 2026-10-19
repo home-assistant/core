@@ -1,6 +1,7 @@
 {
   "domain": "trafikverket_camera",
   "name": "Trafikverket Camera",
+  "categories": ["vehicles_transport"],
   "codeowners": ["@gjohansson-ST"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/trafikverket_camera",

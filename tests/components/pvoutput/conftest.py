@@ -5,12 +5,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pvo import Status, System
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.pvoutput.const import CONF_SYSTEM_ID, DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture

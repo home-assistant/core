@@ -7,14 +7,13 @@ from aiohttp import ClientError
 from blinkpy.auth import LoginError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.blink.const import DOMAIN
 from homeassistant.components.blink.coordinator import SCAN_INTERVAL
 from homeassistant.components.blink.services import SERVICE_SAVE_VIDEO
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 CAMERA_NAME = "Camera 1"
 FILENAME = "blah"

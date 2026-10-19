@@ -5,14 +5,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from gios.model import GiosSensors, GiosStation, Sensor as GiosSensor
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.gios.const import CONF_STATION_ID, DOMAIN
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

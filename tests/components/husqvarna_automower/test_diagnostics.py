@@ -5,6 +5,12 @@ from unittest.mock import AsyncMock
 import zoneinfo
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import (
+    get_diagnostics_for_config_entry,
+    get_diagnostics_for_device,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -13,13 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .const import TEST_MOWER_ID
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import (
-    get_diagnostics_for_config_entry,
-    get_diagnostics_for_device,
-)
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.freeze_time(
