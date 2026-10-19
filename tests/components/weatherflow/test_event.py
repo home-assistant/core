@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from pyweatherflowudp.aioudp import LocalEndpoint
 from syrupy.assertion import SnapshotAssertion
 
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ALL_DEVICE_PACKETS = (
     "hub_status.json",
