@@ -77,8 +77,7 @@ class FenixControlCoordinator(DataUpdateCoordinator[FenixControlData]):
                 translation_domain=DOMAIN, translation_key="auth_failed"
             ) from err
         except FenixControlError as err:
-            # Best effort: the cloud often rejects this with a transient 5xx,
-            # and the state of this poll was already fetched
+            # Best effort: the cloud often rejects this with a transient 5xx
             LOGGER.debug(
                 "Update trigger for installation %s failed: %s", installation_id, err
             )
