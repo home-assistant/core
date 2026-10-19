@@ -5,6 +5,12 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.components.recorder.common import (
+    ForceReturnConnectionToPool,
+    assert_dict_of_states_equal_without_context_and_last_changed,
+    async_record_states,
+    async_wait_recording_done,
+)
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -16,13 +22,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from .common import (
-    ForceReturnConnectionToPool,
-    assert_dict_of_states_equal_without_context_and_last_changed,
-    async_record_states,
-    async_wait_recording_done,
-)
 
 from tests.common import MockEntity, MockEntityPlatform
 from tests.typing import RecorderInstanceContextManager

@@ -1,6 +1,7 @@
 {
   "domain": "thethingsnetwork_lorawan",
   "name": "The Things Network",
+  "categories": ["hubs_protocols.wireless_protocols"],
   "codeowners": ["@balloob"],
   "config_flow": true,
   "dependencies": ["lorawan"],

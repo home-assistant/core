@@ -1,6 +1,7 @@
 {
   "domain": "smtp",
   "name": "SMTP",
+  "categories": ["messaging_notifications.email_sms_calls"],
   "codeowners": ["@tr4nt0r"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/smtp",

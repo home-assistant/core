@@ -19,6 +19,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .const import DOMAIN
+
 if TYPE_CHECKING:
     from . import RenaultConfigEntry
     from .renault_hub import RenaultHub
@@ -68,7 +70,10 @@ class RenaultDataUpdateCoordinator[T: KamereonVehicleDataAttributes](
 
         if self._hub.is_throttled():
             if not self._has_already_worked:
-                raise UpdateFailed("Renault hub currently throttled: init skipped")
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="throttled",
+                )
             # we have been throttled and decided to cooldown
             # so do not count this update as an error
             # coordinator. last_update_success should still be ok
@@ -86,7 +91,10 @@ class RenaultDataUpdateCoordinator[T: KamereonVehicleDataAttributes](
             if not self._has_already_worked:
                 self.update_interval = None
                 self.access_denied = True
-            raise UpdateFailed(f"This endpoint is denied: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="endpoint_denied",
+            ) from err
 
         except QuotaLimitException as err:
             # The data we got is not bad per see, initiate cooldown for all coordinators
@@ -96,20 +104,32 @@ class RenaultDataUpdateCoordinator[T: KamereonVehicleDataAttributes](
                 self.logger.warning("Renault API throttled")
                 return self.data
 
-            raise UpdateFailed(f"Renault API throttled: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="throttled",
+            ) from err
 
         except NotSupportedException as err:
             # Disable because the vehicle does not support this Renault endpoint.
             self.update_interval = None
             self.not_supported = True
-            raise UpdateFailed(f"This endpoint is not supported: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="endpoint_not_supported",
+            ) from err
 
         except NotAuthenticatedException as err:
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_expired",
+            ) from err
 
         except KamereonResponseException as err:
             # Other Renault errors.
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from err
 
         self._has_already_worked = True
         self.assumed_state = False

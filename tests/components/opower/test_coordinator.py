@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, patch
 from opower import AggregateType, CostRead
 from opower.exceptions import ApiException
 import pytest
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.opower.const import DOMAIN
@@ -30,7 +31,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import EnergyConverter
 
 from tests.common import MockConfigEntry
-from tests.components.recorder.common import async_wait_recording_done
 
 
 async def test_coordinator_first_run(
@@ -372,6 +372,14 @@ async def test_coordinator_migration(
     issue = issue_registry.async_get_issue(DOMAIN, "return_to_grid_migration_111111")
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.config_entry_id == mock_config_entry.entry_id
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        issue_registry.async_get_issue(DOMAIN, "return_to_grid_migration_111111")
+        is None
+    )
 
 
 @pytest.mark.parametrize(

@@ -907,6 +907,25 @@
       "description": "Shelly device {device_name} with IP address {ip_address} requires calibration. To calibrate the device, it must be rebooted after proper installation on the valve. You can reboot the device in its web panel, go to 'Settings' > 'Device Reboot'.",
       "title": "Shelly device {device_name} is not calibrated"
     },
+    "ir_raw_receive_disabled": {
+      "fix_flow": {
+        "abort": {
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+          "issue_ignored": "[%key:component::shelly::issues::coiot_unconfigured::fix_flow::abort::issue_ignored%]"
+        },
+        "step": {
+          "init": {
+            "description": "Your Shelly device {device_name} with IP address {ip_address} has RAW receive disabled for the infrared receiver. RAW receive must be enabled for the infrared receiver entity to be available.\n\nSelect **Enable RAW receive** to enable it on the device.",
+            "menu_options": {
+              "confirm": "Enable RAW receive",
+              "ignore": "[%key:component::shelly::issues::coiot_unconfigured::fix_flow::step::init::menu_options::ignore%]"
+            },
+            "title": "[%key:component::shelly::issues::ir_raw_receive_disabled::title%]"
+          }
+        }
+      },
+      "title": "Infrared RAW receive disabled on {device_name}"
+    },
     "open_wifi_ap": {
       "fix_flow": {
         "abort": {

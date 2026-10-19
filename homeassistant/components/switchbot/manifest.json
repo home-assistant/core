@@ -27,6 +27,7 @@
       "manufacturer_id": 741
     }
   ],
+  "categories": ["sensors", "blinds_curtains", "plugs_switches"],
   "codeowners": [
     "@danielhiversen",
     "@RenierM26",
