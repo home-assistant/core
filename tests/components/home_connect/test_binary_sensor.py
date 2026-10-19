@@ -16,6 +16,7 @@ from aiohomeconnect.model import (
 from aiohomeconnect.model.error import HomeConnectApiError
 from aiohomeconnect.model.program import ProgramKey
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.home_connect.const import (
     BSH_OPERATION_STATE_FINISHED,
@@ -38,8 +39,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import create_event_message
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

@@ -14,11 +14,10 @@ from powerfox import (
     WaterMeter,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.powerfox.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-
-from tests.common import MockConfigEntry
 
 
 def _power_meter() -> PowerMeter:

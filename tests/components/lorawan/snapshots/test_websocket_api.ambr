@@ -1,0 +1,85 @@
+# serializer version: 1
+# name: test_device_observations[discovered]
+  dict({
+    'connections': list([
+      dict({
+        'configuration_url': None,
+        'domain': 'test_provider',
+        'entry_id': 'network',
+        'title': 'Mock Title',
+      }),
+    ]),
+    'devices': list([
+      dict({
+        'application_id': 'application',
+        'battery_level': None,
+        'connection': dict({
+          'configuration_url': None,
+          'domain': 'test_provider',
+          'entry_id': 'network',
+          'title': 'Mock Title',
+        }),
+        'dev_eui': '0201010101010101',
+        'device_id': None,
+        'downlink_margin': None,
+        'external_power_source': None,
+        'last_join': None,
+        'last_status': None,
+        'last_uplink': None,
+        'manufacturer': '',
+        'model': '',
+        'name': 'Greenhouse',
+        'receptions': list([
+        ]),
+        'support': 'integration_not_configured',
+      }),
+    ]),
+  })
+# ---
+# name: test_device_observations[observed]
+  dict({
+    'connections': list([
+      dict({
+        'configuration_url': None,
+        'domain': 'test_provider',
+        'entry_id': 'network',
+        'title': 'Mock Title',
+      }),
+    ]),
+    'devices': list([
+      dict({
+        'application_id': 'application',
+        'battery_level': 0,
+        'connection': dict({
+          'configuration_url': None,
+          'domain': 'test_provider',
+          'entry_id': 'network',
+          'title': 'Mock Title',
+        }),
+        'dev_eui': '0201010101010101',
+        'device_id': None,
+        'downlink_margin': 2,
+        'external_power_source': False,
+        'last_join': '2026-10-16T12:00:00+00:00',
+        'last_status': '2026-10-16T12:00:00+00:00',
+        'last_uplink': '2026-10-16T12:00:00+00:00',
+        'manufacturer': '',
+        'model': '',
+        'name': 'Greenhouse',
+        'receptions': list([
+          dict({
+            'gateway_id': 'nearby',
+            'rssi': -45,
+            'snr': -1.5,
+          }),
+          dict({
+            'gateway_id': 'rooftop',
+            'rssi': -85,
+            'snr': 4,
+          }),
+        ]),
+        'support': 'integration_not_configured',
+      }),
+    ]),
+  })
+# ---

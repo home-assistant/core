@@ -5,6 +5,7 @@ from typing import Any
 
 from probatio import to_field_list
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from zigpy.application import ControllerApplication
 from zigpy.types.basic import uint16_t
 from zigpy.zcl.clusters import lighting
@@ -20,8 +21,6 @@ from homeassistant.components.zha.helpers import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

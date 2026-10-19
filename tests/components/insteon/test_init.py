@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import insteon
 from homeassistant.components.insteon.const import (
@@ -17,8 +18,6 @@ from homeassistant.setup import async_setup_component
 
 from .const import MOCK_USER_INPUT_PLM
 from .mock_devices import MockDevices
-
-from tests.common import MockConfigEntry
 
 
 async def mock_successful_connection(*args, **kwargs):

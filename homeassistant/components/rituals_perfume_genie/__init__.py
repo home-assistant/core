@@ -11,7 +11,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import ACCOUNT_HASH
+from .const import ACCOUNT_HASH, DOMAIN
 from .coordinator import (
     RitualsConfigEntry,
     RitualsHubsCoordinator,
@@ -34,7 +34,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: RitualsConfigEntry) -> N
     # Initiate reauth for old config entries which don't have
     # username / password in the entry data
     if CONF_EMAIL not in entry.data or CONF_PASSWORD not in entry.data:
-        raise ConfigEntryAuthFailed("Missing credentials")
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="missing_credentials"
+        )
 
     client = RitualsGenie(
         email=entry.data[CONF_EMAIL],

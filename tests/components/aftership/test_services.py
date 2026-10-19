@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.aftership.const import (
     CONF_SLUG,
     CONF_TITLE,
@@ -11,8 +13,6 @@ from homeassistant.components.aftership.const import (
     SERVICE_REMOVE_TRACKING,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def setup_integration(

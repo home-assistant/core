@@ -1,6 +1,7 @@
 {
   "domain": "swiss_hydrological_data",
   "name": "Swiss Hydrological Data",
+  "categories": ["weather_alerts"],
   "codeowners": ["@fabaff"],
   "documentation": "https://www.home-assistant.io/integrations/swiss_hydrological_data",
   "iot_class": "cloud_polling",

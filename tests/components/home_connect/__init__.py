@@ -12,8 +12,7 @@ from aiohomeconnect.model import (
     Status,
     StatusKey,
 )
-
-from tests.common import load_json_object_fixture
+from pytest_homeassistant.common import load_json_object_fixture
 
 MOCK_PROGRAMS: dict[str, Any] = load_json_object_fixture("home_connect/programs.json")
 MOCK_SETTINGS: dict[str, Any] = load_json_object_fixture("home_connect/settings.json")

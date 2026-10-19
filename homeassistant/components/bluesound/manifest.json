@@ -2,6 +2,7 @@
   "domain": "bluesound",
   "name": "Bluesound",
   "after_dependencies": ["zeroconf"],
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@thrawnarn", "@LouisChrist"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bluesound",
