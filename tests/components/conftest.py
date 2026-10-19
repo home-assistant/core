@@ -6,6 +6,7 @@ from functools import lru_cache
 from importlib.util import find_spec
 import inspect
 from ipaddress import IPv4Address, IPv4Network
+import os
 from pathlib import Path
 import re
 import string
@@ -54,6 +55,8 @@ from aiohasupervisor.store import StoreClient
 from aiohasupervisor.supervisor import SupervisorManagementClient
 import probatio
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import components, loader
 from homeassistant.components import repairs
@@ -87,6 +90,7 @@ from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import VolSchemaType
+from homeassistant.setup import async_setup_component
 from homeassistant.util import yaml as yaml_util
 
 from tests.common import QualityScaleStatus, get_quality_scale
@@ -121,22 +125,6 @@ def prevent_io() -> Generator[None]:
     """Fixture to prevent certain I/O from happening."""
     with patch(
         "homeassistant.components.http.ban.load_yaml_config_file",
-    ):
-        yield
-
-
-@pytest.fixture
-def entity_registry_enabled_by_default() -> Generator[None]:
-    """Test fixture that ensures all entities are enabled in the registry."""
-    with (
-        patch(
-            "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.device_tracker.config_entry.ScannerEntity.entity_registry_enabled_default",
-            return_value=True,
-        ),
     ):
         yield
 
@@ -856,6 +844,39 @@ def supervisor_client() -> Generator[AsyncMock]:
         ),
     ):
         yield supervisor_client
+
+
+@pytest.fixture
+def hassio_env(
+    supervisor_is_connected: AsyncMock, supervisor_root_info: AsyncMock
+) -> Generator[None]:
+    """Fixture to inject hassio env."""
+    from aiohasupervisor import SupervisorError  # noqa: PLC0415
+
+    from .hassio import SUPERVISOR_TOKEN  # noqa: PLC0415
+
+    supervisor_root_info.side_effect = SupervisorError()
+    with (
+        patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
+        patch.dict(os.environ, {"SUPERVISOR_TOKEN": SUPERVISOR_TOKEN}),
+    ):
+        yield
+
+
+@pytest.fixture
+async def hassio_stubs(
+    hassio_env: None,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    supervisor_client: AsyncMock,
+    ingress_panels: AsyncMock,
+) -> None:
+    """Create mock hassio http client."""
+    with patch(
+        "homeassistant.components.hassio.coordinator.SupervisorIssuesCoordinator.async_refresh",
+    ):
+        await async_setup_component(hass, "hassio", {})
 
 
 def _validate_translation_placeholders(

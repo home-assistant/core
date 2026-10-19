@@ -710,6 +710,22 @@ def hass_config_dir() -> str:
 
 
 @pytest.fixture
+def entity_registry_enabled_by_default() -> Generator[None]:
+    """Test fixture that ensures all entities are enabled in the registry."""
+    with (
+        patch(
+            "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.device_tracker.config_entry.ScannerEntity.entity_registry_enabled_default",
+            return_value=True,
+        ),
+    ):
+        yield
+
+
+@pytest.fixture
 def custom_integrations_enabled() -> bool:
     """Control custom integration loading."""
     return True
@@ -2272,39 +2288,6 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
         ),
     ):
         yield mock_bleak_scanner_start
-
-
-@pytest.fixture
-def hassio_env(
-    supervisor_is_connected: AsyncMock, supervisor_root_info: AsyncMock
-) -> Generator[None]:
-    """Fixture to inject hassio env."""
-    from aiohasupervisor import SupervisorError  # noqa: PLC0415
-
-    from .components.hassio import SUPERVISOR_TOKEN  # noqa: PLC0415
-
-    supervisor_root_info.side_effect = SupervisorError()
-    with (
-        patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
-        patch.dict(os.environ, {"SUPERVISOR_TOKEN": SUPERVISOR_TOKEN}),
-    ):
-        yield
-
-
-@pytest.fixture
-async def hassio_stubs(
-    hassio_env: None,
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    supervisor_client: AsyncMock,
-    ingress_panels: AsyncMock,
-) -> None:
-    """Create mock hassio http client."""
-    with patch(
-        "homeassistant.components.hassio.coordinator.SupervisorIssuesCoordinator.async_refresh",
-    ):
-        await async_setup_component(hass, "hassio", {})
 
 
 @pytest.fixture
