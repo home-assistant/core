@@ -1,6 +1,10 @@
 {
   "domain": "ping",
   "name": "Ping (ICMP)",
+  "categories": [
+    "presence_location.network_presence",
+    "computers_network.monitoring"
+  ],
   "codeowners": ["@jpbede"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ping",

@@ -12,6 +12,7 @@ from govee_local_api import GoveeDevice
 from govee_local_api.light_capabilities import ON_OFF_CAPABILITIES
 from govee_local_api.message import DevStatusResponse
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.govee_light_local.const import (
     DEVICE_TIMEOUT,
@@ -46,8 +47,6 @@ from .conftest import (
     SCENE_CAPABILITIES,
     setup_light,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_light_known_device(

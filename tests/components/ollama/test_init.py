@@ -7,6 +7,7 @@ import attr
 from httpx2 import ConnectError
 from ollama import ResponseError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import ollama
 from homeassistant.components.ollama.const import DOMAIN
@@ -23,8 +24,6 @@ from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.setup import async_setup_component
 
 from . import TEST_OPTIONS
-
-from tests.common import MockConfigEntry
 
 V1_TEST_USER_DATA = {
     CONF_URL: "http://localhost:11434",

@@ -9,6 +9,7 @@ from unittest.mock import patch
 from evohomeasync2 import exceptions as evo_exc
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -31,8 +32,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .conftest import setup_evohome
 from .const import TEST_INSTALLS
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.mark.parametrize("install", [*TEST_INSTALLS, "botched"])

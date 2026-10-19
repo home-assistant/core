@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from victron_mqtt import (
     AuthenticationError,
     CannotConnectError,
@@ -26,8 +27,6 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 
 from .const import MOCK_INSTALLATION_ID
-
-from tests.common import MockConfigEntry
 
 LEGACY_SENSOR_UNIQUE_ID = (
     f"{MOCK_INSTALLATION_ID}_evcharger_0_evcharger_max_set_current"
@@ -86,6 +85,11 @@ async def test_legacy_evcharger_sensor_creates_repair(
     assert issue is not None
     assert issue.translation_key == "deprecated_sensor"
     assert issue.translation_placeholders == {"entity_id": LEGACY_SENSOR_ENTITY_ID}
+    assert issue.config_entry_id == mock_config_entry.entry_id
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, DEPRECATED_SENSOR_ISSUE_ID) is None
 
 
 @pytest.mark.usefixtures("mock_victron_hub_library")

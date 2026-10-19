@@ -2,6 +2,7 @@
   "domain": "scrape",
   "name": "Scrape",
   "after_dependencies": ["rest"],
+  "categories": ["diy_makers.web_data_connectors"],
   "codeowners": ["@fabaff", "@gjohansson-ST"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/scrape",

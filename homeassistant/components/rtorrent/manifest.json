@@ -1,6 +1,7 @@
 {
   "domain": "rtorrent",
   "name": "rTorrent",
+  "categories": ["computers_network.nas_servers"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/rtorrent",
   "iot_class": "local_polling",

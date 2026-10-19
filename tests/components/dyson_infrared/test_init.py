@@ -2,10 +2,10 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.dyson_infrared import PLATFORMS
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_setup_entry(hass: HomeAssistant) -> None:

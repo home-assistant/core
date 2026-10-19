@@ -4,6 +4,8 @@ from collections.abc import Callable
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 
 from homeassistant.components.number import (
     ATTR_VALUE,
@@ -16,9 +18,6 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 from . import DOMAIN, STANDING_FAN_SERVICE_INFO, WOMETERTHPC_SERVICE_INFO
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 @pytest.mark.parametrize(
@@ -50,7 +49,7 @@ async def test_meter_pro_co2_display_time_offset_initial_state(
         return_value=offset_seconds_on_device,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         state = hass.states.get("number.test_name_display_time_offset")
         assert state is not None
@@ -95,7 +94,7 @@ async def test_meter_pro_co2_set_display_time_offset(
         ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             NUMBER_DOMAIN,
@@ -148,7 +147,7 @@ async def test_set_display_time_offset_out_of_range(
         ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         with pytest.raises(
             ServiceValidationError,
@@ -204,7 +203,7 @@ async def test_standing_fan_oscillation_angle_number(
         **{set_method: mocked_set},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             NUMBER_DOMAIN,
