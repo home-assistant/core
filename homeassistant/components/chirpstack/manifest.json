@@ -1,6 +1,7 @@
 {
   "domain": "chirpstack",
   "name": "ChirpStack",
+  "categories": ["hubs_protocols.wireless_protocols"],
   "codeowners": ["@balloob"],
   "config_flow": true,
   "dependencies": ["lorawan"],
