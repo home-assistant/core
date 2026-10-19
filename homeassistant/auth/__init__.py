@@ -52,7 +52,11 @@ class InvalidProvider(Exception):
     """Authentication provider not found."""
 
 
-class CredentialsExistError(Exception):
+class CredentialsLinkError(Exception):
+    """Raised when credentials can't be linked to a user."""
+
+
+class CredentialsExistError(CredentialsLinkError):
     """Raised when a user already has credentials of an auth provider."""
 
 
@@ -346,12 +350,14 @@ class AuthManager:
             raise ValueError("Credential is already linked to a user")
         # Enforced here to cover every way of linking credentials.
         if user.system_generated:
-            raise ValueError("Unable to link credentials to a system generated user")
+            raise CredentialsLinkError(
+                "Unable to link credentials to a system generated user"
+            )
         if (
             provider := self._async_get_auth_provider(credentials)
         ) is not None and not self.async_can_link_credentials(user, provider):
             raise CredentialsExistError(
-                f"User already has credentials of auth provider {provider.type}"
+                "User already has credentials for this provider"
             )
 
         await self._store.async_link_user(user, credentials)
@@ -361,7 +367,7 @@ class AuthManager:
         self, user: models.User, provider: AuthProvider
     ) -> bool:
         """Return if credentials of the auth provider can be linked to the user."""
-        return not any(
+        return not user.system_generated and not any(
             credential.auth_provider_type == provider.type
             and credential.auth_provider_id == provider.id
             for credential in user.credentials

@@ -354,7 +354,8 @@ async def test_link_credentials_to_a_system_generated_user(
     assert provider is not None
     user = await manager.async_create_system_user("Hass.io")
 
-    with pytest.raises(ValueError, match="system generated user"):
+    assert manager.async_can_link_credentials(user, provider) is False
+    with pytest.raises(auth.CredentialsLinkError, match="system generated user"):
         await manager.async_link_user(
             user, provider.async_create_credentials({"username": "hassio"})
         )
