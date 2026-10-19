@@ -1,6 +1,7 @@
 """Support for Sofar event entities."""
 
 from dataclasses import dataclass
+from datetime import datetime
 from itertools import takewhile
 from typing import override
 
@@ -10,8 +11,10 @@ from homeassistant.components.event import EventEntity, EventEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
+from .const import DOMAIN
 from .coordinator import SofarConfigEntry
 from .entity import SofarEntity, SofarEntityDescription
 
@@ -20,8 +23,11 @@ PARALLEL_UPDATES = 0
 ATTR_FAULT_ID = "fault_id"
 ATTR_OCCURRED_AT = "occurred_at"
 
-# A log entry as (fault id, occurred_at), the form the event stores.
-type EntryKey = tuple[int, str]
+STORAGE_VERSION = 1
+
+# A log entry as (fault id, inverter clock), free of any time zone.
+type EntryKey = tuple[int, datetime]
+type StoredEntries = list[tuple[int, str]]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -54,6 +60,11 @@ async def async_setup_entry(
     )
 
 
+def fault_log_store(hass: HomeAssistant, entry_id: str) -> Store[StoredEntries]:
+    """Return the store of the log entries an entry has handled."""
+    return Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry_id}.fault_log")
+
+
 def _occurred_at(entry: FaultLogEntry) -> str:
     """When the inverter logged the entry, in its local clock."""
     return entry.occurred_at.replace(tzinfo=dt_util.get_default_time_zone()).isoformat()
@@ -61,7 +72,7 @@ def _occurred_at(entry: FaultLogEntry) -> str:
 
 def _key(entry: FaultLogEntry) -> EntryKey:
     """Identify a log entry; simultaneous faults share a timestamp."""
-    return entry.fault.id, _occurred_at(entry)
+    return entry.fault.id, entry.occurred_at
 
 
 class SofarFaultEvent(SofarEntity, EventEntity):
@@ -69,13 +80,20 @@ class SofarFaultEvent(SofarEntity, EventEntity):
 
     entity_description: SofarEventEntityDescription
     _known: set[EntryKey] | None = None
+    _store: Store[StoredEntries]
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Take the log as known up to the restored event."""
+        """Resume from the entries handled before, or take all as known."""
         await super().async_added_to_hass()
-        if self.available:
-            self._known = self._known_at_start()
+        self._store = fault_log_store(self.hass, self.coordinator.config_entry.entry_id)
+        if (stored := await self._store.async_load()) is not None:
+            self._known = {
+                (fault_id, datetime.fromisoformat(occurred_at))
+                for fault_id, occurred_at in stored
+            }
+        elif self.available:
+            self._remember(self._logged())
 
     @callback
     @override
@@ -83,24 +101,32 @@ class SofarFaultEvent(SofarEntity, EventEntity):
         """Fire one event per log entry not seen before."""
         # A failed read says nothing about what the log holds.
         if self.available:
-            known = self._known
-            self._fire_new_entries(
-                known if known is not None else self._known_at_start()
-            )
+            if self._known is None:
+                self._remember(self._logged())
+            else:
+                self._fire_new_entries(self._known)
         super()._handle_coordinator_update()
 
-    def _known_at_start(self) -> set[EntryKey]:
-        """Entries up to the restored event; all, without it in view."""
-        keys = {_key(entry) for entry in self.coordinator.device.fault_log.entries}
-        attributes = self.state_attributes
-        restored = (attributes.get(ATTR_FAULT_ID), attributes.get(ATTR_OCCURRED_AT))
-        return {restored} if restored in keys else keys
+    def _logged(self) -> set[EntryKey]:
+        """Return every entry the log holds now."""
+        return {_key(entry) for entry in self.coordinator.device.fault_log.entries}
+
+    def _remember(self, known: set[EntryKey]) -> None:
+        """Take entries as handled, and keep them across restarts."""
+        self._known = known
+        self._store.async_delay_save(
+            lambda: [(fault_id, at.isoformat()) for fault_id, at in known]
+        )
 
     def _fire_new_entries(self, known: set[EntryKey]) -> None:
         """Fire entries newer than the newest known one, oldest first."""
-        entries = self.coordinator.device.fault_log.entries
         for entry in reversed(
-            list(takewhile(lambda logged: _key(logged) not in known, entries))
+            list(
+                takewhile(
+                    lambda logged: _key(logged) not in known,
+                    self.coordinator.device.fault_log.entries,
+                )
+            )
         ):
             self._trigger_event(
                 entry.fault.key,
@@ -112,4 +138,5 @@ class SofarFaultEvent(SofarEntity, EventEntity):
             )
             # One write per event, so each reaches state triggers.
             self.async_write_ha_state()
-        self._known = {_key(entry) for entry in entries}
+        if (logged := self._logged()) != known:
+            self._remember(logged)
