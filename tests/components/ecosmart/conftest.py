@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock, patch
 
 from aioecosmart import Identity, Spot
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.ecosmart.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 TEST_API_KEY = "ecos_live_abcd1234efgh5678"
 TEST_ACCOUNT_REF = "ACC-000000"

@@ -6,6 +6,11 @@ from unittest.mock import AsyncMock
 
 from aioecosmart import EcosmartConnectionError
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ecosmart.const import DOMAIN, SPOT_SCAN_INTERVAL
@@ -15,8 +20,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .conftest import TEST_ICP, load_spot
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 SPOT_UNIQUE_ID = f"{TEST_ICP}-spot_price"
 
