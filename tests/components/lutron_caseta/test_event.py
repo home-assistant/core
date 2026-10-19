@@ -8,6 +8,7 @@ from pylutron_caseta import (
     BUTTON_STATUS_RELEASED,
 )
 import pytest
+from pytest_homeassistant.common import async_capture_events, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.event import ATTR_EVENT_TYPE, ButtonEventType
@@ -17,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import MockBridge, async_setup_integration
-
-from tests.common import async_capture_events, snapshot_platform
 
 KEYPAD_BUTTON_ENTITY_ID = (
     "event.hallway_hallway_main_stairs_position_1_keypad_kitchen_pendants"
