@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
@@ -42,15 +43,17 @@ ENTITY_DESCRIPTIONS = (
     RitualsSensorEntityDescription(
         key="fill",
         translation_key="fill",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         sensor=Sensor.FILL,
-        value_fn=lambda sensors: sensors.fill.title if sensors.fill else None,
+        value_fn=lambda sensors: sensors.fill_percentage,
         has_fn=lambda hub: Sensor.FILL in hub.supported_sensors,
     ),
     RitualsSensorEntityDescription(
         key="perfume",
         translation_key="perfume",
         sensor=Sensor.PERFUME,
-        value_fn=lambda sensors: sensors.perfume.title if sensors.perfume else None,
+        value_fn=lambda sensors: sensors.perfume_name,
     ),
     RitualsSensorEntityDescription(
         key="wifi_percentage",

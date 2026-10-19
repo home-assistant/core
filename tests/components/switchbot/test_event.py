@@ -126,7 +126,7 @@ async def test_keypad_vision_pro_doorbell_event(
         ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         async_track_state_change_event(hass, entity_id, _track_ring)
 
@@ -206,7 +206,7 @@ async def test_contact_sensor_button_event(
         side_effect=lambda: next(timestamps),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         async_track_state_change_event(hass, entity_id, _track_press)
 
@@ -327,7 +327,7 @@ async def test_climate_panel_keystate_event(
         side_effect=lambda: next(timestamps),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         async_track_state_change_event(hass, on_entity_id, _track_on)
         async_track_state_change_event(hass, off_entity_id, _track_off)
