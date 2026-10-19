@@ -82,8 +82,9 @@ SENSOR_DESCRIPTIONS: dict[str, VelbusSensorEntityDescription] = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         value_fn=lambda channel: (
-            float(channel.get_counter_total())
-            if channel.get_counter_total() is not None
+            float(total)
+            if isinstance(channel, ButtonCounter)
+            and (total := channel.get_counter_total()) is not None
             else None
         ),
         unique_id_suffix="-counter",
@@ -95,8 +96,9 @@ SENSOR_DESCRIPTIONS: dict[str, VelbusSensorEntityDescription] = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfVolume.LITERS,
         value_fn=lambda channel: (
-            float(channel.get_counter_total())
-            if channel.get_counter_total() is not None
+            float(total)
+            if isinstance(channel, ButtonCounter)
+            and (total := channel.get_counter_total()) is not None
             else None
         ),
         unique_id_suffix="-counter",
@@ -113,7 +115,7 @@ async def async_setup_entry(
     await entry.runtime_data.scan_task
     entities: list[VelbusSensor] = []
     for channel in entry.runtime_data.controller.get_all_sensor():
-        if channel.is_counter_channel():
+        if isinstance(channel, ButtonCounter) and channel.is_counter_channel():
             if channel.is_gas():
                 main_key, total_key = "flow", "gas"
             elif channel.is_water():
@@ -152,7 +154,6 @@ class VelbusSensor(VelbusEntity, SensorEntity):
             self._attr_native_unit_of_measurement = description.unit_fn(channel)
         self._attr_unique_id = f"{self._attr_unique_id}{description.unique_id_suffix}"
 
-        # Modify name for counter entities
         if is_counter:
             self._attr_name = f"{self._attr_name}-counter"
 

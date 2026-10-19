@@ -75,6 +75,20 @@ async def test_vmb7in_gas_counter(
     )
 
 
+async def test_vmb7in_gas_counter_unavailable_when_no_total(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_gascounter: AsyncMock,
+) -> None:
+    """Test the gas total is unknown when no counter total has been received."""
+    mock_gascounter.get_counter_total.return_value = None
+    await init_integration(hass, config_entry)
+
+    state = hass.states.get("sensor.input_gascounter_counter")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
 async def test_vmb7in_water_counter(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -97,3 +111,17 @@ async def test_vmb7in_water_counter(
         flow.attributes[ATTR_UNIT_OF_MEASUREMENT]
         == UnitOfVolumeFlowRate.LITERS_PER_HOUR
     )
+
+
+async def test_vmb7in_water_counter_unavailable_when_no_total(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_watercounter: AsyncMock,
+) -> None:
+    """Test the water total is unknown when no counter total has been received."""
+    mock_watercounter.get_counter_total.return_value = None
+    await init_integration(hass, config_entry)
+
+    state = hass.states.get("sensor.input_watercounter_counter")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
