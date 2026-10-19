@@ -1,8 +1,10 @@
 """Test the OKOK Scale init."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 
-from homeassistant.components.okokscale.const import DOMAIN
+from homeassistant.components.okok_scale.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -10,9 +12,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 from . import OKOK_20_SERVICE_INFO, OKOK_C0_SERVICE_INFO, OKOK_F0_SERVICE_INFO
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 @pytest.mark.parametrize(

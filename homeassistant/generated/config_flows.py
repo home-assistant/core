@@ -574,7 +574,7 @@ FLOWS = {
         "obihai",
         "octoprint",
         "ohme",
-        "okokscale",
+        "okok_scale",
         "ollama",
         "omie",
         "omnilogic",

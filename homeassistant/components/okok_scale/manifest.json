@@ -1,5 +1,5 @@
 {
-  "domain": "okokscale",
+  "domain": "okok_scale",
   "name": "OKOK Scale",
   "bluetooth": [
     {
@@ -20,10 +20,11 @@
       "local_name": "80:F4:16:*"
     }
   ],
+  "categories": ["health_wellbeing"],
   "codeowners": ["@rrooggiieerr"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],
-  "documentation": "https://www.home-assistant.io/integrations/okokscale/",
+  "documentation": "https://www.home-assistant.io/integrations/okok_scale/",
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["okokscale"],

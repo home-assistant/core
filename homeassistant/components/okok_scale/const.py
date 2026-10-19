@@ -1,3 +1,3 @@
 """Constants for the OKOK Scale integration."""
 
-DOMAIN = "okokscale"
+DOMAIN = "okok_scale"

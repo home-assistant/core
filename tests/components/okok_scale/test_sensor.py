@@ -4,12 +4,23 @@ from datetime import timedelta
 import time
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
+from pytest_homeassistant.components.bluetooth import (
+    inject_bluetooth_service_info,
+    inject_bluetooth_service_info_bleak,
+    patch_all_discovered_devices,
+    patch_bluetooth_time,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bluetooth import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
 )
-from homeassistant.components.okokscale.const import DOMAIN
+from homeassistant.components.okok_scale.const import DOMAIN
 from homeassistant.const import ATTR_ASSUMED_STATE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -22,14 +33,6 @@ from . import (
     OKOK_C0_SERVICE_INFO,
     OKOK_F0_SERVICE_INFO,
     OKOK_F0_TITLE,
-)
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-from tests.components.bluetooth import (
-    inject_bluetooth_service_info,
-    inject_bluetooth_service_info_bleak,
-    patch_all_discovered_devices,
-    patch_bluetooth_time,
 )
 
 

@@ -922,12 +922,12 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     },
     {
         "connectable": False,
-        "domain": "okokscale",
+        "domain": "okok_scale",
         "manufacturer_id": 4554,
     },
     {
         "connectable": False,
-        "domain": "okokscale",
+        "domain": "okok_scale",
         "manufacturer_data_start": [
             2,
             4,
@@ -936,12 +936,12 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     },
     {
         "connectable": False,
-        "domain": "okokscale",
+        "domain": "okok_scale",
         "manufacturer_id": 8394,
     },
     {
         "connectable": False,
-        "domain": "okokscale",
+        "domain": "okok_scale",
         "local_name": "80:F4:16:*",
     },
     {

@@ -3,8 +3,9 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.okokscale.const import DOMAIN
+from homeassistant.components.okok_scale.const import DOMAIN
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_IGNORE, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -22,10 +23,8 @@ from . import (
     OKOK_F0_TITLE,
 )
 
-from tests.common import MockConfigEntry
-
 DISCOVERY = (
-    "homeassistant.components.okokscale.config_flow.async_discovered_service_info"
+    "homeassistant.components.okok_scale.config_flow.async_discovered_service_info"
 )
 
 

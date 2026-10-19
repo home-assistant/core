@@ -6,12 +6,11 @@ from unittest import mock
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.okokscale.const import DOMAIN
+from homeassistant.components.okok_scale.const import DOMAIN
 
 from . import OKOK_F0_GATT_DATA, OKOK_F0_SERVICE_INFO
-
-from tests.common import MockConfigEntry
 
 service_info = None
 
@@ -64,7 +63,7 @@ def mock_bluetooth(enable_bluetooth: None) -> Generator[None]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Prevent running the real integration setup during tests."""
     with patch(
-        "homeassistant.components.okokscale.async_setup_entry",
+        "homeassistant.components.okok_scale.async_setup_entry",
         return_value=True,
     ) as mock_setup:
         yield mock_setup
