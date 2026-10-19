@@ -11,6 +11,22 @@ from unittest.mock import ANY, AsyncMock, Mock, patch
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockEntityPlatform,
+    MockModule,
+    MockUser,
+    async_mock_service,
+    mock_device_registry,
+    mock_integration,
+    mock_platform,
+)
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import loader
@@ -59,23 +75,6 @@ from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
 from homeassistant.util.json import json_loads
 from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockEntityPlatform,
-    MockModule,
-    MockUser,
-    async_mock_service,
-    mock_device_registry,
-    mock_integration,
-    mock_platform,
-)
-from tests.typing import (
-    ClientSessionGenerator,
-    MockHAClientWebSocket,
-    WebSocketGenerator,
-)
 
 STATE_KEY_SHORT_NAMES = {
     "entity_id": "e",
@@ -3743,8 +3742,11 @@ async def test_subscribe_system_state(
     assert msg["id"] == subscription
     assert msg["type"] == "event"
     assert msg["event"] == {
+        "home_assistant_restart_dismissed": False,
         "home_assistant_restart_required": True,
         "home_assistant_restart_sources": ["hacs"],
+        "host_reboot_dismissed": False,
+        "host_reboot_required": False,
     }
 
     system_state.async_set_home_assistant_restart_required(hass, "demo")
@@ -3752,17 +3754,50 @@ async def test_subscribe_system_state(
     msg = await websocket_client.receive_json()
     assert msg["id"] == subscription
     assert msg["event"] == {
+        "home_assistant_restart_dismissed": False,
         "home_assistant_restart_required": True,
         "home_assistant_restart_sources": ["demo", "hacs"],
+        "host_reboot_dismissed": False,
+        "host_reboot_required": False,
     }
 
 
-async def test_subscribe_system_state_requires_admin(
-    websocket_client: MockHAClientWebSocket, hass_admin_user: MockUser
+async def test_dismiss_system_state(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
 ) -> None:
-    """Test subscribing to the system state without being admin."""
-    hass_admin_user.groups = []
+    """Test dismissing the pending restart reaches every subscriber."""
+    system_state.async_set_home_assistant_restart_required(hass, "hacs")
+
     await websocket_client.send_json_auto_id({"type": "subscribe_system_state"})
+    subscription = (await websocket_client.receive_json())["id"]
+    msg = await websocket_client.receive_json()
+    assert msg["event"]["home_assistant_restart_dismissed"] is False
+
+    await websocket_client.send_json_auto_id({"type": "dismiss_system_state"})
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == subscription
+    assert msg["event"] == {
+        "home_assistant_restart_dismissed": True,
+        "home_assistant_restart_required": True,
+        "home_assistant_restart_sources": ["hacs"],
+        "host_reboot_dismissed": False,
+        "host_reboot_required": False,
+    }
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+
+@pytest.mark.parametrize("command", ["subscribe_system_state", "dismiss_system_state"])
+async def test_system_state_requires_admin(
+    websocket_client: MockHAClientWebSocket, hass_admin_user: MockUser, command: str
+) -> None:
+    """Test the system state commands are for admins only."""
+    hass_admin_user.groups = []
+    await websocket_client.send_json_auto_id({"type": command})
 
     msg = await websocket_client.receive_json()
     assert not msg["success"]

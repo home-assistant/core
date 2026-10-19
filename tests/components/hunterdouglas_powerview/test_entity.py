@@ -3,14 +3,13 @@
 from unittest.mock import PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .const import MOCK_MAC
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_hunterdouglas_hub")

@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.homeassistant_connect_zbt2.const import DOMAIN
 from homeassistant.components.usb import DOMAIN as USB_DOMAIN, USBDevice
@@ -17,7 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.usb import async_request_scan, patch_scanned_serial_ports
 from tests.components.usb.conftest import force_usb_polling_watcher  # noqa: F401
 
@@ -132,6 +132,7 @@ async def test_config_entry_migration_v2(hass: HomeAssistant) -> None:
 )
 async def test_config_entry_migration_v2_collapses_duplicates(
     hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
     older: dict,
     newer: dict,
     serial_number: str,
@@ -173,6 +174,10 @@ async def test_config_entry_migration_v2_collapses_duplicates(
     assert unique_entry.unique_id == serial_number
     assert unique_entry.data == newer["data"]
     assert hass.config_entries.async_get_entry(older_entry.entry_id) is None
+    assert (
+        "Another configuration entry exists for the adapter with serial number"
+        f" {serial_number}"
+    ) in caplog.text
 
 
 @pytest.mark.parametrize(

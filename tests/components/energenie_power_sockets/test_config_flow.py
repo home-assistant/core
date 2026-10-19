@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 from pyegps.exceptions import UsbError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.energenie_power_sockets.const import (
     CONF_DEVICE_API_ID,
@@ -11,8 +12,6 @@ from homeassistant.components.energenie_power_sockets.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_flow(
@@ -35,6 +34,7 @@ async def test_user_flow(
         result1["flow_id"], user_input=demo_config_data
     )
     assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["result"].unique_id == demo_config_data[CONF_DEVICE_API_ID]
 
 
 async def test_user_flow_already_exists(

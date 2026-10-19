@@ -10,11 +10,12 @@ from renault_api.kamereon.models import (
 )
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import RenaultConfigEntry
 from .entity import RenaultDataEntity, RenaultDataEntityDescription
+from .renault_vehicle import RenaultVehicleProxy
 
 # Coordinator is used to centralize the data updates
 # but renault servers are unreliable and it's safer to queue action calls
@@ -37,13 +38,17 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Renault entities from config entry."""
-    entities: list[RenaultSelectEntity] = [
-        RenaultSelectEntity(vehicle, description)
-        for vehicle in config_entry.runtime_data.vehicles.values()
-        for description in SENSOR_TYPES
-        if description.coordinator in vehicle.coordinators
-    ]
-    async_add_entities(entities)
+
+    @callback
+    def _async_add_vehicle(vehicle: RenaultVehicleProxy) -> None:
+        async_add_entities(
+            RenaultSelectEntity(vehicle, description)
+            for description in SENSOR_TYPES
+            if description.coordinator in vehicle.coordinators
+        )
+
+    for vehicle in config_entry.runtime_data.vehicles.values():
+        _async_add_vehicle(vehicle)
 
 
 class RenaultSelectEntity[T: KamereonVehicleDataAttributes](

@@ -4,6 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import patch
 
 from aionut import NUTError, NUTLoginError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.nut.config_flow import PASSWORD_NOT_CHANGED
@@ -22,8 +23,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .util import _get_mock_nutclient, async_init_integration
-
-from tests.common import MockConfigEntry
 
 VALID_CONFIG = {
     CONF_HOST: "localhost",
@@ -117,6 +116,7 @@ async def test_form_user_one_alias(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "1.1.1.1:2222"
     assert result2["data"] == {
@@ -180,6 +180,7 @@ async def test_form_user_multiple_aliases(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "ups2@1.1.1.1:2222"
     assert result3["data"] == {
@@ -230,6 +231,7 @@ async def test_form_user_one_alias_with_ignored_entry(hass: HomeAssistant) -> No
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "1.1.1.1:2222"
     assert result2["data"] == {

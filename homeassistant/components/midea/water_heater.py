@@ -127,7 +127,7 @@ class MideaWaterHeater(MideaEntity, WaterHeaterEntity):
             | WaterHeaterEntityFeature.ON_OFF
         )
         self._attr_precision = float(PRECISION_WHOLE)
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+        self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     @property
     @override
@@ -143,13 +143,13 @@ class MideaWaterHeater(MideaEntity, WaterHeaterEntity):
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Midea Water Heater current temperature."""
         return cast("float", self._device.get_attribute("current_temperature"))
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Midea Water Heater target temperature."""
         return cast("float", self._device.get_attribute("target_temperature"))
 
@@ -236,7 +236,7 @@ class MideaC3WaterHeater(MideaWaterHeater):
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Midea C3 Water Heater current temperature."""
         return cast(
             "float",
@@ -245,7 +245,7 @@ class MideaC3WaterHeater(MideaWaterHeater):
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Midea C3 Water Heater target temperature."""
         return cast("float", self._device.get_attribute(C3Attributes.dhw_target_temp))
 
@@ -340,13 +340,13 @@ class MideaE6WaterHeater(MideaWaterHeater):
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Midea E6 Water Heater current temperature."""
         return cast("float", self._device.get_attribute(self._current_temperature_attr))
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Midea E6 Water Heater target temperature."""
         return cast("float", self._device.get_attribute(self._target_temperature_attr))
 

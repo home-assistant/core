@@ -7,19 +7,23 @@ import pywilight
 from pywilight.wilight_device import PyWiLightDevice
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.wilight.const import DOMAIN
-from homeassistant.components.wilight.switch import (
+from homeassistant.components.wilight.const import (
     ATTR_PAUSE_TIME,
+    ATTR_WATERING_TIME,
+    DOMAIN,
+)
+from homeassistant.components.wilight.services import (
     ATTR_TRIGGER,
+    ATTR_TRIGGER_INDEX,
+    SERVICE_SET_PAUSE_TIME,
+    SERVICE_SET_TRIGGER,
+    SERVICE_SET_WATERING_TIME,
+)
+from homeassistant.components.wilight.switch import (
     ATTR_TRIGGER_1,
     ATTR_TRIGGER_2,
     ATTR_TRIGGER_3,
     ATTR_TRIGGER_4,
-    ATTR_TRIGGER_INDEX,
-    ATTR_WATERING_TIME,
-    SERVICE_SET_PAUSE_TIME,
-    SERVICE_SET_TRIGGER,
-    SERVICE_SET_WATERING_TIME,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,

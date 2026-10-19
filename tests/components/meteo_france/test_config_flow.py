@@ -5,14 +5,13 @@ from unittest.mock import MagicMock, patch
 
 from meteofrance_api.model import Place
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.meteo_france.const import CONF_CITY, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 CITY_1_POSTAL = "74220"
 CITY_1_NAME = "La Clusaz"

@@ -7,9 +7,14 @@ from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from . import EcovacsConfigEntry
-from .const import CONF_OVERRIDE_MQTT_URL, CONF_OVERRIDE_REST_URL
+from .const import (
+    CONF_ACCOUNT_CREDENTIALS,
+    CONF_OVERRIDE_MQTT_URL,
+    CONF_OVERRIDE_REST_URL,
+)
 
 REDACT_CONFIG = {
+    CONF_ACCOUNT_CREDENTIALS,
     CONF_USERNAME,
     CONF_PASSWORD,
     "title",

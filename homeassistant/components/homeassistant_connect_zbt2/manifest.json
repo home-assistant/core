@@ -1,6 +1,7 @@
 {
   "domain": "homeassistant_connect_zbt2",
   "name": "Home Assistant Connect ZBT-2",
+  "categories": ["hubs_protocols.wireless_protocols"],
   "codeowners": ["@home-assistant/core"],
   "config_flow": true,
   "dependencies": ["hardware", "usb", "homeassistant_hardware"],
