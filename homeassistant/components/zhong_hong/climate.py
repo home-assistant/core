@@ -34,6 +34,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     ALL_FAN_MODES,
     BREAKS_IN_HA_VERSION,
+    CONF_FAN_MODES,
     CONF_GATEWAY_ADDRESS,
     DEFAULT_GATEWAY_ADDRESS,
     DEFAULT_PORT,
@@ -171,7 +172,6 @@ async def async_setup_entry(
 class ZhongHongClimate(CoordinatorEntity[ZhongHongCoordinator], ClimateEntity):
     """Representation of an air conditioner behind a ZhongHong gateway."""
 
-    _attr_fan_modes = ALL_FAN_MODES
     _attr_hvac_modes = [
         HVACMode.COOL,
         HVACMode.HEAT,
@@ -204,6 +204,7 @@ class ZhongHongClimate(CoordinatorEntity[ZhongHongCoordinator], ClimateEntity):
         addr_out, addr_in = address
         self._attr_name = f"AC {addr_out}-{addr_in}"
         self._attr_unique_id = device_unique_id(entry, address)
+        self._attr_fan_modes = entry.options.get(CONF_FAN_MODES, ALL_FAN_MODES)
 
     @property
     @override
