@@ -2,8 +2,8 @@
 
 from typing import Any
 
-from aioesphomeapi import APIClient, SendspinFeature
-from aioesphomeapi.model import SerialProxyPortType, SubDeviceInfo
+from aioesphomeapi import APIClient, DeviceCapabilities, SendspinFeature
+from aioesphomeapi.model import SerialProxyInfo, SerialProxyPortType, SubDeviceInfo
 import pytest
 
 from homeassistant.components.esphome.const import CONF_NOISE_PSK, DOMAIN
@@ -87,6 +87,7 @@ async def test_get_device_capabilities(
         }
     )
 
+    mock_client.device_capabilities_compat.assert_awaited_once_with(device.device_info)
     response = await websocket_client.receive_json()
     assert response["success"] is True
     assert response["result"] == {
@@ -212,16 +213,56 @@ async def test_get_device_capabilities_unavailable(
     mock_esphome_device: MockESPHomeDeviceType,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test cached capabilities are returned when the device is unavailable."""
-    mock_client.connected_address = "192.168.1.2"
+    """Test capabilities are kept while disconnected and fetched again on reconnect."""
     device = await mock_esphome_device(
         mock_client=mock_client,
         device_capabilities={
             "bluetooth_proxy": {"feature_flags": 1},
-            "zwave_proxy": {"feature_flags": 1, "home_id": 1234567890},
+            "sendspin": {"feature_flags": SendspinFeature.PAIRING_TOKEN},
         },
     )
-    device.entry.runtime_data.available = False
+    get_capabilities = {
+        TYPE: "esphome/get_device_capabilities",
+        DEVICE_ID: _device_id_for_mac(device_registry, device.entry),
+    }
+    websocket_client = await hass_ws_client()
+
+    # Sendspin is only in the capabilities, not in the stored DeviceInfo
+    await device.mock_disconnect(False)
+    await websocket_client.send_json_auto_id(get_capabilities)
+    response = await websocket_client.receive_json()
+    assert response["result"]["bluetooth_proxy"] == {"supported": True}
+    assert response["result"]["sendspin"] == {"supported": True}
+
+    # A firmware update can change them while the device is away
+    mock_client.device_capabilities_compat.return_value = DeviceCapabilities()
+    await device.mock_connect()
+    await websocket_client.send_json_auto_id(get_capabilities)
+    response = await websocket_client.receive_json()
+    assert response["result"]["bluetooth_proxy"] == {"supported": False}
+    assert response["result"]["sendspin"] == {"supported": False}
+
+
+async def test_get_device_capabilities_before_connect(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test capabilities come from the restored DeviceInfo until the device connects."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "bluetooth_proxy_feature_flags": 1,
+            "zwave_proxy_feature_flags": 1,
+            "zwave_home_id": 1234567890,
+            "serial_proxies": [
+                SerialProxyInfo(name="uart0", port_type=SerialProxyPortType.TTL)
+            ],
+        },
+    )
+    device.entry.runtime_data.device_capabilities = None
 
     websocket_client = await hass_ws_client()
     await websocket_client.send_json_auto_id(
@@ -240,24 +281,27 @@ async def test_get_device_capabilities_unavailable(
             "home_id": 1234567890,
             "config_entry_id": None,
         },
-        "serial_proxies": [],
+        "serial_proxies": [
+            {
+                "name": "uart0",
+                "port_type": "TTL",
+                "url": str(build_url(device.entry.entry_id, "uart0")),
+            }
+        ],
         "sendspin": {"supported": False},
     }
 
 
-async def test_get_device_capabilities_not_loaded(
+async def test_get_device_capabilities_no_device_info(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test a useful empty payload when the config entry is not loaded."""
-    device = await mock_esphome_device(
-        mock_client=mock_client,
-        device_capabilities={"bluetooth_proxy": {"feature_flags": 1}},
-    )
-    await hass.config_entries.async_unload(device.entry.entry_id)
+    """Test a useful empty payload when cached DeviceInfo is missing."""
+    device = await mock_esphome_device(mock_client=mock_client)
+    device.entry.runtime_data.device_info = None
 
     websocket_client = await hass_ws_client()
     await websocket_client.send_json_auto_id(

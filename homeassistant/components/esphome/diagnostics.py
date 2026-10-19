@@ -42,8 +42,7 @@ async def async_get_config_entry_diagnostics(
     if (
         device_info
         and (
-            scanner_mac := entry_data.device_capabilities.bluetooth_proxy.mac_address
-            or device_info.mac_address
+            scanner_mac := device_info.bluetooth_mac_address or device_info.mac_address
         )
         and (scanner := async_scanner_by_source(hass, scanner_mac.upper()))
         and (bluetooth_device := entry_data.bluetooth_device)

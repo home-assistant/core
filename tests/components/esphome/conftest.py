@@ -37,9 +37,6 @@ from homeassistant.components.esphome.const import (
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
     DOMAIN,
 )
-from homeassistant.components.esphome.entry_data import (
-    _device_capabilities_from_device_info,
-)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -227,12 +224,8 @@ def mock_client(mock_device_info) -> Generator[APIClient]:
 
     mock_client.side_effect = mock_constructor
     mock_client.device_info = AsyncMock(return_value=mock_device_info)
-    # Firmware older than API 1.15 has no capabilities request, so the client
-    # builds them from the device info
     mock_client.device_capabilities_compat = AsyncMock(
-        side_effect=lambda device_info: _device_capabilities_from_device_info(
-            device_info, mock_client.api_version
-        )
+        return_value=DeviceCapabilities()
     )
     mock_client.connect = AsyncMock()
     mock_client.disconnect = AsyncMock()
@@ -487,12 +480,10 @@ async def _mock_generic_device_entry(
         "mac_address": "11:22:33:44:55:AA",
     }
     device_info = DeviceInfo(**(default_device_info | mock_device_info))
-    stored_capabilities: dict[str, Any] = {}
     if device_capabilities is not None:
         mock_client.device_capabilities_compat = AsyncMock(
             return_value=DeviceCapabilities.from_dict(device_capabilities)
         )
-        stored_capabilities["device_capabilities"] = device_capabilities
 
     if hass_storage:
         storage_key = f"{DOMAIN}.{entry.entry_id}"
@@ -502,7 +493,6 @@ async def _mock_generic_device_entry(
             "key": storage_key,
             "data": {
                 "device_info": device_info.to_dict(),
-                **stored_capabilities,
             },
         }
 

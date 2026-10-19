@@ -35,7 +35,6 @@ from aioesphomeapi import (
     SendspinFeature,
     SensorInfo,
     SensorState,
-    SerialProxyInfo,
     SerialProxyPortType,
     SubDeviceInfo,
     SupportsResponseType,
@@ -527,80 +526,6 @@ async def test_cold_start_restores_same_key_on_sub_devices(
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == expected
-
-
-@pytest.mark.parametrize(
-    ("stored_data", "expected_capabilities"),
-    [
-        pytest.param(
-            {
-                "device_capabilities": {
-                    "sendspin": {"feature_flags": SendspinFeature.PAIRING_TOKEN},
-                    "wizard": {"configured": True},
-                }
-            },
-            {
-                "sendspin": {"feature_flags": SendspinFeature.PAIRING_TOKEN},
-                "wizard": {"configured": True},
-            },
-            id="stored",
-        ),
-        pytest.param(
-            {},
-            {
-                "bluetooth_proxy": {"mac_address": "AA:BB:CC:DD:EE:FC"},
-                "zwave_proxy": {"feature_flags": 1, "home_id": 1234},
-                "serial_proxies": [
-                    {"name": "uart0", "port_type": SerialProxyPortType.TTL}
-                ],
-            },
-            id="built_from_device_info",
-        ),
-    ],
-)
-async def test_cold_start_restores_device_capabilities(
-    hass: HomeAssistant,
-    mock_client: APIClient,
-    hass_storage: dict[str, Any],
-    stored_data: dict[str, Any],
-    expected_capabilities: dict[str, Any],
-) -> None:
-    """Capabilities are restored, or built for storage without them, before connecting."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="11:22:33:44:55:aa",
-        data={CONF_HOST: "test.local", CONF_PORT: 6053, CONF_PASSWORD: ""},
-    )
-    entry.add_to_hass(hass)
-    device_info = DeviceInfo(
-        name="test",
-        mac_address="11:22:33:44:55:AA",
-        esphome_version="1.0.0",
-        bluetooth_mac_address="AA:BB:CC:DD:EE:FC",
-        zwave_proxy_feature_flags=1,
-        zwave_home_id=1234,
-        serial_proxies=[
-            SerialProxyInfo(name="uart0", port_type=SerialProxyPortType.TTL)
-        ],
-    )
-    storage_key = f"{DOMAIN}.{entry.entry_id}"
-    hass_storage[storage_key] = {
-        "version": 1,
-        "minor_version": 1,
-        "key": storage_key,
-        "data": {
-            "device_info": device_info.to_dict(),
-            "api_version": APIVersion(99, 99).to_dict(),
-            "services": [],
-            **stored_data,
-        },
-    }
-
-    await _async_setup_without_connecting(hass, mock_client, entry)
-
-    assert entry.runtime_data.device_capabilities == DeviceCapabilities.from_dict(
-        expected_capabilities
-    )
 
 
 async def test_restored_state_of_removed_entity_dropped_on_wake(
@@ -4128,13 +4053,20 @@ async def test_zwave_proxy_request_home_id_change(
     device_info = {
         "name": "test-zwave-proxy",
         "mac_address": "11:22:33:44:55:AA",
+        "zwave_proxy_feature_flags": 1,
+    }
+    device_capabilities = {
+        "bluetooth_proxy": {"feature_flags": 1},
+        "zwave_proxy": {"feature_flags": 1},
+        "serial_proxies": [{"name": "uart0", "port_type": SerialProxyPortType.TTL}],
+        "sendspin": {"feature_flags": SendspinFeature.PAIRING_TOKEN},
     }
 
     await mock_esphome_device(
         mock_client=mock_client,
         entry=entry,
         device_info=device_info,
-        device_capabilities={"zwave_proxy": {"feature_flags": 1}},
+        device_capabilities=device_capabilities,
     )
     await hass.async_block_till_done()
 
@@ -4194,12 +4126,17 @@ async def test_zwave_proxy_request_home_id_change(
         # The noise PSK is taken from the config entry, not the live client
         assert call_args[0][3].noise_psk == noise_psk
 
-    assert entry.runtime_data.device_capabilities.zwave_proxy.home_id == zwave_home_id
+    assert entry.runtime_data.device_info.zwave_home_id == zwave_home_id
+    # Only the home ID changes
+    device_capabilities["zwave_proxy"]["home_id"] = zwave_home_id
+    assert entry.runtime_data.device_capabilities == DeviceCapabilities.from_dict(
+        device_capabilities
+    )
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     data = hass_storage[f"{DOMAIN}.{entry.entry_id}"]["data"]
-    assert data["device_capabilities"]["zwave_proxy"]["home_id"] == zwave_home_id
+    assert data["device_info"]["zwave_home_id"] == zwave_home_id
 
 
 async def test_zwave_home_id_change_saved_after_reconnect(
@@ -4212,7 +4149,7 @@ async def test_zwave_home_id_change_saved_after_reconnect(
     """Test a home ID change replaces the pending connect-time save."""
     device = await mock_esphome_device(
         mock_client=mock_client,
-        device_capabilities={"zwave_proxy": {"feature_flags": 1}},
+        device_info={"zwave_proxy_feature_flags": 1},
     )
     storage_key = f"{DOMAIN}.{device.entry.entry_id}"
     zwave_home_id = 3551671779
@@ -4232,7 +4169,7 @@ async def test_zwave_home_id_change_saved_after_reconnect(
     with patch("homeassistant.helpers.discovery_flow.async_create_flow"):
         await report_home_id()
         stored = hass_storage[storage_key]["data"]
-        assert stored["device_capabilities"]["zwave_proxy"]["home_id"] == zwave_home_id
+        assert stored["device_info"]["zwave_home_id"] == zwave_home_id
 
         # The device reconnects with home ID 0, so the connect-time save holds 0
         await device.mock_disconnect(expected_disconnect=False)

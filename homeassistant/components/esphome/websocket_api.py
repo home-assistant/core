@@ -2,6 +2,7 @@
 
 from typing import Any, cast
 
+from aioesphomeapi import APIVersion, DeviceCapabilities, DeviceInfo
 import probatio
 
 from homeassistant.components import websocket_api
@@ -103,11 +104,18 @@ def get_device_capabilities(
         )
         return
 
-    if entry.state is not ConfigEntryState.LOADED:
+    device_info = None
+    if entry.state is ConfigEntryState.LOADED:
+        device_info = entry.runtime_data.device_info
+
+    if device_info is None:
         connection.send_result(msg["id"], _UNAVAILABLE_CAPABILITIES)
         return
 
-    capabilities = entry.runtime_data.device_capabilities
+    entry_data = entry.runtime_data
+    capabilities = entry_data.device_capabilities or _capabilities_from_device_info(
+        device_info, entry_data.api_version
+    )
     home_id = capabilities.zwave_proxy.home_id
     connection.send_result(
         msg["id"],
@@ -132,6 +140,26 @@ def get_device_capabilities(
             ],
             "sendspin": {"supported": bool(capabilities.sendspin.feature_flags)},
         },
+    )
+
+
+def _capabilities_from_device_info(
+    device_info: DeviceInfo, api_version: APIVersion
+) -> DeviceCapabilities:
+    """Return the capabilities in DeviceInfo restored before the device connected."""
+    return DeviceCapabilities.from_dict(
+        {
+            "bluetooth_proxy": {
+                "feature_flags": device_info.bluetooth_proxy_feature_flags_compat(
+                    api_version
+                ),
+            },
+            "zwave_proxy": {
+                "feature_flags": device_info.zwave_proxy_feature_flags,
+                "home_id": device_info.zwave_home_id,
+            },
+            "serial_proxies": [proxy.to_dict() for proxy in device_info.serial_proxies],
+        }
     )
 
 

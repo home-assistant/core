@@ -4,7 +4,6 @@ from unittest.mock import Mock, patch
 
 from aioesphomeapi import (
     APIClient,
-    DeviceCapabilities,
     EntityCategory as ESPHomeEntityCategory,
     EntityInfo,
     SensorInfo,
@@ -147,11 +146,12 @@ async def test_discover_zwave() -> None:
         ),
         None,
     )
-    device_info = Mock(mac_address="mock-device-info-mac")
-    device_info.name = "mock-device-infoname"
-    device_capabilities = DeviceCapabilities.from_dict(
-        {"zwave_proxy": {"feature_flags": 1, "home_id": 1234}}
+    device_info = Mock(
+        mac_address="mock-device-info-mac",
+        zwave_proxy_feature_flags=1,
+        zwave_home_id=1234,
     )
+    device_info.name = "mock-device-infoname"
 
     with patch(
         "homeassistant.helpers.discovery_flow.async_create_flow"
@@ -159,7 +159,6 @@ async def test_discover_zwave() -> None:
         entry_data.async_on_connect(
             hass,
             device_info,
-            device_capabilities,
             None,
         )
         hass.config_entries.async_get_entry.assert_called_once_with("mock-id")
@@ -195,12 +194,12 @@ async def test_discover_zwave_without_home_id() -> None:
         ),
         None,
     )
-    device_info = Mock(mac_address="mock-device-info-mac")
-    device_info.name = "mock-device-infoname"
-    # No home ID (fresh adapter or unplugged)
-    device_capabilities = DeviceCapabilities.from_dict(
-        {"zwave_proxy": {"feature_flags": 1, "home_id": 0}}
+    device_info = Mock(
+        mac_address="mock-device-info-mac",
+        zwave_proxy_feature_flags=1,
+        zwave_home_id=0,  # No home ID (fresh adapter or unplugged)
     )
+    device_info.name = "mock-device-infoname"
 
     with patch(
         "homeassistant.helpers.discovery_flow.async_create_flow"
@@ -208,7 +207,6 @@ async def test_discover_zwave_without_home_id() -> None:
         entry_data.async_on_connect(
             hass,
             device_info,
-            device_capabilities,
             None,
         )
         # Verify async_create_flow was NOT called when zwave_home_id is 0

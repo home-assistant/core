@@ -13,6 +13,7 @@ from aioesphomeapi import (
     ZERO_NOISE_PSK,
     APIClient,
     APIConnectionError,
+    APIVersion,
     DeviceCapabilities,
     DeviceInfo as EsphomeDeviceInfo,
     EncryptionPlaintextAPIError,
@@ -183,13 +184,13 @@ def _async_check_firmware_version(
     hass: HomeAssistant,
     entry: ESPHomeConfigEntry,
     device_info: EsphomeDeviceInfo,
-    device_capabilities: DeviceCapabilities,
+    api_version: APIVersion,
 ) -> None:
     """Create or delete an the ble_firmware_outdated issue."""
     # ESPHome device_info.mac_address is the unique_id
     issue = f"ble_firmware_outdated-{device_info.mac_address}"
     if (
-        not device_capabilities.bluetooth_proxy.feature_flags
+        not device_info.bluetooth_proxy_feature_flags_compat(api_version)
         # If the device has a project name its up to that project
         # to tell them about the firmware version update so we don't notify here
         or (device_info.project_name and device_info.project_name not in PROJECT_URLS)
@@ -655,12 +656,11 @@ class ESPHomeManager:
         if entry.options.get(CONF_SUBSCRIBE_LOGS):
             self._async_subscribe_logs(self._async_get_equivalent_log_level())
         device_info, entity_infos, services = await cli.device_info_and_list_entities()
-        device_capabilities = await cli.device_capabilities_compat(device_info)
 
         device_mac = format_mac(device_info.mac_address)
         mac_address_matches = unique_id == device_mac
         if (
-            bluetooth_mac_address := device_capabilities.bluetooth_proxy.mac_address
+            bluetooth_mac_address := device_info.bluetooth_mac_address
         ) and entry.data.get(CONF_BLUETOOTH_MAC_ADDRESS) != bluetooth_mac_address:
             hass.config_entries.async_update_entry(
                 entry,
@@ -739,7 +739,10 @@ class ESPHomeManager:
 
         api_version = cli.api_version
         assert api_version is not None, "API version must be set"
-        entry_data.async_on_connect(hass, device_info, device_capabilities, api_version)
+        entry_data.device_capabilities = await cli.device_capabilities_compat(
+            device_info
+        )
+        entry_data.async_on_connect(hass, device_info, api_version)
 
         await self._handle_dynamic_encryption_key(device_info)
 
@@ -768,7 +771,7 @@ class ESPHomeManager:
         )
         _setup_services(hass, entry_data, services)
 
-        if device_capabilities.bluetooth_proxy.feature_flags:
+        if device_info.bluetooth_proxy_feature_flags_compat(api_version):
             entry_data.disconnect_callbacks.add(
                 async_connect_scanner(
                     hass, self.entry, entry_data, cli, device_info, self.device_id
@@ -776,12 +779,10 @@ class ESPHomeManager:
             )
         else:
             bluetooth.async_remove_scanner(
-                hass,
-                device_capabilities.bluetooth_proxy.mac_address
-                or device_info.mac_address,
+                hass, device_info.bluetooth_mac_address or device_info.mac_address
             )
 
-        if device_capabilities.voice_assistant.feature_flags and (
+        if device_info.voice_assistant_feature_flags_compat(api_version) and (
             Platform.ASSIST_SATELLITE not in entry_data.loaded_platforms
         ):
             # Create assist satellite entity
@@ -793,7 +794,7 @@ class ESPHomeManager:
         # Setup can wait for this, so only after the platforms are forwarded
         entry_data.first_connect_done.set()
 
-        if device_capabilities.zwave_proxy.feature_flags:
+        if device_info.zwave_proxy_feature_flags:
             entry_data.disconnect_callbacks.add(
                 cli.subscribe_zwave_proxy_request(self._async_zwave_proxy_request)
             )
@@ -806,7 +807,7 @@ class ESPHomeManager:
         )
 
         entry_data.async_save_to_store()
-        _async_check_firmware_version(hass, entry, device_info, device_capabilities)
+        _async_check_firmware_version(hass, entry, device_info, api_version)
         _async_check_using_api_password(hass, entry, device_info, bool(self.password))
 
     def _async_zwave_proxy_request(self, request: ZWaveProxyRequest) -> None:
@@ -825,7 +826,11 @@ class ESPHomeManager:
         zwave_home_id: int = UNPACK_UINT32_BE(request.data[0:4])[0]
         entry_data = self.entry_data
         assert entry_data.device_info is not None
-        # Capabilities are a snapshot from connect time; keep the home ID current.
+        # Both are snapshots from connect time; keep their home IDs current.
+        entry_data.device_info = EsphomeDeviceInfo.from_dict(
+            {**entry_data.device_info.to_dict(), "zwave_home_id": zwave_home_id}
+        )
+        assert entry_data.device_capabilities is not None
         device_capabilities = entry_data.device_capabilities.to_dict()
         device_capabilities["zwave_proxy"]["home_id"] = zwave_home_id
         entry_data.device_capabilities = DeviceCapabilities.from_dict(
@@ -1238,8 +1243,7 @@ class ESPHomeManager:
             # before the first live connect refreshes it.
             reconnect_logic.deep_sleep = device_info.has_deep_sleep
             if (
-                bluetooth_mac_address
-                := entry_data.device_capabilities.bluetooth_proxy.mac_address
+                bluetooth_mac_address := device_info.bluetooth_mac_address
             ) and entry.data.get(CONF_BLUETOOTH_MAC_ADDRESS) != bluetooth_mac_address:
                 hass.config_entries.async_update_entry(
                     entry,
@@ -1261,7 +1265,11 @@ class ESPHomeManager:
         self._async_register_outgoing_target(reconnect_logic)
 
         # Wait for a cached BLE proxy to register its scanner before finishing setup.
-        if entry_data.device_capabilities.bluetooth_proxy.feature_flags:
+        if (
+            device_info := entry_data.device_info
+        ) is not None and device_info.bluetooth_proxy_feature_flags_compat(
+            entry_data.api_version
+        ):
             try:
                 async with asyncio.timeout(STARTUP_SCANNER_WAIT):
                     await entry_data.first_connect_done.wait()
