@@ -82,7 +82,10 @@ rules:
       Each config entry creates a single device.
   entity-category: todo
   entity-device-class: done
-  entity-disabled-by-default: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      No entities should be disabled by default.
   entity-translations: done
   exception-translations: done
   icon-translations:

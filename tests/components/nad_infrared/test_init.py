@@ -1,6 +1,9 @@
 """Tests for the NAD Infrared integration setup."""
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.media_player import (
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SERVICE_TURN_ON,
+)
 from homeassistant.components.nad_infrared.const import CONF_INFRARED_ENTITY_ID
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
@@ -46,7 +49,7 @@ async def test_emitter_entity_id_renamed(
     assert entry.state is ConfigEntryState.LOADED
     assert entry.data[CONF_INFRARED_ENTITY_ID] == stored_emitter
     assert entry.runtime_data == NEW_EMITTER_ENTITY_ID
-    await _assert_button_works(hass, mock_infrared_emitter_entity)
+    await _assert_controls_work(hass, mock_infrared_emitter_entity)
 
 
 async def test_emitter_renamed_while_entry_disabled(
@@ -74,7 +77,7 @@ async def test_emitter_renamed_while_entry_disabled(
 
     assert entry.state is ConfigEntryState.LOADED
     assert entry.runtime_data == NEW_EMITTER_ENTITY_ID
-    await _assert_button_works(hass, mock_infrared_emitter_entity)
+    await _assert_controls_work(hass, mock_infrared_emitter_entity)
 
 
 async def test_emitter_removed(
@@ -93,18 +96,18 @@ async def test_emitter_removed(
     assert mock_config_entry.error_reason_translation_key == "emitter_not_found"
 
 
-async def _assert_button_works(
+async def _assert_controls_work(
     hass: HomeAssistant, mock_infrared_emitter_entity: MockInfraredEmitterEntity
 ) -> None:
-    """Assert a button is available and its press reaches the emitter."""
-    state = hass.states.get("button.nad_receiver_display")
+    """Assert the media player is available and its commands reach the emitter."""
+    state = hass.states.get("media_player.nad_receiver")
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
 
     await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.nad_receiver_display"},
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "media_player.nad_receiver"},
         blocking=True,
     )
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1

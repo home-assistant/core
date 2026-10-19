@@ -9,7 +9,7 @@ from homeassistant.helpers.event import async_track_entity_registry_updated_even
 
 from .const import CONF_INFRARED_ENTITY_ID, DOMAIN
 
-PLATFORMS = [Platform.BUTTON]
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 # The runtime data is the current entity ID of the infrared emitter.
 type NadIrConfigEntry = ConfigEntry[str]

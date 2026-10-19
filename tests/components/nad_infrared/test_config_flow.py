@@ -24,9 +24,6 @@ from tests.common import MockConfigEntry
     [
         (NADDeviceType.RECEIVER, "NAD receiver"),
         (NADDeviceType.AMPLIFIER, "NAD amplifier"),
-        (NADDeviceType.TUNER, "NAD tuner"),
-        (NADDeviceType.CD_PLAYER, "NAD CD player"),
-        (NADDeviceType.TAPE_DECK, "NAD cassette deck"),
     ],
 )
 async def test_user_flow_success(
@@ -42,13 +39,7 @@ async def test_user_flow_success(
 
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
-    assert result["menu_options"] == [
-        "receiver",
-        "amplifier",
-        "tuner",
-        "cd_player",
-        "tape_deck",
-    ]
+    assert result["menu_options"] == ["receiver", "amplifier"]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": device_type.value}
@@ -107,7 +98,7 @@ async def test_user_flow_other_device_type_same_emitter(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": NADDeviceType.CD_PLAYER.value}
+        result["flow_id"], {"next_step_id": NADDeviceType.AMPLIFIER.value}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

@@ -4,9 +4,6 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 from infrared_protocols.codes.nad.amplifier import NADAmplifierCode
-from infrared_protocols.codes.nad.cd import NADCDCode
-from infrared_protocols.codes.nad.tape import NADTapeCode
-from infrared_protocols.codes.nad.tuner import NADTunerCode
 import pytest
 
 from homeassistant.components.nad_infrared import PLATFORMS
@@ -65,24 +62,13 @@ def platforms() -> list[Platform]:
 
 @pytest.fixture
 def mock_nad_to_command() -> Generator[MagicMock]:
-    """Patch ``to_command`` on every NAD code enum to return the code itself.
+    """Patch ``NADAmplifierCode.to_command`` to return the code itself.
 
     This lets tests assert on the code enum value rather than on raw timings.
     """
-    with (
-        patch.object(
-            NADAmplifierCode, "to_command", autospec=True, side_effect=lambda self: self
-        ) as mock,
-        patch.object(
-            NADCDCode, "to_command", autospec=True, side_effect=lambda self: self
-        ),
-        patch.object(
-            NADTapeCode, "to_command", autospec=True, side_effect=lambda self: self
-        ),
-        patch.object(
-            NADTunerCode, "to_command", autospec=True, side_effect=lambda self: self
-        ),
-    ):
+    with patch.object(
+        NADAmplifierCode, "to_command", autospec=True, side_effect=lambda self: self
+    ) as mock:
         yield mock
 
 

@@ -15,16 +15,6 @@
         "description": "Select the infrared emitter to use for controlling your NAD amplifier. The amplifier must be set to IR channel 0.",
         "title": "Set up NAD amplifier"
       },
-      "cd_player": {
-        "data": {
-          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]"
-        },
-        "data_description": {
-          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]"
-        },
-        "description": "Select the infrared emitter to use for controlling your NAD CD player.",
-        "title": "Set up NAD CD player"
-      },
       "receiver": {
         "data": {
           "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]"
@@ -35,292 +25,62 @@
         "description": "Select the infrared emitter to use for controlling your NAD receiver. The receiver must be set to IR channel 0.",
         "title": "Set up NAD receiver"
       },
-      "tape_deck": {
-        "data": {
-          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]"
-        },
-        "data_description": {
-          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]"
-        },
-        "description": "Select the infrared emitter to use for controlling your NAD cassette deck.",
-        "title": "Set up NAD cassette deck"
-      },
-      "tuner": {
-        "data": {
-          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]"
-        },
-        "data_description": {
-          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]"
-        },
-        "description": "Select the infrared emitter to use for controlling your NAD tuner.",
-        "title": "Set up NAD tuner"
-      },
       "user": {
         "description": "Select the type of NAD device to set up.",
         "menu_options": {
           "amplifier": "Amplifier",
-          "cd_player": "CD player",
-          "receiver": "Receiver (amplifier with tuner)",
-          "tape_deck": "Cassette deck",
-          "tuner": "Tuner"
+          "receiver": "Receiver (amplifier with tuner)"
         },
         "title": "Set up NAD IR Remote"
       }
     }
   },
   "entity": {
-    "button": {
-      "audyssey": {
-        "name": "Audyssey"
-      },
-      "av_preset_1": {
-        "name": "A/V preset 1"
-      },
-      "av_preset_2": {
-        "name": "A/V preset 2"
-      },
-      "av_preset_3": {
-        "name": "A/V preset 3"
-      },
-      "av_preset_4": {
-        "name": "A/V preset 4"
-      },
-      "av_preset_5": {
-        "name": "A/V preset 5"
-      },
-      "center_volume_down": {
-        "name": "Center volume down"
-      },
-      "center_volume_up": {
-        "name": "Center volume up"
-      },
-      "cursor_down": {
-        "name": "Cursor down"
-      },
-      "cursor_left": {
-        "name": "Cursor left"
-      },
-      "cursor_right": {
-        "name": "Cursor right"
-      },
-      "cursor_up": {
-        "name": "Cursor up"
-      },
-      "deck_a_fast_forward": {
-        "name": "Deck A fast forward"
-      },
-      "deck_a_play": {
-        "name": "Deck A play"
-      },
-      "deck_a_record": {
-        "name": "Deck A record"
-      },
-      "deck_a_reverse_play": {
-        "name": "Deck A reverse play"
-      },
-      "deck_a_rewind": {
-        "name": "Deck A rewind"
-      },
-      "deck_a_stop": {
-        "name": "Deck A stop"
-      },
-      "deck_b_fast_forward": {
-        "name": "Deck B fast forward"
-      },
-      "deck_b_pause": {
-        "name": "Deck B pause"
-      },
-      "deck_b_play": {
-        "name": "Deck B play"
-      },
-      "deck_b_record": {
-        "name": "Deck B record"
-      },
-      "deck_b_reverse_play": {
-        "name": "Deck B reverse play"
-      },
-      "deck_b_rewind": {
-        "name": "Deck B rewind"
-      },
-      "deck_b_stop": {
-        "name": "Deck B stop"
-      },
-      "dimmer": {
-        "name": "Dimmer"
-      },
-      "disc_1": {
-        "name": "Disc 1"
-      },
-      "disc_2": {
-        "name": "Disc 2"
-      },
-      "disc_3": {
-        "name": "Disc 3"
-      },
-      "disc_4": {
-        "name": "Disc 4"
-      },
-      "disc_5": {
-        "name": "Disc 5"
-      },
-      "display": {
-        "name": "Display"
-      },
-      "enter": {
-        "name": "Enter"
-      },
-      "late_night": {
-        "name": "Late night"
-      },
-      "menu": {
-        "name": "Menu"
-      },
-      "next_disc": {
-        "name": "Next disc"
-      },
-      "open_close": {
-        "name": "Open/close"
-      },
-      "random": {
-        "name": "Random"
-      },
-      "repeat": {
-        "name": "Repeat"
-      },
-      "scan_back": {
-        "name": "Scan back"
-      },
-      "scan_forward": {
-        "name": "Scan forward"
-      },
-      "sleep": {
-        "name": "Sleep"
-      },
-      "source_down": {
-        "name": "Source down"
-      },
-      "source_up": {
-        "name": "Source up"
-      },
-      "speaker_a": {
-        "name": "Speaker A"
-      },
-      "speaker_b": {
-        "name": "Speaker B"
-      },
-      "sub_volume_down": {
-        "name": "Subwoofer volume down"
-      },
-      "sub_volume_up": {
-        "name": "Subwoofer volume up"
-      },
-      "surround_mode": {
-        "name": "Surround mode"
-      },
-      "surround_volume_down": {
-        "name": "Surround volume down"
-      },
-      "surround_volume_up": {
-        "name": "Surround volume up"
-      },
-      "test_tone": {
-        "name": "Test tone"
-      },
-      "time": {
-        "name": "Time"
-      },
-      "tone_defeat": {
-        "name": "Tone defeat"
-      },
-      "tuner_am": {
-        "name": "AM"
-      },
-      "tuner_bank": {
-        "name": "Bank"
-      },
-      "tuner_blend": {
-        "name": "FM blend"
-      },
-      "tuner_dab": {
-        "name": "DAB"
-      },
-      "tuner_delete": {
-        "name": "Delete preset"
-      },
-      "tuner_enter": {
-        "name": "Tuner enter"
-      },
-      "tuner_fm": {
-        "name": "FM"
-      },
-      "tuner_memory": {
-        "name": "Memory"
-      },
-      "tuner_mode": {
-        "name": "Tuner mode"
-      },
-      "tuner_number_0": {
-        "name": "Number 0"
-      },
-      "tuner_number_1": {
-        "name": "Number 1"
-      },
-      "tuner_number_10": {
-        "name": "Number 10"
-      },
-      "tuner_number_2": {
-        "name": "Number 2"
-      },
-      "tuner_number_3": {
-        "name": "Number 3"
-      },
-      "tuner_number_4": {
-        "name": "Number 4"
-      },
-      "tuner_number_5": {
-        "name": "Number 5"
-      },
-      "tuner_number_6": {
-        "name": "Number 6"
-      },
-      "tuner_number_7": {
-        "name": "Number 7"
-      },
-      "tuner_number_8": {
-        "name": "Number 8"
-      },
-      "tuner_number_9": {
-        "name": "Number 9"
-      },
-      "tuner_plus_10": {
-        "name": "+10"
-      },
-      "tuner_preset_down": {
-        "name": "Preset down"
-      },
-      "tuner_preset_tune": {
-        "name": "Preset/tune"
-      },
-      "tuner_preset_up": {
-        "name": "Preset up"
-      },
-      "tuner_search_down": {
-        "name": "Search down"
-      },
-      "tuner_search_up": {
-        "name": "Search up"
-      },
-      "tuner_tune_down": {
-        "name": "Tune down"
-      },
-      "tuner_tune_up": {
-        "name": "Tune up"
+    "media_player": {
+      "receiver": {
+        "state_attributes": {
+          "sound_mode": {
+            "state": {
+              "bypass": "Bypass",
+              "direct": "Direct",
+              "dolby_surround_ex": "Dolby Surround EX",
+              "ears": "EARS",
+              "enhanced_stereo": "Enhanced stereo",
+              "matrix_7_1": "Matrix 7.1",
+              "neo6_cinema": "DTS Neo:6 Cinema",
+              "neo6_music": "DTS Neo:6 Music",
+              "pliix_movie": "Dolby Pro Logic IIx Movie",
+              "pliix_music": "Dolby Pro Logic IIx Music",
+              "stereo_downmix": "Stereo downmix"
+            }
+          },
+          "source": {
+            "state": {
+              "front": "Front",
+              "input_1": "Input 1",
+              "input_2": "Input 2",
+              "input_3": "Input 3",
+              "input_4": "Input 4",
+              "input_5": "Input 5",
+              "input_6": "Input 6",
+              "input_7": "Input 7",
+              "mp": "MP",
+              "tuner": "Tuner"
+            }
+          }
+        }
       }
     }
   },
   "exceptions": {
     "emitter_not_found": {
       "message": "The infrared emitter used by this NAD device no longer exists. Remove this device and set it up again with another emitter."
+    },
+    "invalid_sound_mode": {
+      "message": "Cannot select sound mode {invalid_sound_mode}. Valid sound modes: {valid_sound_modes}."
+    },
+    "invalid_source": {
+      "message": "Cannot select input source {invalid_source}. Valid sources: {valid_sources}."
     }
   }
 }
