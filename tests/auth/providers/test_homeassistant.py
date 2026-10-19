@@ -1,6 +1,7 @@
 """Test the Home Assistant local auth provider."""
 
 import asyncio
+from typing import Any
 from unittest.mock import Mock, patch
 
 import probatio
@@ -269,10 +270,10 @@ async def test_change_username_not_normalized(
 
 
 async def _signed_in_user(
-    hass: HomeAssistant, data: hass_auth.Data
+    hass: HomeAssistant, data: hass_auth.Data, password: str = "test-pass"
 ) -> tuple[hass_auth.HassAuthProvider, User]:
     """Return a provider and a user who signed in with a password."""
-    data.add_auth("hello", "test-pass")
+    data.add_auth("hello", password)
     await data.async_save()
 
     manager = await auth_manager_from_config(hass, [{"type": "homeassistant"}], [])
@@ -282,14 +283,18 @@ async def _signed_in_user(
     return provider, await manager.async_get_or_create_user(credentials)
 
 
+@pytest.mark.parametrize(
+    "password",
+    [pytest.param("test-pass", id="password"), pytest.param("", id="empty-password")],
+)
 async def test_verify_step_up_accepts_the_current_password(
-    hass: HomeAssistant, data: hass_auth.Data
+    hass: HomeAssistant, data: hass_auth.Data, password: str
 ) -> None:
     """Test a signed in user can prove who they are with their password."""
-    provider, user = await _signed_in_user(hass, data)
+    provider, user = await _signed_in_user(hass, data, password)
 
     assert provider.async_get_username(user) == "hello"
-    await provider.async_verify_step_up(user, {"password": "test-pass"}, None)
+    await provider.async_verify_step_up(user, {"password": password}, None)
 
 
 @pytest.mark.parametrize(
@@ -298,10 +303,11 @@ async def test_verify_step_up_accepts_the_current_password(
         pytest.param({"password": "wrong-pass"}, id="wrong"),
         pytest.param({"password": ""}, id="empty"),
         pytest.param({}, id="missing"),
+        pytest.param({"password": 1234}, id="not-a-string"),
     ],
 )
 async def test_verify_step_up_rejects_a_wrong_password(
-    hass: HomeAssistant, data: hass_auth.Data, step_up_data: dict[str, str]
+    hass: HomeAssistant, data: hass_auth.Data, step_up_data: dict[str, Any]
 ) -> None:
     """Test only the current password verifies the user again."""
     provider, user = await _signed_in_user(hass, data)

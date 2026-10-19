@@ -273,7 +273,8 @@ class HassAuthProvider(AuthProvider):
         if (username := self.async_get_username(user)) is None:
             raise InvalidStepUpError("User has no credentials for this provider.")
 
-        if not (password := data.get("password")):
+        # An empty password is valid when it is the one that is stored.
+        if not isinstance(password := data.get("password"), str):
             raise InvalidStepUpError("No password provided.")
 
         try:
