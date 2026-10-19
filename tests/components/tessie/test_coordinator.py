@@ -5,6 +5,7 @@ from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from tesla_fleet_api.exceptions import Forbidden, InvalidToken, MissingToken
 
 from homeassistant.components.tessie import PLATFORMS
@@ -26,8 +27,6 @@ from .common import (
     ERROR_UNKNOWN,
     setup_platform,
 )
-
-from tests.common import async_fire_time_changed
 
 WAIT = timedelta(seconds=TESSIE_SYNC_INTERVAL)
 

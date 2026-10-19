@@ -15,6 +15,7 @@ from aionanoleaf2 import (
     Unavailable,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
@@ -34,8 +35,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import get_reauth_flows, setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 NANOLEAF_ERRORS = [
     pytest.param(Unavailable("unavailable"), id="unavailable"),

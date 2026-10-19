@@ -6,6 +6,8 @@ import string
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import async_load_json_object_fixture
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.knx.const import (
     DOMAIN,
@@ -53,9 +55,6 @@ from homeassistant.helpers.translation import async_get_translations
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
-
-from tests.common import async_load_json_object_fixture
-from tests.typing import WebSocketGenerator
 
 
 async def test_create_entity(

@@ -21,6 +21,11 @@ from aioshelly.exceptions import (
 )
 from aioshelly.rpc_device.utils import bluetooth_mac_from_primary_mac
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_load_json_object_fixture,
+)
 
 from homeassistant.components.shelly.const import (
     BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID,
@@ -55,12 +60,6 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.setup import async_setup_component
 
 from . import MOCK_MAC, init_integration, mutate_rpc_device_status, register_sub_device
-
-from tests.common import (
-    MockConfigEntry,
-    async_capture_events,
-    async_load_json_object_fixture,
-)
 
 
 async def test_custom_coap_port(

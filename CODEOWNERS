@@ -113,6 +113,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/alexa/ @home-assistant/cloud @ochlocracy @jbouwh
 /homeassistant/components/alexa_devices/ @chemelli74 @jamesonuk
 /tests/components/alexa_devices/ @chemelli74 @jamesonuk
+/homeassistant/components/alpha_bidet_infrared/ @eseverson
+/tests/components/alpha_bidet_infrared/ @eseverson
 /homeassistant/components/altruist/ @airalab @LoSk-p
 /tests/components/altruist/ @airalab @LoSk-p
 /homeassistant/components/amazon_polly/ @jschlyter
@@ -465,6 +467,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/ecoforest/ @pjanuario
 /homeassistant/components/econet/ @w1ll1am23
 /tests/components/econet/ @w1ll1am23
+/homeassistant/components/ecosmart/ @Daryn-L
+/tests/components/ecosmart/ @Daryn-L
 /homeassistant/components/ecovacs/ @mib1185 @edenhaus @Augar
 /tests/components/ecovacs/ @mib1185 @edenhaus @Augar
 /homeassistant/components/ecowitt/ @pvizeli
@@ -1741,6 +1745,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/siren/ @home-assistant/core @raman325
 /tests/components/siren/ @home-assistant/core @raman325
 /homeassistant/components/sisyphus/ @jkeljo
+/homeassistant/components/skoda/ @TomVSB @DavidMagyarics @dvx76
+/tests/components/skoda/ @TomVSB @DavidMagyarics @dvx76
 /homeassistant/components/sky_remote/ @dunnmj @saty9
 /tests/components/sky_remote/ @dunnmj @saty9
 /homeassistant/components/skybell/ @tkdrob

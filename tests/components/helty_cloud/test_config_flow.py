@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from pyheltycloud import HeltyCloudAuthError, HeltyCloudConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.helty_cloud.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import EMAIL, PASSWORD, USER_ID
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {CONF_EMAIL: EMAIL, CONF_PASSWORD: PASSWORD}
 

@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from mcstatus import JavaServer
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.minecraft_server.const import DOMAIN
@@ -20,8 +21,6 @@ from .const import (
     TEST_JAVA_STATUS_RESPONSE,
     TEST_PORT,
 )
-
-from tests.common import MockConfigEntry
 
 DEFAULT_NAME = "Minecraft Server"
 

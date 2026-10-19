@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.tibber.const import DOMAIN
@@ -16,8 +17,6 @@ from homeassistant.helpers import (
 from homeassistant.helpers.entity_component import async_update_entity
 
 from .conftest import create_tibber_device, create_tibber_home
-
-from tests.common import MockConfigEntry
 
 
 async def test_price_sensor_state_unit_and_attributes(

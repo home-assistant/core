@@ -5,12 +5,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pybotvac import Robot
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.neato.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
