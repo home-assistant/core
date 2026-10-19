@@ -11,7 +11,6 @@ from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.litterrobot.camera import _build_ice_servers
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util import dt as dt_util
 
 from .conftest import setup_integration
 
@@ -280,76 +279,6 @@ async def test_expired_session_offers_no_ice_servers(
     assert entity._cached_session is not None
 
 
-def _session_expiring_in(delta: timedelta) -> CameraSession:
-    """Build a session that expires delta from the (possibly frozen) current time."""
-    expires = dt_util.utcnow() + delta
-    return CameraSession.from_response(
-        {
-            **MOCK_SESSION_DATA,
-            "sessionExpiration": expires.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-        }
-    )
-
-
-async def test_session_renewed_ahead_of_expiry_without_a_request(
-    hass: HomeAssistant,
-    mock_account_with_litterrobot_5_pro: MagicMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """The session is renewed on a timer, not only when a client asks for it."""
-    mock_client = mock_account_with_litterrobot_5_pro.robots[0].get_camera_client()
-    mock_client.generate_session = AsyncMock(
-        side_effect=lambda **_: _session_expiring_in(timedelta(minutes=10))
-    )
-    await setup_integration(hass, mock_account_with_litterrobot_5_pro, CAMERA_DOMAIN)
-    fetched = mock_client.generate_session.call_count
-
-    # not due yet: renewal is scheduled five minutes ahead of expiry
-    freezer.tick(timedelta(minutes=3))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert mock_client.generate_session.call_count == fetched
-
-    # due now, and no client ever asked for a configuration
-    freezer.tick(timedelta(minutes=3))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert mock_client.generate_session.call_count == fetched + 1
-
-    # and the renewed session is itself renewed in turn
-    freezer.tick(timedelta(minutes=5))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert mock_client.generate_session.call_count == fetched + 2
-
-
-async def test_session_fetch_retried_after_failure(
-    hass: HomeAssistant,
-    mock_account_with_litterrobot_5_pro: MagicMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """A failed fetch is retried once the API has had time to recover."""
-    mock_client = mock_account_with_litterrobot_5_pro.robots[0].get_camera_client()
-    mock_client.generate_session = AsyncMock(
-        side_effect=[
-            Exception("api down"),
-            _session_expiring_in(timedelta(hours=1)),
-        ]
-    )
-    await setup_integration(hass, mock_account_with_litterrobot_5_pro, CAMERA_DOMAIN)
-
-    entity = hass.data[CAMERA_DOMAIN].get_entity(CAMERA_ENTITY_ID)
-    assert entity._cached_session is None
-    assert mock_client.generate_session.call_count == 1
-
-    freezer.tick(timedelta(minutes=6))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert mock_client.generate_session.call_count == 2
-    assert entity._cached_session is not None
-
-
 async def test_empty_cache_is_refetched_on_a_configuration_request(
     hass: HomeAssistant, mock_account_with_litterrobot_5_pro: MagicMock
 ) -> None:
@@ -373,50 +302,6 @@ async def test_empty_cache_is_refetched_on_a_configuration_request(
     # the next client gets the credentials
     config = entity._async_get_webrtc_client_configuration()
     assert config.configuration.ice_servers != []
-
-
-async def test_session_without_expiry_is_not_renewed_on_a_timer(
-    hass: HomeAssistant,
-    mock_account_with_litterrobot_5_pro: MagicMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """No known expiry means nothing to renew ahead of, and no refresh loop."""
-    data = {k: v for k, v in MOCK_SESSION_DATA.items() if k != "sessionExpiration"}
-    mock_client = mock_account_with_litterrobot_5_pro.robots[0].get_camera_client()
-    mock_client.generate_session = AsyncMock(
-        return_value=CameraSession.from_response(data)
-    )
-    await setup_integration(hass, mock_account_with_litterrobot_5_pro, CAMERA_DOMAIN)
-    assert mock_client.generate_session.call_count == 1
-
-    freezer.tick(timedelta(hours=2))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert mock_client.generate_session.call_count == 1
-
-
-async def test_renewal_stops_when_the_entity_is_removed(
-    hass: HomeAssistant,
-    mock_account_with_litterrobot_5_pro: MagicMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """A removed entity must not keep fetching sessions on its timer."""
-    mock_client = mock_account_with_litterrobot_5_pro.robots[0].get_camera_client()
-    mock_client.generate_session = AsyncMock(
-        side_effect=lambda **_: _session_expiring_in(timedelta(minutes=10))
-    )
-    await setup_integration(hass, mock_account_with_litterrobot_5_pro, CAMERA_DOMAIN)
-    fetched = mock_client.generate_session.call_count
-
-    entity = hass.data[CAMERA_DOMAIN].get_entity(CAMERA_ENTITY_ID)
-    await entity.async_will_remove_from_hass()
-
-    freezer.tick(timedelta(minutes=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert mock_client.generate_session.call_count == fetched
 
 
 async def test_removal_awaits_relay_teardown(
@@ -448,3 +333,28 @@ async def test_removal_awaits_relay_teardown(
     # run a scheduled task afterwards
     assert relay.close.called
     assert entity._relays == {}
+
+
+async def test_session_is_not_renewed_in_the_background(
+    hass: HomeAssistant,
+    mock_account_with_litterrobot_5_pro: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """An idle camera must not keep creating sessions.
+
+    A session only lasts about a minute, so renewing one ahead of its expiry
+    would mean a new camera session every minute, whether or not anyone is
+    watching.
+    """
+    mock_client = mock_account_with_litterrobot_5_pro.robots[0].get_camera_client()
+    mock_client.generate_session = AsyncMock(
+        return_value=CameraSession.from_response(MOCK_SESSION_DATA)
+    )
+    await setup_integration(hass, mock_account_with_litterrobot_5_pro, CAMERA_DOMAIN)
+    fetched = mock_client.generate_session.call_count
+
+    freezer.tick(timedelta(hours=6))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_client.generate_session.call_count == fetched
