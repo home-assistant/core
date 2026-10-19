@@ -112,7 +112,11 @@ class RpcLedStripPaletteSelect(RpcSelect):
         super().__init__(coordinator, key, attribute, description)
 
         palettes = coordinator.config_entry.runtime_data.rpc_ledstrip_palettes
-        self._attr_options = list(palettes) if palettes else []
+
+        if TYPE_CHECKING:
+            assert palettes is not None
+
+        self._attr_options = list(palettes)
 
     @property
     @override
