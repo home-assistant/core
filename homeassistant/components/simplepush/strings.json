@@ -36,7 +36,7 @@
   },
   "exceptions": {
     "invalid_api_token": {
-      "message": "Simplepush rejected the API token. Remove the Simplepush entry and add it again with a new API token."
+      "message": "Simplepush rejected the API token."
     },
     "send_message_failed": {
       "message": "Failed to send the Simplepush notification."
