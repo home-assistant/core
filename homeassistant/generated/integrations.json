@@ -10791,6 +10791,9 @@
           "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_push",
+          "categories": [
+            "media_entertainment.gaming"
+          ],
           "name": "SteamVR Base Station"
         }
       }
