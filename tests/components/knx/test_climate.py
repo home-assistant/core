@@ -1,13 +1,19 @@
 """Test KNX climate."""
 
 import pytest
-from pytest_homeassistant.common import async_capture_events
+from pytest_homeassistant.common import async_capture_events, mock_restore_cache
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.knx.const import CONF_SYNC_STATE, ClimateConf
 from homeassistant.components.knx.schema import ClimateSchema
-from homeassistant.const import CONF_NAME, STATE_IDLE, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    CONF_NAME,
+    STATE_IDLE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -373,6 +379,227 @@ async def test_climate_preset_mode(
     entity_registry.async_remove("climate.test")
     # If we remove the entity the underlying devices should disappear too
     assert len(knx.xknx.devices) == 0
+
+
+@pytest.mark.parametrize("restored_mode", [HVACMode.HEAT, HVACMode.OFF])
+async def test_climate_restore_on_off(
+    hass: HomeAssistant, knx: KNXTestKit, restored_mode: HVACMode
+) -> None:
+    """Test KNX climate restores on/off state until bus read completes."""
+    mock_restore_cache(hass, (State("climate.test", restored_mode),))
+    await knx.setup_integration(
+        {
+            ClimateSchema.PLATFORM: {
+                CONF_NAME: "test",
+                ClimateSchema.CONF_TEMPERATURE_ADDRESS: "1/2/3",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_ADDRESS: "1/2/4",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
+                ClimateSchema.CONF_ON_OFF_ADDRESS: "1/2/8",
+                ClimateSchema.CONF_ON_OFF_STATE_ADDRESS: "1/2/9",
+            }
+        }
+    )
+    # restored state is used before any response is received - no telegram sent
+    knx.assert_state("climate.test", restored_mode)
+
+    await knx.assert_read("1/2/3")
+    await knx.assert_read("1/2/5")
+    await knx.receive_response("1/2/3", RAW_FLOAT_20_0)
+    await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
+    await knx.assert_read("1/2/9")
+    knx.assert_state("climate.test", restored_mode)
+
+    # bus confirms restored value
+    await knx.receive_response("1/2/9", int(restored_mode != HVACMode.OFF))
+    knx.assert_state("climate.test", restored_mode)
+
+
+async def test_climate_restore_controller_mode_off(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """Test KNX climate restores controller mode off without on/off address."""
+    mock_restore_cache(hass, (State("climate.test", HVACMode.OFF),))
+    await knx.setup_integration(
+        {
+            ClimateSchema.PLATFORM: {
+                CONF_NAME: "test",
+                ClimateSchema.CONF_TEMPERATURE_ADDRESS: "1/2/3",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_ADDRESS: "1/2/4",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
+                ClimateSchema.CONF_CONTROLLER_MODE_ADDRESS: "1/2/6",
+                ClimateSchema.CONF_CONTROLLER_MODE_STATE_ADDRESS: "1/2/7",
+            }
+        }
+    )
+    knx.assert_state("climate.test", HVACMode.OFF)
+
+    await knx.assert_read("1/2/3")
+    await knx.assert_read("1/2/5")
+    await knx.receive_response("1/2/3", RAW_FLOAT_20_0)
+    await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
+    await knx.assert_read("1/2/7")
+    knx.assert_state("climate.test", HVACMode.OFF)
+    await knx.receive_response("1/2/7", (0x06,))  # off
+    knx.assert_state("climate.test", HVACMode.OFF)
+
+    # turn on uses default hvac mode - restoring OFF doesn't change last hvac mode
+    await hass.services.async_call(
+        "climate",
+        "turn_on",
+        {"entity_id": "climate.test"},
+        blocking=True,
+    )
+    await knx.assert_write("1/2/6", (0x01,))
+    knx.assert_state("climate.test", HVACMode.HEAT)
+
+
+@pytest.mark.parametrize("on_off_ga", [None, "4/4/4"])
+async def test_climate_restore_controller_mode_cool(
+    hass: HomeAssistant, knx: KNXTestKit, on_off_ga: str | None
+) -> None:
+    """Test KNX climate restores a non-default controller mode."""
+    mock_restore_cache(hass, (State("climate.test", HVACMode.COOL),))
+    await knx.setup_integration(
+        {
+            ClimateSchema.PLATFORM: {
+                CONF_NAME: "test",
+                ClimateSchema.CONF_TEMPERATURE_ADDRESS: "1/2/3",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_ADDRESS: "1/2/4",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
+                ClimateSchema.CONF_CONTROLLER_MODE_ADDRESS: "1/2/6",
+                ClimateSchema.CONF_CONTROLLER_MODE_STATE_ADDRESS: "1/2/7",
+            }
+            | ({ClimateSchema.CONF_ON_OFF_ADDRESS: on_off_ga} if on_off_ga else {})
+        }
+    )
+    knx.assert_state("climate.test", HVACMode.COOL, hvac_action="cooling")
+
+    await knx.assert_read("1/2/3")
+    await knx.assert_read("1/2/5")
+    await knx.receive_response("1/2/3", RAW_FLOAT_20_0)
+    await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
+    await knx.assert_read("1/2/7")
+    knx.assert_state("climate.test", HVACMode.COOL)
+    await knx.receive_response("1/2/7", (0x03,))  # cool
+    knx.assert_state("climate.test", HVACMode.COOL)
+
+
+async def test_climate_restore_preset_mode(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """Test KNX climate restores preset mode until bus read completes."""
+    mock_restore_cache(
+        hass,
+        (State("climate.test", HVACMode.HEAT, {"preset_mode": "economy"}),),
+    )
+    await knx.setup_integration(
+        {
+            ClimateSchema.PLATFORM: {
+                CONF_NAME: "test",
+                ClimateSchema.CONF_TEMPERATURE_ADDRESS: "1/2/3",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_ADDRESS: "1/2/4",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
+                ClimateSchema.CONF_OPERATION_MODE_ADDRESS: "1/2/6",
+                ClimateSchema.CONF_OPERATION_MODE_STATE_ADDRESS: "1/2/7",
+            }
+        }
+    )
+    knx.assert_state("climate.test", HVACMode.HEAT, preset_mode="economy")
+
+    await knx.assert_read("1/2/3")
+    await knx.assert_read("1/2/5")
+    await knx.receive_response("1/2/3", RAW_FLOAT_20_0)
+    await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
+    await knx.assert_read("1/2/7")
+    knx.assert_state("climate.test", HVACMode.HEAT, preset_mode="economy")
+    await knx.receive_response("1/2/7", (0x03,))  # economy
+    knx.assert_state("climate.test", HVACMode.HEAT, preset_mode="economy")
+
+
+@pytest.mark.parametrize(
+    ("restored_state", "expected_mode"),
+    [
+        (None, HVACMode.OFF),
+        (State("climate.test", STATE_UNKNOWN), HVACMode.OFF),
+        (State("climate.test", STATE_UNAVAILABLE), HVACMode.OFF),
+        (State("climate.test", "invalid"), HVACMode.OFF),
+        (
+            State("climate.test", HVACMode.HEAT, {"preset_mode": "invalid"}),
+            HVACMode.HEAT,
+        ),
+    ],
+)
+async def test_climate_restore_invalid(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    restored_state: State | None,
+    expected_mode: HVACMode,
+) -> None:
+    """Test KNX climate keeps defaults if there is no valid state to restore."""
+    if restored_state is not None:
+        mock_restore_cache(hass, (restored_state,))
+    await knx.setup_integration(
+        {
+            ClimateSchema.PLATFORM: {
+                CONF_NAME: "test",
+                ClimateSchema.CONF_TEMPERATURE_ADDRESS: "1/2/3",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_ADDRESS: "1/2/4",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
+                ClimateSchema.CONF_ON_OFF_ADDRESS: "1/2/8",
+                ClimateSchema.CONF_OPERATION_MODE_ADDRESS: "1/2/6",
+            }
+        }
+    )
+    # xknx defaults: on/off not initialized -> off; operation mode standby
+    knx.assert_state("climate.test", expected_mode, preset_mode="standby")
+
+    await knx.assert_read("1/2/3")
+    await knx.assert_read("1/2/5")
+    await knx.receive_response("1/2/3", RAW_FLOAT_20_0)
+    await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
+
+
+async def test_climate_restore_bus_value_wins(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """Test values received from the bus override the restored state."""
+    mock_restore_cache(
+        hass,
+        (State("climate.test", HVACMode.COOL, {"preset_mode": "economy"}),),
+    )
+    await knx.setup_integration(
+        {
+            ClimateSchema.PLATFORM: {
+                CONF_NAME: "test",
+                ClimateSchema.CONF_TEMPERATURE_ADDRESS: "1/2/3",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_ADDRESS: "1/2/4",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
+                ClimateSchema.CONF_ON_OFF_ADDRESS: "1/2/8",
+                ClimateSchema.CONF_ON_OFF_STATE_ADDRESS: "1/2/9",
+                ClimateSchema.CONF_HEAT_COOL_ADDRESS: "1/2/10",
+                ClimateSchema.CONF_HEAT_COOL_STATE_ADDRESS: "1/2/11",
+                ClimateSchema.CONF_OPERATION_MODE_ADDRESS: "1/2/6",
+                ClimateSchema.CONF_OPERATION_MODE_STATE_ADDRESS: "1/2/7",
+            }
+        }
+    )
+    knx.assert_state("climate.test", HVACMode.COOL, preset_mode="economy")
+
+    await knx.assert_read("1/2/3")
+    await knx.assert_read("1/2/5")
+    await knx.receive_response("1/2/3", RAW_FLOAT_20_0)
+    await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
+    await knx.assert_read("1/2/9")
+    await knx.receive_response("1/2/9", 0)  # off
+    knx.assert_state("climate.test", HVACMode.OFF, preset_mode="economy")
+    await knx.assert_read("1/2/7")
+    await knx.receive_response("1/2/7", (0x01,))  # comfort
+    await knx.assert_read("1/2/11")
+    await knx.receive_response("1/2/11", 1)  # heat
+    knx.assert_state("climate.test", HVACMode.OFF, preset_mode="comfort")
+
+    await knx.receive_write("1/2/9", 1)  # on
+    knx.assert_state("climate.test", HVACMode.HEAT, preset_mode="comfort")
 
 
 async def test_update_entity(hass: HomeAssistant, knx: KNXTestKit) -> None:
