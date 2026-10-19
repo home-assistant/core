@@ -36,7 +36,9 @@ def validate_input(api_token: str) -> dict[str, str] | None:
         return {"base": "cannot_connect"}
     except OSError:
         return {"base": "cannot_connect"}
-
+    except Exception:
+        _LOGGER.exception("Unexpected exception")
+        errors["base"] = "unknown"
     return None
 
 
