@@ -6,15 +6,15 @@ from typing import NoReturn
 
 from aiohttp.client_exceptions import ServerDisconnectedError
 from uiprotect import ProtectApiClient
+
+# Import the anonymize module from the uiprotect package
+# in __init__ to ensure it gets imported in the executor since the
+# diagnostics module will not be imported in the executor.
+from uiprotect.anonymize import anonymize_data  # noqa: F401
 from uiprotect.api import DEVICE_UPDATE_INTERVAL
 from uiprotect.data import Bootstrap
 from uiprotect.data.public_devices import PublicDeviceModel, PublicNVR
 from uiprotect.exceptions import BadRequest, ClientError, NotAuthorized
-
-# Import the test_util.anonymize module from the uiprotect package
-# in __init__ to ensure it gets imported in the executor since the
-# diagnostics module will not be imported in the executor.
-from uiprotect.test_util.anonymize import anonymize_data  # noqa: F401
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, EVENT_HOMEASSISTANT_STOP
