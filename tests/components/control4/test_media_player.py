@@ -8,7 +8,8 @@ import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    mock_restore_cache,
+    async_mock_restore_state_shutdown_restart,
+    mock_restore_cache_with_extra_data,
     snapshot_platform,
 )
 from syrupy.assertion import SnapshotAssertion
@@ -276,9 +277,9 @@ async def test_media_player_turn_on_restores_last_source(
     mock_c4_room: MagicMock,
 ) -> None:
     """Test that the last source is restored and used after a restart."""
-    mock_restore_cache(
+    mock_restore_cache_with_extra_data(
         hass,
-        [State("media_player.living_room", "off", {"last_source_id": 101})],
+        [(State("media_player.living_room", "off"), {"last_source_id": 101})],
     )
     await setup_integration(hass, mock_config_entry)
 
@@ -305,9 +306,9 @@ async def test_media_player_turn_on_ignores_restored_unknown_source(
     mock_c4_room: MagicMock,
 ) -> None:
     """Test that a restored source the room no longer has is ignored."""
-    mock_restore_cache(
+    mock_restore_cache_with_extra_data(
         hass,
-        [State("media_player.living_room", "off", {"last_source_id": 999})],
+        [(State("media_player.living_room", "off"), {"last_source_id": 999})],
     )
     await setup_integration(hass, mock_config_entry)
 
@@ -337,9 +338,9 @@ async def test_media_player_playing_source_overrides_restored_source(
     mock_room_off_variables: dict,
 ) -> None:
     """Test that the source playing at startup wins over the restored one."""
-    mock_restore_cache(
+    mock_restore_cache_with_extra_data(
         hass,
-        [State("media_player.living_room", "off", {"last_source_id": 100})],
+        [(State("media_player.living_room", "off"), {"last_source_id": 100})],
     )
     mock_room_off_variables[1]["CURRENT MEDIA INFO"] = {"mediainfo": {"medSrcDev": 101}}
     await setup_integration(hass, mock_config_entry)
@@ -367,6 +368,47 @@ async def test_media_player_turn_off(
 
     mock_c4_room.set_room_off.assert_awaited_once()
     mock_c4_room.set_video_and_audio_source.assert_not_called()
+
+
+@pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director_duplicate_source_names",
+    "mock_room_off_update_variables",
+)
+async def test_media_player_restores_source_saved_while_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_c4_room: MagicMock,
+) -> None:
+    """Test that a source stored while the room was unavailable is restored.
+
+    Restore storage keeps the extra data even when the entity was unavailable at
+    shutdown, and Home Assistant drops the extra state attributes of an
+    unavailable entity, so the source has to survive in the extra data alone.
+    """
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State("media_player.living_room", STATE_UNAVAILABLE),
+                {"last_source_id": 101},
+            )
+        ],
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("media_player.living_room")
+    assert state is not None
+    assert state.attributes["last_source_id"] == 101
+
+    await hass.services.async_call(
+        "media_player",
+        "turn_on",
+        {"entity_id": "media_player.living_room"},
+        blocking=True,
+    )
+
+    mock_c4_room.set_video_and_audio_source.assert_awaited_once_with(101)
 
 
 @pytest.mark.usefixtures("mock_c4_account", "mock_c4_director_duplicate_source_names")
@@ -398,3 +440,64 @@ async def test_media_player_setup_recovers_from_failed_first_poll(
     state = hass.states.get("media_player.living_room")
     assert state is not None
     assert state.state == MediaPlayerState.OFF
+
+
+@pytest.mark.usefixtures("mock_c4_account", "mock_c4_director_duplicate_source_names")
+@patch(
+    "homeassistant.components.control4.media_player.update_variables_for_config_entry",
+    autospec=True,
+)
+async def test_media_player_keeps_last_source_across_unavailable_restart(
+    mock_update_variables: MagicMock,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_c4_room: MagicMock,
+    mock_room_off_variables: dict,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that the last source survives a restart while the room is unavailable.
+
+    This is the case the state attribute cannot cover: Home Assistant drops the
+    extra state attributes of an unavailable entity, so the source only lives in
+    the restore data when the entity is unavailable at shutdown.
+    """
+    mock_room_off_variables[1]["POWER_STATE"] = True
+    mock_room_off_variables[1]["CURRENT MEDIA INFO"] = {"mediainfo": {"medSrcDev": 101}}
+    mock_update_variables.return_value = mock_room_off_variables
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("media_player.living_room")
+    assert state is not None
+    assert state.attributes["last_source_id"] == 101
+
+    # The director stops answering, so the room goes unavailable, and it is off
+    # when the director is next read.
+    mock_room_off_variables[1]["POWER_STATE"] = False
+    mock_room_off_variables[1]["CURRENT MEDIA INFO"] = {}
+    mock_update_variables.side_effect = C4Exception("director unavailable")
+    await _async_refresh(hass, freezer)
+
+    state = hass.states.get("media_player.living_room")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    # Home Assistant restarts while the director is still unreachable, and the
+    # director comes back before the room is used.
+    await async_mock_restore_state_shutdown_restart(hass)
+    mock_update_variables.side_effect = None
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await _async_refresh(hass, freezer)
+
+    state = hass.states.get("media_player.living_room")
+    assert state is not None
+    assert state.state == MediaPlayerState.OFF
+    assert state.attributes["last_source_id"] == 101
+
+    await hass.services.async_call(
+        "media_player",
+        "turn_on",
+        {"entity_id": "media_player.living_room"},
+        blocking=True,
+    )
+
+    mock_c4_room.set_video_and_audio_source.assert_awaited_once_with(101)
