@@ -14,14 +14,7 @@ from homeassistant.components.image_upload import (
     DOMAIN as IMAGE_UPLOAD_DOMAIN,
     ImageStorageCollection,
 )
-from homeassistant.const import (
-    ATTR_ID,
-    ATTR_NAME,
-    CONF_ID,
-    CONF_NAME,
-    SERVICE_RELOAD,
-    EntityStateAttribute,
-)
+from homeassistant.const import ATTR_ID, ATTR_NAME, CONF_ID, CONF_NAME, SERVICE_RELOAD
 from homeassistant.core import Event, HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -85,7 +78,6 @@ __all__ = [
     "ATTR_USER_ID",
     "DOMAIN",
     "SERVICE_RELOAD",
-    "EntityStateAttribute",
     "Person",
     "PersonEntityStateAttribute",
     "PersonStorageCollection",
