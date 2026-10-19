@@ -1,6 +1,7 @@
 {
   "domain": "radiotherm",
   "name": "Radio Thermostat",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@vinnyfuria"],
   "config_flow": true,
   "dhcp": [

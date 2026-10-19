@@ -1,0 +1,382 @@
+"""Base entity for the Water heater platform."""
+
+import functools as ft
+from typing import Any, Final, final, override
+
+from propcache.api import cached_property
+
+from homeassistant.const import (
+    PRECISION_TENTHS,
+    PRECISION_WHOLE,
+    STATE_OFF,
+    STATE_ON,
+    UnitOfTemperature,
+)
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.deprecation import (
+    DeprecatedEntityAttr,
+    DeprecatedEntityProperty,
+    migrate_deprecated_entity_members,
+)
+from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.frame import ReportBehavior
+from homeassistant.helpers.temperature import display_temp as show_temp
+from homeassistant.util.unit_conversion import TemperatureConverter
+
+from .const import (
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
+    DOMAIN,
+    WaterHeaterCapabilityAttribute,
+    WaterHeaterEntityFeature,
+    WaterHeaterStateAttribute,
+)
+
+
+class WaterHeaterEntityDescription(EntityDescription, frozen_or_thawed=True):
+    """A class that describes water heater entities."""
+
+
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "native_temperature_unit",
+    "current_operation",
+    "operation_list",
+    "native_current_temperature",
+    "native_target_temperature",
+    "native_target_temperature_high",
+    "native_target_temperature_low",
+    "target_temperature_step",
+    "is_away_mode_on",
+}
+
+
+class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
+    """Base class for water heater entities."""
+
+    _entity_component_unrecorded_attributes = frozenset(
+        {
+            WaterHeaterCapabilityAttribute.OPERATION_LIST,
+            WaterHeaterCapabilityAttribute.MIN_TEMP,
+            WaterHeaterCapabilityAttribute.MAX_TEMP,
+            WaterHeaterCapabilityAttribute.TARGET_TEMP_STEP,
+        }
+    )
+
+    entity_description: WaterHeaterEntityDescription
+    _attr_current_operation: str | None = None
+    _attr_is_away_mode_on: bool | None = None
+    _attr_max_temp: float
+    _attr_min_temp: float
+    _attr_native_current_temperature: float | None = None
+    _attr_native_target_temperature_high: float | None = None
+    _attr_native_target_temperature_low: float | None = None
+    _attr_native_target_temperature: float | None = None
+    _attr_native_temperature_unit: str
+    _attr_operation_list: list[str] | None = None
+    _attr_precision: float
+    _attr_state: None = None
+    _attr_supported_features: WaterHeaterEntityFeature = WaterHeaterEntityFeature(0)
+    _attr_target_temperature_step: float | None = None
+
+    @override
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Serve the native temperature API of subclasses still providing the old one."""
+        super().__init_subclass__(**kwargs)
+        migrate_deprecated_entity_members(cls, WaterHeaterEntity)
+
+    @final
+    @property
+    @override
+    def state(self) -> str | None:
+        """Return the current state."""
+        return self.current_operation
+
+    @property
+    def precision(self) -> float:
+        """Return the precision of the system."""
+        if hasattr(self, "_attr_precision"):
+            return self._attr_precision
+        if self.hass.config.units.temperature_unit == UnitOfTemperature.CELSIUS:
+            return PRECISION_TENTHS
+        return PRECISION_WHOLE
+
+    @property
+    @override
+    def capability_attributes(self) -> dict[str, Any]:
+        """Return capability attributes."""
+        native_temperature_unit = self.native_temperature_unit
+        data: dict[str, Any] = {
+            WaterHeaterCapabilityAttribute.MIN_TEMP: show_temp(
+                self.hass, self.min_temp, native_temperature_unit, self.precision
+            ),
+            WaterHeaterCapabilityAttribute.MAX_TEMP: show_temp(
+                self.hass, self.max_temp, native_temperature_unit, self.precision
+            ),
+        }
+        if target_temperature_step := self.target_temperature_step:
+            data[WaterHeaterCapabilityAttribute.TARGET_TEMP_STEP] = (
+                target_temperature_step
+            )
+
+        if WaterHeaterEntityFeature.OPERATION_MODE in self.supported_features:
+            data[WaterHeaterCapabilityAttribute.OPERATION_LIST] = self.operation_list
+
+        return data
+
+    @final
+    @property
+    @override
+    def state_attributes(self) -> dict[str, Any]:
+        """Return the optional state attributes."""
+        native_temperature_unit = self.native_temperature_unit
+        data: dict[str, Any] = {
+            WaterHeaterStateAttribute.CURRENT_TEMPERATURE: show_temp(
+                self.hass,
+                self.native_current_temperature,
+                native_temperature_unit,
+                self.precision,
+            ),
+            WaterHeaterStateAttribute.TARGET_TEMPERATURE: show_temp(
+                self.hass,
+                self.native_target_temperature,
+                native_temperature_unit,
+                self.precision,
+            ),
+            WaterHeaterStateAttribute.TARGET_TEMP_HIGH: show_temp(
+                self.hass,
+                self.native_target_temperature_high,
+                native_temperature_unit,
+                self.precision,
+            ),
+            WaterHeaterStateAttribute.TARGET_TEMP_LOW: show_temp(
+                self.hass,
+                self.native_target_temperature_low,
+                native_temperature_unit,
+                self.precision,
+            ),
+            WaterHeaterStateAttribute.TEMPERATURE_UNIT: (
+                self.hass.config.units.temperature_unit
+            ),
+        }
+
+        supported_features = self.supported_features
+
+        if WaterHeaterEntityFeature.OPERATION_MODE in supported_features:
+            data[WaterHeaterStateAttribute.OPERATION_MODE] = self.current_operation
+
+        if WaterHeaterEntityFeature.AWAY_MODE in supported_features:
+            is_away = self.is_away_mode_on
+            data[WaterHeaterStateAttribute.AWAY_MODE] = (
+                STATE_ON if is_away else STATE_OFF
+            )
+
+        return data
+
+    @cached_property
+    def native_temperature_unit(self) -> str:
+        """Return the unit of measurement the entity reports temperatures in."""
+        return self._attr_native_temperature_unit
+
+    temperature_unit: Final = DeprecatedEntityProperty[str](
+        "native_temperature_unit",
+        "2027.11",
+        core_integration_behavior=ReportBehavior.ERROR,
+    )
+    _attr_temperature_unit: Final = DeprecatedEntityAttr[str](
+        "_attr_native_temperature_unit",
+        "2027.11",
+        core_integration_behavior=ReportBehavior.ERROR,
+    )
+
+    @cached_property
+    def current_operation(self) -> str | None:
+        """Return current operation ie. eco, electric, performance, ..."""
+        return self._attr_current_operation
+
+    @cached_property
+    def operation_list(self) -> list[str] | None:
+        """Return the list of available operation modes."""
+        return self._attr_operation_list
+
+    @cached_property
+    def native_current_temperature(self) -> float | None:
+        """Return the current temperature in the native unit."""
+        return self._attr_native_current_temperature
+
+    current_temperature: Final = DeprecatedEntityProperty[float | None](
+        "native_current_temperature",
+        "2027.11",
+        core_integration_behavior=ReportBehavior.ERROR,
+    )
+    _attr_current_temperature: Final = DeprecatedEntityAttr[float | None](
+        "_attr_native_current_temperature",
+        "2027.11",
+        core_integration_behavior=ReportBehavior.ERROR,
+    )
+
+    @cached_property
+    def native_target_temperature(self) -> float | None:
+        """Return the temperature we try to reach, in the native unit."""
+        return self._attr_native_target_temperature
+
+    target_temperature: Final = DeprecatedEntityProperty[float | None](
+        "native_target_temperature",
+        "2027.11",
+        core_integration_behavior=ReportBehavior.ERROR,
+    )
+    _attr_target_temperature: Final = DeprecatedEntityAttr[float | None](
+        "_attr_native_target_temperature",
+        "2027.11",
+        core_integration_behavior=ReportBehavior.ERROR,
+    )
+
+    @cached_property
+    def native_target_temperature_high(self) -> float | None:
+        """Return the highbound target temperature we try to reach.
+
+        In the native unit.
+        """
+        return self._attr_native_target_temperature_high
+
+    target_temperature_high: Final = DeprecatedEntityProperty[float | None](
+        "native_target_temperature_high",
+        "2027.11",
+        core_integration_behavior=ReportBehavior.ERROR,
+    )
+    _attr_target_temperature_high: Final = DeprecatedEntityAttr[float | None](
+        "_attr_native_target_temperature_high",
+        "2027.11",
+        core_integration_behavior=ReportBehavior.ERROR,
+    )
+
+    @cached_property
+    def native_target_temperature_low(self) -> float | None:
+        """Return the lowbound target temperature we try to reach.
+
+        In the native unit.
+        """
+        return self._attr_native_target_temperature_low
+
+    target_temperature_low: Final = DeprecatedEntityProperty[float | None](
+        "native_target_temperature_low",
+        "2027.11",
+        core_integration_behavior=ReportBehavior.ERROR,
+    )
+    _attr_target_temperature_low: Final = DeprecatedEntityAttr[float | None](
+        "_attr_native_target_temperature_low",
+        "2027.11",
+        core_integration_behavior=ReportBehavior.ERROR,
+    )
+
+    @cached_property
+    def target_temperature_step(self) -> float | None:
+        """Return the supported step of target temperature."""
+        return self._attr_target_temperature_step
+
+    @cached_property
+    def is_away_mode_on(self) -> bool | None:
+        """Return true if away mode is on."""
+        return self._attr_is_away_mode_on
+
+    def set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        raise NotImplementedError
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        await self.hass.async_add_executor_job(
+            ft.partial(self.set_temperature, **kwargs)
+        )
+
+    def turn_on(self, **kwargs: Any) -> None:
+        """Turn the water heater on."""
+        raise NotImplementedError
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the water heater on."""
+        await self.hass.async_add_executor_job(ft.partial(self.turn_on, **kwargs))
+
+    def turn_off(self, **kwargs: Any) -> None:
+        """Turn the water heater off."""
+        raise NotImplementedError
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the water heater off."""
+        await self.hass.async_add_executor_job(ft.partial(self.turn_off, **kwargs))
+
+    def set_operation_mode(self, operation_mode: str) -> None:
+        """Set new target operation mode."""
+        raise NotImplementedError
+
+    async def async_set_operation_mode(self, operation_mode: str) -> None:
+        """Set new target operation mode."""
+        await self.hass.async_add_executor_job(self.set_operation_mode, operation_mode)
+
+    @final
+    async def async_handle_set_operation_mode(self, operation_mode: str) -> None:
+        """Handle a set target operation mode service call."""
+        if self.operation_list is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="operation_list_not_defined",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "operation_mode": operation_mode,
+                },
+            )
+        if operation_mode not in self.operation_list:
+            operation_list = ", ".join(self.operation_list)
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="not_valid_operation_mode",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "operation_mode": operation_mode,
+                    "operation_list": operation_list,
+                },
+            )
+        await self.async_set_operation_mode(operation_mode)
+
+    def turn_away_mode_on(self) -> None:
+        """Turn away mode on."""
+        raise NotImplementedError
+
+    async def async_turn_away_mode_on(self) -> None:
+        """Turn away mode on."""
+        await self.hass.async_add_executor_job(self.turn_away_mode_on)
+
+    def turn_away_mode_off(self) -> None:
+        """Turn away mode off."""
+        raise NotImplementedError
+
+    async def async_turn_away_mode_off(self) -> None:
+        """Turn away mode off."""
+        await self.hass.async_add_executor_job(self.turn_away_mode_off)
+
+    @property
+    def min_temp(self) -> float:
+        """Return the minimum temperature."""
+        if hasattr(self, "_attr_min_temp"):
+            return self._attr_min_temp
+        return TemperatureConverter.convert(
+            DEFAULT_MIN_TEMP,
+            UnitOfTemperature.FAHRENHEIT,
+            self.native_temperature_unit,
+        )
+
+    @property
+    def max_temp(self) -> float:
+        """Return the maximum temperature."""
+        if hasattr(self, "_attr_max_temp"):
+            return self._attr_max_temp
+        return TemperatureConverter.convert(
+            DEFAULT_MAX_TEMP,
+            UnitOfTemperature.FAHRENHEIT,
+            self.native_temperature_unit,
+        )
+
+    @property
+    @override
+    def supported_features(self) -> WaterHeaterEntityFeature:
+        """Return the list of supported features."""
+        return self._attr_supported_features

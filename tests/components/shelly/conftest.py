@@ -18,6 +18,7 @@ from aioshelly.const import MODEL_1, MODEL_25, MODEL_PLUS_2PM
 from aioshelly.exceptions import NotInitialized
 from aioshelly.rpc_device import RpcDevice, RpcUpdateType
 import pytest
+from pytest_homeassistant.common import async_capture_events
 
 from homeassistant.components.shelly.const import (
     EVENT_SHELLY_CLICK,
@@ -26,8 +27,6 @@ from homeassistant.components.shelly.const import (
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_MAC
-
-from tests.common import async_capture_events
 
 MOCK_SETTINGS = {
     "name": "Test name",
@@ -537,6 +536,15 @@ Shelly.emitEvent("script_start");
     .replace(VAR_VERSION, str(BLE_SCAN_RESULT_VERSION)),
 ]
 
+MOCK_LEDSTRIP_EFFECTS = {
+    "solid": {"name": "Solid Color", "controls": ["rgb"]},
+    "blink": {"name": "Blink", "controls": ["rgb", "bg_rgb", "speed", "intensity"]},
+    "fade": {"name": "Fade", "controls": ["rgb", "speed"]},
+    "rainbow": {"name": "Rainbow", "controls": ["speed", "reverse"]},
+    "colorwipe": {"name": "Color Wipe", "controls": ["rgb", "speed", "reverse"]},
+    "ddp": {"name": "DDP Receiver", "controls": []},
+}
+
 
 @pytest.fixture(autouse=True)
 def mock_coap():
@@ -636,6 +644,7 @@ def _mock_rpc_device(version: str | None = None):
         ble_getconfig=AsyncMock(return_value={}),
         ble_setconfig=AsyncMock(return_value={"restart_required": False}),
         shutdown=AsyncMock(),
+        ledstrip_list_effects=AsyncMock(return_value=MOCK_LEDSTRIP_EFFECTS),
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device

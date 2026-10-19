@@ -1,6 +1,7 @@
 {
   "domain": "jvc_projector",
   "name": "JVC Projector",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@SteveEasley"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/jvc_projector",

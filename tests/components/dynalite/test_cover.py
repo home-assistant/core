@@ -6,6 +6,7 @@ from unittest.mock import Mock
 from dynalite_devices_lib.cover import DynaliteTimeCoverWithTiltDevice
 from dynalite_devices_lib.dynalitebase import DynaliteBaseDevice
 import pytest
+from pytest_homeassistant.common import mock_restore_cache
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -27,8 +28,6 @@ from .common import (
     create_mock_device,
     run_service_tests,
 )
-
-from tests.common import mock_restore_cache
 
 
 @pytest.fixture

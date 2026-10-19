@@ -6,6 +6,13 @@ from unittest.mock import MagicMock
 from freezegun.api import FrozenDateTimeFactory
 from pymiele import MieleDevices, MieleTemperature
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    mock_restore_cache_with_extra_data,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.miele.const import DOMAIN
@@ -16,14 +23,6 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
 from . import get_data_callback
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-    mock_restore_cache_with_extra_data,
-    snapshot_platform,
-)
 
 
 @pytest.mark.freeze_time("2025-05-31 12:30:00+00:00")
