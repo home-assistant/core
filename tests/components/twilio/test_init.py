@@ -1,13 +1,13 @@
 """Test the init file of Twilio."""
 
+from pytest_homeassistant.typing import ClientSessionGenerator
+
 from homeassistant import config_entries
 from homeassistant.components import twilio
 from homeassistant.components.twilio import DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.typing import ClientSessionGenerator
 
 
 async def test_config_flow_registers_webhook(

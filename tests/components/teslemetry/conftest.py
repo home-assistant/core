@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from teslemetry_stream.const import EnergyTotalsEvent
 from teslemetry_stream.stream import recursive_match
 
@@ -25,8 +26,6 @@ from .const import (
     VEHICLE_DATA,
     WAKE_UP_ONLINE,
 )
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture

@@ -1,13 +1,12 @@
 """Test config entries API."""
 
 import pytest
+from pytest_homeassistant.common import CLIENT_ID, MockGroup, MockUser
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.auth import models as auth_models
 from homeassistant.components.config import auth as auth_config
 from homeassistant.core import HomeAssistant
-
-from tests.common import CLIENT_ID, MockGroup, MockUser
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)

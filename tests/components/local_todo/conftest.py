@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.local_todo import LocalTodoListStore
 from homeassistant.components.local_todo.const import (
@@ -14,8 +15,6 @@ from homeassistant.components.local_todo.const import (
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 TODO_NAME = "My Tasks"
 FRIENDLY_NAME = "My tasks"

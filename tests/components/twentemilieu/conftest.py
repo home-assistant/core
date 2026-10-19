@@ -5,6 +5,7 @@ from datetime import date
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from twentemilieu import WasteType
 
 from homeassistant.components.twentemilieu.const import (
@@ -15,8 +16,6 @@ from homeassistant.components.twentemilieu.const import (
 )
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
