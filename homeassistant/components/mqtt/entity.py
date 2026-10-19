@@ -10,15 +10,6 @@ import probatio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_CONFIGURATION_URL,
-    ATTR_HW_VERSION,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_MODEL_ID,
-    ATTR_NAME,
-    ATTR_SERIAL_NUMBER,
-    ATTR_SUGGESTED_AREA,
-    ATTR_SW_VERSION,
     CONF_DEVICE,
     CONF_ENTITY_CATEGORY,
     CONF_ICON,
@@ -1376,31 +1367,31 @@ def device_info_from_specifications(
     )
 
     if CONF_MANUFACTURER in specifications:
-        info[ATTR_MANUFACTURER] = specifications[CONF_MANUFACTURER]
+        info.manufacturer = specifications[CONF_MANUFACTURER]
 
     if CONF_MODEL in specifications:
-        info[ATTR_MODEL] = specifications[CONF_MODEL]
+        info.model = specifications[CONF_MODEL]
 
     if CONF_MODEL_ID in specifications:
-        info[ATTR_MODEL_ID] = specifications[CONF_MODEL_ID]
+        info.model_id = specifications[CONF_MODEL_ID]
 
     if CONF_NAME in specifications:
-        info[ATTR_NAME] = specifications[CONF_NAME]
+        info.name = specifications[CONF_NAME]
 
     if CONF_HW_VERSION in specifications:
-        info[ATTR_HW_VERSION] = specifications[CONF_HW_VERSION]
+        info.hw_version = specifications[CONF_HW_VERSION]
 
     if CONF_SERIAL_NUMBER in specifications:
-        info[ATTR_SERIAL_NUMBER] = specifications[CONF_SERIAL_NUMBER]
+        info.serial_number = specifications[CONF_SERIAL_NUMBER]
 
     if CONF_SW_VERSION in specifications:
-        info[ATTR_SW_VERSION] = specifications[CONF_SW_VERSION]
+        info.sw_version = specifications[CONF_SW_VERSION]
 
     if CONF_SUGGESTED_AREA in specifications:
-        info[ATTR_SUGGESTED_AREA] = specifications[CONF_SUGGESTED_AREA]
+        info.suggested_area = specifications[CONF_SUGGESTED_AREA]
 
     if CONF_CONFIGURATION_URL in specifications:
-        info[ATTR_CONFIGURATION_URL] = specifications[CONF_CONFIGURATION_URL]
+        info.configuration_url = specifications[CONF_CONFIGURATION_URL]
 
     return info
 
@@ -1501,7 +1492,7 @@ class MqttEntityDeviceInfo(Entity):
                 self.hass, self._device_specifications, self._config_entry
             )
         ):
-            info["via_device_id"] = via_device_id
+            info.via_device_id = via_device_id
         return info
 
 
@@ -1562,7 +1553,18 @@ class MqttEntity(
         object_id: str
         default_entity_id: str | None
         if default_entity_id := self._config.get(CONF_DEFAULT_ENTITY_ID):
-            _, _, object_id = default_entity_id.partition(".")
+            domain, _, object_id = default_entity_id.partition(".")
+            entity_domain = self._entity_id_format.split(".")[0]
+            if object_id and domain != entity_domain:
+                _LOGGER.warning(
+                    "The default_entity_id %s of a %s entity has the %s domain; "
+                    "using %s.%s as the default instead",
+                    default_entity_id,
+                    entity_domain,
+                    domain,
+                    entity_domain,
+                    object_id,
+                )
             self.entity_id = async_generate_entity_id(
                 self._entity_id_format, object_id, None, self.hass
             )
@@ -1894,7 +1896,7 @@ def update_device(
 
     if config_entry_id is not None and device_info is not None:
         if via_device_id := _resolve_via_device_id(hass, specifications, config_entry):
-            device_info["via_device_id"] = via_device_id
+            device_info.via_device_id = via_device_id
         device = device_registry.async_get_or_create(
             config_entry_id=config_entry_id, **device_info
         )

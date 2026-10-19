@@ -56,7 +56,7 @@ To resolve: either compute the id per instance (using config-entry id,
 serial, MAC, etc.), or declare the integration as
 ``single_config_entry`` if there is genuinely only ever one instance.
 
-https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/entity-unique-id
+https://contributors.home-assistant.io/core/quality-scale/entity-unique-id/
 """
 
 from astroid import nodes
@@ -300,8 +300,8 @@ class EntityUniqueIdChecker(BaseChecker):
             (
                 "Entity class `%s` should set `_attr_unique_id` or define a "
                 "`unique_id` property "
-                "(https://developers.home-assistant.io/docs/core/"
-                "integration-quality-scale/rules/entity-unique-id)"
+                "(https://contributors.home-assistant.io/core/"
+                "quality-scale/entity-unique-id/)"
             ),
             "home-assistant-missing-entity-unique-id",
             (
@@ -321,8 +321,8 @@ class EntityUniqueIdChecker(BaseChecker):
                 "config entry. Use a per-instance value, or declare "
                 "`single_config_entry: true` in manifest.json if there is "
                 "genuinely only one instance "
-                "(https://developers.home-assistant.io/docs/core/"
-                "integration-quality-scale/rules/entity-unique-id)"
+                "(https://contributors.home-assistant.io/core/"
+                "quality-scale/entity-unique-id/)"
             ),
             "home-assistant-entity-unique-id-static",
             (

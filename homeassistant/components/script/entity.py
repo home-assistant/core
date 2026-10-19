@@ -429,6 +429,8 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
 
         unique_id = self.unique_id
         hass = self.hass
+        # Cannot be moved: each script is also registered as its own action
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         hass.services.async_register(
             DOMAIN,
             unique_id,

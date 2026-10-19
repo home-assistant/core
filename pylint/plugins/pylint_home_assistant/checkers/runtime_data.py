@@ -41,14 +41,14 @@ class HassEnforceRuntimeDataChecker(BaseChecker):
     msgs = {
         "W7405": (
             "Use entry.runtime_data instead of hass.data[DOMAIN] "
-            "(https://developers.home-assistant.io/docs/core/"
-            "integration-quality-scale/rules/runtime-data)",
+            "(https://contributors.home-assistant.io/core/"
+            "quality-scale/runtime-data/)",
             "home-assistant-use-runtime-data",
             "Used when integration code accesses hass.data[DOMAIN]. "
             "New integrations should use entry.runtime_data for type-safe, "
             "automatically-cleaned-up per-entry data storage. "
-            "See https://developers.home-assistant.io/docs/core/"
-            "integration-quality-scale/rules/runtime-data",
+            "See https://contributors.home-assistant.io/core/"
+            "quality-scale/runtime-data/",
         ),
     }
     options = ()

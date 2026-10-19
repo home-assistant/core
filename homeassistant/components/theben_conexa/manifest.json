@@ -7,5 +7,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["theben-conexa-smgw==0.4.2"]
+  "requirements": ["theben-conexa-smgw==0.4.3"]
 }
