@@ -1,5 +1,6 @@
 """Helpers for the Anglian Water integration."""
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
@@ -14,9 +15,10 @@ def consent_required_issue_id(account_number: str) -> str:
 
 
 def async_create_consent_required_issue(
-    hass: HomeAssistant, account_number: str
+    hass: HomeAssistant, entry: ConfigEntry
 ) -> None:
     """Create a repair issue directing the user to accept updated terms."""
+    account_number = entry.data[CONF_ACCOUNT_NUMBER]
     ir.async_create_issue(
         hass,
         DOMAIN,
@@ -28,6 +30,7 @@ def async_create_consent_required_issue(
             CONF_ACCOUNT_NUMBER: account_number,
         },
         learn_more_url=LEARN_MORE_URL,
+        config_entry_id=entry.entry_id,
     )
 
 

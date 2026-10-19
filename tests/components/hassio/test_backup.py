@@ -3005,6 +3005,7 @@ async def test_restore_progress_after_restart_unknown_job(
                         "retention": {"copies": None, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
+                        "last_completed_automatic_backup_size": None,
                         "schedule": {
                             "days": [],
                             "recurrence": "never",
@@ -3037,6 +3038,7 @@ async def test_restore_progress_after_restart_unknown_job(
                         "retention": {"copies": None, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
+                        "last_completed_automatic_backup_size": None,
                         "schedule": {
                             "days": [],
                             "recurrence": "never",

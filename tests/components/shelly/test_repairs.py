@@ -46,11 +46,12 @@ async def test_ble_scanner_unsupported_firmware_issue(
     issue_id = BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=MOCK_MAC)
     assert await async_setup_component(hass, "repairs", {})
     await hass.async_block_till_done()
-    await init_integration(
+    entry = await init_integration(
         hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
     )
 
-    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert (issue := issue_registry.async_get_issue(DOMAIN, issue_id))
+    assert issue.config_entry_id == entry.entry_id
     assert len(issue_registry.issues) == 1
 
     client = await hass_client()
@@ -155,9 +156,10 @@ async def test_outbound_websocket_incorrectly_enabled_issue(
     issue_id = OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID.format(unique=MOCK_MAC)
     assert await async_setup_component(hass, "repairs", {})
     await hass.async_block_till_done()
-    await init_integration(hass, 2)
+    entry = await init_integration(hass, 2)
 
-    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert (issue := issue_registry.async_get_issue(DOMAIN, issue_id))
+    assert issue.config_entry_id == entry.entry_id
     assert len(issue_registry.issues) == 1
 
     client = await hass_client()
@@ -252,10 +254,11 @@ async def test_deprecated_firmware_issue(
             )
         },
     ):
-        await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+        entry = await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
     # The default fw version in tests is 1.0.0, the repair issue should be created.
-    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert (issue := issue_registry.async_get_issue(DOMAIN, issue_id))
+    assert issue.config_entry_id == entry.entry_id
     assert len(issue_registry.issues) == 1
 
     client = await hass_client()
@@ -290,9 +293,10 @@ async def test_open_wifi_ap_issue(
     issue_id = OPEN_WIFI_AP_ISSUE_ID.format(unique=MOCK_MAC)
     assert await async_setup_component(hass, "repairs", {})
     await hass.async_block_till_done()
-    await init_integration(hass, 2)
+    entry = await init_integration(hass, 2)
 
-    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert (issue := issue_registry.async_get_issue(DOMAIN, issue_id))
+    assert issue.config_entry_id == entry.entry_id
     assert len(issue_registry.issues) == 1
 
     client = await hass_client()
@@ -453,9 +457,10 @@ async def test_open_wifi_ap_issue_ignore(
     issue_id = OPEN_WIFI_AP_ISSUE_ID.format(unique=MOCK_MAC)
     assert await async_setup_component(hass, "repairs", {})
     await hass.async_block_till_done()
-    await init_integration(hass, 2)
+    entry = await init_integration(hass, 2)
 
-    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert (issue := issue_registry.async_get_issue(DOMAIN, issue_id))
+    assert issue.config_entry_id == entry.entry_id
     assert len(issue_registry.issues) == 1
 
     client = await hass_client()
@@ -472,6 +477,10 @@ async def test_open_wifi_ap_issue_ignore(
 
     assert (issue := issue_registry.async_get_issue(DOMAIN, issue_id))
     assert issue.dismissed_version
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
 @pytest.mark.parametrize(
@@ -534,10 +543,11 @@ async def test_coiot_disabled_or_wrong_peer_issue(
     issue_id = COIOT_UNCONFIGURED_ISSUE_ID.format(unique=MOCK_MAC)
     assert await async_setup_component(hass, "repairs", {})
     await hass.async_block_till_done()
-    await init_integration(hass, 1)
+    entry = await init_integration(hass, 1)
     await mock_block_device_push_update_failure(hass, mock_block_device)
 
-    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert (issue := issue_registry.async_get_issue(DOMAIN, issue_id))
+    assert issue.config_entry_id == entry.entry_id
     assert len(issue_registry.issues) == 1
 
     client = await hass_client()
@@ -655,7 +665,7 @@ async def test_coiot_push_issue_when_missing_hass_url(
     issue_id = PUSH_UPDATE_ISSUE_ID.format(unique=MOCK_MAC)
     assert await async_setup_component(hass, "repairs", {})
     await hass.async_block_till_done()
-    await init_integration(hass, 1)
+    entry = await init_integration(hass, 1)
 
     with patch(
         "homeassistant.components.shelly.utils.get_url",
@@ -663,8 +673,13 @@ async def test_coiot_push_issue_when_missing_hass_url(
     ):
         await mock_block_device_push_update_failure(hass, mock_block_device)
 
-    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert (issue := issue_registry.async_get_issue(DOMAIN, issue_id))
+    assert issue.config_entry_id == entry.entry_id
     assert len(issue_registry.issues) == 1
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
 async def test_coiot_fix_flow_no_hass_url(
@@ -784,9 +799,10 @@ async def test_rtsp_disabled_issue(
     issue_id = RTSP_DISABLED_ISSUE_ID.format(unique=MOCK_MAC)
     assert await async_setup_component(hass, "repairs", {})
     await hass.async_block_till_done()
-    await init_integration(hass, 3, MODEL_CAMERA)
+    entry = await init_integration(hass, 3, MODEL_CAMERA)
 
-    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert (issue := issue_registry.async_get_issue(DOMAIN, issue_id))
+    assert issue.config_entry_id == entry.entry_id
     assert len(issue_registry.issues) == 1
 
     client = await hass_client()

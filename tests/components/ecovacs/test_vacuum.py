@@ -69,6 +69,7 @@ def _prepare_test(
             2,
             id="clean_count_from_device",
         ),
+        pytest.param("qhe2o2", "vacuum.dusty", [], 1, id="clean_v2"),
     ],
 )
 async def test_clean_area(
