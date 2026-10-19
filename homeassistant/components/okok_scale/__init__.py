@@ -15,6 +15,9 @@ from homeassistant.components.bluetooth.active_update_processor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+
+from .const import DOMAIN
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -59,8 +62,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: OKOKScaleConfigEntry) ->
         else:
             # We have no bluetooth controller that is in range of
             # the device to poll it
-            raise RuntimeError(
-                f"No connectable device found for {service_info.device.address}"
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="no_connectable_device",
+                translation_placeholders={"address": service_info.device.address},
             )
 
         return await data.async_poll(connectable_device, service_info.advertisement)

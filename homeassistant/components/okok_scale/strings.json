@@ -27,5 +27,10 @@
         "name": "Impedance"
       }
     }
+  },
+  "exceptions": {
+    "no_connectable_device": {
+      "message": "No connectable Bluetooth adapter is in range of {address}."
+    }
   }
 }

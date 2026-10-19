@@ -41,18 +41,18 @@ SENSOR_DESCRIPTIONS = {
     (OKOKScaleSensorDeviceClass.MASS, Units.MASS_KILOGRAMS): SensorEntityDescription(
         key="weight",
         device_class=SensorDeviceClass.WEIGHT,
-        icon="mdi:scale-bathroom",
         native_unit_of_measurement=UnitOfMass.KILOGRAMS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
+        translation_key="weight",
     ),
     (OKOKScaleSensorDeviceClass.MASS, Units.MASS_POUNDS): SensorEntityDescription(
         key="weight",
         device_class=SensorDeviceClass.WEIGHT,
-        icon="mdi:scale-bathroom",
         native_unit_of_measurement=UnitOfMass.POUNDS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
+        translation_key="weight",
     ),
     (
         OKOKScaleSensorDeviceClass.SIGNAL_STRENGTH,
