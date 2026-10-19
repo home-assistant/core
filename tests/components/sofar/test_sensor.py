@@ -15,6 +15,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.sofar.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.sofar.sensor import (
     SENSOR_DESCRIPTIONS,
+    TOTAL_SENSOR_DESCRIPTIONS,
     SofarSensorDescription,
     SofarTotalSensorDescription,
 )
@@ -71,11 +72,11 @@ async def test_all_entities(
 
 
 def test_sensor_description_components_are_real() -> None:
-    """Guards SENSOR_DESCRIPTIONS against a component/key transcription slip."""
+    """Guards the descriptions against a component/key transcription slip."""
     inverter = SofarInverter(
         MockModbusConnection().for_unit(1), serial_number="SP1ES12345678"
     )
-    for description in SENSOR_DESCRIPTIONS:
+    for description in (*SENSOR_DESCRIPTIONS, *TOTAL_SENSOR_DESCRIPTIONS):
         component = getattr(inverter, description.component, None)
         assert component is not None, f"unknown component {description.component!r}"
         assert hasattr(component, description.key), (
@@ -153,7 +154,7 @@ async def test_enabled_by_default_partition(
     served = entry.runtime_data.served_components
     expected_disabled = {
         description.key
-        for description in SENSOR_DESCRIPTIONS
+        for description in (*SENSOR_DESCRIPTIONS, *TOTAL_SENSOR_DESCRIPTIONS)
         if description.component in served
         and not description.entity_registry_enabled_default
     }
@@ -333,7 +334,6 @@ async def test_sensor_availability_on_component_failure(
     [
         pytest.param(description, id=description.key)
         for description in SENSOR_DESCRIPTIONS
-        if isinstance(description, SofarSensorDescription)
     ],
 )
 async def test_value_fn_reads_the_field_its_key_names(
@@ -351,8 +351,7 @@ async def test_value_fn_reads_the_field_its_key_names(
     "description",
     [
         pytest.param(description, id=description.key)
-        for description in SENSOR_DESCRIPTIONS
-        if isinstance(description, SofarTotalSensorDescription)
+        for description in TOTAL_SENSOR_DESCRIPTIONS
     ],
 )
 async def test_total_fn_reads_the_total_its_key_names(

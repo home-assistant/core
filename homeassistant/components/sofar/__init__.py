@@ -34,8 +34,9 @@ from .const import (
     TYPE_TCP,
 )
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
+from .entity import SofarEntityDescription
 from .helpers import create_modbus_params
-from .sensor import SENSOR_DESCRIPTIONS, SofarTotalSensorDescription
+from .sensor import SENSOR_DESCRIPTIONS, TOTAL_SENSOR_DESCRIPTIONS
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,7 +74,11 @@ def _async_remove_denied_meter_energy(
     if METER_ENERGY in served:
         return
     registry = er.async_get(hass)
-    for description in SENSOR_DESCRIPTIONS:
+    descriptions: tuple[SofarEntityDescription, ...] = (
+        *SENSOR_DESCRIPTIONS,
+        *TOTAL_SENSOR_DESCRIPTIONS,
+    )
+    for description in descriptions:
         if description.component != METER_ENERGY:
             continue
         entity_id = registry.async_get_entity_id(
@@ -89,9 +94,7 @@ def _async_seed_high_water_marks(
     """Prime high-water marks before the first poll has nothing to compare."""
     registry = er.async_get(hass)
     restore_state_data = restore_state.async_get(hass)
-    for description in SENSOR_DESCRIPTIONS:
-        if not isinstance(description, SofarTotalSensorDescription):
-            continue
+    for description in TOTAL_SENSOR_DESCRIPTIONS:
         entity_id = registry.async_get_entity_id(
             SENSOR_DOMAIN, DOMAIN, f"{serial}_{description.key}"
         )
