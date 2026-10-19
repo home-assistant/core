@@ -204,6 +204,7 @@ class LoginFlow[_AuthProviderT: AuthProvider = AuthProvider](
         """Initialize the login flow."""
         self._auth_provider = auth_provider
         self._auth_manager = auth_provider.hass.auth
+        self.created_at = dt_util.utcnow()
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -230,7 +231,6 @@ class MfaLoginFlow[_AuthProviderT: AuthProvider = AuthProvider](
         super().__init__(auth_provider)
         self._auth_module_id: str | None = None
         self.available_mfa_modules: dict[str, str] = {}
-        self.created_at = dt_util.utcnow()
         self.invalid_mfa_times = 0
         self.user: User | None = None
         self.credential: Credentials | None = None

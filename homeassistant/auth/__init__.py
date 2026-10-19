@@ -33,7 +33,7 @@ from .const import (
 )
 from .mfa_modules import MultiFactorAuthModule, auth_mfa_module_from_config
 from .models import AuthFlowContext, AuthFlowResult
-from .providers import AuthProvider, LoginFlow, auth_provider_from_config
+from .providers import AuthProvider, LoginFlow, MfaLoginFlow, auth_provider_from_config
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -155,7 +155,7 @@ class AuthManagerFlowManager(
                 (
                     flow
                     for flow in self._progress.values()
-                    if cast(LoginFlow, flow).user is None
+                    if not isinstance(flow, MfaLoginFlow) or flow.user is None
                 ),
                 None,
             )
