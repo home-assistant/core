@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 
 from aioimmich.exceptions import ImmichError, ImmichNotFoundError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.immich.const import DOMAIN
 from homeassistant.components.immich.services import SERVICE_UPLOAD_FILE
@@ -16,8 +17,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_services(

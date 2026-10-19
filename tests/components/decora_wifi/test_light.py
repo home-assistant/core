@@ -3,13 +3,12 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "light.living_room"
 

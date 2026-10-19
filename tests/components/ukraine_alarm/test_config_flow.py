@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientConnectionError, ClientError, ClientResponseError, RequestInfo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from yarl import URL
 
 from homeassistant import config_entries
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import REGIONS
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

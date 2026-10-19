@@ -11,6 +11,7 @@ from aiohasupervisor.models import UpdateChannel
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.hassio import DOMAIN
 from homeassistant.components.hassio.auto_update import (
@@ -27,8 +28,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 STORAGE_KEY = "hassio.auto_update"

@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from skoda_public_api.api_layer.exceptions import (
     OpenApiAuthenticationError,
     OpenApiError,
@@ -12,8 +13,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_and_unload(

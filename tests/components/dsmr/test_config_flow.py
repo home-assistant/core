@@ -6,6 +6,7 @@ from unittest.mock import DEFAULT, AsyncMock, MagicMock, patch
 
 from dsmr_parser.exceptions import DecryptionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from serialx.common import UnknownUriScheme
 
 from homeassistant import config_entries
@@ -14,8 +15,6 @@ from homeassistant.components.dsmr.const import DOMAIN
 from homeassistant.components.usb import SerialDevice
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 SERIAL_DATA = {"serial_id": "12345678", "serial_id_gas": "123456789"}
 SERIAL_DATA_SWEDEN = {"serial_id": None, "serial_id_gas": None}

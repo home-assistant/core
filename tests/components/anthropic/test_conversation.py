@@ -48,6 +48,7 @@ from freezegun import freeze_time
 from httpx2 import URL, Request, Response
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
@@ -106,8 +107,6 @@ from . import (
     create_web_fetch_result_block,
     create_web_search_result_block,
 )
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "conversation.claude_conversation"
 

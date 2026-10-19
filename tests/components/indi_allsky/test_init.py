@@ -6,14 +6,13 @@ from unittest.mock import AsyncMock, patch
 from aioindiallsky import IndiAllSkyAuthError, IndiAllSkyConnectionError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.indi_allsky.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup_and_unload_entry(

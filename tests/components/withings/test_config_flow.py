@@ -3,6 +3,9 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.withings.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
@@ -13,10 +16,6 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import setup_integration
 from .conftest import CLIENT_ID, USER_ID
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.usefixtures("current_request_with_host")
