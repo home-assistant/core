@@ -1,6 +1,7 @@
 """Define tests for the generic (IP camera) integration."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.generic.const import (
     CONF_CONTENT_TYPE,
@@ -20,8 +21,6 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("fakeimg_png")

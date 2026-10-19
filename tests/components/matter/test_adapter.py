@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from matter_server.client.models.node import MatterNode
 from matter_server.common.models import EventType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.matter.adapter import get_clean_name
 from homeassistant.components.matter.const import DOMAIN, ID_TYPE_DEVICE_ID
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .common import create_node_from_fixture
-
-from tests.common import MockConfigEntry
 
 
 def identifier_for(

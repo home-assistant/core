@@ -24,6 +24,8 @@ from aiohasupervisor.models import (
     UnsupportedReason,
 )
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.hassio.const import DOMAIN, HASSIO_ISSUES_UPDATE_INTERVAL
 from homeassistant.components.hassio.coordinator import (
@@ -38,9 +40,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .test_init import MOCK_ENVIRON
-
-from tests.common import async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -676,7 +675,7 @@ async def test_supervisor_issues(
         type_="detached_addon_missing",
         fixable=False,
         reference="test",
-        placeholders={"addon_url": "/hassio/addon/test", "addon": "test"},
+        placeholders={"addon_url": "/config/app/test", "addon": "test"},
     )
     assert_issue_repair_in_list(
         msg["result"]["issues"],
@@ -962,7 +961,7 @@ async def test_supervisor_issues_app_port_conflict_single(
         placeholders={
             "reference": "test",
             "addon": "test",
-            "addon_url": "/hassio/addon/test",
+            "addon_url": "/config/app/test",
             "port": "11443",
         },
     )
@@ -1034,7 +1033,7 @@ async def test_supervisor_issues_app_port_conflict_menu(
         placeholders={
             "reference": "test",
             "addon": "test",
-            "addon_url": "/hassio/addon/test",
+            "addon_url": "/config/app/test",
             "port": "11443",
         },
     )
@@ -1090,7 +1089,7 @@ async def test_supervisor_issues_detached_addon_missing(
         placeholders={
             "reference": "test",
             "addon": "test",
-            "addon_url": "/hassio/addon/test",
+            "addon_url": "/config/app/test",
         },
     )
 
@@ -1302,7 +1301,7 @@ async def test_supervisor_issues_addon_pwned(
         placeholders={
             "reference": "test",
             "addon": "test",
-            "addon_url": "/hassio/addon/test",
+            "addon_url": "/config/app/test",
             "more_info_pwned": "https://www.home-assistant.io/more-info/pwned-passwords",
         },
     )

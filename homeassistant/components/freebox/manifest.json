@@ -1,6 +1,11 @@
 {
   "domain": "freebox",
   "name": "Freebox",
+  "categories": [
+    "computers_network.routers_network",
+    "presence_location.network_presence",
+    "security_safety.alarm_systems"
+  ],
   "codeowners": ["@hacf-fr/reviewers", "@Quentame"],
   "config_flow": true,
   "dependencies": ["ffmpeg"],

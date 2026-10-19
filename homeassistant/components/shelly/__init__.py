@@ -66,6 +66,7 @@ from .coordinator import (
 from .repairs import (
     async_manage_ble_scanner_firmware_unsupported_issue,
     async_manage_deprecated_firmware_issue,
+    async_manage_ir_raw_receive_disabled_issue,
     async_manage_open_wifi_ap_issue,
     async_manage_outbound_websocket_incorrectly_enabled_issue,
     async_manage_rtsp_disabled_issue,
@@ -79,6 +80,7 @@ from .utils import (
     get_device_entry_gen,
     get_http_port,
     get_rpc_key_ids,
+    get_rpc_key_instances,
     get_rpc_scripts_event_types,
     get_ws_context,
     is_rpc_ble_scanner_supported,
@@ -345,6 +347,8 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
                 runtime_data.rpc_script_events = await get_rpc_scripts_event_types(
                     device, ignore_scripts=[BLE_SCRIPT_NAME]
                 )
+            if get_rpc_key_instances(device.status, "ledstrip"):
+                runtime_data.rpc_ledstrip_effects = await device.ledstrip_list_effects()
             remove_stale_blu_trv_devices(hass, device, entry)
         except (DeviceConnectionError, MacAddressMismatchError, RpcCallError) as err:
             await device.shutdown()
@@ -410,6 +414,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         )
         async_manage_open_wifi_ap_issue(hass, entry)
         async_manage_rtsp_disabled_issue(hass, entry)
+        async_manage_ir_raw_receive_disabled_issue(hass, entry)
         remove_empty_sub_devices(hass, entry)
     elif (
         sleep_period is None

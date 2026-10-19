@@ -4,6 +4,7 @@ from types import MappingProxyType
 from unittest.mock import AsyncMock
 
 from aiohttp import ClientResponseError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.data_grand_lyon.const import (
     CONF_LINE,
@@ -13,8 +14,6 @@ from homeassistant.components.data_grand_lyon.const import (
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState, ConfigSubentry
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_subentry_added_reloads(

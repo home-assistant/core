@@ -66,7 +66,7 @@ The PR description must follow this template (from `.github/PULL_REQUEST_TEMPLAT
 - This PR fixes or closes issue: fixes #
 - This PR is related to issue: 
 - Link to documentation pull request: 
-- Link to developer documentation pull request: 
+- Link to contributors documentation pull request: 
 - Link to frontend pull request: 
 
 ## Checklist
@@ -78,7 +78,7 @@ The PR description must follow this template (from `.github/PULL_REQUEST_TEMPLAT
 
   AI tools are welcome, but contributors are responsible for *fully*
   understanding the code before submitting a PR. Please follow our AI policy:
-  https://developers.home-assistant.io/docs/ai_policy
+  https://contributors.home-assistant.io/start/ai-policy/
 -->
 
 - [ ] I understand the code I am submitting and can explain how it works.
@@ -131,11 +131,11 @@ To help with the load of incoming pull requests:
 
   Below, some useful links you could explore:
 -->
-[dev-checklist]: https://developers.home-assistant.io/docs/development_checklist/
-[manifest-docs]: https://developers.home-assistant.io/docs/creating_integration_manifest/
-[quality-scale]: https://developers.home-assistant.io/docs/integration_quality_scale_index/
+[dev-checklist]: https://contributors.home-assistant.io/core/development/checklist/
+[manifest-docs]: https://contributors.home-assistant.io/core/integrations/manifest/
+[quality-scale]: https://contributors.home-assistant.io/core/quality-scale/
 [docs-repository]: https://github.com/home-assistant/home-assistant.io
-[perfect-pr]: https://developers.home-assistant.io/docs/review-process/#creating-the-perfect-pr
+[perfect-pr]: https://contributors.home-assistant.io/start/pull-requests/#before-you-open-it
 ```
 
 # GitHub Copilot & Claude Code Instructions

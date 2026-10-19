@@ -9,6 +9,13 @@ from aiohttp import ClientConnectionError, ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
 from pymiele import OAUTH2_TOKEN
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.miele.const import DOMAIN
@@ -18,14 +25,6 @@ from homeassistant.helpers import config_entry_oauth2_flow, device_registry as d
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-)
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import WebSocketGenerator
 
 
 async def test_load_unload_entry(

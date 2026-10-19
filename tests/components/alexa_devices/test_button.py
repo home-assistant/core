@@ -4,6 +4,11 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
@@ -21,8 +26,6 @@ from .const import (
     TEST_DEVICE_2_SN,
     TEST_USERNAME,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_all_entities(

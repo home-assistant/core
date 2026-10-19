@@ -2,6 +2,7 @@
   "domain": "waterfurnace",
   "name": "WaterFurnace",
   "after_dependencies": ["recorder"],
+  "categories": ["climate.heat_pumps_air_conditioning"],
   "codeowners": ["@sdague", "@masterkoppa"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/waterfurnace",
@@ -9,5 +10,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["waterfurnace"],
   "quality_scale": "bronze",
-  "requirements": ["waterfurnace==1.9.7"]
+  "requirements": ["waterfurnace==1.10.0"]
 }

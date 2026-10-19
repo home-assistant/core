@@ -74,7 +74,7 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
         self.device = device
 
         self.context["title_placeholders"] = {
-            "name": device.name,
+            "name": device.name or device.model,
             "model": device.model,
             "host": device.host[0],
         }
@@ -201,19 +201,18 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
 
         else:
             await self.async_set_unique_id(device.mac.hex())
-            if self.source == SOURCE_IMPORT:
-                _LOGGER.warning(
-                    (
-                        "%s (%s at %s) is ready to be configured. Click "
-                        "Configuration in the sidebar, click Integrations and "
-                        "click Configure on the device to complete the setup"
-                    ),
-                    device.name,
-                    device.model,
-                    device.host[0],
-                )
-
             if device.is_locked:
+                if self.source == SOURCE_IMPORT:
+                    _LOGGER.warning(
+                        (
+                            "%s (%s at %s) is ready to be configured. Click "
+                            "Configuration in the sidebar, click Integrations and "
+                            "click Configure on the device to complete the setup"
+                        ),
+                        device.name or device.model,
+                        device.model,
+                        device.host[0],
+                    )
                 return await self.async_step_unlock()
             return await self.async_step_finish()
 
@@ -240,7 +239,7 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 step_id="reset",
                 errors=errors,
                 description_placeholders={
-                    "name": device.name,
+                    "name": device.name or device.model,
                     "model": device.model,
                     "host": device.host[0],
                 },
@@ -300,7 +299,7 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
             data_schema=probatio.Schema(data_schema),
             description_placeholders={
-                "name": device.name,
+                "name": device.name or device.model,
                 "model": device.model,
                 "host": device.host[0],
             },
@@ -309,31 +308,22 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_finish(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Choose a name for the device and create config entry."""
+        """Create the config entry."""
         device = self.device
-        errors: dict[str, str] = {}
 
         # Abort reauthentication flow.
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: device.host[0], CONF_TIMEOUT: device.timeout}
         )
 
-        if user_input is not None:
-            return self.async_create_entry(
-                title=user_input[CONF_NAME],
-                data={
-                    CONF_HOST: device.host[0],
-                    CONF_MAC: device.mac.hex(),
-                    CONF_TYPE: device.devtype,
-                    CONF_TIMEOUT: device.timeout,
-                },
-            )
-
-        # Name field is no longer allowed in config flow schemas
-        # pylint: disable-next=home-assistant-config-flow-name-field
-        data_schema = {probatio.Required(CONF_NAME, default=device.name): str}
-        return self.async_show_form(
-            step_id="finish", data_schema=probatio.Schema(data_schema), errors=errors
+        return self.async_create_entry(
+            title=device.name or device.model,
+            data={
+                CONF_HOST: device.host[0],
+                CONF_MAC: device.mac.hex(),
+                CONF_TYPE: device.devtype,
+                CONF_TIMEOUT: device.timeout,
+            },
         )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:

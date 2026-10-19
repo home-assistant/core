@@ -6,13 +6,12 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from meater.MeaterApi import MeaterCook, MeaterProbe
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.meater.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import PROBE_ID
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

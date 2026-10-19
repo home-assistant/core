@@ -6,6 +6,13 @@ from unittest.mock import patch
 import attr
 from bluetooth_adapters import DEFAULT_ADDRESS, AdapterDetails
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    FakeRemoteScanner,
+    MockBleakClient,
+    _get_manager,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import HaBluetoothConnector
@@ -25,11 +32,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import area_registry as ar, device_registry as dr
 from homeassistant.setup import async_setup_component
-
-from . import FakeRemoteScanner, MockBleakClient, _get_manager
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.usefixtures(

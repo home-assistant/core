@@ -11,6 +11,7 @@ from nrgkick_api import (
     NRGkickInvalidResponseError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nrgkick.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -18,8 +19,6 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 ZEROCONF_DISCOVERY_INFO = ZeroconfServiceInfo(
     ip_address=ip_address("192.168.1.101"),

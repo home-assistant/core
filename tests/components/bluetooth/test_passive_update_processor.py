@@ -8,6 +8,18 @@ from unittest.mock import MagicMock, patch
 
 from home_assistant_bluetooth import BluetoothServiceInfo
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntityPlatform,
+    async_fire_time_changed,
+    async_test_home_assistant,
+)
+from pytest_homeassistant.components.bluetooth import (
+    inject_bluetooth_service_info,
+    inject_bluetooth_service_info_bleak,
+    patch_all_discovered_devices,
+    patch_bluetooth_time,
+)
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
@@ -47,20 +59,6 @@ from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads
-
-from . import (
-    inject_bluetooth_service_info,
-    inject_bluetooth_service_info_bleak,
-    patch_all_discovered_devices,
-    patch_bluetooth_time,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntityPlatform,
-    async_fire_time_changed,
-    async_test_home_assistant,
-)
 
 _LOGGER = logging.getLogger(__name__)
 
