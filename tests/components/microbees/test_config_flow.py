@@ -4,6 +4,9 @@ from unittest.mock import AsyncMock, patch
 
 from microBeesPy import MicroBeesException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.microbees.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -13,10 +16,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import setup_integration
 from .conftest import CLIENT_ID, MICROBEES_AUTH_URI, MICROBEES_TOKEN_URI, SCOPES
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.usefixtures("current_request_with_host")

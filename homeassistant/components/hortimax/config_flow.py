@@ -1,5 +1,6 @@
 """Config flow for the Ridder HortiMaX Pro (HortOS) integration."""
 
+from collections.abc import Mapping
 from typing import Any, override
 
 from aiohortos import HortosAuthenticationError, HortosClient, HortosError
@@ -72,5 +73,33 @@ class HortimaxConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(USER_SCHEMA, user_input),
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle re-authentication after the API key was rejected."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask for a new API key."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            organisation_id = await self._async_validate(
+                user_input[CONF_API_KEY], errors
+            )
+            if not errors:
+                await self.async_set_unique_id(organisation_id)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={CONF_API_KEY: user_input[CONF_API_KEY]},
+                )
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=USER_SCHEMA,
             errors=errors,
         )

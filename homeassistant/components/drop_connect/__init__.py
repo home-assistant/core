@@ -22,7 +22,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: DROPConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: DROPConfigEntry) -> None:
     """Set up DROP from a config entry."""
 
     # Make sure MQTT integration is enabled and the client is available.
@@ -58,11 +58,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: DROPConfigEntry) 
 
     config_entry.runtime_data = drop_data_coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: DROPConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)

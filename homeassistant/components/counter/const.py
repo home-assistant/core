@@ -7,9 +7,15 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
-    from . import Counter
+    from .entity import Counter
 
 DOMAIN: Final = "counter"
+
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
+
+CONF_INITIAL = "initial"
+CONF_RESTORE = "restore"
+CONF_STEP = "step"
 
 DATA_COMPONENT: HassKey[EntityComponent[Counter]] = HassKey(DOMAIN)
 

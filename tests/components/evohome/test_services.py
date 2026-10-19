@@ -352,26 +352,28 @@ async def test_controller_services_with_zone_id(
 
 @pytest.mark.parametrize("install", ["default"])
 @pytest.mark.usefixtures("evohome")
-async def test_set_system_mode_entity_not_found(hass: HomeAssistant) -> None:
-    """Test set_system_mode with a non-existent entity_id raises entity_not_found."""
+async def test_set_system_mode_entity_not_found(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test set_system_mode with a non-existent entity_id is logged and ignored."""
 
     non_existent_entity_id = "climate.non_existent_entity"
 
-    with pytest.raises(ServiceValidationError) as exc_info:
+    with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
         await hass.services.async_call(
             DOMAIN,
             EvoService.SET_SYSTEM_MODE,
             {
                 SZ_MODE: "Auto",
-                ATTR_ENTITY_ID: non_existent_entity_id,
             },
+            target={ATTR_ENTITY_ID: non_existent_entity_id},
             blocking=True,
         )
 
-    assert exc_info.value.translation_key == "entity_not_found"
-    assert exc_info.value.translation_placeholders == {
-        ATTR_ENTITY_ID: non_existent_entity_id,
-    }
+        mock_fcn.assert_not_awaited()
+
+    assert "Referenced entities climate.non_existent_entity are missing" in caplog.text
 
 
 _SET_SYSTEM_MODE_VALIDATOR_PARAMS = [

@@ -4,14 +4,13 @@ from datetime import timedelta
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.risco import CannotConnectError, UnauthorizedError
 from homeassistant.components.risco.coordinator import LAST_EVENT_TIMESTAMP_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed
 
 ENTITY_IDS = {
     "Alarm": "sensor.risco_test_site_name_alarm_events",
