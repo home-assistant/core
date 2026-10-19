@@ -407,6 +407,7 @@ class TeslemetryOperationSelectEntity(TeslemetryEnergyInfoEntity, SelectEntity):
         self.raise_for_scope(Scope.ENERGY_CMDS)
         await handle_command(self.hass, self.config_entry, self.api.operation(option))
         self._attr_current_option = option
+        self.coordinator.async_set_command_value(self.key, option)
         self.async_write_ha_state()
 
 
@@ -465,4 +466,5 @@ class TeslemetryExportRuleSelectEntity(
             self.api.grid_import_export(customer_preferred_export_rule=option),
         )
         self._attr_current_option = option
+        self.coordinator.async_set_command_value(self.key, option)
         self.async_write_ha_state()

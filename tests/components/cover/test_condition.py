@@ -3,13 +3,7 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.cover import ATTR_IS_CLOSED, CoverState
-from homeassistant.components.cover.condition import CONDITIONS
-from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     ConditionStateDescription,
     TargetSupport,
     assert_condition_behavior_all,
@@ -22,6 +16,11 @@ from tests.components.common import (
     parametrize_target_entities,
     target_entities,
 )
+
+from homeassistant.components.cover import ATTR_IS_CLOSED, CoverState
+from homeassistant.components.cover.condition import CONDITIONS
+from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID
+from homeassistant.core import HomeAssistant
 
 DEVICE_CLASS_CONDITIONS = [
     ("awning", "cover.awning_is_open", "cover.awning_is_closed"),

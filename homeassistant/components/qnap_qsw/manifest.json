@@ -1,6 +1,7 @@
 {
   "domain": "qnap_qsw",
   "name": "QNAP QSW",
+  "categories": ["computers_network.routers_network"],
   "codeowners": ["@Noltari"],
   "config_flow": true,
   "dhcp": [

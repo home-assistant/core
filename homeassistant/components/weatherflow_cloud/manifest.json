@@ -1,6 +1,7 @@
 {
   "domain": "weatherflow_cloud",
   "name": "WeatherflowCloud",
+  "categories": ["weather_alerts.forecasts"],
   "codeowners": ["@jeeftor"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/weatherflow_cloud",

@@ -5,13 +5,12 @@ from datetime import datetime
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from solaredge_web import EnergyData
 
 from homeassistant.components.solaredge.const import CONF_SITE_ID, DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 SITE_ID = "1a2b3c4d5e6f7g8h"
 API_KEY = "a1b2c3d4e5f6g7h8"
@@ -105,8 +104,8 @@ def mock_solaredge_web_api_fixture() -> Generator[AsyncMock]:
         api = mock_web_api_flow.return_value
         mock_web_api_coord.return_value = api
         api.async_get_equipment.return_value = {
-            "7A012345-CA": {"name": "Optimizer 1.1"},
-            "7A012346-CA": {"name": "Optimizer 1.2"},
+            "7A012345-CA": {"name": "Optimizer 1.1", "type": "OPTIMIZER"},
+            "7A012346-CA": {"name": "Optimizer 1.2", "type": "OPTIMIZER"},
         }
         api.async_get_energy_data.return_value = [
             EnergyData(

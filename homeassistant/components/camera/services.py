@@ -45,7 +45,7 @@ from .const import (
 from .helper import async_get_stream_image, async_stream_endpoint_url
 
 if TYPE_CHECKING:
-    from . import Camera
+    from .entity import Camera
 
 CAMERA_SERVICE_SNAPSHOT: VolDictType = {probatio.Required(ATTR_FILENAME): cv.template}
 

@@ -312,4 +312,5 @@ class TeslemetryEnergyInfoNumberSensorEntity(TeslemetryEnergyInfoEntity, NumberE
             self.hass, self.config_entry, self.entity_description.func(self.api, value)
         )
         self._attr_native_value = value
+        self.coordinator.async_set_command_value(self.key, value)
         self.async_write_ha_state()

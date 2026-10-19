@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant import setup
 from homeassistant.components.command_line.binary_sensor import CommandBinarySensor
@@ -21,8 +22,6 @@ from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.util import dt as dt_util
 
 from . import mock_asyncio_subprocess_run
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.mark.parametrize(
