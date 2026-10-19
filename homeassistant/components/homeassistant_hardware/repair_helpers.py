@@ -25,6 +25,7 @@ def async_create_multi_pan_migration_issue(
         hass,
         domain=domain,
         issue_id=_multi_pan_issue_id(config_entry),
+        config_entry_id=config_entry.entry_id,
         is_fixable=True,
         is_persistent=False,
         severity=ir.IssueSeverity.WARNING,

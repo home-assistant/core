@@ -31,7 +31,7 @@ class SystemMonitorData:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: SystemMonitorConfigEntry
-) -> bool:
+) -> None:
     """Set up System Monitor from a config entry."""
     psutil_wrapper = await hass.async_add_executor_job(ha_psutil.PsutilWrapper)
 
@@ -59,19 +59,18 @@ async def async_setup_entry(
     entry.runtime_data = SystemMonitorData(coordinator, psutil_wrapper)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: SystemMonitorConfigEntry
-) -> bool:
+) -> None:
     """Unload System Monitor config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, entry: SystemMonitorConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
 
     if entry.version == 1 and entry.minor_version < 3:
@@ -96,5 +95,3 @@ async def async_migrate_entry(
     _LOGGER.debug(
         "Migration to version %s.%s successful", entry.version, entry.minor_version
     )
-
-    return True

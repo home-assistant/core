@@ -1,6 +1,7 @@
 """Test fixtures for the search integration."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.search import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -11,8 +12,6 @@ from homeassistant.helpers import (
     floor_registry as fr,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="search_item_ids")
@@ -76,6 +75,7 @@ async def search_item_ids_fixture(
         config_entry=config_entry,
         device_id=device.id,
         disabled_by=er.RegistryEntryDisabler.USER,
+        original_name="Disabled area override",
     )
     entity_registry.async_update_entity(
         disabled_area_override_entity.entity_id, area_id=area.id

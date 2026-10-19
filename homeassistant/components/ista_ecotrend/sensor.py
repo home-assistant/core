@@ -1,8 +1,7 @@
 """Sensor platform for Ista EcoTrend integration."""
 
-import asyncio
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 from enum import StrEnum
 import logging
 from typing import override
@@ -223,7 +222,9 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle coordinator update."""
-        asyncio.run_coroutine_threadsafe(self.update_statistics(), self.hass.loop)
+        self.coordinator.config_entry.async_create_task(
+            self.hass, self.update_statistics()
+        )
 
     async def update_statistics(self) -> None:
         """Import ista EcoTrend historical statistics."""
@@ -261,9 +262,9 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
 
         if last_stats:
             statistics_sum = last_stats[statistic_id][0].get("sum") or 0.0
-            statistics_since = datetime.datetime.fromtimestamp(
-                last_stats[statistic_id][0].get("end") or 0, tz=datetime.UTC
-            ) + datetime.timedelta(days=1)
+            statistics_since = dt.datetime.fromtimestamp(
+                last_stats[statistic_id][0].get("end") or 0, tz=dt.UTC
+            ) + dt.timedelta(days=1)
 
         if monthly_consumptions := get_statistics(
             self.coordinator.data[self.consumption_unit],

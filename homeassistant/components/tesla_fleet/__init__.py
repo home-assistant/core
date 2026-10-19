@@ -33,6 +33,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER
 from .coordinator import (
@@ -44,6 +45,7 @@ from .coordinator import (
     _stale_site_info_error,
 )
 from .models import TeslaFleetData, TeslaFleetEnergyData, TeslaFleetVehicleData
+from .services import async_setup_services
 
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
@@ -63,6 +65,12 @@ PLATFORMS: Final = [
 type TeslaFleetConfigEntry = ConfigEntry[TeslaFleetData]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Tesla Fleet integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def _async_get_products(tesla: TeslaFleetApi) -> list[dict]:
@@ -122,7 +130,7 @@ async def _async_get_products(tesla: TeslaFleetApi) -> list[dict]:
         raise ConfigEntryNotReady from e
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -> None:
     """Set up TeslaFleet config."""
 
     implementation = await async_get_config_entry_implementation(hass, entry)
@@ -284,9 +292,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
     # Setup Platforms
     entry.runtime_data = TeslaFleetData(vehicles, energysites, scopes)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -> None:
     """Unload TeslaFleet Config."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools>=78.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pytest-home-assistant"
+version = "0.0.0"
+license = "Apache-2.0"
+license-files = ["LICENSE.md"]
+description = "Pytest fixtures and test helpers for Home Assistant."
+readme = "README.md"
+requires-python = ">=3.14.2"
+authors = [
+  { name = "The Home Assistant Authors", email = "hello@home-assistant.io" },
+]
+
+# Dependency pins are synchronized by script.gen_requirements_all.
+dependencies = [
+  "homeassistant",
+  "bleak-retry-connector==4.7.1",
+  "freezegun==1.5.5",
+  "paho-mqtt==2.1.0",
+  "pytest==9.0.3",
+  "pytest-aiohttp==1.1.1",
+  "pytest-asyncio==1.4.0",
+  "pytest-freezer==0.4.9",
+  "pytest-socket==0.8.1",
+  "pytest-xdist==3.8.0",
+  "requests-mock==1.12.1",
+  "respx==0.23.1",
+  "syrupy==6.1.1",
+]
+
+[project.entry-points.pytest11]
+pytest_homeassistant = "pytest_homeassistant.bootstrap"
+
+[project.optional-dependencies]
+bluetooth = [
+  "aiohasupervisor==0.7.0",
+  "aiousbwatcher==1.1.2",
+  "bluetooth-adapters==2.4.0",
+  "bluetooth-auto-recovery==1.6.4",
+  "bluetooth-data-tools==1.29.24",
+  "habluetooth==7.1.2",
+  "serialx==1.14.0",
+]
+infrared = ["infrared-protocols==10.3.0"]
+radio-frequency = ["rf-protocols==4.3.0"]
+
+[project.urls]
+Repository = "https://github.com/home-assistant/core"
+Documentation = "https://contributors.home-assistant.io"
+
+[tool.setuptools.packages.find]
+include = ["pytest_homeassistant*"]

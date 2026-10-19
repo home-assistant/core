@@ -5,6 +5,7 @@ from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError, ClientResponseError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.energyid import DOMAIN, _async_handle_state_change
 from homeassistant.components.energyid.const import (
@@ -20,8 +21,6 @@ from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_successful_setup(
@@ -64,6 +63,7 @@ async def test_setup_fails_on_auth_error(
 
     # Unexpected errors cause retry, not reauth (might be temporary network issues)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "auth_unexpected_error"
 
 
 async def test_setup_fails_when_not_claimed(
@@ -79,6 +79,7 @@ async def test_setup_fails_when_not_claimed(
 
     # Device not claimed raises ConfigEntryAuthFailed, resulting in SETUP_ERROR state
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "device_not_claimed"
 
     # Verify that a reauth flow was initiated (reviewer comment at line 56-81)
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
@@ -105,6 +106,7 @@ async def test_setup_auth_error_401_triggers_reauth(
 
     # 401 error raises ConfigEntryAuthFailed, resulting in SETUP_ERROR state
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "invalid_credentials"
 
     # Verify that a reauth flow was initiated
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
@@ -131,6 +133,7 @@ async def test_setup_auth_error_403_triggers_reauth(
 
     # 403 error raises ConfigEntryAuthFailed, resulting in SETUP_ERROR state
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "invalid_credentials"
 
     # Verify that a reauth flow was initiated
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
@@ -157,6 +160,7 @@ async def test_setup_http_error_triggers_retry(
 
     # 500 error raises ConfigEntryNotReady, resulting in SETUP_RETRY state
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "auth_http_error"
 
 
 async def test_setup_network_error_triggers_retry(
@@ -172,6 +176,7 @@ async def test_setup_network_error_triggers_retry(
 
     # Network error raises ConfigEntryNotReady, resulting in SETUP_RETRY state
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "auth_connection_error"
 
 
 async def test_state_change_sends_data(
@@ -546,6 +551,7 @@ async def test_setup_timeout_during_authentication(hass: HomeAssistant) -> None:
 
         assert not result
         assert entry.state is ConfigEntryState.SETUP_RETRY
+        assert entry.error_reason_translation_key == "auth_timeout"
 
 
 async def test_periodic_sync_error_and_recovery(hass: HomeAssistant) -> None:
@@ -1030,6 +1036,8 @@ async def test_unload_entry_unexpected_exception(hass: HomeAssistant) -> None:
 
             # Should return False due to exception (line 384)
             assert not result
+            assert entry.state is ConfigEntryState.FAILED_UNLOAD
+            assert entry.reason == "Error while unloading the EnergyID entry"
 
 
 # ============================================================================

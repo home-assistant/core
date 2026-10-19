@@ -23,7 +23,7 @@ from .coordinator import (
     PeblarUserConfigurationDataUpdateCoordinator,
 )
 from .entity import PeblarEntity
-from .helpers import peblar_exception_handler
+from .helpers import peblar_exception_handler, supports_custom_solar
 
 PARALLEL_UPDATES = 1
 
@@ -49,6 +49,7 @@ def _smart_charging_options(configuration: PeblarUserConfiguration) -> list[str]
     return [
         option
         for option, allowed in (
+            ("custom_solar", supports_custom_solar(configuration)),
             ("default", True),
             ("fast_solar", solar),
             ("pure_solar", solar),
