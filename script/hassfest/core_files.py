@@ -17,7 +17,6 @@ MISSING_ALL = {
     "configurator",
     "input_boolean",
     "llm",
-    "person",
     "sun",
 }
 
