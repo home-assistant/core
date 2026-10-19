@@ -591,6 +591,7 @@ def test_integration_properties(hass: HomeAssistant) -> None:
             "mqtt": ["hue/discovery"],
             "version": "1.0.0",
             "quality_scale": "gold",
+            "categories": ["lighting.bulbs_lamps", "hubs_protocols"],
         },
     )
     assert integration.name == "Philips Hue"
@@ -630,6 +631,7 @@ def test_integration_properties(hass: HomeAssistant) -> None:
     assert integration.overwrites_built_in is False
     assert integration.version == "1.0.0"
     assert integration.quality_scale == "gold"
+    assert integration.categories == ["lighting.bulbs_lamps", "hubs_protocols"]
 
     integration = loader.Integration(
         hass,
@@ -654,6 +656,7 @@ def test_integration_properties(hass: HomeAssistant) -> None:
     assert integration.mqtt is None
     assert integration.version is None
     assert integration.quality_scale == "custom"
+    assert integration.categories == []
 
     integration = loader.Integration(
         hass,

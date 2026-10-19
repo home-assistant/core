@@ -1,6 +1,7 @@
 {
   "domain": "nextdns",
   "name": "NextDNS",
+  "categories": ["computers_network.routers_network"],
   "codeowners": ["@bieniu"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nextdns",

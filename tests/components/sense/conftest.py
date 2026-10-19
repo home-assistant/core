@@ -1,7 +1,7 @@
 """Common methods for Sense."""
 
 from collections.abc import Generator
-import datetime
+import datetime as dt
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
@@ -60,7 +60,7 @@ def mock_sense() -> Generator[MagicMock]:
         type(gateway).active_solar_power = PropertyMock(return_value=500)
         type(gateway).active_voltage = PropertyMock(return_value=[120, 240])
         gateway.get_stat.return_value = 15
-        gateway.trend_start.return_value = datetime.datetime.fromisoformat(
+        gateway.trend_start.return_value = dt.datetime.fromisoformat(
             "2024-01-01 01:01:00+00:00"
         )
 

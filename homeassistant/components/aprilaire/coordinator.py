@@ -195,12 +195,12 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
 
         model_number = data.get(Attribute.MODEL_NUMBER)
         if model_number is not None:
-            device_info["model"] = MODELS.get(model_number, f"Unknown ({model_number})")
+            device_info.model = MODELS.get(model_number, f"Unknown ({model_number})")
 
         firmware_major_revision = data.get(Attribute.FIRMWARE_MAJOR_REVISION)
         firmware_minor_revision = data.get(Attribute.FIRMWARE_MINOR_REVISION)
         if firmware_major_revision is not None:
-            device_info["sw_version"] = (
+            device_info.sw_version = (
                 str(firmware_major_revision)
                 if firmware_minor_revision is None
                 else f"{firmware_major_revision}.{firmware_minor_revision:02}"

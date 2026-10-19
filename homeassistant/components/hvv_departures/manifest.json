@@ -1,6 +1,7 @@
 {
   "domain": "hvv_departures",
   "name": "HVV Departures",
+  "categories": ["vehicles_transport.public_transport"],
   "codeowners": ["@vigonotion"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hvv_departures",

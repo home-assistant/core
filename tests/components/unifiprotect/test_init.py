@@ -12,8 +12,12 @@ from uiprotect.data import (
     NVR,
     Bootstrap,
     CloudAccount,
+    Fob,
     Light,
+    LinkStation,
     NvrArmModeStatus,
+    Relay,
+    Siren,
     Version,
 )
 from uiprotect.data.public_devices import PublicCamera
@@ -447,6 +451,39 @@ async def test_device_remove_devices_nvr(
     client = await hass_ws_client(hass)
     response = await client.remove_device(live_device_entry.id)
     assert not response["success"]
+
+
+@pytest.mark.parametrize(
+    ("store", "model"),
+    [
+        pytest.param("fobs", Fob, id="fob"),
+        pytest.param("relays", Relay, id="relay"),
+        pytest.param("sirens", Siren, id="siren"),
+        pytest.param("alarm_hubs", LinkStation, id="alarm_hub"),
+    ],
+)
+async def test_device_remove_public_only_family(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    ufp: MockUFPFixture,
+    light: Light,
+    store: str,
+    model: type,
+) -> None:
+    """A device only the public cache knows refuses removal while it exists."""
+    await init_entry(hass, ufp, [light])
+    device = Mock(spec=model)
+    device.mac = "aa:bb:cc:dd:ee:02"
+    setattr(ufp.api.public_bootstrap, store, {"device-id": device})
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=ufp.entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "AABBCCDDEE02")},
+    )
+
+    assert not await async_remove_config_entry_device(hass, ufp.entry, device_entry)
+
+    setattr(ufp.api.public_bootstrap, store, {})
+    assert await async_remove_config_entry_device(hass, ufp.entry, device_entry)
 
 
 async def test_remove_config_entry_device_rejects_child_device(

@@ -1,0 +1,11 @@
+{
+  "api_version": 1,
+  "serial_number": "TEST-CAM-0001",
+  "device_id": "TEST-DEVICE-CAM",
+  "manufacturer": "HAVEN IAQ",
+  "model": "Central Air Monitor",
+  "product_type": "cam",
+  "fw_ver": "test-firmware",
+  "hw_version": "test-hardware",
+  "capabilities": ["air_quality", "airflow"]
+}

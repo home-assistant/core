@@ -7,6 +7,13 @@ from unittest.mock import sentinel
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.components.recorder.common import (
+    assert_dict_of_states_equal_without_context_and_last_changed,
+    assert_multiple_states_equal_without_context,
+    assert_multiple_states_equal_without_context_and_last_changed,
+    assert_states_equal_without_context,
+    async_wait_recording_done,
+)
 
 from homeassistant.components import history
 from homeassistant.components.history import DOMAIN
@@ -19,13 +26,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockUser
-from tests.components.recorder.common import (
-    assert_dict_of_states_equal_without_context_and_last_changed,
-    assert_multiple_states_equal_without_context,
-    assert_multiple_states_equal_without_context_and_last_changed,
-    assert_states_equal_without_context,
-    async_wait_recording_done,
-)
 from tests.typing import ClientSessionGenerator
 
 

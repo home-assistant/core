@@ -1,3 +1,3 @@
-"""Tests for the Radio Frequency integration."""
+"""Tests for the radio frequency integration."""
 
-ENTITY_ID = "radio_frequency.test_rf_transmitter"
+from pytest_homeassistant.components.radio_frequency import ENTITY_ID as ENTITY_ID
