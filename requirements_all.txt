@@ -1227,7 +1227,7 @@ gps3==0.33.3
 grandstream-home-api==0.1.7
 
 # homeassistant.components.gree
-greeclimate==3.4.1
+greeclimate==3.5.1
 
 # homeassistant.components.greencell
 greencell_client==1.0.3
