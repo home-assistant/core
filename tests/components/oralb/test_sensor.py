@@ -4,6 +4,13 @@ from datetime import timedelta
 import time
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.bluetooth import (
+    inject_bluetooth_service_info,
+    inject_bluetooth_service_info_bleak,
+    patch_all_discovered_devices,
+    patch_bluetooth_time,
+)
 
 from homeassistant.components.bluetooth import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
@@ -22,14 +29,6 @@ from . import (
     ORALB_IO_SIX_SECTORS_LAST_SECTOR_SERVICE_INFO,
     ORALB_IO_SIX_SECTORS_SECTOR_5_SERVICE_INFO,
     ORALB_SERVICE_INFO,
-)
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.bluetooth import (
-    inject_bluetooth_service_info,
-    inject_bluetooth_service_info_bleak,
-    patch_all_discovered_devices,
-    patch_bluetooth_time,
 )
 
 

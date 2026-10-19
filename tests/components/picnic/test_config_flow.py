@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from python_picnic_api2.models import User
 from python_picnic_api2.session import (
     Picnic2FAError,
@@ -16,8 +17,6 @@ from homeassistant.components.picnic.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_COUNTRY_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

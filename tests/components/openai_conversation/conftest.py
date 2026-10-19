@@ -20,6 +20,7 @@ from openai.types.responses import (
 )
 from openai.types.responses.response import IncompleteDetails
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.openai_conversation.const import (
     CONF_CHAT_MODEL,
@@ -39,8 +40,6 @@ from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

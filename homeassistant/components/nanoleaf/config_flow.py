@@ -5,7 +5,7 @@ import logging
 import os
 from typing import Any, Final, cast, override
 
-from aionanoleaf2 import InvalidToken, Nanoleaf, Unauthorized, Unavailable
+from aionanoleaf2 import AuthError, Nanoleaf, NanoleafError, Unauthorized
 import probatio
 
 from homeassistant.config_entries import (
@@ -64,15 +64,16 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         try:
             await self.nanoleaf.authorize()
-        except Unavailable:
+        except Unauthorized:
+            # Pairing mode is not active yet: the link step explains how to enable it
+            pass
+        except NanoleafError:
             return self.async_show_form(
                 step_id="user",
                 data_schema=USER_SCHEMA,
                 errors={"base": "cannot_connect"},
                 last_step=False,
             )
-        except Unauthorized:
-            pass
         except Exception:
             _LOGGER.exception("Unknown error connecting to Nanoleaf")
             return self.async_show_form(
@@ -108,10 +109,10 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             try:
                 await nanoleaf.get_info()
-            except Unavailable:
-                errors["base"] = "cannot_connect"
-            except InvalidToken:
+            except AuthError:
                 errors["base"] = "invalid_token"
+            except NanoleafError:
+                errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unknown error connecting to Nanoleaf")
                 errors["base"] = "unknown"
@@ -214,7 +215,7 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="link", errors={"base": "not_allowing_new_tokens"}
             )
-        except Unavailable:
+        except NanoleafError:
             return self.async_abort(reason="cannot_connect")
         except Exception:
             _LOGGER.exception("Unknown error authorizing Nanoleaf")
@@ -234,10 +235,10 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
         """Finish Nanoleaf config flow."""
         try:
             await self.nanoleaf.get_info()
-        except Unavailable:
-            return self.async_abort(reason="cannot_connect")
-        except InvalidToken:
+        except AuthError:
             return self.async_abort(reason="invalid_token")
+        except NanoleafError:
+            return self.async_abort(reason="cannot_connect")
         except Exception:
             _LOGGER.exception(
                 "Unknown error connecting with Nanoleaf at %s", self.nanoleaf.host

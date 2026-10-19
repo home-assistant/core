@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from ritualsgenie import RitualsGenieConnectionError, Sensor
 
 from homeassistant.components.rituals_perfume_genie.const import DOMAIN
@@ -22,8 +23,6 @@ from .common import (
     mock_diffuser_v1_battery_cartridge,
     mock_diffuser_v2_no_battery_no_cartridge,
 )
-
-from tests.common import async_fire_time_changed
 
 
 async def _tick(

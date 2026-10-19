@@ -4,6 +4,17 @@ from typing import Any
 from unittest.mock import call, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_mqtt_message,
+)
+from pytest_homeassistant.components.mqtt.common import (
+    MOCK_NOTIFY_SUBENTRY_DATA,
+    MOCK_SUBENTRY_DATA_BAD_COMPONENT_SCHEMA,
+    MOCK_SUBENTRY_DATA_SET_MIX,
+)
+from pytest_homeassistant.typing import MqttMockHAClientGenerator
 
 from homeassistant.components import mqtt, sensor
 from homeassistant.components.mqtt.const import DOMAIN
@@ -22,15 +33,6 @@ from homeassistant.helpers import (
     json,
 )
 from homeassistant.util import slugify
-
-from .common import (
-    MOCK_NOTIFY_SUBENTRY_DATA,
-    MOCK_SUBENTRY_DATA_BAD_COMPONENT_SCHEMA,
-    MOCK_SUBENTRY_DATA_SET_MIX,
-)
-
-from tests.common import MockConfigEntry, async_capture_events, async_fire_mqtt_message
-from tests.typing import MqttMockHAClientGenerator
 
 
 @pytest.mark.parametrize(

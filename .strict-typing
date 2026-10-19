@@ -191,6 +191,7 @@ homeassistant.components.duco.*
 homeassistant.components.dunehd.*
 homeassistant.components.duotecno.*
 homeassistant.components.easyenergy.*
+homeassistant.components.ecosmart.*
 homeassistant.components.ecovacs.*
 homeassistant.components.ecowitt.*
 homeassistant.components.efergy.*
@@ -273,6 +274,7 @@ homeassistant.components.harman_luxury.*
 homeassistant.components.hase_iq.*
 homeassistant.components.haven_iaq.*
 homeassistant.components.hdfury.*
+homeassistant.components.helty_cloud.*
 homeassistant.components.heos.*
 homeassistant.components.here_travel_time.*
 homeassistant.components.history.*

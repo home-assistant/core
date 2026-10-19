@@ -15,6 +15,7 @@ from pyotgw.vars import (
     OTGW_LED_F,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.opentherm_gw import DOMAIN
 from homeassistant.components.opentherm_gw.const import (
@@ -37,8 +38,6 @@ from homeassistant.const import ATTR_ENTITY_ID, CONF_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
