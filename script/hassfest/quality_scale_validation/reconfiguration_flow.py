@@ -1,6 +1,6 @@
 """Enforce that the integration implements reconfiguration flow.
 
-https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/reconfiguration-flow/
+https://contributors.home-assistant.io/core/quality-scale/reconfiguration-flow/
 """
 
 import ast

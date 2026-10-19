@@ -4,12 +4,12 @@ from collections.abc import Callable, Coroutine
 from pathlib import Path
 from typing import Any
 
+from pytest_homeassistant.common import MockPlatform, mock_platform
+
 from homeassistant.components import wake_word
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
-from tests.common import MockPlatform, mock_platform
 
 
 def mock_wake_word_entity_platform(

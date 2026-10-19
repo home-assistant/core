@@ -54,7 +54,17 @@ STATE_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     }
 )
 
-TRIGGER_SCHEMA = probatio.Any(POSITION_TRIGGER_SCHEMA, STATE_TRIGGER_SCHEMA)
+TRIGGER_SCHEMA = probatio.TaggedUnion(
+    CONF_TYPE,
+    {
+        "position": POSITION_TRIGGER_SCHEMA,
+        "tilt_position": POSITION_TRIGGER_SCHEMA,
+        "opened": STATE_TRIGGER_SCHEMA,
+        "closed": STATE_TRIGGER_SCHEMA,
+        "opening": STATE_TRIGGER_SCHEMA,
+        "closing": STATE_TRIGGER_SCHEMA,
+    },
+)
 
 
 async def async_get_triggers(

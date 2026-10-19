@@ -3,8 +3,11 @@
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+from pytest_homeassistant.common import load_json_object_fixture
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
-from uiprotect.data import LinkStation, WSAction
+from uiprotect.data import DeviceState, LinkStation, WSAction
 from uiprotect.websocket import WebsocketState
 
 from homeassistant.const import STATE_UNAVAILABLE
@@ -17,10 +20,6 @@ from .utils import (
     make_public_bootstrap,
     public_device_ws_message,
 )
-
-from tests.common import load_json_object_fixture
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 DOMAIN = "unifiprotect"
 
@@ -42,9 +41,10 @@ def _make_public_bootstrap(hub: LinkStation | None) -> Mock:
     nvr.display_name = "Test NVR"
     nvr.device_type = None
     nvr.type = None
-    return make_public_bootstrap(
-        alarm_hubs={hub.id: hub} if hub is not None else {}, nvr=nvr
-    )
+    nvr.unifi_dict.return_value = {"name": "Test NVR"}
+    hubs = {hub.id: hub} if hub is not None else {}
+    # Alarm hubs are the alarm-hub subset of the link stations.
+    return make_public_bootstrap(alarm_hubs=hubs, link_stations=dict(hubs), nvr=nvr)
 
 
 @pytest.fixture(name="alarm_hub")
@@ -229,9 +229,9 @@ async def test_alarm_hub_in_diagnostics(
         hass, hass_client, ufp_with_alarm_hub.entry
     )
 
-    assert "alarm_hubs" in diag
-    assert len(diag["alarm_hubs"]) == 1
-    hub = diag["alarm_hubs"][0]
+    hubs = diag["public_bootstrap"]["link_stations"]
+    assert len(hubs) == 1
+    hub = hubs[0]
     # Anonymized: the real MAC must not leak.
     assert hub["mac"] != ALARM_HUB_MAC
     assert "alarmHub" in hub
@@ -247,8 +247,8 @@ async def test_alarm_hub_device_and_entities(
     """Snapshot the alarm hub device and all of its entities."""
     await init_entry(hass, ufp_with_alarm_hub, [])
 
-    device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, ALARM_HUB_MAC), ufp_with_alarm_hub.entry.entry_id
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, ALARM_HUB_MAC), ufp_with_alarm_hub.entry.entry_id
     )
     assert device is not None
     assert device == snapshot(name="device")
@@ -317,6 +317,75 @@ async def test_alarm_hub_state_updates_from_public_ws(
     assert hass.states.get(entity_id).state == "on"
 
 
+async def test_alarm_hub_values_update_from_public_ws(
+    hass: HomeAssistant,
+    ufp_with_alarm_hub: MockUFPFixture,
+    alarm_hub: LinkStation,
+) -> None:
+    """Hub-level values follow a public devices WS update."""
+    await init_entry(hass, ufp_with_alarm_hub, [])
+    assert hass.states.get("binary_sensor.alarm_hub_tamper").state == "off"
+    assert hass.states.get("sensor.alarm_hub_battery_voltage").state == "12.108427"
+
+    alarm_hub.alarm_hub["cover"]["status"] = "open"
+    alarm_hub.alarm_hub["battery"]["voltage"] = 11.5
+    assert ufp_with_alarm_hub.devices_ws_subscription is not None
+    ufp_with_alarm_hub.devices_ws_subscription(public_device_ws_message(alarm_hub))
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.alarm_hub_tamper").state == "on"
+    assert hass.states.get("sensor.alarm_hub_battery_voltage").state == "11.5"
+
+
+async def test_alarm_hub_reads_replaced_object_after_resync(
+    hass: HomeAssistant,
+    ufp_with_alarm_hub: MockUFPFixture,
+    alarm_hub: LinkStation,
+) -> None:
+    """A resync that replaces the hub object is picked up from the bootstrap."""
+    await init_entry(hass, ufp_with_alarm_hub, [])
+
+    replaced = _make_alarm_hub()
+    replaced.alarm_hub["cover"]["status"] = "open"
+    replaced.alarm_hub["battery"]["voltage"] = 11.5
+    ufp_with_alarm_hub.api.public_bootstrap.alarm_hubs[alarm_hub.id] = replaced
+    msg = public_device_ws_message(None)
+    msg.old_obj = alarm_hub
+    assert ufp_with_alarm_hub.devices_ws_subscription is not None
+    ufp_with_alarm_hub.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.alarm_hub_tamper").state == "on"
+    assert hass.states.get("sensor.alarm_hub_battery_voltage").state == "11.5"
+
+
+async def test_alarm_hub_unavailable_while_disconnected(
+    hass: HomeAssistant,
+    ufp_with_alarm_hub: MockUFPFixture,
+    alarm_hub: LinkStation,
+) -> None:
+    """A disconnected hub takes all of its entities offline until it is back."""
+    await init_entry(hass, ufp_with_alarm_hub, [])
+    entity_ids = (
+        "binary_sensor.alarm_hub_tamper",
+        "sensor.alarm_hub_battery_voltage",
+        "binary_sensor.alarm_hub_hallway",
+    )
+    assert ufp_with_alarm_hub.devices_ws_subscription is not None
+
+    alarm_hub.state = DeviceState.DISCONNECTED
+    ufp_with_alarm_hub.devices_ws_subscription(public_device_ws_message(alarm_hub))
+    await hass.async_block_till_done()
+    for entity_id in entity_ids:
+        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    alarm_hub.state = DeviceState.CONNECTED
+    ufp_with_alarm_hub.devices_ws_subscription(public_device_ws_message(alarm_hub))
+    await hass.async_block_till_done()
+    for entity_id in entity_ids:
+        assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+
 async def test_alarm_hub_becomes_unavailable_when_removed(
     hass: HomeAssistant,
     ufp_with_alarm_hub: MockUFPFixture,
@@ -369,14 +438,19 @@ async def test_alarm_hub_disconnected_battery(
     assert voltage.state == "unknown"
 
 
+@pytest.mark.parametrize(
+    "is_public_only",
+    [pytest.param(False, id="hybrid"), pytest.param(True, id="api_key_only")],
+)
 async def test_alarm_hub_added_at_runtime(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     alarm_hub: LinkStation,
+    is_public_only: bool,
 ) -> None:
     """A hub adopted after setup is discovered from its public add frame."""
-    ufp.api.is_public_only = True
+    ufp.api.is_public_only = is_public_only
     ufp.api.has_public_bootstrap = True
     pb = _make_public_bootstrap(None)
     ufp.api.public_bootstrap = pb
@@ -401,6 +475,97 @@ async def test_alarm_hub_added_at_runtime(
     )
 
 
+async def test_alarm_hub_known_at_setup_not_added_again(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    ufp_with_alarm_hub: MockUFPFixture,
+    alarm_hub: LinkStation,
+) -> None:
+    """An add frame for a hub that existed at setup does not add it twice."""
+    await init_entry(hass, ufp_with_alarm_hub, [])
+    entity_ids = hass.states.async_entity_ids()
+
+    msg = public_device_ws_message(alarm_hub)
+    msg.action = WSAction.ADD
+    assert ufp_with_alarm_hub.devices_ws_subscription is not None
+    ufp_with_alarm_hub.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    assert hass.states.async_entity_ids() == entity_ids
+    assert "does not generate unique IDs" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "is_public_only",
+    [pytest.param(False, id="hybrid"), pytest.param(True, id="api_key_only")],
+)
+async def test_plain_link_station_added_at_runtime(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    ufp: MockUFPFixture,
+    alarm_hub: LinkStation,
+    is_public_only: bool,
+) -> None:
+    """A link station that is not an alarm hub gets no alarm hub entities."""
+    link_station = alarm_hub.model_copy(update={"is_alarm_hub": False})
+    ufp.api.is_public_only = is_public_only
+    ufp.api.has_public_bootstrap = True
+    pb = _make_public_bootstrap(None)
+    ufp.api.public_bootstrap = pb
+    ufp.api.update_public = AsyncMock(return_value=pb)
+
+    await init_entry(hass, ufp, [])
+    msg = public_device_ws_message(link_station)
+    msg.action = WSAction.ADD
+    assert ufp.devices_ws_subscription is not None
+    ufp.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, ALARM_HUB_MAC), ufp.entry.entry_id
+        )
+        is None
+    )
+    assert hass.states.get("sensor.alarm_hub_battery_voltage") is None
+
+
+@pytest.mark.parametrize(
+    ("device_type", "model", "object_id"),
+    [
+        pytest.param(None, "Alarm Hub", "alarm_hub", id="no_type"),
+        pytest.param("UP-Hub-Test", "UP-Hub-Test", "up_hub_test", id="type"),
+    ],
+)
+async def test_alarm_hub_without_name(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    ufp: MockUFPFixture,
+    alarm_hub: LinkStation,
+    device_type: str | None,
+    model: str,
+    object_id: str,
+) -> None:
+    """A hub without a name falls back to its model and MAC."""
+    unnamed = alarm_hub.model_copy(update={"name": None, "device_type": device_type})
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = _make_public_bootstrap(unnamed)
+
+    await init_entry(hass, ufp, [])
+
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, ALARM_HUB_MAC), ufp.entry.entry_id
+    )
+    assert device is not None
+    assert device.name == f"{model} {ALARM_HUB_MAC}"
+    assert device.model == model
+    assert device.model_id == device_type
+    assert (
+        hass.states.get(f"sensor.{object_id}_{ALARM_HUB_MAC.lower()}_battery_voltage")
+        is not None
+    )
+
+
 async def test_alarm_hub_unavailable_when_public_bootstrap_lost(
     hass: HomeAssistant,
     ufp_with_alarm_hub: MockUFPFixture,
@@ -413,7 +578,8 @@ async def test_alarm_hub_unavailable_when_public_bootstrap_lost(
     assert hass.states.get(entity_id).state == "12.108427"
 
     ufp_with_alarm_hub.api.has_public_bootstrap = False
-    msg = public_device_ws_message(alarm_hub)
+    # A frame without a merged object makes the entities re-read the bootstrap.
+    msg = public_device_ws_message(None)
     msg.old_obj = alarm_hub
     assert ufp_with_alarm_hub.devices_ws_subscription is not None
     ufp_with_alarm_hub.devices_ws_subscription(msg)
