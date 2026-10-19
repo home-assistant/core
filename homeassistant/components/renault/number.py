@@ -16,13 +16,14 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.const import PERCENTAGE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import RenaultConfigEntry
 from .const import DOMAIN
 from .entity import RenaultDataEntity, RenaultDataEntityDescription
+from .renault_vehicle import RenaultVehicleProxy
 
 # Coordinator is used to centralize the data updates
 # but renault servers are unreliable and it's safer to queue action calls
@@ -94,13 +95,17 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Renault entities from config entry."""
-    entities: list[RenaultNumberEntity] = [
-        RenaultNumberEntity(vehicle, description)
-        for vehicle in config_entry.runtime_data.vehicles.values()
-        for description in NUMBER_TYPES
-        if description.coordinator in vehicle.coordinators
-    ]
-    async_add_entities(entities)
+
+    @callback
+    def _async_add_vehicle(vehicle: RenaultVehicleProxy) -> None:
+        async_add_entities(
+            RenaultNumberEntity(vehicle, description)
+            for description in NUMBER_TYPES
+            if description.coordinator in vehicle.coordinators
+        )
+
+    for vehicle in config_entry.runtime_data.vehicles.values():
+        _async_add_vehicle(vehicle)
 
 
 class RenaultNumberEntity[T: KamereonVehicleDataAttributes](

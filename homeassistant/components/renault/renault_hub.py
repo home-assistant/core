@@ -18,13 +18,14 @@ from renault_api.kamereon.models import KamereonVehiclesLink
 from renault_api.renault_account import RenaultAccount
 from renault_api.renault_client import RenaultClient
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     COOLING_UPDATES_SECONDS,
+    DOMAIN,
     MAX_CALLS_PER_HOURS,
     RenaultConfigurationKeys,
 )
@@ -37,17 +38,22 @@ LOGGER = logging.getLogger(__name__)
 
 
 async def _get_filtered_vehicles(account: RenaultAccount) -> list[KamereonVehiclesLink]:
-    """Get the vehicles, filtering out those with missing details.
+    """Get the vehicles, filtering out those with missing details."""
+    vehicles = await account.get_vehicles()
+    return await _filter_vehicles_with_details(account, vehicles.vehicleLinks or [])
+
+
+async def _filter_vehicles_with_details(
+    account: RenaultAccount, vehicle_links: list[KamereonVehiclesLink]
+) -> list[KamereonVehiclesLink]:
+    """Filter out the vehicles with missing details.
 
     The vehicle list sometimes omits the details, so they are requested
     separately. They may still be missing for new purchases, or due to an
     issue with the Renault servers.
     """
-    vehicles = await account.get_vehicles()
-    if not vehicles.vehicleLinks:
-        return []
     result: list[KamereonVehiclesLink] = []
-    for link in vehicles.vehicleLinks:
+    for link in vehicle_links:
         if link.vehicleDetails is None and link.vin:
             vehicle = await account.get_api_vehicle(link.vin)
             with contextlib.suppress(KamereonResponseException):
@@ -162,13 +168,21 @@ class RenaultHub:
         ]
 
         self._account = await self._client.get_api_account(account_id)
-        vehicle_links = await _get_filtered_vehicles(self._account)
+        vehicles = await self._account.get_vehicles()
+        all_vehicle_links = vehicles.vehicleLinks or []
+        vehicle_links = await _filter_vehicles_with_details(
+            self._account, all_vehicle_links
+        )
+        # An empty list is more likely a server issue than all vehicles removed.
+        if vins := {link.vin for link in all_vehicle_links if link.vin}:
+            self._async_remove_stale_devices(config_entry, vins)
         if not vehicle_links:
             LOGGER.debug(
                 "No valid vehicle details found for account_id: %s", account_id
             )
             raise ConfigEntryNotReady(
-                "Failed to retrieve vehicle details from Renault servers"
+                translation_domain=DOMAIN,
+                translation_key="no_vehicle_details",
             )
 
         num_call_per_scan = len(COORDINATORS) * len(vehicle_links)
@@ -204,6 +218,21 @@ class RenaultHub:
             for vehicle_link in vehicle_links:
                 vehicle = self._vehicles[str(vehicle_link.vin)]
                 vehicle.update_scan_interval(new_scan_interval)
+
+    @callback
+    def _async_remove_stale_devices(
+        self, config_entry: RenaultConfigEntry, vins: set[str]
+    ) -> None:
+        """Remove the devices of vehicles no longer linked to the account."""
+        device_registry = dr.async_get(self._hass)
+        for device_entry in dr.async_entries_for_config_entry(
+            device_registry, config_entry.entry_id
+        ):
+            if not any(
+                domain == DOMAIN and identifier in vins
+                for domain, identifier in device_entry.identifiers
+            ):
+                device_registry.async_remove_device(device_entry.id)
 
     async def async_initialise_vehicle(
         self,

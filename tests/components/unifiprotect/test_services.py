@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser
 from uiprotect.data import Camera, Chime, Light, ModelType, PTZPreset
 from uiprotect.data.devices import CameraZone
 from uiprotect.exceptions import BadRequest, ClientError
@@ -49,8 +50,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from . import patch_ufp_method
 from .conftest import UNIFI_MAC
 from .utils import MockUFPFixture, init_entry
-
-from tests.common import MockConfigEntry, MockUser
 
 
 @pytest.fixture(name="device")

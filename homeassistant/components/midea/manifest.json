@@ -1,6 +1,11 @@
 {
   "domain": "midea",
   "name": "Midea",
+  "categories": [
+    "climate.heat_pumps_air_conditioning",
+    "appliances_cleaning",
+    "climate.water_heaters"
+  ],
   "codeowners": ["@chemelli74", "@rokam"],
   "config_flow": true,
   "dhcp": [
@@ -13,5 +18,5 @@
   "iot_class": "local_polling",
   "loggers": ["midealocal"],
   "quality_scale": "gold",
-  "requirements": ["midea-local==12.3.0"]
+  "requirements": ["midea-local==13.0.0"]
 }

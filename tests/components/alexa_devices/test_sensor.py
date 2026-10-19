@@ -12,6 +12,11 @@ from aioamazondevices.exceptions import (
 from aioamazondevices.structures import AmazonDevice, AmazonDeviceSensor
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
@@ -28,8 +33,6 @@ from .const import (
     TEST_DEVICE_AQM,
     TEST_DEVICE_AQM_SN,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.parametrize(

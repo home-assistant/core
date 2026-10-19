@@ -1,6 +1,7 @@
 {
   "domain": "risco",
   "name": "Risco",
+  "categories": ["security_safety.alarm_systems"],
   "codeowners": ["@OnFreund"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/risco",

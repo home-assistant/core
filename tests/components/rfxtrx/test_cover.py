@@ -3,13 +3,12 @@
 from unittest.mock import call
 
 import pytest
+from pytest_homeassistant.common import mock_restore_cache
 
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import create_rfx_test_entry
-
-from tests.common import mock_restore_cache
 
 
 async def test_one_cover(hass: HomeAssistant, rfxtrx) -> None:

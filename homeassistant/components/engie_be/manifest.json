@@ -1,6 +1,7 @@
 {
   "domain": "engie_be",
   "name": "ENGIE Belgium",
+  "categories": ["energy.energy_prices"],
   "codeowners": ["@DaanVervacke"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/engie_be",

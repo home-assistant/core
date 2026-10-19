@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, call, patch
 from goodwe import InverterError, SensorKind
 from goodwe.sensor import Current
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.goodwe.const import (
     CONF_MODEL_FAMILY,
@@ -38,8 +39,6 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import TEST_HOST, TEST_PORT, TEST_SERIAL
-
-from tests.common import MockConfigEntry
 
 BATTERY_CHARGE_CURRENT = "battery_charge_current"
 BATTERY_CHARGE_CURRENT_ENTITY_ID = "number.goodwe_battery_charge_current_limit"

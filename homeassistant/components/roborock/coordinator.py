@@ -271,6 +271,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
                     severity=IssueSeverity.WARNING,
                     translation_key="cloud_api_used",
                     translation_placeholders={"device_name": self._device.name},
+                    config_entry_id=self.config_entry.entry_id,
                     learn_more_url="https://www.home-assistant.io/integrations/roborock/#the-integration-tells-me-it-cannot-reach-my-vacuum-and-is-using-the-cloud-api-and-that-this-is-not-supported-or-i-am-having-any-networking-issues",
                 )
 

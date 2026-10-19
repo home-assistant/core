@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from typedmonarchmoney.models import (
     MonarchAccount,
     MonarchBudget,
@@ -14,8 +15,6 @@ from typedmonarchmoney.models import (
 
 from homeassistant.components.monarch_money.const import DOMAIN
 from homeassistant.const import CONF_TOKEN
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 def _typed_budgets(data: dict[str, Any]) -> dict[str, MonarchBudget]:

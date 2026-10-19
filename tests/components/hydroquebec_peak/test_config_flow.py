@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from hydropeak_opendata import OpenDataConnectionError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hydroquebec_peak.const import CONF_OFFER, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -10,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_OFFER
-
-from tests.common import MockConfigEntry
 
 
 async def test_full_flow(

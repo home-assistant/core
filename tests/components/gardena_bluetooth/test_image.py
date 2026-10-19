@@ -14,6 +14,8 @@ from gardena_bluetooth.const import (
 from gardena_bluetooth.exceptions import CharacteristicNoAccess
 from gardena_bluetooth.parse import CharacteristicContourPoints
 import pytest
+from pytest_homeassistant.common import snapshot_platform
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.gardena_bluetooth.coordinator import SEGMENTED_SCAN_COUNT
@@ -23,9 +25,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import AQUA_CONTOUR_SERVICE_INFO, setup_entry
-
-from tests.common import snapshot_platform
-from tests.typing import ClientSessionGenerator
 
 pytestmark = pytest.mark.usefixtures("constant_advertisements")
 
