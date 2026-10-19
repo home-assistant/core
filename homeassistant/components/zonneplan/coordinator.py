@@ -41,7 +41,7 @@ LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(minutes=15)
 BATTERY_UPDATE_INTERVAL = timedelta(minutes=5)
-BATTERY_CONTROL_UPDATE_INTERVAL = timedelta(minutes=1)
+BATTERY_CONTROL_UPDATE_INTERVAL = timedelta(minutes=5)
 
 type ZonneplanConfigEntry = ConfigEntry[ZonneplanRuntimeData]
 
@@ -327,4 +327,6 @@ class ZonneplanBatteryControlCoordinator(
                 translation_domain=DOMAIN,
                 translation_key="api_error",
             ) from err
-        await self.async_request_refresh()
+        finally:
+            # A failed switch can leave the battery half switched.
+            await self.async_request_refresh()

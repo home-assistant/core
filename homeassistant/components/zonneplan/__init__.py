@@ -40,7 +40,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZonneplanConfigEntry) ->
     battery_control_coordinator = ZonneplanBatteryControlCoordinator(
         hass, entry, zonneplan, battery_connection_uuids
     )
-    await battery_control_coordinator.async_config_entry_first_refresh()
+    # Not a first refresh: a failing control mode must not take down the sensors.
+    await battery_control_coordinator.async_refresh()
 
     entry.runtime_data = ZonneplanRuntimeData(
         coordinator=coordinator,

@@ -27,7 +27,7 @@ from homeassistant.components.zonneplan.const import DOMAIN
 from homeassistant.components.zonneplan.coordinator import (
     BATTERY_CONTROL_UPDATE_INTERVAL,
 )
-from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -190,7 +190,7 @@ async def test_select_option_error(
     expected_exception: type[HomeAssistantError],
     translation_key: str,
 ) -> None:
-    """Test errors while switching the control mode."""
+    """Test errors while switching the control mode still refresh the control mode."""
     mock_zonneplan_client.async_set_battery_control_mode.side_effect = exception
 
     with pytest.raises(expected_exception) as exc_info:
@@ -203,7 +203,8 @@ async def test_select_option_error(
 
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == translation_key
-    assert mock_zonneplan_client.async_get_battery_control_mode.call_count == 1
+    # The switch may have been applied partly, so the select shows what the battery reports.
+    assert mock_zonneplan_client.async_get_battery_control_mode.call_count == 2
 
 
 async def test_select_option_authentication_error(
@@ -262,3 +263,35 @@ async def test_select_update(
 
     assert (state := hass.states.get(CONTROL_MODE_ENTITY_ID))
     assert state.state == "dynamic_charging"
+
+
+async def test_select_control_mode_unavailable_at_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_zonneplan_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failing control mode doesn't block the setup."""
+    mock_zonneplan_client.async_get_battery_control_mode.side_effect = (
+        ZonneplanConnectionError("boom")
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert (state := hass.states.get(CONTROL_MODE_ENTITY_ID))
+    assert state.state == STATE_UNAVAILABLE
+
+    mock_zonneplan_client.async_get_battery_control_mode.side_effect = None
+    freezer.tick(BATTERY_CONTROL_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(CONTROL_MODE_ENTITY_ID))
+    assert state.state == "self_consumption"
+    assert state.attributes[ATTR_OPTIONS] == [
+        "self_consumption",
+        "home_optimization",
+        "dynamic_charging",
+    ]

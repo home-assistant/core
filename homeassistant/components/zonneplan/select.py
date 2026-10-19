@@ -2,6 +2,7 @@
 
 from typing import override
 
+from pyzonneplan import BatteryControlMode
 from pyzonneplan.const import BatteryMode
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -47,10 +48,22 @@ class ZonneplanBatteryControlModeSelect(
     """Representation of the control mode of a Zonneplan home battery."""
 
     @property
+    def _control_mode(self) -> BatteryControlMode | None:
+        """Return the control mode, None until it was fetched once."""
+        return (self.coordinator.data or {}).get(self._contract_uuid)
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the control mode is known."""
+        return super().available and self._control_mode is not None
+
+    @property
     @override
     def options(self) -> list[str]:
         """Return the modes the battery supports, and the current one."""
-        control_mode = self.coordinator.data[self._contract_uuid]
+        if (control_mode := self._control_mode) is None:
+            return []
         available_modes = control_mode.available_modes
         return [
             mode.value
