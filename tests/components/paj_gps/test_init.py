@@ -7,18 +7,17 @@ from freezegun.api import FrozenDateTimeFactory
 from pajgps_api.models.device import Device
 from pajgps_api.pajgps_api_error import AuthenticationError, TokenRefreshError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
 
 from homeassistant.components.paj_gps.const import DOMAIN, UPDATE_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-)
 
 
 @pytest.mark.parametrize(
