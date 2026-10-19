@@ -14,9 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntityStateAttribute,
     SensorStateClass,
 )
-from homeassistant.components.sensor.recorder import (  # pylint: disable=home-assistant-component-root-import
-    reset_detected,
-)
+from homeassistant.components.sensor.recorder import reset_detected  # pylint: disable=home-assistant-component-root-import
 from homeassistant.const import (
     EntityStateAttribute,
     UnitOfEnergy,
@@ -639,6 +637,15 @@ class EnergyCostSensor(SensorEntity):
         """Handle child updates."""
         self._update_cost()
         self.async_write_ha_state()
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Update the stat ID stored for the frontend."""
+        super().async_entity_id_changed(old_entity_id)
+        self.hass.data[DOMAIN]["cost_sensors"][
+            self._config[self._adapter.stat_energy_key]
+        ] = self.entity_id
 
     @override
     async def async_will_remove_from_hass(self) -> None:

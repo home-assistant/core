@@ -296,11 +296,13 @@ async def test_raise_addon_task_in_progress(
 ) -> None:
     """Test raise ConfigEntryNotReady if an add-on task is in progress."""
     install_event = asyncio.Event()
+    install_started = asyncio.Event()
 
     install_addon_original_side_effect = install_addon.side_effect
 
     async def install_addon_side_effect(slug: str) -> None:
         """Mock install add-on."""
+        install_started.set()
         await install_event.wait()
         await install_addon_original_side_effect(slug)
 
@@ -317,7 +319,7 @@ async def test_raise_addon_task_in_progress(
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
-    await asyncio.sleep(0.05)
+    await install_started.wait()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
     assert install_addon.call_count == 1
@@ -325,7 +327,6 @@ async def test_raise_addon_task_in_progress(
 
     # Check that we only call install add-on once if a task is in progress.
     await hass.config_entries.async_reload(entry.entry_id)
-    await asyncio.sleep(0.05)
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
     assert entry.error_reason_translation_key == "addon_not_ready"
@@ -745,10 +746,14 @@ async def test_ipv6_repair_resolves_on_reload(
 
 
 @pytest.mark.parametrize(
-    ("stop_addon_side_effect", "entry_state"),
+    ("stop_addon_side_effect", "entry_state", "entry_reason"),
     [
-        (None, ConfigEntryState.NOT_LOADED),
-        (SupervisorError("Boom"), ConfigEntryState.FAILED_UNLOAD),
+        (None, ConfigEntryState.NOT_LOADED, None),
+        (
+            SupervisorError("Boom"),
+            ConfigEntryState.FAILED_UNLOAD,
+            "Failed to stop the Matter Server app",
+        ),
     ],
 )
 async def test_stop_addon(
@@ -760,6 +765,7 @@ async def test_stop_addon(
     stop_addon: AsyncMock,
     stop_addon_side_effect: Exception | None,
     entry_state: ConfigEntryState,
+    entry_reason: str | None,
 ) -> None:
     """Test stop the Matter add-on on entry unload if entry is disabled."""
     stop_addon.side_effect = stop_addon_side_effect
@@ -786,6 +792,7 @@ async def test_stop_addon(
     await hass.async_block_till_done()
 
     assert entry.state is entry_state
+    assert entry.reason == entry_reason
     assert stop_addon.call_count == 1
     assert stop_addon.call_args == call("core_matter_server")
 

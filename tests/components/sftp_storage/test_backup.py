@@ -1,14 +1,16 @@
 """Test the Backup SFTP Location platform."""
 
+from collections.abc import AsyncIterator
 from io import StringIO
 import json
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, call, patch
 
 from asyncssh.sftp import SFTPError
 import pytest
 
 from homeassistant.components.sftp_storage.backup import (
+    async_get_backup_agents,
     async_register_backup_agents_listener,
 )
 from homeassistant.components.sftp_storage.const import (
@@ -291,6 +293,32 @@ async def test_agents_upload(
     assert uploaded_metadata == BACKUP_METADATA["metadata"]
 
 
+@pytest.mark.usefixtures("mock_ssh_connection")
+async def test_agents_upload_progress(hass: HomeAssistant) -> None:
+    """Test that upload progress is reported after each written chunk."""
+
+    async def backup_stream() -> AsyncIterator[bytes]:
+        yield b"abc"
+        yield b"defgh"
+
+    async def open_stream() -> AsyncIterator[bytes]:
+        return backup_stream()
+
+    on_progress = Mock()
+    (agent,) = await async_get_backup_agents(hass)
+
+    await agent.async_upload_backup(
+        open_stream=open_stream,
+        backup=TEST_AGENT_BACKUP,
+        on_progress=on_progress,
+    )
+
+    assert on_progress.call_args_list == [
+        call(bytes_uploaded=3),
+        call(bytes_uploaded=8),
+    ]
+
+
 async def test_agents_upload_fail(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -339,7 +367,7 @@ async def test_agents_delete(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
 
     # Called 2 times, to remove metadata and backup file.
     assert mock_ssh_connection._sftp._mock_unlink.call_count == 2
@@ -350,17 +378,18 @@ async def test_agents_delete(
     [
         (
             [True, False],
-            {"agent_errors": {}},
+            {"agent_error_translations": {}, "agent_errors": {}},
         ),  # First `True` is to confirm the metadata file exists
         (
             SFTPError(0, "manual"),
             {
+                "agent_error_translations": {},
                 "agent_errors": {
                     f"{DOMAIN}.{TEST_AGENT_ID}": (
                         f"Failed to delete backup id:"
                         f" {TEST_AGENT_BACKUP.backup_id}: manual"
                     )
-                }
+                },
             },
         ),
     ],
@@ -410,7 +439,7 @@ async def test_agents_delete_not_found(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
 
 
 async def test_listeners_get_cleaned_up(hass: HomeAssistant) -> None:

@@ -23,7 +23,7 @@
           "capabilities": {
             "isMultiSplitSystem": false,
             "isLegacyDevice": false,
-            "hasStandby": false,
+            "hasStandby": true,
             "hasCoolOperationMode": true,
             "hasHeatOperationMode": true,
             "hasAutoOperationMode": true,
@@ -43,10 +43,8 @@
             "hasDemandSideControl": false,
             "hasHalfDegreeIncrements": true,
             "supportsWideVane": false,
-            "hasOutdoorTemperatureSensor": true,
             "hasVaneVertical": true,
-            "hasVaneHorizontal": true,
-            "hasStandbyMode": true
+            "hasVaneHorizontal": true
           },
           "frostProtection": {
             "active": false,
@@ -194,7 +192,8 @@
           },
           "rssi": -52,
           "frostProtection": {
-            "active": false,
+            "zone1Active": false,
+            "zone2Active": false,
             "enabled": true,
             "min": 5,
             "max": 8

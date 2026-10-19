@@ -1,7 +1,7 @@
 """The tests for the Logger component."""
 
 from collections import defaultdict
-import datetime
+import datetime as dt
 import logging
 from typing import Any
 from unittest.mock import Mock, patch
@@ -427,7 +427,7 @@ async def test_log_once_removed_from_store(
     assert hass_storage["core.logger"]["data"] == store_contents["data"]
 
     async_fire_time_changed(
-        hass, dt_util.utcnow() + datetime.timedelta(seconds=SAVE_DELAY_LONG)
+        hass, dt_util.utcnow() + dt.timedelta(seconds=SAVE_DELAY_LONG)
     )
     await hass.async_block_till_done()
 
