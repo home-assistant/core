@@ -20,7 +20,6 @@ MISSING_ALL = {
     "llm",
     "person",
     "sun",
-    "timer",
     "zone",
 }
 
