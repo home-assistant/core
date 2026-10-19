@@ -13232,6 +13232,16 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "local_vision": {
+      "name": "Local vision",
+      "integration_type": "helper",
+      "categories": [
+        "ai_voice.image_recognition",
+        "helpers.calculate_value"
+      ],
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
     "manual": {
       "name": "Manual alarm control panel",
       "integration_type": "helper",
