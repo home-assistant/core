@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from google.genai import types
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import stt
 from homeassistant.components.google_generative_ai_conversation.const import (
@@ -19,8 +20,6 @@ from homeassistant.const import CONF_API_KEY, CONF_PROMPT
 from homeassistant.core import HomeAssistant
 
 from . import API_ERROR_500, CLIENT_ERROR_BAD_REQUEST
-
-from tests.common import MockConfigEntry
 
 TEST_CHAT_MODEL = "models/gemini-3.1-flash-lite"
 TEST_PROMPT = "Please transcribe the audio."

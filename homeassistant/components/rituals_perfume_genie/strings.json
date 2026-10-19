@@ -69,8 +69,32 @@
     }
   },
   "exceptions": {
+    "authentication_failed": {
+      "message": "Rituals didn't accept your credentials. Sign in again to continue."
+    },
+    "communication_error": {
+      "message": "An error occurred while communicating with Rituals."
+    },
+    "diffuser_not_found": {
+      "message": "Diffuser {hublot} is no longer on your Rituals account."
+    },
     "firmware_update_failed": {
       "message": "Rituals could not start the firmware update: {error}"
+    },
+    "missing_credentials": {
+      "message": "The credentials of your Rituals account are missing. Sign in again to continue."
+    },
+    "perfume_amount_not_whole": {
+      "message": "The perfume amount has to be a whole number, not {value}."
+    },
+    "rate_limited": {
+      "message": "Rituals is limiting how often it can be used. Try again later."
+    },
+    "unknown_error": {
+      "message": "An unknown error occurred while communicating with Rituals: {error}"
+    },
+    "update_failed": {
+      "message": "An error occurred while updating from Rituals: {error}"
     }
   }
 }

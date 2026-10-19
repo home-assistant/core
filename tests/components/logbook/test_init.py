@@ -9,6 +9,16 @@ from unittest.mock import Mock
 from freezegun import freeze_time
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    mock_platform,
+)
+from pytest_homeassistant.components.recorder.common import (
+    async_recorder_block_till_done,
+    async_wait_recording_done,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant import core as ha
 from homeassistant.components import logbook, recorder
@@ -17,6 +27,7 @@ from homeassistant.components import logbook, recorder
 from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
 from homeassistant.components.logbook import DOMAIN
+from homeassistant.components.logbook.const import ATTR_MESSAGE
 from homeassistant.components.logbook.models import EventAsRow, LazyEventPartialState
 from homeassistant.components.logbook.processor import EventProcessor
 from homeassistant.components.logbook.queries.common import PSEUDO_EVENT_STATE_CHANGED
@@ -58,13 +69,6 @@ from .common import (
     simulate_thermostat_context_chain,
 )
 
-from tests.common import MockConfigEntry, async_capture_events, mock_platform
-from tests.components.recorder.common import (
-    async_recorder_block_till_done,
-    async_wait_recording_done,
-)
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
-
 EMPTY_CONFIG = logbook.CONFIG_SCHEMA({logbook.DOMAIN: {}})
 
 
@@ -90,7 +94,7 @@ async def test_service_call_create_logbook_entry(hass_: HomeAssistant) -> None:
         "log",
         {
             ATTR_NAME: "Alarm",
-            logbook.ATTR_MESSAGE: "is triggered",
+            ATTR_MESSAGE: "is triggered",
             ATTR_DOMAIN: "switch",
             ATTR_ENTITY_ID: "switch.test_switch",
         },
@@ -101,7 +105,7 @@ async def test_service_call_create_logbook_entry(hass_: HomeAssistant) -> None:
         "log",
         {
             ATTR_NAME: "This entry",
-            logbook.ATTR_MESSAGE: "has no domain or entity_id",
+            ATTR_MESSAGE: "has no domain or entity_id",
         },
         True,
     )
@@ -123,14 +127,14 @@ async def test_service_call_create_logbook_entry(hass_: HomeAssistant) -> None:
     first_call = calls[-2]
 
     assert first_call.data.get(ATTR_NAME) == "Alarm"
-    assert first_call.data.get(logbook.ATTR_MESSAGE) == "is triggered"
+    assert first_call.data.get(ATTR_MESSAGE) == "is triggered"
     assert first_call.data.get(ATTR_DOMAIN) == "switch"
     assert first_call.data.get(ATTR_ENTITY_ID) == "switch.test_switch"
 
     last_call = calls[-1]
 
     assert last_call.data.get(ATTR_NAME) == "This entry"
-    assert last_call.data.get(logbook.ATTR_MESSAGE) == "has no domain or entity_id"
+    assert last_call.data.get(ATTR_MESSAGE) == "has no domain or entity_id"
     assert last_call.data.get(ATTR_DOMAIN) == "logbook"
 
 
@@ -145,7 +149,7 @@ async def test_service_call_create_logbook_entry_invalid_entity_id(
         EVENT_LOGBOOK_ENTRY,
         {
             ATTR_NAME: "Alarm",
-            logbook.ATTR_MESSAGE: "is triggered",
+            ATTR_MESSAGE: "is triggered",
             ATTR_DOMAIN: "switch",
             ATTR_ENTITY_ID: 1234,
         },
@@ -162,7 +166,7 @@ async def test_service_call_create_logbook_entry_invalid_entity_id(
     assert events[0][ATTR_DOMAIN] == "switch"
     assert events[0][ATTR_NAME] == "Alarm"
     assert events[0][ATTR_ENTITY_ID] == 1234
-    assert events[0][logbook.ATTR_MESSAGE] == "is triggered"
+    assert events[0][ATTR_MESSAGE] == "is triggered"
 
 
 async def test_service_call_create_log_book_entry_no_message(
@@ -281,7 +285,7 @@ def test_process_custom_logbook_entries(hass_: HomeAssistant) -> None:
                 EVENT_LOGBOOK_ENTRY,
                 {
                     ATTR_NAME: name,
-                    logbook.ATTR_MESSAGE: message,
+                    ATTR_MESSAGE: message,
                     ATTR_ENTITY_ID: entity_id,
                 },
             ),
@@ -1910,7 +1914,7 @@ async def test_fire_logbook_entries(
             EVENT_LOGBOOK_ENTRY,
             {
                 ATTR_NAME: "Alarm",
-                logbook.ATTR_MESSAGE: "is triggered",
+                ATTR_MESSAGE: "is triggered",
                 ATTR_DOMAIN: "switch",
                 ATTR_ENTITY_ID: "sensor.xyz",
             },
@@ -1923,7 +1927,7 @@ async def test_fire_logbook_entries(
         EVENT_LOGBOOK_ENTRY,
         {
             ATTR_NAME: "Alarm",
-            logbook.ATTR_MESSAGE: "is triggered",
+            ATTR_MESSAGE: "is triggered",
             ATTR_DOMAIN: "switch",
         },
     )
@@ -2174,7 +2178,7 @@ async def test_include_events_domain_glob(
         EVENT_LOGBOOK_ENTRY,
         {
             ATTR_NAME: "Alarm",
-            logbook.ATTR_MESSAGE: "is triggered",
+            ATTR_MESSAGE: "is triggered",
             ATTR_ENTITY_ID: "switch.any",
         },
     )

@@ -6,12 +6,11 @@ from unittest.mock import AsyncMock, patch
 from huum.const import SaunaStatus
 from huum.schemas import HuumStatusResponse, SaunaConfig
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.huum.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

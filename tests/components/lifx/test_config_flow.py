@@ -13,6 +13,7 @@ from lifx import (
     Light,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.lifx import DOMAIN
@@ -26,8 +27,6 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import DHCP_FORMATTED_MAC, IP_ADDRESS, LABEL, SERIAL
 from .helpers import LEGACY_SERIAL, create_mock_light
-
-from tests.common import MockConfigEntry
 
 OLD_IP_ADDRESS = "127.0.0.2"
 

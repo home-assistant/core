@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from mozart_api.models import BatteryState, BeolinkSelf
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -15,8 +16,6 @@ from .const import (
     TEST_FRIENDLY_NAME_4,
     TEST_JID_4,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_battery_charging(

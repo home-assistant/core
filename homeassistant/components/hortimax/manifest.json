@@ -1,6 +1,7 @@
 {
   "domain": "hortimax",
   "name": "Ridder HortiMaX Pro",
+  "categories": ["garden_plants"],
   "codeowners": ["@wildekek"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hortimax",

@@ -5,13 +5,12 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.wake_on_lan.const import CONF_SECUREON_PASSWORD, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_BROADCAST_ADDRESS, CONF_BROADCAST_PORT, CONF_MAC
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 DEFAULT_MAC = "00:01:02:03:04:05"
 

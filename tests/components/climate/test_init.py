@@ -8,6 +8,14 @@ from unittest.mock import AsyncMock, MagicMock, Mock, call
 import probatio
 from propcache.api import cached_property
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    async_mock_restore_state_shutdown_restart,
+    async_mock_service,
+    mock_restore_cache_with_extra_data,
+    setup_test_component_platform,
+)
 
 from homeassistant.components.climate import (
     DOMAIN,
@@ -54,15 +62,6 @@ from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
     UnitSystem,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    async_mock_restore_state_shutdown_restart,
-    async_mock_service,
-    mock_restore_cache_with_extra_data,
-    setup_test_component_platform,
 )
 
 

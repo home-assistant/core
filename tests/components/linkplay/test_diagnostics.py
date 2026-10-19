@@ -5,6 +5,9 @@ from unittest.mock import patch
 from linkplay.bridge import LinkPlayMultiroom
 from linkplay.consts import API_ENDPOINT
 from linkplay.endpoint import LinkPlayApiEndpoint
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.linkplay.const import DOMAIN
@@ -12,10 +15,6 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 from .conftest import HOST, mock_lp_aiohttp_client
-
-from tests.common import MockConfigEntry, async_load_fixture
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(

@@ -14,6 +14,17 @@ from unittest.mock import ANY, AsyncMock, patch
 import attr
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    async_capture_events,
+    async_fire_time_changed,
+    flush_store,
+    mock_config_flow,
+    mock_device_registry,
+    mock_integration,
+    mock_platform,
+)
 from yarl import URL
 
 from homeassistant import config_entries
@@ -28,18 +39,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util.dt import utcnow
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    async_capture_events,
-    async_fire_time_changed,
-    flush_store,
-    mock_config_flow,
-    mock_device_registry,
-    mock_integration,
-    mock_platform,
-)
 
 
 @pytest.fixture(autouse=True)
