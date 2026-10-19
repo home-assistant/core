@@ -103,21 +103,6 @@ def sensor_update_to_bluetooth_data_update(
             device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value
             for device_key, sensor_values in sensor_update.entity_values.items()
         },
-        entity_names={
-            device_key_to_bluetooth_entity_key(device_key): sensor_values.name
-            for device_key, sensor_values in sensor_update.entity_values.items()
-            # Add names where the entity description has neither a translation_key nor
-            # a device_class
-            if (
-                description := entity_descriptions.get(
-                    device_key_to_bluetooth_entity_key(device_key)
-                )
-            )
-            is None
-            or (
-                description.translation_key is None and description.device_class is None
-            )
-        },
     )
 
 
