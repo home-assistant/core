@@ -576,6 +576,10 @@
     "any_list": {
       "name": "AnyList",
       "integration_type": "service",
+      "categories": [
+        "productivity_information.shopping_groceries",
+        "productivity_information.calendars_todos"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },

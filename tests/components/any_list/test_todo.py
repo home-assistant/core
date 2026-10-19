@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 from aioanylist import AnyListError, Domain
 from aioanylist.proto import PB
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.todo import (
@@ -23,8 +24,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import ITEM_ID, LIST_ID
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "todo.groceries"
 

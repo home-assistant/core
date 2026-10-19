@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from aioanylist import AuthenticationError, AuthTokens, TransportError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.any_list.const import CONF_REFRESH_TOKEN, CONF_USER_LOCALE
 from homeassistant.config_entries import ConfigEntryState
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 from .conftest import USER_ID
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_and_unload(

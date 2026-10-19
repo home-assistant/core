@@ -6,6 +6,7 @@ import uuid
 
 from aioanylist import AuthenticationError, TransportError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.any_list.const import (
@@ -30,8 +31,6 @@ from .conftest import (
     USER_ID,
     USER_LOCALE,
 )
-
-from tests.common import MockConfigEntry
 
 PASSWORD = "secret-password"
 

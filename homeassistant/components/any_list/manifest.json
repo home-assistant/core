@@ -1,6 +1,10 @@
 {
   "domain": "any_list",
   "name": "AnyList",
+  "categories": [
+    "productivity_information.shopping_groceries",
+    "productivity_information.calendars_todos"
+  ],
   "codeowners": ["@BookCatKid"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/any_list",

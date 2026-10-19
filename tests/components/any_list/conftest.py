@@ -7,6 +7,7 @@ from aioanylist import AuthTokens
 from aioanylist.proto import PB
 from aioanylist.state import AnyListState
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.any_list.const import (
     CONF_REFRESH_TOKEN,
@@ -14,8 +15,6 @@ from homeassistant.components.any_list.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_EMAIL
-
-from tests.common import MockConfigEntry
 
 EMAIL = "person@example.com"
 USER_ID = "user-123"
