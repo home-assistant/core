@@ -54,6 +54,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up Airobot button entities."""
     coordinator = entry.runtime_data
+    if not isinstance(coordinator, AirobotDataUpdateCoordinator):
+        return
 
     async_add_entities(
         AirobotButton(coordinator, description) for description in BUTTON_TYPES

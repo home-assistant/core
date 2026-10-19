@@ -1,18 +1,27 @@
 {
   "domain": "airobot",
   "name": "Airobot",
-  "categories": ["climate.thermostats_heating"],
-  "codeowners": ["@mettolen"],
+  "categories": ["climate.fans_ventilation", "climate.thermostats_heating"],
+  "codeowners": ["@mettolen", "@dmednis"],
   "config_flow": true,
+  "dependencies": ["modbus"],
   "dhcp": [
     {
       "hostname": "airobot-thermostat-*"
+    },
+    {
+      "hostname": "airobot-ventilation"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/airobot",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "loggers": ["pyairobotrest"],
+  "loggers": [
+    "modbus_connection",
+    "pyairobotmodbus",
+    "pyairobotrest",
+    "tmodbus"
+  ],
   "quality_scale": "platinum",
-  "requirements": ["pyairobotrest==0.4.0"]
+  "requirements": ["pyairobotmodbus==1.0.0", "pyairobotrest==0.4.0"]
 }

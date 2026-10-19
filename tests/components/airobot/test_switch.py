@@ -177,3 +177,9 @@ async def test_switch_error_handling(
 
     expected_value = service == SERVICE_TURN_ON
     mock_method.assert_called_once_with(expected_value)
+
+
+@pytest.mark.usefixtures("init_vu_integration")
+async def test_switch_not_created_for_ventilation(hass: HomeAssistant) -> None:
+    """Test no switch entities are created for a ventilation entry."""
+    assert not hass.states.async_entity_ids(SWITCH_DOMAIN)

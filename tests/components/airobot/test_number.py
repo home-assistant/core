@@ -76,3 +76,9 @@ async def test_number_set_value_error(
 
     assert exc_info.value.translation_domain == "airobot"
     assert exc_info.value.translation_key == "set_value_failed"
+
+
+@pytest.mark.usefixtures("init_vu_integration")
+async def test_number_not_created_for_ventilation(hass: HomeAssistant) -> None:
+    """Test no number entities are created for a ventilation entry."""
+    assert not hass.states.async_entity_ids(NUMBER_DOMAIN)

@@ -113,3 +113,9 @@ async def test_recalibrate_co2_button_error(
         )
 
     mock_airobot_client.recalibrate_co2_sensor.assert_called_once()
+
+
+@pytest.mark.usefixtures("init_vu_integration")
+async def test_button_not_created_for_ventilation(hass: HomeAssistant) -> None:
+    """Test no button entities are created for a ventilation entry."""
+    assert not hass.states.async_entity_ids(BUTTON_DOMAIN)

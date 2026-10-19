@@ -193,6 +193,7 @@
       "name": "Airobot",
       "integration_type": "device",
       "categories": [
+        "climate.fans_ventilation",
         "climate.thermostats_heating"
       ],
       "config_flow": true,
