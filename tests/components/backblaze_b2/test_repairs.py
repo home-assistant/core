@@ -62,12 +62,21 @@ async def test_repair_issue_creation(
     expected_issues: int,
 ) -> None:
     """Test repair issue creation for different exception types."""
+    mock_entry.add_to_hass(hass)
     mock_entry.runtime_data.api.account_info.get_allowed.side_effect = exception
     with patch.object(mock_entry, "async_start_reauth") as mock_reauth:
         await async_check_for_repair_issues(hass, mock_entry)
 
     mock_reauth.assert_not_called()
     assert len(issue_registry.issues) == expected_issues
+    assert all(
+        issue.config_entry_id == mock_entry.entry_id
+        for issue in issue_registry.issues.values()
+    )
+
+    await hass.config_entries.async_remove(mock_entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(issue_registry.issues) == 0
 
 
 async def test_async_create_fix_flow(hass: HomeAssistant) -> None:

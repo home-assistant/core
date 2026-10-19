@@ -1,6 +1,11 @@
 {
   "domain": "bond",
   "name": "Bond",
+  "categories": [
+    "climate.fans_ventilation",
+    "buttons_remotes",
+    "blinds_curtains"
+  ],
   "codeowners": ["@bdraco", "@prystupa", "@joshs85", "@marciogranzotto"],
   "config_flow": true,
   "dhcp": [

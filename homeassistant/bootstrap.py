@@ -25,6 +25,7 @@ import yarl
 
 from . import (
     block_async_io,
+    block_shared_serial,
     config as conf_util,
     config_entries,
     core,
@@ -349,12 +350,16 @@ async def async_setup_hass(
     _LOGGER.info("Config directory: %s", runtime_config.config_dir)
 
     block_async_io.enable()
+    block_shared_serial.enable()
 
     if not (recovery_mode := runtime_config.recovery_mode):
         config_dict = None
         basic_setup_success = False
 
-        await hass.async_add_executor_job(conf_util.process_ha_config_upgrade, hass)
+        if previous_version := await hass.async_add_executor_job(
+            conf_util.process_ha_config_upgrade, hass
+        ):
+            hass.data[conf_util.DATA_PREVIOUS_VERSION] = previous_version
 
         try:
             config_dict = await conf_util.async_hass_config_yaml(hass)

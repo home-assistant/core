@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator, Generator
 from dataclasses import FrozenInstanceError
 from pathlib import Path
 from typing import Any
-from unittest.mock import ANY, AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, _Call, call, patch
 
 from freezegun import freeze_time
 from hassil.recognize import Intent, IntentData, RecognizeResult
@@ -29,6 +29,7 @@ from homeassistant.components.assist_pipeline.const import (
 from homeassistant.components.assist_pipeline.default_pipeline import (
     _async_local_fallback_intent_filter,
     _DefaultPipelineProcessor,
+    async_get_pipeline_conversation_data,
 )
 from homeassistant.components.assist_pipeline.pipeline import (
     STORAGE_KEY,
@@ -1262,6 +1263,81 @@ async def test_prefer_local_intents(
             ]
             == "Order confirmed"
         )
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_prefer_local_intents_match_failed(
+    hass: HomeAssistant,
+    mock_chat_session: chat_session.ChatSession,
+    pipeline_data: assist_pipeline.pipeline.PipelineData,
+) -> None:
+    """Test that a local intent without targets leaves no trace for the agent."""
+
+    class OrderBeerIntentHandler(intent.IntentHandler):
+        intent_type = "OrderBeer"
+
+        async def async_handle(
+            self, intent_obj: intent.Intent
+        ) -> intent.IntentResponse:
+            raise intent.MatchFailedError(
+                result=intent.MatchTargetsResult(is_match=False),
+                constraints=intent.MatchTargetsConstraints(),
+            )
+
+    intent.async_register(hass, OrderBeerIntentHandler())
+
+    pipeline_store = pipeline_data.pipeline_store
+    pipeline_id = pipeline_store.async_get_preferred_item()
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+    await assist_pipeline.pipeline.async_update_pipeline(
+        hass, pipeline, conversation_engine="test-agent", prefer_local_intents=True
+    )
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+
+    pipeline_input = assist_pipeline.pipeline.PipelineInput(
+        intent_input="I'd like to order a stout please",
+        session=mock_chat_session,
+        run=assist_pipeline.pipeline.PipelineRun(
+            hass,
+            context=Context(),
+            pipeline=pipeline,
+            start_stage=assist_pipeline.PipelineStage.INTENT,
+            end_stage=assist_pipeline.PipelineStage.INTENT,
+            event_callback=lambda event: None,
+        ),
+    )
+
+    with patch(
+        "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_get_agent_info",
+        return_value=conversation.AgentInfo(
+            id="test-agent",
+            name="Test Agent",
+            supports_streaming=False,
+        ),
+    ):
+        await pipeline_input.validate()
+
+    agent_chat_log_roles: list[str] = []
+
+    async def mock_converse(**kwargs: Any) -> conversation.ConversationResult:
+        with (
+            chat_session.async_get_chat_session(
+                hass, kwargs["conversation_id"]
+            ) as session,
+            conversation.async_get_chat_log(hass, session) as chat_log,
+        ):
+            agent_chat_log_roles.extend(content.role for content in chat_log.content)
+        response = intent.IntentResponse(language=hass.config.language)
+        response.async_set_speech("Agent response")
+        return conversation.ConversationResult(response=response)
+
+    with patch(
+        "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_converse",
+        side_effect=mock_converse,
+    ):
+        await pipeline_input.execute()
+
+    assert agent_chat_log_roles == ["system", "user"]
 
 
 async def test_intent_continue_conversation(
@@ -2551,3 +2627,127 @@ async def test_pipeline_error_before_tts_does_not_leak_result_stream(
                 )
 
     assert len(hass.data[tts.DATA_TTS_MANAGER].token_to_stream) == 0
+
+
+def _stt_to_intent_input(
+    hass: HomeAssistant,
+    session: chat_session.ChatSession,
+    pipeline: assist_pipeline.Pipeline,
+) -> assist_pipeline.pipeline.PipelineInput:
+    """Return input for a pipeline that runs from speech-to-text to intent."""
+
+    async def audio_data() -> AsyncGenerator[bytes]:
+        yield make_10ms_chunk(b"part1")
+        yield b""
+
+    return assist_pipeline.pipeline.PipelineInput(
+        session=session,
+        stt_metadata=stt.SpeechMetadata(
+            language="",
+            format=stt.AudioFormats.WAV,
+            codec=stt.AudioCodecs.PCM,
+            bit_rate=stt.AudioBitRates.BITRATE_16,
+            sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+            channel=stt.AudioChannels.CHANNEL_MONO,
+        ),
+        stt_stream=audio_data(),
+        run=assist_pipeline.pipeline.PipelineRun(
+            hass,
+            context=Context(),
+            pipeline=pipeline,
+            start_stage=assist_pipeline.PipelineStage.STT,
+            end_stage=assist_pipeline.PipelineStage.INTENT,
+            event_callback=lambda event: None,
+            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    ("prefer_local_intents", "continue_conversation_agent", "prepared_intents"),
+    [
+        pytest.param(True, None, [call(ANY, "en-US")], id="prefer_local_intents"),
+        pytest.param(False, None, [], id="no_local_intents"),
+        pytest.param(True, "test-agent", [], id="intent_agent_only"),
+    ],
+)
+@pytest.mark.usefixtures("init_components")
+async def test_stt_prepares_intent_agents(
+    hass: HomeAssistant,
+    mock_chat_session: chat_session.ChatSession,
+    pipeline_data: assist_pipeline.pipeline.PipelineData,
+    prefer_local_intents: bool,
+    continue_conversation_agent: str | None,
+    prepared_intents: list[_Call],
+) -> None:
+    """Test speech-to-text prepares the agents that intent recognition uses."""
+    pipeline_id = pipeline_data.pipeline_store.async_get_preferred_item()
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+    await assist_pipeline.pipeline.async_update_pipeline(
+        hass,
+        pipeline,
+        conversation_engine="test-agent",
+        conversation_language=MATCH_ALL,
+        prefer_local_intents=prefer_local_intents,
+    )
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+    async_get_pipeline_conversation_data(
+        hass, mock_chat_session
+    ).continue_conversation_agent = continue_conversation_agent
+
+    pipeline_input = _stt_to_intent_input(hass, mock_chat_session, pipeline)
+    with patch(
+        "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_get_agent_info",
+        return_value=conversation.AgentInfo(
+            id="test-agent",
+            name="Test Agent",
+            supports_streaming=False,
+        ),
+    ):
+        await pipeline_input.validate()
+
+    with (
+        patch(
+            "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_prepare_intents"
+        ) as mock_prepare_intents,
+        patch(
+            "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_prepare_agent"
+        ) as mock_prepare_agent,
+        patch(
+            "homeassistant.components.assist_pipeline.default_pipeline.conversation.async_converse",
+            return_value=conversation.ConversationResult(intent.IntentResponse("en")),
+        ),
+    ):
+        await pipeline_input.execute()
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Recognition uses the STT language because the conversation language is '*'
+    assert mock_prepare_intents.mock_calls == prepared_intents
+    assert mock_prepare_agent.mock_calls == [call(hass, "test-agent", "en-US")]
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_stt_prepares_recognition_language(
+    hass: HomeAssistant,
+    mock_chat_session: chat_session.ChatSession,
+    pipeline_data: assist_pipeline.pipeline.PipelineData,
+) -> None:
+    """Test the prepare loads the intents that recognition uses, and only those."""
+    pipeline_id = pipeline_data.pipeline_store.async_get_preferred_item()
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+    await assist_pipeline.pipeline.async_update_pipeline(
+        hass, pipeline, language="en-GB", conversation_language="en"
+    )
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+
+    pipeline_input = _stt_to_intent_input(hass, mock_chat_session, pipeline)
+    await pipeline_input.validate()
+
+    agent = conversation.async_get_agent(hass)
+    with patch.object(
+        agent, "_load_intents", wraps=agent._load_intents
+    ) as mock_load_intents:
+        await pipeline_input.execute()
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_load_intents.assert_called_once_with("en")

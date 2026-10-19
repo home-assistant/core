@@ -108,9 +108,10 @@ class KnxUiNotify(_KnxNotify, KnxUiEntity):
             entity_config=config.entity,
         )
         knx_conf = config.knx
+        assert knx_conf.ga_send.dpt is not None  # required for notify
         self._device = XknxNotification(
             knx_module.xknx,
-            name=config.entity.xknx_name,
+            name=config.entity.name,
             group_address=knx_conf.ga_send.write,
             value_type=knx_conf.ga_send.dpt,
         )

@@ -471,10 +471,11 @@ async def test_service_exception(
             "renault_api.renault_vehicle.RenaultVehicle.set_ac_stop",
             side_effect=RenaultException("Didn't work"),
         ) as mock_action,
-        pytest.raises(HomeAssistantError, match="Didn't work"),
+        pytest.raises(HomeAssistantError) as err,
     ):
         await hass.services.async_call(
             DOMAIN, RenaultService.AC_CANCEL, service_data=data, blocking=True
         )
+    assert err.value.translation_key == "unknown_error"
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == ()

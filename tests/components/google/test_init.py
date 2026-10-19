@@ -1,7 +1,7 @@
 """The tests for the Google Calendar component."""
 
 from collections.abc import Awaitable, Callable
-import datetime
+import datetime as dt
 import http
 import re
 import time
@@ -17,8 +17,13 @@ import pytest
 from homeassistant.components.google import DOMAIN
 from homeassistant.components.google.const import CONF_CALENDAR_ACCESS
 from homeassistant.components.google.services import SERVICE_CREATE_EVENT
+from homeassistant.components.google.store import STORAGE_SAVE_DELAY_SECONDS
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
+    STATE_OFF,
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -38,10 +43,10 @@ from .conftest import (
     ComponentSetup,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-EXPIRED_TOKEN_TIMESTAMP = datetime.datetime(2022, 4, 8).timestamp()
+EXPIRED_TOKEN_TIMESTAMP = dt.datetime(2022, 4, 8).timestamp()
 
 # Typing helpers
 type HassApi = Callable[[], Awaitable[dict[str, Any]]]
@@ -431,13 +436,13 @@ async def test_add_event_invalid_params(
     [
         (
             {"in": {"days": 3}},
-            datetime.timedelta(days=3),
-            datetime.timedelta(days=4),
+            dt.timedelta(days=3),
+            dt.timedelta(days=4),
         ),
         (
             {"in": {"weeks": 1}},
-            datetime.timedelta(days=7),
-            datetime.timedelta(days=8),
+            dt.timedelta(days=7),
+            dt.timedelta(days=8),
         ),
     ],
     ids=["in_days", "in_weeks"],
@@ -450,8 +455,8 @@ async def test_add_event_date_in_x(
     test_api_calendar: dict[str, Any],
     mock_events_list: ApiResult,
     date_fields: dict[str, Any],
-    start_timedelta: datetime.timedelta,
-    end_timedelta: datetime.timedelta,
+    start_timedelta: dt.timedelta,
+    end_timedelta: dt.timedelta,
     aioclient_mock: AiohttpClientMocker,
     add_event_call_service: Callable[[dict[str, Any]], Awaitable[None]],
     freezer: FrozenDateTimeFactory,
@@ -466,7 +471,7 @@ async def test_add_event_date_in_x(
     # (the test timezone). This ensures dt_util.now().date() returns June 14
     # while a naive datetime.now().date() would return June 15 in UTC.
     freezer.move_to("2025-06-15 03:00:00+00:00")
-    today = datetime.date(2025, 6, 14)
+    today = dt.date(2025, 6, 14)
     start_date = today + start_timedelta
     end_date = today + end_timedelta
 
@@ -503,7 +508,7 @@ async def test_add_event_date(
 
     now = utcnow()
     today = now.date()
-    end_date = today + datetime.timedelta(days=2)
+    end_date = today + dt.timedelta(days=2)
 
     aioclient_mock.clear_requests()
     mock_insert_event(
@@ -542,7 +547,7 @@ async def test_add_event_date_time(
     assert await component_setup()
 
     start_datetime = dt_util.now(time_zone=zoneinfo.ZoneInfo("America/Regina"))
-    delta = datetime.timedelta(days=3, hours=3)
+    delta = dt.timedelta(days=3, hours=3)
     end_datetime = start_datetime + delta
 
     aioclient_mock.clear_requests()
@@ -605,7 +610,7 @@ async def test_unsupported_create_event(
     assert await component_setup()
 
     start_datetime = dt_util.now(time_zone=zoneinfo.ZoneInfo("America/Regina"))
-    delta = datetime.timedelta(days=3, hours=3)
+    delta = dt.timedelta(days=3, hours=3)
     end_datetime = start_datetime + delta
     entity_id = "calendar.backyard_light"
 
@@ -672,7 +677,7 @@ async def test_add_event_location(
 
     now = utcnow()
     today = now.date()
-    end_date = today + datetime.timedelta(days=2)
+    end_date = today + dt.timedelta(days=2)
 
     aioclient_mock.clear_requests()
     mock_insert_event(
@@ -699,7 +704,7 @@ async def test_add_event_location(
 @pytest.mark.parametrize(
     "config_entry_token_expiry",
     [
-        (datetime.datetime.max.replace(tzinfo=UTC).timestamp() + 1),
+        (dt.datetime.max.replace(tzinfo=UTC).timestamp() + 1),
         (utcnow().replace(tzinfo=None).timestamp()),
     ],
     ids=["max_timestamp", "timestamp_naive"],
@@ -900,8 +905,10 @@ async def test_remove_entry(
     component_setup: ComponentSetup,
     test_api_calendar: dict[str, Any],
     mock_events_list: ApiResult,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test load and remove of a ConfigEntry."""
+    """Removing a loaded entry also cancels delayed cache writes."""
     mock_calendars_list({"items": [test_api_calendar]})
     mock_events_list({})
     assert await component_setup()
@@ -910,9 +917,60 @@ async def test_remove_entry(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.state is ConfigEntryState.LOADED
+    storage_key = f"google.{entry.entry_id}"
+    assert await entry.runtime_data.store.async_load()
+    assert storage_key not in hass_storage
 
     assert await hass.config_entries.async_remove(entry.entry_id)
     assert entry.state is ConfigEntryState.NOT_LOADED
+    assert storage_key not in hass_storage
+
+    freezer.tick(STORAGE_SAVE_DELAY_SECONDS + 1)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert storage_key not in hass_storage
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+    await hass.async_block_till_done()
+    assert storage_key not in hass_storage
+
+
+async def test_remove_entry_after_failed_unload(
+    hass: HomeAssistant,
+    mock_calendars_list: ApiResult,
+    component_setup: ComponentSetup,
+    test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Removal prevents pending and future writes after an unload failure."""
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
+    assert await component_setup()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    store = entry.runtime_data.store
+    data = await store.async_load()
+    assert data
+    storage_key = f"google.{entry.entry_id}"
+
+    with patch.object(
+        hass.config_entries, "async_unload_platforms", return_value=False
+    ):
+        assert await hass.config_entries.async_remove(entry.entry_id) == {
+            "require_restart": True
+        }
+
+    assert entry.state is ConfigEntryState.FAILED_UNLOAD
+    assert storage_key not in hass_storage
+
+    # A platform that failed to unload can still update its calendar store.
+    await store.async_save(data)
+    freezer.tick(STORAGE_SAVE_DELAY_SECONDS + 1)
+    async_fire_time_changed(hass)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+    await hass.async_block_till_done()
+    assert storage_key not in hass_storage
 
 
 async def test_oauth_implementation_not_available(

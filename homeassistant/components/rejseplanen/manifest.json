@@ -1,6 +1,7 @@
 {
   "domain": "rejseplanen",
   "name": "Rejseplanen",
+  "categories": ["vehicles_transport.public_transport"],
   "codeowners": ["@Jawar19"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/rejseplanen",

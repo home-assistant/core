@@ -2,7 +2,10 @@
 
 from unittest.mock import MagicMock
 
+from boschshcpy import SHCRoomThermostat2
 from boschshcpy.services_impl import (
+    DisplayDirection,
+    DisplayedTemperatureConfiguration,
     OutdoorSirenService,
     PirSensorConfigurationService,
     SmokeSensitivityService,
@@ -11,7 +14,7 @@ from boschshcpy.services_impl import (
 import pytest
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_SELECT_OPTION
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_SELECT_OPTION, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .conftest import (
@@ -21,12 +24,15 @@ from .conftest import (
     shutter_contact2_device,
     shutter_contact2_plus_device,
     smoke_detector_device,
+    thermostat_gen2_device,
 )
 
 from tests.common import MockConfigEntry
 
 SOUND_LEVEL_ENTITY_ID = "select.outdoor_siren_siren_volume"
 MOTION_SENSITIVITY_ENTITY_ID = "select.motion_detector_motion_sensitivity"
+DISPLAY_DIRECTION_ENTITY_ID = "select.thermostat_gen2_display_orientation"
+DISPLAYED_TEMPERATURE_ENTITY_ID = "select.thermostat_gen2_displayed_temperature"
 SMOKE_SENSITIVITY_ENTITY_ID = "select.smoke_detector_smoke_sensitivity"
 VIBRATION_SENSITIVITY_ENTITY_ID = "select.shutter_contact_vibration_sensitivity"
 
@@ -308,3 +314,160 @@ async def test_smoke_sensitivity_unsupported(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(SMOKE_SENSITIVITY_ENTITY_ID) is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "thermostats": [
+                thermostat_gen2_device(
+                    display_direction=DisplayDirection.Direction.REVERSED,
+                    displayed_temperature=DisplayedTemperatureConfiguration.DisplayedTemperature.MEASURED,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_display_current_options(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The thermostat's display direction and shown temperature are reported."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(DISPLAY_DIRECTION_ENTITY_ID)
+    assert state is not None
+    assert state.state == "reversed"
+    state = hass.states.get(DISPLAYED_TEMPERATURE_ENTITY_ID)
+    assert state is not None
+    assert state.state == "measured"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "thermostats": [
+                thermostat_gen2_device(
+                    display_direction=DisplayDirection.Direction.NORMAL,
+                    displayed_temperature=DisplayedTemperatureConfiguration.DisplayedTemperature.MEASURED,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_display_select_options(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Selecting options writes them to the thermostat."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.thermostats[0]
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: DISPLAY_DIRECTION_ENTITY_ID, "option": "reversed"},
+        blocking=True,
+    )
+    assert device.display_direction == DisplayDirection.Direction.REVERSED
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: DISPLAYED_TEMPERATURE_ENTITY_ID, "option": "setpoint"},
+        blocking=True,
+    )
+    assert (
+        device.displayed_temperature
+        == DisplayedTemperatureConfiguration.DisplayedTemperature.SETPOINT
+    )
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"thermostats": [thermostat_gen2_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_display_unsupported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No selects are created without display support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(DISPLAY_DIRECTION_ENTITY_ID) is None
+    assert hass.states.get(DISPLAYED_TEMPERATURE_ENTITY_ID) is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "thermostats": [
+                thermostat_gen2_device(
+                    supports_display_direction=True,
+                    supports_displayed_temperature=True,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_thermostat_display_unknown_initial_values(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Supported display selects are created even without an initial value."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(DISPLAY_DIRECTION_ENTITY_ID).state == STATE_UNKNOWN
+    assert hass.states.get(DISPLAYED_TEMPERATURE_ENTITY_ID).state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "roomthermostats": [
+                thermostat_gen2_device(
+                    spec=SHCRoomThermostat2,
+                    display_direction=DisplayDirection.Direction.NORMAL,
+                    displayed_temperature=DisplayedTemperatureConfiguration.DisplayedTemperature.SETPOINT,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_room_thermostat_2_display_selects(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Room Thermostat II gets the display selects and writes to the device."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.roomthermostats[0]
+    entity_id = "select.thermostat_gen2_display_orientation"
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "normal"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, "option": "reversed"},
+        blocking=True,
+    )
+    assert device.display_direction == DisplayDirection.Direction.REVERSED
+    assert hass.states.get(DISPLAYED_TEMPERATURE_ENTITY_ID) is not None

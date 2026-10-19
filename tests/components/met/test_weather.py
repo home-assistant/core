@@ -135,10 +135,11 @@ async def test_remove_hourly_entity(
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"name": "Somewhere", "latitude": 10, "longitude": 20, "elevation": 0},
+        title="Met.no (10, 20)",
+        data={"latitude": 10, "longitude": 20, "elevation": 0},
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert hass.states.async_entity_ids("weather") == ["weather.forecast_somewhere"]
-    assert list(entity_registry.entities.keys()) == ["weather.forecast_somewhere"]
+    assert hass.states.async_entity_ids("weather") == ["weather.met_no_10_20"]
+    assert list(entity_registry.entities.keys()) == ["weather.met_no_10_20"]

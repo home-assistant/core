@@ -1,7 +1,7 @@
 """Test the hardware websocket API."""
 
 from collections import namedtuple
-import datetime
+import datetime as dt
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -31,7 +31,7 @@ async def test_board_info(
     assert msg["result"] == {"hardware": []}
 
 
-TEST_TIME_ADVANCE_INTERVAL = datetime.timedelta(seconds=5 + 1)
+TEST_TIME_ADVANCE_INTERVAL = dt.timedelta(seconds=5 + 1)
 
 
 async def test_system_status_subscription(

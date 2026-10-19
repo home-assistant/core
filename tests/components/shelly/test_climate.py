@@ -34,7 +34,10 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.humidifier import ATTR_HUMIDITY
-from homeassistant.components.shelly.climate import PRESET_FROST_PROTECTION
+from homeassistant.components.shelly.climate import (
+    PRESET_FROST_PROTECTION,
+    ShellyClimateExtraStoredData,
+)
 from homeassistant.components.shelly.const import (
     DOMAIN,
     MODEL_LINKEDGO_ST802_THERMOSTAT,
@@ -318,6 +321,10 @@ async def test_block_restored_climate(
     monkeypatch.delattr(mock_block_device.blocks[EMETER_BLOCK_ID], "targetTemp")
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
     device = register_device(device_registry, entry)
+    # Non-climate entities of the entry are skipped when restoring
+    register_entity(
+        hass, SWITCH_DOMAIN, "test_switch", "relay_0", entry, device_id=device.id
+    )
     entity_id = register_entity(
         hass,
         CLIMATE_DOMAIN,
@@ -606,6 +613,22 @@ async def test_block_restored_climate_temperature_unit(
     assert saved[entity_id]["last_target_temp"] == expected_heat_target
 
 
+def test_extra_stored_data_without_last_target_temp() -> None:
+    """Test extra stored data without the last target temperature is rejected."""
+    assert (
+        ShellyClimateExtraStoredData.from_dict(
+            {
+                "native_current_temperature": 18.0,
+                "native_target_temperature": 20.0,
+                "native_target_temperature_high": None,
+                "native_target_temperature_low": None,
+                "native_temperature_unit": UnitOfTemperature.CELSIUS,
+            }
+        )
+        is None
+    )
+
+
 async def test_block_restored_climate_no_last_state(
     hass: HomeAssistant,
     mock_block_device: Mock,
@@ -834,7 +857,7 @@ async def test_device_not_calibrated(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test to create an issue when the device is not calibrated."""
-    await init_integration(hass, 1, sleep_period=1000, model=MODEL_VALVE)
+    entry = await init_integration(hass, 1, sleep_period=1000, model=MODEL_VALVE)
 
     # Make device online
     mock_block_device.mock_online()
@@ -850,9 +873,12 @@ async def test_device_not_calibrated(
     mock_block_device.mock_update()
     await hass.async_block_till_done()
 
-    assert issue_registry.async_get_issue(
-        domain=DOMAIN, issue_id=f"not_calibrated_{MOCK_MAC}"
+    assert (
+        issue := issue_registry.async_get_issue(
+            domain=DOMAIN, issue_id=f"not_calibrated_{MOCK_MAC}"
+        )
     )
+    assert issue.config_entry_id == entry.entry_id
 
     # The device has been calibrated
     monkeypatch.setattr(

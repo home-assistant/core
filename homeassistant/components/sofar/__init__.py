@@ -177,9 +177,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
         config_entry_id=entry.entry_id, **readings.device_info
     )
     entry.runtime_data = SofarRuntimeData(readings, settings, inverter.id)
-    _async_remove_denied_meter_energy(
-        hass, serial, entry.runtime_data.served_components
-    )
+    # Until the masks settle the type, nothing is served or denied.
+    if device.inverter_type:
+        _async_remove_denied_meter_energy(
+            hass, serial, entry.runtime_data.served_components
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

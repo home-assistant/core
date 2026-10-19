@@ -1,6 +1,6 @@
 """The tests for the MQTT room presence sensor."""
 
-import datetime
+import datetime as dt
 import json
 from typing import Any
 from unittest.mock import patch
@@ -114,7 +114,7 @@ async def test_room_update(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> 
     await assert_state(hass, LIVING_ROOM)
     await assert_distance(hass, 1)
 
-    time = dt_util.utcnow() + datetime.timedelta(seconds=7)
+    time = dt_util.utcnow() + dt.timedelta(seconds=7)
     with patch(
         "homeassistant.helpers.condition.conditions.dt_util.utcnow", return_value=time
     ):
