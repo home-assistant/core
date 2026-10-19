@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, Protocol, cast
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPUnauthorized
-import voluptuous as vol
+import probatio
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
@@ -178,13 +178,13 @@ class UserOnboardingView(_BaseOnboardingStepView):
     step = STEP_USER
 
     @RequestDataValidator(
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required("name"): str,
-                vol.Required("username"): str,
-                vol.Required("password"): str,
-                vol.Required("client_id"): str,
-                vol.Required("language"): str,
+                probatio.Required("name"): str,
+                probatio.Required("username"): str,
+                probatio.Required("password"): str,
+                probatio.Required("client_id"): str,
+                probatio.Required("language"): str,
             }
         )
     )
@@ -288,7 +288,12 @@ class IntegrationOnboardingView(_BaseOnboardingStepView):
     step = STEP_INTEGRATION
 
     @RequestDataValidator(
-        vol.Schema({vol.Required("client_id"): str, vol.Required("redirect_uri"): str})
+        probatio.Schema(
+            {
+                probatio.Required("client_id"): str,
+                probatio.Required("redirect_uri"): str,
+            }
+        )
     )
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle token creation."""
@@ -336,9 +341,9 @@ class WaitIntegrationOnboardingView(NoAuthBaseOnboardingView):
     name = "api:onboarding:integration:wait"
 
     @RequestDataValidator(
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required("domain"): str,
+                probatio.Required("domain"): str,
             }
         )
     )

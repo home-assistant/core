@@ -19,7 +19,7 @@ from opendisplay import (
     Rotation,
 )
 from PIL import Image as PILImage, ImageOps
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.bluetooth import (
     BluetoothReachabilityIntent,
@@ -55,26 +55,30 @@ def _str_to_int_enum(enum_class: type[IntEnum]) -> Callable[[str], Any]:
 
     def validate(value: str) -> IntEnum:
         if (result := members.get(value)) is None:
-            raise vol.Invalid(f"Invalid value: {value}")
+            raise probatio.Invalid(f"Invalid value: {value}")
         return result
 
     return validate
 
 
-SCHEMA_UPLOAD_IMAGE = vol.Schema(
+SCHEMA_UPLOAD_IMAGE = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Required(ATTR_IMAGE): MediaSelector(
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(ATTR_IMAGE): MediaSelector(
             MediaSelectorConfig(accept=["image/*"])
         ),
-        vol.Optional(ATTR_ROTATION, default=Rotation.ROTATE_0): vol.All(
-            vol.Coerce(int), vol.Coerce(Rotation)
+        probatio.Optional(ATTR_ROTATION, default=Rotation.ROTATE_0): probatio.All(
+            probatio.Coerce(int), probatio.Coerce(Rotation)
         ),
-        vol.Optional(ATTR_DITHER_MODE, default="burkes"): _str_to_int_enum(DitherMode),
-        vol.Optional(ATTR_REFRESH_MODE, default="full"): _str_to_int_enum(RefreshMode),
-        vol.Optional(ATTR_FIT_MODE, default="contain"): _str_to_int_enum(FitMode),
-        vol.Optional(ATTR_TONE_COMPRESSION): vol.All(
-            vol.Coerce(float), vol.Range(min=0.0, max=100.0)
+        probatio.Optional(ATTR_DITHER_MODE, default="burkes"): _str_to_int_enum(
+            DitherMode
+        ),
+        probatio.Optional(ATTR_REFRESH_MODE, default="full"): _str_to_int_enum(
+            RefreshMode
+        ),
+        probatio.Optional(ATTR_FIT_MODE, default="contain"): _str_to_int_enum(FitMode),
+        probatio.Optional(ATTR_TONE_COMPRESSION): probatio.All(
+            probatio.Coerce(float), probatio.Range(min=0.0, max=100.0)
         ),
     }
 )

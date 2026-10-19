@@ -7,9 +7,9 @@ from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from freezegun import freeze_time
 from hassil.recognize import Intent, IntentData, RecognizeResult
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components import (
     assist_pipeline,
@@ -1818,7 +1818,7 @@ async def test_chat_log_tts_streaming(
     mock_tool = AsyncMock()
     mock_tool.name = "test_tool"
     mock_tool.description = "Test function"
-    mock_tool.parameters = vol.Schema({})
+    mock_tool.parameters = probatio.Schema({})
     mock_tool.async_call.return_value = "Test response"
 
     with (

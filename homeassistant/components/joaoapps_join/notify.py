@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pyjoin import get_devices, send_notification
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -25,10 +25,10 @@ CONF_DEVICE_NAMES = "device_names"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_DEVICE_ID): cv.string,
-        vol.Optional(CONF_DEVICE_IDS): cv.string,
-        vol.Optional(CONF_DEVICE_NAMES): cv.string,
+        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Optional(CONF_DEVICE_ID): cv.string,
+        probatio.Optional(CONF_DEVICE_IDS): cv.string,
+        probatio.Optional(CONF_DEVICE_NAMES): cv.string,
     }
 )
 

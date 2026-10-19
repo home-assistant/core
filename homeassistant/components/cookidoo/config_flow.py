@@ -10,7 +10,7 @@ from cookidoo_api import (
     get_country_options,
     get_localization_options,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -35,13 +35,13 @@ from .helpers import cookidoo_from_config_data
 _LOGGER = logging.getLogger(__name__)
 
 AUTH_DATA_SCHEMA = {
-    vol.Required(CONF_EMAIL): TextSelector(
+    probatio.Required(CONF_EMAIL): TextSelector(
         TextSelectorConfig(
             type=TextSelectorType.EMAIL,
             autocomplete="email",
         ),
     ),
-    vol.Required(CONF_PASSWORD): TextSelector(
+    probatio.Required(CONF_PASSWORD): TextSelector(
         TextSelectorConfig(
             type=TextSelectorType.PASSWORD,
             autocomplete="current-password",
@@ -99,7 +99,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {**AUTH_DATA_SCHEMA, **self.COUNTRY_DATA_SCHEMA}
                 ),
                 suggested_values=suggested_values,
@@ -134,7 +134,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.generate_language_schema()
         return self.async_show_form(
             step_id="language",
-            data_schema=vol.Schema(self.LANGUAGE_DATA_SCHEMA),
+            data_schema=probatio.Schema(self.LANGUAGE_DATA_SCHEMA),
             description_placeholders={"cookidoo": "Cookidoo"},
             errors=errors,
         )
@@ -165,7 +165,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=self.add_suggested_values_to_schema(
-                data_schema=vol.Schema(AUTH_DATA_SCHEMA),
+                data_schema=probatio.Schema(AUTH_DATA_SCHEMA),
                 suggested_values={CONF_EMAIL: reauth_entry.data[CONF_EMAIL]},
             ),
             description_placeholders={"cookidoo": "Cookidoo"},
@@ -175,7 +175,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
     async def generate_country_schema(self) -> None:
         """Generate country schema."""
         self.COUNTRY_DATA_SCHEMA = {
-            vol.Required(CONF_COUNTRY): CountrySelector(
+            probatio.Required(CONF_COUNTRY): CountrySelector(
                 CountrySelectorConfig(
                     countries=[
                         country.upper() for country in await get_country_options()
@@ -187,7 +187,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
     async def generate_language_schema(self) -> None:
         """Generate language schema."""
         self.LANGUAGE_DATA_SCHEMA = {
-            vol.Required(CONF_LANGUAGE): LanguageSelector(
+            probatio.Required(CONF_LANGUAGE): LanguageSelector(
                 LanguageSelectorConfig(
                     languages=[
                         option.language

@@ -8,8 +8,8 @@ from aiontfy.exceptions import (
     NtfyHTTPError,
     NtfyUnauthorizedAuthenticationError,
 )
+import probatio
 import pytest
-import voluptuous as vol
 from yarl import URL
 
 from homeassistant.components import camera, image, media_source
@@ -205,7 +205,7 @@ async def test_send_message_exception(
             "Delayed email notifications are not supported",
         ),
         (
-            vol.MultipleInvalid,
+            probatio.MultipleInvalid,
             {
                 ATTR_ATTACH: "https://example.com/Epic Sax Guy 10 Hours.mp4",
                 ATTR_ATTACH_FILE: {
@@ -218,14 +218,14 @@ async def test_send_message_exception(
             "Only one attachment source is allowed: URL or local file",
         ),
         (
-            vol.MultipleInvalid,
+            probatio.MultipleInvalid,
             {
                 ATTR_FILENAME: "Epic Sax Guy 10 Hours.mp4",
             },
             "Filename only allowed when attachment is provided",
         ),
         (
-            vol.MultipleInvalid,
+            probatio.MultipleInvalid,
             {
                 ATTR_ACTIONS: [
                     {"action": "broadcast", "label": "1"},

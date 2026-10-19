@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 import anthropic
 from anthropic.resources.messages.messages import DEPRECATED_MODELS
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
@@ -81,12 +81,12 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
                     reverse=True,
                 )
             ),
-            vol.UNDEFINED,
+            probatio.UNDEFINED,
         )
 
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     CONF_CHAT_MODEL,
                     default=suggested_model,
                 ): SelectSelector(

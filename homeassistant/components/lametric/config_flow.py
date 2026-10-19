@@ -18,7 +18,7 @@ from demetriek import (
     Simple,
     Sound,
 )
-import voluptuous as vol
+import probatio
 from yarl import URL
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
@@ -158,16 +158,16 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         # Don't ask for a host if it was discovered
         schema = {
-            vol.Required(CONF_API_KEY): TextSelector(
+            probatio.Required(CONF_API_KEY): TextSelector(
                 TextSelectorConfig(type=TextSelectorType.PASSWORD)
             )
         }
         if not self.discovered and self.source != SOURCE_REAUTH:
-            schema = {vol.Required(CONF_HOST): TextSelector()} | schema
+            schema = {probatio.Required(CONF_HOST): TextSelector()} | schema
 
         return self.async_show_form(
             step_id="manual_entry",
-            data_schema=vol.Schema(schema),
+            data_schema=probatio.Schema(schema),
             description_placeholders={
                 "devices_url": DEVICES_URL,
             },
@@ -224,9 +224,9 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="cloud_select_device",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_DEVICE): SelectSelector(
+                    probatio.Required(CONF_DEVICE): SelectSelector(
                         SelectSelectorConfig(
                             mode=SelectSelectorMode.DROPDOWN,
                             options=[

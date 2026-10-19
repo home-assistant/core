@@ -7,8 +7,8 @@ from typing import Any, cast, override
 
 from fints.client import FinTS3PinTanClient
 from fints.models import SEPAAccount
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -37,22 +37,22 @@ ATTR_ACCOUNT = CONF_ACCOUNT
 ATTR_BANK = "bank"
 ATTR_ACCOUNT_TYPE = "account_type"
 
-SCHEMA_ACCOUNTS = vol.Schema(
+SCHEMA_ACCOUNTS = probatio.Schema(
     {
-        vol.Required(CONF_ACCOUNT): cv.string,
-        vol.Optional(CONF_NAME, default=None): vol.Any(None, cv.string),
+        probatio.Required(CONF_ACCOUNT): cv.string,
+        probatio.Optional(CONF_NAME, default=None): probatio.Any(None, cv.string),
     }
 )
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_BIN): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PIN): cv.string,
-        vol.Required(CONF_URL): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_ACCOUNTS, default=[]): cv.ensure_list(SCHEMA_ACCOUNTS),
-        vol.Optional(CONF_HOLDINGS, default=[]): cv.ensure_list(SCHEMA_ACCOUNTS),
+        probatio.Required(CONF_BIN): cv.string,
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_PIN): cv.string,
+        probatio.Required(CONF_URL): cv.string,
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_ACCOUNTS, default=[]): cv.ensure_list(SCHEMA_ACCOUNTS),
+        probatio.Optional(CONF_HOLDINGS, default=[]): cv.ensure_list(SCHEMA_ACCOUNTS),
     }
 )
 

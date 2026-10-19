@@ -11,9 +11,9 @@ from typing import Any, Self
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow, loader
 from homeassistant.config_entries import ConfigEntry
@@ -10315,7 +10315,7 @@ async def test_options_flow_automatic_reload(
                     if user_input is not None:
                         return self.async_create_entry(data=user_input)
                     return self.async_show_form(
-                        step_id="init", data_schema=vol.Schema({"test": str})
+                        step_id="init", data_schema=probatio.Schema({"test": str})
                     )
 
             return _OptionsFlow()

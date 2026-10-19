@@ -5,8 +5,8 @@ from itertools import batched
 import logging
 from typing import TYPE_CHECKING, Any, override
 
+import probatio
 import steam.api
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -34,13 +34,13 @@ _LOGGER = logging.getLogger(__name__)
 # To avoid too long request URIs, the amount of ids to request is limited
 MAX_IDS_TO_REQUEST = 275
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): str,
-        vol.Required(CONF_ACCOUNT): str,
+        probatio.Required(CONF_API_KEY): str,
+        probatio.Required(CONF_ACCOUNT): str,
     }
 )
-STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_API_KEY): str})
 
 
 def validate_input(user_input: dict[str, str]) -> dict[str, str | int]:
@@ -267,9 +267,9 @@ class FriendSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_ACCOUNT): SelectSelector(
+                        probatio.Required(CONF_ACCOUNT): SelectSelector(
                             SelectSelectorConfig(options=options, sort=True)
                         )
                     }

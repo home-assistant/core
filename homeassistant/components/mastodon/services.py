@@ -17,7 +17,7 @@ from mastodon.Mastodon import (
     ScheduledStatus,
     Status,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import camera, image
 from homeassistant.components.media_source import async_resolve_media
@@ -88,70 +88,78 @@ class QuoteApprovalPolicy(StrEnum):
 
 
 SERVICE_GET_ACCOUNT = "get_account"
-SERVICE_GET_ACCOUNT_SCHEMA = vol.Schema(
+SERVICE_GET_ACCOUNT_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Required(ATTR_ACCOUNT_NAME): str,
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(ATTR_ACCOUNT_NAME): str,
     }
 )
 SERVICE_MUTE_ACCOUNT = "mute_account"
-SERVICE_MUTE_ACCOUNT_SCHEMA = vol.Schema(
+SERVICE_MUTE_ACCOUNT_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Required(ATTR_ACCOUNT_NAME): str,
-        vol.Optional(ATTR_DURATION): vol.All(
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(ATTR_ACCOUNT_NAME): str,
+        probatio.Optional(ATTR_DURATION): probatio.All(
             cv.time_period,
-            vol.Range(
+            probatio.Range(
                 min=timedelta(seconds=1), max=timedelta(seconds=MAX_DURATION_SECONDS)
             ),
         ),
-        vol.Optional(ATTR_HIDE_NOTIFICATIONS, default=True): bool,
+        probatio.Optional(ATTR_HIDE_NOTIFICATIONS, default=True): bool,
     }
 )
 SERVICE_UNMUTE_ACCOUNT = "unmute_account"
-SERVICE_UNMUTE_ACCOUNT_SCHEMA = vol.Schema(
+SERVICE_UNMUTE_ACCOUNT_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Required(ATTR_ACCOUNT_NAME): str,
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(ATTR_ACCOUNT_NAME): str,
     }
 )
 SERVICE_POST = "post"
-SERVICE_POST_SCHEMA = vol.Schema(
+SERVICE_POST_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Required(ATTR_STATUS): str,
-        vol.Optional(ATTR_VISIBILITY): vol.In([x.lower() for x in StatusVisibility]),
-        vol.Optional(ATTR_QUOTE_APPROVAL_POLICY): vol.In(
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(ATTR_STATUS): str,
+        probatio.Optional(ATTR_VISIBILITY): probatio.In(
+            [x.lower() for x in StatusVisibility]
+        ),
+        probatio.Optional(ATTR_QUOTE_APPROVAL_POLICY): probatio.In(
             [x.lower() for x in QuoteApprovalPolicy]
         ),
-        vol.Optional(ATTR_IDEMPOTENCY_KEY): str,
-        vol.Optional(ATTR_CONTENT_WARNING): str,
-        vol.Optional(ATTR_LANGUAGE): str,
-        vol.Optional(ATTR_MEDIA): str,
-        vol.Optional(ATTR_MEDIA_DESCRIPTION): str,
-        vol.Optional(ATTR_MEDIA_WARNING): bool,
-        vol.Optional(ATTR_IN_REPLY_TO): str,
-        vol.Optional(ATTR_QUOTED_STATUS): str,
+        probatio.Optional(ATTR_IDEMPOTENCY_KEY): str,
+        probatio.Optional(ATTR_CONTENT_WARNING): str,
+        probatio.Optional(ATTR_LANGUAGE): str,
+        probatio.Optional(ATTR_MEDIA): str,
+        probatio.Optional(ATTR_MEDIA_DESCRIPTION): str,
+        probatio.Optional(ATTR_MEDIA_WARNING): bool,
+        probatio.Optional(ATTR_IN_REPLY_TO): str,
+        probatio.Optional(ATTR_QUOTED_STATUS): str,
     }
 )
 
 SERVICE_UPDATE_PROFILE = "update_profile"
-SERVICE_UPDATE_PROFILE_SCHEMA = vol.Schema(
+SERVICE_UPDATE_PROFILE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Optional(ATTR_DISPLAY_NAME): str,
-        vol.Optional(ATTR_NOTE): str,
-        vol.Exclusive(ATTR_AVATAR, ATTR_AVATAR): MediaSelector({"accept": ["image/*"]}),
-        vol.Exclusive(ATTR_DELETE_AVATAR, ATTR_AVATAR): cv.boolean,
-        vol.Exclusive(ATTR_HEADER, ATTR_HEADER): MediaSelector({"accept": ["image/*"]}),
-        vol.Exclusive(ATTR_DELETE_HEADER, ATTR_HEADER): cv.boolean,
-        vol.Optional(ATTR_LOCKED): bool,
-        vol.Optional(ATTR_BOT): bool,
-        vol.Optional(ATTR_DISCOVERABLE): bool,
-        vol.Optional(ATTR_FIELDS): vol.All(
-            cv.ensure_list, vol.Length(max=4), [dict[str, str]]
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Optional(ATTR_DISPLAY_NAME): str,
+        probatio.Optional(ATTR_NOTE): str,
+        probatio.Exclusive(ATTR_AVATAR, ATTR_AVATAR): MediaSelector(
+            {"accept": ["image/*"]}
         ),
-        vol.Optional(ATTR_ATTRIBUTION_DOMAINS): vol.All(cv.ensure_list, [str]),
+        probatio.Exclusive(ATTR_DELETE_AVATAR, ATTR_AVATAR): cv.boolean,
+        probatio.Exclusive(ATTR_HEADER, ATTR_HEADER): MediaSelector(
+            {"accept": ["image/*"]}
+        ),
+        probatio.Exclusive(ATTR_DELETE_HEADER, ATTR_HEADER): cv.boolean,
+        probatio.Optional(ATTR_LOCKED): bool,
+        probatio.Optional(ATTR_BOT): bool,
+        probatio.Optional(ATTR_DISCOVERABLE): bool,
+        probatio.Optional(ATTR_FIELDS): probatio.All(
+            cv.ensure_list, probatio.Length(max=4), [dict[str, str]]
+        ),
+        probatio.Optional(ATTR_ATTRIBUTION_DOMAINS): probatio.All(
+            cv.ensure_list, [str]
+        ),
     }
 )
 

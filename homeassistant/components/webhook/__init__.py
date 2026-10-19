@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, cast
 from aiohttp import StreamReader
 from aiohttp.hdrs import METH_GET, METH_HEAD, METH_POST, METH_PUT
 from aiohttp.web import Request, Response
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
@@ -274,12 +274,12 @@ def websocket_list(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "webhook/handle",
-        vol.Required("webhook_id"): str,
-        vol.Required("method"): vol.In(SUPPORTED_METHODS),
-        vol.Optional("body", default=""): str,
-        vol.Optional("headers", default={}): {str: str},
-        vol.Optional("query", default=""): str,
+        probatio.Required("type"): "webhook/handle",
+        probatio.Required("webhook_id"): str,
+        probatio.Required("method"): probatio.In(SUPPORTED_METHODS),
+        probatio.Optional("body", default=""): str,
+        probatio.Optional("headers", default={}): {str: str},
+        probatio.Optional("query", default=""): str,
     }
 )
 @websocket_api.async_response

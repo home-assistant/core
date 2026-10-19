@@ -6,7 +6,7 @@ import os
 import re
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -31,9 +31,11 @@ SCAN_INTERVAL = timedelta(seconds=120)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_JAILS): vol.All(cv.ensure_list, vol.Length(min=1)),
-        vol.Optional(CONF_FILE_PATH): cv.isfile,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_JAILS): probatio.All(
+            cv.ensure_list, probatio.Length(min=1)
+        ),
+        probatio.Optional(CONF_FILE_PATH): cv.isfile,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 

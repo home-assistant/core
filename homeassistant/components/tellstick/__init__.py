@@ -2,10 +2,10 @@
 
 import logging
 
+import probatio
 from tellcore.constants import TELLSTICK_DIM, TELLSTICK_UP
 from tellcore.telldus import AsyncioCallbackDispatcher, TelldusCore
 from tellcorenet import TellCoreClient
-import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
@@ -27,21 +27,21 @@ CONF_SIGNAL_REPETITIONS = "signal_repetitions"
 
 DOMAIN = "tellstick"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Inclusive(CONF_HOST, "tellcore-net"): cv.string,
-                vol.Inclusive(CONF_PORT, "tellcore-net"): vol.All(
-                    cv.ensure_list, [cv.port], vol.Length(min=2, max=2)
+                probatio.Inclusive(CONF_HOST, "tellcore-net"): cv.string,
+                probatio.Inclusive(CONF_PORT, "tellcore-net"): probatio.All(
+                    cv.ensure_list, [cv.port], probatio.Length(min=2, max=2)
                 ),
-                vol.Optional(
+                probatio.Optional(
                     CONF_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS
-                ): vol.Coerce(int),
+                ): probatio.Coerce(int),
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

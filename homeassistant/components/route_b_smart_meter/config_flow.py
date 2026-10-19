@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 from momonga import Momonga, MomongaSkJoinFailure, MomongaSkScanFailure
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.usb import (
     USBDevice,
@@ -99,9 +99,11 @@ class BRouteConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_DEVICE, default=discovered_device_id): vol.In(
+                    probatio.Required(
+                        CONF_DEVICE, default=discovered_device_id
+                    ): probatio.In(
                         {discovered_device_id: discovered_device_name}
                         if discovered_device_id and discovered_device_name
                         else {
@@ -109,8 +111,8 @@ class BRouteConfigFlow(ConfigFlow, domain=DOMAIN):
                             for name, device in device_options.items()
                         }
                     ),
-                    vol.Required(CONF_ID): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_ID): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,

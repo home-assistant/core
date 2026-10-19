@@ -2,8 +2,8 @@
 
 from typing import Any
 
+import probatio
 from rf_protocols import ModulationType
-import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -19,7 +19,7 @@ def async_setup(hass: HomeAssistant) -> None:
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "radio_frequency/list"})
+@websocket_api.websocket_command({probatio.Required("type"): "radio_frequency/list"})
 @callback
 def ws_list_transmitters(
     hass: HomeAssistant,

@@ -3,7 +3,7 @@
 import logging
 from typing import cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -25,9 +25,9 @@ SENSORS = ["battery", "next_cycle", "rain_delay", "watering_time"]
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSORS)): vol.All(
-            cv.ensure_list, [vol.In(SENSORS)]
-        )
+        probatio.Optional(
+            CONF_MONITORED_CONDITIONS, default=list(SENSORS)
+        ): probatio.All(cv.ensure_list, [probatio.In(SENSORS)])
     }
 )
 

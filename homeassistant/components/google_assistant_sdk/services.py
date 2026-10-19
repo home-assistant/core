@@ -2,7 +2,7 @@
 
 import dataclasses
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import (
     HomeAssistant,
@@ -19,12 +19,14 @@ from .helpers import async_send_text_commands
 SERVICE_SEND_TEXT_COMMAND = "send_text_command"
 SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND = "command"
 SERVICE_SEND_TEXT_COMMAND_FIELD_MEDIA_PLAYER = "media_player"
-SERVICE_SEND_TEXT_COMMAND_SCHEMA = vol.All(
+SERVICE_SEND_TEXT_COMMAND_SCHEMA = probatio.All(
     {
-        vol.Required(SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND): vol.All(
-            cv.ensure_list, [vol.All(str, vol.Length(min=1))]
+        probatio.Required(SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND): probatio.All(
+            cv.ensure_list, [probatio.All(str, probatio.Length(min=1))]
         ),
-        vol.Optional(SERVICE_SEND_TEXT_COMMAND_FIELD_MEDIA_PLAYER): cv.comp_entity_ids,
+        probatio.Optional(
+            SERVICE_SEND_TEXT_COMMAND_FIELD_MEDIA_PLAYER
+        ): cv.comp_entity_ids,
     },
 )
 

@@ -9,7 +9,7 @@ from typing import Any, Protocol, cast, override
 
 from aiohttp import web
 from aiohttp.web_request import FileField
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import http, websocket_api
 from homeassistant.components.http import require_admin
@@ -127,7 +127,7 @@ class LocalSource(MediaSource):
 
         if not uploaded_file.content_type.startswith(("image/", "video/", "audio/")):
             LOGGER.error("Content type not allowed")
-            raise vol.Invalid("Only images and video are allowed")
+            raise probatio.Invalid("Only images and video are allowed")
 
         try:
             raise_if_invalid_filename(uploaded_file.filename)
@@ -414,7 +414,7 @@ class UploadMediaView(http.HomeAssistantView):
 
     url = "/api/media_source/local_source/upload"
     name = "api:media_source:local_source:upload"
-    schema = vol.Schema(
+    schema = probatio.Schema(
         {
             "media_content_id": str,
             "file": FileField,
@@ -431,7 +431,7 @@ class UploadMediaView(http.HomeAssistantView):
 
         try:
             data = self.schema(dict(await request.post()))
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             LOGGER.error("Received invalid upload data: %s", err)
             raise web.HTTPBadRequest from err
 
@@ -469,8 +469,8 @@ class UploadMediaView(http.HomeAssistantView):
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "media_source/local_source/remove",
-        vol.Required("media_content_id"): str,
+        probatio.Required("type"): "media_source/local_source/remove",
+        probatio.Required("media_content_id"): str,
     }
 )
 @websocket_api.require_admin

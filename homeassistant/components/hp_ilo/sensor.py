@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 
 import hpilo
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -50,26 +50,26 @@ SENSOR_TYPES = {
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_MONITORED_VARIABLES, default=[]): vol.All(
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Optional(CONF_MONITORED_VARIABLES, default=[]): probatio.All(
             cv.ensure_list,
             [
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_NAME): cv.string,
-                        vol.Required(CONF_SENSOR_TYPE): vol.All(
-                            cv.string, vol.In(SENSOR_TYPES)
+                        probatio.Required(CONF_NAME): cv.string,
+                        probatio.Required(CONF_SENSOR_TYPE): probatio.All(
+                            cv.string, probatio.In(SENSOR_TYPES)
                         ),
-                        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-                        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+                        probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+                        probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
                     }
                 )
             ],
         ),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     }
 )
 

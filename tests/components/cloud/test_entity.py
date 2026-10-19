@@ -6,8 +6,8 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from PIL import Image
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import conversation
 from homeassistant.components.cloud.const import AI_TASK_ENTITY_UNIQUE_ID, DOMAIN
@@ -57,7 +57,7 @@ class DummyTool(llm.Tool):
 
     name = "do_something"
     description = "Test tool"
-    parameters = vol.Schema({vol.Required("value"): str})
+    parameters = probatio.Schema({probatio.Required("value"): str})
 
     async def async_call(self, hass: HomeAssistant, tool_input, llm_context):
         """No-op implementation."""
@@ -66,13 +66,13 @@ class DummyTool(llm.Tool):
 
 async def test_format_structured_output() -> None:
     """Test that structured output schemas are normalized."""
-    schema = vol.Schema(
+    schema = probatio.Schema(
         {
-            vol.Required("name"): selector.TextSelector(),
-            vol.Optional("age"): selector.NumberSelector(
+            probatio.Required("name"): selector.TextSelector(),
+            probatio.Optional("age"): selector.NumberSelector(
                 config=selector.NumberSelectorConfig(min=0, max=120),
             ),
-            vol.Required("stuff"): selector.ObjectSelector(
+            probatio.Required("stuff"): selector.ObjectSelector(
                 {
                     "multiple": True,
                     "fields": {

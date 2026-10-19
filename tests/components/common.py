@@ -10,8 +10,8 @@ from pathlib import Path
 import re
 from typing import Any, TypedDict
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_LABEL_ID,
@@ -1716,7 +1716,7 @@ async def _validate_condition_options(
     if valid:
         await async_validate_condition_config(hass, config)
     else:
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(probatio.Invalid):
             await async_validate_condition_config(hass, config)
 
 
@@ -1836,7 +1836,7 @@ async def _validate_trigger_options(
     if valid:
         await async_validate_trigger_config(hass, [trigger_config])
     else:
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(probatio.Invalid):
             await async_validate_trigger_config(hass, [trigger_config])
 
 

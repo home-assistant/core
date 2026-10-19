@@ -1,8 +1,8 @@
 """The bluesound component."""
 
+import probatio
 from pyblu import Player
 from pyblu.errors import PlayerUnreachableError
-import voluptuous as vol
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -35,7 +35,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         SERVICE_JOIN,
         entity_domain=MEDIA_PLAYER_DOMAIN,
-        schema={vol.Required(ATTR_MASTER): cv.entity_id},
+        schema={probatio.Required(ATTR_MASTER): cv.entity_id},
         func="async_bluesound_join",
     )
     service.async_register_platform_entity_service(

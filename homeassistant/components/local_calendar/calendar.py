@@ -12,7 +12,7 @@ from ical.exceptions import CalendarParseError
 from ical.store import EventStore, EventStoreError
 from ical.timeline import Timeline, materialize_timeline
 from ical.types import Range, Recur
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.calendar import (
     EVENT_END,
@@ -226,7 +226,7 @@ def _parse_event(event: dict[str, Any]) -> Event:
         return Event(**event)
     except CalendarParseError as err:
         _LOGGER.debug("Error parsing event input fields: %s (%s)", event, str(err))
-        raise vol.Invalid("Error parsing event input fields") from err
+        raise probatio.Invalid("Error parsing event input fields") from err
 
 
 def _get_status(event: Event) -> CalendarEventStatus | None:

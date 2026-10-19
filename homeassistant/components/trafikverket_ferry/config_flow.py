@@ -4,9 +4,9 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 from pytrafikverket import TrafikverketFerry
 from pytrafikverket.exceptions import InvalidAuthentication, NoFerryFound
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
@@ -18,15 +18,21 @@ from .util import create_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): selector.TextSelector(
+        probatio.Required(CONF_API_KEY): selector.TextSelector(
             selector.TextSelectorConfig()
         ),
-        vol.Required(CONF_FROM): selector.TextSelector(selector.TextSelectorConfig()),
-        vol.Optional(CONF_TO): selector.TextSelector(selector.TextSelectorConfig()),
-        vol.Optional(CONF_TIME): selector.TimeSelector(selector.TimeSelectorConfig()),
-        vol.Required(CONF_WEEKDAY, default=WEEKDAYS): selector.SelectSelector(
+        probatio.Required(CONF_FROM): selector.TextSelector(
+            selector.TextSelectorConfig()
+        ),
+        probatio.Optional(CONF_TO): selector.TextSelector(
+            selector.TextSelectorConfig()
+        ),
+        probatio.Optional(CONF_TIME): selector.TimeSelector(
+            selector.TimeSelectorConfig()
+        ),
+        probatio.Required(CONF_WEEKDAY, default=WEEKDAYS): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=WEEKDAYS,
                 multiple=True,
@@ -36,9 +42,9 @@ DATA_SCHEMA = vol.Schema(
         ),
     }
 )
-DATA_SCHEMA_REAUTH = vol.Schema(
+DATA_SCHEMA_REAUTH = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): selector.TextSelector(
+        probatio.Required(CONF_API_KEY): selector.TextSelector(
             selector.TextSelectorConfig()
         ),
     }

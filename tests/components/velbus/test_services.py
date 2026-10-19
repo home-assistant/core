@@ -2,8 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.velbus.const import (
     CONF_CONFIG_ENTRY,
@@ -56,7 +56,7 @@ async def test_global_services_with_config_entry(
         )
 
     # Test missing interface
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(probatio.error.MultipleInvalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SCAN,

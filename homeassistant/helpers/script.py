@@ -12,8 +12,8 @@ import logging
 from typing import Any, Literal, TypedDict, cast, overload, override
 
 import async_interrupt
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.components import scene
@@ -285,21 +285,23 @@ class trace_action:
 
 
 def make_script_schema(
-    schema: Mapping[Any, Any], default_script_mode: str, extra: int = vol.PREVENT_EXTRA
-) -> vol.Schema:
+    schema: Mapping[Any, Any],
+    default_script_mode: str,
+    extra: int = probatio.PREVENT_EXTRA,
+) -> probatio.Schema:
     """Make a schema for a component that uses the script helper."""
-    return vol.Schema(
+    return probatio.Schema(
         {
             **schema,
-            vol.Optional(CONF_MODE, default=default_script_mode): vol.In(
+            probatio.Optional(CONF_MODE, default=default_script_mode): probatio.In(
                 SCRIPT_MODE_CHOICES
             ),
-            vol.Optional(CONF_MAX, default=DEFAULT_MAX): vol.All(
-                vol.Coerce(int), vol.Range(min=2)
+            probatio.Optional(CONF_MAX, default=DEFAULT_MAX): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=2)
             ),
-            vol.Optional(CONF_MAX_EXCEEDED, default=DEFAULT_MAX_EXCEEDED): vol.All(
-                vol.Upper, vol.In(_MAX_EXCEEDED_CHOICES)
-            ),
+            probatio.Optional(
+                CONF_MAX_EXCEEDED, default=DEFAULT_MAX_EXCEEDED
+            ): probatio.All(probatio.Upper, probatio.In(_MAX_EXCEEDED_CHOICES)),
         },
         extra=extra,
     )
@@ -620,7 +622,7 @@ class _ScriptRun:
         if isinstance(
             exception,
             (
-                vol.Invalid,
+                probatio.Invalid,
                 exceptions.TemplateError,
                 exceptions.ServiceNotFound,
                 exceptions.InvalidEntityFormatError,
@@ -643,7 +645,7 @@ class _ScriptRun:
         error = str(exception)
         level = logging.ERROR
 
-        if isinstance(exception, vol.Invalid):
+        if isinstance(exception, probatio.Invalid):
             error_desc = "Invalid data"
 
         elif isinstance(exception, exceptions.TemplateError):
@@ -1063,12 +1065,12 @@ class _ScriptRun:
                 params[CONF_DOMAIN], params[CONF_SERVICE]
             )
             if supports_response == SupportsResponse.ONLY and not return_response:
-                raise vol.Invalid(
+                raise probatio.Invalid(
                     f"Script requires '{CONF_RESPONSE_VARIABLE}' for response data "
                     f"for service call {params[CONF_DOMAIN]}.{params[CONF_SERVICE]}"
                 )
             if supports_response == SupportsResponse.NONE and return_response:
-                raise vol.Invalid(
+                raise probatio.Invalid(
                     f"Script does not support '{CONF_RESPONSE_VARIABLE}' for service "
                     f"'{params[CONF_DOMAIN]}.{params[CONF_SERVICE]}'"
                     " which does not support response data."
@@ -1186,7 +1188,7 @@ class _ScriptRun:
             return cv.positive_time_period(  # type: ignore[no-any-return]
                 template.render_complex(self._action[key], self._variables)
             )
-        except (exceptions.TemplateError, vol.Invalid) as ex:
+        except (exceptions.TemplateError, probatio.Invalid) as ex:
             self._log(
                 "Error rendering %s %s template: %s",
                 self._script.name,

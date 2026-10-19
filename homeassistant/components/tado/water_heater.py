@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
@@ -52,10 +52,10 @@ SERVICE_WATER_HEATER_TIMER = "set_water_heater_timer"
 ATTR_TIME_PERIOD = "time_period"
 
 WATER_HEATER_TIMER_SCHEMA: VolDictType = {
-    vol.Required(ATTR_TIME_PERIOD, default="01:00:00"): vol.All(
+    probatio.Required(ATTR_TIME_PERIOD, default="01:00:00"): probatio.All(
         cv.time_period, cv.positive_timedelta, lambda td: td.total_seconds()
     ),
-    vol.Optional(ATTR_TEMPERATURE): vol.Coerce(float),
+    probatio.Optional(ATTR_TEMPERATURE): probatio.Coerce(float),
 }
 
 

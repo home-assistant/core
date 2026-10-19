@@ -2,8 +2,8 @@
 
 from logging import getLogger
 
+import probatio
 from switchbot_api import ArtFrameCommands
-import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
@@ -14,12 +14,12 @@ from .const import AI_ART_FRAME_UPLOAD_IMAGE_SERVICE, DOMAIN
 _LOGGER = getLogger(__name__)
 
 
-UPLOAD_IMAGE_SCHEMA = vol.Schema(
+UPLOAD_IMAGE_SCHEMA = probatio.Schema(
     {
-        vol.Required("device_id"): vol.All(
-            cv.ensure_list, [cv.string], vol.Length(min=1)
+        probatio.Required("device_id"): probatio.All(
+            cv.ensure_list, [cv.string], probatio.Length(min=1)
         ),
-        vol.Required("image_url"): cv.url,
+        probatio.Required("image_url"): cv.url,
     }
 )
 

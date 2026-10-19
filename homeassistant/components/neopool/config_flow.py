@@ -9,7 +9,7 @@ from neopool_modbus.exceptions import (
     NeoPoolTimeoutError,
 )
 from neopool_modbus.registers import DEFAULT_MODBUS_FRAMER
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigFlow,
@@ -71,15 +71,19 @@ class NeoPoolConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step of the configuration flow."""
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_HOST): str,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
-                vol.Optional(CONF_UNIT_ID, default=DEFAULT_UNIT_ID): vol.Coerce(int),
-                vol.Optional(
+                probatio.Required(CONF_HOST): str,
+                probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Coerce(
+                    int
+                ),
+                probatio.Optional(
+                    CONF_UNIT_ID, default=DEFAULT_UNIT_ID
+                ): probatio.Coerce(int),
+                probatio.Optional(
                     CONF_MODBUS_FRAMER,
                     default=DEFAULT_MODBUS_FRAMER,
-                ): vol.In(("tcp", "rtu")),
+                ): probatio.In(("tcp", "rtu")),
             }
         )
         errors: dict[str, str] = {}
@@ -109,20 +113,20 @@ class NeoPoolConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self._get_reconfigure_entry()
         current = entry.data
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_HOST, default=current[CONF_HOST]): str,
-                vol.Optional(
+                probatio.Required(CONF_HOST, default=current[CONF_HOST]): str,
+                probatio.Optional(
                     CONF_PORT, default=current.get(CONF_PORT, DEFAULT_PORT)
-                ): vol.Coerce(int),
-                vol.Optional(
+                ): probatio.Coerce(int),
+                probatio.Optional(
                     CONF_UNIT_ID,
                     default=current.get(CONF_UNIT_ID, DEFAULT_UNIT_ID),
-                ): vol.Coerce(int),
-                vol.Optional(
+                ): probatio.Coerce(int),
+                probatio.Optional(
                     CONF_MODBUS_FRAMER,
                     default=current.get(CONF_MODBUS_FRAMER, DEFAULT_MODBUS_FRAMER),
-                ): vol.In(("tcp", "rtu")),
+                ): probatio.In(("tcp", "rtu")),
             }
         )
 
@@ -157,29 +161,29 @@ class NeoPoolOptionsFlowHandler(OptionsFlowWithReload):
             return self.async_create_entry(title="", data=user_input)
 
         options = self.config_entry.options
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_USE_LIGHT,
                     default=options.get(CONF_USE_LIGHT, False),
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_USE_COVER_SENSOR,
                     default=options.get(CONF_USE_COVER_SENSOR, False),
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_USE_AUX1,
                     default=options.get(CONF_USE_AUX1, False),
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_USE_AUX2,
                     default=options.get(CONF_USE_AUX2, False),
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_USE_AUX3,
                     default=options.get(CONF_USE_AUX3, False),
                 ): bool,
-                vol.Optional(
+                probatio.Optional(
                     CONF_USE_AUX4,
                     default=options.get(CONF_USE_AUX4, False),
                 ): bool,

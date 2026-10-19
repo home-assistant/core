@@ -3,7 +3,7 @@
 from http import HTTPStatus
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import webhook
 from homeassistant.components.device_tracker import ATTR_BATTERY
@@ -40,18 +40,22 @@ def _id(value: str) -> str:
     return value.replace("-", "")
 
 
-WEBHOOK_SCHEMA = vol.Schema(
+WEBHOOK_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE): _id,
-        vol.Required(ATTR_LATITUDE): cv.latitude,
-        vol.Required(ATTR_LONGITUDE): cv.longitude,
-        vol.Optional(ATTR_ACCURACY, default=DEFAULT_ACCURACY): vol.Coerce(float),
-        vol.Optional(ATTR_ACTIVITY): cv.string,
-        vol.Optional(ATTR_ALTITUDE): vol.Coerce(float),
-        vol.Optional(ATTR_BATTERY, default=DEFAULT_BATTERY): vol.Coerce(float),
-        vol.Optional(ATTR_DIRECTION): vol.Coerce(float),
-        vol.Optional(ATTR_PROVIDER): cv.string,
-        vol.Optional(ATTR_SPEED): vol.Coerce(float),
+        probatio.Required(ATTR_DEVICE): _id,
+        probatio.Required(ATTR_LATITUDE): cv.latitude,
+        probatio.Required(ATTR_LONGITUDE): cv.longitude,
+        probatio.Optional(ATTR_ACCURACY, default=DEFAULT_ACCURACY): probatio.Coerce(
+            float
+        ),
+        probatio.Optional(ATTR_ACTIVITY): cv.string,
+        probatio.Optional(ATTR_ALTITUDE): probatio.Coerce(float),
+        probatio.Optional(ATTR_BATTERY, default=DEFAULT_BATTERY): probatio.Coerce(
+            float
+        ),
+        probatio.Optional(ATTR_DIRECTION): probatio.Coerce(float),
+        probatio.Optional(ATTR_PROVIDER): cv.string,
+        probatio.Optional(ATTR_SPEED): probatio.Coerce(float),
     }
 )
 
@@ -62,7 +66,7 @@ async def handle_webhook(
     """Handle incoming webhook with GPSLogger request."""
     try:
         data = WEBHOOK_SCHEMA(dict(await request.post()))
-    except vol.MultipleInvalid as error:
+    except probatio.MultipleInvalid as error:
         return web.Response(
             text=error.error_message, status=HTTPStatus.UNPROCESSABLE_ENTITY
         )

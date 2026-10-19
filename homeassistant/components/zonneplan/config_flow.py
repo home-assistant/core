@@ -4,6 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 from pyzonneplan import (
     OtpChallenge,
     Zonneplan,
@@ -11,7 +12,6 @@ from pyzonneplan import (
     ZonneplanInvalidOtpError,
     ZonneplanTimeoutError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -31,16 +31,16 @@ from .const import DOMAIN
 
 LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_EMAIL): TextSelector(
+        probatio.Required(CONF_EMAIL): TextSelector(
             TextSelectorConfig(type=TextSelectorType.EMAIL, autocomplete="username")
         ),
     }
 )
-STEP_OTP_DATA_SCHEMA = vol.Schema(
+STEP_OTP_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required("otp"): TextSelector(
+        probatio.Required("otp"): TextSelector(
             TextSelectorConfig(type=TextSelectorType.NUMBER)
         )
     }

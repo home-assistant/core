@@ -5,9 +5,9 @@ import logging
 import os
 from typing import Any, override
 
+import probatio
 from pyflume import FlumeAuth, FlumeDeviceList
 from requests.exceptions import RequestException
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -28,12 +28,12 @@ _LOGGER = logging.getLogger(__name__)
 #
 # Currently they only implement the token endpoint
 #
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_CLIENT_ID): str,
-        vol.Required(CONF_CLIENT_SECRET): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_CLIENT_ID): str,
+        probatio.Required(CONF_CLIENT_SECRET): str,
     }
 )
 
@@ -152,9 +152,9 @@ class FlumeConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_USERNAME: existing_entry.data[CONF_USERNAME]
             },
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,

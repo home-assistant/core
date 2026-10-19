@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
@@ -17,23 +17,23 @@ from .coordinator import JellyfinConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL): str,
-        vol.Required(CONF_USERNAME): str,
-        vol.Optional(CONF_PASSWORD, default=""): str,
+        probatio.Required(CONF_URL): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Optional(CONF_PASSWORD, default=""): str,
     }
 )
 
-REAUTH_DATA_SCHEMA = vol.Schema(
+REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_PASSWORD, default=""): str,
+        probatio.Optional(CONF_PASSWORD, default=""): str,
     }
 )
 
 
-OPTIONAL_DATA_SCHEMA = vol.Schema(
-    {vol.Optional("audio_codec"): vol.In(SUPPORTED_AUDIO_CODECS)}
+OPTIONAL_DATA_SCHEMA = probatio.Schema(
+    {probatio.Optional("audio_codec"): probatio.In(SUPPORTED_AUDIO_CODECS)}
 )
 
 

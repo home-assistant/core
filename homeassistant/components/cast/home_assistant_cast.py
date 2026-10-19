@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import auth, core
 from homeassistant.const import ATTR_ENTITY_ID
@@ -80,11 +80,11 @@ async def async_setup_ha_cast(hass: core.HomeAssistant, entry: CastConfigEntry) 
         DOMAIN,
         SERVICE_SHOW_VIEW,
         handle_show_view,
-        vol.Schema(
+        probatio.Schema(
             {
                 ATTR_ENTITY_ID: cv.entity_id,
                 ATTR_VIEW_PATH: str,
-                vol.Optional(ATTR_URL_PATH): str,
+                probatio.Optional(ATTR_URL_PATH): str,
             }
         ),
     )

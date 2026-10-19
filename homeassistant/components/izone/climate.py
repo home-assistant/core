@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 from pizone import Controller, Zone
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.climate import (
     FAN_AUTO,
@@ -52,10 +52,10 @@ IZONE_SERVICE_AIRFLOW_MIN = "airflow_min"
 IZONE_SERVICE_AIRFLOW_MAX = "airflow_max"
 
 IZONE_SERVICE_AIRFLOW_SCHEMA: VolDictType = {
-    vol.Required(ATTR_AIRFLOW): vol.All(
-        vol.Coerce(float),
-        vol.In(range(0, 101, 5)),
-        vol.Coerce(int),
+    probatio.Required(ATTR_AIRFLOW): probatio.All(
+        probatio.Coerce(float),
+        probatio.In(range(0, 101, 5)),
+        probatio.Coerce(int),
         msg="invalid airflow",
     ),
 }

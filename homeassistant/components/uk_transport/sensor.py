@@ -6,8 +6,8 @@ import logging
 import re
 from typing import Any, override
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -38,19 +38,21 @@ CONF_QUERIES = "queries"
 CONF_ORIGIN = "origin"
 CONF_DESTINATION = "destination"
 
-_QUERY_SCHEME = vol.Schema(
+_QUERY_SCHEME = probatio.Schema(
     {
-        vol.Required(CONF_MODE): vol.All(cv.ensure_list, [vol.In(["bus", "train"])]),
-        vol.Required(CONF_ORIGIN): cv.string,
-        vol.Required(CONF_DESTINATION): cv.string,
+        probatio.Required(CONF_MODE): probatio.All(
+            cv.ensure_list, [probatio.In(["bus", "train"])]
+        ),
+        probatio.Required(CONF_ORIGIN): cv.string,
+        probatio.Required(CONF_DESTINATION): cv.string,
     }
 )
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_APP_ID): cv.string,
-        vol.Required(CONF_API_APP_KEY): cv.string,
-        vol.Required(CONF_QUERIES): [_QUERY_SCHEME],
+        probatio.Required(CONF_API_APP_ID): cv.string,
+        probatio.Required(CONF_API_APP_KEY): cv.string,
+        probatio.Required(CONF_QUERIES): [_QUERY_SCHEME],
     }
 )
 

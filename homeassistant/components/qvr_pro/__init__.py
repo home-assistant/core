@@ -2,10 +2,10 @@
 
 import logging
 
+import probatio
 from pyqvrpro import Client
 from pyqvrpro.client import AuthenticationError, InsufficientPermissionsError
 from requests.exceptions import ConnectionError as RequestsConnectionError
-import voluptuous as vol
 
 from homeassistant.const import (
     CONF_HOST,
@@ -32,25 +32,25 @@ SERVICE_CHANNEL_GUID = "guid"
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Optional(CONF_EXCLUDE_CHANNELS, default=[]): vol.All(
+                probatio.Required(CONF_HOST): cv.string,
+                probatio.Required(CONF_USERNAME): cv.string,
+                probatio.Required(CONF_PASSWORD): cv.string,
+                probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                probatio.Optional(CONF_EXCLUDE_CHANNELS, default=[]): probatio.All(
                     cv.ensure_list_csv, [cv.positive_int]
                 ),
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-SERVICE_CHANNEL_RECORD_SCHEMA = vol.Schema(
-    {vol.Required(SERVICE_CHANNEL_GUID): cv.string}
+SERVICE_CHANNEL_RECORD_SCHEMA = probatio.Schema(
+    {probatio.Required(SERVICE_CHANNEL_GUID): cv.string}
 )
 
 

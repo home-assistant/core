@@ -3,8 +3,8 @@
 import logging
 from typing import Any, NamedTuple, override
 
+import probatio
 from pyintesishome import IHAuthenticationError, IHConnectionError, IntesisHome
-import voluptuous as vol
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -43,9 +43,9 @@ IH_DEVICE_ANYWAIR = "anywair"
 
 PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_DEVICE, default=IH_DEVICE_INTESISHOME): vol.In(
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Optional(CONF_DEVICE, default=IH_DEVICE_INTESISHOME): probatio.In(
             [IH_DEVICE_AIRCONWITHME, IH_DEVICE_ANYWAIR, IH_DEVICE_INTESISHOME]
         ),
     }

@@ -5,7 +5,7 @@ from typing import Any, override
 
 import messagebird
 from messagebird.client import ErrorException
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import (
     ATTR_TARGET,
@@ -21,9 +21,9 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_SENDER, default="HA"): vol.All(
-            cv.string, vol.Match(r"^(\+?[1-9]\d{1,14}|\w{1,11})$")
+        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Optional(CONF_SENDER, default="HA"): probatio.All(
+            cv.string, probatio.Match(r"^(\+?[1-9]\d{1,14}|\w{1,11})$")
         ),
     }
 )

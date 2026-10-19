@@ -5,7 +5,7 @@ from enum import Enum
 from operator import attrgetter
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.llm import LLMTools
 from homeassistant.components.sensor import (
@@ -220,21 +220,21 @@ class GetLiveContextTool(Tool):
         "Prefer filtering by domain when searching"
         " for multiple devices of the same type."
     )
-    parameters = vol.Schema(
+    parameters = probatio.Schema(
         {
-            vol.Optional(
+            probatio.Optional(
                 "name",
                 description="Filter entities by name or alias (case-insensitive).",
             ): cv.string,
-            vol.Optional(
+            probatio.Optional(
                 "domain",
                 description=(
                     "Filter entities by domain"
                     " (e.g. 'light', 'sensor')."
                     " Accepts a single domain or a list."
                 ),
-            ): vol.Any(cv.string, [cv.string]),
-            vol.Optional(
+            ): probatio.Any(cv.string, [cv.string]),
+            probatio.Optional(
                 "area",
                 description="Filter entities by area name or alias (case-insensitive).",
             ): cv.string,

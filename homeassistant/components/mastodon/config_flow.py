@@ -11,7 +11,7 @@ from mastodon.Mastodon import (
     MastodonNotFoundError,
     MastodonUnauthorizedError,
 )
-import voluptuous as vol
+import probatio
 from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -26,38 +26,38 @@ from homeassistant.util import slugify
 from .const import CONF_BASE_URL, DOMAIN, LOGGER
 from .utils import construct_mastodon_username, create_mastodon_client
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(
+        probatio.Required(
             CONF_BASE_URL,
         ): TextSelector(TextSelectorConfig(type=TextSelectorType.URL)),
-        vol.Required(
+        probatio.Required(
             CONF_CLIENT_ID,
         ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
-        vol.Required(
+        probatio.Required(
             CONF_CLIENT_SECRET,
         ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
-        vol.Required(
+        probatio.Required(
             CONF_ACCESS_TOKEN,
         ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
     }
 )
-REAUTH_SCHEMA = vol.Schema(
+REAUTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(
+        probatio.Required(
             CONF_ACCESS_TOKEN,
         ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
     }
 )
-STEP_RECONFIGURE_SCHEMA = vol.Schema(
+STEP_RECONFIGURE_SCHEMA = probatio.Schema(
     {
-        vol.Required(
+        probatio.Required(
             CONF_CLIENT_ID,
         ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
-        vol.Required(
+        probatio.Required(
             CONF_CLIENT_SECRET,
         ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
-        vol.Required(
+        probatio.Required(
             CONF_ACCESS_TOKEN,
         ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
     }

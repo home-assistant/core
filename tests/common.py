@@ -30,9 +30,9 @@ from aiohttp.test_utils import unused_port as get_test_instance_port
 from annotatedyaml import load_yaml_dict, loader as yaml_loader
 import attr
 from paho.mqtt.client import MQTTMessage
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant import auth, bootstrap, config_entries, loader
 from homeassistant.auth import (
@@ -376,7 +376,7 @@ def async_mock_service(
     hass: HomeAssistant,
     domain: str,
     service: str,
-    schema: vol.Schema | None = None,
+    schema: probatio.Schema | None = None,
     response: ServiceResponse = None,
     supports_response: SupportsResponse | None = None,
     raise_exception: Exception | None = None,
@@ -878,9 +878,9 @@ class MockModule:
         dependencies: list[str] | None = None,
         setup: Callable[[HomeAssistant, ConfigType], bool] | None = None,
         requirements: list[str] | None = None,
-        config_schema: vol.Schema | None = None,
-        platform_schema: vol.Schema | None = None,
-        platform_schema_base: vol.Schema | None = None,
+        config_schema: probatio.Schema | None = None,
+        platform_schema: probatio.Schema | None = None,
+        platform_schema_base: probatio.Schema | None = None,
         async_setup: Callable[[HomeAssistant, ConfigType], Coroutine[Any, Any, bool]]
         | None = None,
         async_setup_entry: Callable[
@@ -973,7 +973,7 @@ class MockPlatform:
         ]
         | None = None,
         dependencies: list[str] | None = None,
-        platform_schema: vol.Schema | None = None,
+        platform_schema: probatio.Schema | None = None,
         async_setup_platform: Callable[
             [HomeAssistant, ConfigType, AddEntitiesCallback, DiscoveryInfoType | None],
             Coroutine[Any, Any, None],
@@ -2008,8 +2008,8 @@ def get_quality_scale(integration: str) -> dict[str, QualityScaleStatus]:
     }
 
 
-def get_schema_suggested_value(schema: vol.Schema, key: str) -> Any | None:
-    """Get suggested value for key in voluptuous schema."""
+def get_schema_suggested_value(schema: probatio.Schema, key: str) -> Any | None:
+    """Get suggested value for key in probatio schema."""
     for schema_key in schema:
         if schema_key == key:
             if (

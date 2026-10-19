@@ -4,8 +4,8 @@ from http import HTTPStatus
 import logging
 from typing import Any, override
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
@@ -23,7 +23,10 @@ DEFAULT_NAME = "clickatell"
 BASE_API_URL = "https://platform.clickatell.com/messages/http/send"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_API_KEY): cv.string, vol.Required(CONF_RECIPIENT): cv.string}
+    {
+        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(CONF_RECIPIENT): cv.string,
+    }
 )
 
 

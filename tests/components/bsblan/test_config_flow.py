@@ -4,8 +4,8 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
 from bsblan import BSBLANAuthError, BSBLANConnectionError, BSBLANError
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.bsblan.const import (
     CONF_HEATING_CIRCUITS,
@@ -327,7 +327,7 @@ async def test_authentication_error(
     assert passkey_field.default() == "secret"
     assert username_field.default() == "testuser"
     # Password should never be pre-filled for security reasons
-    assert password_field.default is vol.UNDEFINED
+    assert password_field.default is probatio.UNDEFINED
 
 
 async def test_authentication_error_vs_connection_error(

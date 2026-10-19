@@ -4,7 +4,7 @@ import logging
 
 from hlk_sw16 import create_hlk_sw16_connection
 from hlk_sw16.protocol import SW16Client
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SWITCHES, Platform
@@ -25,21 +25,22 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SWITCH]
 
-SWITCH_SCHEMA = vol.Schema({vol.Optional(CONF_NAME): cv.string})
+SWITCH_SCHEMA = probatio.Schema({probatio.Optional(CONF_NAME): cv.string})
 
-RELAY_ID = vol.All(
-    vol.Any(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "a", "b", "c", "d", "e", "f"), vol.Coerce(str)
+RELAY_ID = probatio.All(
+    probatio.Any(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "a", "b", "c", "d", "e", "f"),
+    probatio.Coerce(str),
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                cv.string: vol.Schema(
+                cv.string: probatio.Schema(
                     {
-                        vol.Required(CONF_HOST): cv.string,
-                        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                        vol.Required(CONF_SWITCHES): vol.Schema(
+                        probatio.Required(CONF_HOST): cv.string,
+                        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                        probatio.Required(CONF_SWITCHES): probatio.Schema(
                             {RELAY_ID: SWITCH_SCHEMA}
                         ),
                     }
@@ -47,7 +48,7 @@ CONFIG_SCHEMA = vol.Schema(
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 type HlkConfigEntry = ConfigEntry[SW16Client]

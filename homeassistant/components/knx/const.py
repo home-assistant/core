@@ -165,7 +165,7 @@ class KNXConfigEntryOptions(TypedDict, total=False):
 class ColorTempModes(Enum):
     """Color temperature modes for config validation."""
 
-    # YAML uses Enum.name (with vol.Upper), UI uses Enum.value for lookup
+    # YAML uses Enum.name (with probatio.Upper), UI uses Enum.value for lookup
     ABSOLUTE = "7.600"
     ABSOLUTE_FLOAT = "9"
     RELATIVE = "5.001"

@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
+import probatio
 from smarttub import Spa, SpaError, SpaReminder
-import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -37,13 +37,13 @@ ATTR_UPDATED_AT = "updated_at"
 # how many days to snooze the reminder for
 ATTR_REMINDER_DAYS = "days"
 RESET_REMINDER_SCHEMA: VolDictType = {
-    vol.Required(ATTR_REMINDER_DAYS): vol.All(
-        vol.Coerce(int), vol.Range(min=30, max=365)
+    probatio.Required(ATTR_REMINDER_DAYS): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=30, max=365)
     )
 }
 SNOOZE_REMINDER_SCHEMA: VolDictType = {
-    vol.Required(ATTR_REMINDER_DAYS): vol.All(
-        vol.Coerce(int), vol.Range(min=10, max=120)
+    probatio.Required(ATTR_REMINDER_DAYS): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=10, max=120)
     )
 }
 

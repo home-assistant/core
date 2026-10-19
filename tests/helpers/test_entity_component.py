@@ -7,9 +7,9 @@ import re
 from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun import freeze_time
+import probatio
 import pytest
 from pytest_unordered import unordered
-import voluptuous as vol
 
 from homeassistant.const import (
     ENTITY_MATCH_ALL,
@@ -553,7 +553,7 @@ async def test_register_entity_service(
         "test_placeholder": "beer"
     }
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             "hello",
@@ -761,7 +761,7 @@ async def test_register_batched_entity_service(hass: HomeAssistant) -> None:
         "test_placeholder": "beer"
     }
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             "hello",
@@ -851,9 +851,9 @@ async def test_register_entity_service_non_entity_service_schema(
 
     for idx, schema in enumerate(
         (
-            vol.Schema({"some": str}),
-            vol.All(vol.Schema({"some": str})),
-            vol.Any(vol.Schema({"some": str})),
+            probatio.Schema({"some": str}),
+            probatio.All(probatio.Schema({"some": str})),
+            probatio.Any(probatio.Schema({"some": str})),
         )
     ):
         expected_message = (
@@ -870,8 +870,8 @@ async def test_register_entity_service_non_entity_service_schema(
     for idx, schema in enumerate(
         (
             cv.make_entity_service_schema({"some": str}),
-            vol.Schema(cv.make_entity_service_schema({"some": str})),
-            vol.All(cv.make_entity_service_schema({"some": str})),
+            probatio.Schema(cv.make_entity_service_schema({"some": str})),
+            probatio.All(cv.make_entity_service_schema({"some": str})),
         )
     ):
         component.async_register_entity_service(f"test_service_{idx}", schema, Mock())

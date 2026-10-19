@@ -7,8 +7,8 @@ from typing import Any, Self, override
 from urllib.parse import urlparse
 
 import getmac
+import probatio
 from samsungtvws.encrypted.authenticator import SamsungTVEncryptedWSAsyncAuthenticator
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -60,7 +60,7 @@ from .const import (
     UPNP_SVC_RENDERING_CONTROL,
 )
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): str})
 
 
 def _strip_uuid(udn: str) -> str:
@@ -333,7 +333,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="pairing",
             errors=errors,
             description_placeholders={"device": self._title},
-            data_schema=vol.Schema({}),
+            data_schema=probatio.Schema({}),
         )
 
     async def async_step_encrypted_pairing(
@@ -365,7 +365,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="encrypted_pairing",
             errors=errors,
             description_placeholders={"device": self._title},
-            data_schema=vol.Schema({vol.Required(CONF_PIN): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_PIN): str}),
         )
 
     @callback
@@ -651,5 +651,5 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm_encrypted",
             errors=errors,
             description_placeholders={"device": reauth_entry.title},
-            data_schema=vol.Schema({vol.Required(CONF_PIN): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_PIN): str}),
         )

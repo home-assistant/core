@@ -5,8 +5,8 @@ from enum import StrEnum
 import logging
 from typing import Any, final, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -68,7 +68,9 @@ class HumidifierDeviceClass(StrEnum):
     DEHUMIDIFIER = "dehumidifier"
 
 
-DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(HumidifierDeviceClass))
+DEVICE_CLASSES_SCHEMA = probatio.All(
+    probatio.Lower, probatio.Coerce(HumidifierDeviceClass)
+)
 
 # DEVICE_CLASSES below is deprecated as of 2021.12
 # use the HumidifierDeviceClass enum instead.
@@ -97,15 +99,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(SERVICE_TOGGLE, None, "async_toggle")
     component.async_register_entity_service(
         SERVICE_SET_MODE,
-        {vol.Required(ATTR_MODE): cv.string},
+        {probatio.Required(ATTR_MODE): cv.string},
         "async_set_mode",
         [HumidifierEntityFeature.MODES],
     )
     component.async_register_entity_service(
         SERVICE_SET_HUMIDITY,
         {
-            vol.Required(ATTR_HUMIDITY): vol.All(
-                vol.Coerce(int), vol.Range(min=0, max=100)
+            probatio.Required(ATTR_HUMIDITY): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=0, max=100)
             )
         },
         async_service_humidity_set,

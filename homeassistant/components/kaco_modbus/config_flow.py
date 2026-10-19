@@ -5,7 +5,7 @@ from typing import Any, override
 
 from kaco_modbus import KacoError, KacoInverter, NotAKacoInverterError
 from modbus_connection import ModbusError, ModbusTcpParams
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -22,20 +22,20 @@ from .const import CONF_UNIT_ID, DEFAULT_PORT, DEFAULT_UNIT_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): TextSelector(),
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.All(
+        probatio.Required(CONF_HOST): TextSelector(),
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.All(
             NumberSelector(
                 NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1, max=65535)
             ),
-            vol.Coerce(int),
+            probatio.Coerce(int),
         ),
-        vol.Required(CONF_UNIT_ID, default=DEFAULT_UNIT_ID): vol.All(
+        probatio.Required(CONF_UNIT_ID, default=DEFAULT_UNIT_ID): probatio.All(
             NumberSelector(
                 NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1, max=247)
             ),
-            vol.Coerce(int),
+            probatio.Coerce(int),
         ),
     }
 )

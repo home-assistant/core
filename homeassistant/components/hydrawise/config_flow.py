@@ -4,24 +4,24 @@ from collections.abc import Mapping
 from typing import Any, override
 
 from aiohttp import ClientError
+import probatio
 from pydrawise import auth as pydrawise_auth, hybrid
 from pydrawise.exceptions import NotAuthorizedError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 
 from .const import APP_ID, DOMAIN, LOGGER
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_API_KEY): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_API_KEY): str,
     }
 )
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_PASSWORD): str, vol.Required(CONF_API_KEY): str}
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_PASSWORD): str, probatio.Required(CONF_API_KEY): str}
 )
 
 

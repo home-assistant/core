@@ -8,9 +8,9 @@ import threading
 from typing import Any
 from unittest.mock import AsyncMock, Mock, call as mock_call, patch
 
+import probatio
 import pytest
 from pytest_unordered import unordered
-import voluptuous as vol
 
 # To prevent circular import when running just this file
 from homeassistant import config_entries, exceptions
@@ -1442,7 +1442,7 @@ async def test_async_get_descriptions_with_placeholders(hass: HomeAssistant) -> 
               unit_of_measurement: "seconds"
     """
 
-    service_schema = vol.Schema(
+    service_schema = probatio.Schema(
         {
             "topic": cv.string,
             "duration": cv.positive_int,
@@ -1974,7 +1974,7 @@ async def test_register_admin_service(
         "test",
         "test2",
         mock_service,
-        vol.Schema({vol.Required("required"): cv.boolean}),
+        probatio.Schema({probatio.Required("required"): cv.boolean}),
     )
 
     with pytest.raises(exceptions.UnknownUser):
@@ -1997,7 +1997,7 @@ async def test_register_admin_service(
         )
     assert len(calls) == 0
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             "test",
             "test",
@@ -2007,7 +2007,7 @@ async def test_register_admin_service(
         )
     assert len(calls) == 0
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             "test",
             "test2",
@@ -3322,9 +3322,9 @@ async def test_register_platform_entity_service_non_entity_service_schema(
 
     for idx, schema in enumerate(
         (
-            vol.Schema({"some": str}),
-            vol.All(vol.Schema({"some": str})),
-            vol.Any(vol.Schema({"some": str})),
+            probatio.Schema({"some": str}),
+            probatio.All(probatio.Schema({"some": str})),
+            probatio.Any(probatio.Schema({"some": str})),
         )
     ):
         with pytest.raises(HomeAssistantError, match=expected_message):
@@ -3349,8 +3349,8 @@ async def test_register_platform_entity_service_non_entity_service_schema(
     for idx, schema in enumerate(
         (
             cv.make_entity_service_schema({"some": str}),
-            vol.Schema(cv.make_entity_service_schema({"some": str})),
-            vol.All(cv.make_entity_service_schema({"some": str})),
+            probatio.Schema(cv.make_entity_service_schema({"some": str})),
+            probatio.All(cv.make_entity_service_schema({"some": str})),
         )
     ):
         service.async_register_platform_entity_service(

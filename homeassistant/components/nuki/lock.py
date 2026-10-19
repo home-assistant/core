@@ -3,11 +3,11 @@
 from abc import abstractmethod
 from typing import Any, override
 
+import probatio
 from pynuki import NukiLock, NukiOpener
 from pynuki.constants import MODE_OPENER_CONTINUOUS
 from pynuki.device import NukiDevice
 from requests.exceptions import RequestException
-import voluptuous as vol
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.core import HomeAssistant
@@ -41,7 +41,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         "lock_n_go",
         {
-            vol.Optional(ATTR_UNLATCH, default=False): cv.boolean,
+            probatio.Optional(ATTR_UNLATCH, default=False): cv.boolean,
         },
         "lock_n_go",
     )
@@ -49,7 +49,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         "set_continuous_mode",
         {
-            vol.Required(ATTR_ENABLE): cv.boolean,
+            probatio.Required(ATTR_ENABLE): cv.boolean,
         },
         "set_continuous_mode",
     )

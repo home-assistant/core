@@ -10,7 +10,7 @@ from google_air_quality_api.exceptions import (
     InvalidCustomLAQIConfigurationError,
 )
 from google_air_quality_api.mapping import AQICategoryMapping
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -54,11 +54,11 @@ AIR_QUALITY_COVERAGE_URL = (
     "https://developers.google.com/maps/documentation/air-quality/coverage"
 )
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): str,
-        vol.Optional(SECTION_API_KEY_OPTIONS): section(
-            vol.Schema({vol.Optional(CONF_REFERRER): str}),
+        probatio.Required(CONF_API_KEY): str,
+        probatio.Optional(SECTION_API_KEY_OPTIONS): section(
+            probatio.Schema({probatio.Optional(CONF_REFERRER): str}),
             SectionConfig(collapsed=True),
         ),
     }
@@ -108,28 +108,28 @@ async def _validate_input(
     return False
 
 
-def _get_location_schema(hass: HomeAssistant) -> vol.Schema:
+def _get_location_schema(hass: HomeAssistant) -> probatio.Schema:
     """Return the schema for a location with default values from the hass config."""
-    return vol.Schema(
+    return probatio.Schema(
         {
             # Name field is no longer allowed in config flow schemas
             # pylint: disable-next=home-assistant-config-flow-name-field
-            vol.Required(CONF_NAME, default=hass.config.location_name): str,
-            vol.Required(
+            probatio.Required(CONF_NAME, default=hass.config.location_name): str,
+            probatio.Required(
                 CONF_LOCATION,
                 default={
                     CONF_LATITUDE: hass.config.latitude,
                     CONF_LONGITUDE: hass.config.longitude,
                 },
             ): LocationSelector(LocationSelectorConfig(radius=False)),
-            vol.Optional(CUSTOM_LOCAL_AQI_OPTIONS): section(
-                vol.Schema(
+            probatio.Optional(CUSTOM_LOCAL_AQI_OPTIONS): section(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_ENABLE_CUSTOM_LAQI, default=False): bool,
-                        vol.Optional(
+                        probatio.Required(CONF_ENABLE_CUSTOM_LAQI, default=False): bool,
+                        probatio.Optional(
                             CONF_COUNTRY, default=hass.config.country
                         ): CountrySelector(),
-                        vol.Optional(CUSTOM_LAQI): SelectSelector(
+                        probatio.Optional(CUSTOM_LAQI): SelectSelector(
                             SelectSelectorConfig(
                                 options=sorted(
                                     AQICategoryMapping.get_all_laq_indices()
@@ -225,7 +225,7 @@ class GoogleAirQualityConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(schema), user_input
+                probatio.Schema(schema), user_input
             ),
             errors=errors,
             description_placeholders=description_placeholders,

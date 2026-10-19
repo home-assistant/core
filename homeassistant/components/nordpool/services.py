@@ -6,6 +6,7 @@ from functools import partial
 import logging
 from typing import TYPE_CHECKING
 
+import probatio
 from pynordpool import (
     AREAS,
     Currency,
@@ -16,7 +17,6 @@ from pynordpool import (
     NordPoolError,
     PriceIndicesData,
 )
-import voluptuous as vol
 
 from homeassistant.const import ATTR_DATE
 from homeassistant.core import (
@@ -45,7 +45,7 @@ def _validate_areas(areas: list[str]) -> list[str]:
         validated_area = cv.string(area)
         validated_area = validated_area.upper()
         if validated_area not in AREAS:
-            raise vol.Invalid(f"Area {area} is not valid")
+            raise probatio.Invalid(f"Area {area} is not valid")
 
         validated_areas.append(validated_area)
 
@@ -59,22 +59,27 @@ ATTR_CURRENCY = "currency"
 
 SERVICE_GET_PRICES_FOR_DATE = "get_prices_for_date"
 SERVICE_GET_PRICE_INDICES_FOR_DATE = "get_price_indices_for_date"
-SERVICE_GET_PRICES_SCHEMA = vol.Schema(
+SERVICE_GET_PRICES_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-        vol.Required(ATTR_DATE): cv.date,
-        vol.Optional(ATTR_AREAS, default=[]): vol.All(cv.ensure_list, _validate_areas),
-        vol.Optional(ATTR_CURRENCY): vol.All(
+        probatio.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(
+            {"integration": DOMAIN}
+        ),
+        probatio.Required(ATTR_DATE): cv.date,
+        probatio.Optional(ATTR_AREAS, default=[]): probatio.All(
+            cv.ensure_list, _validate_areas
+        ),
+        probatio.Optional(ATTR_CURRENCY): probatio.All(
             cv.string,
-            vol.Upper,
-            vol.In([currency.value for currency in Currency]),
+            probatio.Upper,
+            probatio.In([currency.value for currency in Currency]),
         ),
     }
 )
 SERVICE_GET_PRICE_INDICES_SCHEMA = SERVICE_GET_PRICES_SCHEMA.extend(
     {
-        vol.Optional(ATTR_RESOLUTION, default=60): vol.All(
-            cv.positive_int, vol.All(vol.Coerce(int), vol.In((15, 30, 60)))
+        probatio.Optional(ATTR_RESOLUTION, default=60): probatio.All(
+            cv.positive_int,
+            probatio.All(probatio.Coerce(int), probatio.In((15, 30, 60))),
         ),
     }
 )

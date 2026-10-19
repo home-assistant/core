@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 from meater import AuthenticationError, MeaterApi, ServiceUnavailableError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -15,9 +15,9 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
-USER_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+REAUTH_SCHEMA = probatio.Schema({probatio.Required(CONF_PASSWORD): str})
+USER_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_USERNAME): str, probatio.Required(CONF_PASSWORD): str}
 )
 
 

@@ -4,8 +4,8 @@ from datetime import timedelta
 import logging
 from typing import Any, final, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_OPTION, SERVICE_SELECT_OPTION
@@ -79,19 +79,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_SELECT_NEXT,
-        {vol.Optional(ATTR_CYCLE, default=True): bool},
+        {probatio.Optional(ATTR_CYCLE, default=True): bool},
         SelectEntity.async_next.__name__,
     )
 
     component.async_register_entity_service(
         SERVICE_SELECT_OPTION,
-        {vol.Required(ATTR_OPTION): cv.string},
+        {probatio.Required(ATTR_OPTION): cv.string},
         SelectEntity.async_handle_select_option.__name__,
     )
 
     component.async_register_entity_service(
         SERVICE_SELECT_PREVIOUS,
-        {vol.Optional(ATTR_CYCLE, default=True): bool},
+        {probatio.Optional(ATTR_CYCLE, default=True): bool},
         SelectEntity.async_previous.__name__,
     )
 

@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from typing import Any, override
 
 import aiolifx_effects as aiolifx_effects_module
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -57,8 +57,8 @@ SERVICE_LIFX_SET_STATE = "set_state"
 
 LIFX_SET_STATE_SCHEMA: VolDictType = {
     **LIGHT_TURN_ON_SCHEMA,
-    ATTR_INFRARED: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
-    ATTR_ZONES: vol.All(cv.ensure_list, [cv.positive_int]),
+    ATTR_INFRARED: probatio.All(probatio.Coerce(int), probatio.Clamp(min=0, max=255)),
+    ATTR_ZONES: probatio.All(cv.ensure_list, [cv.positive_int]),
     ATTR_POWER: cv.boolean,
 }
 
@@ -66,8 +66,10 @@ LIFX_SET_STATE_SCHEMA: VolDictType = {
 SERVICE_LIFX_SET_HEV_CYCLE_STATE = "set_hev_cycle_state"
 
 LIFX_SET_HEV_CYCLE_STATE_SCHEMA: VolDictType = {
-    vol.Required(ATTR_POWER): cv.boolean,
-    ATTR_DURATION: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=86400)),
+    probatio.Required(ATTR_POWER): cv.boolean,
+    ATTR_DURATION: probatio.All(
+        probatio.Coerce(float), probatio.Clamp(min=0, max=86400)
+    ),
 }
 
 HSBK_HUE = 0

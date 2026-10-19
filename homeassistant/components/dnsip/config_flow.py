@@ -6,7 +6,7 @@ from typing import Any, Literal, override
 
 import aiodns
 from aiodns.error import DNSError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -36,16 +36,16 @@ from .const import (
     DOMAIN,
 )
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOSTNAME, default=DEFAULT_HOSTNAME): cv.string,
-        vol.Required(CONF_ADDITIONAL_OPTIONS): section(
-            vol.Schema(
+        probatio.Required(CONF_HOSTNAME, default=DEFAULT_HOSTNAME): cv.string,
+        probatio.Required(CONF_ADDITIONAL_OPTIONS): section(
+            probatio.Schema(
                 {
-                    vol.Optional(CONF_RESOLVER): cv.string,
-                    vol.Optional(CONF_PORT): cv.port,
-                    vol.Optional(CONF_RESOLVER_IPV6): cv.string,
-                    vol.Optional(CONF_PORT_IPV6): cv.port,
+                    probatio.Optional(CONF_RESOLVER): cv.string,
+                    probatio.Optional(CONF_PORT): cv.port,
+                    probatio.Optional(CONF_RESOLVER_IPV6): cv.string,
+                    probatio.Optional(CONF_PORT_IPV6): cv.port,
                 }
             ),
             SectionConfig(collapsed=True),
@@ -213,12 +213,12 @@ class DnsIPOptionsFlowHandler(OptionsFlowWithReload):
                 )
 
         schema = self.add_suggested_values_to_schema(
-            vol.Schema(
+            probatio.Schema(
                 {
-                    vol.Optional(CONF_RESOLVER): cv.string,
-                    vol.Optional(CONF_PORT): cv.port,
-                    vol.Optional(CONF_RESOLVER_IPV6): cv.string,
-                    vol.Optional(CONF_PORT_IPV6): cv.port,
+                    probatio.Optional(CONF_RESOLVER): cv.string,
+                    probatio.Optional(CONF_PORT): cv.port,
+                    probatio.Optional(CONF_RESOLVER_IPV6): cv.string,
+                    probatio.Optional(CONF_PORT_IPV6): cv.port,
                 }
             ),
             self.config_entry.options,

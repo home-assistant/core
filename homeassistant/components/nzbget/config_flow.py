@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -76,17 +76,17 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=user_input,
                 )
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_HOST): str,
-                vol.Optional(CONF_USERNAME): str,
-                vol.Optional(CONF_PASSWORD): str,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-                vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
-                vol.Required(CONF_MORE_OPTIONS): section(
-                    vol.Schema(
+                probatio.Required(CONF_HOST): str,
+                probatio.Optional(CONF_USERNAME): str,
+                probatio.Optional(CONF_PASSWORD): str,
+                probatio.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+                probatio.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
+                probatio.Required(CONF_MORE_OPTIONS): section(
+                    probatio.Schema(
                         {
-                            vol.Optional(
+                            probatio.Optional(
                                 CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
                             ): bool,
                         }

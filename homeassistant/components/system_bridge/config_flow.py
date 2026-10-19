@@ -5,6 +5,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 from systembridgeconnector.exceptions import (
     AuthenticationException,
     ConnectionClosedException,
@@ -12,7 +13,6 @@ from systembridgeconnector.exceptions import (
 )
 from systembridgeconnector.models.modules import GetData, Module
 from systembridgeconnector.websocket_client import WebSocketClient
-import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
@@ -26,12 +26,14 @@ from .const import DATA_WAIT_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_AUTHENTICATE_DATA_SCHEMA = vol.Schema({vol.Required(CONF_TOKEN): cv.string})
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_AUTHENTICATE_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_TOKEN): cv.string}
+)
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PORT, default=9170): cv.string,
-        vol.Required(CONF_TOKEN): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_PORT, default=9170): cv.string,
+        probatio.Required(CONF_TOKEN): cv.string,
     }
 )
 

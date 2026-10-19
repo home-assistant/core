@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, override
 
 from flow_it_api.client import FlowItVMCMachine
 from flow_it_api.exceptions import FlowItAuthError, FlowItConnectionError
-import voluptuous as vol
+import probatio
 from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -78,15 +78,17 @@ class FlowItConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): TextSelector(
+                    probatio.Required(CONF_HOST): str,
+                    probatio.Required(
+                        CONF_USERNAME, default=DEFAULT_USERNAME
+                    ): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.TEXT, autocomplete="username"
                         )
                     ),
-                    vol.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(CONF_PASSWORD): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
@@ -130,14 +132,16 @@ class FlowItConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=data,
                 )
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): TextSelector(
+                probatio.Required(
+                    CONF_USERNAME, default=DEFAULT_USERNAME
+                ): TextSelector(
                     TextSelectorConfig(
                         type=TextSelectorType.TEXT, autocomplete="username"
                     )
                 ),
-                vol.Required(CONF_PASSWORD): TextSelector(
+                probatio.Required(CONF_PASSWORD): TextSelector(
                     TextSelectorConfig(
                         type=TextSelectorType.PASSWORD, autocomplete="current-password"
                     )

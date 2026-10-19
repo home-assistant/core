@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
@@ -65,13 +65,13 @@ class MikrotikFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Optional(CONF_PORT, default=DEFAULT_API_PORT): int,
-                    vol.Optional(CONF_VERIFY_SSL, default=False): bool,
+                    probatio.Required(CONF_HOST): str,
+                    probatio.Required(CONF_USERNAME): str,
+                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Optional(CONF_PORT, default=DEFAULT_API_PORT): int,
+                    probatio.Optional(CONF_VERIFY_SSL, default=False): bool,
                 }
             ),
             errors=errors,
@@ -105,9 +105,9 @@ class MikrotikFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             description_placeholders={CONF_USERNAME: reauth_entry.data[CONF_USERNAME]},
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,
@@ -131,15 +131,15 @@ class MikrotikOptionsFlowHandler(OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         options = {
-            vol.Optional(
+            probatio.Optional(
                 CONF_FORCE_DHCP,
                 default=self.config_entry.options.get(CONF_FORCE_DHCP, False),
             ): bool,
-            vol.Optional(
+            probatio.Optional(
                 CONF_ARP_PING,
                 default=self.config_entry.options.get(CONF_ARP_PING, False),
             ): bool,
-            vol.Optional(
+            probatio.Optional(
                 CONF_DETECTION_TIME,
                 default=self.config_entry.options.get(
                     CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME
@@ -148,5 +148,5 @@ class MikrotikOptionsFlowHandler(OptionsFlow):
         }
 
         return self.async_show_form(
-            step_id="device_tracker", data_schema=vol.Schema(options)
+            step_id="device_tracker", data_schema=probatio.Schema(options)
         )

@@ -1,8 +1,10 @@
 """Test Matter lights."""
 
+from typing import Any
 from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
+from chip.clusters.Objects import NullValue
 from matter_server.client.models.node import MatterNode
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -486,3 +488,80 @@ async def test_extended_color_light(
         ]
     )
     matter_client.send_device_command.reset_mock()
+
+
+@pytest.mark.parametrize("node_fixture", ["color_temperature_light"])
+async def test_light_null_color_temperature(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test a light that stops reporting a color temperature."""
+    entity_id = "light.mock_color_temperature_light"
+
+    set_node_attribute(matter_node, 1, 768, 7, 300)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["color_temp_kelvin"] == 3333
+
+    set_node_attribute(matter_node, 1, 768, 7, NullValue)
+    await trigger_subscription_callback(hass, matter_client)
+
+    # the last known value is not the current one, so it is not reported
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["color_temp_kelvin"] is None
+
+
+@pytest.mark.parametrize(
+    "color_mode",
+    [
+        pytest.param(NullValue, id="null"),
+        pytest.param(255, id="out_of_range"),
+    ],
+)
+@pytest.mark.parametrize("node_fixture", ["extended_color_light"])
+async def test_light_unexpected_color_mode(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    color_mode: Any,
+) -> None:
+    """Test a light that reports a color mode we cannot map."""
+    entity_id = "light.mock_extended_color_light"
+
+    set_node_attribute(matter_node, 1, 768, 8, 0)
+    set_node_attribute(matter_node, 1, 8, 0, 128)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["color_mode"] == ColorMode.HS
+
+    set_node_attribute(matter_node, 1, 768, 8, color_mode)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "on"
+    # the color the light is showing is anyone's guess, but it is still a light
+    assert state.attributes["color_mode"] == ColorMode.UNKNOWN
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": entity_id, "brightness": 128},
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.LevelControl.Commands.MoveToLevelWithOnOff(
+            level=128,
+            transitionTime=0,
+        ),
+    )

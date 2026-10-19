@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_MODE, CONF_OPTIONS, PERCENTAGE, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, State
@@ -28,8 +28,10 @@ from .const import (
 
 IS_MODE_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
     {
-        vol.Required(CONF_OPTIONS): {
-            vol.Required(CONF_MODE): vol.All(cv.ensure_list, vol.Length(min=1), [str]),
+        probatio.Required(CONF_OPTIONS): {
+            probatio.Required(CONF_MODE): probatio.All(
+                cv.ensure_list, probatio.Length(min=1), [str]
+            ),
         },
     }
 )

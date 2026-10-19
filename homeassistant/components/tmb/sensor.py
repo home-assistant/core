@@ -4,9 +4,9 @@ from datetime import timedelta
 import logging
 from typing import Any, override
 
+import probatio
 from requests import HTTPError
 from tmb import IBus
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -31,19 +31,21 @@ ATTR_LINE = "line"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-LINE_STOP_SCHEMA = vol.Schema(
+LINE_STOP_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_BUS_STOP): cv.string,
-        vol.Required(CONF_LINE): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
+        probatio.Required(CONF_BUS_STOP): cv.string,
+        probatio.Required(CONF_LINE): cv.string,
+        probatio.Optional(CONF_NAME): cv.string,
     }
 )
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_APP_ID): cv.string,
-        vol.Required(CONF_APP_KEY): cv.string,
-        vol.Required(CONF_BUS_STOPS): vol.All(cv.ensure_list, [LINE_STOP_SCHEMA]),
+        probatio.Required(CONF_APP_ID): cv.string,
+        probatio.Required(CONF_APP_KEY): cv.string,
+        probatio.Required(CONF_BUS_STOPS): probatio.All(
+            cv.ensure_list, [LINE_STOP_SCHEMA]
+        ),
     }
 )
 

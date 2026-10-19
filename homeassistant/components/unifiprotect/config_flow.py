@@ -6,11 +6,11 @@ from pathlib import Path
 from typing import Any, override
 
 from aiohttp import CookieJar
+import probatio
 from uiprotect import ProtectApiClient
 from uiprotect.data import NVR
 from uiprotect.exceptions import ClientError, NotAuthorized
 from unifi_discovery import async_console_is_alive
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
@@ -128,7 +128,7 @@ def _build_schema(
     include_host: bool = True,
     include_connection: bool = True,
     credentials_optional: bool = False,
-) -> vol.Schema:
+) -> probatio.Schema:
     """Build a config flow schema.
 
     Args:
@@ -137,10 +137,10 @@ def _build_schema(
         credentials_optional: Credentials optional (True to keep existing values).
 
     """
-    req, opt = vol.Required, vol.Optional
+    req, opt = probatio.Required, probatio.Optional
     cred_key = opt if credentials_optional else req
 
-    schema: dict[vol.Marker, selector.Selector] = {}
+    schema: dict[probatio.Marker, selector.Selector] = {}
     if include_host:
         schema[req(CONF_HOST)] = _TEXT_SELECTOR
     if include_connection:
@@ -149,17 +149,19 @@ def _build_schema(
     schema[req(CONF_USERNAME)] = _TEXT_SELECTOR
     schema[cred_key(CONF_PASSWORD)] = _PASSWORD_SELECTOR
     schema[cred_key(CONF_API_KEY)] = _PASSWORD_SELECTOR
-    return vol.Schema(schema)
+    return probatio.Schema(schema)
 
 
-def _build_api_key_schema() -> vol.Schema:
+def _build_api_key_schema() -> probatio.Schema:
     """Build the schema for the public-API-only (API-key) connection mode."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_HOST): _TEXT_SELECTOR,
-            vol.Required(CONF_PORT, default=DEFAULT_PORT): _PORT_SELECTOR,
-            vol.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): _BOOL_SELECTOR,
-            vol.Required(CONF_API_KEY): _PASSWORD_SELECTOR,
+            probatio.Required(CONF_HOST): _TEXT_SELECTOR,
+            probatio.Required(CONF_PORT, default=DEFAULT_PORT): _PORT_SELECTOR,
+            probatio.Required(
+                CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
+            ): _BOOL_SELECTOR,
+            probatio.Required(CONF_API_KEY): _PASSWORD_SELECTOR,
         }
     )
 
@@ -174,10 +176,10 @@ DISCOVERY_SCHEMA = _build_schema(include_host=False)
 # Public-API-only (API key, no local user) flow
 API_KEY_SCHEMA = _build_api_key_schema()
 # Discovery variant: host comes from discovery, ssl from the candidate order
-DISCOVERY_API_KEY_SCHEMA = vol.Schema(
+DISCOVERY_API_KEY_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): _PORT_SELECTOR,
-        vol.Required(CONF_API_KEY): _PASSWORD_SELECTOR,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): _PORT_SELECTOR,
+        probatio.Required(CONF_API_KEY): _PASSWORD_SELECTOR,
     }
 )
 # Reauth flow: only credentials, connection settings preserved
@@ -188,7 +190,9 @@ API_KEY_DOCUMENTATION_URL = (
     "https://www.home-assistant.io/integrations/unifiprotect/#api-key-only"
 )
 # Reauth flow for public-API-only entries: the API key is the only credential
-REAUTH_API_KEY_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): _PASSWORD_SELECTOR})
+REAUTH_API_KEY_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_API_KEY): _PASSWORD_SELECTOR}
+)
 
 
 async def async_local_user_documentation_url(hass: HomeAssistant) -> str:
@@ -843,28 +847,30 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_DISABLE_RTSP,
                         default=self.config_entry.options.get(CONF_DISABLE_RTSP, False),
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_ALL_UPDATES,
                         default=self.config_entry.options.get(CONF_ALL_UPDATES, False),
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_OVERRIDE_CHOST,
                         default=self.config_entry.options.get(
                             CONF_OVERRIDE_CHOST, False
                         ),
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_MAX_MEDIA,
                         default=self.config_entry.options.get(
                             CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA
                         ),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=100, max=10000)),
+                    ): probatio.All(
+                        probatio.Coerce(int), probatio.Range(min=100, max=10000)
+                    ),
                 }
             ),
         )

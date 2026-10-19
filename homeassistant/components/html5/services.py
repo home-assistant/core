@@ -1,6 +1,6 @@
 """Service registration for HTML5 integration."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -36,40 +36,42 @@ SERVICE_DISMISS_MESSAGE = "dismiss_message"
 
 SERVICE_SEND_MESSAGE_SCHEMA = cv.make_entity_service_schema(
     {
-        vol.Required(ATTR_TITLE, default=ATTR_TITLE_DEFAULT): cv.string,
-        vol.Optional(ATTR_MESSAGE): cv.string,
-        vol.Optional(ATTR_DIR): vol.In({"auto", "ltr", "rtl"}),
-        vol.Optional(ATTR_ICON): cv.string,
-        vol.Optional(ATTR_BADGE): cv.string,
-        vol.Optional(ATTR_IMAGE): cv.string,
-        vol.Optional(ATTR_TAG): cv.string,
-        vol.Exclusive(ATTR_VIBRATE, "silent_xor_vibrate"): vol.All(
+        probatio.Required(ATTR_TITLE, default=ATTR_TITLE_DEFAULT): cv.string,
+        probatio.Optional(ATTR_MESSAGE): cv.string,
+        probatio.Optional(ATTR_DIR): probatio.In({"auto", "ltr", "rtl"}),
+        probatio.Optional(ATTR_ICON): cv.string,
+        probatio.Optional(ATTR_BADGE): cv.string,
+        probatio.Optional(ATTR_IMAGE): cv.string,
+        probatio.Optional(ATTR_TAG): cv.string,
+        probatio.Exclusive(ATTR_VIBRATE, "silent_xor_vibrate"): probatio.All(
             cv.ensure_list,
-            [vol.All(vol.Coerce(int), vol.Range(min=0))],
+            [probatio.All(probatio.Coerce(int), probatio.Range(min=0))],
         ),
-        vol.Optional(ATTR_TIMESTAMP): cv.datetime,
-        vol.Optional(ATTR_LANG): cv.language,
-        vol.Exclusive(ATTR_SILENT, "silent_xor_vibrate"): cv.boolean,
-        vol.Optional(ATTR_RENOTIFY): cv.boolean,
-        vol.Optional(ATTR_REQUIRE_INTERACTION): cv.boolean,
-        vol.Optional(ATTR_URGENCY): vol.In({"normal", "high", "low"}),
-        vol.Optional(ATTR_TTL): vol.All(cv.time_period, cv.positive_timedelta),
-        vol.Optional(ATTR_ACTIONS): vol.All(
+        probatio.Optional(ATTR_TIMESTAMP): cv.datetime,
+        probatio.Optional(ATTR_LANG): cv.language,
+        probatio.Exclusive(ATTR_SILENT, "silent_xor_vibrate"): cv.boolean,
+        probatio.Optional(ATTR_RENOTIFY): cv.boolean,
+        probatio.Optional(ATTR_REQUIRE_INTERACTION): cv.boolean,
+        probatio.Optional(ATTR_URGENCY): probatio.In({"normal", "high", "low"}),
+        probatio.Optional(ATTR_TTL): probatio.All(
+            cv.time_period, cv.positive_timedelta
+        ),
+        probatio.Optional(ATTR_ACTIONS): probatio.All(
             cv.ensure_list,
             [
                 {
-                    vol.Required(ATTR_ACTION): cv.string,
-                    vol.Required(ATTR_TITLE): cv.string,
-                    vol.Optional(ATTR_ICON): cv.string,
+                    probatio.Required(ATTR_ACTION): cv.string,
+                    probatio.Required(ATTR_TITLE): cv.string,
+                    probatio.Optional(ATTR_ICON): cv.string,
                 }
             ],
         ),
-        vol.Optional(ATTR_DATA): dict,
+        probatio.Optional(ATTR_DATA): dict,
     }
 )
 
 SERVICE_DISMISS_MESSAGE_SCHEMA = cv.make_entity_service_schema(
-    {vol.Optional(ATTR_TAG): cv.string}
+    {probatio.Optional(ATTR_TAG): cv.string}
 )
 
 

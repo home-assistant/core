@@ -5,8 +5,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import override
 
+import probatio
 from pydrawise import Controller, Zone
-import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -71,10 +71,12 @@ ZONE_BINARY_SENSORS: tuple[HydrawiseBinarySensorEntityDescription, ...] = (
 )
 
 SCHEMA_START_WATERING: VolDictType = {
-    vol.Optional("duration"): vol.All(vol.Coerce(int), vol.Range(min=0, max=1440)),
+    probatio.Optional("duration"): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=0, max=1440)
+    ),
 }
 SCHEMA_SUSPEND: VolDictType = {
-    vol.Required("until"): cv.datetime,
+    probatio.Required("until"): cv.datetime,
 }
 
 

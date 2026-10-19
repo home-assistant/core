@@ -3,7 +3,7 @@
 import logging
 from typing import Final
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.zone import condition as zone_condition
 from homeassistant.const import CONF_EVENT, CONF_PLATFORM, CONF_SOURCE, CONF_ZONE
@@ -33,10 +33,10 @@ DEFAULT_EVENT: Final = EVENT_ENTER
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_PLATFORM): "geo_location",
-        vol.Required(CONF_SOURCE): cv.string,
-        vol.Required(CONF_ZONE): entity_domain("zone"),
-        vol.Required(CONF_EVENT, default=DEFAULT_EVENT): vol.Any(
+        probatio.Required(CONF_PLATFORM): "geo_location",
+        probatio.Required(CONF_SOURCE): cv.string,
+        probatio.Required(CONF_ZONE): entity_domain("zone"),
+        probatio.Required(CONF_EVENT, default=DEFAULT_EVENT): probatio.Any(
             EVENT_ENTER, EVENT_LEAVE
         ),
     }

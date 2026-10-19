@@ -2,8 +2,8 @@
 
 from typing import override
 
+import probatio
 import romy
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
@@ -50,9 +50,9 @@ class RomyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): cv.string,
+                    probatio.Required(CONF_HOST): cv.string,
                 },
             ),
             errors=errors,
@@ -78,8 +78,12 @@ class RomyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="password",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_PASSWORD): vol.All(cv.string, vol.Length(8))},
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_PASSWORD): probatio.All(
+                        cv.string, probatio.Length(8)
+                    )
+                },
             ),
             errors=errors,
         )

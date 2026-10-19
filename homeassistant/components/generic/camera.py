@@ -7,7 +7,7 @@ import time
 from typing import Any, override
 
 import httpx
-import voluptuous as vol
+import probatio
 import yarl
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
@@ -143,8 +143,8 @@ class GenericCamera(Camera):
             return self._last_image
 
         try:
-            vol.Schema(vol.Url())(url)
-        except vol.Invalid as err:
+            probatio.Schema(probatio.Url())(url)
+        except probatio.Invalid as err:
             _LOGGER.warning("Invalid URL '%s': %s, returning last image", url, err)
             return self._last_image
 

@@ -5,8 +5,8 @@ from enum import StrEnum
 import logging
 from typing import override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -42,7 +42,7 @@ class SwitchDeviceClass(StrEnum):
     SWITCH = "switch"
 
 
-DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(SwitchDeviceClass))
+DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(SwitchDeviceClass))
 DEVICE_CLASSES = [cls.value for cls in SwitchDeviceClass]
 
 

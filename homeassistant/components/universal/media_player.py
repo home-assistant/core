@@ -3,7 +3,7 @@
 from copy import copy
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
@@ -106,19 +106,19 @@ CMD_SCHEMA = cv.schema_with_slug_keys(cv.SERVICE_SCHEMA)
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_CHILDREN, default=[]): cv.entity_ids,
-        vol.Optional(CONF_COMMANDS, default={}): CMD_SCHEMA,
-        vol.Optional(CONF_ATTRS, default={}): vol.Or(
+        probatio.Required(CONF_NAME): cv.string,
+        probatio.Optional(CONF_CHILDREN, default=[]): cv.entity_ids,
+        probatio.Optional(CONF_COMMANDS, default={}): CMD_SCHEMA,
+        probatio.Optional(CONF_ATTRS, default={}): probatio.Or(
             cv.ensure_list(ATTRS_SCHEMA), ATTRS_SCHEMA
         ),
-        vol.Optional(CONF_BROWSE_MEDIA_ENTITY): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_ACTIVE_CHILD_TEMPLATE): cv.template,
-        vol.Optional(CONF_STATE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_BROWSE_MEDIA_ENTITY): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_ACTIVE_CHILD_TEMPLATE): cv.template,
+        probatio.Optional(CONF_STATE_TEMPLATE): cv.template,
     },
-    extra=vol.REMOVE_EXTRA,
+    extra=probatio.REMOVE_EXTRA,
 )
 
 

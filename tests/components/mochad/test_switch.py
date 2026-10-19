@@ -2,11 +2,13 @@
 
 from unittest import mock
 
+from pymochad.exceptions import MochadException
 import pytest
 
 from homeassistant.components import switch
-from homeassistant.components.mochad import switch as mochad
+from homeassistant.components.mochad import DOMAIN, switch as mochad
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockEntityPlatform
@@ -59,3 +61,24 @@ async def test_turn_off(switch_mock) -> None:
     """Test turn_off."""
     switch_mock.turn_off()
     switch_mock.switch.send_cmd.assert_called_once_with("off")
+
+
+@pytest.mark.parametrize(
+    ("action", "translation_key"),
+    [("turn_on", "turn_on_failed"), ("turn_off", "turn_off_failed")],
+)
+async def test_action_raises_on_communication_error(
+    switch_mock: mochad.MochadSwitch, action: str, translation_key: str
+) -> None:
+    """Test that a failed action raises instead of being swallowed."""
+    with mock.patch(
+        "homeassistant.components.mochad.switch.MochadException",
+        MochadException,
+    ):
+        switch_mock.switch.send_cmd.side_effect = MochadException("boom")
+        with pytest.raises(HomeAssistantError) as exc_info:
+            getattr(switch_mock, action)()
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == translation_key
+    assert "error" in exc_info.value.translation_placeholders

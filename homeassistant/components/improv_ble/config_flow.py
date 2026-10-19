@@ -17,7 +17,7 @@ from improv_ble_client import (
     device_filter,
     errors as improv_ble_errors,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import (
@@ -36,10 +36,10 @@ from .const import DOMAIN, PROVISIONING_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_PROVISION_SCHEMA = vol.Schema(
+STEP_PROVISION_SCHEMA = probatio.Schema(
     {
-        vol.Required("ssid"): str,
-        vol.Optional("password"): str,
+        probatio.Required("ssid"): str,
+        probatio.Optional("password"): str,
     }
 )
 
@@ -100,9 +100,9 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_ADDRESS): vol.In(
+                probatio.Required(CONF_ADDRESS): probatio.In(
                     {
                         service_info.address: (
                             f"{service_info.name} ({service_info.address})"

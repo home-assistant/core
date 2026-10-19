@@ -20,7 +20,7 @@ from airos.exceptions import (
     AirOSTLSCompatibilityError,
 )
 from airos.helpers import DetectDeviceData, async_get_firmware_data
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -66,15 +66,17 @@ AirOSDeviceDetect = AirOS8 | AirOS6
 # Discovery duration in seconds, airOS announces every 20 seconds
 DISCOVER_INTERVAL: int = 30
 
-STEP_DISCOVERY_DATA_SCHEMA = vol.Schema(
+STEP_DISCOVERY_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(SECTION_ADDITIONAL_SETTINGS): section(
-            vol.Schema(
+        probatio.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(SECTION_ADDITIONAL_SETTINGS): section(
+            probatio.Schema(
                 {
-                    vol.Required(CONF_SSL, default=DEFAULT_SSL): bool,
-                    vol.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
+                    probatio.Required(CONF_SSL, default=DEFAULT_SSL): bool,
+                    probatio.Required(
+                        CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
+                    ): bool,
                 }
             ),
             {"collapsed": True},
@@ -83,7 +85,7 @@ STEP_DISCOVERY_DATA_SCHEMA = vol.Schema(
 )
 
 STEP_MANUAL_DATA_SCHEMA = STEP_DISCOVERY_DATA_SCHEMA.extend(
-    {vol.Required(CONF_HOST): str}
+    {probatio.Required(CONF_HOST): str}
 )
 
 
@@ -223,9 +225,9 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(CONF_PASSWORD): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
@@ -255,24 +257,24 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(CONF_PASSWORD): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
                         )
                     ),
-                    vol.Required(SECTION_ADDITIONAL_SETTINGS): section(
-                        vol.Schema(
+                    probatio.Required(SECTION_ADDITIONAL_SETTINGS): section(
+                        probatio.Schema(
                             {
-                                vol.Required(
+                                probatio.Required(
                                     CONF_SSL,
                                     default=current_data[SECTION_ADDITIONAL_SETTINGS][
                                         CONF_SSL
                                     ],
                                 ): bool,
-                                vol.Required(
+                                probatio.Required(
                                     CONF_VERIFY_SSL,
                                     default=current_data[SECTION_ADDITIONAL_SETTINGS][
                                         CONF_VERIFY_SSL
@@ -349,7 +351,9 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="select_device",
-            data_schema=vol.Schema({vol.Required(MAC_ADDRESS): vol.In(list_options)}),
+            data_schema=probatio.Schema(
+                {probatio.Required(MAC_ADDRESS): probatio.In(list_options)}
+            ),
         )
 
     async def async_step_configure_device(

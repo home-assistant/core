@@ -5,8 +5,8 @@ from datetime import timedelta
 import logging
 from typing import Any, override
 
+import probatio
 from pynetio import Netio
-import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.components.http import HomeAssistantView
@@ -56,11 +56,11 @@ URL_API_NETIO_EP = "/api/netio/{host}"
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_OUTLETS): {cv.string: cv.string},
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Optional(CONF_OUTLETS): {cv.string: cv.string},
     }
 )
 

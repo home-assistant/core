@@ -5,8 +5,8 @@ from collections.abc import Generator
 from dataclasses import asdict
 from unittest.mock import Mock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import stt
 from homeassistant.components.assist_pipeline import (
@@ -1021,7 +1021,7 @@ async def test_ask_question_invalid_sentences(
     sentence: str,
 ) -> None:
     """Test that invalid sentences raise an exception."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             "ask_question",

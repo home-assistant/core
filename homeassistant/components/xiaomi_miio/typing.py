@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, NamedTuple
 
 from miio import Device as MiioDevice
 from miio.gateway.gateway import Gateway
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -18,7 +18,7 @@ class ServiceMethodDetails(NamedTuple):
     """Details for SERVICE_TO_METHOD mapping."""
 
     method: str
-    schema: vol.Schema | None = None
+    schema: probatio.Schema | None = None
 
 
 @dataclass

@@ -1,7 +1,7 @@
 """Test the services for the Flo by Moen integration."""
 
+from probatio.error import MultipleInvalid
 import pytest
-from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.flo.const import DOMAIN
 from homeassistant.components.flo.switch import (

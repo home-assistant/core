@@ -3,10 +3,10 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+import probatio
 from pushover_complete import BadAPIRequestError, PushoverAPI
 from requests.exceptions import RequestException
 from urllib3.exceptions import HTTPError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
@@ -35,10 +35,10 @@ PLATFORMS = [Platform.NOTIFY]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-SERVICE_CANCEL_SCHEMA = vol.Schema(
+SERVICE_CANCEL_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_ENTRY_ID): cv.string,
-        vol.Optional(ATTR_TAG): cv.string,
+        probatio.Required(ATTR_ENTRY_ID): cv.string,
+        probatio.Optional(ATTR_TAG): cv.string,
     }
 )
 

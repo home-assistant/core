@@ -3,6 +3,7 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pyiskra.adapters import Modbus, RestAPI
 from pyiskra.exceptions import (
     DeviceConnectionError,
@@ -11,7 +12,6 @@ from pyiskra.exceptions import (
     NotAuthorised,
 )
 from pyiskra.helper import BasicInfo
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -37,10 +37,10 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PROTOCOL, default="rest_api"): SelectSelector(
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PROTOCOL, default="rest_api"): SelectSelector(
             SelectSelectorConfig(
                 options=["rest_api", "modbus_tcp"],
                 mode=SelectSelectorMode.LIST,
@@ -50,21 +50,21 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-STEP_AUTHENTICATION_DATA_SCHEMA = vol.Schema(
+STEP_AUTHENTICATION_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
 # CONF_ADDRESS validation is done later in code, as if
-# ranges are set in voluptuous it turns into a slider
-STEP_MODBUS_TCP_DATA_SCHEMA = vol.Schema(
+# ranges are set in probatio it turns into a slider
+STEP_MODBUS_TCP_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PORT, default=10001): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=65535)
+        probatio.Required(CONF_PORT, default=10001): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=0, max=65535)
         ),
-        vol.Required(CONF_ADDRESS, default=33): NumberSelector(
+        probatio.Required(CONF_ADDRESS, default=33): NumberSelector(
             NumberSelectorConfig(min=1, max=255, mode=NumberSelectorMode.BOX)
         ),
     }

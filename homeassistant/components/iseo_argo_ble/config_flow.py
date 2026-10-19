@@ -11,7 +11,7 @@ from iseo_argo_ble import (
     IseoConnectionError,
     is_iseo_advertisement,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
@@ -119,9 +119,9 @@ class IseoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): SelectSelector(
+                    probatio.Required(CONF_ADDRESS): SelectSelector(
                         SelectSelectorConfig(
                             options=[
                                 SelectOptionDict(

@@ -4,7 +4,7 @@ import contextlib
 import logging
 from zoneinfo import ZoneInfo
 
-import voluptuous as vol
+import probatio
 from yarl import URL
 from zha.application.const import BAUD_RATES, RadioType
 from zha.application.gateway import Gateway
@@ -62,23 +62,23 @@ from .repairs.wrong_silabs_firmware import (
     warn_on_wrong_silabs_firmware,
 )
 
-DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(CONF_TYPE): cv.string})
+DEVICE_CONFIG_SCHEMA_ENTRY = probatio.Schema({probatio.Optional(CONF_TYPE): cv.string})
 ZHA_CONFIG_SCHEMA = {
-    vol.Optional(CONF_BAUDRATE): cv.positive_int,
-    vol.Optional(CONF_DATABASE): cv.string,
-    vol.Optional(CONF_DEVICE_CONFIG, default={}): vol.Schema(
+    probatio.Optional(CONF_BAUDRATE): cv.positive_int,
+    probatio.Optional(CONF_DATABASE): cv.string,
+    probatio.Optional(CONF_DEVICE_CONFIG, default={}): probatio.Schema(
         {cv.string: DEVICE_CONFIG_SCHEMA_ENTRY}
     ),
-    vol.Optional(CONF_ENABLE_QUIRKS, default=True): cv.boolean,
-    vol.Optional(CONF_ZIGPY): dict,
-    vol.Optional(CONF_RADIO_TYPE): cv.enum(RadioType),
-    vol.Optional(CONF_USB_PATH): cv.string,
-    vol.Optional(CONF_CUSTOM_QUIRKS_PATH): cv.isdir,
+    probatio.Optional(CONF_ENABLE_QUIRKS, default=True): cv.boolean,
+    probatio.Optional(CONF_ZIGPY): dict,
+    probatio.Optional(CONF_RADIO_TYPE): cv.enum(RadioType),
+    probatio.Optional(CONF_USB_PATH): cv.string,
+    probatio.Optional(CONF_CUSTOM_QUIRKS_PATH): cv.isdir,
 }
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
-            vol.All(
+        DOMAIN: probatio.Schema(
+            probatio.All(
                 cv.deprecated(CONF_USB_PATH),
                 cv.deprecated(CONF_BAUDRATE),
                 cv.deprecated(CONF_RADIO_TYPE),
@@ -86,7 +86,7 @@ CONFIG_SCHEMA = vol.Schema(
             ),
         ),
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 PLATFORMS = (

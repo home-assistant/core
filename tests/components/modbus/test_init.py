@@ -18,10 +18,10 @@ import logging
 from unittest import mock
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 from pymodbus.exceptions import ModbusException
 from pymodbus.pdu import ExceptionResponse
 import pytest
-import voluptuous as vol
 
 from homeassistant import config as hass_config
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -156,10 +156,10 @@ async def test_fixedRegList_validator() -> None:
     ):
         assert isinstance(hvac_fixedsize_reglist_validator(value), list)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         hvac_fixedsize_reglist_validator([15, "ab", 17, 18, 19, 20, 21])
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         hvac_fixedsize_reglist_validator([15, 17])
 
 
@@ -171,13 +171,13 @@ async def test_register_int_list_validator() -> None:
     ):
         assert isinstance(register_int_list_validator(value), vtype)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         register_int_list_validator([15, 16])
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         register_int_list_validator(-15)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         register_int_list_validator(["aq"])
 
 
@@ -192,9 +192,9 @@ async def test_nan_validator() -> None:
     ):
         assert isinstance(nan_validator(value), value_type)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         nan_validator("x15")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         nan_validator("not a hex string")
 
 
@@ -251,7 +251,7 @@ async def test_ok_struct_validator(do_config) -> None:
     """Test struct validator."""
     try:
         struct_validator(do_config)
-    except vol.Invalid:
+    except probatio.Invalid:
         pytest.fail("struct_validator unexpected exception")
 
 
@@ -346,7 +346,7 @@ async def test_exception_struct_validator(do_config) -> None:
     """Test struct validator."""
     try:
         struct_validator(do_config)
-    except vol.Invalid:
+    except probatio.Invalid:
         return
     pytest.fail("struct_validator missing exception")
 
@@ -1623,12 +1623,12 @@ async def test_pb_service_write_no_slave(
 async def test_ensure_and_check_conflicting_scales_and_offsets(do_config) -> None:
     """Test ensure_and_check_conflicting_scales_and_offsets."""
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         ensure_and_check_conflicting_scales_and_offsets(do_config[0])
 
 
 async def test_not_zero_value() -> None:
     """Test not 0 validator validator."""
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         not_zero_value(0, "Value cannot be zero.")

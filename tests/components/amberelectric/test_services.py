@@ -2,8 +2,8 @@
 
 import re
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.amberelectric.const import DOMAIN
 from homeassistant.components.amberelectric.services import ATTR_CHANNEL_TYPE
@@ -123,7 +123,7 @@ async def test_incorrect_channel_type(
     await setup_integration(hass, general_channel_config_entry)
 
     with pytest.raises(
-        vol.error.MultipleInvalid,
+        probatio.error.MultipleInvalid,
         match=re.escape(
             "value must be one of ['controlled_load', 'feed_in',"
             " 'general'] at 'channel_type'"

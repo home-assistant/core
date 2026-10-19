@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 from earn_e_p1 import EarnEP1Device, EarnEP1Listener, discover, validate
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC
@@ -18,9 +18,9 @@ _LOGGER = logging.getLogger(__name__)
 DISCOVERY_TIMEOUT = 10
 VALIDATION_TIMEOUT = 65
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        probatio.Required(CONF_HOST): str,
     }
 )
 

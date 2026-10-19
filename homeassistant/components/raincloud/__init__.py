@@ -3,9 +3,9 @@
 from datetime import timedelta
 import logging
 
+import probatio
 from raincloudy.core import RainCloudy
 from requests.exceptions import ConnectTimeout, HTTPError
-import voluptuous as vol
 
 from homeassistant.components import persistent_notification
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
@@ -26,17 +26,19 @@ DOMAIN = "raincloud"
 
 SCAN_INTERVAL = timedelta(seconds=20)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
+                probatio.Required(CONF_USERNAME): cv.string,
+                probatio.Required(CONF_PASSWORD): cv.string,
+                probatio.Optional(
+                    CONF_SCAN_INTERVAL, default=SCAN_INTERVAL
+                ): cv.time_period,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

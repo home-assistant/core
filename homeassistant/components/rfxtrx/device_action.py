@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import InvalidDeviceAutomationConfig
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
@@ -31,8 +31,8 @@ ACTION_SELECTION = {
 
 ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): vol.In(ACTION_TYPES),
-        vol.Required(CONF_SUBTYPE): str,
+        probatio.Required(CONF_TYPE): probatio.In(ACTION_TYPES),
+        probatio.Required(CONF_SUBTYPE): str,
     }
 )
 

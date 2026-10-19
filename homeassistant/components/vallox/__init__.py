@@ -2,8 +2,8 @@
 
 import ipaddress
 
+import probatio
 from vallox_websocket_api import Vallox
-import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
@@ -14,19 +14,21 @@ from .const import DEFAULT_NAME, DOMAIN
 from .coordinator import ValloxConfigEntry, ValloxDataUpdateCoordinator
 from .services import async_setup_services
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
+CONFIG_SCHEMA = probatio.Schema(
+    probatio.All(
         cv.deprecated(DOMAIN),
         {
-            DOMAIN: vol.Schema(
+            DOMAIN: probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): vol.All(ipaddress.ip_address, cv.string),
-                    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                    probatio.Required(CONF_HOST): probatio.All(
+                        ipaddress.ip_address, cv.string
+                    ),
+                    probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                 }
             )
         },
     ),
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 PLATFORMS: list[str] = [

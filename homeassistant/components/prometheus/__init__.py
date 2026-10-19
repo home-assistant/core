@@ -8,9 +8,9 @@ import string
 from typing import Any, cast
 
 from aiohttp import web
+import probatio
 import prometheus_client
 from prometheus_client.metrics import MetricWrapperBase
-import voluptuous as vol
 
 from homeassistant import core as hacore
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
@@ -101,35 +101,37 @@ CONF_COMPONENT_CONFIG_GLOB = "component_config_glob"
 CONF_COMPONENT_CONFIG_DOMAIN = "component_config_domain"
 CONF_DEFAULT_METRIC = "default_metric"
 CONF_OVERRIDE_METRIC = "override_metric"
-COMPONENT_CONFIG_SCHEMA_ENTRY = vol.Schema(
-    {vol.Optional(CONF_OVERRIDE_METRIC): cv.string}
+COMPONENT_CONFIG_SCHEMA_ENTRY = probatio.Schema(
+    {probatio.Optional(CONF_OVERRIDE_METRIC): cv.string}
 )
 ALLOWED_METRIC_CHARS = set(string.ascii_letters + string.digits + "_:")
 
 DEFAULT_NAMESPACE = "homeassistant"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
+        DOMAIN: probatio.All(
             {
-                vol.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
-                vol.Optional(CONF_PROM_NAMESPACE, default=DEFAULT_NAMESPACE): cv.string,
-                vol.Optional(CONF_REQUIRES_AUTH, default=True): cv.boolean,
-                vol.Optional(CONF_DEFAULT_METRIC): cv.string,
-                vol.Optional(CONF_OVERRIDE_METRIC): cv.string,
-                vol.Optional(CONF_COMPONENT_CONFIG, default={}): vol.Schema(
+                probatio.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
+                probatio.Optional(
+                    CONF_PROM_NAMESPACE, default=DEFAULT_NAMESPACE
+                ): cv.string,
+                probatio.Optional(CONF_REQUIRES_AUTH, default=True): cv.boolean,
+                probatio.Optional(CONF_DEFAULT_METRIC): cv.string,
+                probatio.Optional(CONF_OVERRIDE_METRIC): cv.string,
+                probatio.Optional(CONF_COMPONENT_CONFIG, default={}): probatio.Schema(
                     {cv.entity_id: COMPONENT_CONFIG_SCHEMA_ENTRY}
                 ),
-                vol.Optional(CONF_COMPONENT_CONFIG_GLOB, default={}): vol.Schema(
-                    {cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}
-                ),
-                vol.Optional(CONF_COMPONENT_CONFIG_DOMAIN, default={}): vol.Schema(
-                    {cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}
-                ),
+                probatio.Optional(
+                    CONF_COMPONENT_CONFIG_GLOB, default={}
+                ): probatio.Schema({cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}),
+                probatio.Optional(
+                    CONF_COMPONENT_CONFIG_DOMAIN, default={}
+                ): probatio.Schema({cv.string: COMPONENT_CONFIG_SCHEMA_ENTRY}),
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

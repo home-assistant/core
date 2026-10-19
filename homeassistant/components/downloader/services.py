@@ -4,8 +4,8 @@ from http import HTTPStatus
 import os
 import re
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -165,13 +165,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_DOWNLOAD_FILE,
         download_file,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Optional(ATTR_FILENAME): cv.string,
-                vol.Optional(ATTR_SUBDIR): cv.string,
-                vol.Required(ATTR_URL): cv.url,
-                vol.Optional(ATTR_OVERWRITE, default=False): cv.boolean,
-                vol.Optional(ATTR_HEADERS, default=dict): vol.Schema(
+                probatio.Optional(ATTR_FILENAME): cv.string,
+                probatio.Optional(ATTR_SUBDIR): cv.string,
+                probatio.Required(ATTR_URL): cv.url,
+                probatio.Optional(ATTR_OVERWRITE, default=False): cv.boolean,
+                probatio.Optional(ATTR_HEADERS, default=dict): probatio.Schema(
                     {cv.string: cv.string}
                 ),
             }

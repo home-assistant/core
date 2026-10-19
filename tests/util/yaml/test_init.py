@@ -8,8 +8,8 @@ import pathlib
 from typing import Any
 from unittest.mock import Mock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 import yaml as pyyaml
 
 from homeassistant.config import YAML_CONFIG_FILE, load_yaml_config_file
@@ -529,20 +529,20 @@ def test_string_annotated() -> None:
 
 
 @pytest.mark.usefixtures("try_both_loaders")
-def test_string_used_as_vol_schema() -> None:
-    """Test the subclassed strings can be used in voluptuous schemas."""
+def test_string_used_as_probatio_schema() -> None:
+    """Test the subclassed strings can be used in probatio schemas."""
     conf = "wanted_data:\n  key_1: value_1\n  key_2: value_2\n"
     with io.StringIO(conf) as file:
         doc = yaml_loader.parse_yaml(file)
 
     # Test using the subclassed strings in a schema
-    schema = vol.Schema(
-        {vol.Required(key): value for key, value in doc["wanted_data"].items()},
+    schema = probatio.Schema(
+        {probatio.Required(key): value for key, value in doc["wanted_data"].items()},
     )
     # Test using the subclassed strings when validating a schema
     schema(doc["wanted_data"])
     schema({"key_1": "value_1", "key_2": "value_2"})
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         schema({"key_1": "value_2", "key_2": "value_1"})
 
 

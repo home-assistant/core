@@ -5,8 +5,8 @@ import json
 import logging
 from typing import Any, override
 
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
@@ -34,10 +34,12 @@ HEADERS = {"Content-Type": CONTENT_TYPE_JSON}
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_RECIPIENT, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_SENDER, default=DEFAULT_SENDER): cv.string,
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(CONF_RECIPIENT, default=[]): probatio.All(
+            cv.ensure_list, [cv.string]
+        ),
+        probatio.Optional(CONF_SENDER, default=DEFAULT_SENDER): cv.string,
     }
 )
 

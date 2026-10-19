@@ -5,7 +5,7 @@ from random import randint
 from typing import override
 
 from enturclient import EnturPublicTransportData
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -51,14 +51,14 @@ from .const import (
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_STOP_IDS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_EXPAND_PLATFORMS, default=True): cv.boolean,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
-        vol.Optional(CONF_WHITELIST_LINES, default=[]): cv.ensure_list,
-        vol.Optional(CONF_OMIT_NON_BOARDING, default=True): cv.boolean,
-        vol.Optional(CONF_NUMBER_OF_DEPARTURES, default=2): vol.All(
-            cv.positive_int, vol.Range(min=2, max=10)
+        probatio.Required(CONF_STOP_IDS): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(CONF_EXPAND_PLATFORMS, default=True): cv.boolean,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
+        probatio.Optional(CONF_WHITELIST_LINES, default=[]): cv.ensure_list,
+        probatio.Optional(CONF_OMIT_NON_BOARDING, default=True): cv.boolean,
+        probatio.Optional(CONF_NUMBER_OF_DEPARTURES, default=2): probatio.All(
+            cv.positive_int, probatio.Range(min=2, max=10)
         ),
     }
 )

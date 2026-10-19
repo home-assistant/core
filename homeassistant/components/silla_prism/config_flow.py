@@ -3,9 +3,9 @@
 import asyncio
 from typing import Any, override
 
+import probatio
 from pysillaprism import parse_hello, parse_message
 from pysillaprism.exceptions import PrismParseError
-import voluptuous as vol
 
 from homeassistant.components.mqtt import (
     ReceiveMessage,
@@ -44,7 +44,7 @@ class PrismConfigFlow(ConfigFlow, domain=DOMAIN):
             base_topic = user_input[CONF_BASE_TOPIC].strip().strip("/")
             try:
                 valid_publish_topic(base_topic)
-            except vol.Invalid:
+            except probatio.Invalid:
                 errors[CONF_BASE_TOPIC] = "invalid_base_topic"
             else:
                 await self.async_set_unique_id(base_topic)
@@ -63,9 +63,9 @@ class PrismConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_BASE_TOPIC, default=DEFAULT_BASE_TOPIC): str,
+                    probatio.Required(CONF_BASE_TOPIC, default=DEFAULT_BASE_TOPIC): str,
                 }
             ),
             errors=errors,

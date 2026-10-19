@@ -11,8 +11,8 @@ import logging
 from typing import override
 import zoneinfo
 
+import probatio
 from py_rejseplan.dataclasses.departure import Departure
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -52,11 +52,13 @@ METRO_TYPES = ["M"]
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_AUTHENTICATION): cv.string,
-        vol.Required(CONF_STOP_ID): vol.All(cv.ensure_list, [cv.positive_int]),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_DEPARTURE_TYPE, default=[]): vol.All(
-            cv.ensure_list, [vol.In([*BUS_TYPES, *TRAIN_TYPES, *METRO_TYPES])]
+        probatio.Required(CONF_AUTHENTICATION): cv.string,
+        probatio.Required(CONF_STOP_ID): probatio.All(
+            cv.ensure_list, [cv.positive_int]
+        ),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_DEPARTURE_TYPE, default=[]): probatio.All(
+            cv.ensure_list, [probatio.In([*BUS_TYPES, *TRAIN_TYPES, *METRO_TYPES])]
         ),
     }
 )

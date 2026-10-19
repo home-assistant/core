@@ -5,7 +5,7 @@ from ipaddress import ip_address
 from typing import TYPE_CHECKING, Any, override
 from urllib.parse import urlsplit
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -129,17 +129,17 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
                 return await self._create_entry()
 
         data = self.discovery_schema or {
-            vol.Required(CONF_PROTOCOL): vol.In(PROTOCOL_CHOICES),
-            vol.Required(CONF_HOST): str,
-            vol.Required(CONF_USERNAME): str,
-            vol.Required(CONF_PASSWORD): str,
-            vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+            probatio.Required(CONF_PROTOCOL): probatio.In(PROTOCOL_CHOICES),
+            probatio.Required(CONF_HOST): str,
+            probatio.Required(CONF_USERNAME): str,
+            probatio.Required(CONF_PASSWORD): str,
+            probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
         }
 
         return self.async_show_form(
             step_id="user",
             description_placeholders=self.config,
-            data_schema=vol.Schema(data),
+            data_schema=probatio.Schema(data),
             errors=errors,
         )
 
@@ -181,11 +181,13 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
         protocol = entry_data.get(CONF_PROTOCOL, "http")
         password = entry_data[CONF_PASSWORD] if keep_password else ""
         self.discovery_schema = {
-            vol.Required(CONF_PROTOCOL, default=protocol): vol.In(PROTOCOL_CHOICES),
-            vol.Required(CONF_HOST, default=entry_data[CONF_HOST]): str,
-            vol.Required(CONF_USERNAME, default=entry_data[CONF_USERNAME]): str,
-            vol.Required(CONF_PASSWORD, default=password): str,
-            vol.Required(CONF_PORT, default=entry_data[CONF_PORT]): int,
+            probatio.Required(CONF_PROTOCOL, default=protocol): probatio.In(
+                PROTOCOL_CHOICES
+            ),
+            probatio.Required(CONF_HOST, default=entry_data[CONF_HOST]): str,
+            probatio.Required(CONF_USERNAME, default=entry_data[CONF_USERNAME]): str,
+            probatio.Required(CONF_PASSWORD, default=password): str,
+            probatio.Required(CONF_PORT, default=entry_data[CONF_PORT]): int,
         }
 
         return await self.async_step_user()
@@ -260,13 +262,13 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
         self.discovery_schema = {
-            vol.Required(CONF_PROTOCOL): vol.In(PROTOCOL_CHOICES),
-            vol.Required(CONF_HOST, default=discovery_info[CONF_HOST]): TextSelector(
-                TextSelectorConfig(read_only=True)
-            ),
-            vol.Required(CONF_USERNAME): str,
-            vol.Required(CONF_PASSWORD): str,
-            vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+            probatio.Required(CONF_PROTOCOL): probatio.In(PROTOCOL_CHOICES),
+            probatio.Required(
+                CONF_HOST, default=discovery_info[CONF_HOST]
+            ): TextSelector(TextSelectorConfig(read_only=True)),
+            probatio.Required(CONF_USERNAME): str,
+            probatio.Required(CONF_PASSWORD): str,
+            probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
         }
 
         return await self.async_step_user()
@@ -319,10 +321,10 @@ class AxisOptionsFlowHandler(OptionsFlow):
             stream_profiles.extend(profile.name for profile in vapix.streaming_profiles)
 
             schema[
-                vol.Optional(
+                probatio.Optional(
                     CONF_STREAM_PROFILE, default=self.hub.config.stream_profile
                 )
-            ] = vol.In(stream_profiles)
+            ] = probatio.In(stream_profiles)
 
         # Video sources
 
@@ -339,9 +341,11 @@ class AxisOptionsFlowHandler(OptionsFlow):
                 video_sources[int(idx) + 1] = video_source.name
 
             schema[
-                vol.Optional(CONF_VIDEO_SOURCE, default=self.hub.config.video_source)
-            ] = vol.In(video_sources)
+                probatio.Optional(
+                    CONF_VIDEO_SOURCE, default=self.hub.config.video_source
+                )
+            ] = probatio.In(video_sources)
 
         return self.async_show_form(
-            step_id="configure_stream", data_schema=vol.Schema(schema)
+            step_id="configure_stream", data_schema=probatio.Schema(schema)
         )

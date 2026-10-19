@@ -16,7 +16,7 @@ from broadlink.exceptions import (
     ReadError,
     StorageError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.remote import (
@@ -60,32 +60,38 @@ FLAG_STORAGE_VERSION = 1
 CODE_SAVE_DELAY = 15
 FLAG_SAVE_DELAY = 15
 
-COMMAND_SCHEMA = vol.Schema(
+COMMAND_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_COMMAND): vol.All(
-            cv.ensure_list, [vol.All(cv.string, vol.Length(min=1))], vol.Length(min=1)
+        probatio.Required(ATTR_COMMAND): probatio.All(
+            cv.ensure_list,
+            [probatio.All(cv.string, probatio.Length(min=1))],
+            probatio.Length(min=1),
         ),
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 SERVICE_SEND_SCHEMA = COMMAND_SCHEMA.extend(
     {
-        vol.Optional(ATTR_DEVICE): vol.All(cv.string, vol.Length(min=1)),
-        vol.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS): vol.Coerce(float),
+        probatio.Optional(ATTR_DEVICE): probatio.All(cv.string, probatio.Length(min=1)),
+        probatio.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS): probatio.Coerce(
+            float
+        ),
     }
 )
 
 SERVICE_LEARN_SCHEMA = COMMAND_SCHEMA.extend(
     {
-        vol.Required(ATTR_DEVICE): vol.All(cv.string, vol.Length(min=1)),
-        vol.Optional(ATTR_COMMAND_TYPE, default=COMMAND_TYPE_IR): vol.In(COMMAND_TYPES),
-        vol.Optional(ATTR_ALTERNATIVE, default=False): cv.boolean,
+        probatio.Required(ATTR_DEVICE): probatio.All(cv.string, probatio.Length(min=1)),
+        probatio.Optional(ATTR_COMMAND_TYPE, default=COMMAND_TYPE_IR): probatio.In(
+            COMMAND_TYPES
+        ),
+        probatio.Optional(ATTR_ALTERNATIVE, default=False): cv.boolean,
     }
 )
 
 SERVICE_DELETE_SCHEMA = COMMAND_SCHEMA.extend(
-    {vol.Required(ATTR_DEVICE): vol.All(cv.string, vol.Length(min=1))}
+    {probatio.Required(ATTR_DEVICE): probatio.All(cv.string, probatio.Length(min=1))}
 )
 
 

@@ -4,12 +4,12 @@ from dataclasses import asdict
 import logging
 from typing import Any
 
+import probatio
 from systembridgeconnector.models.keyboard_key import KeyboardKey
 from systembridgeconnector.models.keyboard_text import KeyboardText
 from systembridgeconnector.models.modules.processes import Process
 from systembridgeconnector.models.open_path import OpenPath
 from systembridgeconnector.models.open_url import OpenUrl
-import voluptuous as vol
 
 from homeassistant.const import CONF_COMMAND, CONF_ID, CONF_NAME, CONF_PATH, CONF_URL
 from homeassistant.core import (
@@ -49,10 +49,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         "get_process_by_id",
         handle_get_process_by_id,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_BRIDGE): cv.string,
-                vol.Required(CONF_ID): cv.positive_int,
+                probatio.Required(CONF_BRIDGE): cv.string,
+                probatio.Required(CONF_ID): cv.positive_int,
             },
         ),
         supports_response=SupportsResponse.ONLY,
@@ -62,10 +62,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         "get_processes_by_name",
         handle_get_processes_by_name,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_BRIDGE): cv.string,
-                vol.Required(CONF_NAME): cv.string,
+                probatio.Required(CONF_BRIDGE): cv.string,
+                probatio.Required(CONF_NAME): cv.string,
             },
         ),
         supports_response=SupportsResponse.ONLY,
@@ -75,10 +75,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         "open_path",
         handle_open_path,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_BRIDGE): cv.string,
-                vol.Required(CONF_PATH): cv.string,
+                probatio.Required(CONF_BRIDGE): cv.string,
+                probatio.Required(CONF_PATH): cv.string,
             },
         ),
         supports_response=SupportsResponse.ONLY,
@@ -88,10 +88,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         "power_command",
         handle_power_command,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_BRIDGE): cv.string,
-                vol.Required(CONF_COMMAND): vol.In(POWER_COMMAND_MAP),
+                probatio.Required(CONF_BRIDGE): cv.string,
+                probatio.Required(CONF_COMMAND): probatio.In(POWER_COMMAND_MAP),
             },
         ),
         supports_response=SupportsResponse.ONLY,
@@ -101,10 +101,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         "open_url",
         handle_open_url,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_BRIDGE): cv.string,
-                vol.Required(CONF_URL): cv.string,
+                probatio.Required(CONF_BRIDGE): cv.string,
+                probatio.Required(CONF_URL): cv.string,
             },
         ),
         supports_response=SupportsResponse.ONLY,
@@ -114,10 +114,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         "send_keypress",
         handle_send_keypress,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_BRIDGE): cv.string,
-                vol.Required(CONF_KEY): cv.string,
+                probatio.Required(CONF_BRIDGE): cv.string,
+                probatio.Required(CONF_KEY): cv.string,
             },
         ),
         supports_response=SupportsResponse.ONLY,
@@ -130,10 +130,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         "send_text",
         handle_send_text,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(CONF_BRIDGE): cv.string,
-                vol.Required(CONF_TEXT): cv.string,
+                probatio.Required(CONF_BRIDGE): cv.string,
+                probatio.Required(CONF_TEXT): cv.string,
             },
         ),
         supports_response=SupportsResponse.ONLY,

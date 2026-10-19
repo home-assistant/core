@@ -1,6 +1,6 @@
 """Provides device automations for Cover."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import async_validate_entity_schema
 from homeassistant.const import (
@@ -29,22 +29,22 @@ POSITION_ACTION_TYPES = {"set_position", "set_tilt_position"}
 
 CMD_ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): vol.In(CMD_ACTION_TYPES),
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Required(CONF_TYPE): probatio.In(CMD_ACTION_TYPES),
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
     }
 )
 
 POSITION_ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): vol.In(POSITION_ACTION_TYPES),
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Optional("position", default=0): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=100)
+        probatio.Required(CONF_TYPE): probatio.In(POSITION_ACTION_TYPES),
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Optional("position", default=0): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=0, max=100)
         ),
     }
 )
 
-_ACTION_SCHEMA = vol.Any(CMD_ACTION_SCHEMA, POSITION_ACTION_SCHEMA)
+_ACTION_SCHEMA = probatio.Any(CMD_ACTION_SCHEMA, POSITION_ACTION_SCHEMA)
 
 
 async def async_validate_action_config(
@@ -96,16 +96,16 @@ async def async_get_actions(
 
 async def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List action capabilities."""
     if config[CONF_TYPE] not in POSITION_ACTION_TYPES:
         return {}
 
     return {
-        "extra_fields": vol.Schema(
+        "extra_fields": probatio.Schema(
             {
-                vol.Optional(ATTR_POSITION, default=0): vol.All(
-                    vol.Coerce(int), vol.Range(min=0, max=100)
+                probatio.Optional(ATTR_POSITION, default=0): probatio.All(
+                    probatio.Coerce(int), probatio.Range(min=0, max=100)
                 )
             }
         )

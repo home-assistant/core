@@ -16,6 +16,7 @@ from awesomeversion import (
     AwesomeVersionStrategy,
 )
 import ciso8601
+import probatio
 from sqlalchemy import inspect, text
 from sqlalchemy.engine import Result, Row
 from sqlalchemy.engine.interfaces import DBAPIConnection
@@ -23,7 +24,6 @@ from sqlalchemy.exc import OperationalError, SQLAlchemyError, StatementError
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
-import voluptuous as vol
 
 from homeassistant.const import WEEKDAYS
 from homeassistant.core import HomeAssistant, callback
@@ -943,25 +943,31 @@ def is_second_sunday(date_time: datetime) -> bool:
     return bool(second_sunday(date_time.year, date_time.month).day == date_time.day)
 
 
-PERIOD_SCHEMA = vol.Schema(
+PERIOD_SCHEMA = probatio.Schema(
     {
-        vol.Exclusive("calendar", "period"): vol.Schema(
+        probatio.Exclusive("calendar", "period"): probatio.Schema(
             {
-                vol.Required("period"): vol.Any("hour", "day", "week", "month", "year"),
-                vol.Optional("offset"): int,
-                vol.Optional("first_weekday"): vol.Any(*WEEKDAYS),
+                probatio.Required("period"): probatio.Any(
+                    "hour", "day", "week", "month", "year"
+                ),
+                probatio.Optional("offset"): int,
+                probatio.Optional("first_weekday"): probatio.Any(*WEEKDAYS),
             }
         ),
-        vol.Exclusive("fixed_period", "period"): vol.Schema(
+        probatio.Exclusive("fixed_period", "period"): probatio.Schema(
             {
-                vol.Optional("start_time"): vol.All(cv.datetime, dt_util.as_utc),
-                vol.Optional("end_time"): vol.All(cv.datetime, dt_util.as_utc),
+                probatio.Optional("start_time"): probatio.All(
+                    cv.datetime, dt_util.as_utc
+                ),
+                probatio.Optional("end_time"): probatio.All(
+                    cv.datetime, dt_util.as_utc
+                ),
             }
         ),
-        vol.Exclusive("rolling_window", "period"): vol.Schema(
+        probatio.Exclusive("rolling_window", "period"): probatio.Schema(
             {
-                vol.Required("duration"): cv.time_period_dict,
-                vol.Optional("offset"): cv.time_period_dict,
+                probatio.Required("duration"): cv.time_period_dict,
+                probatio.Optional("offset"): cv.time_period_dict,
             }
         ),
     }

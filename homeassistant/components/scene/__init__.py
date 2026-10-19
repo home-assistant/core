@@ -5,7 +5,7 @@ import importlib
 import logging
 from typing import Any, Final, final, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import ATTR_TRANSITION
 from homeassistant.config_entries import ConfigEntry
@@ -39,7 +39,7 @@ def _platform_validator(config: dict[str, Any]) -> dict[str, Any]:
             f"homeassistant.components.{platform_name}.scene"
         )
     except ImportError:
-        raise vol.Invalid("Invalid platform specified") from None
+        raise probatio.Invalid("Invalid platform specified") from None
 
     if not hasattr(platform, "PLATFORM_SCHEMA"):
         return config
@@ -47,13 +47,15 @@ def _platform_validator(config: dict[str, Any]) -> dict[str, Any]:
     return platform.PLATFORM_SCHEMA(config)  # type: ignore[no-any-return]
 
 
-PLATFORM_SCHEMA = vol.Schema(
-    vol.All(
+PLATFORM_SCHEMA = probatio.Schema(
+    probatio.All(
         _hass_domain_validator,
-        vol.Schema({vol.Required(CONF_PLATFORM): str}, extra=vol.ALLOW_EXTRA),
+        probatio.Schema(
+            {probatio.Required(CONF_PLATFORM): str}, extra=probatio.ALLOW_EXTRA
+        ),
         _platform_validator,
     ),
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 # mypy: disallow-any-generics
@@ -75,7 +77,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         SERVICE_TURN_ON,
-        {ATTR_TRANSITION: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=6553))},
+        {
+            ATTR_TRANSITION: probatio.All(
+                probatio.Coerce(float), probatio.Clamp(min=0, max=6553)
+            )
+        },
         "_async_activate",
     )
 

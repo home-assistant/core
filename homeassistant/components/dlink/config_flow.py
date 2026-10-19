@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pyW215.pyW215 import SmartPlug
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -60,14 +60,14 @@ class DLinkFlowHandler(ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
         return self.async_show_form(
             step_id="confirm_discovery",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_USERNAME,
                         default=user_input.get(CONF_USERNAME, DEFAULT_USERNAME),
                     ): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Required(CONF_USE_LEGACY_PROTOCOL): bool,
+                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_USE_LEGACY_PROTOCOL): bool,
                 }
             ),
             errors=errors,
@@ -96,17 +96,17 @@ class DLinkFlowHandler(ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_HOST, default=user_input.get(CONF_HOST, self.ip_address)
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_USERNAME,
                         default=user_input.get(CONF_USERNAME, DEFAULT_USERNAME),
                     ): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Required(CONF_USE_LEGACY_PROTOCOL): bool,
+                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_USE_LEGACY_PROTOCOL): bool,
                 }
             ),
             errors=errors,

@@ -4,7 +4,7 @@ from collections.abc import Callable, Coroutine
 from typing import TYPE_CHECKING, Any
 
 from aioguardian.errors import GuardianError
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -32,25 +32,25 @@ SERVICES = (
     SERVICE_NAME_UPGRADE_FIRMWARE,
 )
 
-SERVICE_BASE_SCHEMA = vol.Schema(
+SERVICE_BASE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
     }
 )
 
-SERVICE_PAIR_UNPAIR_SENSOR_SCHEMA = vol.Schema(
+SERVICE_PAIR_UNPAIR_SENSOR_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Required(CONF_UID): cv.string,
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(CONF_UID): cv.string,
     }
 )
 
-SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.Schema(
+SERVICE_UPGRADE_FIRMWARE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Optional(CONF_URL): cv.url,
-        vol.Optional(CONF_PORT): cv.port,
-        vol.Optional(CONF_FILENAME): cv.string,
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Optional(CONF_URL): cv.url,
+        probatio.Optional(CONF_PORT): cv.port,
+        probatio.Optional(CONF_FILENAME): cv.string,
     },
 )
 

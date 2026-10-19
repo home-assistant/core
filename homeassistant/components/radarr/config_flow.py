@@ -7,7 +7,7 @@ from aiohttp import ClientConnectorError
 from aiopyarr import exceptions
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.radarr_client import RadarrClient
-import voluptuous as vol
+import probatio
 from yarl import URL
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
@@ -86,13 +86,13 @@ class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_URL, default=user_input.get(CONF_URL, DEFAULT_URL)
                     ): str,
-                    vol.Optional(CONF_API_KEY): str,
-                    vol.Optional(
+                    probatio.Optional(CONF_API_KEY): str,
+                    probatio.Optional(
                         CONF_VERIFY_SSL,
                         default=user_input.get(CONF_VERIFY_SSL, False),
                     ): bool,

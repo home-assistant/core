@@ -4,9 +4,9 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 from pylitterbot import Account
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -16,10 +16,12 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+STEP_USER_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_USERNAME): str, probatio.Required(CONF_PASSWORD): str}
 )
-STEP_REAUTH_RECONFIGURE_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
+STEP_REAUTH_RECONFIGURE_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_PASSWORD): str}
+)
 
 
 class LitterRobotConfigFlow(ConfigFlow, domain=DOMAIN):

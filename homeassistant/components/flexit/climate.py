@@ -5,7 +5,7 @@ from typing import Any, override
 
 from flexit_modbus import MAX_TEMPERATURE, MIN_TEMPERATURE, FanMode, SystemActivity
 from modbus_connection import ModbusError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
@@ -48,9 +48,9 @@ DEFAULT_HUB = "modbus_hub"
 CONF_HUB = "hub"
 PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
-        vol.Required(CONF_SLAVE): vol.All(int, vol.Range(min=0, max=32)),
-        vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
+        probatio.Required(CONF_SLAVE): probatio.All(int, probatio.Range(min=0, max=32)),
+        probatio.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): cv.string,
     }
 )
 

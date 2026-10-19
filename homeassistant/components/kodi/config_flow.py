@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pykodi import CannotConnectError, InvalidAuthError, Kodi, get_kodi_connection
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -237,12 +237,12 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
     def _show_credentials_form(
         self, errors: dict[str, str] | None = None
     ) -> ConfigFlowResult:
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_USERNAME, description={"suggested_value": self._username}
                 ): str,
-                vol.Optional(
+                probatio.Optional(
                     CONF_PASSWORD, description={"suggested_value": self._password}
                 ): str,
             }
@@ -256,11 +256,11 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
     def _show_user_form(self, errors=None):
         default_port = self._port or DEFAULT_PORT
         default_ssl = self._ssl or DEFAULT_SSL
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_HOST, default=self._host): str,
-                vol.Required(CONF_PORT, default=default_port): int,
-                vol.Required(CONF_SSL, default=default_ssl): bool,
+                probatio.Required(CONF_HOST, default=self._host): str,
+                probatio.Required(CONF_PORT, default=default_port): int,
+                probatio.Required(CONF_SSL, default=default_ssl): bool,
             }
         )
 
@@ -271,9 +271,9 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def _show_ws_port_form(self, errors=None):
         suggestion = self._ws_port or DEFAULT_WS_PORT
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_WS_PORT, description={"suggested_value": suggestion}
                 ): int
             }

@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from typing import Any, override
 
 from bsblan import BSBLAN, BSBLANAuthError, BSBLANConfig, BSBLANError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
@@ -116,15 +116,15 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle getting credentials for discovered device."""
         if user_input is None:
-            data_schema = vol.Schema(
+            data_schema = probatio.Schema(
                 {
-                    vol.Optional(CONF_PASSKEY): str,
-                    vol.Optional(CONF_USERNAME): str,
-                    vol.Optional(CONF_PASSWORD): str,
+                    probatio.Optional(CONF_PASSKEY): str,
+                    probatio.Optional(CONF_USERNAME): str,
+                    probatio.Optional(CONF_PASSWORD): str,
                 }
             )
             if not self._auth_required:
-                data_schema = vol.Schema({})
+                data_schema = probatio.Schema({})
 
             return self.async_show_form(
                 step_id="discovery_confirm",
@@ -154,11 +154,11 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
             if is_discovery:
                 return self.async_show_form(
                     step_id="discovery_confirm",
-                    data_schema=vol.Schema(
+                    data_schema=probatio.Schema(
                         {
-                            vol.Optional(CONF_PASSKEY): str,
-                            vol.Optional(CONF_USERNAME): str,
-                            vol.Optional(CONF_PASSWORD): str,
+                            probatio.Optional(CONF_PASSKEY): str,
+                            probatio.Optional(CONF_USERNAME): str,
+                            probatio.Optional(CONF_PASSWORD): str,
                         }
                     ),
                     errors={"base": "invalid_auth"},
@@ -169,11 +169,11 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
             if is_discovery:
                 return self.async_show_form(
                     step_id="discovery_confirm",
-                    data_schema=vol.Schema(
+                    data_schema=probatio.Schema(
                         {
-                            vol.Optional(CONF_PASSKEY): str,
-                            vol.Optional(CONF_USERNAME): str,
-                            vol.Optional(CONF_PASSWORD): str,
+                            probatio.Optional(CONF_PASSKEY): str,
+                            probatio.Optional(CONF_USERNAME): str,
+                            probatio.Optional(CONF_PASSWORD): str,
                         }
                     ),
                     errors={"base": "cannot_connect"},
@@ -270,49 +270,49 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         return errors
 
     @callback
-    def _build_credentials_schema(self, defaults: Mapping[str, Any]) -> vol.Schema:
+    def _build_credentials_schema(self, defaults: Mapping[str, Any]) -> probatio.Schema:
         """Build schema for credentials-only forms (reauth)."""
-        return vol.Schema(
+        return probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_PASSKEY,
-                    default=defaults.get(CONF_PASSKEY) or vol.UNDEFINED,
+                    default=defaults.get(CONF_PASSKEY) or probatio.UNDEFINED,
                 ): str,
-                vol.Optional(
+                probatio.Optional(
                     CONF_USERNAME,
-                    default=defaults.get(CONF_USERNAME) or vol.UNDEFINED,
+                    default=defaults.get(CONF_USERNAME) or probatio.UNDEFINED,
                 ): str,
-                vol.Optional(
+                probatio.Optional(
                     CONF_PASSWORD,
-                    default=vol.UNDEFINED,
+                    default=probatio.UNDEFINED,
                 ): str,
             }
         )
 
     @callback
-    def _build_connection_schema(self, defaults: Mapping[str, Any]) -> vol.Schema:
+    def _build_connection_schema(self, defaults: Mapping[str, Any]) -> probatio.Schema:
         """Build schema for full connection forms (user and reconfigure)."""
-        return vol.Schema(
+        return probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     CONF_HOST,
-                    default=defaults.get(CONF_HOST, vol.UNDEFINED),
+                    default=defaults.get(CONF_HOST, probatio.UNDEFINED),
                 ): str,
-                vol.Optional(
+                probatio.Optional(
                     CONF_PORT,
                     default=defaults.get(CONF_PORT, DEFAULT_PORT),
                 ): int,
-                vol.Optional(
+                probatio.Optional(
                     CONF_PASSKEY,
-                    default=defaults.get(CONF_PASSKEY) or vol.UNDEFINED,
+                    default=defaults.get(CONF_PASSKEY) or probatio.UNDEFINED,
                 ): str,
-                vol.Optional(
+                probatio.Optional(
                     CONF_USERNAME,
-                    default=defaults.get(CONF_USERNAME) or vol.UNDEFINED,
+                    default=defaults.get(CONF_USERNAME) or probatio.UNDEFINED,
                 ): str,
-                vol.Optional(
+                probatio.Optional(
                     CONF_PASSWORD,
-                    default=vol.UNDEFINED,
+                    default=probatio.UNDEFINED,
                 ): str,
             }
         )

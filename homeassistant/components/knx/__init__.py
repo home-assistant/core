@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 from typing import Final
 
-import voluptuous as vol
+import probatio
 from xknx.exceptions import XKNXException
 
 from homeassistant.config_entries import ConfigEntry
@@ -70,10 +70,10 @@ _KNX_YAML_CONFIG: Final = "knx_yaml_config"
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
-            vol.Schema(
+        DOMAIN: probatio.All(
+            probatio.Schema(
                 {
                     **EventSchema.SCHEMA,
                     **ExposeSchema.platform_node(),
@@ -98,7 +98,7 @@ CONFIG_SCHEMA = vol.Schema(
             ),
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

@@ -3,8 +3,8 @@
 from typing import Any, override
 
 from oemthermostat import Thermostat
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
@@ -29,11 +29,11 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default="Thermostat"): cv.string,
-        vol.Optional(CONF_PORT, default=80): cv.port,
-        vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
-        vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_NAME, default="Thermostat"): cv.string,
+        probatio.Optional(CONF_PORT, default=80): cv.port,
+        probatio.Inclusive(CONF_USERNAME, "authentication"): cv.string,
+        probatio.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
     }
 )
 

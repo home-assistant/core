@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Any, cast, override
 import wave
 
 import hass_nabucasa
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import (
     conversation,
@@ -109,24 +109,26 @@ def validate_language(data: dict[str, Any]) -> Any:
     """Validate language settings."""
     for engine, language in ENGINE_LANGUAGE_PAIRS:
         if data[engine] is not None and data[language] is None:
-            raise vol.Invalid(f"Need language {language} for {engine} {data[engine]}")
+            raise probatio.Invalid(
+                f"Need language {language} for {engine} {data[engine]}"
+            )
     return data
 
 
 PIPELINE_FIELDS: VolDictType = {
-    vol.Required("conversation_engine"): str,
-    vol.Required("conversation_language"): str,
-    vol.Required("language"): str,
-    vol.Required("name"): str,
-    vol.Required("stt_engine"): vol.Any(str, None),
-    vol.Required("stt_language"): vol.Any(str, None),
-    vol.Required("tts_engine"): vol.Any(str, None),
-    vol.Required("tts_language"): vol.Any(str, None),
-    vol.Required("tts_voice"): vol.Any(str, None),
-    vol.Required("wake_word_entity"): vol.Any(str, None),
-    vol.Required("wake_word_id"): vol.Any(str, None),
-    vol.Optional("prefer_local_intents"): bool,
-    vol.Optional("acknowledge_media_id"): str,
+    probatio.Required("conversation_engine"): str,
+    probatio.Required("conversation_language"): str,
+    probatio.Required("language"): str,
+    probatio.Required("name"): str,
+    probatio.Required("stt_engine"): probatio.Any(str, None),
+    probatio.Required("stt_language"): probatio.Any(str, None),
+    probatio.Required("tts_engine"): probatio.Any(str, None),
+    probatio.Required("tts_language"): probatio.Any(str, None),
+    probatio.Required("tts_voice"): probatio.Any(str, None),
+    probatio.Required("wake_word_entity"): probatio.Any(str, None),
+    probatio.Required("wake_word_id"): probatio.Any(str, None),
+    probatio.Optional("prefer_local_intents"): bool,
+    probatio.Optional("acknowledge_media_id"): str,
 }
 
 STORED_PIPELINE_RUNS = 10
@@ -2021,8 +2023,8 @@ class PipelineStorageCollectionWebsocket(
             self.ws_get_item,
             websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
                 {
-                    vol.Required("type"): f"{self.api_prefix}/get",
-                    vol.Optional(self.item_id_key): str,
+                    probatio.Required("type"): f"{self.api_prefix}/get",
+                    probatio.Optional(self.item_id_key): str,
                 }
             ),
         )
@@ -2035,8 +2037,8 @@ class PipelineStorageCollectionWebsocket(
             ),
             websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
                 {
-                    vol.Required("type"): f"{self.api_prefix}/set_preferred",
-                    vol.Required(self.item_id_key): str,
+                    probatio.Required("type"): f"{self.api_prefix}/set_preferred",
+                    probatio.Required(self.item_id_key): str,
                 }
             ),
         )

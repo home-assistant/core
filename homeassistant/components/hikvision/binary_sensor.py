@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pyhik.constants import SENSOR_MAP
-import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
@@ -160,22 +160,22 @@ IGNORED_SENSOR_TYPES: frozenset[str] = frozenset({SENSOR_MAP["videoloss"]})
 
 _LOGGER = logging.getLogger(__name__)
 
-CUSTOMIZE_SCHEMA = vol.Schema(
+CUSTOMIZE_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_IGNORED, default=DEFAULT_IGNORED): cv.boolean,
-        vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): cv.positive_int,
+        probatio.Optional(CONF_IGNORED, default=DEFAULT_IGNORED): cv.boolean,
+        probatio.Optional(CONF_DELAY, default=DEFAULT_DELAY): cv.positive_int,
     }
 )
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_SSL, default=False): cv.boolean,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_CUSTOMIZE, default={}): vol.Schema(
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_SSL, default=False): cv.boolean,
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Optional(CONF_CUSTOMIZE, default={}): probatio.Schema(
             {cv.string: CUSTOMIZE_SCHEMA}
         ),
     }

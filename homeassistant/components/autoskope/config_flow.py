@@ -5,7 +5,7 @@ from typing import Any, override
 
 from autoskope_client.api import AutoskopeApi
 from autoskope_client.models import CannotConnect, InvalidAuth
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -19,16 +19,16 @@ from homeassistant.helpers.selector import (
 
 from .const import DEFAULT_HOST, DOMAIN, SECTION_ADDITIONAL_SETTINGS
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
-        vol.Required(SECTION_ADDITIONAL_SETTINGS): section(
-            vol.Schema(
+        probatio.Required(SECTION_ADDITIONAL_SETTINGS): section(
+            probatio.Schema(
                 {
-                    vol.Required(CONF_HOST, default=DEFAULT_HOST): TextSelector(
+                    probatio.Required(CONF_HOST, default=DEFAULT_HOST): TextSelector(
                         TextSelectorConfig(type=TextSelectorType.URL)
                     ),
                 }
@@ -38,9 +38,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
@@ -83,7 +83,7 @@ class AutoskopeConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 cv.url(host)
-            except vol.Invalid:
+            except probatio.Invalid:
                 errors["base"] = "invalid_url"
 
             if not errors:

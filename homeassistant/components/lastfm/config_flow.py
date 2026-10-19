@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pylast import LastFMNetwork, PyLastError, User, WSError
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigFlow,
@@ -27,10 +27,10 @@ PLACEHOLDERS = {
     "privacy_settings_url": "https://www.last.fm/settings/privacy",
 }
 
-CONFIG_SCHEMA: vol.Schema = vol.Schema(
+CONFIG_SCHEMA: probatio.Schema = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): str,
-        vol.Required(CONF_MAIN_USER): str,
+        probatio.Required(CONF_API_KEY): str,
+        probatio.Required(CONF_MAIN_USER): str,
     }
 )
 
@@ -157,9 +157,9 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders=PLACEHOLDERS,
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_USERS): SelectSelector(
+                        probatio.Required(CONF_USERS): SelectSelector(
                             SelectSelectorConfig(
                                 options=friends, custom_value=True, multiple=True
                             )
@@ -217,9 +217,9 @@ class LastFmOptionsFlowHandler(OptionsFlowWithReload):
             errors=errors,
             description_placeholders=PLACEHOLDERS,
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_USERS): SelectSelector(
+                        probatio.Required(CONF_USERS): SelectSelector(
                             SelectSelectorConfig(
                                 options=friends, custom_value=True, multiple=True
                             )

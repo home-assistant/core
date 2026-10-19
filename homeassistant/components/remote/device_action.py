@@ -1,6 +1,6 @@
 """Provides device actions for remotes."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import (
     async_validate_entity_schema,
@@ -14,7 +14,9 @@ from . import DOMAIN
 
 # mypy: disallow-any-generics
 
-_ACTION_SCHEMA = toggle_entity.ACTION_SCHEMA.extend({vol.Required(CONF_DOMAIN): DOMAIN})
+_ACTION_SCHEMA = toggle_entity.ACTION_SCHEMA.extend(
+    {probatio.Required(CONF_DOMAIN): DOMAIN}
+)
 
 
 async def async_validate_action_config(

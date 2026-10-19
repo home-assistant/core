@@ -8,8 +8,8 @@ import logging
 from math import ceil, floor
 from typing import TYPE_CHECKING, Any, Self, final, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
@@ -96,7 +96,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_SET_VALUE,
-        {vol.Required(ATTR_VALUE): vol.Coerce(float)},
+        {probatio.Required(ATTR_VALUE): probatio.Coerce(float)},
         async_set_value,
     )
 

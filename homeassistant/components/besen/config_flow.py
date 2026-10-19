@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, override
 from besen.client import BesenClient
 from besen.const import DEFAULT_PIN
 from besen.exceptions import CannotConnect, InvalidAuth, NoConnectablePath
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.components import bluetooth
@@ -40,27 +40,27 @@ PIN_SCHEMA = selector.TextSelector(
     )
 )
 
-PIN_ONLY_SCHEMA = vol.Schema(
+PIN_ONLY_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PIN, default=DEFAULT_PIN): PIN_SCHEMA,
+        probatio.Required(CONF_PIN, default=DEFAULT_PIN): PIN_SCHEMA,
     }
 )
 
 
 def _user_schema(
     discoveries: dict[str, BluetoothServiceInfoBleak],
-) -> vol.Schema:
+) -> probatio.Schema:
     """Return the user step schema."""
 
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_ADDRESS): vol.In(
+            probatio.Required(CONF_ADDRESS): probatio.In(
                 {
                     address: discovery.name or address
                     for address, discovery in discoveries.items()
                 }
             ),
-            vol.Required(CONF_PIN, default=DEFAULT_PIN): PIN_SCHEMA,
+            probatio.Required(CONF_PIN, default=DEFAULT_PIN): PIN_SCHEMA,
         }
     )
 

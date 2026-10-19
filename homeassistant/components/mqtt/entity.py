@@ -6,7 +6,7 @@ from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, Protocol, cast, final, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -160,7 +160,7 @@ PUBLISH_KWARGS = (CONF_MESSAGE_EXPIRY_INTERVAL,)
 
 @callback
 def async_handle_schema_error(
-    discovery_payload: MQTTDiscoveryPayload, err: vol.Invalid
+    discovery_payload: MQTTDiscoveryPayload, err: probatio.Invalid
 ) -> None:
     """Help handling schema errors on MQTT discovery messages."""
     discovery_topic: str = discovery_payload.discovery_data[ATTR_DISCOVERY_TOPIC]
@@ -212,7 +212,7 @@ def async_setup_non_entity_entry_helper(
     hass: HomeAssistant,
     domain: str,
     async_setup: _SetupNonEntityHelperCallbackProtocol,
-    discovery_schema: vol.Schema,
+    discovery_schema: probatio.Schema,
 ) -> None:
     """Set up automation or tag creation dynamically through MQTT discovery."""
     mqtt_data = hass.data[DATA_MQTT]
@@ -228,7 +228,7 @@ def async_setup_non_entity_entry_helper(
         try:
             config: ConfigType = discovery_schema(discovery_payload)
             await async_setup(config, discovery_data=discovery_payload.discovery_data)
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             _handle_discovery_failure(hass, discovery_payload)
             async_handle_schema_error(discovery_payload, err)
         except Exception:
@@ -342,7 +342,7 @@ def async_setup_entity_entry_helper(  # noqa: C901
                         )
                     ]
                 )
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             _handle_discovery_failure(hass, discovery_payload)
             async_handle_schema_error(discovery_payload, err)
         except Exception:
@@ -404,7 +404,7 @@ def async_setup_entity_entry_helper(  # noqa: C901
                     if TYPE_CHECKING:
                         assert entity_class is not None
                     subentry_entities.append(entity_class(hass, config, entry, None))
-                except vol.Invalid as exc:
+                except probatio.Invalid as exc:
                     _LOGGER.error(
                         "Schema violation occurred when trying to set up "
                         "entity from subentry %s %s %s: %s",
@@ -430,7 +430,7 @@ def async_setup_entity_entry_helper(  # noqa: C901
                     continue
 
                 entities.append(entity_class(hass, config, entry, None))
-            except vol.Invalid as exc:
+            except probatio.Invalid as exc:
                 error = str(exc)
                 config_file = getattr(yaml_config, "__config_file__", "?")
                 line = getattr(yaml_config, "__line__", "?")
@@ -1586,7 +1586,7 @@ class MqttEntity(
         """Handle updated discovery message."""
         try:
             config: DiscoveryInfoType = self.config_schema()(discovery_payload)
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             async_handle_schema_error(discovery_payload, err)
             return
         self._config = config

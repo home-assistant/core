@@ -7,7 +7,7 @@ import logging
 
 import aiohttp
 from aiohttp.hdrs import AUTHORIZATION, USER_AGENT
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_DOMAIN, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -42,18 +42,20 @@ NO_IP_ERRORS = {
 UPDATE_URL = "https://dynupdate.no-ip.com/nic/update"
 HA_USER_AGENT = f"{SERVER_SOFTWARE} {EMAIL}"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_DOMAIN): cv.string,
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+                probatio.Required(CONF_DOMAIN): cv.string,
+                probatio.Required(CONF_USERNAME): cv.string,
+                probatio.Required(CONF_PASSWORD): cv.string,
+                probatio.Optional(
+                    CONF_TIMEOUT, default=DEFAULT_TIMEOUT
+                ): cv.positive_int,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

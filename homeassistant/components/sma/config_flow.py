@@ -5,13 +5,13 @@ import dataclasses
 import logging
 from typing import Any, override
 
+import probatio
 from pysma import (
     SmaAuthenticationException,
     SmaConnectionException,
     SmaReadException,
     SMAWebConnect,
 )
-import voluptuous as vol
 from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -39,15 +39,15 @@ from .const import CONF_GROUP, DOMAIN, GROUPS
 _LOGGER = logging.getLogger(__name__)
 
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): TextSelector(
+        probatio.Required(CONF_HOST): TextSelector(
             TextSelectorConfig(type=TextSelectorType.URL)
         ),
-        vol.Optional(CONF_SSL, default=False): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-        vol.Optional(CONF_GROUP, default=GROUPS[0]): vol.In(GROUPS),
-        vol.Required(CONF_PASSWORD): TextSelector(
+        probatio.Optional(CONF_SSL, default=False): cv.boolean,
+        probatio.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        probatio.Optional(CONF_GROUP, default=GROUPS[0]): probatio.In(GROUPS),
+        probatio.Required(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -57,12 +57,12 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-STEP_DISCOVERY_CONFIRM_DATA_SCHEMA = vol.Schema(
+STEP_DISCOVERY_CONFIRM_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_SSL, default=False): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-        vol.Optional(CONF_GROUP, default=GROUPS[0]): vol.In(GROUPS),
-        vol.Required(CONF_PASSWORD): TextSelector(
+        probatio.Optional(CONF_SSL, default=False): cv.boolean,
+        probatio.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        probatio.Optional(CONF_GROUP, default=GROUPS[0]): probatio.In(GROUPS),
+        probatio.Required(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -108,11 +108,11 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize."""
         self._data: dict[str, Any] = {
-            CONF_HOST: vol.UNDEFINED,
+            CONF_HOST: probatio.UNDEFINED,
             CONF_SSL: False,
             CONF_VERIFY_SSL: True,
             CONF_GROUP: GROUPS[0],
-            CONF_PASSWORD: vol.UNDEFINED,
+            CONF_PASSWORD: probatio.UNDEFINED,
         }
         self._discovery_data: dict[str, Any] = {}
 
@@ -243,9 +243,9 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(CONF_PASSWORD): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",

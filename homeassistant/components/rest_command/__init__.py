@@ -8,7 +8,7 @@ from typing import Any
 import aiohttp
 from aiohttp import hdrs
 from multidict import CIMultiDict
-import voluptuous as vol
+import probatio
 from yarl import URL
 
 from homeassistant.const import (
@@ -53,32 +53,32 @@ CONF_CONTENT_TYPE = "content_type"
 CONF_INSECURE_CIPHER = "insecure_cipher"
 CONF_SKIP_URL_ENCODING = "skip_url_encoding"
 
-COMMAND_SCHEMA = vol.Schema(
+COMMAND_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL): cv.template,
-        vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.All(
-            vol.Lower, vol.In(SUPPORT_REST_METHODS)
+        probatio.Required(CONF_URL): cv.template,
+        probatio.Optional(CONF_METHOD, default=DEFAULT_METHOD): probatio.All(
+            probatio.Lower, probatio.In(SUPPORT_REST_METHODS)
         ),
-        vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.template}),
-        vol.Optional(CONF_AUTHENTICATION): vol.In(
+        probatio.Optional(CONF_HEADERS): probatio.Schema({cv.string: cv.template}),
+        probatio.Optional(CONF_AUTHENTICATION): probatio.In(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
         # A colon cannot be encoded into basic credentials, RFC 7617#section-2
-        vol.Inclusive(CONF_USERNAME, "authentication"): vol.All(
-            cv.string, vol.Match(r"^[^:]*$")
+        probatio.Inclusive(CONF_USERNAME, "authentication"): probatio.All(
+            cv.string, probatio.Match(r"^[^:]*$")
         ),
-        vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
-        vol.Optional(CONF_PAYLOAD): cv.template,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
-        vol.Optional(CONF_CONTENT_TYPE): cv.string,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-        vol.Optional(CONF_INSECURE_CIPHER, default=False): cv.boolean,
-        vol.Optional(CONF_SKIP_URL_ENCODING, default=False): cv.boolean,
+        probatio.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
+        probatio.Optional(CONF_PAYLOAD): cv.template,
+        probatio.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): probatio.Coerce(int),
+        probatio.Optional(CONF_CONTENT_TYPE): cv.string,
+        probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        probatio.Optional(CONF_INSECURE_CIPHER, default=False): cv.boolean,
+        probatio.Optional(CONF_SKIP_URL_ENCODING, default=False): cv.boolean,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: cv.schema_with_slug_keys(COMMAND_SCHEMA)}, extra=vol.ALLOW_EXTRA
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: cv.schema_with_slug_keys(COMMAND_SCHEMA)}, extra=probatio.ALLOW_EXTRA
 )
 
 
@@ -284,7 +284,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async_register_rest_command(name, command_config)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({})
+        DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=probatio.Schema({})
     )
 
     return True

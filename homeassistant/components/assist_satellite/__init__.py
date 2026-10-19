@@ -14,7 +14,7 @@ from hassil.util import (
     PUNCTUATION_START,
     PUNCTUATION_START_WORD,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 from homeassistant.components.http import StaticPathConfig
@@ -71,13 +71,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         "announce",
-        vol.All(
+        probatio.All(
             cv.make_entity_service_schema(
                 {
-                    vol.Optional("message"): str,
-                    vol.Optional("media_id"): _media_id_validator,
-                    vol.Optional("preannounce", default=True): bool,
-                    vol.Optional("preannounce_media_id"): _media_id_validator,
+                    probatio.Optional("message"): str,
+                    probatio.Optional("media_id"): _media_id_validator,
+                    probatio.Optional("preannounce", default=True): bool,
+                    probatio.Optional("preannounce_media_id"): _media_id_validator,
                 }
             ),
             cv.has_at_least_one_key("message", "media_id"),
@@ -88,14 +88,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         "start_conversation",
-        vol.All(
+        probatio.All(
             cv.make_entity_service_schema(
                 {
-                    vol.Optional("start_message"): str,
-                    vol.Optional("start_media_id"): _media_id_validator,
-                    vol.Optional("preannounce", default=True): bool,
-                    vol.Optional("preannounce_media_id"): _media_id_validator,
-                    vol.Optional("extra_system_prompt"): str,
+                    probatio.Optional("start_message"): str,
+                    probatio.Optional("start_media_id"): _media_id_validator,
+                    probatio.Optional("preannounce", default=True): bool,
+                    probatio.Optional("preannounce_media_id"): _media_id_validator,
+                    probatio.Optional("extra_system_prompt"): str,
                 }
             ),
             cv.has_at_least_one_key("start_message", "start_media_id"),
@@ -154,17 +154,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         domain=DOMAIN,
         service="ask_question",
         service_func=handle_ask_question,
-        schema=vol.All(
+        schema=probatio.All(
             {
-                vol.Required(ATTR_ENTITY_ID): cv.entity_domain(DOMAIN),
-                vol.Optional("question"): str,
-                vol.Optional("question_media_id"): _media_id_validator,
-                vol.Optional("preannounce", default=True): bool,
-                vol.Optional("preannounce_media_id"): _media_id_validator,
-                vol.Optional("answers"): [
+                probatio.Required(ATTR_ENTITY_ID): cv.entity_domain(DOMAIN),
+                probatio.Optional("question"): str,
+                probatio.Optional("question_media_id"): _media_id_validator,
+                probatio.Optional("preannounce", default=True): bool,
+                probatio.Optional("preannounce_media_id"): _media_id_validator,
+                probatio.Optional("answers"): [
                     {
-                        vol.Required("id"): str,
-                        vol.Required("sentences"): vol.All(
+                        probatio.Required("id"): str,
+                        probatio.Required("sentences"): probatio.All(
                             cv.ensure_list,
                             [cv.string],
                             has_one_non_empty_item,
@@ -215,7 +215,7 @@ def has_no_punctuation(value: list[str]) -> list[str]:
             or PUNCTUATION_START_WORD.search(sentence)
             or PUNCTUATION_END_WORD.search(sentence)
         ):
-            raise vol.Invalid("sentence should not contain punctuation")
+            raise probatio.Invalid("sentence should not contain punctuation")
 
     return value
 
@@ -231,31 +231,31 @@ def is_valid_sentence(value: list[str]) -> list[str]:
         try:
             parse_sentence(sentence)
         except ParseError as err:
-            raise vol.Invalid(f"invalid sentence: {err}") from err
+            raise probatio.Invalid(f"invalid sentence: {err}") from err
     return value
 
 
 def has_one_non_empty_item(value: list[str]) -> list[str]:
     """Validate result has at least one item."""
     if len(value) < 1:
-        raise vol.Invalid("at least one sentence is required")
+        raise probatio.Invalid("at least one sentence is required")
 
     for sentence in value:
         if not sentence:
-            raise vol.Invalid("sentences cannot be empty")
+            raise probatio.Invalid("sentences cannot be empty")
 
     return value
 
 
 # Validator for media_id fields that accepts both string and media selector format
-_media_id_validator = vol.Any(
+_media_id_validator = probatio.Any(
     cv.string,  # Plain string format
-    vol.All(
-        vol.Schema(
+    probatio.All(
+        probatio.Schema(
             {
-                vol.Required("media_content_id"): cv.string,
-                vol.Required("media_content_type"): cv.string,
-                vol.Remove("metadata"): dict,  # Ignore metadata if present
+                probatio.Required("media_content_id"): cv.string,
+                probatio.Required("media_content_type"): cv.string,
+                probatio.Remove("metadata"): dict,  # Ignore metadata if present
             }
         ),
         # Extract media_content_id from media selector format

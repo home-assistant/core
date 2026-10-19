@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 from motionblinds import MotionDiscovery, MotionGateway
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigFlow,
@@ -29,9 +29,9 @@ from .gateway import ConnectMotionGateway
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_HOST): str,
+        probatio.Optional(CONF_HOST): str,
     }
 )
 
@@ -47,9 +47,9 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        settings_schema = vol.Schema(
+        settings_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_WAIT_FOR_PUSH,
                     default=self.config_entry.options.get(
                         CONF_WAIT_FOR_PUSH, DEFAULT_WAIT_FOR_PUSH
@@ -72,7 +72,7 @@ class MotionBlindsFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the Motionblinds flow."""
         self._host: str | None = None
         self._ips: list[str] = []
-        self._config_settings: vol.Schema | None = None
+        self._config_settings: probatio.Schema | None = None
 
     @staticmethod
     @callback
@@ -150,7 +150,9 @@ class MotionBlindsFlowHandler(ConfigFlow, domain=DOMAIN):
             self._host = user_input["select_ip"]
             return await self.async_step_connect()
 
-        select_schema = vol.Schema({vol.Required("select_ip"): vol.In(self._ips)})
+        select_schema = probatio.Schema(
+            {probatio.Required("select_ip"): probatio.In(self._ips)}
+        )
 
         return self.async_show_form(step_id="select", data_schema=select_schema)
 
@@ -196,9 +198,11 @@ class MotionBlindsFlowHandler(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        self._config_settings = vol.Schema(
+        self._config_settings = probatio.Schema(
             {
-                vol.Required(CONF_API_KEY): vol.All(str, vol.Length(min=16, max=16)),
+                probatio.Required(CONF_API_KEY): probatio.All(
+                    str, probatio.Length(min=16, max=16)
+                ),
             }
         )
 

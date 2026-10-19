@@ -9,8 +9,8 @@ from tempfile import TemporaryDirectory
 from typing import Any
 from unittest.mock import Mock, PropertyMock, patch
 
+from probatio import Invalid, MultipleInvalid
 import pytest
-from voluptuous import Invalid, MultipleInvalid
 from webrtc_models import RTCConfiguration, RTCIceServer
 
 from homeassistant.const import (

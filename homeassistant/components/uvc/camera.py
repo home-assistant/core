@@ -5,10 +5,10 @@ import logging
 import re
 from typing import Any, cast, override
 
+import probatio
 from uvcclient import camera as uvc_camera, nvr
 from uvcclient.camera import UVCCameraClient
 from uvcclient.nvr import UVCRemote
-import voluptuous as vol
 
 from homeassistant.components.camera import (
     PLATFORM_SCHEMA as CAMERA_PLATFORM_SCHEMA,
@@ -34,11 +34,11 @@ DEFAULT_SSL = False
 
 PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_NVR): cv.string,
-        vol.Required(CONF_KEY): cv.string,
-        vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        probatio.Required(CONF_NVR): cv.string,
+        probatio.Required(CONF_KEY): cv.string,
+        probatio.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
     }
 )
 

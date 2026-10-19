@@ -17,6 +17,7 @@ from aiopowerwall import (
 from bleak.exc import BleakError
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
+import probatio
 import pytest
 from tesla_fleet_api.const import AuthorizedClientState
 from tesla_fleet_api.exceptions import (
@@ -33,7 +34,6 @@ from tesla_fleet_api.exceptions import (
 from tesla_fleet_api.tesla import VehicleRouter
 from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
 from tesla_fleet_api.teslemetry.energysite import AuthorizedClient, AuthorizedClients
-import voluptuous as vol
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -1598,7 +1598,7 @@ def _credentials_host_is_blank(result: SubentryFlowResult) -> bool:
     """Return whether the CONF_HOST field carries no schema default (left blank)."""
     for key in result["data_schema"].schema:
         if key == CONF_HOST:
-            return key.default is vol.UNDEFINED
+            return key.default is probatio.UNDEFINED
     raise AssertionError("CONF_HOST field not found in credentials schema")
 
 

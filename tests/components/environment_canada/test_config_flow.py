@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import xml.etree.ElementTree as ET
 
 import aiohttp
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.environment_canada.const import (
@@ -254,7 +254,7 @@ async def _setup_with_options(
     return ecmap
 
 
-def _section_field_names(data_schema: vol.Schema, section_key: str) -> set[str]:
+def _section_field_names(data_schema: probatio.Schema, section_key: str) -> set[str]:
     """Return the field names nested inside a given section of a data schema."""
     for key, value in data_schema.schema.items():
         if str(key) == section_key:
@@ -262,7 +262,7 @@ def _section_field_names(data_schema: vol.Schema, section_key: str) -> set[str]:
     raise KeyError(section_key)
 
 
-def _section_defaults(data_schema: vol.Schema, section_key: str) -> dict[str, Any]:
+def _section_defaults(data_schema: probatio.Schema, section_key: str) -> dict[str, Any]:
     """Return the default values nested inside a given section of a data schema."""
     for key, value in data_schema.schema.items():
         if str(key) == section_key:

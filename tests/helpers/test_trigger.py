@@ -10,9 +10,9 @@ from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
 from pytest_unordered import unordered
-import voluptuous as vol
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
@@ -187,7 +187,7 @@ async def _call_in_order(funcs: list[Callable[[], Any]], *, reverse: bool) -> li
 
 async def test_bad_trigger_platform(hass: HomeAssistant) -> None:
     """Test bad trigger platform."""
-    with pytest.raises(vol.Invalid) as ex:
+    with pytest.raises(probatio.Invalid) as ex:
         await async_validate_trigger_config(hass, [{"platform": "not_a_platform"}])
     assert "Invalid trigger 'not_a_platform' specified" in str(ex)
 
@@ -913,7 +913,7 @@ async def test_platform_multiple_triggers(
     assert await async_validate_trigger_config(hass, config_1) == config_1
     assert await async_validate_trigger_config(hass, config_2) == config_2
     with pytest.raises(
-        vol.Invalid, match="Invalid trigger 'test.unknown_trig' specified"
+        probatio.Invalid, match="Invalid trigger 'test.unknown_trig' specified"
     ):
         await async_validate_trigger_config(hass, config_3)
 
@@ -962,8 +962,8 @@ async def test_platform_migrate_trigger(hass: HomeAssistant) -> None:
     """Test a trigger platform with a migration."""
 
     OPTIONS_SCHEMA_DICT = {
-        vol.Required("option_1"): str,
-        vol.Optional("option_2"): int,
+        probatio.Required("option_1"): str,
+        probatio.Optional("option_2"): int,
     }
 
     class MockTrigger(Trigger):
@@ -1015,8 +1015,8 @@ async def test_platform_backwards_compatibility_for_new_style_configs(
 
         TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
             {
-                vol.Required("option_1"): str,
-                vol.Optional("option_2"): int,
+                probatio.Required("option_1"): str,
+                probatio.Optional("option_2"): int,
             }
         )
 
@@ -1529,12 +1529,12 @@ async def test_subscribe_triggers_no_triggers(
         (
             # Missing threshold type
             {},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             # Invalid threshold type
             {"threshold": {"type": "invalid_type"}},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             # Must be valid entity id
@@ -1545,7 +1545,7 @@ async def test_subscribe_triggers_no_triggers(
                     "value_max": {"entity": "dog"},
                 }
             },
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             # Above must be smaller than below
@@ -1556,7 +1556,7 @@ async def test_subscribe_triggers_no_triggers(
                     "value_max": {"number": 10},
                 }
             },
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
     ],
 )
@@ -1685,21 +1685,21 @@ def _make_with_unit_changed_trigger_class() -> type[
         # Invalid: missing threshold type
         (
             {},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         # Invalid: invalid threshold type
         (
             {"threshold": {"type": "invalid_type"}},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         # Invalid: numerical limit without unit
         (
             {"threshold": {"type": "above", "value": {"number": 10}}},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             {"threshold": {"type": "below", "value": {"number": 90}}},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             {
@@ -1709,7 +1709,7 @@ def _make_with_unit_changed_trigger_class() -> type[
                     "value_max": {"number": 90},
                 }
             },
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         # Invalid: one numerical limit without unit (other is entity)
         (
@@ -1720,7 +1720,7 @@ def _make_with_unit_changed_trigger_class() -> type[
                     "value_max": {"entity": "sensor.test"},
                 }
             },
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             {
@@ -1730,7 +1730,7 @@ def _make_with_unit_changed_trigger_class() -> type[
                     "value_max": {"number": 90},
                 }
             },
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         # Invalid: invalid unit value
         (
@@ -1740,7 +1740,7 @@ def _make_with_unit_changed_trigger_class() -> type[
                     "value": {"number": 10, "unit_of_measurement": "invalid_unit"},
                 }
             },
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         # Invalid: Must use valid entity id
         (
@@ -1751,7 +1751,7 @@ def _make_with_unit_changed_trigger_class() -> type[
                     "value_max": {"entity": "dog"},
                 }
             },
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         # Invalid: above must be smaller than below
         (
@@ -1762,7 +1762,7 @@ def _make_with_unit_changed_trigger_class() -> type[
                     "value_max": {"number": 10, "unit_of_measurement": "°F"},
                 }
             },
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
     ],
 )
@@ -3020,77 +3020,77 @@ async def test_numerical_trigger_reports_single_reason_for_between(
         (
             # Missing threshold type
             {},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             # Missing threshold type
             {"threshold": {}},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             # Invalid threshold type
             {"threshold": {"type": "cat"}},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             # Must provide lower limit for ABOVE
             {"threshold": {"type": "above"}},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             # Must provide lower limit for ABOVE
             {"threshold": {"type": "above", "value_min": {"number": 10}}},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             # Must provide lower limit for ABOVE
             {"threshold": {"type": "above", "value_max": {"number": 90}}},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             # Must provide upper limit for BELOW
             {"threshold": {"type": "below"}},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             # Must provide upper limit for BELOW
             {"threshold": {"type": "below", "value_min": {"number": 10}}},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             # Must provide upper limit for BELOW
             {"threshold": {"type": "below", "value_max": {"number": 10}}},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             # Must provide upper and lower limits for BETWEEN
             {"threshold": {"type": "between"}},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             # Must provide upper and lower limits for BETWEEN
             {"threshold": {"type": "between", "value_min": {"number": 10}}},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             # Must provide upper and lower limits for BETWEEN
             {"threshold": {"type": "between", "value_max": {"number": 90}}},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             # Must provide upper and lower limits for OUTSIDE
             {"threshold": {"type": "outside"}},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             # Must provide upper and lower limits for OUTSIDE
             {"threshold": {"type": "outside", "value_min": {"number": 10}}},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             # Must provide upper and lower limits for OUTSIDE
             {"threshold": {"type": "outside", "value_max": {"number": 90}}},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             # Must be valid entity id
@@ -3101,7 +3101,7 @@ async def test_numerical_trigger_reports_single_reason_for_between(
                     "value_max": {"entity": "dog"},
                 }
             },
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             # Min must be smaller than max
@@ -3112,7 +3112,7 @@ async def test_numerical_trigger_reports_single_reason_for_between(
                     "value_max": {"number": 10},
                 }
             },
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
     ],
 )
@@ -3228,7 +3228,7 @@ def _make_with_unit_crossed_threshold_trigger_class() -> type[
         # Invalid: numerical limit without unit
         (
             {"threshold": {"type": "above", "value": {"number": 10}}},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             {
@@ -3238,7 +3238,7 @@ def _make_with_unit_crossed_threshold_trigger_class() -> type[
                     "value_max": {"number": 90},
                 }
             },
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         # Invalid: one numerical limit without unit (other is entity)
         (
@@ -3249,7 +3249,7 @@ def _make_with_unit_crossed_threshold_trigger_class() -> type[
                     "value_max": {"entity": "sensor.test"},
                 }
             },
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         # Invalid: invalid unit value
         (
@@ -3259,17 +3259,17 @@ def _make_with_unit_crossed_threshold_trigger_class() -> type[
                     "value": {"number": 10, "unit_of_measurement": "invalid_unit"},
                 }
             },
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         # Invalid: missing threshold type
         (
             {},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         # Invalid: missing threshold type
         (
             {"threshold": {}},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
     ],
 )
@@ -6091,7 +6091,9 @@ async def mock_device_automation(hass: HomeAssistant) -> str:
         hass,
         "test.device_trigger",
         Mock(
-            TRIGGER_SCHEMA=DEVICE_TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
+            TRIGGER_SCHEMA=DEVICE_TRIGGER_BASE_SCHEMA.extend(
+                {}, extra=probatio.ALLOW_EXTRA
+            )
         ),
     )
     config_entry = MockConfigEntry(domain="test")
@@ -6273,5 +6275,5 @@ def test_entity_state_trigger_schema_behavior_invalid(behavior: str) -> None:
         CONF_TARGET: {CONF_ENTITY_ID: "test.entity"},
         CONF_OPTIONS: {ATTR_BEHAVIOR: behavior},
     }
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR(config)

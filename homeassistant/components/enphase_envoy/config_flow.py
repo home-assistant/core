@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING, Any, override
 
 from awesomeversion import AwesomeVersion
 import jwt
+import probatio
 from pyenphase import AUTH_TOKEN_MIN_VERSION, Envoy, EnvoyError, EnvoyTokenAuth
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -131,16 +131,16 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         return EnvoyOptionsFlowHandler()
 
     @callback
-    def _async_generate_schema(self) -> vol.Schema:
+    def _async_generate_schema(self) -> probatio.Schema:
         """Generate schema."""
         schema: VolDictType = {}
 
         if self.ip_address:
-            schema[vol.Required(CONF_HOST, default=self.ip_address)] = vol.In(
+            schema[probatio.Required(CONF_HOST, default=self.ip_address)] = probatio.In(
                 [self.ip_address]
             )
         elif self.source != SOURCE_REAUTH:
-            schema[vol.Required(CONF_HOST)] = str
+            schema[probatio.Required(CONF_HOST)] = str
 
         default_username = ""
         if (
@@ -152,18 +152,20 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self.manual_token:
             # in manual token entry mode show token input field
-            schema[vol.Optional(CONF_TOKEN, default="")] = str
+            schema[probatio.Optional(CONF_TOKEN, default="")] = str
         else:
             # in automatic token mode show username and password inputs
             schema[
-                vol.Optional(CONF_USERNAME, default=self.username or default_username)
+                probatio.Optional(
+                    CONF_USERNAME, default=self.username or default_username
+                )
             ] = str
-            schema[vol.Optional(CONF_PASSWORD, default="")] = str
+            schema[probatio.Optional(CONF_PASSWORD, default="")] = str
 
         # option to switch between automatic and manual token entry modes
-        schema[vol.Optional(CONF_MANUAL_TOKEN, default=self.manual_token)] = bool
+        schema[probatio.Optional(CONF_MANUAL_TOKEN, default=self.manual_token)] = bool
 
-        return vol.Schema(schema)
+        return probatio.Schema(schema)
 
     @callback
     def _async_current_hosts(self) -> set[str]:
@@ -449,16 +451,16 @@ class EnvoyOptionsFlowHandler(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
                         default=self.config_entry.options.get(
                             OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
                             OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
                         ),
                     ): bool,
-                    vol.Required(
+                    probatio.Required(
                         OPTION_DISABLE_KEEP_ALIVE,
                         default=self.config_entry.options.get(
                             OPTION_DISABLE_KEEP_ALIVE,

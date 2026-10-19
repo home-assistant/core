@@ -2,7 +2,7 @@
 
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, STATE_OFF
 from homeassistant.core import HomeAssistant
@@ -34,8 +34,10 @@ class HumidityHandler(intent.IntentHandler):
     intent_type = INTENT_HUMIDITY
     description = "Set desired humidity level"
     slot_schema = {
-        vol.Required("name"): intent.non_empty_string,
-        vol.Required("humidity"): vol.All(vol.Coerce(int), vol.Range(0, 100)),
+        probatio.Required("name"): intent.non_empty_string,
+        probatio.Required("humidity"): probatio.All(
+            probatio.Coerce(int), probatio.Range(0, 100)
+        ),
     }
     platforms = {DOMAIN}
 
@@ -90,8 +92,8 @@ class SetModeHandler(intent.IntentHandler):
     intent_type = INTENT_MODE
     description = "Set humidifier mode"
     slot_schema = {
-        vol.Required("name"): intent.non_empty_string,
-        vol.Required("mode"): cv.string,
+        probatio.Required("name"): intent.non_empty_string,
+        probatio.Required("mode"): cv.string,
     }
     platforms = {DOMAIN}
 

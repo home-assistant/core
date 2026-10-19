@@ -4,7 +4,7 @@ from typing import Any, override
 
 from babel import Locale, UnknownLocaleError
 from holidays import PUBLIC, country_holidays, list_supported_countries
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -65,18 +65,18 @@ def get_optional_categories(country: str) -> list[str]:
     ]
 
 
-def get_options_schema(country: str) -> vol.Schema:
+def get_options_schema(country: str) -> probatio.Schema:
     """Return the options schema."""
     schema = {}
     if provinces := get_optional_provinces(country):
-        schema[vol.Optional(CONF_PROVINCE)] = SelectSelector(
+        schema[probatio.Optional(CONF_PROVINCE)] = SelectSelector(
             SelectSelectorConfig(
                 options=provinces,
                 mode=SelectSelectorMode.DROPDOWN,
             )
         )
     if categories := get_optional_categories(country):
-        schema[vol.Optional(CONF_CATEGORIES)] = SelectSelector(
+        schema[probatio.Optional(CONF_CATEGORIES)] = SelectSelector(
             SelectSelectorConfig(
                 options=categories,
                 multiple=True,
@@ -84,7 +84,7 @@ def get_options_schema(country: str) -> vol.Schema:
                 translation_key="categories",
             )
         )
-    return vol.Schema(schema)
+    return probatio.Schema(schema)
 
 
 def get_entry_name(language: str, country: str, province: str | None) -> str:
@@ -143,9 +143,9 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
             title = locale.territories[selected_country]
             return self.async_create_entry(title=title, data=user_input)
 
-        user_schema = vol.Schema(
+        user_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_COUNTRY, default=self.hass.config.country
                 ): CountrySelector(
                     CountrySelectorConfig(
@@ -243,9 +243,9 @@ class HolidayOptionsFlowHandler(OptionsFlowWithReload):
         if not categories:
             return self.async_abort(reason="no_categories")
 
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Optional(CONF_CATEGORIES): SelectSelector(
+                probatio.Optional(CONF_CATEGORIES): SelectSelector(
                     SelectSelectorConfig(
                         options=categories,
                         multiple=True,

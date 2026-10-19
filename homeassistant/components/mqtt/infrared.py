@@ -5,7 +5,7 @@ import logging
 from typing import Any, override
 
 import orjson
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import infrared
 from homeassistant.components.infrared import (
@@ -53,12 +53,12 @@ DEFAULT_RECEIVER_NAME = "MQTT Infrared receiver"
 
 MQTT_INFRARED_ATTRIBUTES_BLOCKED: frozenset[str] = frozenset()
 
-SIGNAL_SCHEMA = vol.Schema(
+SIGNAL_SCHEMA = probatio.Schema(
     {
-        vol.Required("timings"): vol.All([int], vol.Length(min=1)),
-        vol.Optional("modulation"): vol.Any(int, None),
+        probatio.Required("timings"): probatio.All([int], probatio.Length(min=1)),
+        probatio.Optional("modulation"): probatio.Any(int, None),
     },
-    extra=vol.REMOVE_EXTRA,
+    extra=probatio.REMOVE_EXTRA,
 )
 
 
@@ -80,41 +80,41 @@ def validate_mqtt_infrared_discovery(config_value: dict[str, Any]) -> ConfigType
     return config
 
 
-INFRARED_BASE_SCHEMA = vol.Schema(
-    {vol.Required(CONF_SCHEMA): vol.Any("emitter", "receiver")},
-    extra=vol.ALLOW_EXTRA,
+INFRARED_BASE_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_SCHEMA): probatio.Any("emitter", "receiver")},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 EMITTER_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_SCHEMA): "emitter",
-        vol.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
-        vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
+        probatio.Required(CONF_SCHEMA): "emitter",
+        probatio.Required(CONF_COMMAND_TOPIC): valid_publish_topic,
+        probatio.Optional(CONF_COMMAND_TEMPLATE): cv.template,
+        probatio.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 RECEIVER_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_SCHEMA): "receiver",
-        vol.Required(CONF_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
+        probatio.Required(CONF_SCHEMA): "receiver",
+        probatio.Required(CONF_STATE_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 
 DISCOVERY_SCHEMA_MAPPING: dict[str, VolSchemaType] = {
-    "emitter": EMITTER_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA),
-    "receiver": RECEIVER_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA),
+    "emitter": EMITTER_SCHEMA.extend({}, extra=probatio.REMOVE_EXTRA),
+    "receiver": RECEIVER_SCHEMA.extend({}, extra=probatio.REMOVE_EXTRA),
 }
 
-PLATFORM_SCHEMA_MODERN = vol.All(
+PLATFORM_SCHEMA_MODERN = probatio.All(
     INFRARED_BASE_SCHEMA,
     validate_mqtt_infrared_config,
 )
-DISCOVERY_SCHEMA = vol.All(
+DISCOVERY_SCHEMA = probatio.All(
     INFRARED_BASE_SCHEMA,
     validate_mqtt_infrared_discovery,
 )
@@ -230,7 +230,7 @@ class MqttInfraredReceiverEntity(MqttEntity, InfraredReceiverEntity):
             return
         try:
             payload_dict = SIGNAL_SCHEMA(json_loads_object(payload))
-        except (*JSON_DECODE_EXCEPTIONS, vol.Invalid, TypeError, ValueError):
+        except (*JSON_DECODE_EXCEPTIONS, probatio.Invalid, TypeError, ValueError):
             _LOGGER.warning(
                 "Invalid message received for %s on topic %s, with template %s. "
                 "Message is not a valid signal JSON message. Got %s",

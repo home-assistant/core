@@ -22,7 +22,7 @@ from typing import (
     override,
 )
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -122,33 +122,33 @@ TRIGGERS: HassKey[dict[str, str]] = HassKey("triggers")
 
 # Basic schemas to sanity check the trigger descriptions,
 # full validation is done by hassfest.triggers
-_FIELD_DESCRIPTION_SCHEMA = vol.Schema(
+_FIELD_DESCRIPTION_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_SELECTOR): selector.validate_selector,
+        probatio.Optional(CONF_SELECTOR): selector.validate_selector,
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-_TRIGGER_DESCRIPTION_SCHEMA = vol.Schema(
+_TRIGGER_DESCRIPTION_SCHEMA = probatio.Schema(
     {
-        vol.Optional("target"): TargetSelector.CONFIG_SCHEMA,
-        vol.Optional("fields"): vol.Schema({str: _FIELD_DESCRIPTION_SCHEMA}),
+        probatio.Optional("target"): TargetSelector.CONFIG_SCHEMA,
+        probatio.Optional("fields"): probatio.Schema({str: _FIELD_DESCRIPTION_SCHEMA}),
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
 def starts_with_dot(key: str) -> str:
     """Check if key starts with dot."""
     if not key.startswith("."):
-        raise vol.Invalid("Key does not start with .")
+        raise probatio.Invalid("Key does not start with .")
     return key
 
 
-_TRIGGERS_DESCRIPTION_SCHEMA = vol.Schema(
+_TRIGGERS_DESCRIPTION_SCHEMA = probatio.Schema(
     {
-        vol.Remove(vol.All(str, starts_with_dot)): object,
-        cv.underscore_slug: vol.Any(None, _TRIGGER_DESCRIPTION_SCHEMA),
+        probatio.Remove(probatio.All(str, starts_with_dot)): object,
+        cv.underscore_slug: probatio.Any(None, _TRIGGER_DESCRIPTION_SCHEMA),
     }
 )
 
@@ -231,8 +231,8 @@ async def _register_trigger_platform(
 
 _TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_OPTIONS): object,
-        vol.Optional(CONF_TARGET): cv.TARGET_FIELDS,
+        probatio.Optional(CONF_OPTIONS): object,
+        probatio.Optional(CONF_TARGET): cv.TARGET_FIELDS,
     }
 )
 
@@ -355,21 +355,21 @@ def _backwards_compatible_behavior(value: Any) -> Any:
     return value
 
 
-ENTITY_STATE_TRIGGER_SCHEMA = vol.Schema(
+ENTITY_STATE_TRIGGER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
-        vol.Required(CONF_OPTIONS, default={}): {},
+        probatio.Required(CONF_TARGET): cv.TARGET_FIELDS,
+        probatio.Required(CONF_OPTIONS, default={}): {},
     }
 )
 
 ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR = ENTITY_STATE_TRIGGER_SCHEMA.extend(
     {
-        vol.Required(CONF_OPTIONS, default={}): {
-            vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_EACH): vol.All(
+        probatio.Required(CONF_OPTIONS, default={}): {
+            probatio.Required(ATTR_BEHAVIOR, default=BEHAVIOR_EACH): probatio.All(
                 _backwards_compatible_behavior,
-                vol.In([BEHAVIOR_FIRST, BEHAVIOR_ALL, BEHAVIOR_EACH]),
+                probatio.In([BEHAVIOR_FIRST, BEHAVIOR_ALL, BEHAVIOR_EACH]),
             ),
-            vol.Optional(CONF_FOR): cv.positive_time_period,
+            probatio.Optional(CONF_FOR): cv.positive_time_period,
         },
     }
 )
@@ -391,7 +391,7 @@ class EntityTriggerBase(Trigger):
     # `_excluded_states`. Subclasses can override to relax the origin
     # check.
     _excluded_from_states: ClassVar[frozenset[str]] = _excluded_states
-    _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR
+    _schema: probatio.Schema = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR
     # When True, indirect target expansion (via device/area/floor) skips
     # entities with an entity_category.
     _primary_entities_only: ClassVar[bool] = True
@@ -791,15 +791,15 @@ class StatelessEntityTriggerBase(EntityTriggerBase):
     after startup must still fire the trigger.
     """
 
-    _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA
+    _schema: probatio.Schema = ENTITY_STATE_TRIGGER_SCHEMA
     _excluded_from_states: ClassVar[frozenset[str]] = frozenset({STATE_UNAVAILABLE})
 
 
 NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
     {
-        vol.Required(CONF_OPTIONS, default={}): vol.All(
+        probatio.Required(CONF_OPTIONS, default={}): probatio.All(
             {
-                vol.Required("threshold"): NumericThresholdSelector(
+                probatio.Required("threshold"): NumericThresholdSelector(
                     NumericThresholdSelectorConfig(mode=NumericThresholdMode.CHANGED)
                 )
             },
@@ -1097,13 +1097,13 @@ class EntityNumericalStateChangedTriggerBase(EntityNumericalStateTriggerBase):
 
 def make_numerical_state_changed_with_unit_schema(
     unit_converter: type[BaseUnitConverter],
-) -> vol.Schema:
+) -> probatio.Schema:
     """Factory for numerical state trigger schema with unit option."""
     return ENTITY_STATE_TRIGGER_SCHEMA.extend(
         {
-            vol.Required(CONF_OPTIONS, default={}): vol.All(
+            probatio.Required(CONF_OPTIONS, default={}): probatio.All(
                 {
-                    vol.Required("threshold"): NumericThresholdSelector(
+                    probatio.Required("threshold"): NumericThresholdSelector(
                         NumericThresholdSelectorConfig(
                             mode=NumericThresholdMode.CHANGED,
                             unit_of_measurement=list(unit_converter.VALID_UNITS),
@@ -1131,8 +1131,8 @@ class EntityNumericalStateChangedTriggerWithUnitBase(
 NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = (
     ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR.extend(
         {
-            vol.Required(CONF_OPTIONS): {
-                vol.Required("threshold"): NumericThresholdSelector(
+            probatio.Required(CONF_OPTIONS): {
+                probatio.Required("threshold"): NumericThresholdSelector(
                     NumericThresholdSelectorConfig(mode=NumericThresholdMode.CROSSED)
                 ),
             },
@@ -1158,7 +1158,7 @@ class EntityNumericalStateCrossedThresholdTriggerBase(EntityNumericalStateTrigge
 
 def _make_numerical_state_crossed_threshold_with_unit_schema(
     unit_converter: type[BaseUnitConverter],
-) -> vol.Schema:
+) -> probatio.Schema:
     """Trigger for numerical state and state attribute changes.
 
     This trigger only fires when the observed attribute
@@ -1166,8 +1166,8 @@ def _make_numerical_state_crossed_threshold_with_unit_schema(
     """
     return ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR.extend(
         {
-            vol.Required(CONF_OPTIONS, default={}): {
-                vol.Required("threshold"): NumericThresholdSelector(
+            probatio.Required(CONF_OPTIONS, default={}): {
+                probatio.Required("threshold"): NumericThresholdSelector(
                     NumericThresholdSelectorConfig(
                         mode=NumericThresholdMode.CROSSED,
                         unit_of_measurement=list(unit_converter.VALID_UNITS),
@@ -1353,7 +1353,7 @@ class TriggerProtocol(Protocol):
     async def async_get_triggers(self, hass: HomeAssistant) -> dict[str, type[Trigger]]:
         """Return the triggers provided by this integration."""
 
-    TRIGGER_SCHEMA: vol.Schema
+    TRIGGER_SCHEMA: probatio.Schema
 
     async def async_validate_trigger_config(
         self, hass: HomeAssistant, config: ConfigType
@@ -1634,11 +1634,11 @@ async def _async_get_trigger_platform(
     try:
         integration = await async_get_integration(hass, platform)
     except IntegrationNotFound:
-        raise vol.Invalid(f"Invalid trigger '{trigger_key}' specified") from None
+        raise probatio.Invalid(f"Invalid trigger '{trigger_key}' specified") from None
     try:
         platform_module = await integration.async_get_platform("trigger")
     except ImportError:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"Integration '{platform}' does not provide trigger support"
         ) from None
 
@@ -1662,7 +1662,7 @@ async def async_validate_trigger_config(
                 platform_domain, trigger_key
             )
             if not (trigger := trigger_descriptors.get(relative_trigger_key)):
-                raise vol.Invalid(f"Invalid trigger '{trigger_key}' specified")
+                raise probatio.Invalid(f"Invalid trigger '{trigger_key}' specified")
             conf = await trigger.async_validate_complete_config(hass, conf)
         elif hasattr(platform, "async_validate_trigger_config"):
             conf = move_options_fields_to_top_level(conf, cv.TRIGGER_BASE_SCHEMA)
@@ -1928,7 +1928,7 @@ def _load_triggers_file(integration: Integration) -> dict[str, Any]:
             "Unable to find triggers.yaml for the %s integration", integration.domain
         )
         return {}
-    except (HomeAssistantError, vol.Invalid) as ex:
+    except (HomeAssistantError, probatio.Invalid) as ex:
         _LOGGER.warning(
             "Unable to parse triggers.yaml for the %s integration: %s",
             integration.domain,

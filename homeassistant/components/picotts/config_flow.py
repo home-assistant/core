@@ -3,15 +3,15 @@
 import shutil
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.tts import CONF_LANG
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
 from .const import DEFAULT_LANG, DOMAIN, SUPPORT_LANGUAGES
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES)}
+STEP_USER_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_LANG, default=DEFAULT_LANG): probatio.In(SUPPORT_LANGUAGES)}
 )
 
 

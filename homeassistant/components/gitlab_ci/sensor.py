@@ -5,7 +5,7 @@ import logging
 from typing import override
 
 from gitlab import Gitlab, GitlabAuthenticationError, GitlabGetError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -43,10 +43,10 @@ SCAN_INTERVAL = timedelta(seconds=300)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_GITLAB_ID): cv.string,
-        vol.Required(CONF_TOKEN): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_URL, default=DEFAULT_URL): cv.string,
+        probatio.Required(CONF_GITLAB_ID): cv.string,
+        probatio.Required(CONF_TOKEN): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_URL, default=DEFAULT_URL): cv.string,
     }
 )
 

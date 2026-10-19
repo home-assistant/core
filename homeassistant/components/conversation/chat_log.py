@@ -10,7 +10,7 @@ import logging
 from pathlib import Path
 from typing import Any, Literal, TypedDict, cast
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, TemplateError
@@ -459,7 +459,7 @@ class ChatLog:
 
             try:
                 tool_result = await tool_call_tasks[tool_input.id]
-            except (HomeAssistantError, vol.Invalid) as e:
+            except (HomeAssistantError, probatio.Invalid) as e:
                 tool_result = {"error": type(e).__name__}
                 if str(e):
                     tool_result["error_text"] = str(e)

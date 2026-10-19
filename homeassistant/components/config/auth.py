@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.auth.models import User
 from homeassistant.components import websocket_api
@@ -20,7 +20,7 @@ def async_setup(hass: HomeAssistant) -> bool:
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "config/auth/list"})
+@websocket_api.websocket_command({probatio.Required("type"): "config/auth/list"})
 @websocket_api.async_response
 async def websocket_list(
     hass: HomeAssistant,
@@ -35,7 +35,7 @@ async def websocket_list(
 
 @websocket_api.require_admin
 @websocket_api.websocket_command(
-    {vol.Required("type"): "config/auth/delete", vol.Required("user_id"): str}
+    {probatio.Required("type"): "config/auth/delete", probatio.Required("user_id"): str}
 )
 @websocket_api.async_response
 async def websocket_delete(
@@ -66,10 +66,10 @@ async def websocket_delete(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/auth/create",
-        vol.Required("name"): str,
-        vol.Optional("group_ids"): [str],
-        vol.Optional("local_only"): bool,
+        probatio.Required("type"): "config/auth/create",
+        probatio.Required("name"): str,
+        probatio.Optional("group_ids"): [str],
+        probatio.Optional("local_only"): bool,
     }
 )
 @websocket_api.async_response
@@ -91,12 +91,12 @@ async def websocket_create(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/auth/update",
-        vol.Required("user_id"): str,
-        vol.Optional("name"): str,
-        vol.Optional("is_active"): bool,
-        vol.Optional("group_ids"): [str],
-        vol.Optional("local_only"): bool,
+        probatio.Required("type"): "config/auth/update",
+        probatio.Required("user_id"): str,
+        probatio.Optional("name"): str,
+        probatio.Optional("is_active"): bool,
+        probatio.Optional("group_ids"): [str],
+        probatio.Optional("local_only"): bool,
     }
 )
 @websocket_api.async_response

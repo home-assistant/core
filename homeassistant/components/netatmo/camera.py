@@ -4,9 +4,9 @@ import logging
 from typing import Any, cast, override
 
 import aiohttp
+import probatio
 from pyatmo import ApiError as NetatmoApiError, modules as NaModules
 from pyatmo.event import Event as NaEvent
-import voluptuous as vol
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.const import ATTR_PERSONS
@@ -68,17 +68,17 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_SET_PERSONS_HOME,
-        {vol.Required(ATTR_PERSONS): vol.All(cv.ensure_list, [cv.string])},
+        {probatio.Required(ATTR_PERSONS): probatio.All(cv.ensure_list, [cv.string])},
         "_service_set_persons_home",
     )
     platform.async_register_entity_service(
         SERVICE_SET_PERSON_AWAY,
-        {vol.Optional(ATTR_PERSON): cv.string},
+        {probatio.Optional(ATTR_PERSON): cv.string},
         "_service_set_person_away",
     )
     platform.async_register_entity_service(
         SERVICE_SET_CAMERA_LIGHT,
-        {vol.Required(ATTR_CAMERA_LIGHT_MODE): vol.In(CAMERA_LIGHT_MODES)},
+        {probatio.Required(ATTR_CAMERA_LIGHT_MODE): probatio.In(CAMERA_LIGHT_MODES)},
         "_service_set_camera_light",
     )
 

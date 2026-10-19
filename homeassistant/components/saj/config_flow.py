@@ -3,8 +3,8 @@
 import logging
 from typing import TYPE_CHECKING, Any, override
 
+import probatio
 import pysaj
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -178,16 +178,16 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors or None,
         )
 
-    def _schema_user(self) -> vol.Schema:
+    def _schema_user(self) -> probatio.Schema:
         """Define the schema for the user step."""
-        return vol.Schema(
+        return probatio.Schema(
             {
-                vol.Required(CONF_HOST): str,
-                vol.Optional(CONF_TYPE, default=CONNECTION_TYPES[0]): vol.In(
+                probatio.Required(CONF_HOST): str,
+                probatio.Optional(CONF_TYPE, default=CONNECTION_TYPES[0]): probatio.In(
                     CONNECTION_TYPES
                 ),
-                vol.Optional(CONF_USERNAME, default=""): str,
-                vol.Optional(CONF_PASSWORD, default=""): str,
+                probatio.Optional(CONF_USERNAME, default=""): str,
+                probatio.Optional(CONF_PASSWORD, default=""): str,
             }
         )
 
@@ -235,11 +235,11 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors or None,
         )
 
-    def _schema_device_credentials(self) -> vol.Schema:
+    def _schema_device_credentials(self) -> probatio.Schema:
         """Define the schema for the device credentials step."""
-        return vol.Schema(
+        return probatio.Schema(
             {
-                vol.Optional(CONF_USERNAME, default=self._pending_username): str,
-                vol.Optional(CONF_PASSWORD, default=self._pending_password): str,
+                probatio.Optional(CONF_USERNAME, default=self._pending_username): str,
+                probatio.Optional(CONF_PASSWORD, default=self._pending_password): str,
             }
         )

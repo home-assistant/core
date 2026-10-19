@@ -7,9 +7,9 @@ import re
 from typing import Any
 
 from freezegun import freeze_time
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components.calendar import (
     CREATE_EVENT_SERVICE,
@@ -249,35 +249,35 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
     [
         (
             {},
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "must contain at least one of start_date, start_date_time, in",
         ),
         (
             {
                 "start_date": "2022-04-01",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "Start and end dates must both be specified",
         ),
         (
             {
                 "end_date": "2022-04-02",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "must contain at least one of start_date, start_date_time, in.",
         ),
         (
             {
                 "start_date_time": "2022-04-01T06:00:00",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "Start and end datetimes must both be specified",
         ),
         (
             {
                 "end_date_time": "2022-04-02T07:00:00",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "must contain at least one of start_date, start_date_time, in.",
         ),
         (
@@ -286,7 +286,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 "start_date_time": "2022-04-01T06:00:00",
                 "end_date_time": "2022-04-02T07:00:00",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "must contain at most one of start_date, start_date_time, in.",
         ),
         (
@@ -295,7 +295,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 "end_date_time": "2022-04-01T07:00:00",
                 "end_date": "2022-04-02",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "Start and end dates must both be specified",
         ),
         (
@@ -303,7 +303,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 "start_date": "2022-04-01",
                 "end_date_time": "2022-04-02T07:00:00",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "Start and end dates must both be specified",
         ),
         (
@@ -311,7 +311,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 "start_date_time": "2022-04-01T07:00:00",
                 "end_date": "2022-04-02",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "Start and end dates must both be specified",
         ),
         (
@@ -321,7 +321,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                     "weeks": 2,
                 }
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "two or more values in the same group of exclusion 'event_types'",
         ),
         (
@@ -332,7 +332,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                     "days": 2,
                 },
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "must contain at most one of start_date, start_date_time, in.",
         ),
         (
@@ -343,7 +343,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                     "days": 2,
                 },
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "must contain at most one of start_date, start_date_time, in.",
         ),
         (
@@ -351,7 +351,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 "start_date_time": "2022-04-01T06:00:00+00:00",
                 "end_date_time": "2022-04-01T07:00:00+01:00",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "Expected all values to have the same timezone",
         ),
         (
@@ -359,7 +359,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 "start_date_time": "2022-04-01T07:00:00",
                 "end_date_time": "2022-04-01T06:00:00",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "Expected minimum event duration",
         ),
         (
@@ -367,7 +367,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 "start_date": "2022-04-02",
                 "end_date": "2022-04-01",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "Expected minimum event duration",
         ),
         (
@@ -375,7 +375,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 "start_date": "2022-04-01",
                 "end_date": "2022-04-01",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "Expected minimum event duration",
         ),
     ],
@@ -520,7 +520,7 @@ async def test_list_events_service_duration(
 
 async def test_list_events_positive_duration(hass: HomeAssistant) -> None:
     """Test listing events requires a positive duration."""
-    with pytest.raises(vol.Invalid, match="should be positive"):
+    with pytest.raises(probatio.Invalid, match="should be positive"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_EVENTS,
@@ -537,7 +537,7 @@ async def test_list_events_exclusive_fields(hass: HomeAssistant) -> None:
     """Test listing events specifying fields that are exclusive."""
     end = dt_util.now() + timedelta(days=1)
 
-    with pytest.raises(vol.Invalid, match="at most one of"):
+    with pytest.raises(probatio.Invalid, match="at most one of"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_EVENTS,
@@ -553,7 +553,7 @@ async def test_list_events_exclusive_fields(hass: HomeAssistant) -> None:
 
 async def test_list_events_missing_fields(hass: HomeAssistant) -> None:
     """Test listing events missing some required fields."""
-    with pytest.raises(vol.Invalid, match="at least one of"):
+    with pytest.raises(probatio.Invalid, match="at least one of"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_EVENTS,
@@ -608,7 +608,7 @@ async def test_list_events_service_same_dates(
 ) -> None:
     """Test listing events from the service call using the same start and end time."""
 
-    with pytest.raises(vol.error.MultipleInvalid, match=re.escape(error_msg)):
+    with pytest.raises(probatio.error.MultipleInvalid, match=re.escape(error_msg)):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_EVENTS,

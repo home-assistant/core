@@ -29,8 +29,8 @@ from aiohasupervisor.models import (
     SupervisorOptions,
 )
 from freezegun.api import FrozenDateTimeFactory
+from probatio import Invalid
 import pytest
-from voluptuous import Invalid
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import frontend, hassio

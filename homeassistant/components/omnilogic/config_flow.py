@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 from omnilogic import LoginException, OmniLogic, OmniLogicException
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -65,10 +65,10 @@ class OmniLogicConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_USERNAME): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,
@@ -88,22 +88,22 @@ class OptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
                     # Polling interval is user-configurable, which is no longer allowed
                     # pylint: disable-next=home-assistant-config-flow-polling-field
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_SCAN_INTERVAL,
                         default=self.config_entry.options.get(
                             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                         ),
                     ): int,
-                    vol.Optional(
+                    probatio.Optional(
                         "ph_offset",
                         default=self.config_entry.options.get(
                             "ph_offset", DEFAULT_PH_OFFSET
                         ),
-                    ): vol.All(vol.Coerce(float)),
+                    ): probatio.All(probatio.Coerce(float)),
                 }
             ),
         )

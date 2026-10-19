@@ -1,6 +1,6 @@
 """Support for Roku API emulation."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.components.network import async_get_source_ip
@@ -22,28 +22,28 @@ from .const import (
     DOMAIN,
 )
 
-SERVER_CONFIG_SCHEMA = vol.Schema(
+SERVER_CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_LISTEN_PORT): cv.port,
-        vol.Optional(CONF_HOST_IP): cv.string,
-        vol.Optional(CONF_ADVERTISE_IP): cv.string,
-        vol.Optional(CONF_ADVERTISE_PORT): cv.port,
-        vol.Optional(CONF_UPNP_BIND_MULTICAST): cv.boolean,
+        probatio.Required(CONF_NAME): cv.string,
+        probatio.Required(CONF_LISTEN_PORT): cv.port,
+        probatio.Optional(CONF_HOST_IP): cv.string,
+        probatio.Optional(CONF_ADVERTISE_IP): cv.string,
+        probatio.Optional(CONF_ADVERTISE_PORT): cv.port,
+        probatio.Optional(CONF_UPNP_BIND_MULTICAST): cv.boolean,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_SERVERS): vol.All(
+                probatio.Required(CONF_SERVERS): probatio.All(
                     cv.ensure_list, [SERVER_CONFIG_SCHEMA]
                 )
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 type EmulatedRokuConfigEntry = ConfigEntry[EmulatedRoku]

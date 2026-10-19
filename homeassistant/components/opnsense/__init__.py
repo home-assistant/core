@@ -11,7 +11,7 @@ from aiopnsense import (
     OPNsenseTimeoutError,
     OPNsenseUnknownFirmware,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
@@ -24,21 +24,21 @@ from homeassistant.helpers.typing import ConfigType
 from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACES, DOMAIN
 from .types import OPNsenseConfigEntry, OPNsenseRuntimeData
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_URL): cv.url,
-                vol.Required(CONF_API_KEY): cv.string,
-                vol.Required(CONF_API_SECRET): cv.string,
-                vol.Optional(CONF_VERIFY_SSL, default=False): cv.boolean,
-                vol.Optional(CONF_TRACKER_INTERFACES, default=[]): vol.All(
+                probatio.Required(CONF_URL): cv.url,
+                probatio.Required(CONF_API_KEY): cv.string,
+                probatio.Required(CONF_API_SECRET): cv.string,
+                probatio.Optional(CONF_VERIFY_SSL, default=False): cv.boolean,
+                probatio.Optional(CONF_TRACKER_INTERFACES, default=[]): probatio.All(
                     cv.ensure_list, [cv.string]
                 ),
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 PLATFORMS = [Platform.DEVICE_TRACKER]

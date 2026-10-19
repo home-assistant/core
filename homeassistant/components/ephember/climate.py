@@ -5,6 +5,7 @@ from enum import IntEnum
 import logging
 from typing import Any, override
 
+import probatio
 from pyephember2.pyephember2 import (
     EphEmber,
     ZoneMode,
@@ -15,7 +16,6 @@ from pyephember2.pyephember2 import (
     zone_name,
     zone_target_temperature,
 )
-import voluptuous as vol
 
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
@@ -43,7 +43,10 @@ SCAN_INTERVAL = timedelta(seconds=120)
 OPERATION_LIST = [HVACMode.HEAT_COOL, HVACMode.HEAT, HVACMode.OFF]
 
 PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
+    {
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(CONF_PASSWORD): cv.string,
+    }
 )
 
 EPH_TO_HA_STATE = {

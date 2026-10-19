@@ -2,7 +2,7 @@
 
 import logging
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
@@ -31,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Node"
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_NODES): vol.All(cv.ensure_list, [cv.string])}
+    {probatio.Required(CONF_NODES): probatio.All(cv.ensure_list, [cv.string])}
 )
 
 

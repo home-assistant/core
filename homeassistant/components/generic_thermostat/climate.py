@@ -9,7 +9,7 @@ import math
 import time
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -96,35 +96,39 @@ CONF_TEMP_STEP = "target_temp_step"
 
 
 PRESETS_SCHEMA: VolDictType = {
-    vol.Optional(v): vol.Coerce(float) for v in CONF_PRESETS.values()
+    probatio.Optional(v): probatio.Coerce(float) for v in CONF_PRESETS.values()
 }
 
-PLATFORM_SCHEMA_COMMON = vol.Schema(
+PLATFORM_SCHEMA_COMMON = probatio.Schema(
     {
-        vol.Required(CONF_HEATER): cv.entity_id,
-        vol.Required(CONF_SENSOR): cv.entity_id,
-        vol.Optional(CONF_AC_MODE): cv.boolean,
-        vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
-        vol.Optional(CONF_MIN_DUR): cv.positive_time_period,
-        vol.Optional(CONF_MAX_DUR): cv.positive_time_period,
-        vol.Optional(CONF_DUR_COOLDOWN): cv.positive_time_period,
-        vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_COLD_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
-        vol.Optional(CONF_HOT_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
-        vol.Optional(CONF_TARGET_TEMP): vol.Coerce(float),
-        vol.Optional(CONF_KEEP_ALIVE): cv.positive_time_period,
-        vol.Optional(CONF_INITIAL_HVAC_MODE): vol.In(
+        probatio.Required(CONF_HEATER): cv.entity_id,
+        probatio.Required(CONF_SENSOR): cv.entity_id,
+        probatio.Optional(CONF_AC_MODE): cv.boolean,
+        probatio.Optional(CONF_MAX_TEMP): probatio.Coerce(float),
+        probatio.Optional(CONF_MIN_DUR): cv.positive_time_period,
+        probatio.Optional(CONF_MAX_DUR): cv.positive_time_period,
+        probatio.Optional(CONF_DUR_COOLDOWN): cv.positive_time_period,
+        probatio.Optional(CONF_MIN_TEMP): probatio.Coerce(float),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(
+            CONF_COLD_TOLERANCE, default=DEFAULT_TOLERANCE
+        ): probatio.Coerce(float),
+        probatio.Optional(
+            CONF_HOT_TOLERANCE, default=DEFAULT_TOLERANCE
+        ): probatio.Coerce(float),
+        probatio.Optional(CONF_TARGET_TEMP): probatio.Coerce(float),
+        probatio.Optional(CONF_KEEP_ALIVE): cv.positive_time_period,
+        probatio.Optional(CONF_INITIAL_HVAC_MODE): probatio.In(
             [HVACMode.COOL, HVACMode.HEAT, HVACMode.OFF]
         ),
-        vol.Optional(CONF_PRECISION): vol.All(
-            vol.Coerce(float),
-            vol.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]),
+        probatio.Optional(CONF_PRECISION): probatio.All(
+            probatio.Coerce(float),
+            probatio.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]),
         ),
-        vol.Optional(CONF_TEMP_STEP): vol.All(
-            vol.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE])
+        probatio.Optional(CONF_TEMP_STEP): probatio.All(
+            probatio.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE])
         ),
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
         **PRESETS_SCHEMA,
     }
 )

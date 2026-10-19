@@ -4,7 +4,7 @@ import asyncio
 import logging
 
 from keba_kecontact.connection import KebaKeContact
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -26,21 +26,21 @@ CONF_FS_INTERVAL = "refresh_interval"
 MAX_POLLING_INTERVAL = 5  # in seconds
 MAX_FAST_POLLING_COUNT = 4
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Optional(CONF_RFID, default="00845500"): cv.string,
-                vol.Optional(CONF_FS, default=False): cv.boolean,
-                vol.Optional(CONF_FS_TIMEOUT, default=30): cv.positive_int,
-                vol.Optional(CONF_FS_FALLBACK, default=6): cv.positive_int,
-                vol.Optional(CONF_FS_PERSIST, default=0): cv.positive_int,
-                vol.Optional(CONF_FS_INTERVAL, default=5): cv.positive_int,
+                probatio.Required(CONF_HOST): cv.string,
+                probatio.Optional(CONF_RFID, default="00845500"): cv.string,
+                probatio.Optional(CONF_FS, default=False): cv.boolean,
+                probatio.Optional(CONF_FS_TIMEOUT, default=30): cv.positive_int,
+                probatio.Optional(CONF_FS_FALLBACK, default=6): cv.positive_int,
+                probatio.Optional(CONF_FS_PERSIST, default=0): cv.positive_int,
+                probatio.Optional(CONF_FS_INTERVAL, default=5): cv.positive_int,
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 _SERVICE_MAP = {

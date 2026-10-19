@@ -5,7 +5,7 @@ from typing import Any, override
 
 from aioairq import AirQ, InvalidAuth
 from aiohttp.client_exceptions import ClientConnectionError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
@@ -25,18 +25,18 @@ from .const import CONF_CLIP_NEGATIVE, CONF_RETURN_AVERAGE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_IP_ADDRESS): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_IP_ADDRESS): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Optional(CONF_RETURN_AVERAGE, default=True): BooleanSelector(),
-                vol.Optional(CONF_CLIP_NEGATIVE, default=True): BooleanSelector(),
+                probatio.Optional(CONF_RETURN_AVERAGE, default=True): BooleanSelector(),
+                probatio.Optional(CONF_CLIP_NEGATIVE, default=True): BooleanSelector(),
             }
         )
     ),
@@ -144,7 +144,7 @@ class AirQConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="discovery_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_PASSWORD): str}),
             description_placeholders={"name": self._discovered_name},
             errors=errors,
         )

@@ -5,7 +5,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Final
 
 from bsblan import BSBLANError, DaySchedule, DHWSchedule, TimeSlot
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -44,23 +44,23 @@ _DAY_NAME_SLOT_ATTR_PAIRS: tuple[tuple[str, str], ...] = (
 
 
 # Schema for a single time slot
-_SLOT_SCHEMA = vol.Schema(
+_SLOT_SCHEMA = probatio.Schema(
     {
-        vol.Required("start_time"): cv.time,
-        vol.Required("end_time"): cv.time,
+        probatio.Required("start_time"): cv.time,
+        probatio.Required("end_time"): cv.time,
     }
 )
 
 
-_WEEKLY_SCHEDULE_FIELDS: Final[dict[vol.Marker, Any]] = {
-    vol.Optional(slot_attr): vol.All(cv.ensure_list, [_SLOT_SCHEMA])
+_WEEKLY_SCHEDULE_FIELDS: Final[dict[probatio.Marker, Any]] = {
+    probatio.Optional(slot_attr): probatio.All(cv.ensure_list, [_SLOT_SCHEMA])
     for _, slot_attr in _DAY_NAME_SLOT_ATTR_PAIRS
 }
 
 
-SERVICE_SET_HOT_WATER_SCHEDULE_SCHEMA = vol.Schema(
+SERVICE_SET_HOT_WATER_SCHEDULE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
         **_WEEKLY_SCHEDULE_FIELDS,
     }
 )
@@ -186,9 +186,9 @@ async def async_sync_time(service_call: ServiceCall) -> None:
     )
 
 
-SYNC_TIME_SCHEMA = vol.Schema(
+SYNC_TIME_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
     }
 )
 

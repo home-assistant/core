@@ -4,7 +4,7 @@ from datetime import timedelta
 from typing import Any
 
 from aiontfy import BroadcastAction, CopyAction, HttpAction, ViewAction
-import voluptuous as vol
+import probatio
 from yarl import URL
 
 from homeassistant.components.notify import (
@@ -64,75 +64,81 @@ def validate_filename(params: dict[str, Any]) -> dict[str, Any]:
     if ATTR_FILENAME in params and not (
         ATTR_ATTACH_FILE in params or ATTR_ATTACH in params
     ):
-        raise vol.Invalid("Filename only allowed when attachment is provided")
+        raise probatio.Invalid("Filename only allowed when attachment is provided")
     return params
 
 
-ACTION_SCHEMA = vol.Schema(
+ACTION_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_LABEL): cv.string,
-        vol.Optional(ATTR_CLEAR, default=False): cv.boolean,
+        probatio.Required(ATTR_LABEL): cv.string,
+        probatio.Optional(ATTR_CLEAR, default=False): cv.boolean,
     }
 )
 VIEW_SCHEMA = ACTION_SCHEMA.extend(
     {
-        vol.Required(ATTR_ACTION): vol.Equal("view"),
-        vol.Required(ATTR_URL): vol.All(vol.Url(), vol.Coerce(URL)),
+        probatio.Required(ATTR_ACTION): probatio.Equal("view"),
+        probatio.Required(ATTR_URL): probatio.All(probatio.Url(), probatio.Coerce(URL)),
     }
 )
 BROADCAST_SCHEMA = ACTION_SCHEMA.extend(
     {
-        vol.Required(ATTR_ACTION): vol.Equal("broadcast"),
-        vol.Optional(ATTR_INTENT): cv.string,
-        vol.Optional(ATTR_EXTRAS): dict[str, str],
+        probatio.Required(ATTR_ACTION): probatio.Equal("broadcast"),
+        probatio.Optional(ATTR_INTENT): cv.string,
+        probatio.Optional(ATTR_EXTRAS): dict[str, str],
     }
 )
 HTTP_SCHEMA = VIEW_SCHEMA.extend(
     {
-        vol.Required(ATTR_ACTION): vol.Equal("http"),
-        vol.Optional(ATTR_METHOD): cv.string,
-        vol.Optional(ATTR_HEADERS): dict[str, str],
-        vol.Optional(ATTR_BODY): cv.string,
+        probatio.Required(ATTR_ACTION): probatio.Equal("http"),
+        probatio.Optional(ATTR_METHOD): cv.string,
+        probatio.Optional(ATTR_HEADERS): dict[str, str],
+        probatio.Optional(ATTR_BODY): cv.string,
     }
 )
 COPY_SCHEMA = ACTION_SCHEMA.extend(
     {
-        vol.Required(ATTR_ACTION): vol.Equal("copy"),
-        vol.Required(ATTR_VALUE): cv.string,
+        probatio.Required(ATTR_ACTION): probatio.Equal("copy"),
+        probatio.Required(ATTR_VALUE): cv.string,
     }
 )
 
-SERVICE_PUBLISH_SCHEMA = vol.All(
+SERVICE_PUBLISH_SCHEMA = probatio.All(
     cv.make_entity_service_schema(
         {
-            vol.Optional(ATTR_TITLE): cv.string,
-            vol.Optional(ATTR_MESSAGE): cv.string,
-            vol.Optional(ATTR_MARKDOWN): cv.boolean,
-            vol.Optional(ATTR_TAGS): vol.All(cv.ensure_list, [str]),
-            vol.Optional(ATTR_PRIORITY): vol.All(vol.Coerce(int), vol.Range(1, 5)),
-            vol.Optional(ATTR_CLICK): vol.All(vol.Url(), vol.Coerce(URL)),
-            vol.Optional(ATTR_DELAY): vol.All(
+            probatio.Optional(ATTR_TITLE): cv.string,
+            probatio.Optional(ATTR_MESSAGE): cv.string,
+            probatio.Optional(ATTR_MARKDOWN): cv.boolean,
+            probatio.Optional(ATTR_TAGS): probatio.All(cv.ensure_list, [str]),
+            probatio.Optional(ATTR_PRIORITY): probatio.All(
+                probatio.Coerce(int), probatio.Range(1, 5)
+            ),
+            probatio.Optional(ATTR_CLICK): probatio.All(
+                probatio.Url(), probatio.Coerce(URL)
+            ),
+            probatio.Optional(ATTR_DELAY): probatio.All(
                 cv.time_period,
-                vol.Range(min=timedelta(seconds=10), max=timedelta(days=3)),
+                probatio.Range(min=timedelta(seconds=10), max=timedelta(days=3)),
             ),
-            vol.Optional(ATTR_EMAIL): vol.Email(),
-            vol.Optional(ATTR_CALL): cv.string,
-            vol.Optional(ATTR_ICON): vol.All(vol.Url(), vol.Coerce(URL)),
-            vol.Optional(ATTR_SEQUENCE_ID): cv.string,
-            vol.Exclusive(ATTR_ATTACH, GRP_ATTACHMENT, MSG_ATTACHMENT): vol.All(
-                vol.Url(), vol.Coerce(URL)
+            probatio.Optional(ATTR_EMAIL): probatio.Email(),
+            probatio.Optional(ATTR_CALL): cv.string,
+            probatio.Optional(ATTR_ICON): probatio.All(
+                probatio.Url(), probatio.Coerce(URL)
             ),
-            vol.Exclusive(
+            probatio.Optional(ATTR_SEQUENCE_ID): cv.string,
+            probatio.Exclusive(
+                ATTR_ATTACH, GRP_ATTACHMENT, MSG_ATTACHMENT
+            ): probatio.All(probatio.Url(), probatio.Coerce(URL)),
+            probatio.Exclusive(
                 ATTR_ATTACH_FILE, GRP_ATTACHMENT, MSG_ATTACHMENT
             ): MediaSelector({"accept": ["*/*"]}),
-            vol.Optional(ATTR_FILENAME): cv.string,
-            vol.Optional(ATTR_ACTIONS): vol.All(
+            probatio.Optional(ATTR_FILENAME): cv.string,
+            probatio.Optional(ATTR_ACTIONS): probatio.All(
                 cv.ensure_list,
-                vol.Length(
+                probatio.Length(
                     max=MAX_ACTIONS_ALLOWED,
                     msg="Too many actions defined. A maximum of 3 is supported",
                 ),
-                [vol.Any(VIEW_SCHEMA, BROADCAST_SCHEMA, HTTP_SCHEMA, COPY_SCHEMA)],
+                [probatio.Any(VIEW_SCHEMA, BROADCAST_SCHEMA, HTTP_SCHEMA, COPY_SCHEMA)],
             ),
         }
     ),
@@ -141,7 +147,7 @@ SERVICE_PUBLISH_SCHEMA = vol.All(
 
 SERVICE_CLEAR_DELETE_SCHEMA = cv.make_entity_service_schema(
     {
-        vol.Required(ATTR_SEQUENCE_ID): cv.string,
+        probatio.Required(ATTR_SEQUENCE_ID): cv.string,
     }
 )
 

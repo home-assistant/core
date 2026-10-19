@@ -6,7 +6,7 @@ from pathlib import Path
 
 from google_photos_library_api.exceptions import GooglePhotosApiError
 from google_photos_library_api.model import NewMediaItem, SimpleMediaItem
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_FILENAME
 from homeassistant.core import (
@@ -26,11 +26,11 @@ CONF_CONFIG_ENTRY_ID = "config_entry_id"
 CONF_ALBUM = "album"
 
 UPLOAD_SERVICE = "upload"
-UPLOAD_SERVICE_SCHEMA = vol.Schema(
+UPLOAD_SERVICE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_CONFIG_ENTRY_ID): cv.string,
-        vol.Required(CONF_FILENAME): vol.All(cv.ensure_list, [cv.string]),
-        vol.Required(CONF_ALBUM): cv.string,
+        probatio.Required(CONF_CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(CONF_FILENAME): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Required(CONF_ALBUM): cv.string,
     }
 )
 CONTENT_SIZE_LIMIT = 20 * 1024 * 1024

@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from typing import Any, override
 
 from airpatrol.api import AirPatrolAPI, AirPatrolAuthenticationError, AirPatrolError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD
@@ -18,15 +18,15 @@ from homeassistant.helpers.selector import (
 
 from .const import DOMAIN
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_EMAIL): TextSelector(
+        probatio.Required(CONF_EMAIL): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.EMAIL,
                 autocomplete="email",
             )
         ),
-        vol.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",

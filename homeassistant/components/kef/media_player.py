@@ -9,7 +9,7 @@ from typing import Any, override
 from aiokef import AsyncKefSpeaker
 from aiokef.aiokef import DSP_OPTION_MAPPING
 from getmac import get_mac_address
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
@@ -60,17 +60,19 @@ DSP_SCAN_INTERVAL = timedelta(seconds=3600)
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_TYPE): vol.In(["LS50", "LSX"]),
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_MAX_VOLUME, default=DEFAULT_MAX_VOLUME): cv.small_float,
-        vol.Optional(CONF_VOLUME_STEP, default=DEFAULT_VOLUME_STEP): cv.small_float,
-        vol.Optional(
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_TYPE): probatio.In(["LS50", "LSX"]),
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_MAX_VOLUME, default=DEFAULT_MAX_VOLUME): cv.small_float,
+        probatio.Optional(
+            CONF_VOLUME_STEP, default=DEFAULT_VOLUME_STEP
+        ): cv.small_float,
+        probatio.Optional(
             CONF_INVERSE_SPEAKER_MODE, default=DEFAULT_INVERSE_SPEAKER_MODE
         ): cv.boolean,
-        vol.Optional(CONF_SUPPORTS_ON, default=DEFAULT_SUPPORTS_ON): cv.boolean,
-        vol.Optional(CONF_STANDBY_TIME): vol.In([20, 60]),
+        probatio.Optional(CONF_SUPPORTS_ON, default=DEFAULT_SUPPORTS_ON): cv.boolean,
+        probatio.Optional(CONF_STANDBY_TIME): probatio.In([20, 60]),
     }
 )
 
@@ -151,12 +153,14 @@ async def async_setup_platform(
     platform.async_register_entity_service(
         SERVICE_MODE,
         {
-            vol.Optional("desk_mode"): cv.boolean,
-            vol.Optional("wall_mode"): cv.boolean,
-            vol.Optional("phase_correction"): cv.boolean,
-            vol.Optional("high_pass"): cv.boolean,
-            vol.Optional("sub_polarity"): vol.In(["-", "+"]),
-            vol.Optional("bass_extension"): vol.In(["Less", "Standard", "Extra"]),
+            probatio.Optional("desk_mode"): cv.boolean,
+            probatio.Optional("wall_mode"): cv.boolean,
+            probatio.Optional("phase_correction"): cv.boolean,
+            probatio.Optional("high_pass"): cv.boolean,
+            probatio.Optional("sub_polarity"): probatio.In(["-", "+"]),
+            probatio.Optional("bass_extension"): probatio.In(
+                ["Less", "Standard", "Extra"]
+            ),
         },
         "set_mode",
     )
@@ -168,8 +172,8 @@ async def async_setup_platform(
         platform.async_register_entity_service(
             name,
             {
-                vol.Required(option): vol.All(
-                    vol.Coerce(float), vol.Coerce(dtype), vol.In(options)
+                probatio.Required(option): probatio.All(
+                    probatio.Coerce(float), probatio.Coerce(dtype), probatio.In(options)
                 )
             },
             f"set_{which}",

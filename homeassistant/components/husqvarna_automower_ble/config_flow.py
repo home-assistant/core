@@ -11,7 +11,7 @@ from bleak_retry_connector import get_device
 from gardena_bluetooth.const import ScanService
 from gardena_bluetooth.parse import ProductType
 from gardena_bluetooth.scan import async_get_manufacturer_data
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothServiceInfo
@@ -20,16 +20,16 @@ from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID, CONF_PIN
 
 from .const import DOMAIN, LOGGER
 
-BLUETOOTH_SCHEMA = vol.Schema(
+BLUETOOTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PIN): str,
+        probatio.Required(CONF_PIN): str,
     }
 )
 
-USER_SCHEMA = vol.Schema(
+USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ADDRESS): str,
-        vol.Required(CONF_PIN): str,
+        probatio.Required(CONF_ADDRESS): str,
+        probatio.Required(CONF_PIN): str,
     }
 )
 

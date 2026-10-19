@@ -9,7 +9,7 @@ from typing import Any
 import aiohttp
 from colorthief import ColorThief
 from PIL import UnidentifiedImageError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import (
     ATTR_RGB_COLOR,
@@ -26,22 +26,22 @@ from .const import ATTR_PATH, ATTR_URL, DOMAIN, SERVICE_GET_COLOR
 _LOGGER = logging.getLogger(__name__)
 
 # Extend the existing light.turn_on service schema
-TURN_ON_SERVICE_SCHEMA = vol.All(
+TURN_ON_SERVICE_SCHEMA = probatio.All(
     cv.has_at_least_one_key(ATTR_URL, ATTR_PATH),
     cv.make_entity_service_schema(
         {
             **LIGHT_TURN_ON_SCHEMA,
-            vol.Exclusive(ATTR_PATH, "color_extractor"): cv.isfile,
-            vol.Exclusive(ATTR_URL, "color_extractor"): cv.url,
+            probatio.Exclusive(ATTR_PATH, "color_extractor"): cv.isfile,
+            probatio.Exclusive(ATTR_URL, "color_extractor"): cv.url,
         }
     ),
 )
 
-GET_COLOR_SERVICE_SCHEMA = vol.All(
+GET_COLOR_SERVICE_SCHEMA = probatio.All(
     cv.has_at_least_one_key(ATTR_URL, ATTR_PATH),
     {
-        vol.Exclusive(ATTR_PATH, "color_extractor"): cv.isfile,
-        vol.Exclusive(ATTR_URL, "color_extractor"): cv.url,
+        probatio.Exclusive(ATTR_PATH, "color_extractor"): cv.isfile,
+        probatio.Exclusive(ATTR_URL, "color_extractor"): cv.url,
     },
 )
 

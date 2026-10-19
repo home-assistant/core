@@ -4,9 +4,9 @@ import asyncio
 from urllib.parse import urlparse
 
 from aiohttp import CookieJar
+import probatio
 from pyisy import ISY, ISYConnectionError, ISYInvalidAuthError, ISYResponseParseError
 from pyisy.constants import CONFIG_NETWORKING, CONFIG_PORTAL
-import voluptuous as vol
 
 from homeassistant.const import (
     CONF_HOST,
@@ -49,9 +49,9 @@ from .models import IsyConfigEntry, IsyData
 from .services import async_setup_services
 from .util import _async_cleanup_registry_entries
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     cv.deprecated(DOMAIN),
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

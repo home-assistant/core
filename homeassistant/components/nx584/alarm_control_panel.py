@@ -5,8 +5,8 @@ import logging
 from typing import override
 
 from nx584 import client
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
     PLATFORM_SCHEMA as ALARM_CONTROL_PANEL_PLATFORM_SCHEMA,
@@ -35,9 +35,9 @@ ATTR_ZONE = "zone"
 
 PLATFORM_SCHEMA = ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     }
 )
 
@@ -72,13 +72,13 @@ async def async_setup_platform(
 
     platform.async_register_entity_service(
         SERVICE_BYPASS_ZONE,
-        {vol.Required(ATTR_ZONE): cv.positive_int},
+        {probatio.Required(ATTR_ZONE): cv.positive_int},
         "alarm_bypass",
     )
 
     platform.async_register_entity_service(
         SERVICE_UNBYPASS_ZONE,
-        {vol.Required(ATTR_ZONE): cv.positive_int},
+        {probatio.Required(ATTR_ZONE): cv.positive_int},
         "alarm_unbypass",
     )
 

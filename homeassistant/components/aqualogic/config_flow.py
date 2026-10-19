@@ -5,7 +5,7 @@ import threading
 from typing import Any, override
 
 from aqualogic.core import AquaLogic
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -13,10 +13,10 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT): cv.port,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT): cv.port,
     }
 )
 

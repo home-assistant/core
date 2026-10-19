@@ -4,8 +4,8 @@ import asyncio
 from copy import deepcopy
 from unittest.mock import MagicMock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import light, switch
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
@@ -653,13 +653,13 @@ async def test_match_child_device_area(
 
 def test_async_validate_slots() -> None:
     """Test async_validate_slots of IntentHandler."""
-    handler1 = MockIntentHandler({vol.Required("name"): cv.string})
+    handler1 = MockIntentHandler({probatio.Required("name"): cv.string})
 
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(probatio.error.MultipleInvalid):
         handler1.async_validate_slots({})
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(probatio.error.MultipleInvalid):
         handler1.async_validate_slots({"name": 1})
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(probatio.error.MultipleInvalid):
         handler1.async_validate_slots({"name": "kitchen"})
     handler1.async_validate_slots({"name": {"value": "kitchen"}})
     handler1.async_validate_slots(

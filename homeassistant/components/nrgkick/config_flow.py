@@ -5,7 +5,7 @@ import logging
 from typing import TYPE_CHECKING, Any, override
 
 from nrgkick_api import NRGkickAPI
-import voluptuous as vol
+import probatio
 import yarl
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -42,33 +42,35 @@ def _normalize_host(value: str) -> str:
 
     value = value.strip()
     if not value:
-        raise vol.Invalid("host is required")
+        raise probatio.Invalid("host is required")
     if "://" in value:
         try:
             url = yarl.URL(cv.url(value))
         except ValueError as err:
-            raise vol.Invalid("invalid url") from err
+            raise probatio.Invalid("invalid url") from err
         if not url.host:
-            raise vol.Invalid("invalid url")
+            raise probatio.Invalid("invalid url")
         if url.port is not None:
             return f"{url.host}:{url.port}"
         return url.host
     return value.strip("/").split("/", 1)[0]
 
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): TextSelector(TextSelectorConfig(autocomplete="off")),
+        probatio.Required(CONF_HOST): TextSelector(
+            TextSelectorConfig(autocomplete="off")
+        ),
     }
 )
 
 
-STEP_AUTH_DATA_SCHEMA = vol.Schema(
+STEP_AUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_USERNAME): TextSelector(
+        probatio.Optional(CONF_USERNAME): TextSelector(
             TextSelectorConfig(autocomplete="off")
         ),
-        vol.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
@@ -177,7 +179,7 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 host = _normalize_host(user_input[CONF_HOST])
-            except vol.Invalid:
+            except probatio.Invalid:
                 errors["base"] = "cannot_connect"
             else:
                 info, needs_auth = await self._async_validate_host(host, errors)
@@ -280,7 +282,7 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 host = _normalize_host(user_input[CONF_HOST])
-            except vol.Invalid:
+            except probatio.Invalid:
                 errors["base"] = "cannot_connect"
             else:
                 info, needs_auth = await self._async_validate_host(host, errors)
@@ -426,7 +428,7 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="zeroconf_enable_json_api",
-            data_schema=vol.Schema({}),
+            data_schema=probatio.Schema({}),
             description_placeholders={
                 "name": self._discovered_name,
                 "device_ip": _normalize_host(self._discovered_host),
@@ -450,7 +452,7 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="zeroconf_confirm",
-            data_schema=vol.Schema({}),
+            data_schema=probatio.Schema({}),
             description_placeholders={
                 "name": self._discovered_name,
                 "device_ip": self._discovered_host,

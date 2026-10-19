@@ -2,8 +2,8 @@
 
 from typing import Any, override
 
+import probatio
 from srpenergy.client import SrpEnergyClient
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -81,21 +81,21 @@ class SRPEnergyConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(CONF_ID): (
+                        probatio.Required(CONF_ID): (
                             str
                             if self.source == SOURCE_USER
                             else self._get_reconfigure_entry().data[CONF_ID]
                         ),
                         # Name field is no longer allowed in config flow schemas
                         # pylint: disable-next=home-assistant-config-flow-name-field
-                        vol.Required(
+                        probatio.Required(
                             CONF_NAME, default=self.hass.config.location_name
                         ): str,
-                        vol.Required(CONF_USERNAME): str,
-                        vol.Required(CONF_PASSWORD): str,
-                        vol.Optional(CONF_IS_TOU, default=False): bool,
+                        probatio.Required(CONF_USERNAME): str,
+                        probatio.Required(CONF_PASSWORD): str,
+                        probatio.Optional(CONF_IS_TOU, default=False): bool,
                     }
                 ),
                 suggested_values=(

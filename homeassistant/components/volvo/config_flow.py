@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from volvocarsapi.api import VolvoCarsApi
 from volvocarsapi.models import VolvoApiException, VolvoCarsVehicle
 from volvocarsapi.scopes import ALL_SCOPES
@@ -145,9 +145,9 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 user_input = {}
 
         schema = self.add_suggested_values_to_schema(
-            vol.Schema(
+            probatio.Schema(
                 {
-                    vol.Required(CONF_API_KEY): TextSelector(
+                    probatio.Required(CONF_API_KEY): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.TEXT, autocomplete="password"
                         )
@@ -193,9 +193,9 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         if len(self._vehicles) == 0:
             errors[CONF_VIN] = "no_vehicles"
 
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_VIN): SelectSelector(
+                probatio.Required(CONF_VIN): SelectSelector(
                     SelectSelectorConfig(
                         options=[
                             SelectOptionDict(

@@ -3,7 +3,7 @@
 from typing import Any, override
 
 from aiohortos import HortosAuthenticationError, HortosClient, HortosError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
@@ -16,9 +16,9 @@ from homeassistant.helpers.selector import (
 
 from .const import DOMAIN, LOGGER
 
-USER_SCHEMA = vol.Schema(
+USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): TextSelector(
+        probatio.Required(CONF_API_KEY): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD, autocomplete="api_key")
         ),
     }

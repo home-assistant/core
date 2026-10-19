@@ -6,11 +6,11 @@ from typing import Any, override
 from uuid import uuid4
 
 from aiohttp import ClientError, web_exceptions
+import probatio
 from pydaikin.daikin_base import Appliance
 from pydaikin.discovery import Discovery
 from pydaikin.exceptions import DaikinException
 from pydaikin.factory import DaikinFactory
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_UUID
@@ -33,13 +33,13 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self.host: str | None = None
 
     @property
-    def schema(self) -> vol.Schema:
+    def schema(self) -> probatio.Schema:
         """Return current schema."""
-        return vol.Schema(
+        return probatio.Schema(
             {
-                vol.Required(CONF_HOST, default=self.host): str,
-                vol.Optional(CONF_API_KEY): str,
-                vol.Optional(CONF_PASSWORD): str,
+                probatio.Required(CONF_HOST, default=self.host): str,
+                probatio.Optional(CONF_API_KEY): str,
+                probatio.Optional(CONF_PASSWORD): str,
             }
         )
 

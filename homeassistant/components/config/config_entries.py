@@ -8,7 +8,7 @@ from typing import Any, NoReturn, override
 
 from aiohttp import web
 import aiohttp.web_exceptions
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES, POLICY_EDIT
@@ -185,12 +185,12 @@ class ConfigManagerFlowIndexView(
 
     @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission="add")
     @RequestDataValidator(
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required("handler"): vol.Any(str, list),
-                vol.Optional("entry_id"): cv.string,
+                probatio.Required("handler"): probatio.Any(str, list),
+                probatio.Optional("entry_id"): cv.string,
             },
-            extra=vol.ALLOW_EXTRA,
+            extra=probatio.ALLOW_EXTRA,
         )
     )
     @override
@@ -329,11 +329,13 @@ class SubentryManagerFlowIndexView(
 
     @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
     @RequestDataValidator(
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required("handler"): vol.All(vol.Coerce(tuple), (str, str)),
+                probatio.Required("handler"): probatio.All(
+                    probatio.Coerce(tuple), (str, str)
+                ),
             },
-            extra=vol.ALLOW_EXTRA,
+            extra=probatio.ALLOW_EXTRA,
         )
     )
     @override
@@ -529,9 +531,9 @@ async def config_entry_get_single(
     {
         "type": "config_entries/update",
         "entry_id": str,
-        vol.Optional("title"): str,
-        vol.Optional("pref_disable_new_entities"): bool,
-        vol.Optional("pref_disable_polling"): bool,
+        probatio.Optional("title"): str,
+        probatio.Optional("pref_disable_new_entities"): bool,
+        probatio.Optional("pref_disable_polling"): bool,
     }
 )
 @websocket_api.async_response
@@ -578,8 +580,10 @@ async def config_entry_update(
         "type": "config_entries/disable",
         "entry_id": str,
         # We only allow setting disabled_by user via API.
-        # No Enum support like this in voluptuous, use .value
-        "disabled_by": vol.Any(config_entries.ConfigEntryDisabler.USER.value, None),
+        # No Enum support like this in probatio, use .value
+        "disabled_by": probatio.Any(
+            config_entries.ConfigEntryDisabler.USER.value, None
+        ),
     }
 )
 @websocket_api.async_response
@@ -652,9 +656,9 @@ async def ignore_config_flow(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config_entries/get",
-        vol.Optional("type_filter"): vol.All(cv.ensure_list, [str]),
-        vol.Optional("domain"): str,
+        probatio.Required("type"): "config_entries/get",
+        probatio.Optional("type_filter"): probatio.All(cv.ensure_list, [str]),
+        probatio.Optional("domain"): str,
     }
 )
 @websocket_api.async_response
@@ -672,8 +676,8 @@ async def config_entries_get(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config_entries/subscribe",
-        vol.Optional("type_filter"): vol.All(cv.ensure_list, [str]),
+        probatio.Required("type"): "config_entries/subscribe",
+        probatio.Optional("type_filter"): probatio.All(cv.ensure_list, [str]),
     }
 )
 @websocket_api.async_response
@@ -802,7 +806,7 @@ async def config_subentry_list(
         "type": "config_entries/subentries/update",
         "entry_id": str,
         "subentry_id": str,
-        vol.Optional("title"): str,
+        probatio.Optional("title"): str,
     }
 )
 @websocket_api.async_response

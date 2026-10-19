@@ -13,6 +13,7 @@ import re
 from time import time as time_time
 from typing import TYPE_CHECKING, Any, Literal, Required, TypedDict, cast
 
+import probatio
 from sqlalchemy import (
     Label,
     Select,
@@ -28,7 +29,6 @@ from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
-import voluptuous as vol
 
 from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
@@ -473,7 +473,7 @@ def validate_statistic_id(value: str) -> str:
     if valid_statistic_id(value):
         return value
 
-    raise vol.Invalid(f"Statistics ID {value} is an invalid statistic ID")
+    raise probatio.Invalid(f"Statistics ID {value} is an invalid statistic ID")
 
 
 @dataclasses.dataclass
@@ -685,7 +685,7 @@ def _get_first_id_stmt(start: datetime) -> StatementLambdaElement:
     return lambda_stmt(lambda: select(StatisticsRuns.run_id).filter_by(start=start))
 
 
-CUSTOM_EQUIVALENT_UNITS_SCHEMA = vol.Schema({str: {vol.Any(str, None): str}})
+CUSTOM_EQUIVALENT_UNITS_SCHEMA = probatio.Schema({str: {probatio.Any(str, None): str}})
 # Keep track of domains for which a warning about failure
 # to collect custom units has been logged
 _warn_custom_units_error: set[str] = set()
@@ -727,7 +727,7 @@ def _get_custom_equivalent_units(
                 platform_custom_equivalent_units
             )
             custom_equivalent_units_per_entity |= validated_data
-        except vol.Invalid as inv:
+        except probatio.Invalid as inv:
             if domain not in _warn_custom_units_error:
                 _warn_custom_units_error.add(domain)
                 _LOGGER.warning(
@@ -2883,7 +2883,7 @@ def async_add_external_statistics(
 
     if "mean_type" not in metadata and not _called_from_ws_api:  # type: ignore[unreachable]
         report_usage(  # type: ignore[unreachable]
-            "doesn't specify mean_type when calling async_import_statistics",
+            "doesn't specify mean_type when calling async_add_external_statistics",
             breaks_in_ha_version="2026.11",
             exclude_integrations={DOMAIN},
         )

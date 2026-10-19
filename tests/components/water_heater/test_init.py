@@ -3,8 +3,8 @@
 from unittest import mock
 from unittest.mock import AsyncMock, MagicMock
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.water_heater import (
     DOMAIN,
@@ -40,7 +40,7 @@ async def test_set_temp_schema_no_req(
     calls = async_mock_service(hass, domain, service, schema)
 
     data = {"hvac_mode": "off", "entity_id": ["climate.test_id"]}
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(domain, service, data)
     await hass.async_block_till_done()
 

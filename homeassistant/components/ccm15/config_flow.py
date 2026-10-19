@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 from ccm15 import CCM15Device
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -15,10 +15,10 @@ from .const import DEFAULT_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_PORT, default=80): cv.port,
+        probatio.Required(CONF_HOST): str,
+        probatio.Optional(CONF_PORT, default=80): cv.port,
     }
 )
 

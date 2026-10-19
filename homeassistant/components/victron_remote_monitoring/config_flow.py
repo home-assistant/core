@@ -4,10 +4,10 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 from victron_vrm import VictronVRMClient
 from victron_vrm.exceptions import AuthenticationError, VictronVRMError
 from victron_vrm.models import Site
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN
@@ -24,7 +24,7 @@ from .const import CONF_SITE_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_TOKEN): str})
+STEP_USER_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_API_TOKEN): str})
 
 
 class CannotConnect(HomeAssistantError):
@@ -153,9 +153,9 @@ class VictronRemoteMonitoringFlowHandler(ConfigFlow, domain=DOMAIN):
             site_options = self._build_site_options()
             return self.async_show_form(
                 step_id="select_site",
-                data_schema=vol.Schema(
+                data_schema=probatio.Schema(
                     {
-                        vol.Required(CONF_SITE_ID): SelectSelector(
+                        probatio.Required(CONF_SITE_ID): SelectSelector(
                             SelectSelectorConfig(
                                 options=site_options, mode=SelectSelectorMode.DROPDOWN
                             )
@@ -194,9 +194,9 @@ class VictronRemoteMonitoringFlowHandler(ConfigFlow, domain=DOMAIN):
         site_options = self._build_site_options()
         return self.async_show_form(
             step_id="select_site",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_SITE_ID): SelectSelector(
+                    probatio.Required(CONF_SITE_ID): SelectSelector(
                         SelectSelectorConfig(
                             options=site_options, mode=SelectSelectorMode.DROPDOWN
                         )
@@ -251,6 +251,6 @@ class VictronRemoteMonitoringFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_API_TOKEN): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_API_TOKEN): str}),
             errors=errors,
         )

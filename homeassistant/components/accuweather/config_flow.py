@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, override
 from accuweather import AccuWeather, ApiError, InvalidApiKeyError, RequestsExceededError
 from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectorError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
@@ -63,13 +63,13 @@ class AccuWeatherFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_API_KEY): str,
-                    vol.Optional(
+                    probatio.Required(CONF_API_KEY): str,
+                    probatio.Optional(
                         CONF_LATITUDE, default=self.hass.config.latitude
                     ): cv.latitude,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_LONGITUDE, default=self.hass.config.longitude
                     ): cv.longitude,
                 }
@@ -116,6 +116,6 @@ class AccuWeatherFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_API_KEY): str}),
             errors=errors,
         )

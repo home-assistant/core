@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from typing import Any, override
 
 from powerfox import PowerfoxAuthenticationError, PowerfoxConnectionError, PowerfoxLocal
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -18,16 +18,16 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_API_KEY): str,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_API_KEY): str,
     }
 )
 
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_API_KEY): str,
+        probatio.Required(CONF_API_KEY): str,
     }
 )
 

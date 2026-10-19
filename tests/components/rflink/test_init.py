@@ -3,8 +3,8 @@
 import logging
 from unittest.mock import Mock
 
+from probatio.error import MultipleInvalid
 import pytest
-from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.rflink import (
     CONF_KEEPALIVE_IDLE,

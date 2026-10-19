@@ -3,9 +3,9 @@
 from collections.abc import Mapping
 from typing import Any, override
 
+import probatio
 from pytile import async_login
 from pytile.errors import InvalidAuthError, TileError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -13,16 +13,16 @@ from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN, LOGGER
 
-STEP_REAUTH_SCHEMA = vol.Schema(
+STEP_REAUTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
-STEP_USER_SCHEMA = vol.Schema(
+STEP_USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -37,7 +37,9 @@ class TileFlowHandler(ConfigFlow, domain=DOMAIN):
         self._password: str | None = None
         self._username: str | None = None
 
-    async def _async_verify(self, step_id: str, schema: vol.Schema) -> ConfigFlowResult:
+    async def _async_verify(
+        self, step_id: str, schema: probatio.Schema
+    ) -> ConfigFlowResult:
         """Attempt to authenticate the provided credentials."""
         assert self._username
         assert self._password

@@ -12,8 +12,8 @@ from unittest.mock import ANY, MagicMock, Mock, mock_open, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from paho.mqtt.client import MQTTMessage, Properties
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import core as ha
 from homeassistant.components import mqtt
@@ -271,7 +271,7 @@ async def test_service_call_without_topic_does_not_publish(
 ) -> None:
     """Test the service call if topic is missing."""
     mqtt_mock = await mqtt_mock_entry()
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             mqtt.SERVICE_PUBLISH,
@@ -311,7 +311,7 @@ async def test_service_call_with_template_topic_renders_invalid_topic(
     If a wildcard topic is rendered, then fail.
     """
     mqtt_mock = await mqtt_mock_entry()
-    with pytest.raises(vol.Invalid) as exc:
+    with pytest.raises(probatio.Invalid) as exc:
         await hass.services.async_call(
             DOMAIN,
             mqtt.SERVICE_PUBLISH,
@@ -528,44 +528,44 @@ async def test_publish_api_with_falback_to_none(
 def test_validate_topic() -> None:
     """Test topic name/filter validation."""
     # Invalid UTF-8, must not contain U+D800 to U+DFFF.
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\ud800")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\udfff")
     # Topic MUST NOT be empty
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("")
     # Topic MUST NOT be longer than 65535 encoded bytes.
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("ü" * 32768)
     # UTF-8 MUST NOT include null character
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("bad\0one")
 
     # Topics "SHOULD NOT" include these special characters
     # (not MUST NOT, RFC2119). The receiver MAY close the connection.
     # We enforce this because mosquitto does: https://github.com/eclipse/mosquitto/commit/94fdc9cb44c829ff79c74e1daa6f7d04283dfffd
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\u0001")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\u001f")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\u007f")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\u009f")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\ufdd0")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\ufdef")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\ufffe")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\ufffe")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\uffff")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\U0001fffe")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.util.valid_topic("\U0001ffff")
 
 
@@ -573,24 +573,24 @@ def test_validate_subscribe_topic() -> None:
     """Test invalid subscribe topics."""
     mqtt.valid_subscribe_topic("#")
     mqtt.valid_subscribe_topic("sport/#")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_subscribe_topic("sport/#/")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_subscribe_topic("foo/bar#")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_subscribe_topic("foo/#/bar")
 
     mqtt.valid_subscribe_topic("+")
     mqtt.valid_subscribe_topic("+/tennis/#")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_subscribe_topic("sport+")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_subscribe_topic("sport+/")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_subscribe_topic("sport/+1")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_subscribe_topic("sport/+#")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_subscribe_topic("bad+topic")
     mqtt.valid_subscribe_topic("sport/+/player1")
     mqtt.valid_subscribe_topic("/finance")
@@ -600,13 +600,13 @@ def test_validate_subscribe_topic() -> None:
 
 def test_validate_publish_topic() -> None:
     """Test invalid publish topics."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_publish_topic("pub+")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_publish_topic("pub/+")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_publish_topic("1#")
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         mqtt.valid_publish_topic("bad+topic")
     mqtt.valid_publish_topic("//")
 
@@ -657,7 +657,7 @@ def test_entity_device_info_schema() -> None:
         }
     )
     # no identifiers
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         MQTT_ENTITY_DEVICE_INFO_SCHEMA(
             {
                 "manufacturer": "Whatever",
@@ -667,13 +667,13 @@ def test_entity_device_info_schema() -> None:
             }
         )
     # empty identifiers
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         MQTT_ENTITY_DEVICE_INFO_SCHEMA(
             {"identifiers": [], "connections": [], "name": "Beer"}
         )
 
     # not a valid URL
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         MQTT_ENTITY_DEVICE_INFO_SCHEMA(
             {
                 "manufacturer": "Whatever",

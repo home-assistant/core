@@ -13,8 +13,10 @@ from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
 from mcp.client.streamable_http import streamable_http_client
 from mcp.types import InitializeResult
+import probatio
+
+# Imported by name because the tests patch it on this module.
 from probatio import from_openapi
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
@@ -127,7 +129,7 @@ class ModelContextProtocolTool(llm.Tool):
         self,
         name: str,
         description: str | None,
-        parameters: vol.Schema,
+        parameters: probatio.Schema,
         server_url: str,
         config_entry: ConfigEntry,
         token_manager: TokenManager | None = None,

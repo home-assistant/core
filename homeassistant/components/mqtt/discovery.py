@@ -10,7 +10,7 @@ import re
 import time
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_MQTT,
@@ -80,8 +80,8 @@ TOPIC_BASE = "~"
 
 CONF_MIGRATE_DISCOVERY = "migrate_discovery"
 
-MIGRATE_DISCOVERY_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_MIGRATE_DISCOVERY): True},
+MIGRATE_DISCOVERY_SCHEMA = probatio.Schema(
+    {probatio.Optional(CONF_MIGRATE_DISCOVERY): True},
 )
 
 
@@ -110,7 +110,7 @@ def _async_process_discovery_migration(payload: MQTTDiscoveryPayload) -> bool:
     if CONF_MIGRATE_DISCOVERY in payload:
         try:
             MIGRATE_DISCOVERY_SCHEMA(payload)
-        except vol.Invalid as exc:
+        except probatio.Invalid as exc:
             _LOGGER.warning(exc)
             return False
         payload.migrate_discovery = True
@@ -303,7 +303,7 @@ def _parse_device_payload(
     _replace_all_abbreviations(device_payload)
     try:
         DEVICE_DISCOVERY_SCHEMA(device_payload)
-    except vol.Invalid as exc:
+    except probatio.Invalid as exc:
         _LOGGER.warning(
             "Invalid MQTT device discovery payload for %s, %s: '%s'",
             object_id,

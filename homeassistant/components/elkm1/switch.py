@@ -9,7 +9,7 @@ from elkm1_lib.elements import Element
 from elkm1_lib.elk import Elk
 from elkm1_lib.outputs import Output
 from elkm1_lib.thermostats import Thermostat
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -26,9 +26,9 @@ from .models import ELKM1Data
 SERVICE_SWITCH_OUTPUT_TURN_ON_FOR = "switch_output_turn_on_for"
 
 ELK_OUTPUT_TURN_ON_FOR_SERVICE_SCHEMA: VolDictType = {
-    vol.Required(ATTR_DURATION): vol.All(
+    probatio.Required(ATTR_DURATION): probatio.All(
         cv.time_period,
-        vol.Range(min=timedelta(seconds=1), max=timedelta(seconds=65535)),
+        probatio.Range(min=timedelta(seconds=1), max=timedelta(seconds=65535)),
     ),
 }
 

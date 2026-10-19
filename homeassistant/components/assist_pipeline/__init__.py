@@ -3,7 +3,7 @@
 from collections.abc import AsyncIterable
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import stt
 from homeassistant.core import Context, HomeAssistant
@@ -66,15 +66,15 @@ __all__ = (
     "async_update_pipeline",
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_DEBUG_RECORDING_DIR): str,
+                probatio.Optional(CONF_DEBUG_RECORDING_DIR): str,
             },
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

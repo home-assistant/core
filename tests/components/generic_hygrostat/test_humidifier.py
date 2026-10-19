@@ -4,8 +4,8 @@ import datetime
 
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import core as ha
 from homeassistant.components import input_boolean, switch
@@ -351,7 +351,7 @@ async def test_set_target_humidity(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY)
     assert state.attributes.get("humidity") == 40
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
             SERVICE_SET_HUMIDITY,

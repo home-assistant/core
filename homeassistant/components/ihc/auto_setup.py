@@ -4,7 +4,7 @@ import logging
 import os.path
 
 from defusedxml import ElementTree
-import voluptuous as vol
+import probatio
 
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import CONF_TYPE, CONF_UNIT_OF_MEASUREMENT, UnitOfTemperature
@@ -28,54 +28,54 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-AUTO_SETUP_SCHEMA = vol.Schema(
+AUTO_SETUP_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_BINARY_SENSOR, default=[]): vol.All(
+        probatio.Optional(CONF_BINARY_SENSOR, default=[]): probatio.All(
             cv.ensure_list,
             [
-                vol.All(
+                probatio.All(
                     {
-                        vol.Required(CONF_NODE): cv.string,
-                        vol.Required(CONF_XPATH): cv.string,
-                        vol.Optional(CONF_INVERTING, default=False): cv.boolean,
-                        vol.Optional(CONF_TYPE): cv.string,
+                        probatio.Required(CONF_NODE): cv.string,
+                        probatio.Required(CONF_XPATH): cv.string,
+                        probatio.Optional(CONF_INVERTING, default=False): cv.boolean,
+                        probatio.Optional(CONF_TYPE): cv.string,
                     }
                 )
             ],
         ),
-        vol.Optional(CONF_LIGHT, default=[]): vol.All(
+        probatio.Optional(CONF_LIGHT, default=[]): probatio.All(
             cv.ensure_list,
             [
-                vol.All(
+                probatio.All(
                     {
-                        vol.Required(CONF_NODE): cv.string,
-                        vol.Required(CONF_XPATH): cv.string,
-                        vol.Optional(CONF_DIMMABLE, default=False): cv.boolean,
+                        probatio.Required(CONF_NODE): cv.string,
+                        probatio.Required(CONF_XPATH): cv.string,
+                        probatio.Optional(CONF_DIMMABLE, default=False): cv.boolean,
                     }
                 )
             ],
         ),
-        vol.Optional(CONF_SENSOR, default=[]): vol.All(
+        probatio.Optional(CONF_SENSOR, default=[]): probatio.All(
             cv.ensure_list,
             [
-                vol.All(
+                probatio.All(
                     {
-                        vol.Required(CONF_NODE): cv.string,
-                        vol.Required(CONF_XPATH): cv.string,
-                        vol.Optional(
+                        probatio.Required(CONF_NODE): cv.string,
+                        probatio.Required(CONF_XPATH): cv.string,
+                        probatio.Optional(
                             CONF_UNIT_OF_MEASUREMENT, default=UnitOfTemperature.CELSIUS
                         ): cv.string,
                     }
                 )
             ],
         ),
-        vol.Optional(CONF_SWITCH, default=[]): vol.All(
+        probatio.Optional(CONF_SWITCH, default=[]): probatio.All(
             cv.ensure_list,
             [
-                vol.All(
+                probatio.All(
                     {
-                        vol.Required(CONF_NODE): cv.string,
-                        vol.Required(CONF_XPATH): cv.string,
+                        probatio.Required(CONF_NODE): cv.string,
+                        probatio.Required(CONF_XPATH): cv.string,
                     }
                 )
             ],
@@ -98,7 +98,7 @@ def autosetup_ihc_products(hass: HomeAssistant, config, ihc_controller, controll
     yaml = load_yaml_config_file(yaml_path)
     try:
         auto_setup_conf = AUTO_SETUP_SCHEMA(yaml)
-    except vol.Invalid as exception:
+    except probatio.Invalid as exception:
         _LOGGER.error("Invalid IHC auto setup data: %s", exception)
         return False
 

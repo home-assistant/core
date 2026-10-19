@@ -7,7 +7,7 @@ import logging
 from xml.parsers.expat import ExpatError
 
 from aiohttp import ClientSession
-import voluptuous as vol
+import probatio
 import xmltodict
 
 from homeassistant.components.sensor import (
@@ -128,12 +128,12 @@ SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_MONITORED_VARIABLES): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_KEYS)]
+        probatio.Required(CONF_MONITORED_VARIABLES): probatio.All(
+            cv.ensure_list, [probatio.In(SENSOR_KEYS)]
         ),
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_TOTAL_BANDWIDTH): cv.positive_int,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(CONF_TOTAL_BANDWIDTH): cv.positive_int,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 

@@ -6,7 +6,7 @@ import logging
 from typing import override
 
 from infrared_protocols.commands import Command as InfraredCommand
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import (
@@ -87,7 +87,7 @@ def async_subscribe_receiver(
     ent_reg = er.async_get(hass)
     try:
         entity_id = er.async_validate_entity_id(ent_reg, entity_id_or_uuid)
-    except vol.Invalid as err:
+    except probatio.Invalid as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="receiver_not_found",

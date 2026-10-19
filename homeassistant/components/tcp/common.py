@@ -2,7 +2,7 @@
 
 from typing import Any, Final
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     CONF_HOST,
@@ -27,16 +27,16 @@ from .const import (
     DEFAULT_VERIFY_SSL,
 )
 
-TCP_PLATFORM_SCHEMA: Final[dict[vol.Marker, Any]] = {
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PORT): cv.port,
-    vol.Required(CONF_PAYLOAD): cv.string,
-    vol.Optional(CONF_BUFFER_SIZE, default=DEFAULT_BUFFER_SIZE): cv.positive_int,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_VALUE_ON): cv.string,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+TCP_PLATFORM_SCHEMA: Final[dict[probatio.Marker, Any]] = {
+    probatio.Required(CONF_HOST): cv.string,
+    probatio.Required(CONF_PORT): cv.port,
+    probatio.Required(CONF_PAYLOAD): cv.string,
+    probatio.Optional(CONF_BUFFER_SIZE, default=DEFAULT_BUFFER_SIZE): cv.positive_int,
+    probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    probatio.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    probatio.Optional(CONF_VALUE_ON): cv.string,
+    probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    probatio.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+    probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
 }

@@ -8,7 +8,7 @@ import sys
 import aiohttp
 from citybikes import __version__ as CITYBIKES_CLIENT_VERSION
 from citybikes.asyncio import Client as CitybikesClient
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     ENTITY_ID_FORMAT,
@@ -72,17 +72,17 @@ CITYBIKES_ATTRIBUTION = (
 
 CITYBIKES_NETWORKS = "citybikes_networks"
 
-PLATFORM_SCHEMA = vol.All(
+PLATFORM_SCHEMA = probatio.All(
     cv.has_at_least_one_key(CONF_RADIUS, CONF_STATIONS_LIST),
     SENSOR_PLATFORM_SCHEMA.extend(
         {
-            vol.Optional(CONF_NAME, default=""): cv.string,
-            vol.Optional(CONF_NETWORK): cv.string,
-            vol.Inclusive(CONF_LATITUDE, "coordinates"): cv.latitude,
-            vol.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
-            vol.Optional(CONF_RADIUS, "station_filter"): cv.positive_int,
-            vol.Optional(CONF_STATIONS_LIST, "station_filter"): vol.All(
-                cv.ensure_list, vol.Length(min=1), [cv.string]
+            probatio.Optional(CONF_NAME, default=""): cv.string,
+            probatio.Optional(CONF_NETWORK): cv.string,
+            probatio.Inclusive(CONF_LATITUDE, "coordinates"): cv.latitude,
+            probatio.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
+            probatio.Optional(CONF_RADIUS, "station_filter"): cv.positive_int,
+            probatio.Optional(CONF_STATIONS_LIST, "station_filter"): probatio.All(
+                cv.ensure_list, probatio.Length(min=1), [cv.string]
             ),
         }
     ),

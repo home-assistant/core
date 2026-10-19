@@ -5,6 +5,7 @@ import logging
 from typing import TYPE_CHECKING, Any, override
 from urllib.parse import urlparse
 
+import probatio
 from pyheos import (
     CommandAuthenticationError,
     ConnectionState,
@@ -12,7 +13,6 @@ from pyheos import (
     HeosError,
     HeosOptions,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
@@ -31,10 +31,10 @@ from .coordinator import HeosConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-AUTH_SCHEMA = vol.Schema(
+AUTH_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_USERNAME): selector.TextSelector(),
-        vol.Optional(CONF_PASSWORD): selector.TextSelector(
+        probatio.Optional(CONF_USERNAME): selector.TextSelector(),
+        probatio.Optional(CONF_PASSWORD): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
     }
@@ -196,7 +196,9 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
         # Return form
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST, default=host): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_HOST, default=host): str}
+            ),
             errors=errors,
         )
 
@@ -215,7 +217,9 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema({vol.Required(CONF_HOST, default=host): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_HOST, default=host): str}
+            ),
             errors=errors,
         )
 

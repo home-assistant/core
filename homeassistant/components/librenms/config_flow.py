@@ -7,7 +7,7 @@ from typing import Any, override
 from aiolibrenms import Librenms
 from aiolibrenms.const import CONNECT_ERRORS
 from aiolibrenms.exceptions import LibrenmsUnauthenticatedError
-import voluptuous as vol
+import probatio
 from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -37,15 +37,15 @@ class InvalidUrl(HomeAssistantError):
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL): TextSelector(
+        probatio.Required(CONF_URL): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.URL)
         ),
-        vol.Required(CONF_API_KEY): TextSelector(
+        probatio.Required(CONF_API_KEY): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
-        vol.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
+        probatio.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
     }
 )
 
@@ -164,9 +164,9 @@ class LibrenmsConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_API_KEY): TextSelector(
+                    probatio.Required(CONF_API_KEY): TextSelector(
                         config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     )
                 }
@@ -232,12 +232,12 @@ class LibrenmsConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_URL, default=url): TextSelector(
+                    probatio.Required(CONF_URL, default=url): TextSelector(
                         config=TextSelectorConfig(type=TextSelectorType.URL)
                     ),
-                    vol.Required(CONF_VERIFY_SSL, default=verify_ssl): bool,
+                    probatio.Required(CONF_VERIFY_SSL, default=verify_ssl): bool,
                 }
             ),
             errors=errors,

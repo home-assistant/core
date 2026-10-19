@@ -4,8 +4,8 @@ from datetime import date, timedelta
 import logging
 from typing import final, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DATE
@@ -43,7 +43,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_SET_VALUE, {vol.Required(ATTR_DATE): cv.date}, _async_set_value
+        SERVICE_SET_VALUE, {probatio.Required(ATTR_DATE): cv.date}, _async_set_value
     )
 
     return True

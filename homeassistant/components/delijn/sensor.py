@@ -3,9 +3,9 @@
 from datetime import datetime
 import logging
 
+import probatio
 from pydelijn.api import Passages
 from pydelijn.common import HttpException
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -31,11 +31,13 @@ DEFAULT_NAME = "De Lijn"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_NEXT_DEPARTURE): [
+        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(CONF_NEXT_DEPARTURE): [
             {
-                vol.Required(CONF_STOP_ID): cv.string,
-                vol.Optional(CONF_NUMBER_OF_DEPARTURES, default=5): cv.positive_int,
+                probatio.Required(CONF_STOP_ID): cv.string,
+                probatio.Optional(
+                    CONF_NUMBER_OF_DEPARTURES, default=5
+                ): cv.positive_int,
             }
         ],
     }

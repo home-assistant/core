@@ -7,7 +7,7 @@ from typing import Any, override
 
 from aiohttp import ClientResponseError
 from doorbirdpy import DoorBird
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
@@ -40,22 +40,22 @@ DEFAULT_OPTIONS = {CONF_EVENTS: [DEFAULT_DOORBELL_EVENT, DEFAULT_MOTION_EVENT]}
 
 
 AUTH_VOL_DICT: VolDictType = {
-    vol.Required(CONF_USERNAME): str,
-    vol.Required(CONF_PASSWORD): str,
+    probatio.Required(CONF_USERNAME): str,
+    probatio.Required(CONF_PASSWORD): str,
 }
-AUTH_SCHEMA = vol.Schema(AUTH_VOL_DICT)
+AUTH_SCHEMA = probatio.Schema(AUTH_VOL_DICT)
 
 
 def _schema_with_defaults(
     host: str | None = None, name: str | None = None
-) -> vol.Schema:
-    return vol.Schema(
+) -> probatio.Schema:
+    return probatio.Schema(
         {
-            vol.Required(CONF_HOST, default=host): str,
+            probatio.Required(CONF_HOST, default=host): str,
             **AUTH_VOL_DICT,
             # Name field is no longer allowed in config flow schemas
             # pylint: disable-next=home-assistant-config-flow-name-field
-            vol.Optional(CONF_NAME, default=name): str,
+            probatio.Optional(CONF_NAME, default=name): str,
         }
     )
 
@@ -104,7 +104,7 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the DoorBird config flow."""
-        self.discovery_schema: vol.Schema | None = None
+        self.discovery_schema: probatio.Schema | None = None
 
     async def _async_verify_existing_device_for_discovery(
         self,
@@ -293,8 +293,8 @@ class OptionsFlowHandler(OptionsFlow):
 
         # We convert to a comma separated list for the UI
         # since there really isn't anything better
-        options_schema = vol.Schema(
-            {vol.Optional(CONF_EVENTS, default=", ".join(current_events)): str}
+        options_schema = probatio.Schema(
+            {probatio.Optional(CONF_EVENTS, default=", ".join(current_events)): str}
         )
         return self.async_show_form(step_id="init", data_schema=options_schema)
 

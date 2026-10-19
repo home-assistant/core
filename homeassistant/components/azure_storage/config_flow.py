@@ -9,7 +9,7 @@ from azure.core.pipeline.transport._aiohttp import (
     AioHttpTransport,
 )  # need to import from private file, as it is not properly imported in the init
 from azure.storage.blob.aio import ContainerClient
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -89,13 +89,13 @@ class AzureStorageConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ACCOUNT_NAME): str,
-                    vol.Required(
+                    probatio.Required(CONF_ACCOUNT_NAME): str,
+                    probatio.Required(
                         CONF_CONTAINER_NAME, default="home-assistant-backups"
                     ): str,
-                    vol.Required(CONF_STORAGE_ACCOUNT_KEY): str,
+                    probatio.Required(CONF_STORAGE_ACCOUNT_KEY): str,
                 }
             ),
             errors=errors,
@@ -129,9 +129,9 @@ class AzureStorageConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_STORAGE_ACCOUNT_KEY): str,
+                    probatio.Required(CONF_STORAGE_ACCOUNT_KEY): str,
                 }
             ),
             errors=errors,
@@ -157,13 +157,13 @@ class AzureStorageConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={**reconfigure_entry.data, **user_input},
                 )
         return self.async_show_form(
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_CONTAINER_NAME,
                         default=reconfigure_entry.data[CONF_CONTAINER_NAME],
                     ): str,
-                    vol.Required(
+                    probatio.Required(
                         CONF_STORAGE_ACCOUNT_KEY,
                         default=reconfigure_entry.data[CONF_STORAGE_ACCOUNT_KEY],
                     ): str,

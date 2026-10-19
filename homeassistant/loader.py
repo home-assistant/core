@@ -31,8 +31,8 @@ from awesomeversion import (
     AwesomeVersionException,
     AwesomeVersionStrategy,
 )
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from . import generated
 from .const import Platform
@@ -379,7 +379,7 @@ async def async_get_config_flows(
 class ComponentProtocol(Protocol):
     """Define the format of an integration."""
 
-    CONFIG_SCHEMA: vol.Schema
+    CONFIG_SCHEMA: probatio.Schema
     DOMAIN: str
 
     async def async_setup_entry(

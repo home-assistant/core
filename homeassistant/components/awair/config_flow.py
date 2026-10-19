@@ -4,10 +4,10 @@ from collections.abc import Mapping
 from typing import Any, Self, cast, override
 
 from aiohttp.client_exceptions import ClientError
+import probatio
 from python_awair import Awair, AwairLocal, AwairLocalDevice
 from python_awair.exceptions import AuthError, AwairError
 from python_awair.user import AwairUser
-import voluptuous as vol
 
 from homeassistant.components import onboarding
 from homeassistant.config_entries import SOURCE_ZEROCONF, ConfigFlow, ConfigFlowResult
@@ -109,7 +109,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="cloud",
-            data_schema=vol.Schema({vol.Optional(CONF_ACCESS_TOKEN): str}),
+            data_schema=probatio.Schema({probatio.Optional(CONF_ACCESS_TOKEN): str}),
             description_placeholders={
                 "url": "https://developer.getawair.com/onboard/login"
             },
@@ -181,11 +181,13 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
         discovered = self._get_discovered_entries()
 
         if not discovered or (user_input and user_input.get(CONF_DEVICE) == "manual"):
-            data_schema = vol.Schema({vol.Required(CONF_HOST): str})
+            data_schema = probatio.Schema({probatio.Required(CONF_HOST): str})
 
         elif discovered:
             discovered["manual"] = "Manual"
-            data_schema = vol.Schema({vol.Required(CONF_DEVICE): vol.In(discovered)})
+            data_schema = probatio.Schema(
+                {probatio.Required(CONF_DEVICE): probatio.In(discovered)}
+            )
 
         return self.async_show_form(
             step_id="local_pick",
@@ -221,7 +223,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_ACCESS_TOKEN): str}),
             errors=errors,
         )
 

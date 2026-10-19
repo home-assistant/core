@@ -10,7 +10,7 @@ from aiorussound.connection import (
     RussoundSerialConnectionHandler,
 )
 from aiorussound.rio import Controller, RussoundRIOClient
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -40,9 +40,9 @@ from .const import (
     TYPE_TCP,
 )
 
-TRANSPORT_SCHEMA = vol.Schema(
+TRANSPORT_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_TYPE, default=TYPE_TCP): SelectSelector(
+        probatio.Required(CONF_TYPE, default=TYPE_TCP): SelectSelector(
             SelectSelectorConfig(
                 options=[TYPE_TCP, TYPE_SERIAL],
                 translation_key="connection_type",
@@ -51,26 +51,26 @@ TRANSPORT_SCHEMA = vol.Schema(
     }
 )
 
-TCP_SCHEMA = vol.Schema(
+TCP_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     }
 )
 
-SERIAL_SCHEMA = vol.Schema(
+SERIAL_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_DEVICE): SerialPortSelector(),
-        vol.Optional(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): vol.All(
-            vol.Coerce(int),
-            vol.Range(min=1),
+        probatio.Required(CONF_DEVICE): SerialPortSelector(),
+        probatio.Optional(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): probatio.All(
+            probatio.Coerce(int),
+            probatio.Range(min=1),
         ),
     }
 )
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(
+        probatio.Optional(
             CONF_ZONE_SOURCE_EXCLUSION,
             default=True,
         ): bool,

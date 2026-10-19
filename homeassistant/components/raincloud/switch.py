@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
@@ -28,12 +28,12 @@ SWITCHES = ["auto_watering", "manual_watering"]
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SWITCHES)): vol.All(
-            cv.ensure_list, [vol.In(SWITCHES)]
-        ),
-        vol.Optional(CONF_WATERING_TIME, default=DEFAULT_WATERING_TIME): vol.All(
-            vol.In(ALLOWED_WATERING_TIME)
-        ),
+        probatio.Optional(
+            CONF_MONITORED_CONDITIONS, default=list(SWITCHES)
+        ): probatio.All(cv.ensure_list, [probatio.In(SWITCHES)]),
+        probatio.Optional(
+            CONF_WATERING_TIME, default=DEFAULT_WATERING_TIME
+        ): probatio.All(probatio.In(ALLOWED_WATERING_TIME)),
     }
 )
 
