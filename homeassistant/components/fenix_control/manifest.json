@@ -1,6 +1,7 @@
 {
   "domain": "fenix_control",
   "name": "FENIX Control",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@baracudaz"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/fenix_control",

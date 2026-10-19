@@ -4,9 +4,7 @@ rules:
     status: exempt
     comment: The integration does not provide service actions.
   appropriate-polling: done
-  brands:
-    status: todo
-    comment: Pending the home-assistant/brands PR with the manufacturer-approved logos.
+  brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
@@ -17,15 +15,9 @@ rules:
   docs-conditions:
     status: exempt
     comment: The integration does not provide conditions.
-  docs-high-level-description:
-    status: done
-    comment: Documentation draft https://github.com/baracudaz/home-assistant-docs/pull/1
-  docs-installation-instructions:
-    status: done
-    comment: Documentation draft https://github.com/baracudaz/home-assistant-docs/pull/1
-  docs-removal-instructions:
-    status: done
-    comment: Documentation draft https://github.com/baracudaz/home-assistant-docs/pull/1
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   docs-triggers:
     status: exempt
     comment: The integration does not provide triggers.
