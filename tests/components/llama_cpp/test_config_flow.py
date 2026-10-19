@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx2
 import openai
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.llama_cpp.const import (
@@ -24,8 +25,6 @@ from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_PROMPT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import llm
-
-from tests.common import MockConfigEntry
 
 RECOMMENDED_OPTIONS = {
     CONF_RECOMMENDED: True,

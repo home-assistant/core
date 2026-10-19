@@ -1,41 +1,41 @@
 """Support for scripts."""
 
-import asyncio
 from typing import Any
 
-import probatio
-
 from homeassistant.components import websocket_api
-from homeassistant.const import (
-    CONF_MODE,  # noqa: F401
-    SERVICE_RELOAD,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_ON,
-)
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.config_validation import make_entity_service_schema
+from homeassistant.const import CONF_MODE, STATE_ON
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.async_ import create_eager_task
 
-from .config import ScriptConfig  # noqa: F401
-from .const import (
-    ATTR_VARIABLES,
-    DOMAIN,
-    EVENT_SCRIPT_STARTED,  # noqa: F401
-    LOGGER,
-)
-from .entity import BaseScriptEntity, UnavailableScriptEntity  # noqa: F401
+from .config import ScriptConfig
+from .const import DOMAIN, EVENT_SCRIPT_STARTED, LOGGER
+from .entity import BaseScriptEntity, UnavailableScriptEntity
 from .helpers import async_get_blueprints
+from .services import async_setup_services
 from .util import async_process_config
 
-SCRIPT_TURN_ONOFF_SCHEMA = make_entity_service_schema(
-    {probatio.Optional(ATTR_VARIABLES): {str: cv.match_all}}
-)
-RELOAD_SERVICE_SCHEMA = probatio.Schema({})
+__all__ = [
+    "CONF_MODE",
+    "DOMAIN",
+    "EVENT_SCRIPT_STARTED",
+    "BaseScriptEntity",
+    "ScriptConfig",
+    "UnavailableScriptEntity",
+    "areas_in_script",
+    "async_get_blueprints",
+    "blueprint_in_script",
+    "devices_in_script",
+    "entities_in_script",
+    "floors_in_script",
+    "labels_in_script",
+    "scripts_with_area",
+    "scripts_with_blueprint",
+    "scripts_with_device",
+    "scripts_with_entity",
+    "scripts_with_floor",
+    "scripts_with_label",
+]
 
 
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
@@ -181,62 +181,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async_get_blueprints(hass).async_populate(), eager_start=True
     )
 
-    async def reload_service(service: ServiceCall) -> None:
-        """Call a service to reload scripts."""
-        await async_get_blueprints(hass).async_reset_cache()
-        conf = await component.async_prepare_reload(skip_reset=True)
-        await async_process_config(hass, conf, component)
-
-    async def turn_on_service(service: ServiceCall) -> None:
-        """Call a service to turn script on."""
-        variables = service.data.get(ATTR_VARIABLES)
-        script_entities = await component.async_extract_from_service(service)
-        for script_entity in script_entities:
-            await script_entity.async_turn_on(
-                variables=variables, context=service.context, wait=False
-            )
-
-    async def turn_off_service(service: ServiceCall) -> None:
-        """Cancel a script."""
-        # Stopping a script is ok to be done in parallel
-        script_entities = await component.async_extract_from_service(service)
-
-        if not script_entities:
-            return
-
-        for script_entity in script_entities:
-            script_entity.async_set_context(service.context)
-
-        await asyncio.wait(
-            [
-                create_eager_task(script_entity.async_turn_off())
-                for script_entity in script_entities
-            ]
-        )
-
-    async def toggle_service(service: ServiceCall) -> None:
-        """Toggle a script."""
-        script_entities = await component.async_extract_from_service(service)
-        for script_entity in script_entities:
-            await script_entity.async_toggle(context=service.context, wait=False)
-
-    # Should be adjusted to register actions in async_setup_services in services.py
-    # pylint: disable-next=home-assistant-action-registered-outside-services-module
-    hass.services.async_register(
-        DOMAIN, SERVICE_RELOAD, reload_service, schema=RELOAD_SERVICE_SCHEMA
-    )
-    # pylint: disable-next=home-assistant-action-registered-outside-services-module
-    hass.services.async_register(
-        DOMAIN, SERVICE_TURN_ON, turn_on_service, schema=SCRIPT_TURN_ONOFF_SCHEMA
-    )
-    # pylint: disable-next=home-assistant-action-registered-outside-services-module
-    hass.services.async_register(
-        DOMAIN, SERVICE_TURN_OFF, turn_off_service, schema=SCRIPT_TURN_ONOFF_SCHEMA
-    )
-    # pylint: disable-next=home-assistant-action-registered-outside-services-module
-    hass.services.async_register(
-        DOMAIN, SERVICE_TOGGLE, toggle_service, schema=SCRIPT_TURN_ONOFF_SCHEMA
-    )
+    async_setup_services(hass)
 
     websocket_api.async_register_command(hass, websocket_config)
 

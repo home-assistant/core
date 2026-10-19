@@ -11,6 +11,8 @@ from aiotedee.exceptions import (
     TedeeWebhookException,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.tedee.const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN
@@ -22,9 +24,6 @@ from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 from .conftest import WEBHOOK_ID
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_load_unload_config_entry(

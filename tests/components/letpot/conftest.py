@@ -10,6 +10,7 @@ from letpot.models import (
     LetPotDeviceStatus,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.letpot.const import (
     CONF_ACCESS_TOKEN_EXPIRES,
@@ -21,8 +22,6 @@ from homeassistant.components.letpot.const import (
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL
 
 from . import AUTHENTICATION, MAX_STATUS, SE_STATUS
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
