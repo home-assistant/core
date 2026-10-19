@@ -239,6 +239,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         },
         version=1,
         minor_version=2,
+        title="Mock title",
     )
     config_entry.add_to_hass(hass)
     hass.set_state(CoreState.stopped)
@@ -289,4 +290,5 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         CONF_SCAN_INTERVAL: 10,
         CONF_MAC_EXCLUDE: ["00:00:00:00:00:00", "11:22:33:44:55:66"],
     }
+    assert config_entry.title == "Mock title"
     assert len(mock_setup_entry.mock_calls) == 1
