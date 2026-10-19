@@ -99,7 +99,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 continue
             hass.services.async_remove(DOMAIN, existing_service)
 
-        for name, command_config in conf[DOMAIN].items():
+        for name, command_config in conf.get(DOMAIN, {}).items():
             async_register_rest_command(name, command_config)
 
     @callback
