@@ -79,6 +79,7 @@ async def test_data_secure_group_key_issue_repair_flow(
     knx.receive_data_secure_issue("1/2/5", source="1.0.1")
     issue = issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_DATA_SECURE_GROUP_KEY)
     assert issue is not None
+    assert issue.config_entry_id == knx.mock_config_entry.entry_id
     assert issue.translation_placeholders == {
         "addresses": "`1/2/5` from 1.0.1, 1.0.10\n`11/0/0` from 1.0.1",  # check sorting
         "interface": "0.0.0",
