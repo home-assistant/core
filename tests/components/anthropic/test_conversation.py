@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncGenerator, AsyncIterator, Generator
 from copy import deepcopy
-import datetime
+import datetime as dt
 from pathlib import Path
 from typing import Unpack
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
@@ -153,7 +153,7 @@ def code_execution_container() -> Container:
     """Return an active code execution container."""
     return Container(
         id="container_paused",
-        expires_at=dt_util.utcnow() + datetime.timedelta(minutes=5),
+        expires_at=dt_util.utcnow() + dt.timedelta(minutes=5),
     )
 
 
@@ -3022,7 +3022,7 @@ async def test_pause_turn_followed_by_local_tool(
                     tool_name="GetCurrentTime",
                     result=llm.ToolResult(
                         data={
-                            "speech_slots": {"time": datetime.time(14, 30, 0)},
+                            "speech_slots": {"time": dt.time(14, 30, 0)},
                             "message": "Current time retrieved",
                         }
                     ),

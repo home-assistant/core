@@ -11,7 +11,7 @@ This checker flags:
 - action registrations anywhere else in an integration
 - an ``async_setup_services`` or ``setup_services`` with a different signature
 
-https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/action-setup/
+https://contributors.home-assistant.io/core/quality-scale/action-setup/
 """
 
 from astroid import nodes

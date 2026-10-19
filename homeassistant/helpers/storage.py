@@ -666,8 +666,10 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
 
     async def async_remove(self) -> None:
         """Remove all data."""
-        self._io.async_invalidate_cache()
+        self._data = None
         self._async_cleanup_delay_listener()
         self._async_cleanup_final_write_listener()
 
-        await self._io.async_remove()
+        async with self._write_lock:
+            self._io.async_invalidate_cache()
+            await self._io.async_remove()

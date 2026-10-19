@@ -1,6 +1,6 @@
 """Tests for calendar platform of local calendar."""
 
-import datetime
+import datetime as dt
 from datetime import timedelta
 import errno
 import textwrap
@@ -160,8 +160,8 @@ async def test_active_event(
     setup_integration: None,
 ) -> None:
     """Test an event with a start/end date time."""
-    start = dt_util.now() - datetime.timedelta(minutes=30)
-    end = dt_util.now() + datetime.timedelta(minutes=30)
+    start = dt_util.now() - dt.timedelta(minutes=30)
+    end = dt_util.now() + dt.timedelta(minutes=30)
     client = await ws_client()
     await client.cmd_result(
         "create",
@@ -197,8 +197,8 @@ async def test_upcoming_event(
     setup_integration: None,
 ) -> None:
     """Test an event with a start/end date time."""
-    start = dt_util.now() + datetime.timedelta(days=1)
-    end = dt_util.now() + datetime.timedelta(days=1, hours=1)
+    start = dt_util.now() + dt.timedelta(days=1)
+    end = dt_util.now() + dt.timedelta(days=1, hours=1)
     client = await ws_client()
     await client.cmd_result(
         "create",

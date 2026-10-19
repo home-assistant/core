@@ -38,15 +38,15 @@ class HassEnforceConfigFlowNoPollingChecker(BaseChecker):
         "W7407": (
             "Config flow should not include a '%s' field -- polling intervals "
             "should be fixed by the integration, not user-configurable "
-            "(https://developers.home-assistant.io/docs/core/"
-            "integration-quality-scale/rules/appropriate-polling)",
+            "(https://contributors.home-assistant.io/core/"
+            "quality-scale/appropriate-polling/)",
             "home-assistant-config-flow-polling-field",
             "Used when a config flow schema includes a polling/scan interval "
             "field. The integration author should determine the appropriate "
             "polling frequency based on API rate limits and data freshness "
             "needs. Polling intervals should not be user-configurable. "
-            "See https://developers.home-assistant.io/docs/core/"
-            "integration-quality-scale/rules/appropriate-polling",
+            "See https://contributors.home-assistant.io/core/"
+            "quality-scale/appropriate-polling/",
         ),
     }
     options = ()

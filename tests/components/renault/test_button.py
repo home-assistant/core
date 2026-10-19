@@ -4,14 +4,16 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from renault_api.exceptions import NotAuthenticatedException
 from renault_api.kamereon import schemas
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.renault.const import DOMAIN
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import async_load_fixture, snapshot_platform
@@ -126,6 +128,37 @@ async def test_button_start_charge(
         )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == (None,)
+
+
+@pytest.mark.usefixtures("fixtures_with_data")
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+async def test_button_authentication_expired(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
+    """Test a button press with an expired login triggers reauth."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.set_charge_start",
+            side_effect=NotAuthenticatedException("Authentication expired."),
+        ),
+        pytest.raises(HomeAssistantError) as err,
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            service_data={ATTR_ENTITY_ID: "button.reg_zoe_40_start_charge"},
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "authentication_expired"
+    await hass.async_block_till_done()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == config_entry.entry_id
 
 
 @pytest.mark.usefixtures("fixtures_with_data")

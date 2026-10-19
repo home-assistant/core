@@ -1,7 +1,7 @@
 """The tests for sensor recorder platform."""
 
 from collections.abc import Iterable
-import datetime
+import datetime as dt
 from datetime import timedelta
 import math
 from statistics import fmean
@@ -259,7 +259,7 @@ async def test_statistics_during_period(
     }
 
 
-@pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2022, 10, 21, 7, 25, tzinfo=dt.UTC))
 @pytest.mark.usefixtures("recorder_mock")
 @pytest.mark.parametrize("offset", [0, 1, 2])
 async def test_statistic_during_period(
@@ -707,7 +707,7 @@ def _circular_mean_approx(
     return pytest.approx(_circular_mean(values)["mean"], abs=tolerance)
 
 
-@pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2022, 10, 21, 7, 25, tzinfo=dt.UTC))
 @pytest.mark.usefixtures("recorder_mock")
 @pytest.mark.parametrize("offset", [0, 1, 2])
 @pytest.mark.parametrize(
@@ -1070,7 +1070,7 @@ async def test_statistic_during_period_circular_mean(
     }
 
 
-@pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2022, 10, 21, 7, 25, tzinfo=dt.UTC))
 @pytest.mark.usefixtures("recorder_mock")
 async def test_statistic_during_period_hole(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
@@ -1223,7 +1223,7 @@ async def test_statistic_during_period_hole(
     }
 
 
-@pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2022, 10, 21, 7, 25, tzinfo=dt.UTC))
 @pytest.mark.usefixtures("recorder_mock")
 async def test_statistic_during_period_hole_circular_mean(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
@@ -1378,10 +1378,10 @@ async def test_statistic_during_period_hole_circular_mean(
     "frozen_time",
     [
         # This is the normal case, all statistics runs are available
-        datetime.datetime(2022, 10, 21, 6, 31, tzinfo=datetime.UTC),
+        dt.datetime(2022, 10, 21, 6, 31, tzinfo=dt.UTC),
         # Statistic only available up until 6:25, this can happen if
         # core has been shut down for an hour
-        datetime.datetime(2022, 10, 21, 7, 31, tzinfo=datetime.UTC),
+        dt.datetime(2022, 10, 21, 7, 31, tzinfo=dt.UTC),
     ],
 )
 @pytest.mark.usefixtures("recorder_mock")
@@ -1389,7 +1389,7 @@ async def test_statistic_during_period_partial_overlap(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
-    frozen_time: datetime.datetime,
+    frozen_time: dt.datetime,
 ) -> None:
     """Test statistic_during_period."""
     client = await hass_ws_client()
@@ -1725,7 +1725,7 @@ async def test_statistic_during_period_partial_overlap(
     )
 
 
-@pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2022, 10, 21, 7, 25, tzinfo=dt.UTC))
 @pytest.mark.parametrize(
     ("calendar_period", "start_time", "end_time"),
     [
@@ -2789,7 +2789,7 @@ async def test_clear_statistics_range(
     assert response["success"]
     await async_recorder_block_till_done(hass)
 
-    def starts(period: str) -> dict[str, list[datetime.datetime]]:
+    def starts(period: str) -> dict[str, list[dt.datetime]]:
         stats = statistics_during_period(
             hass,
             start,

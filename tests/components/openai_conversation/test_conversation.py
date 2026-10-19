@@ -1,6 +1,6 @@
 """Tests for the OpenAI integration."""
 
-import datetime
+import datetime as dt
 from typing import Literal
 from unittest.mock import AsyncMock
 
@@ -289,7 +289,7 @@ async def test_function_call(
                 data={
                     "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
                     "response_type": "action_done",
-                    "speech_slots": {"time": datetime.time(12, 0, 0, 0)},
+                    "speech_slots": {"time": dt.time(12, 0, 0, 0)},
                     "data": {"success": [], "failed": []},
                 }
             ),
