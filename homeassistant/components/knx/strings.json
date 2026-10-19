@@ -1688,6 +1688,10 @@
       "description": "The stored expose configuration of the following entities is invalid, so it was not set up:\n\n{entities}\n\nCorrect or delete it in the KNX panel. Check the logs for details.",
       "title": "Invalid KNX expose configuration"
     },
+    "telegram_storage_disk_space": {
+      "description": "The KNX telegram database needs about {required_mb} MB of free space on its disk for a one-time upgrade, but only {available_mb} MB are available. KNX telegrams are not stored until the upgrade has run. Free up space; the upgrade is retried on the next start of Home Assistant or reload of the integration.",
+      "title": "Not enough disk space for the KNX telegram database upgrade"
+    },
     "telegram_storage_error": {
       "description": "The configured KNX telegram storage backend failed to initialize. As a result, KNX telegrams are currently not being stored. Check the logs for details on the error and ensure your database is accessible.",
       "title": "KNX telegram storage error"

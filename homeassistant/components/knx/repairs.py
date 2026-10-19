@@ -266,6 +266,26 @@ def async_create_telegram_storage_issue(
 
 
 @callback
+def async_create_telegram_storage_disk_space_issue(
+    hass: HomeAssistant, config_entry_id: str, required: int, available: int
+) -> None:
+    """Create a repair issue for a database upgrade the disk has no room for."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR,
+        config_entry_id=config_entry_id,
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="telegram_storage_disk_space",
+        translation_placeholders={
+            "required_mb": str(required >> 20),
+            "available_mb": str(available >> 20),
+        },
+    )
+
+
+@callback
 def async_delete_telegram_storage_issue(hass: HomeAssistant) -> None:
     """Delete the repair issue for storage initialization failure."""
     ir.async_delete_issue(

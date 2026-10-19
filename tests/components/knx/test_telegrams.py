@@ -12,6 +12,7 @@ from freezegun.api import FrozenDateTimeFactory
 from knx_telegram_store import (
     BufferedPostgresStore,
     BufferedSqliteStore,
+    InsufficientDiskSpaceError,
     KnxTelegramStoreException,
     StoredTelegram,
     TelegramQuery,
@@ -803,6 +804,30 @@ async def test_postgres_store_init_gives_up_after_retries(
         issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
         is not None
     )
+
+
+async def test_store_init_without_disk_space(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """A database upgrade the disk has no room for raises a repair issue with the numbers."""
+    with patch(
+        "knx_telegram_store.BufferedSqliteStore.initialize",
+        side_effect=InsufficientDiskSpaceError(
+            "The timestamp conversion", 400 << 20, 12 << 20
+        ),
+    ):
+        await knx.setup_integration(real_telegram_store=True)
+
+    assert hass.data[KNX_MODULE_KEY].telegrams.store is None
+    issue = issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
+    assert issue is not None
+    assert issue.translation_key == "telegram_storage_disk_space"
+    assert issue.translation_placeholders == {
+        "required_mb": "400",
+        "available_mb": "12",
+    }
 
 
 async def test_postgres_backend_flushes_more_often_than_sqlite(
