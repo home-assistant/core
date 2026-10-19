@@ -9,10 +9,6 @@ from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import AddonState, InstalledAddonComplete
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.components.hassio.common import (
-    MOCK_REPOSITORIES,
-    MOCK_STORE_ADDONS,
-)
 
 from homeassistant import config_entries
 from homeassistant.components.hassio import DOMAIN
@@ -26,6 +22,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+
+from .common import MOCK_REPOSITORIES, MOCK_STORE_ADDONS
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
