@@ -556,9 +556,7 @@ class Zone(collection.CollectionEntity):
     def _state_is_in_zone(self, state: State | None) -> bool:
         """Return if given state is in zone."""
 
-        from homeassistant.components.device_tracker import (  # noqa: PLC0415
-            ATTR_IN_ZONES,
-        )
+        from homeassistant.components.device_tracker import ATTR_IN_ZONES  # noqa: PLC0415
 
         return (
             state is not None

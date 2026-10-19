@@ -1841,9 +1841,7 @@ async def async_test_recorder(
     from homeassistant.components import recorder  # noqa: PLC0415
     from homeassistant.components.recorder import migration  # noqa: PLC0415
 
-    from .components.recorder.common import (  # noqa: PLC0415
-        async_recorder_block_till_done,
-    )
+    from .components.recorder.common import async_recorder_block_till_done  # noqa: PLC0415
     from .patch_recorder import real_session_scope  # noqa: PLC0415
 
     if TYPE_CHECKING:
@@ -2051,9 +2049,7 @@ def mock_recorder_before_hass() -> None:
 @pytest.fixture(name="init_infrared")
 async def init_infrared_fixture(hass: HomeAssistant) -> None:
     """Set up the Infrared integration for testing."""
-    from .components.infrared.common import (  # noqa: PLC0415
-        init_infrared_fixture_helper,
-    )
+    from .components.infrared.common import init_infrared_fixture_helper  # noqa: PLC0415
 
     await init_infrared_fixture_helper(hass)
 
@@ -2063,9 +2059,7 @@ async def mock_infrared_emitter_entity_fixture(
     hass: HomeAssistant, init_infrared: None
 ) -> MockInfraredEmitterEntity:
     """Return a mock infrared emitter entity."""
-    from .components.infrared.common import (  # noqa: PLC0415
-        mock_infrared_emitter_entity_fixture_helper,
-    )
+    from .components.infrared.common import mock_infrared_emitter_entity_fixture_helper  # noqa: PLC0415
 
     return await mock_infrared_emitter_entity_fixture_helper(hass)
 
@@ -2075,9 +2069,7 @@ async def mock_infrared_receiver_entity_fixture(
     hass: HomeAssistant, init_infrared: None
 ) -> MockInfraredReceiverEntity:
     """Return a mock infrared receiver entity."""
-    from .components.infrared.common import (  # noqa: PLC0415
-        mock_infrared_receiver_entity_fixture_helper,
-    )
+    from .components.infrared.common import mock_infrared_receiver_entity_fixture_helper  # noqa: PLC0415
 
     return await mock_infrared_receiver_entity_fixture_helper(hass)
 
@@ -2143,9 +2135,7 @@ def register_non_connectable_scanner(hass: HomeAssistant) -> Generator[None]:
 
     from homeassistant.components import bluetooth  # noqa: PLC0415
 
-    from .components.bluetooth import (  # noqa: PLC0415
-        NON_CONNECTABLE_REMOTE_SOURCE_ADDRESS,
-    )
+    from .components.bluetooth import NON_CONNECTABLE_REMOTE_SOURCE_ADDRESS  # noqa: PLC0415
 
     remote_scanner = BaseHaRemoteScanner(
         NON_CONNECTABLE_REMOTE_SOURCE_ADDRESS, "non connectable", None, False
@@ -2216,10 +2206,7 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
 
     # Late imports to avoid loading bleak unless we need it
 
-    from habluetooth import (  # noqa: PLC0415
-        manager as bluetooth_manager,
-        scanner as bluetooth_scanner,
-    )
+    from habluetooth import manager as bluetooth_manager, scanner as bluetooth_scanner  # noqa: PLC0415
 
     # We need to drop the stop method from the object since we patched
     # out start and this fixture will expire before the stop method is called
