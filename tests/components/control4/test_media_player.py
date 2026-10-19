@@ -12,12 +12,17 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache,
+    snapshot_platform,
+)
 
 
 @pytest.fixture
@@ -83,61 +88,6 @@ async def test_media_player_room_off(
 
 @pytest.mark.usefixtures(
     "mock_c4_account",
-    "mock_c4_director_duplicate_source_names",
-    "mock_room_off_update_variables",
-)
-async def test_media_player_turn_on_prefers_playing_source(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_c4_room: MagicMock,
-    mock_room_off_variables: dict,
-) -> None:
-    """Test that turn_on starts the room with the source that is playing.
-
-    The room has two video sources (ids 100 and 101, both named "TV"), the
-    current video device is 100, but the playing source is 101 — so 101 must
-    be posted: the playing source outranks the current video source.
-    """
-    mock_room_off_variables[1]["CURRENT MEDIA INFO"] = {"mediainfo": {"medSrcDev": 101}}
-    mock_room_off_variables[1]["CURRENT_VIDEO_DEVICE"] = 100
-    await setup_integration(hass, mock_config_entry)
-
-    await hass.services.async_call(
-        "media_player",
-        "turn_on",
-        {"entity_id": "media_player.living_room"},
-        blocking=True,
-    )
-
-    mock_c4_room.set_video_and_audio_source.assert_awaited_once_with(101)
-
-
-@pytest.mark.usefixtures(
-    "mock_c4_account", "mock_c4_director", "mock_room_off_update_variables"
-)
-async def test_media_player_turn_on_ignores_unknown_current_video_source(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_c4_room: MagicMock,
-    mock_room_off_variables: dict,
-) -> None:
-    """Test that a current video device that is not a source is not used."""
-    mock_room_off_variables[1]["CURRENT_VIDEO_DEVICE"] = 999
-    await setup_integration(hass, mock_config_entry)
-
-    await hass.services.async_call(
-        "media_player",
-        "turn_on",
-        {"entity_id": "media_player.living_room"},
-        blocking=True,
-    )
-
-    # Falls through to the room's video source instead of posting 999.
-    mock_c4_room.set_video_and_audio_source.assert_awaited_once_with(100)
-
-
-@pytest.mark.usefixtures(
-    "mock_c4_account",
     "mock_c4_director_audio_first_mixed_sources",
     "mock_room_off_update_variables",
 )
@@ -146,12 +96,10 @@ async def test_media_player_turn_on_prefers_video_source(
     mock_config_entry: MockConfigEntry,
     mock_c4_room: MagicMock,
 ) -> None:
-    """Test that turn_on prefers a video source even when audio is listed first.
+    """Test that a room that never played starts with its first video source.
 
-    Room 1 has an audio source (200) listed before a video source (100), and
-    neither the playing source nor the current video device identifies a
-    source, so the final fallback must skip the first (audio) source and start
-    the room with the video one.
+    Room 1 has an audio source (200) listed before a video source (100), so the
+    fallback must skip the first (audio) source and start the video one.
     """
     await setup_integration(hass, mock_config_entry)
 
@@ -188,25 +136,48 @@ async def test_media_player_turn_on_audio_only_room(
     mock_c4_room.set_video_and_audio_source.assert_not_called()
 
 
+async def _async_refresh(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Let the coordinator poll the director again."""
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+
 @pytest.mark.usefixtures(
     "mock_c4_account",
     "mock_c4_director_duplicate_source_names",
     "mock_room_off_update_variables",
 )
-async def test_media_player_turn_on_duplicate_source_names(
+async def test_media_player_turn_on_restarts_last_source(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_c4_room: MagicMock,
     mock_room_off_variables: dict,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that turn_on posts the picked source id, not a name lookup.
+    """Test that the source survives the room being turned off.
 
-    Room 1 has two video sources both named "TV" (ids 100 and 101); the
-    current video device is 101, so 101 must be posted — a name lookup
-    would have picked the first match, 100.
+    Room 1 has two video sources both named "TV" (ids 100 and 101). The room
+    plays 101, then the director resets its source variables on ROOM_OFF, and
+    turn_on must still post 101 by id; a name lookup would pick 100.
     """
-    mock_room_off_variables[1]["CURRENT_VIDEO_DEVICE"] = 101
+    mock_room_off_variables[1]["POWER_STATE"] = True
+    mock_room_off_variables[1]["CURRENT MEDIA INFO"] = {"mediainfo": {"medSrcDev": 101}}
     await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("media_player.living_room")
+    assert state is not None
+    assert state.attributes["last_source_id"] == 101
+
+    mock_room_off_variables[1]["POWER_STATE"] = False
+    mock_room_off_variables[1]["CURRENT MEDIA INFO"] = {}
+    mock_room_off_variables[1]["CURRENT_VIDEO_DEVICE"] = 0
+    await _async_refresh(hass, freezer)
+
+    state = hass.states.get("media_player.living_room")
+    assert state is not None
+    assert state.state == MediaPlayerState.OFF
+    assert state.attributes["last_source_id"] == 101
 
     await hass.services.async_call(
         "media_player",
@@ -218,18 +189,55 @@ async def test_media_player_turn_on_duplicate_source_names(
     mock_c4_room.set_video_and_audio_source.assert_awaited_once_with(101)
 
 
-@pytest.mark.usefixtures("mock_c4_account", "mock_c4_director", "mock_update_variables")
-async def test_media_player_turn_on_keeps_current_source(
+@pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director_duplicate_source_names",
+    "mock_room_off_update_variables",
+)
+async def test_media_player_last_source_follows_playing_source(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_c4_room: MagicMock,
+    mock_room_off_variables: dict,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that turning on a room that is on selects its current source."""
+    """Test that the remembered source follows the source being played."""
     await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("media_player.living_room")
     assert state is not None
-    assert state.state == MediaPlayerState.ON
+    assert state.attributes["last_source_id"] is None
+
+    for source_id in (100, 101):
+        mock_room_off_variables[1]["CURRENT MEDIA INFO"] = {
+            "mediainfo": {"medSrcDev": source_id}
+        }
+        await _async_refresh(hass, freezer)
+
+        state = hass.states.get("media_player.living_room")
+        assert state is not None
+        assert state.attributes["last_source_id"] == source_id
+
+
+@pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director_duplicate_source_names",
+    "mock_room_off_update_variables",
+)
+async def test_media_player_turn_on_restores_last_source(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_c4_room: MagicMock,
+) -> None:
+    """Test that the last source is restored and used after a restart."""
+    mock_restore_cache(
+        hass,
+        [State("media_player.living_room", "off", {"last_source_id": 101})],
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("media_player.living_room")
+    assert state is not None
+    assert state.attributes["last_source_id"] == 101
 
     await hass.services.async_call(
         "media_player",
@@ -238,10 +246,60 @@ async def test_media_player_turn_on_keeps_current_source(
         blocking=True,
     )
 
-    # POWER_STATE is true and CURRENT_VIDEO_DEVICE is the TV, so that is what
-    # the room is started with.
+    mock_c4_room.set_video_and_audio_source.assert_awaited_once_with(101)
+
+
+@pytest.mark.usefixtures(
+    "mock_c4_account", "mock_c4_director", "mock_room_off_update_variables"
+)
+async def test_media_player_turn_on_ignores_restored_unknown_source(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_c4_room: MagicMock,
+) -> None:
+    """Test that a restored source the room no longer has is ignored."""
+    mock_restore_cache(
+        hass,
+        [State("media_player.living_room", "off", {"last_source_id": 999})],
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("media_player.living_room")
+    assert state is not None
+    assert state.attributes["last_source_id"] is None
+
+    await hass.services.async_call(
+        "media_player",
+        "turn_on",
+        {"entity_id": "media_player.living_room"},
+        blocking=True,
+    )
+
+    # Falls through to the room's first video source instead of posting 999.
     mock_c4_room.set_video_and_audio_source.assert_awaited_once_with(100)
-    mock_c4_room.set_room_off.assert_not_called()
+
+
+@pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director_duplicate_source_names",
+    "mock_room_off_update_variables",
+)
+async def test_media_player_playing_source_overrides_restored_source(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_room_off_variables: dict,
+) -> None:
+    """Test that the source playing at startup wins over the restored one."""
+    mock_restore_cache(
+        hass,
+        [State("media_player.living_room", "off", {"last_source_id": 100})],
+    )
+    mock_room_off_variables[1]["CURRENT MEDIA INFO"] = {"mediainfo": {"medSrcDev": 101}}
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("media_player.living_room")
+    assert state is not None
+    assert state.attributes["last_source_id"] == 101
 
 
 @pytest.mark.usefixtures("mock_c4_account", "mock_c4_director", "mock_update_variables")

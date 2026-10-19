@@ -15,9 +15,9 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import Control4ConfigEntry, Control4RuntimeData
@@ -37,6 +37,8 @@ CONTROL4_STOPPED = "STOPPED"
 CONTROL4_MEDIA_INFO = "CURRENT MEDIA INFO"
 
 CONTROL4_PARENT_ID = "parentId"
+
+ATTR_LAST_SOURCE_ID = "last_source_id"
 
 VARIABLES_OF_INTEREST = {
     CONTROL4_POWER_STATE,
@@ -177,7 +179,7 @@ async def async_setup_entry(
     async_add_entities(entity_list, True)
 
 
-class Control4Room(Control4Entity, MediaPlayerEntity):
+class Control4Room(Control4Entity, MediaPlayerEntity, RestoreEntity):
     """Control4 Room entity."""
 
     _attr_has_entity_name = True
@@ -206,6 +208,7 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
         self._attr_entity_registry_enabled_default = not room_hidden
         self._id_to_parent = id_to_parent
         self._sources = sources
+        self._last_source_id: int | None = None
         self._attr_supported_features = (
             MediaPlayerEntityFeature.PLAY
             | MediaPlayerEntityFeature.PAUSE
@@ -217,6 +220,33 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
             | MediaPlayerEntityFeature.TURN_OFF
             | MediaPlayerEntityFeature.SELECT_SOURCE
         )
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Restore the last source, then let the current one take over."""
+        await super().async_added_to_hass()
+        if (last_state := await self.async_get_last_state()) is not None:
+            last_source_id = last_state.attributes.get(ATTR_LAST_SOURCE_ID)
+            if last_source_id in self._sources:
+                self._last_source_id = last_source_id
+        self._remember_playing_source()
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Remember the playing source before writing the new state."""
+        self._remember_playing_source()
+        super()._handle_coordinator_update()
+
+    @callback
+    def _remember_playing_source(self) -> None:
+        """Remember the source the room is playing.
+
+        The director resets the room's source variables when the room is turned
+        off, so the last source has to be kept here to start it again.
+        """
+        if (source_id := self._get_current_playing_device_id()) in self._sources:
+            self._last_source_id = source_id
 
     def _create_api_object(self) -> C4Room:
         """Create a pyControl4 device object.
@@ -287,6 +317,12 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
             return MediaPlayerState.ON
 
         return MediaPlayerState.OFF
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, int | None]:
+        """Return the id of the source the room starts with when turned on."""
+        return {ATTR_LAST_SOURCE_ID: self._last_source_id}
 
     @property
     @override
@@ -368,26 +404,23 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
 
         await self.coordinator.async_request_refresh()
 
-    def _pick_source_to_turn_on(self) -> _RoomSource | None:
-        """Pick the source to start an off room with.
+    def _get_source_to_turn_on(self) -> _RoomSource:
+        """Get the source to start a room with.
 
-        Prefer whatever is already playing, then the room's current video source,
-        then any video source, and finally any source at all.
+        Use the last source the room played, or for a room that has not
+        played anything yet, the first video source, or else the first source.
         """
-        if source_id := self._get_current_playing_device_id():
-            if source := self._sources.get(source_id):
-                return source
-        if source_id := self._get_current_video_device_id():
-            if source := self._sources.get(source_id):
-                return source
-        return next(
+        if self._last_source_id in self._sources:
+            return self._sources[self._last_source_id]
+        first_video_source = next(
             (
                 source
                 for source in self._sources.values()
                 if _SourceType.VIDEO in source.source_type
             ),
-            next(iter(self._sources.values()), None),
+            None,
         )
+        return first_video_source or next(iter(self._sources.values()))
 
     @override
     async def async_turn_on(self) -> None:
@@ -395,17 +428,10 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
 
         Control4 has no "room on" command: a room is started by selecting a
         source, which is what the Control4 app does when a source is chosen.
-        The picked source is posted by id rather than looked up by name, so
+        The source is posted by id rather than looked up by name, so
         duplicate source names can never start the wrong device.
         """
-        if (source := self._pick_source_to_turn_on()) is None:
-            # Rooms without sources do not get an entity, and _sources is
-            # never mutated afterwards, so this only fires if that invariant
-            # breaks.
-            raise HomeAssistantError(  # pragma: no cover
-                "No Control4 source is available to turn on this room"
-            )
-        await self._async_post_source(source)
+        await self._async_post_source(self._get_source_to_turn_on())
         await self.coordinator.async_request_refresh()
 
     @override
