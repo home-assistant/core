@@ -13,7 +13,6 @@ from homeassistant.components.homeassistant.exposed_entities import (
     LEGACY_ENTITY_PURGE_INTERVAL,
     LEGACY_ENTITY_SWEEP_CHUNK_SIZE,
     LEGACY_ENTITY_SWEEP_INTERVAL,
-    STORAGE_VERSION_MINOR,
     ExposedEntities,
     ExposedEntity,
     async_expose_entity,
@@ -759,7 +758,8 @@ async def test_orphaned_since_stored_outside_records(
     await flush_store(exposed_entities._store)
 
     stored = hass_storage["homeassistant.exposed_entities"]
-    assert stored["minor_version"] == STORAGE_VERSION_MINOR
+    # A minor bump would rewrite the whole store at load; the key is optional.
+    assert stored["minor_version"] == 1
     assert stored["data"]["exposed_entities"]["sensor.long_gone"] == {
         "assistants": {"test1": {"should_expose": True}}
     }
