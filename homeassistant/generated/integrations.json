@@ -11720,6 +11720,9 @@
     "trimlight": {
       "name": "Trimlight",
       "integration_type": "device",
+      "categories": [
+        "lighting.led_strips_controllers"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
