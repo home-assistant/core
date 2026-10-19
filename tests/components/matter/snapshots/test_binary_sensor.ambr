@@ -661,7 +661,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[ductech_smartwings_levitate][binary_sensor.smartwings_levitate_with_ductech_endpoint_1_battery-entry]
+# name: test_binary_sensors[ductech_smartwings_levitate][binary_sensor.smartwings_levitate_with_ductech_battery_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -671,11 +671,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000057-MatterNodeDevice-1')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000057-MatterNodeDevice'), ('matter', 'serial_serial_87')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.smartwings_levitate_with_ductech_endpoint_1_battery',
+    'entity_id': 'binary_sensor.smartwings_levitate_with_ductech_battery_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -683,12 +683,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Battery',
+    'object_id_base': 'Battery (1)',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': 'Battery',
+    'original_name': 'Battery (1)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -698,21 +698,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[ductech_smartwings_levitate][binary_sensor.smartwings_levitate_with_ductech_endpoint_1_battery-state]
+# name: test_binary_sensors[ductech_smartwings_levitate][binary_sensor.smartwings_levitate_with_ductech_battery_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 1 Battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SmartWings Levitate with DUCTECH Battery (1)',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.smartwings_levitate_with_ductech_endpoint_1_battery',
+    'entity_id': 'binary_sensor.smartwings_levitate_with_ductech_battery_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[ductech_smartwings_levitate][binary_sensor.smartwings_levitate_with_ductech_endpoint_1_configuration_status-entry]
+# name: test_binary_sensors[ductech_smartwings_levitate][binary_sensor.smartwings_levitate_with_ductech_battery_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -722,11 +722,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000057-MatterNodeDevice-1')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000057-MatterNodeDevice'), ('matter', 'serial_serial_87')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.smartwings_levitate_with_ductech_endpoint_1_configuration_status',
+    'entity_id': 'binary_sensor.smartwings_levitate_with_ductech_battery_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -734,63 +734,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Configuration status',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Configuration status',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'config_status_operational',
-    'unique_id': '00000000000004D2-0000000000000057-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensors[ductech_smartwings_levitate][binary_sensor.smartwings_levitate_with_ductech_endpoint_1_configuration_status-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 1 Configuration status',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.smartwings_levitate_with_ductech_endpoint_1_configuration_status',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_binary_sensors[ductech_smartwings_levitate][binary_sensor.smartwings_levitate_with_ductech_endpoint_2_battery-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000057-MatterNodeDevice-2')]>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.smartwings_levitate_with_ductech_endpoint_2_battery',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Battery',
+    'object_id_base': 'Battery (2)',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': 'Battery',
+    'original_name': 'Battery (2)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -800,21 +749,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[ductech_smartwings_levitate][binary_sensor.smartwings_levitate_with_ductech_endpoint_2_battery-state]
+# name: test_binary_sensors[ductech_smartwings_levitate][binary_sensor.smartwings_levitate_with_ductech_battery_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 2 Battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SmartWings Levitate with DUCTECH Battery (2)',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.smartwings_levitate_with_ductech_endpoint_2_battery',
+    'entity_id': 'binary_sensor.smartwings_levitate_with_ductech_battery_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[ductech_smartwings_levitate][binary_sensor.smartwings_levitate_with_ductech_endpoint_2_configuration_status-entry]
+# name: test_binary_sensors[ductech_smartwings_levitate][binary_sensor.smartwings_levitate_with_ductech_configuration_status_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -824,11 +773,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000057-MatterNodeDevice-2')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000057-MatterNodeDevice'), ('matter', 'serial_serial_87')]>,
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.smartwings_levitate_with_ductech_endpoint_2_configuration_status',
+    'entity_id': 'binary_sensor.smartwings_levitate_with_ductech_configuration_status_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -836,12 +785,63 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Configuration status',
+    'object_id_base': 'Configuration status (1)',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Configuration status',
+    'original_name': 'Configuration status (1)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'config_status_operational',
+    'unique_id': '00000000000004D2-0000000000000057-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[ductech_smartwings_levitate][binary_sensor.smartwings_levitate_with_ductech_configuration_status_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SmartWings Levitate with DUCTECH Configuration status (1)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.smartwings_levitate_with_ductech_configuration_status_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[ductech_smartwings_levitate][binary_sensor.smartwings_levitate_with_ductech_configuration_status_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000057-MatterNodeDevice'), ('matter', 'serial_serial_87')]>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.smartwings_levitate_with_ductech_configuration_status_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Configuration status (2)',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Configuration status (2)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -851,14 +851,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[ductech_smartwings_levitate][binary_sensor.smartwings_levitate_with_ductech_endpoint_2_configuration_status-state]
+# name: test_binary_sensors[ductech_smartwings_levitate][binary_sensor.smartwings_levitate_with_ductech_configuration_status_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 2 Configuration status',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SmartWings Levitate with DUCTECH Configuration status (2)',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.smartwings_levitate_with_ductech_endpoint_2_configuration_status',
+    'entity_id': 'binary_sensor.smartwings_levitate_with_ductech_configuration_status_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

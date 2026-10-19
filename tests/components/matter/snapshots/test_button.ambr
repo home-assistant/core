@@ -356,7 +356,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[aqara_light_switch_h2_us_4100][button.aqara_smart_wall_switch_endpoint_1_identify-entry]
+# name: test_buttons[aqara_light_switch_h2_us_4100][button.aqara_smart_wall_switch_identify_1_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -366,11 +366,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F7-MatterNodeDevice-1')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F7-MatterNodeDevice'), ('matter', 'serial_serial_1015')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.aqara_smart_wall_switch_endpoint_1_identify',
+    'entity_id': 'button.aqara_smart_wall_switch_identify_1_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -378,12 +378,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Identify',
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
-    'original_name': 'Identify',
+    'original_name': 'Identify (1)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -393,21 +393,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[aqara_light_switch_h2_us_4100][button.aqara_smart_wall_switch_endpoint_1_identify-state]
+# name: test_buttons[aqara_light_switch_h2_us_4100][button.aqara_smart_wall_switch_identify_1_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 1 Identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Identify (1)',
     }),
     'context': <ANY>,
-    'entity_id': 'button.aqara_smart_wall_switch_endpoint_1_identify',
+    'entity_id': 'button.aqara_smart_wall_switch_identify_1_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[aqara_light_switch_h2_us_4100][button.aqara_smart_wall_switch_endpoint_2_identify-entry]
+# name: test_buttons[aqara_light_switch_h2_us_4100][button.aqara_smart_wall_switch_identify_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -417,11 +417,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F7-MatterNodeDevice-2')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F7-MatterNodeDevice'), ('matter', 'serial_serial_1015')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.aqara_smart_wall_switch_endpoint_2_identify',
+    'entity_id': 'button.aqara_smart_wall_switch_identify_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -429,12 +429,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Identify',
+    'object_id_base': 'Identify (2)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
-    'original_name': 'Identify',
+    'original_name': 'Identify (2)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -444,14 +444,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[aqara_light_switch_h2_us_4100][button.aqara_smart_wall_switch_endpoint_2_identify-state]
+# name: test_buttons[aqara_light_switch_h2_us_4100][button.aqara_smart_wall_switch_identify_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 2 Identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Identify (2)',
     }),
     'context': <ANY>,
-    'entity_id': 'button.aqara_smart_wall_switch_endpoint_2_identify',
+    'entity_id': 'button.aqara_smart_wall_switch_identify_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -560,7 +560,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[aqara_light_switch_h2_us_4101][button.aqara_smart_wall_switch_endpoint_1_identify_2-entry]
+# name: test_buttons[aqara_light_switch_h2_us_4101][button.aqara_smart_wall_switch_identify_1_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -570,11 +570,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F8-MatterNodeDevice-1')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F8-MatterNodeDevice'), ('matter', 'serial_serial_1016')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.aqara_smart_wall_switch_endpoint_1_identify_2',
+    'entity_id': 'button.aqara_smart_wall_switch_identify_1_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -582,12 +582,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Identify',
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
-    'original_name': 'Identify',
+    'original_name': 'Identify (1)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -597,21 +597,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[aqara_light_switch_h2_us_4101][button.aqara_smart_wall_switch_endpoint_1_identify_2-state]
+# name: test_buttons[aqara_light_switch_h2_us_4101][button.aqara_smart_wall_switch_identify_1_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 1 Identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Identify (1)',
     }),
     'context': <ANY>,
-    'entity_id': 'button.aqara_smart_wall_switch_endpoint_1_identify_2',
+    'entity_id': 'button.aqara_smart_wall_switch_identify_1_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[aqara_light_switch_h2_us_4101][button.aqara_smart_wall_switch_endpoint_2_identify_2-entry]
+# name: test_buttons[aqara_light_switch_h2_us_4101][button.aqara_smart_wall_switch_identify_2_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -621,11 +621,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F8-MatterNodeDevice-2')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F8-MatterNodeDevice'), ('matter', 'serial_serial_1016')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.aqara_smart_wall_switch_endpoint_2_identify_2',
+    'entity_id': 'button.aqara_smart_wall_switch_identify_2_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -633,12 +633,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Identify',
+    'object_id_base': 'Identify (2)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
-    'original_name': 'Identify',
+    'original_name': 'Identify (2)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -648,21 +648,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[aqara_light_switch_h2_us_4101][button.aqara_smart_wall_switch_endpoint_2_identify_2-state]
+# name: test_buttons[aqara_light_switch_h2_us_4101][button.aqara_smart_wall_switch_identify_2_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 2 Identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Identify (2)',
     }),
     'context': <ANY>,
-    'entity_id': 'button.aqara_smart_wall_switch_endpoint_2_identify_2',
+    'entity_id': 'button.aqara_smart_wall_switch_identify_2_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[aqara_light_switch_h2_us_4101][button.aqara_smart_wall_switch_endpoint_3_identify-entry]
+# name: test_buttons[aqara_light_switch_h2_us_4101][button.aqara_smart_wall_switch_identify_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -672,11 +672,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F8-MatterNodeDevice-3')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F8-MatterNodeDevice'), ('matter', 'serial_serial_1016')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.aqara_smart_wall_switch_endpoint_3_identify',
+    'entity_id': 'button.aqara_smart_wall_switch_identify_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -684,12 +684,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Identify',
+    'object_id_base': 'Identify (3)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
-    'original_name': 'Identify',
+    'original_name': 'Identify (3)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -699,14 +699,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[aqara_light_switch_h2_us_4101][button.aqara_smart_wall_switch_endpoint_3_identify-state]
+# name: test_buttons[aqara_light_switch_h2_us_4101][button.aqara_smart_wall_switch_identify_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 3 Identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Wall Switch Identify (3)',
     }),
     'context': <ANY>,
-    'entity_id': 'button.aqara_smart_wall_switch_endpoint_3_identify',
+    'entity_id': 'button.aqara_smart_wall_switch_identify_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2039,7 +2039,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[ductech_smartwings_levitate][button.smartwings_levitate_with_ductech_endpoint_1_identify-entry]
+# name: test_buttons[ductech_smartwings_levitate][button.smartwings_levitate_with_ductech_identify_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2049,11 +2049,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000057-MatterNodeDevice-1')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000057-MatterNodeDevice'), ('matter', 'serial_serial_87')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.smartwings_levitate_with_ductech_endpoint_1_identify',
+    'entity_id': 'button.smartwings_levitate_with_ductech_identify_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2061,12 +2061,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Identify',
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
-    'original_name': 'Identify',
+    'original_name': 'Identify (1)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2076,21 +2076,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[ductech_smartwings_levitate][button.smartwings_levitate_with_ductech_endpoint_1_identify-state]
+# name: test_buttons[ductech_smartwings_levitate][button.smartwings_levitate_with_ductech_identify_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 1 Identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SmartWings Levitate with DUCTECH Identify (1)',
     }),
     'context': <ANY>,
-    'entity_id': 'button.smartwings_levitate_with_ductech_endpoint_1_identify',
+    'entity_id': 'button.smartwings_levitate_with_ductech_identify_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[ductech_smartwings_levitate][button.smartwings_levitate_with_ductech_endpoint_2_identify-entry]
+# name: test_buttons[ductech_smartwings_levitate][button.smartwings_levitate_with_ductech_identify_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2100,11 +2100,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000057-MatterNodeDevice-2')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000057-MatterNodeDevice'), ('matter', 'serial_serial_87')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.smartwings_levitate_with_ductech_endpoint_2_identify',
+    'entity_id': 'button.smartwings_levitate_with_ductech_identify_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2112,12 +2112,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Identify',
+    'object_id_base': 'Identify (2)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
-    'original_name': 'Identify',
+    'original_name': 'Identify (2)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2127,14 +2127,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[ductech_smartwings_levitate][button.smartwings_levitate_with_ductech_endpoint_2_identify-state]
+# name: test_buttons[ductech_smartwings_levitate][button.smartwings_levitate_with_ductech_identify_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 2 Identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SmartWings Levitate with DUCTECH Identify (2)',
     }),
     'context': <ANY>,
-    'entity_id': 'button.smartwings_levitate_with_ductech_endpoint_2_identify',
+    'entity_id': 'button.smartwings_levitate_with_ductech_identify_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -6461,7 +6461,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[nanoleaf_nl77k1][button.multicolor_ceiling_light_endpoint_1_identify-entry]
+# name: test_buttons[nanoleaf_nl77k1][button.multicolor_ceiling_light_identify_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -6471,11 +6471,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F3-MatterNodeDevice-1')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F3-MatterNodeDevice'), ('matter', 'serial_serial_1011')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.multicolor_ceiling_light_endpoint_1_identify',
+    'entity_id': 'button.multicolor_ceiling_light_identify_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6483,12 +6483,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Identify',
+    'object_id_base': 'Identify (1)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
-    'original_name': 'Identify',
+    'original_name': 'Identify (1)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6498,21 +6498,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[nanoleaf_nl77k1][button.multicolor_ceiling_light_endpoint_1_identify-state]
+# name: test_buttons[nanoleaf_nl77k1][button.multicolor_ceiling_light_identify_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 1 Identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multicolor Ceiling Light Identify (1)',
     }),
     'context': <ANY>,
-    'entity_id': 'button.multicolor_ceiling_light_endpoint_1_identify',
+    'entity_id': 'button.multicolor_ceiling_light_identify_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[nanoleaf_nl77k1][button.multicolor_ceiling_light_endpoint_2_identify-entry]
+# name: test_buttons[nanoleaf_nl77k1][button.multicolor_ceiling_light_identify_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -6522,11 +6522,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F3-MatterNodeDevice-2')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-00000000000003F3-MatterNodeDevice'), ('matter', 'serial_serial_1011')]>,
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.multicolor_ceiling_light_endpoint_2_identify',
+    'entity_id': 'button.multicolor_ceiling_light_identify_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6534,12 +6534,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Identify',
+    'object_id_base': 'Identify (2)',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
     'original_icon': None,
-    'original_name': 'Identify',
+    'original_name': 'Identify (2)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6549,14 +6549,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[nanoleaf_nl77k1][button.multicolor_ceiling_light_endpoint_2_identify-state]
+# name: test_buttons[nanoleaf_nl77k1][button.multicolor_ceiling_light_identify_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 2 Identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multicolor Ceiling Light Identify (2)',
     }),
     'context': <ANY>,
-    'entity_id': 'button.multicolor_ceiling_light_endpoint_2_identify',
+    'entity_id': 'button.multicolor_ceiling_light_identify_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

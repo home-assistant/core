@@ -9300,6 +9300,240 @@
     'state': '-66',
   })
 # ---
+# name: test_sensors[ductech_smartwings_levitate][sensor.smartwings_levitate_with_ductech_battery_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000057-MatterNodeDevice'), ('matter', 'serial_serial_87')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smartwings_levitate_with_ductech_battery_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery (1)',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery (1)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000057-MatterNodeDevice-1-PowerSource-47-12',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+  })
+# ---
+# name: test_sensors[ductech_smartwings_levitate][sensor.smartwings_levitate_with_ductech_battery_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SmartWings Levitate with DUCTECH Battery (1)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smartwings_levitate_with_ductech_battery_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '31',
+  })
+# ---
+# name: test_sensors[ductech_smartwings_levitate][sensor.smartwings_levitate_with_ductech_battery_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000057-MatterNodeDevice'), ('matter', 'serial_serial_87')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smartwings_levitate_with_ductech_battery_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery (2)',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery (2)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000057-MatterNodeDevice-2-PowerSource-47-12',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+  })
+# ---
+# name: test_sensors[ductech_smartwings_levitate][sensor.smartwings_levitate_with_ductech_battery_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SmartWings Levitate with DUCTECH Battery (2)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smartwings_levitate_with_ductech_battery_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '31',
+  })
+# ---
+# name: test_sensors[ductech_smartwings_levitate][sensor.smartwings_levitate_with_ductech_battery_charge_state_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'not_charging',
+        'charging',
+        'full_charge',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000057-MatterNodeDevice'), ('matter', 'serial_serial_87')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smartwings_levitate_with_ductech_battery_charge_state_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery charge state (1)',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Battery charge state (1)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_charge_state',
+    'unique_id': '00000000000004D2-0000000000000057-MatterNodeDevice-1-PowerSourceBatChargeState-47-26',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[ductech_smartwings_levitate][sensor.smartwings_levitate_with_ductech_battery_charge_state_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SmartWings Levitate with DUCTECH Battery charge state (1)',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'not_charging',
+        'charging',
+        'full_charge',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smartwings_levitate_with_ductech_battery_charge_state_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'not_charging',
+  })
+# ---
+# name: test_sensors[ductech_smartwings_levitate][sensor.smartwings_levitate_with_ductech_battery_charge_state_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'not_charging',
+        'charging',
+        'full_charge',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000057-MatterNodeDevice'), ('matter', 'serial_serial_87')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smartwings_levitate_with_ductech_battery_charge_state_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery charge state (2)',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Battery charge state (2)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_charge_state',
+    'unique_id': '00000000000004D2-0000000000000057-MatterNodeDevice-2-PowerSourceBatChargeState-47-26',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[ductech_smartwings_levitate][sensor.smartwings_levitate_with_ductech_battery_charge_state_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SmartWings Levitate with DUCTECH Battery charge state (2)',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'not_charging',
+        'charging',
+        'full_charge',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smartwings_levitate_with_ductech_battery_charge_state_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'not_charging',
+  })
+# ---
 # name: test_sensors[ductech_smartwings_levitate][sensor.smartwings_levitate_with_ductech_boot_reason-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -9370,342 +9604,6 @@
     'state': 'software_reset',
   })
 # ---
-# name: test_sensors[ductech_smartwings_levitate][sensor.smartwings_levitate_with_ductech_endpoint_1_battery-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000057-MatterNodeDevice-1')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.smartwings_levitate_with_ductech_endpoint_1_battery',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Battery',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-    'original_icon': None,
-    'original_name': 'Battery',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000057-MatterNodeDevice-1-PowerSource-47-12',
-    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
-  })
-# ---
-# name: test_sensors[ductech_smartwings_levitate][sensor.smartwings_levitate_with_ductech_endpoint_1_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 1 Battery',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smartwings_levitate_with_ductech_endpoint_1_battery',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '31',
-  })
-# ---
-# name: test_sensors[ductech_smartwings_levitate][sensor.smartwings_levitate_with_ductech_endpoint_1_battery_charge_state-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'not_charging',
-        'charging',
-        'full_charge',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000057-MatterNodeDevice-1')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.smartwings_levitate_with_ductech_endpoint_1_battery_charge_state',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Battery charge state',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Battery charge state',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'battery_charge_state',
-    'unique_id': '00000000000004D2-0000000000000057-MatterNodeDevice-1-PowerSourceBatChargeState-47-26',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[ductech_smartwings_levitate][sensor.smartwings_levitate_with_ductech_endpoint_1_battery_charge_state-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 1 Battery charge state',
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'not_charging',
-        'charging',
-        'full_charge',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smartwings_levitate_with_ductech_endpoint_1_battery_charge_state',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'not_charging',
-  })
-# ---
-# name: test_sensors[ductech_smartwings_levitate][sensor.smartwings_levitate_with_ductech_endpoint_1_target_opening_position-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000057-MatterNodeDevice-1')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.smartwings_levitate_with_ductech_endpoint_1_target_opening_position',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Target opening position',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Target opening position',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'window_covering_target_position',
-    'unique_id': '00000000000004D2-0000000000000057-MatterNodeDevice-1-TargetPositionLiftPercent100ths-258-11',
-    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
-  })
-# ---
-# name: test_sensors[ductech_smartwings_levitate][sensor.smartwings_levitate_with_ductech_endpoint_1_target_opening_position-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 1 Target opening position',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smartwings_levitate_with_ductech_endpoint_1_target_opening_position',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '5',
-  })
-# ---
-# name: test_sensors[ductech_smartwings_levitate][sensor.smartwings_levitate_with_ductech_endpoint_2_battery-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000057-MatterNodeDevice-2')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.smartwings_levitate_with_ductech_endpoint_2_battery',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Battery',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-    'original_icon': None,
-    'original_name': 'Battery',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000057-MatterNodeDevice-2-PowerSource-47-12',
-    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
-  })
-# ---
-# name: test_sensors[ductech_smartwings_levitate][sensor.smartwings_levitate_with_ductech_endpoint_2_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 2 Battery',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smartwings_levitate_with_ductech_endpoint_2_battery',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '31',
-  })
-# ---
-# name: test_sensors[ductech_smartwings_levitate][sensor.smartwings_levitate_with_ductech_endpoint_2_battery_charge_state-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'not_charging',
-        'charging',
-        'full_charge',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000057-MatterNodeDevice-2')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.smartwings_levitate_with_ductech_endpoint_2_battery_charge_state',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Battery charge state',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Battery charge state',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'battery_charge_state',
-    'unique_id': '00000000000004D2-0000000000000057-MatterNodeDevice-2-PowerSourceBatChargeState-47-26',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[ductech_smartwings_levitate][sensor.smartwings_levitate_with_ductech_endpoint_2_battery_charge_state-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 2 Battery charge state',
-      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'not_charging',
-        'charging',
-        'full_charge',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smartwings_levitate_with_ductech_endpoint_2_battery_charge_state',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'not_charging',
-  })
-# ---
-# name: test_sensors[ductech_smartwings_levitate][sensor.smartwings_levitate_with_ductech_endpoint_2_target_opening_position-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': None,
-    'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000057-MatterNodeDevice-2')]>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.smartwings_levitate_with_ductech_endpoint_2_target_opening_position',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Target opening position',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Target opening position',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'window_covering_target_position',
-    'unique_id': '00000000000004D2-0000000000000057-MatterNodeDevice-2-TargetPositionLiftPercent100ths-258-11',
-    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
-  })
-# ---
-# name: test_sensors[ductech_smartwings_levitate][sensor.smartwings_levitate_with_ductech_endpoint_2_target_opening_position-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 2 Target opening position',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smartwings_levitate_with_ductech_endpoint_2_target_opening_position',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '95',
-  })
-# ---
 # name: test_sensors[ductech_smartwings_levitate][sensor.smartwings_levitate_with_ductech_reboot_count-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -9757,6 +9655,108 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
+  })
+# ---
+# name: test_sensors[ductech_smartwings_levitate][sensor.smartwings_levitate_with_ductech_target_opening_position_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000057-MatterNodeDevice'), ('matter', 'serial_serial_87')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smartwings_levitate_with_ductech_target_opening_position_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Target opening position (1)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Target opening position (1)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_covering_target_position',
+    'unique_id': '00000000000004D2-0000000000000057-MatterNodeDevice-1-TargetPositionLiftPercent100ths-258-11',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+  })
+# ---
+# name: test_sensors[ductech_smartwings_levitate][sensor.smartwings_levitate_with_ductech_target_opening_position_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SmartWings Levitate with DUCTECH Target opening position (1)',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smartwings_levitate_with_ductech_target_opening_position_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
+# name: test_sensors[ductech_smartwings_levitate][sensor.smartwings_levitate_with_ductech_target_opening_position_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000057-MatterNodeDevice'), ('matter', 'serial_serial_87')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smartwings_levitate_with_ductech_target_opening_position_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Target opening position (2)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Target opening position (2)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_covering_target_position',
+    'unique_id': '00000000000004D2-0000000000000057-MatterNodeDevice-2-TargetPositionLiftPercent100ths-258-11',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
+  })
+# ---
+# name: test_sensors[ductech_smartwings_levitate][sensor.smartwings_levitate_with_ductech_target_opening_position_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SmartWings Levitate with DUCTECH Target opening position (2)',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smartwings_levitate_with_ductech_target_opening_position_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '95',
   })
 # ---
 # name: test_sensors[ductech_smartwings_levitate][sensor.smartwings_levitate_with_ductech_thread_channel-entry]

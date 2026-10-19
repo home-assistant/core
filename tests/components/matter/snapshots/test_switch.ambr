@@ -453,7 +453,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switches[ductech_smartwings_levitate][switch.smartwings_levitate_with_ductech_endpoint_1_reverse_motor_direction-entry]
+# name: test_switches[ductech_smartwings_levitate][switch.smartwings_levitate_with_ductech_reverse_motor_direction_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -463,11 +463,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000057-MatterNodeDevice-1')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000057-MatterNodeDevice'), ('matter', 'serial_serial_87')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.smartwings_levitate_with_ductech_endpoint_1_reverse_motor_direction',
+    'entity_id': 'switch.smartwings_levitate_with_ductech_reverse_motor_direction_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -475,12 +475,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Reverse motor direction',
+    'object_id_base': 'Reverse motor direction (1)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Reverse motor direction',
+    'original_name': 'Reverse motor direction (1)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -490,20 +490,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[ductech_smartwings_levitate][switch.smartwings_levitate_with_ductech_endpoint_1_reverse_motor_direction-state]
+# name: test_switches[ductech_smartwings_levitate][switch.smartwings_levitate_with_ductech_reverse_motor_direction_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 1 Reverse motor direction',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SmartWings Levitate with DUCTECH Reverse motor direction (1)',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.smartwings_levitate_with_ductech_endpoint_1_reverse_motor_direction',
+    'entity_id': 'switch.smartwings_levitate_with_ductech_reverse_motor_direction_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switches[ductech_smartwings_levitate][switch.smartwings_levitate_with_ductech_endpoint_2_reverse_motor_direction-entry]
+# name: test_switches[ductech_smartwings_levitate][switch.smartwings_levitate_with_ductech_reverse_motor_direction_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -513,11 +513,11 @@
     'config_entry_id': <ANY>,
     'config_subentry_id': None,
     'device_class': None,
-    'device_id': <ChildDeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000057-MatterNodeDevice-2')]>,
+    'device_id': <DeviceEntry identifiers=[('matter', 'deviceid_00000000000004D2-0000000000000057-MatterNodeDevice'), ('matter', 'serial_serial_87')]>,
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.smartwings_levitate_with_ductech_endpoint_2_reverse_motor_direction',
+    'entity_id': 'switch.smartwings_levitate_with_ductech_reverse_motor_direction_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -525,12 +525,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Reverse motor direction',
+    'object_id_base': 'Reverse motor direction (2)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Reverse motor direction',
+    'original_name': 'Reverse motor direction (2)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -540,13 +540,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[ductech_smartwings_levitate][switch.smartwings_levitate_with_ductech_endpoint_2_reverse_motor_direction-state]
+# name: test_switches[ductech_smartwings_levitate][switch.smartwings_levitate_with_ductech_reverse_motor_direction_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Endpoint 2 Reverse motor direction',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SmartWings Levitate with DUCTECH Reverse motor direction (2)',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.smartwings_levitate_with_ductech_endpoint_2_reverse_motor_direction',
+    'entity_id': 'switch.smartwings_levitate_with_ductech_reverse_motor_direction_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
