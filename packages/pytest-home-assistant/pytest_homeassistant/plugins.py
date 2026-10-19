@@ -1836,9 +1836,7 @@ async def async_test_recorder(
     from homeassistant.components import recorder  # noqa: PLC0415
     from homeassistant.components.recorder import migration  # noqa: PLC0415
 
-    from .components.recorder.common import (  # noqa: PLC0415
-        async_recorder_block_till_done,
-    )
+    from .components.recorder.common import async_recorder_block_till_done  # noqa: PLC0415
     from .patch_recorder import real_session_scope  # noqa: PLC0415
 
     if TYPE_CHECKING:
@@ -2104,9 +2102,7 @@ def register_non_connectable_scanner(hass: HomeAssistant) -> Generator[None]:
 
     from homeassistant.components import bluetooth  # noqa: PLC0415
 
-    from .components.bluetooth import (  # noqa: PLC0415
-        NON_CONNECTABLE_REMOTE_SOURCE_ADDRESS,
-    )
+    from .components.bluetooth import NON_CONNECTABLE_REMOTE_SOURCE_ADDRESS  # noqa: PLC0415
 
     remote_scanner = BaseHaRemoteScanner(
         NON_CONNECTABLE_REMOTE_SOURCE_ADDRESS, "non connectable", None, False
@@ -2177,10 +2173,7 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
 
     # Late imports to avoid loading bleak unless we need it
 
-    from habluetooth import (  # noqa: PLC0415
-        manager as bluetooth_manager,
-        scanner as bluetooth_scanner,
-    )
+    from habluetooth import manager as bluetooth_manager, scanner as bluetooth_scanner  # noqa: PLC0415
 
     # We need to drop the stop method from the object since we patched
     # out start and this fixture will expire before the stop method is called
