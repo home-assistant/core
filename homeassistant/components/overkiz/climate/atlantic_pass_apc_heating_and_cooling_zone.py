@@ -96,7 +96,7 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def current_native_temperature(self) -> float | None:
         """Return the current temperature."""
 
         res = None
@@ -413,7 +413,7 @@ class AtlanticPassAPCHeatingAndCoolingZone(OverkizEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def target_native_temperature(self) -> float | None:
         """Return hvac target temperature."""
 
         if self.hvac_mode == HVACMode.OFF:
