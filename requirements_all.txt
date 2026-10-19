@@ -190,7 +190,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.5
 
 # homeassistant.components.alexa_devices
-aioamazondevices==16.3.2
+aioamazondevices==16.8.1
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -263,7 +263,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.engie_be
-aioengiebelgium==0.4.3
+aioengiebelgium==0.8.1
 
 # homeassistant.components.esphome
 aioesphomeapi==46.12.0
@@ -3366,7 +3366,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==23.5.0
+uiprotect==23.9.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1
