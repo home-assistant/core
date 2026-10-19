@@ -40,6 +40,8 @@ CONF_DURATION: Final = "duration"
 CAMERA_STREAM_SOURCE_TIMEOUT: Final = 10
 CAMERA_IMAGE_TIMEOUT: Final = 10
 
+PREVIEW_FEATURE_TWO_WAY_AUDIO: Final = "two_way_audio"
+
 
 class CameraEntityStateAttribute(StrEnum):
     """State attributes for camera entities."""

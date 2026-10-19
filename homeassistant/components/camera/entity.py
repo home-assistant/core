@@ -13,6 +13,7 @@ from aiohttp import web
 from propcache.api import cached_property
 from webrtc_models import RTCIceCandidateInit
 
+from homeassistant.components.labs import async_is_preview_feature_enabled
 from homeassistant.components.stream import Stream, create_stream
 from homeassistant.components.web_rtc import async_get_ice_servers
 from homeassistant.const import CONTENT_TYPE_MULTIPART, EntityStateAttribute
@@ -23,8 +24,10 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from .const import (
     CAMERA_STREAM_SOURCE_TIMEOUT,
     DEFAULT_CONTENT_TYPE,
+    DOMAIN,
     ENTITY_IMAGE_URL,
     MIN_STREAM_INTERVAL,
+    PREVIEW_FEATURE_TWO_WAY_AUDIO,
     CameraEntityFeature,
     CameraEntityStateAttribute,
     CameraState,
@@ -528,6 +531,9 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             two_way_audio=(
                 self.camera_entity_capabilities.two_way_audio
                 and StreamType.WEB_RTC in frontend_stream_types
+                and async_is_preview_feature_enabled(
+                    self.hass, DOMAIN, PREVIEW_FEATURE_TWO_WAY_AUDIO
+                )
             ),
         )
 

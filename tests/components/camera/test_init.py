@@ -22,10 +22,12 @@ from homeassistant.components.camera.const import (
     DOMAIN,
     PREF_ORIENTATION,
     PREF_PRELOAD_STREAM,
+    PREVIEW_FEATURE_TWO_WAY_AUDIO,
     StreamType,
 )
 from homeassistant.components.camera.helper import get_camera_from_entity_id
 from homeassistant.components.camera.prefs import get_dynamic_camera_stream_settings
+from homeassistant.components.labs import async_update_preview_feature
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -1099,12 +1101,37 @@ async def test_camera_capabilities_webrtc(
     )
 
 
+async def _async_set_two_way_audio_preview_feature(
+    hass: HomeAssistant, enabled: bool
+) -> None:
+    """Set up labs and set the two way audio preview feature."""
+    assert await async_setup_component(hass, "labs", {})
+    await async_update_preview_feature(
+        hass, DOMAIN, PREVIEW_FEATURE_TWO_WAY_AUDIO, enabled
+    )
+
+
+@pytest.mark.parametrize(
+    (
+        "preview_feature_enabled",
+        "expected_two_way_audio",
+        "expected_two_way_audio_with_webrtc_provider",
+    ),
+    [
+        pytest.param(True, False, True, id="preview_feature_enabled"),
+        pytest.param(False, False, False, id="preview_feature_disabled"),
+    ],
+)
 @pytest.mark.usefixtures("mock_camera", "mock_stream_source")
 async def test_camera_capabilities_two_way_audio_hls(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    preview_feature_enabled: bool,
+    expected_two_way_audio: bool,
+    expected_two_way_audio_with_webrtc_provider: bool,
 ) -> None:
-    """Test two way audio is only reported for HLS cameras with a WebRTC provider."""
+    """Test two way audio for HLS cameras needs a WebRTC provider and labs."""
+    await _async_set_two_way_audio_preview_feature(hass, preview_feature_enabled)
     cam = get_camera_from_entity_id(hass, "camera.demo_camera")
     cam._attr_camera_entity_capabilities = camera.CameraEntityCapabilities(
         two_way_audio=True
@@ -1116,17 +1143,27 @@ async def test_camera_capabilities_two_way_audio_hls(
         cam.entity_id,
         {StreamType.HLS},
         {StreamType.HLS, StreamType.WEB_RTC},
-        expected_two_way_audio=False,
-        expected_two_way_audio_with_webrtc_provider=True,
+        expected_two_way_audio=expected_two_way_audio,
+        expected_two_way_audio_with_webrtc_provider=expected_two_way_audio_with_webrtc_provider,
     )
 
 
+@pytest.mark.parametrize(
+    ("preview_feature_enabled", "expected_two_way_audio"),
+    [
+        pytest.param(True, True, id="preview_feature_enabled"),
+        pytest.param(False, False, id="preview_feature_disabled"),
+    ],
+)
 @pytest.mark.usefixtures("mock_test_webrtc_cameras")
 async def test_camera_capabilities_two_way_audio_native_webrtc(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    preview_feature_enabled: bool,
+    expected_two_way_audio: bool,
 ) -> None:
-    """Test two way audio is reported for native WebRTC cameras."""
+    """Test two way audio for native WebRTC cameras needs the labs feature."""
+    await _async_set_two_way_audio_preview_feature(hass, preview_feature_enabled)
     cam = get_camera_from_entity_id(hass, "camera.async")
     cam._attr_camera_entity_capabilities = camera.CameraEntityCapabilities(
         two_way_audio=True
@@ -1138,9 +1175,27 @@ async def test_camera_capabilities_two_way_audio_native_webrtc(
         cam.entity_id,
         {StreamType.WEB_RTC},
         {StreamType.WEB_RTC},
-        expected_two_way_audio=True,
-        expected_two_way_audio_with_webrtc_provider=True,
+        expected_two_way_audio=expected_two_way_audio,
+        expected_two_way_audio_with_webrtc_provider=expected_two_way_audio,
     )
+
+
+@pytest.mark.usefixtures("mock_test_webrtc_cameras")
+async def test_camera_capabilities_two_way_audio_preview_feature_toggled(
+    hass: HomeAssistant,
+) -> None:
+    """Test toggling the labs feature is reflected without reloading."""
+    await _async_set_two_way_audio_preview_feature(hass, True)
+    cam = get_camera_from_entity_id(hass, "camera.async")
+    cam._attr_camera_entity_capabilities = camera.CameraEntityCapabilities(
+        two_way_audio=True
+    )
+    assert cam.camera_capabilities.two_way_audio
+
+    await async_update_preview_feature(
+        hass, DOMAIN, PREVIEW_FEATURE_TWO_WAY_AUDIO, False
+    )
+    assert not cam.camera_capabilities.two_way_audio
 
 
 @pytest.mark.usefixtures("mock_test_webrtc_cameras", "register_test_provider")
