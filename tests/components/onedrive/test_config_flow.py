@@ -6,6 +6,9 @@ from unittest.mock import AsyncMock, MagicMock
 from onedrive_personal_sdk.exceptions import OneDriveException
 from onedrive_personal_sdk.models.items import AppRoot, ItemUpdate
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries
 from homeassistant.components.onedrive.const import (
@@ -24,10 +27,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import setup_integration
 from .const import CLIENT_ID
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 async def _do_get_token(
@@ -351,6 +350,9 @@ async def test_reconfigure_flow_error(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_FOLDER_NAME: "newFolder"}
     )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
     assert mock_config_entry.data[CONF_FOLDER_NAME] == "newFolder"
     assert mock_config_entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN] == "mock-access-token"

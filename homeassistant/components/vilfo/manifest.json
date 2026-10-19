@@ -1,6 +1,7 @@
 {
   "domain": "vilfo",
   "name": "Vilfo Router",
+  "categories": ["computers_network.routers_network"],
   "codeowners": ["@ManneW"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/vilfo",

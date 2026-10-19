@@ -1,6 +1,7 @@
 {
   "domain": "sonarr",
   "name": "Sonarr",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@ctalkington"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sonarr",

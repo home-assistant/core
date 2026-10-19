@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from zoneinfo import ZoneInfo
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.media_player import MediaType
 from homeassistant.components.squeezebox import const
@@ -36,8 +37,6 @@ from homeassistant.components.squeezebox.const import (
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-
-from tests.common import MockConfigEntry
 
 VOLUME_STEP = 10
 BROWSE_LIMIT = 10

@@ -2,8 +2,13 @@
 
 from unittest.mock import AsyncMock, Mock, patch
 
-from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
+from my_pv.exceptions import (
+    MyPVAuthenticationError,
+    MyPVConnectionError,
+    MyPVTooManyRequestsError,
+)
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
@@ -15,8 +20,6 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("mock_my_pv_client")
@@ -145,6 +148,7 @@ async def test_number_set_value_returns_false(
     [
         (MyPVConnectionError(), HomeAssistantError),
         (MyPVAuthenticationError(), ConfigEntryAuthFailed),
+        (MyPVTooManyRequestsError(), HomeAssistantError),
     ],
 )
 async def test_number_set_value_raises_error(

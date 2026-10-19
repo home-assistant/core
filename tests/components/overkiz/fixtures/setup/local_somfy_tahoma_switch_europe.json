@@ -6554,6 +6554,787 @@
         "widgetName": "DynamicExteriorVenetianBlind"
       },
       "deviceURL": "io://1234-5678-6508/11292138"
+    },
+    {
+      "type": 1,
+      "synced": true,
+      "enabled": true,
+      "deviceURL": "io://1234-5678-6508/2840629#1",
+      "subsystemId": 1,
+      "available": true,
+      "definition": {
+        "type": "ACTUATOR",
+        "states": [
+          {
+            "name": "io:SensorsErrorState"
+          },
+          {
+            "name": "io:VentilationConfigurationModeState"
+          },
+          {
+            "name": "io:AirDemandModeState"
+          },
+          {
+            "name": "core:StatusState"
+          },
+          {
+            "name": "io:VentilationModeState"
+          },
+          {
+            "name": "io:EnergySavingState"
+          },
+          {
+            "name": "io:CO2HistoryState"
+          },
+          {
+            "name": "core:CommandLockLevelsState"
+          },
+          {
+            "name": "core:TimeProgramState"
+          },
+          {
+            "name": "core:OperatingStateState"
+          },
+          {
+            "name": "io:InletEngineState"
+          },
+          {
+            "name": "io:OutletEngineState"
+          },
+          {
+            "name": "io:ProgCommandState"
+          },
+          {
+            "name": "io:RemainingTimeBeforeFilterChangeState"
+          },
+          {
+            "name": "core:DiscreteRSSILevelState"
+          },
+          {
+            "name": "core:RSSILevelState"
+          },
+          {
+            "name": "core:PriorityLockTimerState"
+          },
+          {
+            "name": "io:PriorityLockLevelState"
+          },
+          {
+            "name": "io:PriorityLockOriginatorState"
+          },
+          {
+            "name": "core:AirDemandState"
+          },
+          {
+            "name": "core:NameState"
+          }
+        ],
+        "commands": [
+          {
+            "commandName": "refreshTimeProgram",
+            "nparams": 0
+          },
+          {
+            "commandName": "setTimeProgram",
+            "nparams": 1,
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "pairOneWayController",
+            "nparams": 1,
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "setAirDemandMode",
+            "nparams": 1,
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "resetVentilation",
+            "nparams": 0,
+            "paramsSig": "*p1,*p2,*p3"
+          },
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 1,
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "refreshVentilationState",
+            "nparams": 0
+          },
+          {
+            "commandName": "delayedStopIdentify",
+            "nparams": 1,
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "refreshVentilationConfigurationMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairOneWayController",
+            "nparams": 1,
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "refreshSensorsState",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshEnergySaving",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshCO2History",
+            "nparams": 0
+          },
+          {
+            "commandName": "wink",
+            "nparams": 1,
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "addLockLevel",
+            "nparams": 1,
+            "paramsSig": "p1,*p2"
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1,
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "setVentilationMode",
+            "nparams": 1,
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "resetLockLevels",
+            "nparams": 0
+          },
+          {
+            "commandName": "removeLockLevel",
+            "nparams": 1,
+            "paramsSig": "p1"
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "setVentilationConfigurationMode",
+            "nparams": 1,
+            "paramsSig": "p1"
+          }
+        ],
+        "uiClass": "VentilationSystem",
+        "attributes": [
+          {
+            "name": "core:Manufacturer"
+          },
+          {
+            "name": "core:FirmwareRevision"
+          }
+        ],
+        "widgetName": "AtlanticHeatRecoveryVentilation"
+      },
+      "controllableName": "io:AtlanticHeatRecoveryVentilationIOComponent",
+      "label": "Ventilation",
+      "states": [
+        {
+          "name": "core:StatusState",
+          "value": "available",
+          "type": 3
+        },
+        {
+          "name": "core:CommandLockLevelsState",
+          "value": [],
+          "type": 11
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "value": "good",
+          "type": 3
+        },
+        {
+          "name": "core:RSSILevelState",
+          "value": 100,
+          "type": 1
+        },
+        {
+          "name": "io:VentilationConfigurationModeState",
+          "value": "comfort",
+          "type": 3
+        },
+        {
+          "name": "core:AirDemandState",
+          "value": 100,
+          "type": 1
+        },
+        {
+          "name": "io:AirDemandModeState",
+          "value": "auto",
+          "type": 3
+        },
+        {
+          "name": "core:NameState",
+          "value": "Ventilation",
+          "type": 3
+        },
+        {
+          "name": "io:SensorsErrorState",
+          "value": {
+            "outlet": {
+              "exhaustAir": false,
+              "newAir": false
+            },
+            "co2": false,
+            "outside": false,
+            "inlet": {
+              "exhaustAir": false,
+              "newAir": false
+            }
+          },
+          "type": 11
+        },
+        {
+          "name": "core:OperatingStateState",
+          "value": 8,
+          "type": 1
+        },
+        {
+          "name": "io:InletEngineState",
+          "value": 114,
+          "type": 1
+        },
+        {
+          "name": "io:OutletEngineState",
+          "value": 111,
+          "type": 1
+        },
+        {
+          "name": "io:ProgCommandState",
+          "value": 0,
+          "type": 1
+        },
+        {
+          "name": "io:RemainingTimeBeforeFilterChangeState",
+          "value": 3262,
+          "type": 1
+        },
+        {
+          "name": "core:TimeProgramState",
+          "value": {
+            "daymode": {
+              "tuesday": "day-presence",
+              "monday": "day-presence",
+              "sunday": "day-presence",
+              "wednesday": "day-presence",
+              "thursday": "day-presence",
+              "friday": "day-presence",
+              "saturday": "day-presence"
+            },
+            "programs": [
+              {
+                "slots": {
+                  "count": 2,
+                  "definitions": [
+                    {
+                      "mode": "away",
+                      "start": "09:00"
+                    },
+                    {
+                      "mode": "presence",
+                      "start": "00:00"
+                    }
+                  ]
+                }
+              },
+              {
+                "slots": {
+                  "count": 0,
+                  "definitions": []
+                }
+              }
+            ],
+            "lastRequest": "gui"
+          },
+          "type": 11
+        },
+        {
+          "name": "io:CO2HistoryState",
+          "value": [
+            67, 70, 68, 68, 68, 69, 69, 70, 71, 72, 72, 72, 73, 73, 73, 73, 74,
+            81, 80, 68, 72, 73, 70, 69, 68, 72, 68, 66, 68, 66, 64, 62, 64, 63,
+            62, 62, 60, 58, 56, 54, 53, 52, 52, 56, 59, 63, 67, 69, 72, 73, 74,
+            74, 75, 74, 74, 72, 72, 72, 72, 73, 73, 73, 74, 75, 76, 85, 72, 73,
+            73, 70, 66, 64, 61, 59, 59, 57, 57, 53, 51, 50, 49, 48, 48, 47, 46,
+            46, 48, 54, 58, 59, 58, 58, 60, 62, 63, 65, 65, 65, 64, 63, 63, 63,
+            63, 63, 64, 64, 64, 65, 65, 66, 66, 67, 67, 70, 77, 77, 72, 67, 65,
+            63, 52, 49, 47, 49, 52, 53, 53, 55, 59, 63, 60, 61, 54, 49, 49, 52,
+            53, 59, 59, 60, 60, 60, 60, 60, 22
+          ],
+          "type": 10
+        },
+        {
+          "name": "io:EnergySavingState",
+          "value": 314,
+          "type": 1
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "value": "Atlantic Group",
+          "type": 3
+        },
+        {
+          "name": "core:FirmwareRevision",
+          "value": "682008A",
+          "type": 3
+        }
+      ]
+    },
+    {
+      "type": 2,
+      "synced": true,
+      "enabled": true,
+      "deviceURL": "io://1234-5678-6508/2840629#2",
+      "subsystemId": 2,
+      "available": true,
+      "definition": {
+        "type": "SENSOR",
+        "states": [
+          {
+            "name": "core:CO2ConcentrationState"
+          },
+          {
+            "name": "core:StatusState"
+          }
+        ],
+        "commands": [],
+        "uiClass": "AirSensor",
+        "attributes": [
+          {
+            "name": "core:Manufacturer"
+          },
+          {
+            "name": "core:PowerSourceType"
+          },
+          {
+            "name": "core:FirmwareRevision"
+          }
+        ],
+        "widgetName": "CO2Sensor"
+      },
+      "controllableName": "io:CO2IOSystemDeviceSensor",
+      "label": "Ventilation (Ventilation#2)",
+      "states": [
+        {
+          "name": "core:StatusState",
+          "value": "available",
+          "type": 3
+        },
+        {
+          "name": "core:CO2ConcentrationState",
+          "value": 605,
+          "type": 1
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "value": "Atlantic Group",
+          "type": 3
+        },
+        {
+          "name": "core:PowerSourceType",
+          "value": "mainSupply",
+          "type": 3
+        },
+        {
+          "name": "core:FirmwareRevision",
+          "value": "682008A",
+          "type": 3
+        }
+      ]
+    },
+    {
+      "type": 2,
+      "synced": true,
+      "enabled": true,
+      "deviceURL": "io://1234-5678-6508/2840629#3",
+      "subsystemId": 3,
+      "available": true,
+      "definition": {
+        "type": "SENSOR",
+        "states": [
+          {
+            "name": "core:TemperatureState"
+          },
+          {
+            "name": "core:StatusState"
+          }
+        ],
+        "commands": [],
+        "uiClass": "TemperatureSensor",
+        "attributes": [
+          {
+            "name": "core:Manufacturer"
+          },
+          {
+            "name": "core:PowerSourceType"
+          },
+          {
+            "name": "core:MeasuredValueType"
+          },
+          {
+            "name": "core:FirmwareRevision"
+          }
+        ],
+        "widgetName": "TemperatureSensor"
+      },
+      "controllableName": "io:TemperatureInCelciusIOSystemDeviceSensor",
+      "label": "Ventilation (Ventilation#3)",
+      "states": [
+        {
+          "name": "core:StatusState",
+          "value": "available",
+          "type": 3
+        },
+        {
+          "name": "core:TemperatureState",
+          "value": -40,
+          "type": 1
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "value": "Atlantic Group",
+          "type": 3
+        },
+        {
+          "name": "core:PowerSourceType",
+          "value": "mainSupply",
+          "type": 3
+        },
+        {
+          "name": "core:MeasuredValueType",
+          "value": "core:TemperatureInCelcius",
+          "type": 3
+        },
+        {
+          "name": "core:FirmwareRevision",
+          "value": "682008A",
+          "type": 3
+        }
+      ]
+    },
+    {
+      "type": 2,
+      "synced": true,
+      "enabled": true,
+      "deviceURL": "io://1234-5678-6508/2840629#4",
+      "subsystemId": 4,
+      "available": true,
+      "definition": {
+        "type": "SENSOR",
+        "states": [
+          {
+            "name": "core:TemperatureState"
+          },
+          {
+            "name": "core:StatusState"
+          }
+        ],
+        "commands": [],
+        "uiClass": "TemperatureSensor",
+        "attributes": [
+          {
+            "name": "core:Manufacturer"
+          },
+          {
+            "name": "core:PowerSourceType"
+          },
+          {
+            "name": "core:MeasuredValueType"
+          },
+          {
+            "name": "core:FirmwareRevision"
+          }
+        ],
+        "widgetName": "TemperatureSensor"
+      },
+      "controllableName": "io:TemperatureInCelciusIOSystemDeviceSensor",
+      "label": "Ventilation (Ventilation#4)",
+      "states": [
+        {
+          "name": "core:StatusState",
+          "value": "available",
+          "type": 3
+        },
+        {
+          "name": "core:TemperatureState",
+          "value": 19,
+          "type": 2
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "value": "Atlantic Group",
+          "type": 3
+        },
+        {
+          "name": "core:PowerSourceType",
+          "value": "mainSupply",
+          "type": 3
+        },
+        {
+          "name": "core:MeasuredValueType",
+          "value": "core:TemperatureInCelcius",
+          "type": 3
+        },
+        {
+          "name": "core:FirmwareRevision",
+          "value": "682008A",
+          "type": 3
+        }
+      ]
+    },
+    {
+      "type": 2,
+      "synced": true,
+      "enabled": true,
+      "deviceURL": "io://1234-5678-6508/2840629#5",
+      "subsystemId": 5,
+      "available": true,
+      "definition": {
+        "type": "SENSOR",
+        "states": [
+          {
+            "name": "core:TemperatureState"
+          },
+          {
+            "name": "core:StatusState"
+          }
+        ],
+        "commands": [],
+        "uiClass": "TemperatureSensor",
+        "attributes": [
+          {
+            "name": "core:Manufacturer"
+          },
+          {
+            "name": "core:PowerSourceType"
+          },
+          {
+            "name": "core:MeasuredValueType"
+          },
+          {
+            "name": "core:FirmwareRevision"
+          }
+        ],
+        "widgetName": "TemperatureSensor"
+      },
+      "controllableName": "io:TemperatureInCelciusIOSystemDeviceSensor",
+      "label": "Ventilation (Ventilation#5)",
+      "states": [
+        {
+          "name": "core:StatusState",
+          "value": "available",
+          "type": 3
+        },
+        {
+          "name": "core:TemperatureState",
+          "value": 19.2,
+          "type": 2
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "value": "Atlantic Group",
+          "type": 3
+        },
+        {
+          "name": "core:PowerSourceType",
+          "value": "mainSupply",
+          "type": 3
+        },
+        {
+          "name": "core:MeasuredValueType",
+          "value": "core:TemperatureInCelcius",
+          "type": 3
+        },
+        {
+          "name": "core:FirmwareRevision",
+          "value": "682008A",
+          "type": 3
+        }
+      ]
+    },
+    {
+      "type": 2,
+      "synced": true,
+      "enabled": true,
+      "deviceURL": "io://1234-5678-6508/2840629#6",
+      "subsystemId": 6,
+      "available": true,
+      "definition": {
+        "type": "SENSOR",
+        "states": [
+          {
+            "name": "core:TemperatureState"
+          },
+          {
+            "name": "core:StatusState"
+          }
+        ],
+        "commands": [],
+        "uiClass": "TemperatureSensor",
+        "attributes": [
+          {
+            "name": "core:Manufacturer"
+          },
+          {
+            "name": "core:PowerSourceType"
+          },
+          {
+            "name": "core:MeasuredValueType"
+          },
+          {
+            "name": "core:FirmwareRevision"
+          }
+        ],
+        "widgetName": "TemperatureSensor"
+      },
+      "controllableName": "io:TemperatureInCelciusIOSystemDeviceSensor",
+      "label": "Ventilation (Ventilation#6)",
+      "states": [
+        {
+          "name": "core:StatusState",
+          "value": "available",
+          "type": 3
+        },
+        {
+          "name": "core:TemperatureState",
+          "value": 23.1,
+          "type": 2
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "value": "Atlantic Group",
+          "type": 3
+        },
+        {
+          "name": "core:PowerSourceType",
+          "value": "mainSupply",
+          "type": 3
+        },
+        {
+          "name": "core:MeasuredValueType",
+          "value": "core:TemperatureInCelcius",
+          "type": 3
+        },
+        {
+          "name": "core:FirmwareRevision",
+          "value": "682008A",
+          "type": 3
+        }
+      ]
+    },
+    {
+      "type": 2,
+      "synced": true,
+      "enabled": true,
+      "deviceURL": "io://1234-5678-6508/2840629#7",
+      "subsystemId": 7,
+      "available": true,
+      "definition": {
+        "type": "SENSOR",
+        "states": [
+          {
+            "name": "core:TemperatureState"
+          },
+          {
+            "name": "core:StatusState"
+          }
+        ],
+        "commands": [],
+        "uiClass": "TemperatureSensor",
+        "attributes": [
+          {
+            "name": "core:Manufacturer"
+          },
+          {
+            "name": "core:PowerSourceType"
+          },
+          {
+            "name": "core:MeasuredValueType"
+          },
+          {
+            "name": "core:FirmwareRevision"
+          }
+        ],
+        "widgetName": "TemperatureSensor"
+      },
+      "controllableName": "io:TemperatureInCelciusIOSystemDeviceSensor",
+      "label": "Ventilation (Ventilation#7)",
+      "states": [
+        {
+          "name": "core:StatusState",
+          "value": "available",
+          "type": 3
+        },
+        {
+          "name": "core:TemperatureState",
+          "value": 25,
+          "type": 2
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "value": "Atlantic Group",
+          "type": 3
+        },
+        {
+          "name": "core:PowerSourceType",
+          "value": "mainSupply",
+          "type": 3
+        },
+        {
+          "name": "core:MeasuredValueType",
+          "value": "core:TemperatureInCelcius",
+          "type": 3
+        },
+        {
+          "name": "core:FirmwareRevision",
+          "value": "682008A",
+          "type": 3
+        }
+      ]
     }
   ],
   "gateways": [

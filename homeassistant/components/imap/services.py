@@ -1,6 +1,7 @@
 """Support for the imap services."""
 
 import asyncio
+from contextlib import asynccontextmanager, suppress
 from email.message import Message
 import logging
 from typing import Any
@@ -19,7 +20,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
-from .const import DOMAIN
+from .const import DOMAIN, INVALID_COMMAND_CHARS
 from .coordinator import ImapMessage, connect_to_server, get_parts
 from .errors import InvalidAuth, InvalidFolder
 
@@ -31,10 +32,19 @@ CONF_PART = "part"
 CONF_UID = "uid"
 CONF_TARGET_FOLDER = "target_folder"
 
+
+def _command_argument(value: Any) -> str:
+    """Validate a string that is passed as an IMAP command argument."""
+    command_argument = cv.string(value)
+    if INVALID_COMMAND_CHARS.search(command_argument):
+        raise probatio.Invalid("NUL, CR and LF characters are not allowed")
+    return command_argument
+
+
 _SERVICE_UID_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_ENTRY): cv.string,
-        probatio.Required(CONF_UID): cv.string,
+        probatio.Required(CONF_UID): _command_argument,
     }
 )
 
@@ -42,7 +52,7 @@ SERVICE_SEEN_SCHEMA = _SERVICE_UID_SCHEMA
 SERVICE_MOVE_SCHEMA = _SERVICE_UID_SCHEMA.extend(
     {
         probatio.Optional(CONF_SEEN): cv.boolean,
-        probatio.Required(CONF_TARGET_FOLDER): cv.string,
+        probatio.Required(CONF_TARGET_FOLDER): _command_argument,
     }
 )
 SERVICE_DELETE_SCHEMA = _SERVICE_UID_SCHEMA
@@ -54,8 +64,9 @@ SERVICE_FETCH_PART_SCHEMA = _SERVICE_UID_SCHEMA.extend(
 )
 
 
+@asynccontextmanager
 async def async_get_imap_client(hass: HomeAssistant, entry_id: str) -> IMAP4_SSL:
-    """Get IMAP client and connect."""
+    """Get IMAP client and connect, as managed context."""
     if (entry := hass.config_entries.async_get_entry(entry_id)) is None or (
         entry.state is not ConfigEntryState.LOADED
     ):
@@ -73,13 +84,21 @@ async def async_get_imap_client(hass: HomeAssistant, entry_id: str) -> IMAP4_SSL
         raise ServiceValidationError(
             translation_domain=DOMAIN, translation_key="invalid_folder"
         ) from exc
-    except (TimeoutError, AioImapException) as exc:
+    except (OSError, AioImapException) as exc:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="imap_server_fail",
             translation_placeholders={"error": str(exc)},
         ) from exc
-    return client
+
+    try:
+        yield client
+    finally:
+        if client:
+            with suppress(BaseException):
+                await client.close()
+            with suppress(BaseException):
+                client.protocol.transport.close()
 
 
 @callback
@@ -120,17 +139,16 @@ async def _async_seen(call: ServiceCall) -> None:
         uid,
         entry_id,
     )
-    client = await async_get_imap_client(call.hass, entry_id)
-    try:
-        response = await client.store(uid, "+FLAGS (\\Seen)")
-    except (TimeoutError, AioImapException) as exc:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="imap_server_fail",
-            translation_placeholders={"error": str(exc)},
-        ) from exc
-    raise_on_error(response, "seen_failed")
-    await client.close()
+    async with async_get_imap_client(call.hass, entry_id) as client:
+        try:
+            response = await client.store(uid, "+FLAGS (\\Seen)")
+        except (TimeoutError, AioImapException) as exc:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="imap_server_fail",
+                translation_placeholders={"error": str(exc)},
+            ) from exc
+        raise_on_error(response, "seen_failed")
 
 
 async def _async_move(call: ServiceCall) -> None:
@@ -146,26 +164,25 @@ async def _async_move(call: ServiceCall) -> None:
         seen,
         entry_id,
     )
-    client = await async_get_imap_client(call.hass, entry_id)
-    try:
-        if seen:
-            response = await client.store(uid, "+FLAGS (\\Seen)")
-            raise_on_error(response, "seen_failed")
-        response = await client.copy(uid, target_folder)
-        raise_on_error(response, "copy_failed")
-        response = await client.store(uid, "+FLAGS (\\Deleted)")
-        raise_on_error(response, "delete_failed")
-        response = await asyncio.wait_for(
-            client.protocol.expunge(uid, by_uid=True), client.timeout
-        )
-        raise_on_error(response, "expunge_failed")
-    except (TimeoutError, AioImapException) as exc:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="imap_server_fail",
-            translation_placeholders={"error": str(exc)},
-        ) from exc
-    await client.close()
+    async with async_get_imap_client(call.hass, entry_id) as client:
+        try:
+            if seen:
+                response = await client.store(uid, "+FLAGS (\\Seen)")
+                raise_on_error(response, "seen_failed")
+            response = await client.copy(uid, target_folder)
+            raise_on_error(response, "copy_failed")
+            response = await client.store(uid, "+FLAGS (\\Deleted)")
+            raise_on_error(response, "delete_failed")
+            response = await asyncio.wait_for(
+                client.protocol.expunge(uid, by_uid=True), client.timeout
+            )
+            raise_on_error(response, "expunge_failed")
+        except (TimeoutError, AioImapException) as exc:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="imap_server_fail",
+                translation_placeholders={"error": str(exc)},
+            ) from exc
 
 
 async def _async_delete(call: ServiceCall) -> None:
@@ -177,21 +194,20 @@ async def _async_delete(call: ServiceCall) -> None:
         uid,
         entry_id,
     )
-    client = await async_get_imap_client(call.hass, entry_id)
-    try:
-        response = await client.store(uid, "+FLAGS (\\Deleted)")
-        raise_on_error(response, "delete_failed")
-        response = await asyncio.wait_for(
-            client.protocol.expunge(uid, by_uid=True), client.timeout
-        )
-        raise_on_error(response, "expunge_failed")
-    except (TimeoutError, AioImapException) as exc:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="imap_server_fail",
-            translation_placeholders={"error": str(exc)},
-        ) from exc
-    await client.close()
+    async with async_get_imap_client(call.hass, entry_id) as client:
+        try:
+            response = await client.store(uid, "+FLAGS (\\Deleted)")
+            raise_on_error(response, "delete_failed")
+            response = await asyncio.wait_for(
+                client.protocol.expunge(uid, by_uid=True), client.timeout
+            )
+            raise_on_error(response, "expunge_failed")
+        except (TimeoutError, AioImapException) as exc:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="imap_server_fail",
+                translation_placeholders={"error": str(exc)},
+            ) from exc
 
 
 async def _async_fetch(call: ServiceCall) -> ServiceResponse:
@@ -203,19 +219,18 @@ async def _async_fetch(call: ServiceCall) -> ServiceResponse:
         uid,
         entry_id,
     )
-    client = await async_get_imap_client(call.hass, entry_id)
-    try:
-        response = await client.fetch(uid, "BODY.PEEK[]")
-    except (TimeoutError, AioImapException) as exc:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="imap_server_fail",
-            translation_placeholders={"error": str(exc)},
-        ) from exc
-    raise_on_error(response, "fetch_failed")
-    # Index 1 of of the response lines contains the bytearray with the message data
-    message = ImapMessage(response.lines[1])
-    await client.close()
+    async with async_get_imap_client(call.hass, entry_id) as client:
+        try:
+            response = await client.fetch(uid, "BODY.PEEK[]")
+        except (TimeoutError, AioImapException) as exc:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="imap_server_fail",
+                translation_placeholders={"error": str(exc)},
+            ) from exc
+        raise_on_error(response, "fetch_failed")
+        # Index 1 of of the response lines contains the bytearray with the message data
+        message = ImapMessage(response.lines[1])
     return {
         "text": message.text,
         "sender": message.sender,
@@ -237,19 +252,18 @@ async def _async_fetch_part(call: ServiceCall) -> ServiceResponse:
         uid,
         entry_id,
     )
-    client = await async_get_imap_client(call.hass, entry_id)
-    try:
-        response = await client.fetch(uid, "BODY.PEEK[]")
-    except (TimeoutError, AioImapException) as exc:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="imap_server_fail",
-            translation_placeholders={"error": str(exc)},
-        ) from exc
-    raise_on_error(response, "fetch_failed")
-    # Index 1 of of the response lines contains the bytearray with the message data
-    message = ImapMessage(response.lines[1])
-    await client.close()
+    async with async_get_imap_client(call.hass, entry_id) as client:
+        try:
+            response = await client.fetch(uid, "BODY.PEEK[]")
+        except (TimeoutError, AioImapException) as exc:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="imap_server_fail",
+                translation_placeholders={"error": str(exc)},
+            ) from exc
+        raise_on_error(response, "fetch_failed")
+        # Index 1 of of the response lines contains the bytearray with the message data
+        message = ImapMessage(response.lines[1])
     part_data = _get_message_part(message.email_message, part_key)
     part_data_content = part_data.get_payload(decode=False)
     try:

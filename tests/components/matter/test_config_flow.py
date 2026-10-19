@@ -9,6 +9,7 @@ from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import Discovery
 from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.matter.const import ADDON_SLUG, DOMAIN
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 ADDON_DISCOVERY_INFO = {
     "addon": "Matter Server",
@@ -178,6 +177,17 @@ async def test_manual_errors(
     assert client_connect.call_count == 1
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
+
+    client_connect.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "url": "ws://localhost:5580/ws",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_manual_already_configured(

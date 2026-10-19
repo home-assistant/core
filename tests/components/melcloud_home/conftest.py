@@ -6,15 +6,14 @@ from unittest.mock import AsyncMock, patch
 from aiomelcloudhome import MELCloudHome, UserContext
 from aiomelcloudhome.models.telemetry import TelemetryValue
 import pytest
-
-from homeassistant.components.melcloud_home.const import DOMAIN
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     load_json_array_fixture,
     load_json_object_fixture,
 )
+
+from homeassistant.components.melcloud_home.const import DOMAIN
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
 MOCK_USER_INPUT = {
     CONF_EMAIL: "user@example.com",
@@ -71,4 +70,5 @@ def mock_config_entry() -> MockConfigEntry:
         title=MOCK_USER_INPUT[CONF_EMAIL],
         data=MOCK_USER_INPUT,
         entry_id="config-entry-uuid-1",
+        minor_version=2,
     )
