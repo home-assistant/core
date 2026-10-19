@@ -124,16 +124,16 @@ class ViCareEntity(Entity):
                     config_entry.entry_id,
                 )
                 if gateway_device is not None:
-                    device_info["via_device_id"] = gateway_device.id
+                    device_info.via_device_id = gateway_device.id
             elif (
                 len(parts) == 2
                 and len(zigbee_ieee := device_serial.removeprefix("zigbee-")) == 16
             ):
-                device_info["serial_number"] = "-".join(
+                device_info.serial_number = "-".join(
                     zigbee_ieee.upper()[i : i + 2] for i in range(0, 16, 2)
                 )
         else:
-            device_info["serial_number"] = device_serial
+            device_info.serial_number = device_serial
 
         return device_info
 

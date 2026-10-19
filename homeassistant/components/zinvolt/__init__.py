@@ -34,7 +34,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZinvoltConfigEntry) -> N
             translation_domain=DOMAIN, translation_key="authentication_failed"
         ) from err
     except ZinvoltError as err:
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="update_failed"
+        ) from err
 
     coordinators: dict[str, ZinvoltDeviceCoordinator] = {}
     tasks = []

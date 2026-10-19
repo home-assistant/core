@@ -189,6 +189,15 @@ class PendingDiscovered(TypedDict):
     unsub: CALLBACK_TYPE
 
 
+@dataclass(slots=True, frozen=True)
+class DiscoveredDisabledEntity:
+    """Discovered entity that is disabled in the entity registry."""
+
+    # Entity registry index (entity_platform, "mqtt", unique_id)
+    registry_key: tuple[str, str, str]
+    discovery_data: DiscoveryInfoType
+
+
 class MqttOriginInfo(TypedDict, total=False):
     """Integration info of discovered entity."""
 
@@ -483,11 +492,11 @@ class MqttData:
     device_triggers: dict[str, Trigger] = field(default_factory=dict)
     data_config_flow_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     # Attribute `discovery_discovered_and_disabled` maps a discovery hash to
-    # the entity registry index, which is a tuple (entity_platform, "mqtt", unique_id)
-    # It allows to cleanup disabled entities when an empty payload is received.
-    discovery_discovered_and_disabled: dict[tuple[str, str], tuple[str, str, str]] = (
-        field(default_factory=dict)
-    )
+    # the disabled entity, so it can be cleaned up when an empty payload
+    # is received on the topic it was discovered on.
+    discovery_discovered_and_disabled: dict[
+        tuple[str, str], DiscoveredDisabledEntity
+    ] = field(default_factory=dict)
     discovery_already_discovered: set[tuple[str, str]] = field(default_factory=set)
     discovery_pending_discovered: dict[tuple[str, str], PendingDiscovered] = field(
         default_factory=dict

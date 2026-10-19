@@ -8,7 +8,6 @@ import pytest
 from homeassistant.components.input_text import (
     ATTR_MAX,
     ATTR_MIN,
-    ATTR_MODE,
     ATTR_VALUE,
     CONF_INITIAL,
     CONF_MAX_VALUE,
@@ -21,6 +20,7 @@ from homeassistant.const import (
     ATTR_EDITABLE,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
+    ATTR_MODE,
     ATTR_NAME,
     SERVICE_RELOAD,
 )

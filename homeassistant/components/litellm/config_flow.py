@@ -1,5 +1,6 @@
 """Config flow for LiteLLM integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -97,26 +98,30 @@ class LiteLLMConfigFlow(ConfigFlow, domain=DOMAIN):
             "stt": STTFlowHandler,
         }
 
+    async def _async_validate(self, url: str, api_key: str | None) -> dict[str, str]:
+        """Validate the proxy connection and return any errors."""
+        try:
+            await _get_models(self.hass, url, api_key)
+        except InvalidAuth:
+            return {"base": "invalid_auth"}
+        except CannotConnect:
+            return {"base": "cannot_connect"}
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return {"base": "unknown"}
+        return {}
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             url = _normalize_url(user_input[CONF_URL])
             api_key = user_input.get(CONF_API_KEY)
             self._async_abort_entries_match({CONF_URL: url})
-            try:
-                await _get_models(self.hass, url, api_key)
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            if not (errors := await self._async_validate(url, api_key)):
                 data = {CONF_URL: url}
                 if api_key:
                     data[CONF_API_KEY] = api_key
@@ -132,6 +137,47 @@ class LiteLLMConfigFlow(ConfigFlow, domain=DOMAIN):
                     probatio.Optional(probatio.Secret(CONF_API_KEY)): str,
                 }
             ),
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle re-authentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm re-authentication."""
+        reauth_entry = self._get_reauth_entry()
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            api_key = user_input[CONF_API_KEY]
+            if not (
+                errors := await self._async_validate(
+                    reauth_entry.data[CONF_URL], api_key
+                )
+            ):
+                # A loaded entry is reloaded by its update listener when data changes
+                reload = (
+                    reauth_entry.data.get(CONF_API_KEY) == api_key
+                    or not reauth_entry.update_listeners
+                )
+                result = self.async_update_and_abort(
+                    reauth_entry, data_updates={CONF_API_KEY: api_key}
+                )
+                if reload:
+                    self.hass.config_entries.async_schedule_reload(
+                        reauth_entry.entry_id
+                    )
+                return result
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+            ),
+            description_placeholders={CONF_URL: reauth_entry.data[CONF_URL]},
             errors=errors,
         )
 

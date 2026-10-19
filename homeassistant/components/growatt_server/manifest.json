@@ -1,6 +1,7 @@
 {
   "domain": "growatt_server",
   "name": "Growatt",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@johanzander"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/growatt_server",

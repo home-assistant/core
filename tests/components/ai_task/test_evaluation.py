@@ -13,7 +13,11 @@ from homeassistant.components import ai_task
 from homeassistant.components.ai_task.const import DATA_PREFERENCES
 from homeassistant.components.media_source import MediaImage
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceValidationError,
+    Unauthorized,
+)
 from homeassistant.helpers import chat_session
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
@@ -140,7 +144,7 @@ async def test_missing_entity(
     hass: HomeAssistant, entity_id: str | None, error: str
 ) -> None:
     """Report missing entities or preferences."""
-    with pytest.raises(HomeAssistantError, match=error):
+    with pytest.raises(ServiceValidationError, match=error):
         await ai_task.async_evaluate(
             hass,
             task_name="Delivery",
@@ -184,7 +188,7 @@ async def test_features(
 ) -> None:
     """Require evaluation support and the shared attachment capability."""
     mock_ai_task_entity.supported_features = features
-    with pytest.raises(HomeAssistantError, match=error):
+    with pytest.raises(ServiceValidationError, match=error):
         await ai_task.async_evaluate(
             hass,
             task_name="Delivery",
@@ -248,7 +252,7 @@ async def test_camera_only(hass: HomeAssistant, mock_evaluate: AsyncMock) -> Non
 @pytest.mark.usefixtures("init_components")
 async def test_missing_input(hass: HomeAssistant, mock_evaluate: AsyncMock) -> None:
     """Reject a task with neither state nor attachments."""
-    with pytest.raises(HomeAssistantError, match="requires state or attachments"):
+    with pytest.raises(ServiceValidationError, match="requires state or attachments"):
         await ai_task.async_evaluate(
             hass, task_name="Delivery", entity_id=TEST_ENTITY_ID, questions=QUESTIONS
         )

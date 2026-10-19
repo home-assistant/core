@@ -41,7 +41,9 @@ async def test_cameras(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test camera entities are created correctly."""
-    with patch("homeassistant.components.camera._RND.getrandbits", return_value=1):
+    with patch(
+        "homeassistant.components.camera.entity._RND.getrandbits", return_value=1
+    ):
         await setup_camera_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
