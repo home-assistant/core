@@ -845,7 +845,8 @@ class EntityPlatform:
         A device info with fields gets or creates the device, otherwise the device
         entry set on the entity is used.
         """
-        device_info = entity.device_info
+        if (device_info := entity.device_info) is None:
+            return entity.device_entry
         if isinstance(device_info, dr.ChildDeviceInfo):
             return dr.async_get(self.hass).async_get_or_create_child_from_device_info(
                 config_entry_id=config_entry_id,
@@ -853,9 +854,7 @@ class EntityPlatform:
                 device_info=device_info,
             )
         device_info_fields: dict[str, Any]
-        if device_info is None:
-            device_info_fields = {}
-        elif isinstance(device_info, dr.DeviceInfo):
+        if isinstance(device_info, dr.DeviceInfo):
             device_info_fields = device_info.as_dict()
         else:
             # An integration can still describe its device with a plain
