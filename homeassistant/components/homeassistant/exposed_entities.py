@@ -46,10 +46,6 @@ KNOWN_ASSISTANTS = ("cloud.alexa", "cloud.google_assistant", "conversation")
 
 STORAGE_KEY = f"{DOMAIN}.exposed_entities"
 STORAGE_VERSION = 1
-# Minor 2 adds the top-level "orphaned" map. Minor-only bumps load in both
-# directions: an older core falls back to reading the data as-is and never
-# looks at the extra key.
-STORAGE_VERSION_MINOR = 2
 
 SAVE_DELAY = 10
 
@@ -142,6 +138,9 @@ class SerializedExposedEntities(TypedDict):
 
     assistants: dict[str, dict[str, Any]]
     exposed_entities: dict[str, dict[str, Any]]
+    # No minor-version bump for this key: older cores ignore it, and a version
+    # mismatch rewrites the whole store at load, which on affected installs is
+    # a multi-GB write before the sweep has removed anything.
     orphaned: NotRequired[dict[str, float]]
 
 
@@ -160,11 +159,7 @@ class ExposedEntities:
         self._hass = hass
         self._listeners: dict[str, list[Callable[[], None]]] = {}
         self._store: Store[SerializedExposedEntities] = Store(
-            hass,
-            STORAGE_VERSION,
-            STORAGE_KEY,
-            minor_version=STORAGE_VERSION_MINOR,
-            serialize_in_event_loop=False,
+            hass, STORAGE_VERSION, STORAGE_KEY, serialize_in_event_loop=False
         )
 
     async def async_initialize(self) -> None:
