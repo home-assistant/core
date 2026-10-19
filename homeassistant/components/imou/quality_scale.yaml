@@ -72,7 +72,10 @@ rules:
     comment: |
       Rejected App ID or App secret uses the reauthentication flow.
       A used-up Open Platform monthly quota is not fixable inside Home Assistant and is reported in diagnostics.
-  stale-devices: todo
+  stale-devices:
+    status: done
+    comment: Devices that leave the account can be deleted from the device page. Devices the cloud still reports cannot.
+
   # Platinum
   async-dependency: todo
   inject-websession: todo

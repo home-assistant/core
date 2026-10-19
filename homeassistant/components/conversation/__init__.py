@@ -193,6 +193,14 @@ async def async_prepare_agent(
     await agent.async_prepare(language)
 
 
+async def async_prepare_intents(hass: HomeAssistant, language: str) -> None:
+    """Prepare sentence triggers and strict intent matching in a language."""
+    agent = get_agent_manager(hass).default_agent
+    assert agent is not None
+
+    await agent.async_prepare(language, strict_intents_only=True)
+
+
 async def async_handle_sentence_triggers(
     hass: HomeAssistant,
     user_input: ConversationInput,
