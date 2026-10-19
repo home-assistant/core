@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import pysaj
+import aiosaj
 
 from homeassistant.const import (
     CONF_HOST,
@@ -35,8 +35,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SAJConfigEntry) -> None:
         if password:
             kwargs["password"] = password
 
-    saj = pysaj.SAJ(host, **kwargs)
-    sensor_def = pysaj.Sensors(wifi)
+    saj = aiosaj.SAJ(host, **kwargs)
+    sensor_def = aiosaj.Sensors(wifi)
 
     coordinator = SAJDataUpdateCoordinator(hass, entry, saj, sensor_def, wifi=wifi)
     await coordinator.async_config_entry_first_refresh()

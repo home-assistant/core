@@ -432,6 +432,9 @@ aiorussound==5.0.2
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
 
+# homeassistant.components.saj
+aiosaj==0.2.1
+
 # homeassistant.components.shelly
 aioshelly==13.35.0
 
@@ -2608,9 +2611,6 @@ pyrympro==0.0.9
 
 # homeassistant.components.sabnzbd
 pysabnzbd==1.1.1
-
-# homeassistant.components.saj
-pysaj==0.0.16
 
 # homeassistant.components.saunum
 pysaunum==0.7.0
