@@ -56,6 +56,7 @@ FLOWS = {
         "aladdin_connect",
         "alarmdecoder",
         "alexa_devices",
+        "alpha_bidet_infrared",
         "altruist",
         "amberelectric",
         "ambient_network",

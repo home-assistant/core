@@ -69,6 +69,7 @@ homeassistant.components.alarm_control_panel.*
 homeassistant.components.alert.*
 homeassistant.components.alexa.*
 homeassistant.components.alexa_devices.*
+homeassistant.components.alpha_bidet_infrared.*
 homeassistant.components.alpha_vantage.*
 homeassistant.components.altruist.*
 homeassistant.components.amazon_polly.*
