@@ -1,6 +1,7 @@
 {
   "domain": "foreca",
   "name": "Foreca",
+  "categories": ["weather_alerts.forecasts"],
   "codeowners": ["@EetuPelkonen", "@hyvatti-foreca"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/foreca",

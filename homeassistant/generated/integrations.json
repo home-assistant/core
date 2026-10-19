@@ -2263,6 +2263,9 @@
     "foreca": {
       "name": "Foreca",
       "integration_type": "service",
+      "categories": [
+        "weather_alerts.forecasts"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
