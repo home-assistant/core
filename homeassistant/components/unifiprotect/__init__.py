@@ -6,11 +6,6 @@ from typing import NoReturn
 
 from aiohttp.client_exceptions import ServerDisconnectedError
 from uiprotect import ProtectApiClient
-
-# Import the anonymize module from the uiprotect package
-# in __init__ to ensure it gets imported in the executor since the
-# diagnostics module will not be imported in the executor.
-from uiprotect.anonymize import anonymize_data  # noqa: F401
 from uiprotect.api import DEVICE_UPDATE_INTERVAL
 from uiprotect.data import Bootstrap
 from uiprotect.data.public_devices import PublicDeviceModel, PublicNVR
