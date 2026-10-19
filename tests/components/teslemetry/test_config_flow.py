@@ -27,6 +27,16 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.bluetooth import (
+    FakeScanner,
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_advertisement,
+    inject_advertisement_with_time_and_source_connectable,
+)
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from tesla_fleet_api.const import AuthorizedClientState
 from tesla_fleet_api.exceptions import (
     BadGateway,
@@ -90,17 +100,6 @@ from homeassistant.setup import async_setup_component
 
 from . import mock_config_entry, setup_platform
 from .const import ADDRESS, CONFIG_V1, METADATA, PRODUCTS, UNIQUE_ID, VIN
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.bluetooth import (
-    FakeScanner,
-    generate_advertisement_data,
-    generate_ble_device,
-    inject_advertisement,
-    inject_advertisement_with_time_and_source_connectable,
-)
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 REDIRECT = "https://example.com/auth/external/callback"
 

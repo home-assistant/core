@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from lojack_api import ApiError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lojack.const import DEFAULT_UPDATE_INTERVAL, DOMAIN
@@ -15,8 +16,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .const import TEST_BATTERY_VOLTAGE, TEST_ODOMETER, TEST_SPEED, TEST_TIMESTAMP
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID_BASE = "sensor.2021_honda_accord"
 

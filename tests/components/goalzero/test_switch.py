@@ -1,5 +1,8 @@
 """Switch tests for the Goalzero integration."""
 
+from pytest_homeassistant.common import async_load_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+
 from homeassistant.components.goalzero.const import DEFAULT_NAME, DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -12,9 +15,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from . import async_init_integration
-
-from tests.common import async_load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_switches_states(

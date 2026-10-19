@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import network
@@ -22,8 +23,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import LOOPBACK_IPADDR, NO_LOOPBACK_IPADDR
-
-from tests.typing import WebSocketGenerator
 
 
 def _mock_cond_socket(sockname):

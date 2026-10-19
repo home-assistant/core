@@ -6,11 +6,10 @@ from unittest.mock import AsyncMock, patch
 
 from aiohortos import Device, Organisation, Readout, TokenPair
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_array_fixture
 
 from homeassistant.components.hortimax.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
-
-from tests.common import MockConfigEntry, load_json_array_fixture
 
 API_KEY = "test-api-key"
 DEVICE = "HOR00000000.000"

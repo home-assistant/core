@@ -5,15 +5,14 @@ import re
 from typing import Any
 from unittest.mock import Mock
 
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from uiprotect.data import Light
 
 from homeassistant.core import HomeAssistant
 
 from .utils import MockUFPFixture, init_entry
-
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 # Pattern for hex IDs (24 char hex strings like device/user IDs)
 HEX_ID_PATTERN = re.compile(r"^[a-f0-9]{24}$")

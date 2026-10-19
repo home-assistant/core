@@ -1,14 +1,14 @@
 """Test the Devialet diagnostics."""
 
+from pytest_homeassistant.common import async_load_json_object_fixture
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
+
 from homeassistant.components.devialet.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import async_load_json_object_fixture
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(
