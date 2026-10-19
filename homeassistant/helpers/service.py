@@ -323,10 +323,19 @@ def async_prepare_call_from_config(
             CONF_ENTITY_ID in exclude
         ):
             try:
-                excluded_entity_ids = entity_registry.async_validate_entity_ids(
-                    entity_registry.async_get(hass),
-                    cv.entity_ids_or_uuids(exclude[CONF_ENTITY_ID]),
-                )
+                registry = entity_registry.async_get(hass)
+                excluded_entity_ids = [
+                    entity_id
+                    for entity_id_or_uuid in cv.entity_ids_or_uuids(
+                        exclude[CONF_ENTITY_ID]
+                    )
+                    if (
+                        entity_id := entity_registry.async_resolve_entity_id(
+                            registry, entity_id_or_uuid
+                        )
+                    )
+                    is not None
+                ]
             except probatio.Invalid as ex:
                 raise HomeAssistantError(
                     "Template rendered invalid excluded entity IDs: "
