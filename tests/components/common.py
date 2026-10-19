@@ -28,7 +28,6 @@ from pytest_homeassistant.components.common import (
     HomeAssistant as HomeAssistant,
     Iterable as Iterable,
     MockConfigEntry as MockConfigEntry,
-    Path as Path,
     StateDescription as StateDescription,
     StrEnum as StrEnum,
     TargetSupport as TargetSupport,

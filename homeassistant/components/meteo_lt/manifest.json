@@ -1,6 +1,7 @@
 {
   "domain": "meteo_lt",
   "name": "Meteo.lt",
+  "categories": ["weather_alerts.forecasts"],
   "codeowners": ["@xE1H"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/meteo_lt",

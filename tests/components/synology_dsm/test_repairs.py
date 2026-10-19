@@ -108,6 +108,7 @@ async def test_create_issue(
     hass: HomeAssistant,
     setup_dsm_with_filestation: MagicMock,
     hass_ws_client: WebSocketGenerator,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the issue is created."""
     ws_client = await hass_ws_client(hass)
@@ -121,6 +122,19 @@ async def test_create_issue(
     assert issue["domain"] == DOMAIN
     assert issue["issue_id"] == "missing_backup_setup_my_serial"
     assert issue["translation_key"] == "missing_backup_setup"
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    issue_entry = issue_registry.async_get_issue(
+        DOMAIN, "missing_backup_setup_my_serial"
+    )
+    assert issue_entry is not None
+    assert issue_entry.config_entry_id == entry.entry_id
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        issue_registry.async_get_issue(DOMAIN, "missing_backup_setup_my_serial") is None
+    )
 
 
 async def test_missing_backup_ignore(

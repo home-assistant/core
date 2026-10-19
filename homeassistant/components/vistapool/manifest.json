@@ -1,6 +1,7 @@
 {
   "domain": "vistapool",
   "name": "Vistapool",
+  "categories": ["water.pools_spas"],
   "codeowners": ["@fdebrus"],
   "config_flow": true,
   "dhcp": [

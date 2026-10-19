@@ -1,6 +1,7 @@
 {
   "domain": "simplepush",
   "name": "Simplepush",
+  "categories": ["messaging_notifications.push_notifications"],
   "codeowners": ["@engrbm87"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/simplepush",

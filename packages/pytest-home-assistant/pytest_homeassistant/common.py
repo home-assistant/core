@@ -47,11 +47,10 @@ from homeassistant.components import device_automation, persistent_notification 
 from homeassistant.components.device_automation import (
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
-from homeassistant.components.logger import (
-    DOMAIN as LOGGER_DOMAIN,
-    SERVICE_SET_LEVEL,
-    _clear_logger_overwrites,
-)
+from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN, SERVICE_SET_LEVEL
+
+# pylint: disable-next=home-assistant-component-root-import
+from homeassistant.components.logger.helpers import _clear_logger_overwrites
 from homeassistant.config import IntegrationConfigInfo, async_process_component_config
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -195,7 +194,9 @@ def threadsafe_coroutine_factory(func):
 
 def get_test_config_dir(*add_path):
     """Return a path to a test config dir."""
-    return os.path.join(_paths.TESTS_DIR, "testing_config", *add_path)
+    return os.path.join(
+        _paths.CONFIG_DIR or _paths.TESTS_DIR / "testing_config", *add_path
+    )
 
 
 class StoreWithoutWriteLoad[_T: (Mapping[str, Any] | Sequence[Any])](storage.Store[_T]):
@@ -566,6 +567,7 @@ fire_time_changed = threadsafe_callback_factory(async_fire_time_changed)
 
 def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.Path:
     """Get path of fixture."""
+    original_filename = filename
     if (
         integration is None
         and "/" in filename
@@ -573,10 +575,11 @@ def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.P
     ):
         integration, filename = filename.split("/", 1)
 
-    if integration is None:
-        return _paths.TESTS_DIR.joinpath("fixtures", filename)
-
-    return _paths.TESTS_DIR.joinpath("components", integration, "fixtures", filename)
+    if integration is not None:
+        integration_dir = _paths.TESTS_DIR / "components" / integration
+        if integration_dir.is_dir():
+            return integration_dir / "fixtures" / filename
+    return _paths.TESTS_DIR / "fixtures" / original_filename
 
 
 @lru_cache

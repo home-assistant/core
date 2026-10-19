@@ -1,6 +1,10 @@
 {
   "domain": "alexa_devices",
   "name": "Alexa Devices",
+  "categories": [
+    "ai_voice.voice_assistants",
+    "media_entertainment.speakers_audio"
+  ],
   "codeowners": ["@chemelli74", "@jamesonuk"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/alexa_devices",

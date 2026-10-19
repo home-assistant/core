@@ -548,6 +548,29 @@ async def test_issue_when_using_old_query(
         DOMAIN, f"entity_id_query_does_full_table_scan_{unique_id}"
     )
     assert issue.translation_placeholders == {CONF_QUERY: config[CONF_QUERY]}
+    assert issue.config_entry_id is None
+
+
+async def test_issue_when_using_old_query_from_config_entry(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the full table scan issue is linked to the config entry."""
+    options = {
+        CONF_QUERY: "SELECT entity_id from states",
+        CONF_COLUMN_NAME: "entity_id",
+    }
+    entry = await init_integration(hass, options=options)
+
+    issue_id = f"entity_id_query_does_full_table_scan_{entry.entry_id}"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.config_entry_id == entry.entry_id
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 @pytest.mark.parametrize(
