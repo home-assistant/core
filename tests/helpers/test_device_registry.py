@@ -13445,3 +13445,49 @@ async def test_clear_config_subentry_removes_orphaned_child_device(
     # The child in the cleared subentry is removed, the one in the other subentry kept
     assert device_registry.async_get(child_1.id, include_main_devices=False) is None
     assert device_registry.async_get(child_2.id, include_main_devices=False) is not None
+
+
+async def test_get_or_create_from_device_info(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry_with_subentries: MockConfigEntry,
+) -> None:
+    """Test getting or creating devices from a device info."""
+    config_entry_id = mock_config_entry_with_subentries.entry_id
+    device = device_registry.async_get_or_create_from_device_info(
+        config_entry_id=config_entry_id,
+        config_subentry_id="mock-subentry-id-1-1",
+        disabled_by=dr.DeviceEntryDisabler.INTEGRATION,
+        device_info=dr.DeviceInfo(
+            identifiers={("test", "strip")}, manufacturer="Acme", name="Power strip"
+        ),
+    )
+    assert isinstance(device, dr.DeviceEntry)
+    assert device.config_subentry_id == "mock-subentry-id-1-1"
+    assert device.disabled_by is dr.DeviceEntryDisabler.INTEGRATION
+    assert device.identifiers == {("test", "strip")}
+    assert device.manufacturer == "Acme"
+    assert device.name == "Power strip"
+
+    child_device = device_registry.async_get_or_create_from_device_info(
+        config_entry_id=config_entry_id,
+        config_subentry_id="mock-subentry-id-1-1",
+        device_info=dr.ChildDeviceInfo(
+            identifiers={("test", "strip_outlet_1")},
+            parent_device_id=device.id,
+            name="Outlet 1",
+        ),
+    )
+    assert isinstance(child_device, dr.ChildDeviceEntry)
+    assert child_device.config_subentry_id == "mock-subentry-id-1-1"
+    assert child_device.parent_device_id == device.id
+    assert child_device.name == "Outlet 1"
+
+    # Fields left unset in the device info keep their value
+    same_device = device_registry.async_get_or_create_from_device_info(
+        config_entry_id=config_entry_id,
+        config_subentry_id="mock-subentry-id-1-1",
+        device_info=dr.DeviceInfo(identifiers={("test", "strip")}),
+    )
+    assert same_device.id == device.id
+    assert same_device.manufacturer == "Acme"
+    assert same_device.name == "Power strip"
