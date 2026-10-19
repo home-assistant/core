@@ -47,7 +47,6 @@ from .const import (
     DOMAIN,
     LUTRON_CASETA_BUTTON_EVENT,
     MANUFACTURER,
-    SIGNAL_BRIDGE_CONNECTED,
     SIGNAL_BUTTON_EVENT,
     UNASSIGNED_AREA,
 )
@@ -174,7 +173,6 @@ async def async_setup_entry(
         nonlocal connected_future
         if not connected_future.done():
             connected_future.set_result(None)
-        async_dispatcher_send(hass, SIGNAL_BRIDGE_CONNECTED.format(entry_id))
 
     try:
         bridge = Smartbridge.create_tls(

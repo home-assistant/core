@@ -49,14 +49,6 @@ async def test_entities(
             [ButtonEventType.PRESS_START, ButtonEventType.PRESS_END],
             id="pico_press_and_release",
         ),
-        # An orphan release is the status replayed by the bridge on reconnect
-        pytest.param(
-            PICO_BUTTON_ENTITY_ID,
-            PICO_BUTTON_ID,
-            [BUTTON_STATUS_RELEASED],
-            [],
-            id="pico_orphan_release",
-        ),
         pytest.param(
             PICO_BUTTON_ENTITY_ID,
             PICO_BUTTON_ID,
@@ -77,14 +69,14 @@ async def test_entities(
             KEYPAD_BUTTON_ENTITY_ID,
             KEYPAD_BUTTON_ID,
             [BUTTON_STATUS_PRESSED, BUTTON_STATUS_PRESSED],
-            [ButtonEventType.PRESS_END, ButtonEventType.PRESS_END],
+            [ButtonEventType.PRESS_START, ButtonEventType.PRESS_START],
             id="keypad_press_only",
         ),
         pytest.param(
             KEYPAD_BUTTON_ENTITY_ID,
             KEYPAD_BUTTON_ID,
             [BUTTON_STATUS_PRESSED, BUTTON_STATUS_RELEASED],
-            [ButtonEventType.PRESS_END],
+            [ButtonEventType.PRESS_START],
             id="keypad_release_ignored",
         ),
         pytest.param(
@@ -117,22 +109,3 @@ async def test_button_event_mapping(
         for event in state_changes
         if event.data["entity_id"] == entity_id
     ] == expected_event_types
-
-
-async def test_pending_press_cleared_on_reconnect(hass: HomeAssistant) -> None:
-    """Test a release replayed after a reconnect does not end a stale press."""
-    config_entry = await async_setup_integration(hass, MockBridge)
-    bridge = config_entry.runtime_data.bridge
-    state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
-
-    bridge.call_button_subscribers(PICO_BUTTON_ID, BUTTON_STATUS_PRESSED)
-    # The release is lost while disconnected, then replayed on reconnect
-    bridge.on_connect_callback()
-    bridge.call_button_subscribers(PICO_BUTTON_ID, BUTTON_STATUS_RELEASED)
-    await hass.async_block_till_done()
-
-    assert [
-        event.data["new_state"].attributes[ATTR_EVENT_TYPE]
-        for event in state_changes
-        if event.data["entity_id"] == PICO_BUTTON_ENTITY_ID
-    ] == [ButtonEventType.PRESS_START]

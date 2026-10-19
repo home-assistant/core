@@ -14,7 +14,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import SIGNAL_BRIDGE_CONNECTED, SIGNAL_BUTTON_EVENT
+from .const import SIGNAL_BUTTON_EVENT
 from .device_trigger import LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP
 from .entity import LutronCasetaEntity
 from .models import LutronCasetaConfigEntry, LutronCasetaData
@@ -42,7 +42,6 @@ class LutronCasetaButtonEvent(LutronCasetaEntity, EventEntity):
 
     _attr_device_class = EventDeviceClass.BUTTON
     _attr_has_entity_name = True
-    _pressed = False
 
     def __init__(
         self,
@@ -59,8 +58,8 @@ class LutronCasetaButtonEvent(LutronCasetaEntity, EventEntity):
         self._config_entry_id = data.config_entry_id
         # Picos report both press and release. Keypads only reliably report
         # the press: depending on the system, a physical keypad press sends
-        # Press alone or Press and Release together. A device with one event
-        # per interaction maps it to press_end, so that is all keypads declare.
+        # Press alone or Press and Release together. Keypads therefore only
+        # declare press_start.
         self._reports_release = device["type"] in LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP
         if self._reports_release:
             self._attr_event_types = [
@@ -68,7 +67,7 @@ class LutronCasetaButtonEvent(LutronCasetaEntity, EventEntity):
                 ButtonEventType.PRESS_END,
             ]
         else:
-            self._attr_event_types = [ButtonEventType.PRESS_END]
+            self._attr_event_types = [ButtonEventType.PRESS_START]
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -81,32 +80,14 @@ class LutronCasetaButtonEvent(LutronCasetaEntity, EventEntity):
                 self._handle_button_status,
             )
         )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_BRIDGE_CONNECTED.format(self._config_entry_id),
-                self._handle_bridge_connected,
-            )
-        )
-
-    @callback
-    def _handle_bridge_connected(self) -> None:
-        """Forget a pending press, as its release may have been lost."""
-        self._pressed = False
 
     @callback
     def _handle_button_status(self, status: str) -> None:
         """Translate a LEAP button status into a standard button event."""
         # MultiTap is not mapped: each tap still emits a press, as device triggers do.
-        if status == BUTTON_STATUS_PRESSED and self._reports_release:
-            self._pressed = True
+        if status == BUTTON_STATUS_PRESSED:
             self._trigger_event(ButtonEventType.PRESS_START)
-        elif status == BUTTON_STATUS_PRESSED:
-            # A keypad release may never come, so fire on the press.
-            self._trigger_event(ButtonEventType.PRESS_END)
-        elif status == BUTTON_STATUS_RELEASED and self._pressed:
-            # A release without a press is the bridge replaying status on reconnect.
-            self._pressed = False
+        elif status == BUTTON_STATUS_RELEASED and self._reports_release:
             self._trigger_event(ButtonEventType.PRESS_END)
         else:
             return

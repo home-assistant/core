@@ -69,7 +69,7 @@
     'area_id': None,
     'capabilities': dict({
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
-        <ButtonEventType.PRESS_END: 'press_end'>,
+        <ButtonEventType.PRESS_START: 'press_start'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -109,7 +109,7 @@
       'device_id': '1372',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
-        <ButtonEventType.PRESS_END: 'press_end'>,
+        <ButtonEventType.PRESS_START: 'press_start'>,
       ]),
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Main Stairs Position 1 Keypad Kitchen Pendants',
     }),
