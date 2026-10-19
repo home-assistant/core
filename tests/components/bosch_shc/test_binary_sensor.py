@@ -18,6 +18,7 @@ from .conftest import (
     twinguard_device,
 )
 
+
 @pytest.mark.parametrize(
     "device_buckets",
     [
