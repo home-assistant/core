@@ -62,7 +62,7 @@ CURRENCY_SCHEMA = probatio.Schema(
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
         probatio.Optional(CONF_FOREIGN_EXCHANGE): probatio.All(
             probatio.EnsureList(), [CURRENCY_SCHEMA]
         ),

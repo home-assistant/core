@@ -13,6 +13,7 @@ from homeassistant.components.bluetooth import BluetoothReachabilityIntent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -111,5 +112,13 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
                 translation_domain=DOMAIN,
                 translation_key="incomplete_read",
             )
+
+        device_registry = dr.async_get(self.hass)
+        if (
+            device := device_registry.async_get_device_by_connection(
+                (dr.CONNECTION_BLUETOOTH, data.address), self.config_entry.entry_id
+            )
+        ) and device.sw_version != data.sw_version:
+            device_registry.async_update_device(device.id, sw_version=data.sw_version)
 
         return data

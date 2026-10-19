@@ -8,6 +8,7 @@ from aiohttp import web
 from aioimmich.assets.models import AssetType
 from aioimmich.exceptions import ImmichError, ImmichForbiddenError, ImmichNotFoundError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.immich.const import DOMAIN
 from homeassistant.components.immich.media_source import (
@@ -27,8 +28,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.aiohttp import MockRequest, MockStreamReaderChunked
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_get_media_source(hass: HomeAssistant) -> None:
@@ -640,6 +639,9 @@ async def test_media_view(
             "2e94c203-50aa-4ad2-8e29-56dd74e0eff4/thumbnail/image/jpeg",
         )
         assert isinstance(result, web.Response)
+    mock_immich.assets.async_view_asset.assert_awaited_with(
+        "2e94c203-50aa-4ad2-8e29-56dd74e0eff4", "thumbnail", edited=True
+    )
     with patch.object(tempfile, "tempdir", tmp_path):
         result = await view.get(
             request,

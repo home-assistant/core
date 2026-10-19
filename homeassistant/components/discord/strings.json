@@ -22,5 +22,10 @@
         "description": "Refer to the documentation on getting your Discord bot key.\n\n{url}"
       }
     }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "Error communicating with Discord."
+    }
   }
 }

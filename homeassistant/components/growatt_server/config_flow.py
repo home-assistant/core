@@ -189,7 +189,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME,
                         default=entry.data.get(CONF_USERNAME),
                     ): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                     probatio.Required(
                         CONF_REGION, default=current_region
                     ): SelectSelector(
@@ -328,7 +328,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
         data_schema = probatio.Schema(
             {
                 probatio.Required(CONF_USERNAME): str,
-                probatio.Required(CONF_PASSWORD): str,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 probatio.Required(CONF_REGION, default=DEFAULT_URL): SelectSelector(
                     SelectSelectorConfig(
                         options=list(SERVER_URLS_NAMES.keys()),

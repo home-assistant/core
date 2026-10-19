@@ -4,6 +4,7 @@ from http import HTTPStatus
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.todoist.const import (
     ASSIGNEE,
@@ -17,8 +18,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .conftest import PROJECT_ID
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload(

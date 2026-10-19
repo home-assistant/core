@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from geocachingapi.models import GeocachingCache, GeocachingStatus, GeocachingTrackable
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.geocaching.const import (
     CONF_TRACKABLE_CODES,
@@ -21,8 +22,6 @@ from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.const import CONF_CODE, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 async def _async_setup_geocaching_entry(

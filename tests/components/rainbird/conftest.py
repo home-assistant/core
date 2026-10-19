@@ -9,6 +9,11 @@ from unittest.mock import patch
 
 from pyrainbird import encryption
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
 
 from homeassistant.components.rainbird import DOMAIN
 from homeassistant.components.rainbird.const import (
@@ -17,9 +22,6 @@ from homeassistant.components.rainbird.const import (
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 HOST = "example.com"
 URL = "http://example.com/stick"

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 from typing import cast, override
 
 from geocachingapi.models import GeocachingCache, GeocachingTrackable
@@ -74,14 +74,14 @@ PROFILE_SENSORS: tuple[GeocachingSensorEntityDescription, ...] = (
 class GeocachingCacheSensorDescription(SensorEntityDescription):
     """Define Sensor entity description class."""
 
-    value_fn: Callable[[GeocachingCache], StateType | datetime.date]
+    value_fn: Callable[[GeocachingCache], StateType | dt.date]
 
 
 @dataclass(frozen=True, kw_only=True)
 class GeocachingTrackableSensorDescription(SensorEntityDescription):
     """Define trackable sensor entity description class."""
 
-    value_fn: Callable[[GeocachingTrackable], StateType | datetime.date]
+    value_fn: Callable[[GeocachingTrackable], StateType | dt.date]
 
 
 CACHE_SENSORS: tuple[GeocachingCacheSensorDescription, ...] = (
@@ -219,7 +219,7 @@ class GeoEntityCacheSensorEntity(GeoEntityBaseCache, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> StateType | datetime.date:
+    def native_value(self) -> StateType | dt.date:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.cache)
 
@@ -258,7 +258,7 @@ class GeoEntityTrackableSensorEntity(GeoEntityBaseTrackable, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> StateType | datetime.date:
+    def native_value(self) -> StateType | dt.date:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.trackable)
 

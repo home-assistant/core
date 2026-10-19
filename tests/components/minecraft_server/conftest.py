@@ -1,14 +1,13 @@
 """Fixtures for Minecraft Server integration tests."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.minecraft_server.api import MinecraftServerType
 from homeassistant.components.minecraft_server.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS, CONF_TYPE
 
 from .const import TEST_ADDRESS, TEST_CONFIG_ENTRY_ID
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

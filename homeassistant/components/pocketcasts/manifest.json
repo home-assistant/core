@@ -1,6 +1,7 @@
 {
   "domain": "pocketcasts",
   "name": "Pocket Casts",
+  "categories": ["media_entertainment.music_radio_services"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/pocketcasts",
   "iot_class": "cloud_polling",

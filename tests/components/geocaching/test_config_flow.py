@@ -6,6 +6,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from geocachingapi.exceptions import GeocachingApiError, GeocachingInvalidSettingsError
 from geocachingapi.models import GeocachingStatus, GeocachingTrackable
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
@@ -39,10 +42,6 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 
 from . import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 CURRENT_ENVIRONMENT_URLS = ENVIRONMENT_URLS[ENVIRONMENT]
 
@@ -519,6 +518,12 @@ async def test_subentry_flow_invalid_code(
     assert result["errors"] == {CONF_CODE: "invalid_cache_code"}
     mock_geocaching_config_flow.verify_settings.assert_not_awaited()
 
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_CODE: "GC12345"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_subentry_flow_already_configured(
     hass: HomeAssistant,
@@ -554,6 +559,12 @@ async def test_subentry_flow_already_configured(
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_CODE: "already_configured"}
     mock_geocaching_config_flow.verify_settings.assert_not_awaited()
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_CODE: "GC67890"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_subentry_flow_maximum(
@@ -899,6 +910,14 @@ async def test_options_flow_error(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["errors"] == {"base": error}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_TRACKABLE_CODES: "TB12345"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_TRACKABLE_CODES: ["TB12345"]}
+    assert mock_config_entry.options == {CONF_TRACKABLE_CODES: ["TB12345"]}
 
 
 @pytest.mark.parametrize(

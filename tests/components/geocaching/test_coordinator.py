@@ -9,6 +9,7 @@ from geocachingapi.models import (
     GeocachingTrackable,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.geocaching.const import (
     CONF_TRACKABLE_CODES,
@@ -18,8 +19,6 @@ from homeassistant.components.geocaching.const import (
 from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
