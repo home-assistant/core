@@ -5,6 +5,7 @@ from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.camera import (
     DOMAIN as CAMERA_DOMAIN,
@@ -20,8 +21,6 @@ from homeassistant.helpers import device_registry as dr
 
 from .common import setup_platform
 from .const import DATA_HOME_GET_NODES
-
-from tests.common import async_fire_time_changed
 
 
 async def test_setup(hass: HomeAssistant, router: Mock) -> None:

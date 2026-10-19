@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.vegehub import DOMAIN
 from homeassistant.const import (
@@ -15,8 +16,6 @@ from homeassistant.const import (
     CONF_WEBHOOK_ID,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_fixture
 
 TEST_IP = "192.168.0.100"
 TEST_UNIQUE_ID = "aabbccddeeff"

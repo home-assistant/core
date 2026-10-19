@@ -13,6 +13,11 @@ from linkplay.bridge import (
 )
 from linkplay.consts import API_ENDPOINT, LoopMode, PlayingStatus
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_load_fixture,
+)
 
 from homeassistant.components.linkplay.const import DOMAIN, SHARED_DATA_KEY
 from homeassistant.components.media_player import (
@@ -33,6 +38,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_ENTITY_PICTURE,
     CONF_HOST,
     EVENT_STATE_CHANGED,
     EVENT_STATE_REPORTED,
@@ -52,8 +58,6 @@ from homeassistant.helpers.entity_component import async_update_entity
 
 from . import setup_integration
 from .conftest import HOST, HOST_REENTRY, mock_lp_aiohttp_client
-
-from tests.common import MockConfigEntry, async_capture_events, async_load_fixture
 
 ENTITY_ID = "media_player.smart_zone_1_54b9"
 LEADER_ENTITY_ID = "media_player.leader"
@@ -126,6 +130,27 @@ async def test_follower_mirrors_leader_media_info(hass: HomeAssistant) -> None:
     # volume and source stay on the follower itself
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.8
     assert state.attributes[ATTR_INPUT_SOURCE] == "Follower"
+
+
+@pytest.mark.parametrize(
+    ("album_art", "has_picture"),
+    [
+        pytest.param("https://example.com/cover.jpg", True, id="url"),
+        pytest.param("", False, id="empty"),
+    ],
+)
+async def test_album_art(
+    hass: HomeAssistant,
+    leader_player: AsyncMock,
+    album_art: str,
+    has_picture: bool,
+) -> None:
+    """Test that empty album art does not set an entity picture."""
+    leader_player.album_art = album_art
+    await async_update_entity(hass, ENTITY_ID)
+
+    state = hass.states.get(ENTITY_ID)
+    assert (ATTR_ENTITY_PICTURE in state.attributes) is has_picture
 
 
 @pytest.mark.parametrize(

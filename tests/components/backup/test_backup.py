@@ -8,6 +8,7 @@ from tarfile import TarError
 from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup import DOMAIN, backup
@@ -20,8 +21,6 @@ from .common import (
     TEST_BACKUP_PATH_ABC123,
     TEST_BACKUP_PATH_DEF456,
 )
-
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 real_read_backup = backup.read_backup
 

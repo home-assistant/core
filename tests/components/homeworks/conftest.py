@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.homeworks.const import (
     CONF_ADDR,
@@ -24,8 +25,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
-
-from tests.common import MockConfigEntry
 
 CONFIG_ENTRY_OPTIONS = {
     CONF_CONTROLLER_ID: "main_controller",

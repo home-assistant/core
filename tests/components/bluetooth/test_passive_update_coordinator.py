@@ -7,6 +7,12 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.components.bluetooth import (
+    inject_bluetooth_service_info,
+    patch_all_discovered_devices,
+    patch_bluetooth_time,
+)
 
 from homeassistant.components.bluetooth import (
     DOMAIN,
@@ -22,14 +28,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from . import (
-    inject_bluetooth_service_info,
-    patch_all_discovered_devices,
-    patch_bluetooth_time,
-)
-
-from tests.common import async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
 

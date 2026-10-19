@@ -2,16 +2,19 @@
 
 from typing import Any
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
+
 from homeassistant import config_entries
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import ClientSessionGenerator
 
 
 async def test_integration_not_found_confirm_step(

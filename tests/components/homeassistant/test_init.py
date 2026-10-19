@@ -4,6 +4,14 @@ from unittest.mock import Mock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntityPlatform,
+    MockUser,
+    async_capture_events,
+    async_mock_service,
+    patch_yaml_files,
+)
 import yaml
 
 from homeassistant import config, core as ha
@@ -38,15 +46,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import entity, entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntityPlatform,
-    MockUser,
-    async_capture_events,
-    async_mock_service,
-    patch_yaml_files,
-)
 
 
 async def test_turn_on_without_entities(hass: HomeAssistant) -> None:
