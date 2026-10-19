@@ -3,10 +3,15 @@
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from aiocomelit.api import ComelitSerialBridgeObject
+from aiocomelit.api import ComelitDeviceObject
 from aiocomelit.const import CLIMATE, WATT
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -29,8 +34,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "climate.climate0"
 
@@ -103,7 +106,7 @@ async def test_climate_data_update(
     assert state.attributes[ATTR_TEMPERATURE] == 5.0
 
     mock_serial_bridge.get_all_devices.return_value[CLIMATE] = {
-        0: ComelitSerialBridgeObject(
+        0: ComelitDeviceObject(
             index=0,
             name="Climate0",
             status=0,
@@ -331,7 +334,7 @@ async def test_climate_remove_stale(
     assert state.attributes[ATTR_TEMPERATURE] == 5.0
 
     mock_serial_bridge.get_all_devices.return_value[CLIMATE] = {
-        0: ComelitSerialBridgeObject(
+        0: ComelitDeviceObject(
             index=0,
             name="Climate0",
             status=0,

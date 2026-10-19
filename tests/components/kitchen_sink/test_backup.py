@@ -5,6 +5,7 @@ from io import StringIO
 from unittest.mock import ANY, patch
 
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components.backup import (
     DOMAIN as BACKUP_DOMAIN,
@@ -16,8 +17,6 @@ from homeassistant.components.kitchen_sink import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import instance_id
 from homeassistant.setup import async_setup_component
-
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)

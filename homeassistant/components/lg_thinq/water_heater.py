@@ -88,7 +88,7 @@ class ThinQWaterHeaterEntity(ThinQEntity, WaterHeaterEntity):
             WaterHeaterEntityFeature.TARGET_TEMPERATURE
             | WaterHeaterEntityFeature.OPERATION_MODE
         )
-        self._attr_temperature_unit = (
+        self._attr_native_temperature_unit = (
             self._get_unit_of_measurement(self.data.unit) or UnitOfTemperature.CELSIUS
         )
         if modes := self.data.job_modes:
@@ -100,8 +100,8 @@ class ThinQWaterHeaterEntity(ThinQEntity, WaterHeaterEntity):
     def _update_status(self) -> None:
         """Update status itself."""
         super()._update_status()
-        self._attr_current_temperature = self.data.current_temp
-        self._attr_target_temperature = self.data.target_temp
+        self._attr_native_current_temperature = self.data.current_temp
+        self._attr_native_target_temperature = self.data.target_temp
 
         if self.data.max is not None:
             self._attr_max_temp = self.data.max
@@ -110,7 +110,7 @@ class ThinQWaterHeaterEntity(ThinQEntity, WaterHeaterEntity):
         if self.data.step is not None:
             self._attr_target_temperature_step = self.data.step
 
-        self._attr_temperature_unit = (
+        self._attr_native_temperature_unit = (
             self._get_unit_of_measurement(self.data.unit) or UnitOfTemperature.CELSIUS
         )
         if self.data.is_on:
@@ -126,8 +126,8 @@ class ThinQWaterHeaterEntity(ThinQEntity, WaterHeaterEntity):
             "[%s:%s] update status: c:%s, t:%s, op_mode:%s, op_list:%s, is_on:%s",
             self.coordinator.device_name,
             self.property_id,
-            self.current_temperature,
-            self.target_temperature,
+            self.native_current_temperature,
+            self.native_target_temperature,
             self.current_operation,
             self.operation_list,
             self.data.is_on,
@@ -149,7 +149,7 @@ class ThinQWaterHeaterEntity(ThinQEntity, WaterHeaterEntity):
 
         if (
             temperature := kwargs.get(ATTR_TEMPERATURE)
-        ) is not None and temperature != self.target_temperature:
+        ) is not None and temperature != self.native_target_temperature:
             await self.async_call_api(
                 self.coordinator.api.async_set_target_temperature(
                     self.property_id, temperature

@@ -1,6 +1,7 @@
 {
   "domain": "autoskope",
   "name": "Autoskope",
+  "categories": ["presence_location.trackers", "vehicles_transport.cars_evs"],
   "codeowners": ["@mcisk"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/autoskope",

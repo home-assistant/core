@@ -4,6 +4,11 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.infrared import (
+    EMITTER_ENTITY_ID,
+    RECEIVER_ENTITY_ID,
+)
 
 from homeassistant.components.led_infrared.const import (
     CONF_DEVICE_TYPE,
@@ -12,9 +17,6 @@ from homeassistant.components.led_infrared.const import (
     DOMAIN,
     LEDIrDeviceType,
 )
-
-from tests.common import MockConfigEntry
-from tests.components.infrared import EMITTER_ENTITY_ID, RECEIVER_ENTITY_ID
 
 
 @pytest.fixture
@@ -68,6 +70,10 @@ def mock_infrared_code_to_command() -> Generator[None]:
         ),
         patch(
             "infrared_protocols.codes.generic.led.Generic44KeyCode.to_command",
+            new=mock_to_command,
+        ),
+        patch(
+            "infrared_protocols.codes.generic.led.Generic10KeyCode.to_command",
             new=mock_to_command,
         ),
     ):

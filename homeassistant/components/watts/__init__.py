@@ -97,19 +97,13 @@ def _handle_new_devices(
     async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_new_device")
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WattsVisionConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WattsVisionConfigEntry) -> None:
     """Set up Watts Vision from a config entry."""
-    try:
-        implementation = (
-            await config_entry_oauth2_flow.async_get_config_entry_implementation(
-                hass, entry
-            )
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
         )
-    except config_entry_oauth2_flow.ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth_implementation_unavailable",
-        ) from err
+    )
 
     oauth_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
@@ -170,14 +164,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: WattsVisionConfigEntry) 
         )
     )
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: WattsVisionConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     for device_coordinator in entry.runtime_data.device_coordinators.values():
         device_coordinator.unsubscribe_hub_listener()
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

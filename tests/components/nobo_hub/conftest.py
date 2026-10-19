@@ -6,13 +6,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pynobo import nobo as pynobo_nobo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nobo_hub import PLATFORMS
 from homeassistant.components.nobo_hub.const import CONF_SERIAL, DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 SERIAL = "102000013098"
 STORED_IP = "192.168.1.122"
@@ -104,6 +103,7 @@ def mock_nobo_class(
                 "week_profile_id": "0",
                 "temp_comfort_c": "21",
                 "temp_eco_c": "17",
+                "override_allowed": "1",
             },
         }
         model = pynobo_nobo.Model(

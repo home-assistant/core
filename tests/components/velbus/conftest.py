@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from velbusaio.channels import (
     Blind,
     Button,
@@ -22,8 +23,6 @@ from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from .const import PORT_TCP
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="controller")
@@ -121,6 +120,8 @@ def mock_button() -> AsyncMock:
     channel.get_module_serial.return_value = "a1b2c3d4e5f6"
     channel.is_sub_device.return_value = False
     channel.is_closed.return_value = True
+    channel.is_long_pressed.return_value = False
+    channel.get_channel_info.return_value = {"long": False}
     channel.is_on.return_value = False
     return channel
 
@@ -177,6 +178,7 @@ def mock_select() -> AsyncMock:
     channel = AsyncMock(spec=SelectedProgram)
     channel.get_categories.return_value = ["select"]
     channel.get_name.return_value = "select"
+    channel.get_property_key.return_value = "SelectedProgram"
     channel.get_module_address.return_value = 88
     channel.get_channel_number.return_value = 33
     channel.get_module_type_name.return_value = "VMB4RYNO"
@@ -241,8 +243,10 @@ def mock_lightsensor() -> AsyncMock:
     channel = AsyncMock(spec=LightValue)
     channel.get_categories.return_value = ["sensor"]
     channel.get_name.return_value = "LightSensor"
+    channel.get_property_key.return_value = "LightValue"
     channel.get_module_address.return_value = 2
-    channel.get_channel_number.return_value = 4
+    # Properties always report channel number 0 (Property.get_channel_number)
+    channel.get_channel_number.return_value = 0
     channel.get_module_type_name.return_value = "VMB7IN"
     channel.get_module_type.return_value = 8
     channel.get_full_name.return_value = "Input"

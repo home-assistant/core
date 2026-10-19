@@ -1,10 +1,10 @@
 """Fixtures for the Fully Kiosk Browser integration tests."""
 
 from collections.abc import Generator
-import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.fully_kiosk.const import DOMAIN
 from homeassistant.const import (
@@ -15,8 +15,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture
@@ -69,11 +67,11 @@ def mock_fully_kiosk() -> Generator[MagicMock]:
         autospec=True,
     ) as client_mock:
         client = client_mock.return_value
-        client.getDeviceInfo.return_value = json.loads(
-            load_fixture("deviceinfo.json", DOMAIN)
+        client.getDeviceInfo.return_value = load_json_object_fixture(
+            "deviceinfo.json", DOMAIN
         )
-        client.getSettings.return_value = json.loads(
-            load_fixture("listsettings.json", DOMAIN)
+        client.getSettings.return_value = load_json_object_fixture(
+            "listsettings.json", DOMAIN
         )
         yield client
 

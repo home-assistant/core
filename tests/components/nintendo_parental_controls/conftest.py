@@ -11,15 +11,14 @@ from pynintendoparental.application import (
     PlayedAppUsage,
 )
 from pynintendoparental.device import Device
-from pynintendoparental.enum import DeviceTimerMode
+from pynintendoparental.enum import DeviceTimerMode, SafeLaunchSetting
 from pynintendoparental.player import Player, PlayerRegistry
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nintendo_parental_controls.const import DOMAIN
 
 from .const import ACCOUNT_ID, API_TOKEN, LOGIN_URL
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -38,6 +37,8 @@ def mock_nintendo_app() -> Application:
     mock_app = MagicMock(spec=Application)
     mock_app.application_id = "testappid"
     mock_app.name = "Test Game Name"
+    mock_app.image_url = "http://example.com/image.png"
+    mock_app.safe_launch_setting = SafeLaunchSetting.ALLOW
     return mock_app
 
 

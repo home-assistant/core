@@ -5,6 +5,8 @@ from copy import deepcopy
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from satel_integra import SatelFirmwareVersion, SatelPanelInfo, SatelPanelModel
 
 from homeassistant.components.satel_integra.config_flow import SatelConfigFlow
 from homeassistant.components.satel_integra.const import DOMAIN
@@ -20,8 +22,6 @@ from . import (
     MOCK_ZONE_TEMPERATURE_SUBENTRY,
     get_monitor_callbacks,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -64,6 +64,17 @@ def mock_satel() -> Generator[AsyncMock]:
         client.violated_zones = []
 
         client.connect = AsyncMock(return_value=True)
+        client.read_panel_info = AsyncMock(
+            return_value=SatelPanelInfo(
+                type_code=2,
+                model=SatelPanelModel("INTEGRA 64"),
+                firmware=SatelFirmwareVersion(
+                    version="1.24", release_date="2025-03-12"
+                ),
+                language_code=0,
+                settings_stored_in_flash=True,
+            )
+        )
         client.read_temperature = AsyncMock(return_value=21.5)
         client.read_temperatures = AsyncMock(return_value={1: 21.5})
         client.set_output = AsyncMock()

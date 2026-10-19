@@ -1,5 +1,6 @@
 """Tests for the Alexa Devices sensor platform."""
 
+from copy import deepcopy
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -8,9 +9,14 @@ from aioamazondevices.exceptions import (
     CannotConnect,
     CannotRetrieveData,
 )
-from aioamazondevices.structures import AmazonDeviceSensor
+from aioamazondevices.structures import AmazonDevice, AmazonDeviceSensor
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
@@ -18,20 +24,35 @@ from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
-from .const import TEST_DEVICE_1_SN
+from . import assert_device_removed_and_readded, setup_integration
+from .const import (
+    TEST_DEVICE_1,
+    TEST_DEVICE_1_SN,
+    TEST_DEVICE_2,
+    TEST_DEVICE_2_SN,
+    TEST_DEVICE_AQM,
+    TEST_DEVICE_AQM_SN,
+)
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
-
+@pytest.mark.parametrize(
+    "devices",
+    [
+        pytest.param({TEST_DEVICE_1_SN: TEST_DEVICE_1}, id="echo"),
+        pytest.param({TEST_DEVICE_AQM_SN: TEST_DEVICE_AQM}, id="aqm"),
+    ],
+)
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    devices: dict[str, AmazonDevice],
 ) -> None:
     """Test all entities."""
+    mock_amazon_devices_client.get_devices_data.return_value = deepcopy(devices)
+
     with patch("homeassistant.components.alexa_devices.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
@@ -103,6 +124,24 @@ async def test_offline_device(
     assert state.state != STATE_UNAVAILABLE
 
 
+async def test_device_removed_and_readded(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test entities are recreated when a device is removed and re-added."""
+    await assert_device_removed_and_readded(
+        hass,
+        freezer,
+        mock_amazon_devices_client,
+        mock_config_entry,
+        entity_id="sensor.echo_test_2_temperature",
+        devices_with={TEST_DEVICE_1_SN: TEST_DEVICE_1, TEST_DEVICE_2_SN: TEST_DEVICE_2},
+        devices_without={TEST_DEVICE_1_SN: TEST_DEVICE_1},
+    )
+
+
 @pytest.mark.parametrize(
     ("sensor", "api_value", "scale", "state_value", "unit"),
     [
@@ -142,6 +181,9 @@ async def test_unit_of_measurement(
             error_msg=None,
             error_type=None,
             scale=scale,
+            feature_name="sensor",
+            property_name="sensor",
+            instance="1",
         )
     }
 
@@ -172,6 +214,9 @@ async def test_sensor_unavailable(
             error_msg=None,
             error_type=None,
             scale=None,
+            feature_name="lightSensor",
+            property_name="illuminance",
+            instance="1",
         )
     }
 

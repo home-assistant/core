@@ -5,16 +5,15 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 from aiohttp.test_utils import make_mocked_request
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import MockUser
 
 from homeassistant import exceptions
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.redact import REDACTED
-
-from tests.common import MockUser
 
 
 @pytest.mark.parametrize(
@@ -28,7 +27,7 @@ from tests.common import MockUser
             " Mock User from 127.0.0.42 (Browser)",
         ),
         (
-            vol.Invalid("Invalid something"),
+            probatio.Invalid("Invalid something"),
             websocket_api.ERR_INVALID_FORMAT,
             "Invalid something. Got {'id': 5}",
             "Error handling message: Invalid something."
@@ -177,7 +176,7 @@ async def test_credential_redaction(
         "password": test_input[1],
         "token": test_input[2],
     }
-    connection.async_handle_exception(msg, vol.Invalid("bad input"))
+    connection.async_handle_exception(msg, probatio.Invalid("bad input"))
 
     assert len(send_messages) == 1
     error_message = send_messages[0]["error"]["message"]

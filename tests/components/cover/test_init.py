@@ -1,6 +1,7 @@
 """The tests for Cover."""
 
 import pytest
+from pytest_homeassistant.common import setup_test_component_platform
 
 from homeassistant.components import cover
 from homeassistant.components.cover import ATTR_SPEED, CoverState
@@ -19,8 +20,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.setup import async_setup_component
 
 from .common import MockCover
-
-from tests.common import setup_test_component_platform
 
 
 async def test_services(
@@ -320,3 +319,19 @@ async def test_services_with_speed(
         blocking=True,
     )
     assert ent2.last_kwargs == {"position": 49}
+
+
+async def test_deprecated_is_closed(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the deprecated is_closed helper."""
+    hass.states.async_set("cover.test", CoverState.CLOSED)
+    assert cover.is_closed(hass, "cover.test") is True
+
+    hass.states.async_set("cover.test", CoverState.OPEN)
+    assert cover.is_closed(hass, "cover.test") is False
+
+    assert (
+        "The deprecated function is_closed was called. It will be removed in HA Core "
+        "2027.10. Use hass.states.is_state(entity_id, 'closed') instead"
+    ) in caplog.text

@@ -10,8 +10,19 @@ from unittest.mock import patch
 
 from aiohttp.test_utils import TestClient
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import (
+    MockUser,
+    async_capture_events,
+    async_fire_time_changed,
+)
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 
 from homeassistant.components.frontend import (
     CONF_DEVELOPMENT_PR,
@@ -21,7 +32,6 @@ from homeassistant.components.frontend import (
     CONF_THEMES,
     CONFIG_SCHEMA,
     DATA_PANELS,
-    DEFAULT_THEME_COLOR,
     DOMAIN,
     EVENT_PANELS_UPDATED,
     THEMES_STORAGE_KEY,
@@ -31,19 +41,12 @@ from homeassistant.components.frontend import (
     async_remove_panel,
     remove_extra_js_url,
 )
+from homeassistant.components.frontend.helpers import DEFAULT_THEME_COLOR
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockUser, async_capture_events, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import (
-    ClientSessionGenerator,
-    MockHAClientWebSocket,
-    WebSocketGenerator,
-)
 
 MOCK_THEMES = {
     "happy": {"primary-color": "red", "app-header-background-color": "blue"},
@@ -350,7 +353,7 @@ async def test_themes_set_theme_wrong_name(
     """Test frontend.set_theme service called with wrong name."""
 
     with pytest.raises(
-        vol.error.MultipleInvalid,
+        probatio.error.MultipleInvalid,
         match="Theme wrong not found",
     ):
         await hass.services.async_call(
@@ -454,7 +457,7 @@ async def test_themes_set_dark_theme_wrong_name(
 ) -> None:
     """Test frontend.set_theme service called with mode dark and wrong name."""
     with pytest.raises(
-        vol.error.MultipleInvalid,
+        probatio.error.MultipleInvalid,
         match="Theme wrong not found",
     ):
         await hass.services.async_call(DOMAIN, "set_theme", schema, blocking=True)
@@ -473,11 +476,11 @@ async def test_themes_reload_themes(
     """Test frontend.reload_themes service."""
 
     with patch(
-        "homeassistant.components.frontend.async_hass_config_yaml",
+        "homeassistant.components.frontend.services.async_hass_config_yaml",
         return_value={DOMAIN: {CONF_THEMES: {"sad": {"primary-color": "blue"}}}},
     ):
         with pytest.raises(
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             match="Theme happy not found",
         ):
             await hass.services.async_call(
@@ -529,7 +532,7 @@ async def test_themes_reload_themes(
                 }
             },
             None,
-            "must contain at least one of light, dark",
+            "at least one of ['light', 'dark'] is required",
         ),
         (
             {
@@ -564,14 +567,14 @@ async def test_themes_reload_invalid(
     """Test frontend.reload_themes service with an invalid theme."""
 
     with patch(
-        "homeassistant.components.frontend.async_hass_config_yaml",
+        "homeassistant.components.frontend.services.async_hass_config_yaml",
         return_value={DOMAIN: {CONF_THEMES: {"happy": {"primary-color": "pink"}}}},
     ):
         await hass.services.async_call(DOMAIN, "reload_themes", blocking=True)
 
     with (
         patch(
-            "homeassistant.components.frontend.async_hass_config_yaml",
+            "homeassistant.components.frontend.services.async_hass_config_yaml",
             return_value={DOMAIN: {CONF_THEMES: invalid_theme}},
         ),
         pytest.raises(HomeAssistantError, match=rf"Failed to reload themes.*{error}")
@@ -1185,13 +1188,13 @@ async def test_development_pr_and_github_token_inclusive() -> None:
             CONF_DEVELOPMENT_PR: 12345,
         }
     }
-    with pytest.raises(vol.Invalid, match="some but not all"):
+    with pytest.raises(probatio.Invalid, match="some but not all"):
         CONFIG_SCHEMA(invalid_config_pr_only)
 
     invalid_config_token_only: dict[str, dict[str, Any]] = {
         DOMAIN: {CONF_GITHUB_TOKEN: "test_token"}
     }
-    with pytest.raises(vol.Invalid, match="some but not all"):
+    with pytest.raises(probatio.Invalid, match="some but not all"):
         CONFIG_SCHEMA(invalid_config_token_only)
 
 

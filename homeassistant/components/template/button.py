@@ -3,7 +3,7 @@
 import logging
 from typing import TYPE_CHECKING, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.button import (
     DEVICE_CLASSES_SCHEMA,
@@ -39,10 +39,10 @@ SCRIPT_FIELDS = (CONF_PRESS,)
 
 _BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(device_class=True)
 
-BUTTON_YAML_SCHEMA = vol.Schema(
+BUTTON_YAML_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_PRESS): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        probatio.Required(CONF_PRESS): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     }
 ).extend(
     make_template_entity_common_schema(
@@ -50,10 +50,10 @@ BUTTON_YAML_SCHEMA = vol.Schema(
     ).schema
 )
 
-BUTTON_CONFIG_ENTRY_SCHEMA = vol.Schema(
+BUTTON_CONFIG_ENTRY_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_PRESS): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_PRESS): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     }
 ).extend(TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema)
 

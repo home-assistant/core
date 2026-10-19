@@ -4,6 +4,15 @@ from collections.abc import AsyncGenerator
 from unittest.mock import Mock, call, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+    mock_restore_cache,
+)
 
 from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.components.homeassistant_hardware import DOMAIN
@@ -32,16 +41,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
 
 from .common import TEST_DOMAIN, TEST_FIRMWARE_RELEASES_URL, TEST_MANIFEST
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-    mock_restore_cache,
-)
 
 TEST_DEVICE = "/dev/serial/by-id/test-device-12345"
 TEST_SWITCH_ENTITY_ID = "switch.mock_device_beta_firmware_updates"
@@ -181,6 +180,7 @@ async def test_switch_default_off_state(
 )
 async def test_switch_restore_state(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     switch_config_entry: ConfigEntry,
     mock_firmware_client,
     initial_state: str,
@@ -204,7 +204,6 @@ async def test_switch_restore_state(
     ]
 
     # Verify entity registry attributes
-    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     entity_entry = entity_registry.async_get(TEST_SWITCH_ENTITY_ID)
     assert entity_entry is not None
     assert entity_entry.entity_category == EntityCategory.CONFIG

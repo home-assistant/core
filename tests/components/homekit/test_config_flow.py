@@ -3,8 +3,9 @@
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.homekit.accessories import HomeDriver
@@ -22,8 +23,6 @@ from homeassistant.helpers.entityfilter import CONF_INCLUDE_DOMAINS
 from homeassistant.setup import async_setup_component
 
 from .util import PATH_HOMEKIT, async_init_entry
-
-from tests.common import MockConfigEntry
 
 
 def _mock_config_entry_with_options_populated():
@@ -401,6 +400,7 @@ async def test_options_flow_devices(
     with patch("homeassistant.components.homekit.HomeKit") as mock_homekit:
         mock_homekit.return_value = homekit = Mock(bridge=None, driver=None)
         type(homekit).async_start = AsyncMock()
+        type(homekit).async_stop = AsyncMock()
         assert await async_setup_component(hass, DOMAIN, {"homekit": {}})
         assert await async_setup_component(hass, "homeassistant", {})
         assert await async_setup_component(hass, "demo", {"demo": {}})
@@ -1435,7 +1435,7 @@ async def test_options_flow_exclude_mode_skips_category_entities(
 
     # sonos_config_switch.entity_id is a config category entity
     # so it should not be selectable since it will always be excluded
-    with pytest.raises(vol.error.Invalid):
+    with pytest.raises(probatio.error.Invalid):
         await hass.config_entries.options.async_configure(
             result2["flow_id"],
             user_input={"entities": [sonos_config_switch.entity_id]},
@@ -1534,7 +1534,7 @@ async def test_options_flow_exclude_mode_skips_hidden_entities(
 
     # sonos_hidden_switch.entity_id is a hidden entity
     # so it should not be selectable since it will always be excluded
-    with pytest.raises(vol.error.Invalid):
+    with pytest.raises(probatio.error.Invalid):
         await hass.config_entries.options.async_configure(
             result2["flow_id"],
             user_input={"entities": [sonos_hidden_switch.entity_id]},

@@ -30,6 +30,7 @@ from . import configure_integration
         ("Lock Vision", 4),
         ("Lock Vision Pro", 5),
         ("Smart Lock Pro Wifi", 6),
+        ("Smart Lock Ultra Max", 7),
     ],
 )
 async def test_lock(
@@ -74,6 +75,7 @@ async def test_lock(
         ("Smart Lock", 0),
         ("Smart Lock Pro", 1),
         ("Smart Lock Ultra", 2),
+        ("Smart Lock Ultra Max", 3),
         ("Smart Lock Pro Wifi", 5),
     ],
 )

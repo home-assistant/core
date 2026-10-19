@@ -5,7 +5,7 @@ from dataclasses import asdict
 from datetime import datetime, timedelta
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -24,7 +24,7 @@ async def async_setup(hass: HomeAssistant) -> None:
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "hardware/info",
+        probatio.Required("type"): "hardware/info",
     }
 )
 @websocket_api.async_response
@@ -46,7 +46,7 @@ async def ws_info(
 @callback
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "hardware/subscribe_system_status",
+        probatio.Required("type"): "hardware/subscribe_system_status",
     }
 )
 def ws_subscribe_system_status(

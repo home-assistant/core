@@ -4,8 +4,15 @@ from datetime import datetime, timedelta
 from unittest.mock import patch
 
 from freezegun import freeze_time
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    get_fixture_path,
+)
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
+from pytest_homeassistant.typing import RecorderInstanceGenerator
 
 from homeassistant import config as hass_config, core as ha
 from homeassistant.components.history_stats.const import (
@@ -32,10 +39,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed, get_fixture_path
-from tests.components.recorder.common import async_wait_recording_done
-from tests.typing import RecorderInstanceGenerator
 
 
 async def test_setup(recorder_mock: Recorder, hass: HomeAssistant) -> None:
@@ -136,7 +139,7 @@ async def test_setup_multiple_states(
 def test_setup_invalid_config(config) -> None:
     """Test the history statistics sensor setup with invalid config."""
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         SENSOR_SCHEMA(config)
 
 

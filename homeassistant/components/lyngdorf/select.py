@@ -1,16 +1,18 @@
 """Select platform for Lyngdorf integration."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
-from lyngdorf.device import Receiver
+from lyngdorf import LyngdorfInvalidValueError, LyngdorfReceiver
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .entity import LyngdorfEntity
 from .models import LyngdorfConfigEntry
 
@@ -21,9 +23,9 @@ PARALLEL_UPDATES = 1
 class LyngdorfSelectEntityDescription(SelectEntityDescription):
     """Describe a Lyngdorf select entity."""
 
-    current_option_fn: Callable[[Receiver], str | None]
-    options_fn: Callable[[Receiver], list[str]]
-    select_option_fn: Callable[[Receiver, str], None]
+    current_option_fn: Callable[[LyngdorfReceiver], str | None]
+    options_fn: Callable[[LyngdorfReceiver], list[str]]
+    select_option_fn: Callable[[LyngdorfReceiver, str], Awaitable[None]]
 
 
 SELECT_ENTITIES: tuple[LyngdorfSelectEntityDescription, ...] = (
@@ -31,14 +33,14 @@ SELECT_ENTITIES: tuple[LyngdorfSelectEntityDescription, ...] = (
         key="room_perfect_position",
         translation_key="room_perfect_position",
         current_option_fn=lambda r: r.room_perfect_position,
-        options_fn=lambda r: r.available_room_perfect_positions,
+        options_fn=lambda r: r.room_perfect_positions,
         select_option_fn=lambda r, o: r.set_room_perfect_position(o),
     ),
     LyngdorfSelectEntityDescription(
         key="voicing",
         translation_key="voicing",
         current_option_fn=lambda r: r.voicing,
-        options_fn=lambda r: r.available_voicings,
+        options_fn=lambda r: r.voicings,
         select_option_fn=lambda r, o: r.set_voicing(o),
     ),
 )
@@ -67,7 +69,7 @@ class LyngdorfSelect(LyngdorfEntity, SelectEntity):
 
     def __init__(
         self,
-        receiver: Receiver,
+        receiver: LyngdorfReceiver,
         config_entry: LyngdorfConfigEntry,
         device_info: DeviceInfo,
         description: LyngdorfSelectEntityDescription,
@@ -94,4 +96,14 @@ class LyngdorfSelect(LyngdorfEntity, SelectEntity):
     @override
     async def async_select_option(self, option: str) -> None:
         """Set the selected option."""
-        self.entity_description.select_option_fn(self._receiver, option)
+        try:
+            await self.entity_description.select_option_fn(self._receiver, option)
+        except LyngdorfInvalidValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_option",
+                translation_placeholders={
+                    "option": option,
+                    "options": ", ".join(self.options),
+                },
+            ) from err

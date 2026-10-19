@@ -41,8 +41,29 @@
     }
   },
   "exceptions": {
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    "clean_spot_failed": {
+      "message": "Failed to start spot cleaning."
+    },
+    "disable_schedule_failed": {
+      "message": "Failed to disable the Neato cleaning schedule."
+    },
+    "enable_schedule_failed": {
+      "message": "Failed to enable the Neato cleaning schedule."
+    },
+    "locate_failed": {
+      "message": "Failed to locate the vacuum."
+    },
+    "pause_failed": {
+      "message": "Failed to pause cleaning."
+    },
+    "return_to_base_failed": {
+      "message": "Failed to send the vacuum back to its dock."
+    },
+    "start_failed": {
+      "message": "Failed to start cleaning."
+    },
+    "stop_failed": {
+      "message": "Failed to stop cleaning."
     }
   },
   "services": {

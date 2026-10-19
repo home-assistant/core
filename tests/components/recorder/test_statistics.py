@@ -6,9 +6,23 @@ import re
 from typing import Any
 from unittest.mock import ANY, Mock, patch
 
+import probatio
 import pytest
+from pytest_homeassistant.common import MockPlatform, MockUser, mock_platform
+from pytest_homeassistant.components.recorder.common import (
+    assert_dict_of_states_equal_without_context_and_last_changed,
+    async_record_states,
+    async_recorder_block_till_done,
+    async_wait_recording_done,
+    do_adhoc_statistics,
+    get_start_time,
+    statistics_during_period,
+)
+from pytest_homeassistant.typing import (
+    RecorderInstanceContextManager,
+    WebSocketGenerator,
+)
 from sqlalchemy import select
-import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.components import recorder
@@ -53,19 +67,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
-
-from .common import (
-    assert_dict_of_states_equal_without_context_and_last_changed,
-    async_record_states,
-    async_recorder_block_till_done,
-    async_wait_recording_done,
-    do_adhoc_statistics,
-    get_start_time,
-    statistics_during_period,
-)
-
-from tests.common import MockPlatform, MockUser, mock_platform
-from tests.typing import RecorderInstanceContextManager, WebSocketGenerator
 
 POWER_SENSOR_KW_ATTRIBUTES = {
     "device_class": "power",
@@ -1516,6 +1517,62 @@ async def test_update_statistics_metadata_error(
                 "max": 10000.0,
                 "mean": 10000.0,
                 "min": 10000.0,
+                "start": now.timestamp(),
+            }
+        ],
+    }
+
+
+@pytest.mark.parametrize(
+    ("state", "converted_value"),
+    [
+        pytest.param(0, None, id="zero"),
+        pytest.param(20, 5.0, id="non-zero"),
+    ],
+)
+@pytest.mark.usefixtures("recorder_mock")
+async def test_statistics_during_period_display_inverse_unit(
+    hass: HomeAssistant,
+    state: int,
+    converted_value: float | None,
+) -> None:
+    """Test fetching statistics with a display unit which is an inverse unit.
+
+    A zero value has no representation in the inverse unit and should be
+    converted to None instead of raising ZeroDivisionError.
+    """
+    now = get_start_time(dt_util.utcnow())
+
+    attributes = {
+        "device_class": "energy_distance",
+        "state_class": "measurement",
+        "unit_of_measurement": "kWh/100km",
+    }
+
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set(
+        "sensor.test", state, attributes=attributes, timestamp=now.timestamp()
+    )
+    await async_wait_recording_done(hass)
+
+    do_adhoc_statistics(hass, start=now)
+    await async_wait_recording_done(hass)
+
+    assert statistics_during_period(
+        hass,
+        now,
+        period="5minute",
+        statistic_ids={"sensor.test"},
+        units={"energy_distance": "km/kWh"},
+    ) == {
+        "sensor.test": [
+            {
+                "end": (now + timedelta(minutes=5)).timestamp(),
+                "last_reset": None,
+                "max": converted_value,
+                "mean": converted_value,
+                "min": converted_value,
                 "start": now.timestamp(),
             }
         ],
@@ -4534,7 +4591,7 @@ async def test_get_statistics_service_missing_mandatory_keys(
     await async_recorder_block_till_done(hass)
 
     with pytest.raises(
-        vol.error.MultipleInvalid,
+        probatio.error.MultipleInvalid,
         match=re.escape(f"required key not provided at '{missing_key}'"),
     ):
         await hass.services.async_call(

@@ -2,10 +2,11 @@
 
 from collections.abc import Callable, Coroutine
 from copy import deepcopy
-import datetime
+import datetime as dt
 from http import HTTPStatus
 import logging
 from operator import attrgetter
+import time
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
@@ -28,6 +29,13 @@ from hass_nabucasa.const import STATE_CONNECTED
 from hass_nabucasa.payments_api import PaymentsApiError
 from hass_nabucasa.remote import CertificateStatus
 import pytest
+from pytest_homeassistant.common import mock_platform
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 from syrupy.assertion import SnapshotAssertion
 from webrtc_models import RTCIceServer
 
@@ -36,9 +44,7 @@ from homeassistant.components.alexa import errors as alexa_errors
 
 # pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.alexa.entities import LightCapabilities
-from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=home-assistant-component-root-import
-    STORAGE_KEY,
-)
+from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY  # pylint: disable=home-assistant-component-root-import
 from homeassistant.components.cloud.const import (
     DATA_PENDING_AUTO_LOGIN,
     DEFAULT_EXPOSED_DOMAINS,
@@ -46,9 +52,7 @@ from homeassistant.components.cloud.const import (
 )
 from homeassistant.components.cloud.http_api import validate_language_voice
 from homeassistant.components.frontend import DATA_THEMES
-from homeassistant.components.google_assistant.helpers import (  # pylint: disable=home-assistant-component-root-import
-    GoogleEntity,
-)
+from homeassistant.components.google_assistant.helpers import GoogleEntity  # pylint: disable=home-assistant-component-root-import
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.websocket_api import ERR_INVALID_FORMAT
 from homeassistant.core import HomeAssistant, State
@@ -57,15 +61,9 @@ from homeassistant.loader import async_get_loaded_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.location import LocationInfo
+from homeassistant.util.logging import HomeAssistantLogFormatter
 
-from tests.common import mock_platform
 from tests.components.google_assistant import MockConfig
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import (
-    ClientSessionGenerator,
-    MockHAClientWebSocket,
-    WebSocketGenerator,
-)
 
 PIPELINE_DATA_LEGACY = {
     "items": [
@@ -2025,7 +2023,7 @@ async def test_websocket_cloud_onboarding_postpone(
     assert response["result"]["onboarding_postponed"] is True
     assert cloud.client.prefs.onboarding_postponed_until is not None
 
-    freezer.tick(datetime.timedelta(hours=25))
+    freezer.tick(dt.timedelta(hours=25))
 
     await client.send_json_auto_id({"type": "cloud/status"})
     response = await client.receive_json()
@@ -2785,6 +2783,8 @@ async def test_cloud_events_auto_login_push(
     assert event["event"] == {"type": "login"}
 
 
+# Pin the log timestamp offset so the snapshot does not depend on the host timezone
+@patch.object(HomeAssistantLogFormatter, "converter", time.gmtime)
 @patch("homeassistant.components.cloud.helpers.FixedSizeQueueLogHandler.MAX_RECORDS", 3)
 @pytest.mark.usefixtures("enable_custom_integrations")
 async def test_download_support_package(
@@ -2870,10 +2870,7 @@ async def test_download_support_package(
     )
 
     now = dt_util.utcnow()
-    # The logging is done with local time according to the system timezone. Set the
-    # fake time to 12:00 local time
-    tz = now.astimezone().tzinfo
-    freezer.move_to(datetime.datetime(2025, 2, 10, 12, 0, 0, tzinfo=tz))
+    freezer.move_to(dt.datetime(2025, 2, 10, 12, 0, 0, tzinfo=dt.UTC))
     logging.getLogger("hass_nabucasa.iot").info(
         "This message will be dropped since this test patches MAX_RECORDS"
     )
@@ -2916,6 +2913,9 @@ async def test_download_support_package(
     assert await req.text() == snapshot
 
 
+# Pin the log timestamp offset so the snapshot does not depend on the host timezone
+@patch.object(HomeAssistantLogFormatter, "converter", time.gmtime)
+@patch("homeassistant.components.cloud.helpers.FixedSizeQueueLogHandler.MAX_RECORDS", 3)
 @pytest.mark.usefixtures("enable_custom_integrations")
 async def test_download_support_package_custom_components_error(
     hass: HomeAssistant,
@@ -2987,8 +2987,7 @@ async def test_download_support_package_custom_components_error(
     )
 
     now = dt_util.utcnow()
-    tz = now.astimezone().tzinfo
-    freezer.move_to(datetime.datetime(2025, 2, 10, 12, 0, 0, tzinfo=tz))
+    freezer.move_to(dt.datetime(2025, 2, 10, 12, 0, 0, tzinfo=dt.UTC))
     logging.getLogger("hass_nabucasa.iot").info(
         "This message will be dropped since this test patches MAX_RECORDS"
     )
@@ -3035,6 +3034,9 @@ async def test_download_support_package_custom_components_error(
     assert await req.text() == snapshot
 
 
+# Pin the log timestamp offset so the snapshot does not depend on the host timezone
+@patch.object(HomeAssistantLogFormatter, "converter", time.gmtime)
+@patch("homeassistant.components.cloud.helpers.FixedSizeQueueLogHandler.MAX_RECORDS", 3)
 @pytest.mark.usefixtures("enable_custom_integrations")
 async def test_download_support_package_integration_load_error(
     hass: HomeAssistant,
@@ -3109,8 +3111,7 @@ async def test_download_support_package_integration_load_error(
     )
 
     now = dt_util.utcnow()
-    tz = now.astimezone().tzinfo
-    freezer.move_to(datetime.datetime(2025, 2, 10, 12, 0, 0, tzinfo=tz))
+    freezer.move_to(dt.datetime(2025, 2, 10, 12, 0, 0, tzinfo=dt.UTC))
     logging.getLogger("hass_nabucasa.iot").info(
         "This message will be dropped since this test patches MAX_RECORDS"
     )

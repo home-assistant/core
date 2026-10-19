@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from tplink_omada_client import OmadaSite
 from tplink_omada_client.exceptions import (
     ConnectionFailed,
@@ -17,8 +18,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 MOCK_USER_DATA = {
     "host": "https://fake.omada.host",
@@ -54,7 +53,7 @@ async def test_form_single_site(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "OC200 (Display Name)"
+    assert result["title"] == "Test Omada Controller (Display Name)"
     assert result["data"] == MOCK_ENTRY_DATA
     assert result["result"].unique_id == "12345_SiteId"
     assert len(mock_setup_entry.mock_calls) == 1
@@ -94,7 +93,7 @@ async def test_form_multiple_sites(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "OC200 (Site 2)"
+    assert result["title"] == "Test Omada Controller (Site 2)"
     assert result["data"] == {
         "host": "https://fake.omada.host",
         "verify_ssl": True,
@@ -148,7 +147,7 @@ async def test_form_errors_and_recovery(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "OC200 (Display Name)"
+    assert result["title"] == "Test Omada Controller (Display Name)"
     assert result["data"] == MOCK_ENTRY_DATA
     assert len(mock_setup_entry.mock_calls) == 1
 

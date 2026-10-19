@@ -2,16 +2,14 @@
 
 from collections.abc import Generator
 from datetime import UTC, datetime, timedelta
-import json
 from unittest.mock import AsyncMock, patch
 
 from aiohortos import Device, Organisation, Readout, TokenPair
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_array_fixture
 
 from homeassistant.components.hortimax.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
-
-from tests.common import MockConfigEntry, load_fixture
 
 API_KEY = "test-api-key"
 DEVICE = "HOR00000000.000"
@@ -23,7 +21,7 @@ def load_readouts() -> list[Readout]:
     """Return the fixture readouts, parsed the way the library parses them."""
     return [
         readout
-        for raw in json.loads(load_fixture("readouts.json", DOMAIN))
+        for raw in load_json_array_fixture("readouts.json", DOMAIN)
         if (readout := Readout.from_api(raw)) is not None
     ]
 

@@ -4,7 +4,9 @@ from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, patch
 
 from pyintelliclima.const import FanMode, FanSpeed
+from pyintelliclima.intelliclima_types import IntelliClimaDevices
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
@@ -24,8 +26,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 FAN_ENTITY_ID = "fan.test_vmc"
 
@@ -83,8 +83,8 @@ async def test_fan_turn_off_service_calls_api(
     )
 
     # Device serial from single_eco_device.crono_sn
-    mock_cloud_interface.ecocomfort.turn_off.assert_awaited_once_with("11223344")
-    mock_cloud_interface.ecocomfort.set_mode_speed.assert_not_awaited()
+    mock_cloud_interface.ecocomfort2.turn_off.assert_awaited_once_with("11223344")
+    mock_cloud_interface.ecocomfort2.set_mode_speed.assert_not_awaited()
 
 
 async def test_fan_turn_on_service_calls_api(
@@ -103,7 +103,7 @@ async def test_fan_turn_on_service_calls_api(
     )
 
     # Device serial from single_eco_device.crono_sn
-    mock_cloud_interface.ecocomfort.set_mode_speed.assert_awaited_once_with(
+    mock_cloud_interface.ecocomfort2.set_mode_speed.assert_awaited_once_with(
         "11223344", FanMode.inward, FanSpeed.low
     )
 
@@ -122,7 +122,7 @@ async def test_fan_set_percentage_maps_to_speed(
     )
     # Initial mode_set=FanMode.inward from single_eco_device.
     # Sleep speed is FanSpeed.sleep (25%).
-    mock_cloud_interface.ecocomfort.set_mode_speed.assert_awaited_once_with(
+    mock_cloud_interface.ecocomfort2.set_mode_speed.assert_awaited_once_with(
         "11223344", FanMode.inward, FanSpeed.sleep
     )
 
@@ -140,10 +140,10 @@ async def test_fan_set_preset_mode_service(
         blocking=True,
     )
 
-    mock_cloud_interface.ecocomfort.set_mode_speed_auto.assert_awaited_once_with(
+    mock_cloud_interface.ecocomfort2.set_mode_speed_auto.assert_awaited_once_with(
         "11223344"
     )
-    mock_cloud_interface.ecocomfort.turn_off.assert_not_awaited()
+    mock_cloud_interface.ecocomfort2.turn_off.assert_not_awaited()
 
 
 async def test_fan_set_percentage_zero_turns_off(
@@ -158,8 +158,8 @@ async def test_fan_set_percentage_zero_turns_off(
         blocking=True,
     )
 
-    mock_cloud_interface.ecocomfort.turn_off.assert_awaited_once_with("11223344")
-    mock_cloud_interface.ecocomfort.set_mode_speed.assert_not_awaited()
+    mock_cloud_interface.ecocomfort2.turn_off.assert_awaited_once_with("11223344")
+    mock_cloud_interface.ecocomfort2.set_mode_speed.assert_not_awaited()
 
 
 @pytest.mark.parametrize(
@@ -190,10 +190,33 @@ async def test_fan_turn_on_defaulting_behavior(
         blocking=True,
     )
 
-    mock_cloud_interface.ecocomfort.set_mode_speed.assert_awaited_once_with(
+    mock_cloud_interface.ecocomfort2.set_mode_speed.assert_awaited_once_with(
         "11223344", expected_mode, expected_speed
     )
-    mock_cloud_interface.ecocomfort.turn_off.assert_not_awaited()
+    mock_cloud_interface.ecocomfort2.turn_off.assert_not_awaited()
+
+
+async def test_fan_turn_on_when_off_without_percentage(
+    hass: HomeAssistant,
+    mock_cloud_interface: AsyncMock,
+    single_eco_device: IntelliClimaDevices,
+) -> None:
+    """turn_on without percentage on an off fan turns it on at sleep speed."""
+    eco = single_eco_device.ecocomfort2_devices["56789"]
+    eco.mode_set = FanMode.off
+    eco.speed_set = FanSpeed.off
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: FAN_ENTITY_ID},
+        blocking=True,
+    )
+
+    mock_cloud_interface.ecocomfort2.set_mode_speed.assert_awaited_once_with(
+        "11223344", FanMode.alternate, FanSpeed.sleep
+    )
+    mock_cloud_interface.ecocomfort2.turn_off.assert_not_awaited()
 
 
 async def test_fan_turn_on_defaulting_behavior_auto_preset(
@@ -209,7 +232,7 @@ async def test_fan_turn_on_defaulting_behavior_auto_preset(
         blocking=True,
     )
 
-    mock_cloud_interface.ecocomfort.set_mode_speed_auto.assert_awaited_once_with(
+    mock_cloud_interface.ecocomfort2.set_mode_speed_auto.assert_awaited_once_with(
         "11223344"
     )
-    mock_cloud_interface.ecocomfort.turn_off.assert_not_awaited()
+    mock_cloud_interface.ecocomfort2.turn_off.assert_not_awaited()

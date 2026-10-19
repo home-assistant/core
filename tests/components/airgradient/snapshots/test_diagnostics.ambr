@@ -2,6 +2,7 @@
 # name: test_diagnostics_polling_instance
   dict({
     'config': dict({
+      'altitude_unit': None,
       'back_led_brightness': None,
       'buzzer_enabled': None,
       'cloud_connection': None,
@@ -59,6 +60,7 @@
 # name: test_v1_diagnostics
   dict({
     'config': dict({
+      'altitude_unit': None,
       'back_led_brightness': 2,
       'buzzer_enabled': True,
       'cloud_connection': True,
