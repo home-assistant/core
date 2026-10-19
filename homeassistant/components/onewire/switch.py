@@ -4,9 +4,12 @@ from datetime import timedelta
 import os
 from typing import Any, override
 
+from aio_ownet.proxy import OWServerStatelessProxy
+
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -153,7 +156,7 @@ async def async_setup_entry(
         """Add 1-Wire entities for all devices."""
         if not devices:
             return
-        async_add_entities(get_entities(hub, devices), True)
+        async_add_entities(get_entities(config_entry, hub, devices), True)
 
     hub = config_entry.runtime_data
     await _add_entities(hub, hub.devices)
@@ -163,7 +166,9 @@ async def async_setup_entry(
 
 
 def get_entities(
-    onewire_hub: OneWireHub, devices: list[OWDeviceDescription]
+    config_entry: OneWireConfigEntry,
+    onewire_hub: OneWireHub,
+    devices: list[OWDeviceDescription],
 ) -> list[OneWireSwitchEntity]:
     """Get a list of entities."""
     entities: list[OneWireSwitchEntity] = []
@@ -185,6 +190,18 @@ def get_entities(
             continue
         for description in get_sensor_types(device_sub_type)[family]:
             device_file = os.path.join(os.path.split(device.path)[0], description.key)
+            if description.key.startswith("moisture/is_leaf."):
+                entities.append(
+                    OneWireLeafSensorSwitchEntity(
+                        config_entry=config_entry,
+                        description=description,
+                        device_id=device_id,
+                        device_file=device_file,
+                        device_info=device_info,
+                        owproxy=onewire_hub.owproxy,
+                    )
+                )
+                continue
             entities.append(
                 OneWireSwitchEntity(
                     description=description,
@@ -218,3 +235,27 @@ class OneWireSwitchEntity(OneWireEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._write_value(b"0")
+
+
+class OneWireLeafSensorSwitchEntity(OneWireSwitchEntity):
+    """Switch selecting the sensor type of a Hobby Boards moisture meter channel."""
+
+    def __init__(
+        self,
+        config_entry: OneWireConfigEntry,
+        description: SwitchEntityDescription,
+        device_id: str,
+        device_info: DeviceInfo,
+        device_file: str,
+        owproxy: OWServerStatelessProxy,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(description, device_id, device_info, device_file, owproxy)
+        self._config_entry = config_entry
+
+    @override
+    async def _write_value(self, value: bytes) -> None:
+        """Write the value, and reload to recreate the moisture sensor."""
+        await super()._write_value(value)
+        # The sensor type is only read when the sensor entities are created
+        self.hass.config_entries.async_schedule_reload(self._config_entry.entry_id)

@@ -1,7 +1,7 @@
 """Tests for 1-Wire switches."""
 
 from collections.abc import Generator
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 from aio_ownet.exceptions import OWServerConnectionError
 from freezegun.api import FrozenDateTimeFactory
@@ -141,3 +141,45 @@ async def test_switch_write_failure(
         )
     assert exc_info.value.translation_key == "write_failed"
     assert str(exc_info.value) == "Error writing to /05.111111111111/PIO"
+
+
+@pytest.mark.parametrize("device_id", ["EF.111111111112"])
+@pytest.mark.parametrize(
+    ("entity_id", "reload_count"),
+    [
+        pytest.param("switch.ef_111111111112_leaf_sensor_2", 1, id="leaf_sensor"),
+        pytest.param(
+            "switch.ef_111111111112_moisture_sensor_2", 0, id="moisture_sensor"
+        ),
+    ],
+)
+@pytest.mark.parametrize("service", [SERVICE_TURN_ON, SERVICE_TURN_OFF])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_moisture_meter_switch_reload(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    owproxy: MagicMock,
+    device_id: str,
+    entity_id: str,
+    reload_count: int,
+    service: str,
+) -> None:
+    """Test changing the sensor type of a moisture meter channel reloads the entry."""
+    setup_owproxy_mock_devices(owproxy, [device_id])
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch.object(
+        hass.config_entries, "async_schedule_reload"
+    ) as mock_schedule_reload:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+    assert (
+        mock_schedule_reload.call_args_list
+        == [call(config_entry.entry_id)] * reload_count
+    )
