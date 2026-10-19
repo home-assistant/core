@@ -245,9 +245,7 @@ def correct_db_schema_utf8(
         f"{table_name}.4-byte UTF-8" in schema_errors
         or f"{table_name}.{MYSQL_COLLATE}" in schema_errors
     ):
-        from ..migration import (  # noqa: PLC0415
-            _correct_table_character_set_and_collation,
-        )
+        from ..migration import _correct_table_character_set_and_collation  # noqa: PLC0415
 
         _correct_table_character_set_and_collation(table_name, instance.get_session)
 

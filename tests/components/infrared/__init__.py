@@ -1,4 +1,4 @@
-"""Compatibility imports for the Home Assistant pytest helpers."""
+"""Tests for the infrared integration."""
 
 from pytest_homeassistant.components.infrared import (
     EMITTER_ENTITY_ID as EMITTER_ENTITY_ID,
