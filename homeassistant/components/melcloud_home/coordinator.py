@@ -199,6 +199,7 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
         if (delta.unit_type == DEVICE_ATA and _apply_delta(self.ata_units, delta)) or (
             delta.unit_type == DEVICE_ATW and _apply_delta(self.atw_units, delta)
         ):
+            self.last_update_success = True
             self.async_update_listeners()
 
     @callback
