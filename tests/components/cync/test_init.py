@@ -1,6 +1,7 @@
 """Tests for the Cync integration setup."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.cync.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -11,8 +12,6 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
