@@ -12,12 +12,12 @@ from hass_nabucasa.files import FilesError, StorageType
 import pytest
 
 from homeassistant.components.backup import (
-    DATA_MANAGER,
     DOMAIN as BACKUP_DOMAIN,
     AddonInfo,
     AgentBackup,
     Folder,
     UploadBackupEvent,
+    async_get_manager,
 )
 from homeassistant.components.cloud import DOMAIN
 from homeassistant.components.cloud.backup import async_register_backup_agents_listener
@@ -399,7 +399,7 @@ async def test_agents_upload_on_progress(
 
     cloud.files.upload.side_effect = mock_upload
 
-    manager = hass.data[DATA_MANAGER]
+    manager = async_get_manager(hass)
     events: list[UploadBackupEvent] = []
 
     def _collect(event: Any) -> None:
