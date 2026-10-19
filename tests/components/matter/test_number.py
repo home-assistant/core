@@ -377,10 +377,11 @@ async def test_thermostat_temperature_offset(
 
 
 @pytest.mark.parametrize(
-    ("node_fixture", "entity_id", "expected_min", "expected_max"),
+    ("node_fixture", "attributes", "entity_id", "expected_min", "expected_max"),
     [
         pytest.param(
             "aqara_thermostat_w500",
+            {},
             "number.floor_heating_thermostat_temperature_offset",
             -2.5,
             2.5,
@@ -388,10 +389,27 @@ async def test_thermostat_temperature_offset(
         ),
         pytest.param(
             "mock_thermostat",
+            {},
             "number.mock_thermostat_temperature_offset",
             -12.7,
             12.7,
             id="cluster_revision_9_extended_range",
+        ),
+        pytest.param(
+            "mock_thermostat",
+            {"1/513/65533": 0},
+            "number.mock_thermostat_temperature_offset",
+            -2.5,
+            2.5,
+            id="cluster_revision_unreadable_legacy_range",
+        ),
+        pytest.param(
+            "eve_thermo_v5",
+            {"1/513/65533": 0},
+            "number.eve_thermo_20ecd1701_temperature_offset",
+            -2.5,
+            2.5,
+            id="eve_cluster_revision_unreadable_legacy_range",
         ),
     ],
 )

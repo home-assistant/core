@@ -5,6 +5,7 @@ from datetime import datetime
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_load_fixture
 from renault_api.exceptions import RenaultException
 from renault_api.kamereon import schemas
 from renault_api.kamereon.models import ChargeSchedule, HvacSchedule
@@ -19,8 +20,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import async_load_fixture
 
 pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
 
@@ -471,10 +470,11 @@ async def test_service_exception(
             "renault_api.renault_vehicle.RenaultVehicle.set_ac_stop",
             side_effect=RenaultException("Didn't work"),
         ) as mock_action,
-        pytest.raises(HomeAssistantError, match="Didn't work"),
+        pytest.raises(HomeAssistantError) as err,
     ):
         await hass.services.async_call(
             DOMAIN, RenaultService.AC_CANCEL, service_data=data, blocking=True
         )
+    assert err.value.translation_key == "unknown_error"
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == ()

@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from aiopyarr import ArrAuthenticationException, ArrException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.sonarr.const import (
     CONF_MORE_OPTIONS,
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_REAUTH_INPUT, MOCK_USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 async def test_show_user_form(hass: HomeAssistant) -> None:

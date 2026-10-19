@@ -1,14 +1,13 @@
 """Test ESPHome cameras."""
 
 from aioesphomeapi import APIClient, CameraInfo, CameraState as ESPHomeCameraState
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.camera import CameraState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockESPHomeDeviceType
-
-from tests.typing import ClientSessionGenerator
 
 SMALLEST_VALID_JPEG = (
     "ffd8ffe000104a46494600010101004800480000ffdb00430003020202020203020202030303030406040404040408060"

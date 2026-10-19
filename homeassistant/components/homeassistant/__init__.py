@@ -25,11 +25,11 @@ from .const import (
     DATA_EXPOSED_ENTITIES,
     DATA_STOP_HANDLER,
     DOMAIN,
-    SERVICE_HOMEASSISTANT_RESTART,  # noqa: F401
-    SERVICE_HOMEASSISTANT_STOP,  # noqa: F401
+    SERVICE_HOMEASSISTANT_RESTART,
+    SERVICE_HOMEASSISTANT_STOP,
     HomeAssistantService,
 )
-from .exposed_entities import ExposedEntities, async_should_expose  # noqa: F401
+from .exposed_entities import ExposedEntities, async_should_expose
 from .services import async_setup_services
 
 # To be deprecated at a later stage, replaced by HomeAssistantService
@@ -51,6 +51,18 @@ _LOGGER = logging.getLogger(__name__)
 # Storage of the removed almond integration, which created an admin system user
 LEGACY_ALMOND_STORAGE_KEY = "almond"
 LEGACY_ALMOND_STORAGE_VERSION = 1
+
+__all__ = [
+    "DOMAIN",
+    "SERVICE_HOMEASSISTANT_RESTART",
+    "SERVICE_HOMEASSISTANT_STOP",
+    "SERVICE_RELOAD_ALL",
+    "SERVICE_RELOAD_CONFIG_ENTRY",
+    "SERVICE_RELOAD_CORE_CONFIG",
+    "SERVICE_RELOAD_CUSTOM_TEMPLATES",
+    "async_set_stop_handler",
+    "async_should_expose",
+]
 
 
 def _is_32_bit() -> bool:

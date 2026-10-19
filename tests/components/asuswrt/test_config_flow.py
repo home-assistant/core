@@ -6,6 +6,7 @@ from unittest.mock import patch
 from asusrouter import AsusRouterError
 from asusrouter.modules.identity import AsusDevice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.asuswrt.const import (
     CONF_DNSMASQ,
@@ -36,8 +37,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .common import ASUSWRT_BASE, HOST, ROUTER_MAC_ADDR
-
-from tests.common import MockConfigEntry
 
 SSH_KEY = "1234"
 

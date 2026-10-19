@@ -7,6 +7,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 from solaredge_web import EnergyData
 
 from homeassistant.components.recorder import Recorder
@@ -43,9 +45,6 @@ from homeassistant.util.unit_conversion import EnergyConverter
 
 from . import setup_integration
 from .conftest import API_KEY, PASSWORD, SITE_ID, USERNAME
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.recorder.common import async_wait_recording_done
 
 
 @pytest.fixture(autouse=True)
@@ -180,8 +179,8 @@ def mock_solar_edge_web() -> AsyncMock:
     ) as mock_api:
         api = mock_api.return_value
         api.async_get_equipment.return_value = {
-            "7A012345-CA": {"name": "Optimizer 1.1"},
-            "7A012346-CA": {"name": "Optimizer 1.2"},
+            "7A012345-CA": {"name": "Optimizer 1.1", "type": "OPTIMIZER"},
+            "7A012346-CA": {"name": "Optimizer 1.2", "type": "OPTIMIZER"},
         }
         api.async_get_energy_data.return_value = [
             EnergyData(
@@ -241,7 +240,7 @@ async def test_modules_coordinator_subsequent_run(
 ) -> None:
     """Test the coordinator correctly updates statistics on subsequent runs."""
     mock_solar_edge_web.async_get_equipment.return_value = {
-        "7A012345-CA": {"name": "Optimizer 1.1"},
+        "7A012345-CA": {"name": "Optimizer 1.1", "type": "OPTIMIZER"},
     }
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -298,7 +297,7 @@ async def test_modules_coordinator_subsequent_run_with_gap(
 ) -> None:
     """Test the coordinator updates statistics with a gap in data."""
     mock_solar_edge_web.async_get_equipment.return_value = {
-        "7A012345-CA": {"name": "Optimizer 1.1"},
+        "7A012345-CA": {"name": "Optimizer 1.1", "type": "OPTIMIZER"},
     }
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -423,7 +422,7 @@ async def test_modules_coordinator_reprocess_same_window_new_equipment(
     starts from 0.
     """
     mock_solar_edge_web.async_get_equipment.return_value = {
-        "7A012345-CA": {"name": "Optimizer 1.1"},
+        "7A012345-CA": {"name": "Optimizer 1.1", "type": "OPTIMIZER"},
     }
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -440,8 +439,8 @@ async def test_modules_coordinator_reprocess_same_window_new_equipment(
 
     # A second optimizer is added a month later, after a gap in the data.
     mock_solar_edge_web.async_get_equipment.return_value = {
-        "7A012345-CA": {"name": "Optimizer 1.1"},
-        "7A012346-CA": {"name": "Optimizer 1.2"},
+        "7A012345-CA": {"name": "Optimizer 1.1", "type": "OPTIMIZER"},
+        "7A012346-CA": {"name": "Optimizer 1.2", "type": "OPTIMIZER"},
     }
     mock_solar_edge_web.async_get_energy_data.return_value = [
         EnergyData(
@@ -716,7 +715,7 @@ async def test_legacy_statistic_id_reused(
 
     # Equipment with matching name "1.1".
     mock_solar_edge_web.async_get_equipment.return_value = {
-        "7A012345-CA": {"name": "Optimizer 1.1"},
+        "7A012345-CA": {"name": "Optimizer 1.1", "type": "OPTIMIZER"},
     }
 
     entry = MockConfigEntry(
@@ -785,7 +784,7 @@ async def test_legacy_statistic_id_ambiguous(
 
     # Equipment with matching name "1.1".
     mock_solar_edge_web.async_get_equipment.return_value = {
-        "7A012345-CA": {"name": "Optimizer 1.1"},
+        "7A012345-CA": {"name": "Optimizer 1.1", "type": "OPTIMIZER"},
     }
 
     entry = MockConfigEntry(
@@ -806,3 +805,92 @@ async def test_legacy_statistic_id_ambiguous(
         coordinator.get_statistic_id("7A012345-CA") == f"{DOMAIN}:{SITE_ID}_7a012345_ca"
     )
     assert "ambiguous" in caplog.text
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_modules_coordinator_skips_non_pv_equipment(
+    hass: HomeAssistant,
+    mock_solar_edge_web: AsyncMock,
+) -> None:
+    """Test that non-PV equipment such as batteries is skipped.
+
+    Battery modules share the same positional short names (e.g. "1.1.1") as
+    optimizers. If not filtered out, they map to the same legacy statistic IDs
+    and overwrite the optimizer statistics with zero values.
+    """
+    legacy_statistic_id = f"{DOMAIN}:{SITE_ID}_310549011"
+    legacy_metadata = StatisticMetaData(
+        mean_type=StatisticMeanType.ARITHMETIC,
+        has_sum=True,
+        name="SolarEdge Battery Module 1.1.1",
+        source=DOMAIN,
+        statistic_id=legacy_statistic_id,
+        unit_class=EnergyConverter.UNIT_CLASS,
+        unit_of_measurement="Wh",
+    )
+    async_add_external_statistics(hass, legacy_metadata, [])
+    await async_wait_recording_done(hass)
+
+    mock_solar_edge_web.async_get_equipment.return_value = {
+        "7E012345-57": {"name": "Inverter 1", "type": "INVERTER"},
+        "7E012345_31": {"name": "String 1.1", "type": "STRING"},
+        "7A012345-CA": {"name": "Optimizer 1.1.1", "type": "OPTIMIZER"},
+        "BAT-PACK-01": {"name": "Battery 1.1", "type": "BATTERY"},
+        "BAT-MOD-01": {"name": "Battery Module 1.1.1", "type": "BATTERY_MODULE"},
+    }
+    mock_solar_edge_web.async_get_energy_data.return_value = [
+        EnergyData(
+            start_time=dt_util.as_utc(datetime(2025, 1, 1, 10, 0)),
+            values={
+                "7E012345-57": 10.0,
+                "7E012345_31": 10.0,
+                "7A012345-CA": 10.0,
+            },
+        ),
+        EnergyData(
+            start_time=dt_util.as_utc(datetime(2025, 1, 1, 11, 0)),
+            values={
+                "7E012345-57": 14.0,
+                "7E012345_31": 14.0,
+                "7A012345-CA": 14.0,
+            },
+        ),
+    ]
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="SolarEdge",
+        data={CONF_SITE_ID: SITE_ID, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    # Optimizer 1.1.1 reuses the legacy statistic ID without being overwritten
+    # by Battery Module 1.1.1, and its metadata name is updated to the
+    # optimizer's.
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.as_utc(datetime(1970, 1, 1, 0, 0)),
+        None,
+        {legacy_statistic_id},
+        "hour",
+        None,
+        {"state", "sum"},
+    )
+    assert stats == {
+        legacy_statistic_id: [
+            {"start": 1735783200.0, "end": 1735786800.0, "state": 10.0, "sum": 10.0},
+            {"start": 1735786800.0, "end": 1735790400.0, "state": 14.0, "sum": 24.0},
+        ]
+    }
+
+    all_stats = await async_list_statistic_ids(hass)
+    stats_by_id = {s["statistic_id"]: s["name"] for s in all_stats}
+    assert stats_by_id == {
+        f"{DOMAIN}:{SITE_ID}_7e012345_57": "SolarEdge Inverter 1",
+        f"{DOMAIN}:{SITE_ID}_7e012345_31": "SolarEdge String 1.1",
+        legacy_statistic_id: "SolarEdge Optimizer 1.1.1",
+    }

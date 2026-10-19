@@ -1,6 +1,7 @@
 {
   "domain": "opower",
   "name": "Opower",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@tronikos"],
   "config_flow": true,
   "dependencies": ["recorder"],

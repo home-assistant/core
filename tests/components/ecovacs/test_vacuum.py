@@ -3,11 +3,12 @@
 from dataclasses import asdict
 import logging
 
-from deebot_client.events import CachedMapInfoEvent, Event, RoomsEvent
+from deebot_client.events import CachedMapInfoEvent, CleanCountEvent, Event, RoomsEvent
 from deebot_client.events.map import Map
 from deebot_client.models import CleanMode, Room
 from deebot_client.rs.map import RotationAngle  # pylint: disable=no-name-in-module
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import vacuum
 from homeassistant.components.ecovacs.controller import EcovacsController
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from .util import notify_and_wait
-
-from tests.typing import WebSocketGenerator
 
 pytestmark = [pytest.mark.usefixtures("init_integration")]
 
@@ -59,18 +58,36 @@ def _prepare_test(
     assert vacuum_obj.supported_features & vacuum.VacuumEntityFeature.CLEAN_AREA
 
 
-@pytest.mark.parametrize(("device_fixture", "entity_id"), [("qhe2o2", "vacuum.dusty")])
+@pytest.mark.parametrize(
+    ("device_fixture", "entity_id", "events", "expected_cleanings"),
+    [
+        pytest.param("55uoqe", "vacuum.dbmini", [], 1, id="default_count"),
+        pytest.param(
+            "55uoqe",
+            "vacuum.dbmini",
+            [CleanCountEvent(2)],
+            2,
+            id="clean_count_from_device",
+        ),
+        pytest.param("qhe2o2", "vacuum.dusty", [], 1, id="clean_v2"),
+    ],
+)
 async def test_clean_area(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     controller: EcovacsController,
     entity_id: str,
+    events: list[Event],
+    expected_cleanings: int,
 ) -> None:
     """Test clean_area service call."""
     _prepare_test(hass, entity_registry, entity_id)
 
     device = controller.devices[0]
     event_bus = device.events
+
+    for event in events:
+        await notify_and_wait(hass, event_bus, event)
 
     await notify_and_wait(
         hass,
@@ -110,7 +127,7 @@ async def test_clean_area(
     assert device._execute_command.call_count == 1
     command = device._execute_command.call_args.args[0]
     expected_command = device.capabilities.clean.action.area(
-        CleanMode.SPOT_AREA, [2, 1], 1
+        CleanMode.SPOT_AREA, [2, 1], expected_cleanings
     )
     assert command == expected_command
 

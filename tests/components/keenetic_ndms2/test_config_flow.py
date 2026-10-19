@@ -7,6 +7,7 @@ from ndms2_client import ConnectionException
 from ndms2_client.client import InterfaceInfo, RouterInfo
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.keenetic_ndms2 import CONF_INTERFACES, const
@@ -27,8 +28,6 @@ from . import (
     MOCK_RECONFIGURE,
     MOCK_SSDP_DISCOVERY_INFO,
 )
-
-from tests.common import MockConfigEntry
 
 MOCK_ROUTER_INFO = RouterInfo(
     name=MOCK_NAME,

@@ -7,8 +7,7 @@ from typing import override
 import probatio
 
 from homeassistant.components.number import DEVICE_CLASS_UNITS, DEVICE_CLASSES_SCHEMA
-from homeassistant.const import (  # noqa: F401
-    ATTR_MODE,
+from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ICON,
     CONF_ID,
@@ -23,7 +22,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
-from .const import (  # noqa: F401
+from .const import (
     ATTR_VALUE,
     CONF_INITIAL,
     CONF_MAX,
@@ -48,6 +47,27 @@ ATTR_INITIAL = "initial"
 ATTR_MIN = "min"
 ATTR_MAX = "max"
 ATTR_STEP = "step"
+
+__all__ = [
+    "ATTR_MAX",
+    "ATTR_MIN",
+    "ATTR_STEP",
+    "ATTR_VALUE",
+    "CONF_INITIAL",
+    "CONF_MAX",
+    "CONF_MIN",
+    "CONF_MODE",
+    "CONF_NAME",
+    "CONF_STEP",
+    "CONF_UNIT_OF_MEASUREMENT",
+    "DOMAIN",
+    "SERVICE_DECREMENT",
+    "SERVICE_INCREMENT",
+    "SERVICE_RELOAD",
+    "SERVICE_SET_VALUE",
+    "STORAGE_FIELDS",
+    "InputNumber",
+]
 
 
 def _cv_input_number(cfg):

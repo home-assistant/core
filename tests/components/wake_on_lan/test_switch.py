@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
+from pytest_homeassistant.common import async_mock_service
+
 from homeassistant.components import switch
 from homeassistant.components.wake_on_lan.switch import WolSwitch
 from homeassistant.const import (
@@ -14,8 +16,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_mock_service
 
 
 async def test_valid_hostname(
