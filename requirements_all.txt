@@ -196,6 +196,9 @@ aioamazondevices==16.8.1
 # homeassistant.components.ambient_station
 aioambient==2024.08.0
 
+# homeassistant.components.any_list
+aioanylist==1.0.2
+
 # homeassistant.components.apcupsd
 aioapcaccess==1.0.0
 
@@ -1137,7 +1140,7 @@ geniushub-client==0.7.4
 geocachingapi==0.3.0
 
 # homeassistant.components.aprs
-geopy==2.3.0
+geopy==2.5.0
 
 # homeassistant.components.geo_rss_events
 georss-generic-client==0.8
@@ -1478,6 +1481,9 @@ justnimbus==0.7.4
 # homeassistant.components.kaco_modbus
 kaco-modbus==1.1.0
 
+# homeassistant.components.kaco_rs485
+kaco-serial==1.0.2
+
 # homeassistant.components.kaiterra
 kaiterra-async-client==1.1.0
 
@@ -1552,6 +1558,9 @@ libsoundtouch==0.8
 
 # homeassistant.components.lifx
 lifx-async==7.10.1
+
+# homeassistant.components.steamvr_base_station
+lighthouse-ble==0.2.0
 
 # homeassistant.components.osramlightify
 lightify==1.0.7.3

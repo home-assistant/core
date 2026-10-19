@@ -143,6 +143,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/anthemav/ @hyralex
 /homeassistant/components/anthropic/ @Shulyaka
 /tests/components/anthropic/ @Shulyaka
+/homeassistant/components/any_list/ @BookCatKid
+/tests/components/any_list/ @BookCatKid
 /homeassistant/components/aosmith/ @bdr99
 /tests/components/aosmith/ @bdr99
 /homeassistant/components/apache_kafka/ @bachya
@@ -996,6 +998,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/jvc_projector/ @SteveEasley
 /homeassistant/components/kaco_modbus/ @g4bri3lDev
 /tests/components/kaco_modbus/ @g4bri3lDev
+/homeassistant/components/kaco_rs485/ @g4bri3lDev
+/tests/components/kaco_rs485/ @g4bri3lDev
 /homeassistant/components/kaiterra/ @Michsior14
 /homeassistant/components/kaleidescape/ @SteveEasley
 /tests/components/kaleidescape/ @SteveEasley
@@ -1842,6 +1846,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/steam_online/ @tr4nt0r @tkdrob
 /homeassistant/components/steamist/ @bdraco
 /tests/components/steamist/ @bdraco
+/homeassistant/components/steamvr_base_station/ @g4bri3lDev
+/tests/components/steamvr_base_station/ @g4bri3lDev
 /homeassistant/components/stiebel_eltron/ @fucm @ThyMYthOS
 /tests/components/stiebel_eltron/ @fucm @ThyMYthOS
 /homeassistant/components/stookwijzer/ @fwestenberg

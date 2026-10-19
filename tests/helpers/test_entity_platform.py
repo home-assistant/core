@@ -1523,6 +1523,53 @@ async def test_device_info_called(
     assert device.via_device_id == via.id
 
 
+async def test_device_info_clears_via_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test a device info with via_device_id None removes the via device link."""
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+    via = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("hue", "via-id")}
+    )
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("hue", "1234")},
+        via_device_id=via.id,
+    )
+
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setup entry method."""
+        async_add_entities(
+            [
+                MockEntity(
+                    unique_id="qwer",
+                    device_info=dr.DeviceInfo(
+                        identifiers={("hue", "1234")}, via_device_id=None
+                    ),
+                )
+            ]
+        )
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        ("hue", "1234"), config_entry.entry_id
+    )
+    assert device is not None
+    assert device.via_device_id is None
+
+
 @pytest.mark.parametrize(
     "device_info",
     [
