@@ -115,7 +115,7 @@ PLATFORM_SCHEMA_BASE: Final[probatio.Schema] = cv.PLATFORM_SCHEMA_BASE.extend(
 
 SERVICE_SEE_PAYLOAD_SCHEMA: Final[probatio.Schema] = probatio.Schema(
     probatio.All(
-        cv.has_at_least_one_key(ATTR_MAC, ATTR_DEV_ID),
+        probatio.AtLeastOne(ATTR_MAC, ATTR_DEV_ID),
         {
             ATTR_MAC: cv.string,
             ATTR_DEV_ID: cv.string,
@@ -255,6 +255,8 @@ async def async_setup_integration(
         data.pop("battery_status", None)
         await tracker.async_see(**data)
 
+    # Cannot be moved: actions are registered per legacy platform
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(
         DOMAIN, SERVICE_SEE, async_see_service, SERVICE_SEE_PAYLOAD_SCHEMA
     )
@@ -779,6 +781,7 @@ class DeviceTracker:
                 device.async_write_ha_state()
 
 
+# pylint: disable-next=home-assistant-enforce-class-module
 class Device(RestoreEntity):
     """Base class for a tracked device."""
 

@@ -10,6 +10,7 @@ from pyairobotrest.models import (
     ThermostatStatus,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.airobot.const import DOMAIN
 from homeassistant.const import (
@@ -20,8 +21,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

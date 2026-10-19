@@ -4,13 +4,12 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import generate_ble_device
 
 from homeassistant.components.hue_ble.const import DOMAIN
 
 from . import TEST_DEVICE_MAC, TEST_DEVICE_NAME
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import generate_ble_device
 
 
 @pytest.fixture

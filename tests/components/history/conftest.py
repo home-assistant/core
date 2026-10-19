@@ -1,14 +1,13 @@
 """Fixtures for history tests."""
 
 import pytest
+from pytest_homeassistant.typing import RecorderInstanceContextManager
 
 from homeassistant.components import history
 from homeassistant.components.recorder import Recorder
 from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.typing import RecorderInstanceContextManager
 
 
 @pytest.fixture

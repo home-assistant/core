@@ -6,17 +6,18 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from modbus_connection import ModbusConnectionError, ModbusError
+from modbus_connection import ModbusError
 from propcache.api import cached_property
 from sofar_modbus.model import UpdateReport
 from sofar_modbus.modern.device import SofarInverter
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import ATTR_MANUFACTURER, BATTERY_COMPONENTS, DOMAIN
+from .const import ATTR_MANUFACTURER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,80 +46,63 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         )
         self.device = device
         self._poll = poll
-        self._consecutive_failures: dict[str, int] = {}
+        self._failing: set[str] = set()
 
     @cached_property
     def device_info(self) -> dr.DeviceInfo:
         """Return device information."""
         serial = self.device.serial_number
-        assert serial is not None
         identity = self.device.identity
-        return dr.DeviceInfo(
+        info = dr.DeviceInfo(
             identifiers={(DOMAIN, serial)},
             manufacturer=ATTR_MANUFACTURER,
             model=self.device.model or None,
             serial_number=serial,
-            hw_version=identity.hardware_version or None,
-            sw_version=identity.software_version or None,
         )
+        if identity.hardware_version:
+            info.hw_version = identity.hardware_version
+        if identity.software_version:
+            info.sw_version = identity.software_version
+        return info
 
     @override
     async def _async_update_data(self) -> UpdateReport:
         try:
             report = await self._poll()
-            report = await self._retry_failed(report)
-            if not report.updated:
-                errors = list(report.failed.values())
-                if not errors:
-                    raise UpdateFailed(
-                        translation_domain=DOMAIN,
-                        translation_key="no_component_answered",
-                    )
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="no_component_answered",
-                ) from ExceptionGroup("all components failed to refresh", errors)
         except ModbusError as err:
-            # ModbusConnectionError (dead link) and ModbusTimeoutError reach
-            # here; per-block failures once alive land in report.failed instead.
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="modbus_error",
             ) from err
-        else:
-            return report
+        if self.device.unrecognized:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="unrecognized_inverter_model",
+            )
+        if not report.updated:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="no_component_answered",
+            ) from ExceptionGroup(
+                "all components failed to refresh", list(report.failed.values())
+            )
+        self._log_component_changes(report)
+        return report
 
-    async def _retry_failed(self, report: UpdateReport) -> UpdateReport:
-        """Retry failures once; skip if none answered, to avoid doubling timeout."""
-        if report.failed and report.updated:
-            updated: set[str] = set()
-            failed: dict[str, ModbusError] = {}
-            for name in report.failed:
-                try:
-                    await getattr(self.device, name).async_update()
-                except ModbusConnectionError:
-                    raise
-                except ModbusError as err:
-                    failed[name] = err
-                else:
-                    updated.add(name)
-            report = UpdateReport(report.updated | updated, failed)
-
+    def _log_component_changes(self, report: UpdateReport) -> None:
+        """Log a component's first failure and its recovery, once each."""
         for name, cause in report.failed.items():
-            prev = self._consecutive_failures.get(name, 0)
-            self._consecutive_failures[name] = prev + 1
-            if prev == 0:
+            if name not in self._failing:
+                self._failing.add(name)
                 _LOGGER.warning(
-                    "%s: %s failed to refresh and is keeping its previous values: %s",
+                    "%s: %s failed to refresh, its entities are unavailable: %s",
                     self.name,
                     name,
                     cause,
                 )
-        for name in report.updated:
-            if self._consecutive_failures.pop(name, None) is not None:
-                _LOGGER.info("%s: %s is available again", self.name, name)
-
-        return report
+        for name in report.updated & self._failing:
+            self._failing.discard(name)
+            _LOGGER.info("%s: %s is available again", self.name, name)
 
 
 @dataclass
@@ -133,22 +117,11 @@ class SofarRuntimeData:
     @property
     def served_components(self) -> frozenset[str]:
         """Component names this inverter polls, answered or not."""
-        device = self.readings.device
-        return frozenset(device.readings_components) | frozenset(
-            device.settings_components
-        )
-
-    def pack_is_wired(self, number: int) -> bool:
-        """Whether a pack has answered, so it physically exists."""
-        component_name = BATTERY_COMPONENTS[number]
-        if component_name not in self.served_components:
-            return False
-        component = getattr(self.readings.device, component_name)
-        return bool(getattr(component, f"battery_voltage_{number}", None))
+        return self.readings.device.expected_components
 
     def coordinator_for(self, component: str) -> SofarDataUpdateCoordinator:
         """Which coordinator owns a given component's data."""
-        if component in self.readings.device.readings_components:
+        if component in self.readings.device.expected_readings_components:
             return self.readings
         return self.settings
 

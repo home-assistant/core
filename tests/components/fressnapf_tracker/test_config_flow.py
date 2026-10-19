@@ -12,6 +12,7 @@ from fressnapftracker import (
     SmsCodeResponse,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.fressnapf_tracker.const import (
@@ -32,8 +33,6 @@ from .conftest import (
     MOCK_PHONE_NUMBER,
     MOCK_USER_ID,
 )
-
-from tests.common import MockConfigEntry
 
 EMAIL_CREDENTIALS = {CONF_EMAIL: MOCK_EMAIL, CONF_PASSWORD: MOCK_PASSWORD}
 

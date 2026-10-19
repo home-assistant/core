@@ -5,6 +5,13 @@ from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    AsyncMock,
+    MockConfigEntry,
+    async_fire_time_changed,
+    patch,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from watergate_local_api import WatergateApiException
 from watergate_local_api.models import AutoShutOffState
@@ -20,14 +27,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-
-from tests.common import (
-    AsyncMock,
-    MockConfigEntry,
-    async_fire_time_changed,
-    patch,
-    snapshot_platform,
-)
 
 VOLUME_ENTITY_ID = "number.sonic_auto_shut_off_volume_threshold"
 DURATION_ENTITY_ID = "number.sonic_auto_shut_off_duration_threshold"
@@ -148,10 +147,12 @@ async def test_number_raises_on_client_failure(
         WatergateApiException("boom")
     )
 
-    with pytest.raises(HomeAssistantError, match="Failed to update auto shut-off"):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
             {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 250},
             blocking=True,
         )
+
+    assert exc_info.value.translation_key == "auto_shut_off_update_failed"

@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 from aiohttp import web
 from aiohttp.test_utils import TestClient
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components import webhook
 from homeassistant.components.webhook import DOMAIN
@@ -17,7 +18,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.aiohttp import MockRequest
 
 from tests.test_util import mock_real_ip
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture
@@ -308,6 +308,42 @@ async def test_webhook_local_only_mock_request(
     resp = await webhook.async_handle_webhook(hass, webhook_id, request)
     assert resp.status == HTTPStatus.OK
     assert len(hooks) == expected_calls
+
+
+async def test_webhook_local_only_supervisor_unix_socket(
+    hass: HomeAssistant, mock_client: TestClient
+) -> None:
+    """Test local_only webhooks accept requests over the Supervisor Unix socket."""
+    hooks = []
+    webhook_id = webhook.async_generate_id()
+
+    async def handle(hass: HomeAssistant, webhook_id: str, request: web.Request):
+        """Handle webhook."""
+        hooks.append((hass, webhook_id, await request.text()))
+
+    webhook.async_register(
+        hass, "test", "Test hook", webhook_id, handle, local_only=True
+    )
+
+    # A Unix socket has no peer address, aiohttp reports an empty remote
+    with patch(
+        "homeassistant.components.webhook.ip_address",
+        side_effect=ValueError,
+    ):
+        resp = await mock_client.post(f"/api/webhook/{webhook_id}", json={"data": True})
+        assert resp.status == HTTPStatus.OK
+        assert len(hooks) == 0
+
+        with patch(
+            "homeassistant.components.webhook.is_supervisor_unix_socket_request",
+            return_value=True,
+        ):
+            resp = await mock_client.post(
+                f"/api/webhook/{webhook_id}", json={"data": True}
+            )
+        assert resp.status == HTTPStatus.OK
+        assert len(hooks) == 1
+        assert hooks[0][2] == '{"data": true}'
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")
