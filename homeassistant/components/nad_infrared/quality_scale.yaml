@@ -37,11 +37,15 @@ rules:
       entity, so there is no connection to test in the config flow.
   test-before-setup: done
   unique-config-entry: done
+
   # Silver
   action-exceptions: done
   config-entry-unloading: done
-  docs-configuration-parameters: todo
-  docs-installation-parameters: todo
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      This integration does not have an options flow.
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
@@ -66,17 +70,17 @@ rules:
     status: exempt
     comment: |
       This integration does not fetch data from devices.
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: |
       Each config entry creates a single device.
-  entity-category: todo
+  entity-category: done
   entity-device-class: done
   entity-disabled-by-default:
     status: exempt
@@ -89,10 +93,7 @@ rules:
     comment: |
       This integration does not use custom icons.
   reconfiguration-flow: todo
-  repair-issues:
-    status: exempt
-    comment: |
-      This integration does not have repairable issues.
+  repair-issues: todo
   stale-devices:
     status: exempt
     comment: |
