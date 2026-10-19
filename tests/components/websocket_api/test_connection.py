@@ -1,5 +1,7 @@
 """Test WebSocket Connection class."""
 
+import asyncio
+from contextlib import AbstractContextManager, nullcontext
 import logging
 from typing import Any
 from unittest.mock import Mock, patch
@@ -14,6 +16,25 @@ from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.redact import REDACTED
+
+
+@pytest.fixture
+def revocable_connection(
+    hass: HomeAssistant,
+) -> tuple[websocket_api.ActiveConnection, Mock]:
+    """Return an authenticated connection with an observable close callback."""
+    hass.data[DOMAIN] = {}
+    cancel_ws = Mock()
+    connection = websocket_api.ActiveConnection(
+        logging.getLogger(__name__),
+        hass,
+        Mock(),
+        MockUser(),
+        Mock(),
+        remote=None,
+        cancel_ws=cancel_ws,
+    )
+    return connection, cancel_ws
 
 
 @pytest.mark.parametrize(
@@ -125,6 +146,78 @@ async def test_exception_handling(
     assert send_messages[0]["error"]["code"] == code
     assert send_messages[0]["error"]["message"] == err
     assert log in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("command_error", "expected"),
+    [
+        pytest.param(None, nullcontext(), id="success"),
+        pytest.param(ValueError, pytest.raises(ValueError), id="error"),
+    ],
+)
+async def test_deferred_auth_close_blocks_further_commands(
+    hass: HomeAssistant,
+    revocable_connection: tuple[websocket_api.ActiveConnection, Mock],
+    command_error: type[Exception] | None,
+    expected: AbstractContextManager[object],
+) -> None:
+    """Test a revoked socket stops dispatching while its reply can still be sent."""
+    connection, cancel_ws = revocable_connection
+    handler = Mock()
+    connection.handlers["test/command"] = (handler, False)
+    binary_handler = Mock()
+    handler_id, _ = connection.async_register_binary_handler(binary_handler)
+    command = Mock(side_effect=command_error)
+
+    with expected, connection.async_defer_auth_close():
+        connection.async_auth_revoked()
+        cancel_ws.assert_not_called()
+        connection.async_handle({"id": 1, "type": "test/command"})
+        connection.async_handle_binary(handler_id, b"payload")
+        handler.assert_not_called()
+        binary_handler.assert_not_called()
+        command()
+
+    cancel_ws.assert_not_called()
+    connection.send_result(1)
+    await hass.async_block_till_done()
+
+    cancel_ws.assert_called_once_with()
+
+
+async def test_auth_close_from_another_task_is_not_deferred(
+    revocable_connection: tuple[websocket_api.ActiveConnection, Mock],
+) -> None:
+    """Test an opted-in command cannot delay somebody else's revocation."""
+    connection, cancel_ws = revocable_connection
+
+    async def revoke() -> None:
+        connection.async_auth_revoked()
+
+    with connection.async_defer_auth_close():
+        await asyncio.create_task(revoke())
+        cancel_ws.assert_called_once_with()
+
+    cancel_ws.assert_called_once_with()
+
+
+async def test_deferred_auth_close_runs_during_shutdown(
+    hass: HomeAssistant,
+    revocable_connection: tuple[websocket_api.ActiveConnection, Mock],
+) -> None:
+    """Test shutdown closes a revoked socket without waiting for its grace period."""
+    connection, cancel_ws = revocable_connection
+
+    with patch(
+        "homeassistant.components.websocket_api.connection.AUTH_CLOSE_DELAY", 3600
+    ):
+        with connection.async_defer_auth_close():
+            connection.async_auth_revoked()
+        cancel_ws.assert_not_called()
+
+        await hass.async_stop(force=True)
+
+    cancel_ws.assert_called_once_with()
 
 
 async def test_binary_handler_registration() -> None:

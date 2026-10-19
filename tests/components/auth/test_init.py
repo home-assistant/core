@@ -553,7 +553,9 @@ async def test_ws_delete_all_refresh_tokens_error(
 
     tokens = result["result"]
 
-    with patch("homeassistant.components.auth.DELETE_CURRENT_TOKEN_DELAY", 0.001):
+    with patch(
+        "homeassistant.components.websocket_api.connection.AUTH_CLOSE_DELAY", 0.001
+    ):
         await ws_client.send_json(
             {
                 "id": 6,
@@ -638,7 +640,9 @@ async def test_ws_delete_all_refresh_tokens(
     result = await ws_client.receive_json()
     assert result["success"], result
 
-    with patch("homeassistant.components.auth.DELETE_CURRENT_TOKEN_DELAY", 0.001):
+    with patch(
+        "homeassistant.components.websocket_api.connection.AUTH_CLOSE_DELAY", 0.001
+    ):
         await ws_client.send_json(
             {
                 "id": 6,

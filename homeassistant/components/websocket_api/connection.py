@@ -1,6 +1,8 @@
 """Connection session."""
 
-from collections.abc import Callable, Hashable
+import asyncio
+from collections.abc import Callable, Generator, Hashable
+from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import TYPE_CHECKING, Any, Literal, override
 
@@ -32,6 +34,8 @@ current_connection = ContextVar["ActiveConnection | None"](
     "current_connection", default=None
 )
 
+AUTH_CLOSE_DELAY = 2
+
 REDACT_KEYS = {
     "access_token",
     "password",
@@ -49,6 +53,9 @@ class ActiveConnection:
     """Handle an active websocket client connection."""
 
     __slots__ = (
+        "_auth_revoked",
+        "_cancel_ws",
+        "_deferred_auth_close",
         "binary_handlers",
         "can_coalesce",
         "handlers",
@@ -71,8 +78,12 @@ class ActiveConnection:
         user: User,
         refresh_token: RefreshToken | None,
         remote: str | None,
+        cancel_ws: Callable[[], None] | None = None,
     ) -> None:
         """Initialize an active connection."""
+        self._auth_revoked = False
+        self._cancel_ws = cancel_ws
+        self._deferred_auth_close: dict[asyncio.Task[Any], bool] = {}
         self.logger = logger
         self.hass = hass
         self.send_message = send_message
@@ -109,6 +120,40 @@ class ActiveConnection:
     def context(self, msg: dict[str, Any]) -> Context:
         """Return a context."""
         return Context(user_id=self.user.id)
+
+    @contextmanager
+    def async_defer_auth_close(self) -> Generator[None]:
+        """Let a command reply before its own token revocation closes the socket."""
+        task = asyncio.current_task()
+        assert task is not None
+        self._deferred_auth_close[task] = False
+        try:
+            yield
+        finally:
+            if self._deferred_auth_close.pop(task):
+                self.hass.async_create_task(
+                    self._async_close_after_response(),
+                    "Close self-revoked websocket connection",
+                )
+
+    @callback
+    def async_auth_revoked(self) -> None:
+        """Close a revoked connection, allowing an opted-in command to reply."""
+        self._auth_revoked = True
+        if (task := asyncio.current_task()) in self._deferred_auth_close:
+            assert task is not None
+            self._deferred_auth_close[task] = True
+            return
+        assert self._cancel_ws is not None
+        self._cancel_ws()
+
+    async def _async_close_after_response(self) -> None:
+        """Close after the reply has had time to be sent, including at shutdown."""
+        try:
+            await asyncio.sleep(AUTH_CLOSE_DELAY)
+        finally:
+            assert self._cancel_ws is not None
+            self._cancel_ws()
 
     @callback
     def async_register_binary_handler(
@@ -179,6 +224,8 @@ class ActiveConnection:
     @callback
     def async_handle_binary(self, handler_id: int, payload: bytes) -> None:
         """Handle a single incoming binary message."""
+        if self._auth_revoked:
+            return
         index = handler_id - 1
         if (
             index < 0
@@ -199,6 +246,8 @@ class ActiveConnection:
     @callback
     def async_handle(self, msg: JsonValueType) -> None:
         """Handle a single incoming message."""
+        if self._auth_revoked:
+            return
         if (
             # Not using isinstance as we don't care about children
             # as these are always coming from JSON
