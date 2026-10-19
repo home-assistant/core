@@ -327,6 +327,7 @@ FLOWS = {
         "hdfury",
         "hegel",
         "helty",
+        "helty_cloud",
         "heos",
         "here_travel_time",
         "hikvision",
