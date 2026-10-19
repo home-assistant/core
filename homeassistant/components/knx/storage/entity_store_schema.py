@@ -75,11 +75,6 @@ class BaseEntityConfig:
         EntityCategory | None, probatio.Coerce(parse_entity_category)
     ] = None
 
-    @property
-    def xknx_name(self) -> str:
-        """Name of the xknx device, empty when HA names the entity after its device."""
-        return self.name or ""
-
 
 def _name_or_device_required(config: BaseEntityConfig) -> BaseEntityConfig:
     """Require a name, unless the entity is named after its device."""

@@ -6,7 +6,7 @@ Entity to be updated with new values.
 """
 
 import asyncio
-import datetime
+import datetime as dt
 from decimal import Decimal
 from itertools import chain, repeat
 from unittest.mock import DEFAULT, MagicMock
@@ -88,7 +88,7 @@ async def test_default_setup(
         MBusObject(
             (0, 0),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": dt.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal("745.695"), "unit": UnitOfVolume.CUBIC_METERS},
             ],
         ),
@@ -151,7 +151,7 @@ async def test_default_setup(
         MBusObject(
             (0, 0),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642214)},
+                {"value": dt.datetime.fromtimestamp(1551642214)},
                 {"value": Decimal("745.701"), "unit": UnitOfVolume.CUBIC_METERS},
             ],
         ),
@@ -278,7 +278,7 @@ async def test_v4_meter(
         MBusObject(
             (0, 0),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": dt.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal("745.695"), "unit": "m3"},
             ],
         ),
@@ -366,7 +366,7 @@ async def test_v5_meter(
         MBusObject(
             (0, 0),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": dt.datetime.fromtimestamp(1551642213)},
                 {"value": value, "unit": "m3"},
             ],
         ),
@@ -439,7 +439,7 @@ async def test_luxembourg_meter(
         MBusObject(
             (0, 0),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": dt.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal("745.695"), "unit": "m3"},
             ],
         ),
@@ -535,7 +535,7 @@ async def test_luxembourg_smarty_encrypted_meter(
         MBusObject(
             (0, 0),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": dt.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal("745.695"), "unit": "m3"},
             ],
         ),
@@ -777,7 +777,7 @@ async def test_belgian_meter(
         MBusObject(
             (0, 0),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642218)},
+                {"value": dt.datetime.fromtimestamp(1551642218)},
                 {"value": Decimal("4.11"), "unit": "kW"},
             ],
         ),
@@ -801,7 +801,7 @@ async def test_belgian_meter(
         MBusObject(
             (0, 1),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": dt.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal("745.695"), "unit": "m3"},
             ],
         ),
@@ -825,7 +825,7 @@ async def test_belgian_meter(
         MBusObject(
             (0, 2),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642214)},
+                {"value": dt.datetime.fromtimestamp(1551642214)},
                 {"value": Decimal("678.695"), "unit": "m3"},
             ],
         ),
@@ -849,7 +849,7 @@ async def test_belgian_meter(
         MBusObject(
             (0, 3),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642215)},
+                {"value": dt.datetime.fromtimestamp(1551642215)},
                 {"value": Decimal("12.12"), "unit": "m3"},
             ],
         ),
@@ -873,7 +873,7 @@ async def test_belgian_meter(
         MBusObject(
             (0, 4),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642216)},
+                {"value": dt.datetime.fromtimestamp(1551642216)},
                 {"value": Decimal("13.13"), "unit": "m3"},
             ],
         ),
@@ -1016,7 +1016,7 @@ async def test_belgian_meter_alt(
         MBusObject(
             (0, 1),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642215)},
+                {"value": dt.datetime.fromtimestamp(1551642215)},
                 {"value": Decimal("123.456"), "unit": "m3"},
             ],
         ),
@@ -1040,7 +1040,7 @@ async def test_belgian_meter_alt(
         MBusObject(
             (0, 2),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642216)},
+                {"value": dt.datetime.fromtimestamp(1551642216)},
                 {"value": Decimal("678.901"), "unit": "m3"},
             ],
         ),
@@ -1064,7 +1064,7 @@ async def test_belgian_meter_alt(
         MBusObject(
             (0, 3),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642217)},
+                {"value": dt.datetime.fromtimestamp(1551642217)},
                 {"value": Decimal("12.12"), "unit": "m3"},
             ],
         ),
@@ -1088,7 +1088,7 @@ async def test_belgian_meter_alt(
         MBusObject(
             (0, 4),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642218)},
+                {"value": dt.datetime.fromtimestamp(1551642218)},
                 {"value": Decimal("13.13"), "unit": "m3"},
             ],
         ),
@@ -1235,7 +1235,7 @@ async def test_belgian_meter_mbus(
         MBusObject(
             (0, 3),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642217)},
+                {"value": dt.datetime.fromtimestamp(1551642217)},
                 {"value": Decimal("12.12"), "unit": "m3"},
             ],
         ),
@@ -1251,7 +1251,7 @@ async def test_belgian_meter_mbus(
         MBusObject(
             (0, 4),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642218)},
+                {"value": dt.datetime.fromtimestamp(1551642218)},
                 {"value": Decimal("13.13"), "unit": "m3"},
             ],
         ),
@@ -1785,7 +1785,7 @@ async def test_gas_meter_providing_energy_reading(
         MBusObject(
             (0, 0),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": dt.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal("123.456"), "unit": UnitOfEnergy.GIGA_JOULE},
             ],
         ),
@@ -1845,7 +1845,7 @@ async def test_heat_meter_mbus(
         MBusObject(
             (0, 1),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": dt.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal("745.695"), "unit": "GJ"},
             ],
         ),
@@ -1913,7 +1913,7 @@ async def test_heat_cool_meter_mbus(
         MBusObject(
             (0, 1),
             [
-                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": dt.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal("745.695"), "unit": "GJ"},
             ],
         ),

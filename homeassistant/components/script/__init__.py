@@ -3,24 +3,39 @@
 from typing import Any
 
 from homeassistant.components import websocket_api
-from homeassistant.const import (
-    CONF_MODE,  # noqa: F401
-    STATE_ON,
-)
+from homeassistant.const import CONF_MODE, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .config import ScriptConfig  # noqa: F401
-from .const import (
-    DOMAIN,
-    EVENT_SCRIPT_STARTED,  # noqa: F401
-    LOGGER,
-)
-from .entity import BaseScriptEntity, UnavailableScriptEntity  # noqa: F401
+from .config import ScriptConfig
+from .const import DOMAIN, EVENT_SCRIPT_STARTED, LOGGER
+from .entity import BaseScriptEntity, UnavailableScriptEntity
 from .helpers import async_get_blueprints
 from .services import async_setup_services
 from .util import async_process_config
+
+__all__ = [
+    "CONF_MODE",
+    "DOMAIN",
+    "EVENT_SCRIPT_STARTED",
+    "BaseScriptEntity",
+    "ScriptConfig",
+    "UnavailableScriptEntity",
+    "areas_in_script",
+    "async_get_blueprints",
+    "blueprint_in_script",
+    "devices_in_script",
+    "entities_in_script",
+    "floors_in_script",
+    "labels_in_script",
+    "scripts_with_area",
+    "scripts_with_blueprint",
+    "scripts_with_device",
+    "scripts_with_entity",
+    "scripts_with_floor",
+    "scripts_with_label",
+]
 
 
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:

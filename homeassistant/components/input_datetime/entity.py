@@ -1,6 +1,6 @@
 """Entities for the Input datetime integration."""
 
-import datetime as py_datetime
+import datetime as dt
 from typing import Any, Self, override
 
 import probatio
@@ -26,7 +26,7 @@ from .const import (
 )
 
 
-def parse_initial_datetime(conf: dict[str, Any]) -> py_datetime.datetime:
+def parse_initial_datetime(conf: dict[str, Any]) -> dt.datetime:
     """Check the initial value is valid."""
     initial: str = conf[CONF_INITIAL]
 
@@ -39,11 +39,11 @@ def parse_initial_datetime(conf: dict[str, Any]) -> py_datetime.datetime:
 
     if conf[CONF_HAS_DATE]:
         if (date := dt_util.parse_date(initial)) is not None:
-            return py_datetime.datetime.combine(date, DEFAULT_TIME)
+            return dt.datetime.combine(date, DEFAULT_TIME)
         raise probatio.Invalid(f"Initial value '{initial}' can't be parsed as a date")
 
     if (time := dt_util.parse_time(initial)) is not None:
-        return py_datetime.datetime.combine(dt_util.now().date(), time)
+        return dt.datetime.combine(dt_util.now().date(), time)
     raise probatio.Invalid(f"Initial value '{initial}' can't be parsed as a time")
 
 
@@ -125,12 +125,12 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
             if (date := dt_util.parse_date(old_state.state)) is None:
                 current_datetime = dt_util.parse_datetime(default_value)
             else:
-                current_datetime = py_datetime.datetime.combine(date, DEFAULT_TIME)
+                current_datetime = dt.datetime.combine(date, DEFAULT_TIME)
 
         elif (time := dt_util.parse_time(old_state.state)) is None:
             current_datetime = dt_util.parse_datetime(default_value)
         else:
-            current_datetime = py_datetime.datetime.combine(dt_util.now().date(), time)
+            current_datetime = dt.datetime.combine(dt_util.now().date(), time)
 
         self._current_datetime = current_datetime.replace(  # type: ignore[union-attr]
             tzinfo=dt_util.get_default_time_zone()
@@ -217,9 +217,9 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
             )
 
         elif not self.has_time:
-            extended = py_datetime.datetime.combine(
+            extended = dt.datetime.combine(
                 self._current_datetime,
-                py_datetime.time(0, 0),
+                dt.time(0, 0),
                 dt_util.get_default_time_zone(),
             )
             attrs[InputDatetimeEntityStateAttribute.TIMESTAMP] = extended.timestamp()
@@ -262,7 +262,7 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         if not time:
             time = self._current_datetime.time()
 
-        self._current_datetime = py_datetime.datetime.combine(
+        self._current_datetime = dt.datetime.combine(
             date, time, dt_util.get_default_time_zone()
         )
         self.async_write_ha_state()

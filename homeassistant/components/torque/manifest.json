@@ -1,6 +1,7 @@
 {
   "domain": "torque",
   "name": "Torque",
+  "categories": ["vehicles_transport.cars_evs"],
   "codeowners": [],
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/torque",

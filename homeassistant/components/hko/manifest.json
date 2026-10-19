@@ -1,6 +1,7 @@
 {
   "domain": "hko",
   "name": "Hong Kong Observatory",
+  "categories": ["weather_alerts.forecasts"],
   "codeowners": ["@MisterCommand"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hko",

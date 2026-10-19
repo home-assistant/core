@@ -1,6 +1,6 @@
 """The tests for the Met Office sensor component."""
 
-import datetime
+import datetime as dt
 from datetime import timedelta
 import json
 from unittest.mock import patch
@@ -70,7 +70,7 @@ async def wavertree_data(
     }
 
 
-@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2024, 11, 23, 12, tzinfo=dt.UTC))
 async def test_site_cannot_connect(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -104,7 +104,7 @@ async def test_site_cannot_connect(
         assert sensor is None
 
 
-@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2024, 11, 23, 12, tzinfo=dt.UTC))
 async def test_site_cannot_update(
     hass: HomeAssistant,
     requests_mock: requests_mock.Mocker,
@@ -156,7 +156,7 @@ async def test_site_cannot_update(
     assert weather.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2024, 11, 23, 12, tzinfo=dt.UTC))
 async def test_one_weather_site_running(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -192,7 +192,7 @@ async def test_one_weather_site_running(
     assert weather.attributes.get("humidity") == 95
 
 
-@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2024, 11, 23, 12, tzinfo=dt.UTC))
 async def test_two_weather_sites_running(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -264,7 +264,7 @@ async def test_two_weather_sites_running(
     assert weather.attributes.get("humidity") == 98
 
 
-@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2024, 11, 23, 12, tzinfo=dt.UTC))
 async def test_new_config_entry(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, no_sensor, wavertree_data
 ) -> None:
@@ -283,7 +283,7 @@ async def test_new_config_entry(
     assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 1
 
 
-@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2024, 11, 23, 12, tzinfo=dt.UTC))
 @pytest.mark.parametrize(
     ("service"),
     [SERVICE_GET_FORECASTS],
@@ -341,7 +341,7 @@ async def test_forecast_service(
         assert response == snapshot
 
 
-@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2024, 11, 23, 12, tzinfo=dt.UTC))
 async def test_legacy_config_entry_is_removed(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, no_sensor, wavertree_data
 ) -> None:
@@ -368,7 +368,7 @@ async def test_legacy_config_entry_is_removed(
     assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 1
 
 
-@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2024, 11, 23, 12, tzinfo=dt.UTC))
 async def test_forecast_subscription(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,

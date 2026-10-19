@@ -1,6 +1,7 @@
 {
   "domain": "overkiz",
   "name": "Overkiz",
+  "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@imicknl"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

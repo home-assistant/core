@@ -17,6 +17,7 @@ from homeassistant.const import SERVICE_RELOAD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.reload import async_setup_reload_service
+from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
 
@@ -147,6 +148,24 @@ async def test_same_targets(hass: HomeAssistant) -> None:
     await test.async_register_services()
     await hass.async_block_till_done()
     assert test.registered_targets == {"test_a": 1, "test_b": 2}
+
+
+async def test_legacy_action_descriptions(hass: HomeAssistant) -> None:
+    """Test legacy notification action descriptions."""
+    test = NotificationService(hass)
+    await test.async_setup(hass, "test_service", "test")
+    await test.async_register_services()
+
+    descriptions = await async_get_all_descriptions(hass)
+    expected_description = (
+        "This notification action is provided by a notification integration or "
+        "notification group. To change where notifications are sent or which "
+        "options are available, update that integration or group."
+    )
+
+    assert descriptions[DOMAIN]["test_service"]["description"] == expected_description
+    assert descriptions[DOMAIN]["test_a"]["description"] == expected_description
+    assert descriptions[DOMAIN]["test_b"]["description"] == expected_description
 
 
 async def test_change_targets(hass: HomeAssistant) -> None:

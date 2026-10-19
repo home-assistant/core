@@ -1,6 +1,7 @@
 {
   "domain": "peblar",
   "name": "Peblar",
+  "categories": ["energy.ev_charging"],
   "codeowners": ["@frenck"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/peblar",

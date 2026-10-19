@@ -119,6 +119,7 @@ def mock_delay_save() -> Generator[None]:
                     },
                     "last_attempted_automatic_backup": None,
                     "last_completed_automatic_backup": None,
+                    "last_completed_automatic_backup_size": None,
                     "retention": {
                         "copies": None,
                         "days": None,

@@ -3,6 +3,7 @@
 import json
 
 import pytest
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 from sqlalchemy import select
 from sqlalchemy.engine.row import Row
 
@@ -27,8 +28,6 @@ from homeassistant.helpers.entityfilter import (
     CONF_ENTITY_GLOBS,
     convert_include_exclude_filter,
 )
-
-from .common import async_wait_recording_done
 
 
 async def _async_get_states_and_events_with_filter(

@@ -1,3 +1,3 @@
-"""Tests for the Radio Frequency integration."""
+"""Compatibility imports for the Home Assistant pytest helpers."""
 
-ENTITY_ID = "radio_frequency.test_rf_transmitter"
+from pytest_homeassistant.components.radio_frequency import ENTITY_ID as ENTITY_ID
