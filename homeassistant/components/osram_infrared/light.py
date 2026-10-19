@@ -324,5 +324,6 @@ class OsramIrLightWithReceiver(OsramIrLight, InfraredReceiverConsumerEntity):
             return
 
         if code is OsramLightCode.MODE:
-            # MODE does not identify the selected color, so it cannot be tracked.
+            # MODE changes color of the bulb in a predefined order but
+            # does not map reliably to a Home Assistant light effect.
             return
