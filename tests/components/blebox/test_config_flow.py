@@ -14,6 +14,7 @@ from unittest.mock import (
 import blebox_uniapi
 import blebox_uniapi.box
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.blebox import config_flow
@@ -32,8 +33,6 @@ from .conftest import (
     mock_only_feature,
     setup_product_mock,
 )
-
-from tests.common import MockConfigEntry
 
 DHCP_SERVICE_INFO = DhcpServiceInfo(
     ip="172.100.123.4",

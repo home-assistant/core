@@ -1,6 +1,7 @@
 {
   "domain": "bluetooth",
   "name": "Bluetooth",
+  "categories": ["hubs_protocols.wireless_protocols"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
   "dependencies": ["usb"],

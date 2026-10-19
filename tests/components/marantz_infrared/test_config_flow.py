@@ -1,6 +1,7 @@
 """Tests for the Marantz Infrared config flow."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.marantz_infrared.const import (
     CONF_INFRARED_EMITTER_ENTITY_ID,
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import MOCK_INFRARED_EMITTER_ENTITY_ID
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")

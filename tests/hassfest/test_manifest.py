@@ -56,9 +56,42 @@ def test_categories(config: Config, categories: list[str]) -> None:
 
 
 @pytest.mark.usefixtures("mock_core_integration")
-def test_no_categories(config: Config) -> None:
-    """Test categories are optional."""
-    assert _validate(config, {}) == []
+@pytest.mark.parametrize(
+    "integration_type", ["device", "hardware", "helper", "hub", "service"]
+)
+def test_categories_required(config: Config, integration_type: str) -> None:
+    """Test integrations people browse for need categories."""
+    assert _validate(config, {"integration_type": integration_type}) == [
+        f"Integrations of type {integration_type} need categories, see "
+        "https://contributors.home-assistant.io/core/integrations/categories/ "
+        "to pick them"
+    ]
+
+
+@pytest.mark.usefixtures("mock_core_integration")
+@pytest.mark.parametrize("integration_type", ["entity", "system"])
+def test_categories_not_needed(config: Config, integration_type: str) -> None:
+    """Test integration types people don't browse for need no categories."""
+    assert _validate(config, {"integration_type": integration_type}) == []
+
+
+@pytest.mark.usefixtures("mock_core_integration")
+def test_categories_not_needed_virtual(config: Config) -> None:
+    """Test virtual integrations need no categories."""
+    integration = Integration(
+        Path("test"),
+        _config=config,
+        _manifest={
+            "domain": "test",
+            "name": "Test",
+            "integration_type": "virtual",
+            "supported_by": "other",
+        },
+    )
+
+    manifest.validate_manifest(integration, Path("components"), KNOWN_CATEGORIES)
+
+    assert not [error for error in integration.errors if "categories" in error.error]
 
 
 @pytest.mark.usefixtures("mock_core_integration")
@@ -223,6 +256,11 @@ def test_load_known_categories_invalid_strings(
     assert manifest.load_known_categories(replace(config, root=tmp_path)) is None
 
 
+def test_load_known_categories_outside_core(config: Config, tmp_path: Path) -> None:
+    """Test validating outside a core checkout skips the category check."""
+    assert manifest.load_known_categories(replace(config, root=tmp_path)) is None
+
+
 @pytest.mark.usefixtures("mock_core_integration")
 def test_categories_skipped_without_known_categories(config: Config) -> None:
     """Test categories aren't checked when the known categories can't be loaded."""
@@ -242,3 +280,49 @@ def test_categories_skipped_without_known_categories(config: Config) -> None:
     manifest.validate_manifest(integration, Path("components"), None)
 
     assert integration.errors == []
+
+
+def _validate_custom(config: Config, categories: Any) -> Integration:
+    """Validate a custom integration manifest with categories."""
+    integration = Integration(
+        Path("custom"),
+        _config=config,
+        _manifest={
+            "domain": "custom",
+            "name": "Custom",
+            "documentation": "https://example.com",
+            "codeowners": ["@awesome"],
+            "iot_class": "local_polling",
+            "version": "1.0.0",
+            "categories": categories,
+        },
+    )
+    manifest.validate_manifest(integration, Path("components"), KNOWN_CATEGORIES)
+    return integration
+
+
+def test_custom_integration_categories(config: Config) -> None:
+    """Test a custom integration with valid categories passes."""
+    integration = _validate_custom(config, ["plugs_switches", "energy.ev_charging"])
+
+    assert integration.errors == []
+    assert integration.warnings == []
+
+
+def test_custom_integration_unknown_category(config: Config) -> None:
+    """Test an unknown category is only a warning for custom integrations."""
+    integration = _validate_custom(config, ["plugs_switches", "pets"])
+
+    assert integration.errors == []
+    assert [warning.error for warning in integration.warnings] == [
+        "Unknown category `pets`, see "
+        "homeassistant/components/homeassistant/strings.json for the known categories"
+    ]
+
+
+def test_custom_integration_invalid_categories(config: Config) -> None:
+    """Test badly formed categories are still errors for custom integrations."""
+    integration = _validate_custom(config, ["energy", "energy"])
+
+    assert len(integration.errors) == 1
+    assert integration.errors[0].error.startswith("Invalid manifest")

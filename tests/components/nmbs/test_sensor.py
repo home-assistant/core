@@ -9,6 +9,11 @@ from freezegun.api import FrozenDateTimeFactory
 from mashumaro.exceptions import MissingField
 from pyrail.models import ConnectionsApiResponse, LiveboardApiResponse
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
 
 from homeassistant.components.nmbs.const import (
     CONF_EXCLUDE_VIAS,
@@ -27,12 +32,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import STATION_FROM, STATION_TO
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-)
 
 FROZEN_TIME = "2025-10-09T12:00:00+00:00"
 

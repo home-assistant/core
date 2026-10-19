@@ -4,6 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.forked_daapd.const import (
     CONF_LIBRESPOT_JAVA_PORT,
@@ -17,8 +18,6 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 SAMPLE_CONFIG = {
     "websocket_port": 3688,

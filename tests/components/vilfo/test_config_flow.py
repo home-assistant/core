@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from vilfo.exceptions import AuthenticationException, VilfoException
 
 from homeassistant.components.vilfo.const import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

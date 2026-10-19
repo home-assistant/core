@@ -4,6 +4,7 @@ import dataclasses
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pywilight.const import DOMAIN
 
 from homeassistant.components.wilight.config_flow import (
@@ -25,8 +26,6 @@ from . import (
     UPNP_SERIAL,
     WILIGHT_ID,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="dummy_get_components_from_model_clear")

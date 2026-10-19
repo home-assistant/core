@@ -1,6 +1,7 @@
 {
   "domain": "launch_library",
   "name": "Launch Library",
+  "categories": ["news_social_media"],
   "codeowners": ["@ludeeus", "@DurgNomis-drol"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/launch_library",

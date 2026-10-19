@@ -5,6 +5,13 @@ from unittest.mock import AsyncMock
 
 from aioesphomeapi import APIClient, BinarySensorInfo, BinarySensorState, DeviceInfo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.repairs import (
+    get_repairs,
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components.esphome import repairs
 from homeassistant.components.esphome.const import DOMAIN
@@ -19,14 +26,6 @@ from homeassistant.helpers import (
 )
 
 from .conftest import MockESPHomeDeviceType
-
-from tests.common import MockConfigEntry
-from tests.components.repairs import (
-    get_repairs,
-    process_repair_fix_flow,
-    start_repair_fix_flow,
-)
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 async def test_create_fix_flow_raises_on_unknown_issue_id(hass: HomeAssistant) -> None:

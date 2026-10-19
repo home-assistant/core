@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from mashumaro.exceptions import MissingField
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nmbs.const import (
     CONF_STATION_FROM,
@@ -14,8 +15,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .conftest import STATION_TO
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(

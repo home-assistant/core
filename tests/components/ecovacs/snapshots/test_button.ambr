@@ -899,6 +899,756 @@
     'state': '2024-01-01T00:00:00+00:00',
   })
 # ---
+# name: test_buttons[twunby][button.t90_pro_omni_dry_mop:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.t90_pro_omni_dry_mop',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Dry mop',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Dry mop',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'station_action_dry_mop',
+    'unique_id': '8516fbb1-17f1-4194-0000003_station_action_dry_mop',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_dry_mop:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'T90 PRO OMNI Dry mop',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.t90_pro_omni_dry_mop',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_empty_dustbin:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.t90_pro_omni_empty_dustbin',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Empty dustbin',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Empty dustbin',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'station_action_empty_dustbin',
+    'unique_id': '8516fbb1-17f1-4194-0000003_station_action_empty_dustbin',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_empty_dustbin:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'T90 PRO OMNI Empty dustbin',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.t90_pro_omni_empty_dustbin',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_relocate:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.t90_pro_omni_relocate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Relocate',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Relocate',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'relocate',
+    'unique_id': '8516fbb1-17f1-4194-0000003_relocate',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_relocate:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'T90 PRO OMNI Relocate',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.t90_pro_omni_relocate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_reset_cleaning_solution_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.t90_pro_omni_reset_cleaning_solution_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reset cleaning solution lifespan',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset cleaning solution lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_lifespan_cleaning_solution',
+    'unique_id': '8516fbb1-17f1-4194-0000003_reset_lifespan_cleaning_solution',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_reset_cleaning_solution_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'T90 PRO OMNI Reset cleaning solution lifespan',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.t90_pro_omni_reset_cleaning_solution_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_reset_dust_bag_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.t90_pro_omni_reset_dust_bag_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reset dust bag lifespan',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset dust bag lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_lifespan_dust_bag',
+    'unique_id': '8516fbb1-17f1-4194-0000003_reset_lifespan_dust_bag',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_reset_dust_bag_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'T90 PRO OMNI Reset dust bag lifespan',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.t90_pro_omni_reset_dust_bag_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_reset_dust_bucket_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.t90_pro_omni_reset_dust_bucket_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reset dust bucket lifespan',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset dust bucket lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_lifespan_dust_bucket',
+    'unique_id': '8516fbb1-17f1-4194-0000003_reset_lifespan_dust_bucket',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_reset_dust_bucket_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'T90 PRO OMNI Reset dust bucket lifespan',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.t90_pro_omni_reset_dust_bucket_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_reset_dust_container_filter_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.t90_pro_omni_reset_dust_container_filter_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reset dust container filter lifespan',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset dust container filter lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_lifespan_dust_container_filter',
+    'unique_id': '8516fbb1-17f1-4194-0000003_reset_lifespan_dust_container_filter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_reset_dust_container_filter_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'T90 PRO OMNI Reset dust container filter lifespan',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.t90_pro_omni_reset_dust_container_filter_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_reset_filter_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.t90_pro_omni_reset_filter_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reset filter lifespan',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset filter lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_lifespan_filter',
+    'unique_id': '8516fbb1-17f1-4194-0000003_reset_lifespan_filter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_reset_filter_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'T90 PRO OMNI Reset filter lifespan',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.t90_pro_omni_reset_filter_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_reset_heavy_duty_cleaning_solution_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.t90_pro_omni_reset_heavy_duty_cleaning_solution_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reset heavy-duty cleaning solution lifespan',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset heavy-duty cleaning solution lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_lifespan_heavy_duty_cleaning_solution',
+    'unique_id': '8516fbb1-17f1-4194-0000003_reset_lifespan_heavy_duty_cleaning_solution',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_reset_heavy_duty_cleaning_solution_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'T90 PRO OMNI Reset heavy-duty cleaning solution lifespan',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.t90_pro_omni_reset_heavy_duty_cleaning_solution_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_reset_main_brush_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.t90_pro_omni_reset_main_brush_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reset main brush lifespan',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset main brush lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_lifespan_brush',
+    'unique_id': '8516fbb1-17f1-4194-0000003_reset_lifespan_brush',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_reset_main_brush_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'T90 PRO OMNI Reset main brush lifespan',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.t90_pro_omni_reset_main_brush_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_reset_mop_washing_tray_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.t90_pro_omni_reset_mop_washing_tray_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reset mop washing tray lifespan',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset mop washing tray lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_lifespan_mop_washing_tray',
+    'unique_id': '8516fbb1-17f1-4194-0000003_reset_lifespan_mop_washing_tray',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_reset_mop_washing_tray_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'T90 PRO OMNI Reset mop washing tray lifespan',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.t90_pro_omni_reset_mop_washing_tray_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_reset_round_mop_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.t90_pro_omni_reset_round_mop_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reset round mop lifespan',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset round mop lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_lifespan_round_mop',
+    'unique_id': '8516fbb1-17f1-4194-0000003_reset_lifespan_round_mop',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_reset_round_mop_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'T90 PRO OMNI Reset round mop lifespan',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.t90_pro_omni_reset_round_mop_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_reset_side_brush_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.t90_pro_omni_reset_side_brush_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reset side brush lifespan',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset side brush lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_lifespan_side_brush',
+    'unique_id': '8516fbb1-17f1-4194-0000003_reset_lifespan_side_brush',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_reset_side_brush_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'T90 PRO OMNI Reset side brush lifespan',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.t90_pro_omni_reset_side_brush_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_reset_strainer_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.t90_pro_omni_reset_strainer_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reset strainer lifespan',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset strainer lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_lifespan_strainer',
+    'unique_id': '8516fbb1-17f1-4194-0000003_reset_lifespan_strainer',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_reset_strainer_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'T90 PRO OMNI Reset strainer lifespan',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.t90_pro_omni_reset_strainer_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_reset_unit_care_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.t90_pro_omni_reset_unit_care_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reset unit care lifespan',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset unit care lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_lifespan_unit_care',
+    'unique_id': '8516fbb1-17f1-4194-0000003_reset_lifespan_unit_care',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[twunby][button.t90_pro_omni_reset_unit_care_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'T90 PRO OMNI Reset unit care lifespan',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.t90_pro_omni_reset_unit_care_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:00:00+00:00',
+  })
+# ---
 # name: test_buttons[yna5x1][button.ozmo_950_relocate:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
