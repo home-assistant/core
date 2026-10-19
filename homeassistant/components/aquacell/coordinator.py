@@ -14,13 +14,15 @@ from aioaquacell import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     CONF_REFRESH_TOKEN,
     CONF_REFRESH_TOKEN_CREATION_TIME,
+    DOMAIN,
     REFRESH_TOKEN_EXPIRY_TIME,
     UPDATE_INTERVAL,
 )
@@ -86,6 +88,23 @@ class AquacellCoordinator(DataUpdateCoordinator[dict[str, Softener]]):
                 raise UpdateFailed(f"Error communicating with API: {err}") from err
 
         return {softener.dsn: softener for softener in softeners}
+
+    @callback
+    def async_remove_stale_devices(self) -> None:
+        """Remove devices of softeners that are no longer returned by the API."""
+        # An empty list is more likely a cloud error than all softeners being removed
+        if not (softeners := self.data):
+            return
+        device_registry = dr.async_get(self.hass)
+        for device in dr.async_entries_for_config_entry(
+            device_registry, self.config_entry.entry_id
+        ):
+            if not any(
+                identifier[0] == DOMAIN and identifier[1] in softeners
+                for identifier in device.identifiers
+            ):
+                _LOGGER.debug("Removing stale device %s", device.name)
+                device_registry.async_remove_device(device.id)
 
     async def _reauthenticate(self) -> None:
         _LOGGER.debug("Attempting to renew refresh token")
