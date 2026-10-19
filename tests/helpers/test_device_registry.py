@@ -13468,7 +13468,7 @@ async def test_get_or_create_from_device_info(
     assert device.manufacturer == "Acme"
     assert device.name == "Power strip"
 
-    child_device = device_registry.async_get_or_create_from_device_info(
+    child_device = device_registry.async_get_or_create_child_from_device_info(
         config_entry_id=config_entry_id,
         config_subentry_id="mock-subentry-id-1-1",
         device_info=dr.ChildDeviceInfo(

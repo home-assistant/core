@@ -849,7 +849,13 @@ class EntityPlatform:
         if device_info is None:
             return entity.device_entry
         dev_reg = dr.async_get(self.hass)
-        if isinstance(device_info, dr.DeviceInfo | dr.ChildDeviceInfo):
+        if isinstance(device_info, dr.ChildDeviceInfo):
+            return dev_reg.async_get_or_create_child_from_device_info(
+                config_entry_id=config_entry_id,
+                config_subentry_id=config_subentry_id,
+                device_info=device_info,
+            )
+        if isinstance(device_info, dr.DeviceInfo):
             # A device info without any field means no device
             if not device_info.as_dict():
                 return entity.device_entry

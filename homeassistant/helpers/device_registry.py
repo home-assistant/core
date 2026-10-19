@@ -2909,26 +2909,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             ),
         )
 
-    @overload
-    def async_get_or_create_from_device_info(
-        self,
-        *,
-        config_entry_id: str,
-        config_subentry_id: str | UndefinedType | None = UNDEFINED,
-        disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
-        device_info: DeviceInfo,
-    ) -> DeviceEntry: ...
-
-    @overload
-    def async_get_or_create_from_device_info(
-        self,
-        *,
-        config_entry_id: str,
-        config_subentry_id: str | UndefinedType | None = UNDEFINED,
-        disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
-        device_info: ChildDeviceInfo,
-    ) -> ChildDeviceEntry: ...
-
     @callback
     def async_get_or_create_from_device_info(
         self,
@@ -2936,20 +2916,31 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         config_entry_id: str,
         config_subentry_id: str | UndefinedType | None = UNDEFINED,
         disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
-        device_info: DeviceInfo | ChildDeviceInfo,
-    ) -> DeviceEntry | ChildDeviceEntry:
+        device_info: DeviceInfo,
+    ) -> DeviceEntry:
         """Get or create the device described by a device info.
 
-        A ChildDeviceInfo gets or creates a child device.
+        To create or update a child device, use
+        async_get_or_create_child_from_device_info.
         """
-        if isinstance(device_info, ChildDeviceInfo):
-            return self._async_get_or_create_child(
-                config_entry_id=config_entry_id,
-                config_subentry_id=config_subentry_id,
-                disabled_by=disabled_by,
-                device_info=device_info,
-            )
         return self._async_get_or_create(
+            config_entry_id=config_entry_id,
+            config_subentry_id=config_subentry_id,
+            disabled_by=disabled_by,
+            device_info=device_info,
+        )
+
+    @callback
+    def async_get_or_create_child_from_device_info(
+        self,
+        *,
+        config_entry_id: str,
+        config_subentry_id: str | UndefinedType | None = UNDEFINED,
+        disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
+        device_info: ChildDeviceInfo,
+    ) -> ChildDeviceEntry:
+        """Get or create the child device described by a child device info."""
+        return self._async_get_or_create_child(
             config_entry_id=config_entry_id,
             config_subentry_id=config_subentry_id,
             disabled_by=disabled_by,
