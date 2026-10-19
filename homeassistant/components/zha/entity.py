@@ -91,6 +91,13 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         If a device class is set but no translation key,
         the device class name is used.
         """
+        # Group entities use device name since they have their own device
+        if (
+            self.entity_data.is_group_entity
+            and self.entity_data.group_proxy is not None
+        ):
+            return None
+
         meta = self._zha_state
         if meta.primary:
             self._attr_name = None
@@ -126,6 +133,13 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
     @override
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
+        # Group entities have their own device linked via the coordinator
+        if (
+            self.entity_data.is_group_entity
+            and self.entity_data.group_proxy is not None
+        ):
+            return self.entity_data.group_proxy.get_device_info()
+
         zha_device_info = self.entity_data.device_proxy.device_info
         ieee = zha_device_info["ieee"]
 
