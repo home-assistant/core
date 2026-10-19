@@ -17,7 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
-
 ADAM_DHW_NUMBER_UNIQUE_ID = "056ee145a816487eaa69243c3280f8bf-max_dhw_temperature"
 ADAM_DHW_NUMBER_ISSUE_ID = "deprecated_dhw_temperature_056ee145a816487eaa69243c3280f8bf"
 
