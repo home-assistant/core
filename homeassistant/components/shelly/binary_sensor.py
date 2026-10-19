@@ -122,7 +122,7 @@ class RpcCameraZoneBinarySensor(RpcBinarySensor):
 
         if not get_rpc_custom_name(coordinator.device, key):
             _, _, component_id = get_rpc_key(key)
-            self._attr_translation_placeholders = {"zone_id": component_id}
+            self._attr_translation_placeholders = {"zone_number": component_id}
             self._attr_translation_key = "zone_motion_with_number"
 
 

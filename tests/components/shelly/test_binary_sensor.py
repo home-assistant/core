@@ -959,7 +959,7 @@ async def test_rpc_camera_motion(
     ("zone_name", "entity_id"),
     [
         ("Garden", f"{BINARY_SENSOR_DOMAIN}.test_name_garden_motion"),
-        (None, f"{BINARY_SENSOR_DOMAIN}.test_name_camera_zone_20_motion"),
+        (None, f"{BINARY_SENSOR_DOMAIN}.test_name_zone_200_motion"),
     ],
 )
 async def test_rpc_camera_zone_motion(
