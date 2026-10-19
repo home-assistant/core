@@ -18,7 +18,6 @@ MISSING_ALL = {
     "input_boolean",
     "input_select",
     "llm",
-    "person",
     "sun",
     "zone",
 }
