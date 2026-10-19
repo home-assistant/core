@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from lifx import Device, DiscoveredDevice
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.lifx.const import DOMAIN
 from homeassistant.const import CONF_HOST, Platform
@@ -15,8 +16,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .helpers import GROUP, IP_ADDRESS, LABEL, SERIAL, create_mock_light
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 __all__ = ["GROUP", "IP_ADDRESS", "LABEL", "SERIAL"]
 

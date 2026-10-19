@@ -2,6 +2,7 @@
 
 from kasa import Feature
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -27,8 +28,6 @@ from . import (
     snapshot_platform,
 )
 from .const import DEVICE_ID, MAC_ADDRESS
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

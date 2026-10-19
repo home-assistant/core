@@ -16,6 +16,13 @@ from modbus_connection import (
 )
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.sofar.const import (
@@ -48,14 +55,6 @@ from . import (
     seed_pv_inverter,
     serve_meter_energy,
 )
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    mock_restore_cache,
-    mock_restore_cache_with_extra_data,
-)
-from tests.typing import WebSocketGenerator
 
 BATTERY_3_VOLTAGE_REGISTER = 0x0612
 

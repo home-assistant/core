@@ -5,13 +5,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from asyncarve import ArveCustomer, ArveDevices, ArveSensPro, ArveSensProData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.arve.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from pytest_homeassistant.common import MockEntity
+
 from homeassistant.components.vacuum import (
     Segment,
     StateVacuumEntity,
@@ -11,8 +13,6 @@ from homeassistant.components.vacuum import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockEntity
 
 
 class MockVacuum(MockEntity, StateVacuumEntity):

@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, create_autospec, patch, se
 from async_upnp_client.client import UpnpDevice, UpnpService
 from async_upnp_client.utils import absolute_url
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.dlna_dms.const import (
     CONF_SOURCE_ID,
@@ -17,8 +18,6 @@ from homeassistant.components.dlna_dms.dms import DlnaDmsData
 from homeassistant.const import CONF_DEVICE_ID, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 MOCK_DEVICE_HOST: Final = "192.88.99.21"
 MOCK_DEVICE_BASE_URL: Final = f"http://{MOCK_DEVICE_HOST}"
