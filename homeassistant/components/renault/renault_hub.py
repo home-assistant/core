@@ -173,6 +173,9 @@ class RenaultHub:
         vehicle_links = await _filter_vehicles_with_details(
             self._account, all_vehicle_links
         )
+        # An empty list is more likely a server issue than all vehicles removed.
+        if vins := {link.vin for link in all_vehicle_links if link.vin}:
+            self._async_remove_stale_devices(config_entry, vins)
         if not vehicle_links:
             LOGGER.debug(
                 "No valid vehicle details found for account_id: %s", account_id
@@ -185,10 +188,6 @@ class RenaultHub:
         num_call_per_scan = len(COORDINATORS) * len(vehicle_links)
         scan_interval = timedelta(
             seconds=(3600 * num_call_per_scan) / MAX_CALLS_PER_HOURS
-        )
-
-        self._async_remove_stale_devices(
-            config_entry, {link.vin for link in all_vehicle_links if link.vin}
         )
 
         device_registry = dr.async_get(self._hass)

@@ -11,6 +11,7 @@ from renault_api.gigya.exceptions import (
     InvalidCredentialsException,
     PendingTwoFactorAuthenticationException,
 )
+from renault_api.kamereon import models
 from renault_api.renault_session import RenaultSession
 from syrupy.assertion import SnapshotAssertion
 
@@ -394,6 +395,68 @@ async def test_stale_device_removed_on_setup(
     assert [device.identifiers for device in device_entries] == [
         {(DOMAIN, "VF1ZOE40VIN")}
     ]
+
+
+@pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
+@pytest.mark.parametrize("vehicle_type", ["missing_details"], indirect=True)
+async def test_stale_device_removed_on_setup_retry(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: ConfigEntry,
+) -> None:
+    """Test stale devices are removed when no vehicle details are available."""
+    entry_id = config_entry.entry_id
+    for vin in ("VF1ZOE40VIN", "VF1AAAAA555777888"):
+        device_registry.async_get_or_create(
+            config_entry_id=entry_id,
+            identifiers={(DOMAIN, vin)},
+            manufacturer="Renault",
+            model="Zoe",
+            name="REGISTRATION-NUMBER",
+        )
+
+    await hass.config_entries.async_setup(entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry_id)
+    assert [device.identifiers for device in device_entries] == [
+        {(DOMAIN, "VF1ZOE40VIN")}
+    ]
+
+
+@pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+async def test_stale_devices_kept_on_empty_vehicle_list(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: ConfigEntry,
+) -> None:
+    """Test devices are kept when the vehicle list is empty."""
+    entry_id = config_entry.entry_id
+    device_registry.async_get_or_create(
+        config_entry_id=entry_id,
+        identifiers={(DOMAIN, "VF1ZOE40VIN")},
+        manufacturer="Renault",
+        model="Zoe",
+        name="REGISTRATION-NUMBER",
+    )
+
+    with patch(
+        "renault_api.renault_account.RenaultAccount.get_vehicles",
+        return_value=models.KamereonVehiclesResponse(
+            raw_data={},
+            errors=None,
+            accountId=MOCK_ACCOUNT_ID,
+            country="FR",
+            vehicleLinks=[],
+        ),
+    ):
+        await hass.config_entries.async_setup(entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 1
 
 
 @pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
