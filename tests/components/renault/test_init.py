@@ -372,6 +372,32 @@ async def test_device_registry(
 
 @pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
 @pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+async def test_stale_device_removed_on_setup(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: ConfigEntry,
+) -> None:
+    """Test a device no longer in the vehicle list is removed on setup."""
+    entry_id = config_entry.entry_id
+    device_registry.async_get_or_create(
+        config_entry_id=entry_id,
+        identifiers={(DOMAIN, "VF1AAAAA555777888")},
+        manufacturer="Renault",
+        model="Zoe",
+        name="REGISTRATION-NUMBER",
+    )
+
+    await hass.config_entries.async_setup(entry_id)
+    await hass.async_block_till_done()
+
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry_id)
+    assert [device.identifiers for device in device_entries] == [
+        {(DOMAIN, "VF1ZOE40VIN")}
+    ]
+
+
+@pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
 async def test_registry_cleanup(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -384,19 +410,15 @@ async def test_registry_cleanup(
     live_id = "VF1ZOE40VIN"
     dead_id = "VF1AAAAA555777888"
 
-    assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 0
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
     device_registry.async_get_or_create(
         config_entry_id=entry_id,
         identifiers={(DOMAIN, dead_id)},
         manufacturer="Renault",
         model="Zoe",
         name="REGISTRATION-NUMBER",
-        sw_version="X101VE",
     )
-    assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 1
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
     assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 2
 
     # Try to remove "VF1ZOE40VIN" - fails as it is live
