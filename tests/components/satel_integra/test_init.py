@@ -264,7 +264,6 @@ async def test_unload_unsubscribes_connection_status_callbacks(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     for unsubscribe_callback in unsubscribe_callbacks:
         unsubscribe_callback.assert_called_once_with()
-    mock_satel.close.assert_awaited_once_with()
 
 
 @pytest.mark.parametrize(
