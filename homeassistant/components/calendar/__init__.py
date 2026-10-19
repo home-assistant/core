@@ -30,6 +30,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
+from .alternate_calendar import AlternateCalendarProvider, AlternateCalendarRegistry
 from .const import (
     CREATE_EVENT_SERVICE,
     DATA_COMPONENT,
@@ -155,6 +156,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, handle_calendar_event_delete)
     websocket_api.async_register_command(hass, handle_calendar_event_update)
     websocket_api.async_register_command(hass, handle_calendar_event_subscribe)
+    websocket_api.async_register_command(hass, handle_calendar_alternate_dates)
 
     async_setup_services(hass)
     await component.async_setup(config)
@@ -426,6 +428,64 @@ async def handle_calendar_event_update(
         connection.send_error(msg["id"], "failed", str(ex))
     else:
         connection.send_result(msg["id"])
+
+
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): "calendar/alternate_dates",
+        probatio.Required("start"): cv.date,
+        probatio.Required("end"): cv.date,
+        probatio.Optional("calendar_types"): [str],
+    }
+)
+@websocket_api.async_response
+async def handle_calendar_alternate_dates(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Return alternate calendar dates for each day in a range.
+
+    Calendar views label day numbers, not events, so dates come from providers.
+    """
+    requested = msg.get("calendar_types", AlternateCalendarRegistry.list_providers())
+
+    providers: dict[str, AlternateCalendarProvider] = {}
+    for calendar_type in requested:
+        try:
+            providers[calendar_type] = AlternateCalendarRegistry.get_provider(
+                calendar_type
+            )()
+        except KeyError:
+            connection.send_error(
+                msg["id"],
+                ERR_NOT_FOUND,
+                f"Unknown alternate calendar: {calendar_type}",
+                translation_domain=DOMAIN,
+                translation_key="unknown_alternate_calendar",
+                translation_placeholders={"calendar_type": calendar_type},
+            )
+            return
+
+    start: dt.date = msg["start"]
+    end: dt.date = msg["end"]
+
+    def _convert() -> dict[str, list[dict[str, Any]]]:
+        return {
+            (day := start + dt.timedelta(days=offset)).isoformat(): [
+                {
+                    "calendar_type": alternate.calendar_type,
+                    "calendar_name": provider.display_name,
+                    "display_name": alternate.display_name,
+                    "date_str": alternate.date_str,
+                    "metadata": alternate.metadata or {},
+                }
+                for provider in providers.values()
+                if (alternate := provider.convert_date(day)).display_name
+            ]
+            for offset in range((end - start).days + 1)
+        }
+
+    result = await hass.async_add_executor_job(_convert)
+    connection.send_result(msg["id"], result)
 
 
 @websocket_api.websocket_command(
