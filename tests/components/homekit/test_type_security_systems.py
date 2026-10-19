@@ -401,3 +401,34 @@ async def test_set_if_valid_guards_frozen_valid_values(
     assert acc.char_current_state.value == expected_current
     assert acc.char_target_state.value == expected_target
     assert ("Skipping unsupported" in caplog.text) is not value_is_valid
+
+
+async def test_skip_warning_logged_once_per_value(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    hk_driver: HomeDriver,
+) -> None:
+    """Test the skip warning is not repeated while the state stays unsupported."""
+    entity_id = "alarm_control_panel.test"
+
+    hass.states.async_set(
+        entity_id,
+        AlarmControlPanelState.DISARMED,
+        attributes={"supported_features": AlarmControlPanelEntityFeature.ARM_AWAY},
+    )
+    await hass.async_block_till_done()
+    acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    armed_home = State(entity_id, AlarmControlPanelState.ARMED_HOME)
+    acc.async_update_state(armed_home)
+    acc.async_update_state(armed_home)
+    assert caplog.text.count("Skipping unsupported SecuritySystemCurrentState") == 1
+    assert caplog.text.count("Skipping unsupported SecuritySystemTargetState") == 1
+
+    # A valid push resets the guard, so the next skip is reported again.
+    acc.async_update_state(State(entity_id, AlarmControlPanelState.DISARMED))
+    acc.async_update_state(armed_home)
+    assert caplog.text.count("Skipping unsupported SecuritySystemCurrentState") == 2
+    assert caplog.text.count("Skipping unsupported SecuritySystemTargetState") == 2

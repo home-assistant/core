@@ -84,6 +84,7 @@ class SecuritySystem(HomeAccessory):
         state = self.hass.states.get(self.entity_id)
         assert state
         self._alarm_code = self.config.get(ATTR_CODE)
+        self._skipped: dict[str, int] = {}
 
         supported_states = state.attributes.get(
             EntityStateAttribute.SUPPORTED_FEATURES,
@@ -157,17 +158,19 @@ class SecuritySystem(HomeAccessory):
         """Push value to char, or skip (returning False) if not advertised.
 
         The characteristic's valid values are frozen at build time; pushing a
-        value outside that set would raise ValueError in pyhap.
+        value outside that set would raise ValueError in pyhap. A skip is
+        logged once per value so attribute-only updates don't repeat it.
         """
+        name = char.display_name
         if value in char.properties[PROP_VALID_VALUES].values():
             char.set_value(value)
+            self._skipped.pop(name, None)
             return True
-        _LOGGER.warning(
-            "%s: Skipping unsupported %s value %d",
-            self.entity_id,
-            char.display_name,
-            value,
-        )
+        if self._skipped.get(name) != value:
+            self._skipped[name] = value
+            _LOGGER.warning(
+                "%s: Skipping unsupported %s value %d", self.entity_id, name, value
+            )
         return False
 
     @callback
