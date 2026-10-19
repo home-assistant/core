@@ -207,6 +207,8 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
         # so an immediate refresh would show the old state
         device: Device = dataclasses.replace(self.device, **changes)
         data = self.coordinator.data
-        self.coordinator.async_set_updated_data(
-            dataclasses.replace(data, devices={**data.devices, self._device_id: device})
+        # Keep the poll schedule; frequent commands must not postpone polling
+        self.coordinator.data = dataclasses.replace(
+            data, devices={**data.devices, self._device_id: device}
         )
+        self.coordinator.async_update_listeners()

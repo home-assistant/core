@@ -1,6 +1,7 @@
 """Test the FENIX Control climate platform."""
 
 import dataclasses
+from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -98,6 +99,36 @@ async def test_set_temperature(
     state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_TEMPERATURE] == 21.5
     assert state.state == HVACMode.HEAT
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_command_keeps_poll_schedule(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an optimistic update doesn't postpone the next poll."""
+    # Align the poll schedule with the frozen clock
+    await _set_devices(hass, mock_fenix_client, freezer, DEVICE)
+    polls = mock_fenix_client.get_devices.call_count
+
+    freezer.tick(SCAN_INTERVAL - timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 21.5},
+        blocking=True,
+    )
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_TEMPERATURE] == 21.5
+    assert mock_fenix_client.get_devices.call_count == polls
+
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_fenix_client.get_devices.call_count == polls + 1
 
 
 @pytest.mark.usefixtures("init_integration")
