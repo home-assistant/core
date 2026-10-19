@@ -1,4 +1,4 @@
-"""Shared integration helpers."""
+"""Shared test helpers for components."""
 
 from collections.abc import Iterable
 import copy
@@ -186,10 +186,33 @@ async def target_entities(
 
 
 def parametrize_target_entities(domain: str) -> list[tuple[dict, str, int]]:
-    """Parametrize direct and indirect entity targets.
+    """Parametrize target entities for different target types.
 
-    Each case contains a target configuration, an entity ID, and the expected
-    number of targeted entities. Use with target_entities.
+    Meant to be used with target_entities. Each row is a
+    ``(target_config, entity_id, entities_in_target)`` triple.
+
+    Only two representative rows are kept:
+
+    - ``entity`` — a direct ``entity_id`` reference to two standalone entities.
+      This preserves the direct-reference resolution path (state-machine-only,
+      non-registry entities) and a guaranteed multi-entity target, so the
+      all/first/count behavior assertions stay non-vacuous.
+    - ``label-entity`` — a ``label_id`` reference that resolves to three
+      entities: the labeled entity directly and, via label->device expansion,
+      the device-attached entities. This preserves indirect resolution
+      end-to-end plus everything that only fires when excluded entities sit
+      inside the resolved target scope: in-scope cross-domain exclusion (E2),
+      in-scope device_class/feature-filter negatives (E3), and battery's
+      ``primary_entities_only=False`` flag, which only has an observable effect
+      when a categorized entity is reached through device expansion (E1).
+
+    The dropped rows (area, floor, device_id, and the label/area/floor rows
+    that drive the device-attached entity) only varied *how* a target config
+    resolves to an entity set. That resolution is domain-independent machinery
+    covered centrally by ``tests/helpers/test_target.py`` (area->entity,
+    floor->area, area/label/floor->device, direct device incl. child devices,
+    and the ``primary_entities_only`` category asymmetry), so re-exercising it
+    per domain was pure duplication.
     """
     return [
         (

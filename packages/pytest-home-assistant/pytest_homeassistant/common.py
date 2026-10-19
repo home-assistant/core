@@ -193,7 +193,7 @@ def threadsafe_coroutine_factory(func):
 
 
 def get_test_config_dir(*add_path):
-    """Return a path within the test configuration directory."""
+    """Return a path to a test config dir."""
     return os.path.join(
         _paths.CONFIG_DIR or _paths.TESTS_DIR / "testing_config", *add_path
     )
@@ -223,7 +223,7 @@ async def async_test_home_assistant(
     config_dir: str | None = None,
     initial_state: CoreState = CoreState.running,
 ) -> AsyncGenerator[HomeAssistant]:
-    """Create a Home Assistant instance for testing."""
+    """Return a Home Assistant object pointing at test config dir."""
     hass = HomeAssistant(config_dir or get_test_config_dir())
     store = auth_store.AuthStore(hass)
     hass.auth = auth.AuthManager(hass, store, {}, {})
@@ -566,7 +566,7 @@ fire_time_changed = threadsafe_callback_factory(async_fire_time_changed)
 
 
 def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.Path:
-    """Resolve a fixture file path."""
+    """Get path of fixture."""
     if (
         integration is None
         and "/" in filename
@@ -583,20 +583,20 @@ def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.P
 
 @lru_cache
 def load_fixture_bytes(filename: str, integration: str | None = None) -> bytes:
-    """Load a fixture as bytes."""
+    """Load a fixture."""
     return get_fixture_path(filename, integration).read_bytes()
 
 
 @lru_cache
 def load_fixture(filename: str, integration: str | None = None) -> str:
-    """Load a fixture as text."""
+    """Load a fixture."""
     return get_fixture_path(filename, integration).read_text(encoding="utf8")
 
 
 async def async_load_fixture(
     hass: HomeAssistant, filename: str, integration: str | None = None
 ) -> str:
-    """Load a text fixture without blocking the event loop."""
+    """Load a fixture."""
     return await hass.async_add_executor_job(load_fixture, filename, integration)
 
 

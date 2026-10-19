@@ -1,4 +1,4 @@
-"""Supervisor helpers."""
+"""Provide common test tools for hassio."""
 
 from dataclasses import fields
 import logging

@@ -1,4 +1,4 @@
-"""Recorder helpers."""
+"""Common test utils for working with recorder."""
 
 import asyncio
 from collections.abc import Iterable, Iterator

@@ -1,4 +1,4 @@
-"""Test helper types."""
+"""Typing helpers for Home Assistant tests."""
 
 from collections.abc import Callable, Coroutine
 from contextlib import AbstractAsyncContextManager

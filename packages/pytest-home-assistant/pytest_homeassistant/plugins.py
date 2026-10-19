@@ -378,7 +378,13 @@ def expected_lingering_timers() -> bool:
 
 @pytest.fixture
 def wait_for_stop_scripts_after_shutdown() -> bool:
-    """Control whether shutdown waits for pending scripts."""
+    """Add ability to bypass _schedule_stop_scripts_after_shutdown.
+
+    _schedule_stop_scripts_after_shutdown leaves a lingering timer.
+
+    Parametrize to True to bypass the pytest failure.
+    @pytest.mark.parametrize("wait_for_stop_scripts_at_shutdown", [True])
+    """
     return False
 
 
@@ -386,7 +392,7 @@ def wait_for_stop_scripts_after_shutdown() -> bool:
 def skip_stop_scripts(
     wait_for_stop_scripts_after_shutdown: bool,
 ) -> Generator[None]:
-    """Control whether scripts are stopped during shutdown."""
+    """Add ability to bypass _schedule_stop_scripts_after_shutdown."""
     if wait_for_stop_scripts_after_shutdown:
         yield
         return
@@ -705,7 +711,7 @@ def hass_config_dir() -> str:
 
 @pytest.fixture
 def entity_registry_enabled_by_default() -> Generator[None]:
-    """Enable entities by default in the entity registry."""
+    """Test fixture that ensures all entities are enabled in the registry."""
     with (
         patch(
             "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
@@ -1870,7 +1876,7 @@ async def async_test_recorder(
     enable_migrate_entity_ids: bool,
     enable_migrate_event_ids: bool,
 ) -> AsyncGenerator[RecorderInstanceContextManager]:
-    """Provide a context manager for a Recorder instance."""
+    """Yield context manager to setup recorder instance."""
     from homeassistant.components import recorder  # noqa: PLC0415
     from homeassistant.components.recorder import migration  # noqa: PLC0415
 
@@ -2034,7 +2040,7 @@ async def async_test_recorder(
 async def async_setup_recorder_instance(
     async_test_recorder: RecorderInstanceContextManager,
 ) -> AsyncGenerator[RecorderInstanceGenerator]:
-    """Provide a callable for setting up Recorder."""
+    """Yield callable to setup recorder instance."""
 
     async with AsyncExitStack() as stack:
 
@@ -2305,7 +2311,7 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
 def hassio_env(
     supervisor_is_connected: AsyncMock, supervisor_root_info: AsyncMock
 ) -> Generator[None]:
-    """Provide a mocked Supervisor environment."""
+    """Fixture to inject hassio env."""
     from aiohasupervisor import SupervisorError  # noqa: PLC0415
 
     from .components.hassio import SUPERVISOR_TOKEN  # noqa: PLC0415
@@ -2327,7 +2333,7 @@ async def hassio_stubs(
     supervisor_client: AsyncMock,
     ingress_panels: AsyncMock,
 ) -> None:
-    """Set up the Supervisor integration with mocked services."""
+    """Create mock hassio http client."""
     with patch(
         "homeassistant.components.hassio.coordinator.SupervisorIssuesCoordinator.async_refresh",
     ):

@@ -1,4 +1,4 @@
-"""MQTT helpers."""
+"""Common test objects."""
 
 from collections.abc import Iterable
 from contextlib import suppress

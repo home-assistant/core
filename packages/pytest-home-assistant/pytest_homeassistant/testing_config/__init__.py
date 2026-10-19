@@ -1,1 +1,1 @@
-"""Test configuration resources."""
+"""Shared Home Assistant test helpers."""

@@ -19,7 +19,7 @@ async def get_repairs(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
 ):
-    """Return the current repair issues."""
+    """Return the repairs list of issues."""
     assert await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_ws_client(hass)

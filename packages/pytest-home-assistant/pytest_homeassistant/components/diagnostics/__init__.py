@@ -45,7 +45,7 @@ async def _get_diagnostics_for_device(
     config_entry: ConfigEntry,
     device: DeviceEntry,
 ) -> JsonObjectType:
-    """Return the diagnostics response for a device."""
+    """Return the diagnostics for the specified device."""
     assert await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_client()
@@ -62,6 +62,6 @@ async def get_diagnostics_for_device(
     config_entry: ConfigEntry,
     device: DeviceEntry,
 ) -> JsonObjectType:
-    """Return diagnostics data for a device."""
+    """Return the diagnostics for the specified device."""
     data = await _get_diagnostics_for_device(hass, hass_client, config_entry, device)
     return cast(JsonObjectType, data["data"])
