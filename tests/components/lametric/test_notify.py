@@ -16,6 +16,7 @@ from demetriek import (
     SoundURL,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lametric.const import DOMAIN
@@ -36,8 +37,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 NOTIFY_SERVICE = "frenck_s_lametric"
 ENTITY_ID = "notify.frenck_s_lametric_message"

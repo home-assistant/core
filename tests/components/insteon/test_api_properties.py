@@ -12,6 +12,8 @@ from pyinsteon.device_types.dimmable_lighting_control import (
     DimmableLightingControl_KeypadLinc_6,
 )
 import pytest
+from pytest_homeassistant.common import load_json_object_fixture
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 
 from homeassistant.components import insteon
 from homeassistant.components.insteon.api import async_load_api
@@ -30,9 +32,6 @@ from homeassistant.components.insteon.api.properties import (
 from homeassistant.core import HomeAssistant
 
 from .mock_devices import MockDevices
-
-from tests.common import load_json_object_fixture
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
 @pytest.fixture(name="kpl_properties_data", scope="module")

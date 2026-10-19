@@ -14,6 +14,8 @@ from matter_server.client.exceptions import (
 )
 from matter_server.common.errors import MatterError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, mock_component
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.matter import (
     _derive_ble_proxy_url,
@@ -36,9 +38,6 @@ from .common import (
     load_and_parse_node_fixture,
     setup_integration_with_node_fixture,
 )
-
-from tests.common import MockConfigEntry, mock_component
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(name="connect_timeout")

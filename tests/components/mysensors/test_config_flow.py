@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.mysensors.const import (
@@ -24,8 +25,6 @@ from homeassistant.components.mysensors.const import (
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
-
-from tests.common import MockConfigEntry
 
 GATEWAY_TYPE_TO_STEP = {
     CONF_GATEWAY_TYPE_TCP: "gw_tcp",

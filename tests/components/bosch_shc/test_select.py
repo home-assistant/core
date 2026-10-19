@@ -12,6 +12,7 @@ from boschshcpy.services_impl import (
     VibrationSensorService,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_SELECT_OPTION, STATE_UNKNOWN
@@ -26,8 +27,6 @@ from .conftest import (
     smoke_detector_device,
     thermostat_gen2_device,
 )
-
-from tests.common import MockConfigEntry
 
 SOUND_LEVEL_ENTITY_ID = "select.outdoor_siren_siren_volume"
 MOTION_SENSITIVITY_ENTITY_ID = "select.motion_detector_motion_sensitivity"

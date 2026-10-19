@@ -15,6 +15,7 @@ from bsblan import (
     StaticState,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.bsblan.const import (
     CONF_HEATING_CIRCUITS,
@@ -22,8 +23,6 @@ from homeassistant.components.bsblan.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
-
-from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture

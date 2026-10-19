@@ -10,6 +10,7 @@ from typing import Any
 from unittest.mock import ANY, MagicMock, Mock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import influxdb
 from homeassistant.components.influxdb.const import DEFAULT_BUCKET, DOMAIN
@@ -34,8 +35,6 @@ from . import (
     _get_write_api_mock_v1,
     _get_write_api_mock_v2,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def async_wait_for_queue_to_process(hass: HomeAssistant) -> None:

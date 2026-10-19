@@ -4,6 +4,14 @@ from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+    setup_test_component_platform,
+)
 from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components import camera
@@ -16,15 +24,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.setup import async_setup_component
 
 from .common import STREAM_SOURCE, WEBRTC_ANSWER, SomeTestProvider
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-    setup_test_component_platform,
-)
 
 
 @pytest.fixture(autouse=True)

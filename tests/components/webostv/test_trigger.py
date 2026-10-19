@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockEntity, MockEntityPlatform
 
 from homeassistant.components import automation
 from homeassistant.components.webostv import DOMAIN
@@ -14,8 +15,6 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_webostv
 from .const import ENTITY_ID, FAKE_UUID
-
-from tests.common import MockEntity, MockEntityPlatform
 
 
 async def test_webostv_turn_on_trigger_device_id(
