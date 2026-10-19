@@ -67,5 +67,5 @@ class OneWireEntity(Entity):
         else:
             if not self._attr_available:
                 self._attr_available = True
-                _LOGGER.debug("Fetching %s data recovered", self.name)
+                _LOGGER.info("Fetching %s data recovered", self.name)
             self._state = state.decode("ascii").strip()

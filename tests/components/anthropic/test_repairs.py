@@ -1,6 +1,6 @@
 """Tests for the Anthropic repairs flow."""
 
-import datetime
+import datetime as dt
 from functools import partial
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, call, patch
@@ -68,15 +68,15 @@ SERVER_TOOL_OPTIONS = {CONF_CODE_EXECUTION: True, **WEB_SEARCH_OPTIONS}
 
 
 def _deprecated_model(
-    model_id: str, line: ModelLine, retires_at: datetime.datetime
+    model_id: str, line: ModelLine, retires_at: dt.datetime
 ) -> ModelInfo:
     """Return synthetic metadata for an obsolete model."""
     return ModelInfo(
         id=model_id,
         type="model",
         display_name=model_id,
-        created_at=datetime.datetime(2024, 1, 1, tzinfo=datetime.UTC),
-        deprecated_at=datetime.datetime(2025, 8, 13, tzinfo=datetime.UTC),
+        created_at=dt.datetime(2024, 1, 1, tzinfo=dt.UTC),
+        deprecated_at=dt.datetime(2025, 8, 13, tzinfo=dt.UTC),
         retires_at=retires_at,
         lifecycle="deprecated",
         line=line,
@@ -87,17 +87,17 @@ DEPRECATED_MODEL_LIST = [
     _deprecated_model(
         "claude-3-5-haiku-20241022",
         "haiku",
-        datetime.datetime(2026, 2, 19, tzinfo=datetime.UTC),
+        dt.datetime(2026, 2, 19, tzinfo=dt.UTC),
     ),
     _deprecated_model(
         "claude-3-7-sonnet-20250219",
         "sonnet",
-        datetime.datetime(2026, 2, 19, tzinfo=datetime.UTC),
+        dt.datetime(2026, 2, 19, tzinfo=dt.UTC),
     ),
     _deprecated_model(
         "claude-3-opus-20240229",
         "opus",
-        datetime.datetime(2026, 1, 5, tzinfo=datetime.UTC),
+        dt.datetime(2026, 1, 5, tzinfo=dt.UTC),
     ),
 ]
 
