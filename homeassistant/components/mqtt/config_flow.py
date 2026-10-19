@@ -479,7 +479,7 @@ _CODE_VALIDATION_MODE = {
 EXCLUDE_FROM_CONFIG_IF_NONE = {CONF_ENTITY_CATEGORY, CONF_UNIT_OF_MEASUREMENT}
 PWD_NOT_CHANGED = "__**password_not_changed**__"
 
-DEVELOPER_DOCUMENTATION_URL = "https://developers.home-assistant.io/"
+DEVELOPER_DOCUMENTATION_URL = "https://contributors.home-assistant.io/"
 USER_DOCUMENTATION_URL = "https://www.home-assistant.io/"
 TZ_ZONE_ABBR_URL = (
     "https://en.wikipedia.org/wiki/List_of_tz_database_time_zones"
@@ -491,11 +491,11 @@ TEMPLATING_URL = f"{USER_DOCUMENTATION_URL}docs/configuration/templating/"
 COMMAND_TEMPLATING_URL = f"{TEMPLATING_URL}#using-command-templates-with-mqtt"
 VALUE_TEMPLATING_URL = f"{TEMPLATING_URL}#using-value-templates-with-mqtt"
 AVAILABLE_STATE_CLASSES_URL = (
-    f"{DEVELOPER_DOCUMENTATION_URL}docs/core/entity/sensor/#available-state-classes"
+    f"{DEVELOPER_DOCUMENTATION_URL}core/entities/sensor/#state-classes"
 )
 NAMING_ENTITIES_URL = f"{INTEGRATION_URL}#naming-of-mqtt-entities"
 REGISTRY_PROPERTIES_URL = (
-    f"{DEVELOPER_DOCUMENTATION_URL}docs/core/entity/#registry-properties"
+    f"{DEVELOPER_DOCUMENTATION_URL}core/entities/registry/#entity-categories"
 )
 
 TRANSLATION_DESCRIPTION_PLACEHOLDERS = {

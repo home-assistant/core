@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.eq3btsmart.const import DOMAIN
@@ -12,8 +14,6 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util import slugify
 
 from .const import MAC
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_flow(hass: HomeAssistant) -> None:

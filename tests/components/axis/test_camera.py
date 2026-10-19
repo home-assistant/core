@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import camera
@@ -15,14 +16,12 @@ from homeassistant.helpers import entity_registry as er
 from .conftest import ConfigEntryFactoryType
 from .const import MAC, NAME
 
-from tests.common import snapshot_platform
-
 
 @pytest.fixture(autouse=True)
 def mock_getrandbits():
     """Mock camera access token which normally is randomized."""
     with patch(
-        "homeassistant.components.camera.SystemRandom.getrandbits",
+        "homeassistant.components.camera.entity.SystemRandom.getrandbits",
         return_value=1,
     ):
         yield

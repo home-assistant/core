@@ -8,13 +8,8 @@ import probatio
 
 from homeassistant import data_entry_flow
 from homeassistant.components.rest import create_rest_data_from_config
-from homeassistant.components.rest.data import (  # pylint: disable=home-assistant-component-root-import
-    DEFAULT_TIMEOUT,
-)
-from homeassistant.components.rest.schema import (  # pylint: disable=home-assistant-component-root-import
-    DEFAULT_METHOD,
-    METHODS,
-)
+from homeassistant.components.rest.data import DEFAULT_TIMEOUT  # pylint: disable=home-assistant-component-root-import
+from homeassistant.components.rest.schema import DEFAULT_METHOD, METHODS  # pylint: disable=home-assistant-component-root-import
 from homeassistant.components.sensor import CONF_STATE_CLASS
 from homeassistant.config_entries import (
     SOURCE_USER,

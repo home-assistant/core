@@ -39,6 +39,14 @@ ENTITY_DESCRIPTIONS = (
         has_fn=lambda hub: hub.has_battery,
         sensor=Sensor.BATTERY,
     ),
+    RitualsBinarySensorEntityDescription(
+        key="cartridge",
+        translation_key="cartridge",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda sensors: sensors.has_cartridge,
+        has_fn=lambda _: True,
+        sensor=Sensor.PERFUME,
+    ),
 )
 
 

@@ -29,7 +29,8 @@ requirements_test.txt @home-assistant/core
 /homeassistant/helpers/ @home-assistant/core
 /homeassistant/scripts/ @home-assistant/core
 /homeassistant/util/ @home-assistant/core
-/pylint/ @home-assistant/core
+/packages/pylint-home-assistant/ @home-assistant/core
+/packages/pytest-home-assistant/ @home-assistant/core
 /script/ @home-assistant/core
 
 # Home Assistant Supervisor
@@ -45,7 +46,7 @@ build.json @home-assistant/supervisor
 # Agent Configurations
 AGENTS.md @home-assistant/core
 CLAUDE.md @home-assistant/core
-/.agent/ @home-assistant/core
+/.agents/ @home-assistant/core
 /.claude/ @home-assistant/core
 /.gemini/ @home-assistant/core
 

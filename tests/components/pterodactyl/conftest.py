@@ -5,13 +5,12 @@ from unittest.mock import AsyncMock, patch
 
 from pydactyl.responses import PaginatedResponse
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.pterodactyl.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_URL
 
 from .const import TEST_API_KEY, TEST_URL
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture

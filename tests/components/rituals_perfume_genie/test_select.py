@@ -1,7 +1,7 @@
 """Tests for the Rituals Perfume Genie select platform."""
 
 import pytest
-from ritualsgenie import RoomSize
+from ritualsgenie import RitualsGenieConnectionError, RoomSize
 
 from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
@@ -20,7 +20,7 @@ from homeassistant.const import (
     UnitOfArea,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -133,6 +133,26 @@ async def test_select_next_twice(hass: HomeAssistant) -> None:
         RoomSize.LARGE,
     ]
 
+    state = hass.states.get("select.genie_room_size")
+    assert state
+    assert state.state == "60"
+
+
+async def test_select_action_error(hass: HomeAssistant) -> None:
+    """Test a failing change of the room size raises a translated error."""
+    config_entry = mock_config_entry(unique_id="id_123_select_action_error")
+    client = await init_integration(hass, config_entry, [mock_diffuser("lot123")])
+    client.set_room_size_category.side_effect = RitualsGenieConnectionError
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: "select.genie_room_size", ATTR_OPTION: "30"},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "communication_error"
     state = hass.states.get("select.genie_room_size")
     assert state
     assert state.state == "60"

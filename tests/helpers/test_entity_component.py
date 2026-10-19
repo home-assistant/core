@@ -10,6 +10,17 @@ from unittest.mock import AsyncMock, Mock, patch
 from freezegun import freeze_time
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockModule,
+    MockPlatform,
+    MockUser,
+    async_fire_time_changed,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 from pytest_unordered import unordered
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
@@ -40,18 +51,6 @@ from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockModule,
-    MockPlatform,
-    MockUser,
-    async_fire_time_changed,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "test_domain"

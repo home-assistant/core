@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.sia.config_flow import ACCOUNT_SCHEMA, HUB_SCHEMA
@@ -22,8 +23,6 @@ from homeassistant.const import CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 BASIS_CONFIG_ENTRY_ID = 1
 BASIC_CONFIG = {
