@@ -12,7 +12,7 @@ from homeassistant.components.litterrobot.camera import _build_ice_servers
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .conftest import setup_integration
+from .conftest import create_mock_robot, setup_integration
 
 from tests.common import async_fire_time_changed
 
@@ -358,3 +358,37 @@ async def test_session_is_not_renewed_in_the_background(
     await hass.async_block_till_done()
 
     assert mock_client.generate_session.call_count == fetched
+
+
+async def test_camera_added_for_a_robot_discovered_after_setup(
+    hass: HomeAssistant,
+    mock_account_with_no_robots: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A camera robot that appears after setup gets its entity without a reload."""
+    await setup_integration(hass, mock_account_with_no_robots, CAMERA_DOMAIN)
+    assert hass.states.get(CAMERA_ENTITY_ID) is None
+
+    robot = create_mock_robot(
+        None,
+        mock_account_with_no_robots,
+        v4=False,
+        v5=False,
+        v5_pro=True,
+        feeder=False,
+    )
+    robot.get_camera_client().generate_session = AsyncMock(
+        return_value=CameraSession.from_response(MOCK_SESSION_DATA)
+    )
+    mock_account_with_no_robots.robots.append(robot)
+
+    freezer.tick(timedelta(seconds=305))  # the coordinator's 5 minute refresh
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(CAMERA_ENTITY_ID) is not None
+
+    # a later refresh must not add it a second time
+    freezer.tick(timedelta(seconds=305))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids(CAMERA_DOMAIN)) == 1

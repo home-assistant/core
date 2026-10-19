@@ -41,11 +41,25 @@ async def async_setup_entry(
 ) -> None:
     """Set up Litter-Robot cameras using config entry."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        LitterRobotCameraEntity(robot=robot, coordinator=coordinator)
-        for robot in coordinator.account.robots
-        if isinstance(robot, LitterRobot5) and robot.has_camera
-    )
+    known_robots: set[str] = set()
+
+    def _check_robots() -> None:
+        new_robots = [
+            robot
+            for robot in coordinator.account.robots
+            if isinstance(robot, LitterRobot5)
+            and robot.has_camera
+            and robot.serial not in known_robots
+        ]
+        if new_robots:
+            known_robots.update(robot.serial for robot in new_robots)
+            async_add_entities(
+                LitterRobotCameraEntity(robot=robot, coordinator=coordinator)
+                for robot in new_robots
+            )
+
+    _check_robots()
+    entry.async_on_unload(coordinator.async_add_listener(_check_robots))
 
 
 def _build_ice_servers(session: CameraSession) -> list[RTCIceServer]:
