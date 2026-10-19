@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
@@ -20,8 +21,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import SERVER_UUIDS
-
-from tests.common import MockConfigEntry
 
 # Use the same UUIDs defined in the conftest
 TEST_UUID = SERVER_UUIDS[0]
@@ -291,6 +290,7 @@ async def test_discovery_flow_edit_discovered_success(
     assert result["data"][CONF_HOST] == "1.1.1.1"
     assert result["data"][CONF_USERNAME] == "admin"
     assert result["data"][CONF_PASSWORD] == "password"
+    assert result["result"].unique_id == TEST_UUID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -337,6 +337,14 @@ async def test_discovery_flow_edit_discovered_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == expected_error
+
+    mock_server.http_status = HTTPStatus.OK
+    mock_server.async_query.side_effect = [False, {"uuid": TEST_UUID}]
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: "admin", CONF_PASSWORD: "password"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

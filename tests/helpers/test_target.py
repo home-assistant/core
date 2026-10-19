@@ -5,6 +5,13 @@ from collections.abc import Mapping
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    RegistryEntryWithDefaults,
+    mock_area_registry,
+    mock_device_registry,
+    mock_registry,
+)
 
 from homeassistant.components.group import Group
 from homeassistant.const import (
@@ -30,14 +37,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    RegistryEntryWithDefaults,
-    mock_area_registry,
-    mock_device_registry,
-    mock_registry,
-)
 
 
 async def set_states_and_check_target_events(
@@ -1186,6 +1185,7 @@ def child_device_setup(
         "outlet_1_energy",
         config_entry=config_entry,
         device_id=outlet_1.id,
+        original_name="Energy",
         suggested_object_id="outlet_1_energy",
     )
     entity_registry.async_update_entity(own_area_entry.entity_id, area_id="attic")

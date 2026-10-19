@@ -72,12 +72,12 @@ TODO_ITEM_FIELD_SCHEMA = {
 }
 
 
-TODO_ITEM_FIELD_VALIDATIONS = [cv.has_at_most_one_key(ATTR_DUE_DATE, ATTR_DUE_DATETIME)]
+TODO_ITEM_FIELD_VALIDATIONS = [probatio.AtMostOne(ATTR_DUE_DATE, ATTR_DUE_DATETIME)]
 
 
 TODO_SERVICE_GET_ITEMS_SCHEMA = {
     probatio.Optional(ATTR_STATUS): probatio.All(
-        cv.ensure_list,
+        probatio.EnsureList(),
         [probatio.In({TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED})],
     ),
 }
@@ -205,7 +205,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             cv.make_entity_service_schema(
                 {
                     probatio.Required(ATTR_ITEM): probatio.All(
-                        cv.string, str.strip, probatio.Length(min=1)
+                        cv.string, str.strip, probatio.NonEmpty()
                     ),
                     **TODO_ITEM_FIELD_SCHEMA,
                 }
@@ -221,10 +221,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
             cv.make_entity_service_schema(
                 {
                     probatio.Required(ATTR_ITEM): probatio.All(
-                        cv.string, probatio.Length(min=1)
+                        cv.string, probatio.NonEmpty()
                     ),
                     probatio.Optional(ATTR_RENAME): probatio.All(
-                        cv.string, str.strip, probatio.Length(min=1)
+                        cv.string, str.strip, probatio.NonEmpty()
                     ),
                     probatio.Optional(ATTR_STATUS): probatio.In(
                         {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED},
@@ -233,7 +233,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 }
             ),
             *TODO_ITEM_FIELD_VALIDATIONS,
-            cv.has_at_least_one_key(
+            probatio.AtLeastOne(
                 ATTR_RENAME,
                 ATTR_STATUS,
                 *[desc.service_field for desc in TODO_ITEM_FIELDS],
@@ -246,7 +246,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         TodoServices.REMOVE_ITEM,
         cv.make_entity_service_schema(
             {
-                probatio.Required(ATTR_ITEM): probatio.All(cv.ensure_list, [cv.string]),
+                probatio.Required(ATTR_ITEM): probatio.All(
+                    probatio.EnsureList(), [cv.string]
+                ),
             }
         ),
         _async_remove_todo_items,

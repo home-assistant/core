@@ -14,6 +14,7 @@ from homematicip.class_maps import (
 from homematicip.device import Device
 from homematicip.group import Group
 from homematicip.home import Home
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.homematicip_cloud import DOMAIN
 from homeassistant.components.homematicip_cloud.entity import (
@@ -23,8 +24,6 @@ from homeassistant.components.homematicip_cloud.entity import (
 from homeassistant.components.homematicip_cloud.hap import HomematicipHAP
 from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, load_fixture
 
 HAPID = "3014F7110000000000000001"
 HAPPIN = "5678"

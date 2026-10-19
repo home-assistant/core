@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 from aioamazondevices.exceptions import CannotConnect, CannotRetrieveData
 from aioamazondevices.structures import AmazonListInfo, AmazonListType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.const import (
@@ -26,8 +27,6 @@ from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 from .const import TEST_DEVICE_1_SN, TEST_PASSWORD, TEST_USER_ID, TEST_USERNAME
-
-from tests.common import MockConfigEntry
 
 
 def _fail_todo_list_items(client: AsyncMock, error: Exception) -> None:
@@ -305,3 +304,4 @@ async def test_initial_sync_failure_does_not_prevent_other_syncs(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_amazon_devices_client.get_todo_list_items.assert_awaited_once()
     mock_amazon_devices_client.sync_media_state.assert_awaited_once()
+    mock_amazon_devices_client.sync_dnd_state.assert_awaited_once()

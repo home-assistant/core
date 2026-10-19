@@ -1,5 +1,7 @@
 """The tests for lutron caseta logbook."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.lutron_caseta.const import (
     ATTR_ACTION,
     ATTR_AREA_NAME,
@@ -22,7 +24,6 @@ from homeassistant.setup import async_setup_component
 
 from . import MockBridge, async_setup_integration
 
-from tests.common import MockConfigEntry
 from tests.components.logbook.common import MockRow, mock_humanify
 
 

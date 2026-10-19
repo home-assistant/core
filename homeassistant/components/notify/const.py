@@ -11,7 +11,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
-    from . import NotifyEntity
+    from .entity import NotifyEntity
 
 DOMAIN: Final = "notify"
 
@@ -42,7 +42,9 @@ NOTIFY_SERVICE_SCHEMA = probatio.Schema(
     {
         probatio.Required(ATTR_MESSAGE): cv.string,
         probatio.Optional(ATTR_TITLE): cv.string,
-        probatio.Optional(ATTR_TARGET): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(ATTR_TARGET): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
         probatio.Optional(ATTR_DATA): dict,
     }
 )

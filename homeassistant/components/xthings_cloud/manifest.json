@@ -1,6 +1,7 @@
 {
   "domain": "xthings_cloud",
   "name": "Xthings Cloud",
+  "categories": ["lighting.bulbs_lamps", "security_safety.locks_access"],
   "codeowners": ["@XthingsJacobs"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/xthings_cloud",

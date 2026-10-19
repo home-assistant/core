@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-from httpx import BasicAuth
+from httpx2 import BasicAuth
 import probatio
 from pyecoforest.api import EcoforestApi
 from pyecoforest.exceptions import EcoforestAuthenticationRequired
@@ -19,7 +19,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): str,
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 

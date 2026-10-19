@@ -6,14 +6,13 @@ from aiohttp import ClientResponseError
 from gql.transport.exceptions import TransportError, TransportServerError
 from monarchmoney import LoginFailedException, RequireMFAException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.monarch_money.const import CONF_MFA_CODE, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_form_simple(
@@ -279,6 +278,18 @@ async def test_reauth_subscription_auth_failure(
     assert result["errors"] == {"base": "invalid_auth"}
     assert CONF_EMAIL in result["data_schema"].schema
     assert CONF_PASSWORD in result["data_schema"].schema
+
+    client.get_subscription_details.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EMAIL: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 async def test_form_mfa(

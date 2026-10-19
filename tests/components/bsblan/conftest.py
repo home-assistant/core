@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from bsblan import (
     Device,
+    HeatingTimeSwitchPrograms,
     HotWaterConfig,
     HotWaterSchedule,
     HotWaterState,
@@ -14,6 +15,7 @@ from bsblan import (
     StaticState,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.bsblan.const import (
     CONF_HEATING_CIRCUITS,
@@ -21,8 +23,6 @@ from homeassistant.components.bsblan.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
-
-from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture
@@ -106,6 +106,11 @@ def mock_bsblan() -> Generator[MagicMock]:
         )
         bsblan.hot_water_schedule.return_value = HotWaterSchedule.model_validate_json(
             load_fixture("dhw_schedule.json", DOMAIN)
+        )
+        bsblan.heating_schedule.return_value = (
+            HeatingTimeSwitchPrograms.model_validate_json(
+                load_fixture("heating_schedule.json", DOMAIN)
+            )
         )
         # mock get_temperature_unit property
         bsblan.get_temperature_unit = "°C"

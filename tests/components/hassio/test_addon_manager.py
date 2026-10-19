@@ -1,6 +1,7 @@
 """Test the addon manager."""
 
 import asyncio
+from typing import Any
 from unittest.mock import AsyncMock, call
 from uuid import uuid4
 
@@ -9,6 +10,7 @@ from aiohasupervisor import (
     AddonNotSupportedHomeAssistantVersionError,
     AddonNotSupportedMachineTypeError,
     SupervisorError,
+    SupervisorNotFoundError,
 )
 from aiohasupervisor.models import AddonsOptions, Discovery, PartialBackupOptions
 import pytest
@@ -150,6 +152,41 @@ async def test_get_addon_info(
     )
 
 
+async def test_get_addon_info_detached(
+    addon_manager: AddonManager,
+    addon_installed: AsyncMock,
+    addon_store_info: AsyncMock,
+) -> None:
+    """Test get addon info when addon is installed but removed from the store."""
+    addon_store_info.side_effect = SupervisorNotFoundError
+    assert await addon_manager.async_get_addon_info() == AddonInfo(
+        available=True,
+        hostname="core-test-addon",
+        options={},
+        state=AddonState.NOT_RUNNING,
+        update_available=False,
+        version="1.0.0",
+    )
+
+
+async def test_get_addon_info_not_in_store(
+    addon_manager: AddonManager,
+    addon_info: AsyncMock,
+    addon_store_info: AsyncMock,
+) -> None:
+    """Test get addon info when addon is neither installed nor in the store."""
+    addon_store_info.side_effect = SupervisorNotFoundError
+    addon_info.side_effect = SupervisorNotFoundError
+    assert await addon_manager.async_get_addon_info() == AddonInfo(
+        available=False,
+        hostname=None,
+        options={},
+        state=AddonState.NOT_INSTALLED,
+        update_available=False,
+        version=None,
+    )
+
+
 @pytest.mark.parametrize(
     (
         "addon_info_error",
@@ -192,6 +229,70 @@ async def test_set_addon_options(
     assert set_addon_options.call_args == call(
         "test_addon", AddonsOptions(config={"test_key": "test"})
     )
+
+
+@pytest.mark.usefixtures("addon_installed")
+@pytest.mark.parametrize(
+    "addon_config",
+    [
+        pytest.param({"new_key": "new"}, id="add-option"),
+        pytest.param({"test_key": "updated"}, id="update-option"),
+    ],
+)
+async def test_configure_addon_preserves_options(
+    addon_manager: AddonManager,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+    addon_config: dict[str, str],
+) -> None:
+    """Test configuring an add-on preserves all options outside the update."""
+    existing_options = {
+        "test_key": "test",
+        "log_level": "debug",
+        "log_to_file": True,
+        "user_option": {"enabled": False, "values": [1, "two", None]},
+    }
+    addon_options.update(existing_options)
+    expected_options = existing_options | addon_config
+
+    await addon_manager.async_configure_addon(addon_config)
+
+    set_addon_options.assert_awaited_once_with(
+        "test_addon", AddonsOptions(config=expected_options)
+    )
+    assert addon_options == expected_options
+    assert addon_options["log_level"] == "debug"
+    assert addon_options["log_to_file"] is True
+
+
+@pytest.mark.usefixtures("addon_installed")
+@pytest.mark.parametrize(
+    "addon_config",
+    [
+        pytest.param({}, id="empty-update"),
+        pytest.param({"test_key": "test"}, id="unchanged-option"),
+    ],
+)
+async def test_configure_addon_unchanged(
+    addon_manager: AddonManager,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+    addon_config: dict[str, str],
+) -> None:
+    """Test unchanged managed options do not trigger a write."""
+    existing_options = {
+        "test_key": "test",
+        "log_level": "debug",
+        "log_to_file": True,
+    }
+    addon_options.update(existing_options)
+
+    await addon_manager.async_configure_addon(addon_config)
+
+    set_addon_options.assert_not_awaited()
+    assert addon_options == existing_options
+    assert addon_options["log_level"] == "debug"
+    assert addon_options["log_to_file"] is True
 
 
 async def test_set_addon_options_error(

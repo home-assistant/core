@@ -25,7 +25,9 @@ PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_HOST): cv.string,
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        probatio.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+        probatio.Optional(
+            probatio.Secret(CONF_PASSWORD), default=DEFAULT_PASSWORD
+        ): cv.string,
         probatio.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
     }
 )

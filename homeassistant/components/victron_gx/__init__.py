@@ -92,6 +92,7 @@ def _async_check_legacy_sensors(
             DOMAIN,
             issue_id,
             breaks_in_ha_version=_LEGACY_SENSOR_BREAKS_IN_VERSION,
+            config_entry_id=config_entry.entry_id,
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key=translation_key,
@@ -99,7 +100,7 @@ def _async_check_legacy_sensors(
         )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: VictronGxConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: VictronGxConfigEntry) -> None:
     """Set up victron_gx from a config entry."""
     _LOGGER.debug("async_setup_entry called for entry: %s", entry.entry_id)
 
@@ -137,19 +138,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: VictronGxConfigEntry) ->
     )
 
     _LOGGER.debug("async_setup_entry completed for entry: %s", entry.entry_id)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: VictronGxConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: VictronGxConfigEntry) -> None:
     """Unload a config entry."""
     _LOGGER.debug("async_unload_entry called for entry: %s", entry.entry_id)
     hub = entry.runtime_data
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        await hub.stop()
-        hub.unregister_all_new_metric_callbacks()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await hub.stop()
+    hub.unregister_all_new_metric_callbacks()
 
 
 async def async_remove_config_entry_device(

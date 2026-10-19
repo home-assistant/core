@@ -81,7 +81,7 @@ class VoipOptionsFlowHandler(OptionsFlow):
                             CONF_SIP_PORT,
                             SIP_PORT,
                         ),
-                    ): cv.port,
+                    ): probatio.Port(),
                     probatio.Optional(
                         CONF_SIP_USER,
                         description={

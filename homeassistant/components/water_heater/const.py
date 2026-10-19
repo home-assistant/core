@@ -9,9 +9,12 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import WaterHeaterEntity
+    from .entity import WaterHeaterEntity
 
 DOMAIN: Final = "water_heater"
+
+DEFAULT_MIN_TEMP = 110
+DEFAULT_MAX_TEMP = 140
 
 ATTR_AWAY_MODE: Final = "away_mode"
 ATTR_OPERATION_MODE: Final = "operation_mode"
@@ -36,7 +39,7 @@ class WaterHeaterStateAttribute(
     StrEnum,
     metaclass=EnumWithDeprecatedMembers,
     deprecated={
-        "TEMPERATURE": ("ClimateEntityStateAttribute.TARGET_TEMPERATURE", "2027.3.0"),
+        "TEMPERATURE": ("WaterHeaterStateAttribute.TARGET_TEMPERATURE", "2027.3.0"),
     },
 ):
     """State attributes for water heater entities."""
@@ -48,6 +51,7 @@ class WaterHeaterStateAttribute(
     TARGET_TEMP_LOW = "target_temp_low"
     OPERATION_MODE = "operation_mode"
     AWAY_MODE = "away_mode"
+    TEMPERATURE_UNIT = "temperature_unit"
 
 
 STATE_ECO = "eco"

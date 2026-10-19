@@ -6727,6 +6727,75 @@
     'state': 'level_5',
   })
 # ---
+# name: test_platform_setup_and_discovery[select.towel_rack_countdown-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'cancel',
+        '1h',
+        '2h',
+        '3h',
+        '4h',
+        '5h',
+        '6h',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.towel_rack_countdown',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Countdown',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Countdown',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'countdown',
+    'unique_id': 'tuya.mb4qxkyt6rqfacbsjjmcountdown_set',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.towel_rack_countdown-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Towel Rack Countdown',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'cancel',
+        '1h',
+        '2h',
+        '3h',
+        '4h',
+        '5h',
+        '6h',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.towel_rack_countdown',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_platform_setup_and_discovery[select.v20_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
