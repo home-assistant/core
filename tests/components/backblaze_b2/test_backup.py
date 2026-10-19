@@ -484,20 +484,21 @@ async def test_metadata_file_invalid_json_during_list(
     assert response["success"]
 
 
+async def _backup_stream() -> AsyncIterator[bytes]:
+    yield b"\0" * 20000
+
+
+async def _open_backup_stream() -> AsyncIterator[bytes]:
+    return _backup_stream()
+
+
 async def test_upload_progress(hass: HomeAssistant) -> None:
     """Test that upload progress from the B2 worker threads is reported."""
-
-    async def backup_stream() -> AsyncIterator[bytes]:
-        yield b"\0" * 20000
-
-    async def open_stream() -> AsyncIterator[bytes]:
-        return backup_stream()
-
     on_progress = Mock()
     (agent,) = await async_get_backup_agents(hass)
 
     await agent.async_upload_backup(
-        open_stream=open_stream,
+        open_stream=_open_backup_stream,
         backup=TEST_BACKUP,
         on_progress=on_progress,
     )
@@ -530,12 +531,6 @@ async def test_upload_progress_after_failed_upload(
         # A part buffered before the failure finishes uploading
         args[-1].bytes_completed(8192)
 
-    async def backup_stream() -> AsyncIterator[bytes]:
-        yield b"\0" * 20000
-
-    async def open_stream() -> AsyncIterator[bytes]:
-        return backup_stream()
-
     on_progress = Mock()
     (agent,) = await async_get_backup_agents(hass)
 
@@ -548,7 +543,7 @@ async def test_upload_progress_after_failed_upload(
         pytest.raises(expected_error),
     ):
         await agent.async_upload_backup(
-            open_stream=open_stream,
+            open_stream=_open_backup_stream,
             backup=TEST_BACKUP,
             on_progress=on_progress,
         )
