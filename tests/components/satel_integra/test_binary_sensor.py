@@ -26,7 +26,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import get_monitor_callbacks, setup_integration, trigger_connection_status_update
+from . import (
+    get_output_changed_callback,
+    get_zone_changed_callback,
+    setup_integration,
+    trigger_connection_status_update,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -69,28 +74,28 @@ async def test_binary_sensors(
 
 
 @pytest.mark.parametrize(
-    ("violated_entries", "expected_state"),
+    ("device_state", "expected_state"),
     [
-        ({2: 1}, STATE_UNKNOWN),
-        ({1: 0}, STATE_OFF),
-        ({1: 1}, STATE_ON),
+        (None, STATE_UNKNOWN),
+        (False, STATE_OFF),
+        (True, STATE_ON),
     ],
 )
 async def test_binary_sensor_initial_state(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
     mock_config_entry_with_subentries: MockConfigEntry,
-    violated_entries: dict[int, int],
+    device_state: bool | None,
     expected_state: str,
 ) -> None:
     """Test binary sensors have a correct initial state after initialization."""
 
     # Instantly call callback to ensure we have initial data set
     async def mock_start(**_: object) -> None:
-        _, zones_callback, outputs_callback = get_monitor_callbacks(mock_satel)
-
-        outputs_callback(violated_entries)
-        zones_callback(violated_entries)
+        mock_satel.state.outputs[1].active = device_state
+        mock_satel.state.zones[1].violated = device_state
+        get_output_changed_callback(mock_satel)()
+        get_zone_changed_callback(mock_satel)()
 
     mock_satel.start = AsyncMock(side_effect=mock_start)
 
@@ -111,24 +116,22 @@ async def test_binary_sensor_callback(
     assert hass.states.get("binary_sensor.zone").state == STATE_OFF
     assert hass.states.get("binary_sensor.output").state == STATE_OFF
 
-    _, zone_update_method, output_update_method = get_monitor_callbacks(mock_satel)
+    zone_update_method = get_zone_changed_callback(mock_satel)
+    output_update_method = get_output_changed_callback(mock_satel)
 
-    output_update_method({1: 1})
-    zone_update_method({1: 1})
+    mock_satel.state.outputs[1].active = True
+    mock_satel.state.zones[1].violated = True
+    output_update_method()
+    zone_update_method()
     assert hass.states.get("binary_sensor.zone").state == STATE_ON
     assert hass.states.get("binary_sensor.output").state == STATE_ON
 
-    output_update_method({1: 0})
-    zone_update_method({1: 0})
+    mock_satel.state.outputs[1].active = False
+    mock_satel.state.zones[1].violated = False
+    output_update_method()
+    zone_update_method()
     assert hass.states.get("binary_sensor.zone").state == STATE_OFF
     assert hass.states.get("binary_sensor.output").state == STATE_OFF
-
-    # The client library should always report all entries, but test
-    # that we set the status correctly if it doesn't
-    output_update_method({2: 1})
-    zone_update_method({2: 1})
-    assert hass.states.get("binary_sensor.zone").state == STATE_UNKNOWN
-    assert hass.states.get("binary_sensor.output").state == STATE_UNKNOWN
 
 
 async def test_binary_sensor_last_reported(
@@ -150,9 +153,10 @@ async def test_binary_sensor_last_reported(
     async_fire_time_changed(hass)
 
     # Run callbacks with same payload
-    _, zone_update_method, output_update_method = get_monitor_callbacks(mock_satel)
-    output_update_method({1: 0})
-    zone_update_method({1: 0})
+    zone_update_method = get_zone_changed_callback(mock_satel)
+    output_update_method = get_output_changed_callback(mock_satel)
+    output_update_method()
+    zone_update_method()
 
     assert first_reported != hass.states.get("binary_sensor.zone").last_reported
     assert len(events) == 2  # last_reported shall not fire state_changed
