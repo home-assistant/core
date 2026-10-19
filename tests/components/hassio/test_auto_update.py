@@ -6,6 +6,7 @@ import os
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import UpdateChannel
 from freezegun.api import FrozenDateTimeFactory
 import probatio
@@ -23,6 +24,7 @@ from homeassistant.components.hassio.const import (
 )
 from homeassistant.const import WEEKDAYS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -214,7 +216,8 @@ async def test_first_seen_is_set_once(
         "first_seen": {
             "2026.10.2": first_seen.isoformat(),
             "2026.10.3": newer_first_seen.isoformat(),
-        }
+        },
+        "skipped": [],
     }
 
 
@@ -305,3 +308,141 @@ async def test_unavailable_not_stable_channel(
 
     assert manager.unavailable_reason is AutoUpdateUnavailableReason.NOT_STABLE_CHANNEL
     assert manager.async_get_first_seen("2026.10.2") is None
+
+
+CORE_UPDATE_ENTITY_ID = "update.home_assistant_core_update"
+
+
+async def _call_update_service(hass: HomeAssistant, service: str) -> None:
+    """Call an update action on the Home Assistant Core update entity."""
+    await hass.services.async_call(
+        "update", service, {"entity_id": CORE_UPDATE_ENTITY_ID}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+
+async def test_skipped_version_outlives_newer_release(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    homeassistant_info: AsyncMock,
+) -> None:
+    """Test a skipped version stays skipped once a newer version is offered."""
+    await _setup_hassio(hass)
+    manager = hass.data[DATA_AUTO_UPDATE]
+
+    await _call_update_service(hass, "skip")
+
+    assert manager.async_is_skipped("2026.10.2")
+    assert hass_storage[STORAGE_KEY]["data"]["skipped"] == ["2026.10.2"]
+
+    homeassistant_info.return_value = replace(
+        homeassistant_info.return_value, version_latest="2026.10.3"
+    )
+    await _refresh_main_coordinator(hass, freezer)
+
+    # The update entity offers the newer version again, as designed
+    state = hass.states.get(CORE_UPDATE_ENTITY_ID)
+    assert state.state == "on"
+    assert state.attributes["skipped_version"] is None
+    assert manager.async_is_skipped("2026.10.2")
+    assert not manager.async_is_skipped("2026.10.3")
+
+
+async def test_clearing_skipped_version(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test clearing the skip on the update entity allows the version again."""
+    await _setup_hassio(hass)
+    manager = hass.data[DATA_AUTO_UPDATE]
+
+    await _call_update_service(hass, "skip")
+    await _call_update_service(hass, "clear_skipped")
+
+    assert not manager.async_is_skipped("2026.10.2")
+    assert hass_storage[STORAGE_KEY]["data"]["skipped"] == []
+
+
+async def test_skipped_version_survives_restart(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test stored skipped versions are kept and older majors are dropped."""
+    hass_storage[STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 2,
+        "key": STORAGE_KEY,
+        "data": {"first_seen": {}, "skipped": ["2026.9.3", "2026.10.2"]},
+    }
+    await _setup_hassio(hass)
+    manager = hass.data[DATA_AUTO_UPDATE]
+
+    assert manager.async_is_skipped("2026.10.2")
+    assert not manager.async_is_skipped("2026.9.3")
+
+
+async def test_store_migration(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test a store without skipped versions is migrated."""
+    hass_storage[STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": STORAGE_KEY,
+        "data": {"first_seen": {"2026.10.2": "2026-10-10T12:00:00+00:00"}},
+    }
+    await _setup_hassio(hass)
+    manager = hass.data[DATA_AUTO_UPDATE]
+
+    assert not manager.async_is_skipped("2026.10.2")
+    assert manager.async_get_first_seen("2026.10.2") == dt_util.parse_datetime(
+        "2026-10-10T12:00:00+00:00"
+    )
+
+
+async def test_skipped_version_kept_while_unavailable(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    homeassistant_info: AsyncMock,
+) -> None:
+    """Test the update entity going unavailable does not clear the skip."""
+    await _setup_hassio(hass)
+    manager = hass.data[DATA_AUTO_UPDATE]
+    await _call_update_service(hass, "skip")
+
+    homeassistant_info.side_effect = SupervisorError("Boom")
+    await _refresh_main_coordinator(hass, freezer)
+
+    assert hass.states.get(CORE_UPDATE_ENTITY_ID).state == "unavailable"
+    assert manager.async_is_skipped("2026.10.2")
+
+    homeassistant_info.side_effect = None
+    await _refresh_main_coordinator(hass, freezer)
+
+    assert hass.states.get(CORE_UPDATE_ENTITY_ID).state == "off"
+    assert manager.async_is_skipped("2026.10.2")
+
+
+async def test_skipped_version_after_rename(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test skipping still reaches the skip list after renaming the entity."""
+    await _setup_hassio(hass)
+    manager = hass.data[DATA_AUTO_UPDATE]
+    entity_registry.async_update_entity(
+        CORE_UPDATE_ENTITY_ID, new_entity_id="update.renamed_core"
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "update", "skip", {"entity_id": "update.renamed_core"}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    assert manager.async_is_skipped("2026.10.2")
+
+    await hass.services.async_call(
+        "update", "clear_skipped", {"entity_id": "update.renamed_core"}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    assert not manager.async_is_skipped("2026.10.2")

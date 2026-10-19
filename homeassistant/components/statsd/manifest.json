@@ -1,6 +1,7 @@
 {
   "domain": "statsd",
   "name": "StatsD",
+  "categories": ["diy_makers.web_data_connectors"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/statsd",
   "iot_class": "local_push",

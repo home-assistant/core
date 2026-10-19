@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.recorder.statistics import statistics_during_period
@@ -15,7 +16,6 @@ from homeassistant.helpers import entity_registry as er
 from .conftest import extend_statistics
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.recorder.common import async_wait_recording_done
 
 
 @pytest.mark.usefixtures("recorder_mock", "entity_registry_enabled_by_default")

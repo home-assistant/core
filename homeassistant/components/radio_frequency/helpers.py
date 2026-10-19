@@ -84,6 +84,7 @@ async def async_send_command(
     await entity.async_send_command_internal(command)
 
 
+# pylint: disable-next=home-assistant-enforce-class-module
 class RadioFrequencyTransmitterConsumerEntity(Entity):
     """Base entity for integrations that send commands via an RF transmitter.
 
