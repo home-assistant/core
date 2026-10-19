@@ -69,7 +69,8 @@ async def _filter_vehicles_with_details(
 
 def _get_scan_interval(num_call_per_scan: int) -> timedelta:
     """Get the scan interval that keeps the calls within the hourly limit."""
-    return timedelta(seconds=(3600 * num_call_per_scan) / MAX_CALLS_PER_HOURS)
+    # One call per hour is kept for the vehicle list.
+    return timedelta(seconds=(3600 * num_call_per_scan) / (MAX_CALLS_PER_HOURS - 1))
 
 
 class RenaultHub:
