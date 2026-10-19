@@ -1,6 +1,7 @@
 {
   "domain": "wattwaechter",
   "name": "WattWächter Plus",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@smartcircuits"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/wattwaechter",

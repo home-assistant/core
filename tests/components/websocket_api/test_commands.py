@@ -11,6 +11,22 @@ from unittest.mock import ANY, AsyncMock, Mock, patch
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockEntityPlatform,
+    MockModule,
+    MockUser,
+    async_mock_service,
+    mock_device_registry,
+    mock_integration,
+    mock_platform,
+)
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import loader
@@ -59,23 +75,6 @@ from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
 from homeassistant.util.json import json_loads
 from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockEntityPlatform,
-    MockModule,
-    MockUser,
-    async_mock_service,
-    mock_device_registry,
-    mock_integration,
-    mock_platform,
-)
-from tests.typing import (
-    ClientSessionGenerator,
-    MockHAClientWebSocket,
-    WebSocketGenerator,
-)
 
 STATE_KEY_SHORT_NAMES = {
     "entity_id": "e",
@@ -3746,6 +3745,8 @@ async def test_subscribe_system_state(
         "home_assistant_restart_dismissed": False,
         "home_assistant_restart_required": True,
         "home_assistant_restart_sources": ["hacs"],
+        "host_reboot_dismissed": False,
+        "host_reboot_required": False,
     }
 
     system_state.async_set_home_assistant_restart_required(hass, "demo")
@@ -3756,6 +3757,8 @@ async def test_subscribe_system_state(
         "home_assistant_restart_dismissed": False,
         "home_assistant_restart_required": True,
         "home_assistant_restart_sources": ["demo", "hacs"],
+        "host_reboot_dismissed": False,
+        "host_reboot_required": False,
     }
 
 
@@ -3779,6 +3782,8 @@ async def test_dismiss_system_state(
         "home_assistant_restart_dismissed": True,
         "home_assistant_restart_required": True,
         "home_assistant_restart_sources": ["hacs"],
+        "host_reboot_dismissed": False,
+        "host_reboot_required": False,
     }
 
     msg = await websocket_client.receive_json()

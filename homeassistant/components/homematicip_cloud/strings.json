@@ -43,6 +43,9 @@
       "cloud_connection": {
         "name": "Cloud connection"
       },
+      "heating": {
+        "name": "Heating"
+      },
       "raining": {
         "name": "Raining"
       }
@@ -147,6 +150,9 @@
     },
     "pull_latch_not_supported": {
       "message": "{device_name} is not a door opener and cannot pull a latch"
+    },
+    "setup_failed": {
+      "message": "Error connecting with HomematicIP Cloud"
     }
   },
   "services": {

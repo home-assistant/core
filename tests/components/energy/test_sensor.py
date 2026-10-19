@@ -7,6 +7,9 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.energy import DOMAIN, async_get_manager, data
 from homeassistant.components.energy.sensor import (
@@ -23,9 +26,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.components.sensor.recorder import (  # pylint: disable=home-assistant-component-root-import
-    compile_statistics,
-)
+from homeassistant.components.sensor.recorder import compile_statistics  # pylint: disable=home-assistant-component-root-import
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -40,10 +41,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import _WH_TO_CAL, _WH_TO_J
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.recorder.common import async_wait_recording_done
-from tests.typing import WebSocketGenerator
 
 TEST_TIME_ADVANCE_INTERVAL = timedelta(milliseconds=10)
 
@@ -1437,6 +1434,52 @@ async def test_inherit_source_unique_id(
     assert entry
     assert entry.unique_id == f"{source_entry.id}_gas_cost"
     assert entry.hidden_by is er.RegistryEntryHider.INTEGRATION
+
+
+async def test_cost_sensor_rename(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_storage: dict[str, Any],
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test energy/info reports the new cost sensor entity_id after a rename."""
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["energy_sources"].append(
+        {
+            "type": "gas",
+            "stat_energy_from": "sensor.gas_consumption",
+            "stat_cost": None,
+            "entity_energy_price": None,
+            "number_energy_price": 0.5,
+        }
+    )
+    hass_storage[data.STORAGE_KEY] = {"version": 1, "data": energy_data}
+    entity_registry.async_get_or_create(
+        "sensor", "test", "123456", suggested_object_id="gas_consumption"
+    )
+    hass.states.async_set(
+        "sensor.gas_consumption",
+        100,
+        {
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfVolume.CUBIC_METERS,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+        },
+    )
+    await setup_integration(hass)
+
+    entity_registry.async_update_entity(
+        "sensor.gas_consumption_cost", new_entity_id="sensor.renamed_cost"
+    )
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "energy/info"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"]["cost_sensors"] == {
+        "sensor.gas_consumption": "sensor.renamed_cost"
+    }
 
 
 async def test_needs_power_sensor_standard(hass: HomeAssistant) -> None:

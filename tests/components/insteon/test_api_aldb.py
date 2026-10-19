@@ -1,6 +1,5 @@
 """Test the Insteon All-Link Database APIs."""
 
-import asyncio
 from typing import Any
 from unittest.mock import patch
 
@@ -9,6 +8,8 @@ from pyinsteon.address import Address
 from pyinsteon.constants import ALDBStatus
 from pyinsteon.topics import ALDB_LINK_CHANGED, ALDB_STATUS_CHANGED
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 
 from homeassistant.components import insteon
 from homeassistant.components.insteon.api import async_load_api
@@ -24,9 +25,6 @@ from homeassistant.core import HomeAssistant
 
 from .const import MOCK_USER_INPUT_PLM
 from .mock_devices import MockDevices
-
-from tests.common import MockConfigEntry, load_json_object_fixture
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
 @pytest.fixture(name="aldb_data", scope="module")
@@ -327,6 +325,8 @@ async def test_bad_address(
         assert msg["error"]["message"] == INSTEON_DEVICE_NOT_FOUND
 
 
+# pyinsteon's status request handler sleeps in a task of its own
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_notify_on_aldb_loading(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, aldb_data
 ) -> None:
@@ -338,25 +338,19 @@ async def test_notify_on_aldb_loading(
         msg = await ws_client.receive_json()
         assert msg["success"]
 
-        await asyncio.sleep(0.1)
         msg = await ws_client.receive_json()
         assert msg["event"]["type"] == "status"
         assert not msg["event"]["is_loading"]
 
         device = devices["333333"]
         device.aldb._update_status(ALDBStatus.LOADING)
-        await asyncio.sleep(0.1)
         msg = await ws_client.receive_json()
         assert msg["event"]["type"] == "status"
         assert msg["event"]["is_loading"]
 
         device.aldb._update_status(ALDBStatus.LOADED)
-        await asyncio.sleep(0.1)
         msg = await ws_client.receive_json()
         assert msg["event"]["type"] == "status"
         assert not msg["event"]["is_loading"]
 
         await ws_client.client.session.close()
-
-        # Allow lingering tasks to complete
-        await asyncio.sleep(0.1)

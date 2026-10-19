@@ -110,10 +110,12 @@ async def _async_stop_hub(service: ServiceCall) -> None:
 async def _async_reload_config(call: ServiceCall) -> None:
     """Reload Modbus."""
     hass = call.hass
-    if DATA_MODBUS_HUBS not in hass.data:
-        LOGGER.error("Modbus cannot reload, because it was never loaded")
+    # A failed setup stays cached, so the platforms would be rejected
+    if DOMAIN not in hass.config.components:
+        LOGGER.error("Modbus failed to set up, restart Home Assistant to retry")
         return
-    hubs = hass.data[DATA_MODBUS_HUBS]
+    # Without YAML hubs there is nothing to close, but YAML may have been added
+    hubs = hass.data.get(DATA_MODBUS_HUBS, {})
     for hub in hubs.values():
         await hub.async_close()
     reset_platforms = async_get_platforms(hass, DOMAIN)
@@ -121,7 +123,8 @@ async def _async_reload_config(call: ServiceCall) -> None:
         LOGGER.debug("Reload modbus resetting platform: %s", reset_platform.domain)
         await reset_platform.async_reset()
     reload_config = await async_integration_yaml_config(hass, DOMAIN)
-    if not reload_config:
+    # The loaded YAML holds every integration's config, not just this one's
+    if not reload_config or DOMAIN not in reload_config:
         LOGGER.debug("Modbus not present anymore")
         hubs.clear()
         return

@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.nmbs.config_flow import CONF_EXCLUDE_VIAS
@@ -15,8 +16,6 @@ from homeassistant.components.nmbs.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 DUMMY_DATA_IMPORT: dict[str, Any] = {
     "STAT_BRUSSELS_NORTH": "Brussel-Noord/Bruxelles-Nord",
@@ -145,6 +144,7 @@ async def test_dont_abort_if_exists_when_vias_differs(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == f"{mock_config_entry.unique_id}_excl_vias"
 
 
 async def test_unavailable_api(

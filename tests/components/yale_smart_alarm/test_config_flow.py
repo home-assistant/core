@@ -3,14 +3,13 @@
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from yalesmartalarmclient.exceptions import AuthenticationError, UnknownError
 
 from homeassistant import config_entries
 from homeassistant.components.yale_smart_alarm.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -48,6 +47,7 @@ async def test_form(hass: HomeAssistant) -> None:
         "password": "test-password",
         "area_id": "1",
     }
+    assert result2["result"].unique_id == "test-username"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

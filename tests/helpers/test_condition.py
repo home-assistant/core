@@ -14,6 +14,13 @@ from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockModule,
+    MockPlatform,
+    mock_integration,
+    mock_platform,
+)
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 from pytest_unordered import unordered
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -84,9 +91,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.util.yaml.loader import parse_yaml
-
-from tests.common import MockModule, MockPlatform, mock_integration, mock_platform
-from tests.components.recorder.common import async_wait_recording_done
 
 
 async def _create_primary_and_diagnostic_entities_in_area(
@@ -1420,6 +1424,43 @@ async def test_state_for(hass: HomeAssistant, req_state: str | list[str]) -> Non
         assert test.async_check()
 
 
+async def test_state_for_list_of_states(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test state with duration and a list of states.
+
+    The entity must stay in one of the listed states for the whole duration;
+    changing between listed states restarts the duration. This matches the
+    state trigger with a duration and a list of states.
+    """
+    config = {
+        "condition": "state",
+        "entity_id": "light.kitchen",
+        "state": ["off", "unavailable"],
+        "for": {"minutes": 5},
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    hass.states.async_set("light.kitchen", "on")
+    freezer.tick(timedelta(minutes=10))
+    assert not test.async_check()
+
+    hass.states.async_set("light.kitchen", "off")
+    freezer.tick(timedelta(minutes=4))
+    assert not test.async_check()
+    freezer.tick(timedelta(minutes=1, seconds=1))
+    assert test.async_check()
+
+    # Changing to another listed state restarts the duration
+    hass.states.async_set("light.kitchen", "unavailable")
+    freezer.tick(timedelta(minutes=4))
+    assert not test.async_check()
+    freezer.tick(timedelta(minutes=1, seconds=1))
+    assert test.async_check()
+
+
 async def test_state_for_template(hass: HomeAssistant) -> None:
     """Test state with templated duration."""
     config = {
@@ -1481,16 +1522,6 @@ async def test_state_for_invalid_template(
             id="attribute",
         ),
         pytest.param(
-            {"state": ["100", "200"]},
-            r"Cannot use 'for' with a list of states",
-            id="list_of_states",
-        ),
-        pytest.param(
-            {"state": []},
-            r"Cannot use 'for' with a list of states",
-            id="empty_list",
-        ),
-        pytest.param(
             {"state": "input_number.threshold"},
             r"Cannot use 'for' with a state referencing an entity",
             id="state_from_entity",
@@ -1500,16 +1531,19 @@ async def test_state_for_invalid_template(
             r"Cannot use 'for' with a state referencing an entity",
             id="single_item_list_from_entity",
         ),
+        pytest.param(
+            {"state": ["100", "input_number.threshold"]},
+            r"Cannot use 'for' with a state referencing an entity",
+            id="list_with_state_from_entity",
+        ),
     ],
 )
 def test_state_for_not_allowed(extra_config: dict[str, Any], error: str) -> None:
     """Test state condition rejects `for` with unsupported `state`/`attribute`.
 
-    `for` is anchored to the entity's last_changed, which reflects a single
-    current state. It therefore cannot be combined with an attribute, a list
-    that is not a single state, or a state resolved from another entity (even as
-    a single-element list). A single-element literal list behaves like the
-    scalar form (see `test_state_for`).
+    `for` is anchored to the entity's last_changed. It therefore cannot be
+    combined with an attribute or a state resolved from another entity, also
+    when that entity is one item of a list.
     """
     config = {
         "condition": "state",

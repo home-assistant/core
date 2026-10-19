@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pytrafikverket.exceptions import InvalidAuthentication, NoFerryFound
 
 from homeassistant import config_entries
@@ -15,8 +16,6 @@ from homeassistant.components.trafikverket_ferry.const import (
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -149,6 +148,28 @@ async def test_flow_fails(
         )
 
     assert result4["errors"] == {"base": base_error}
+
+    with (
+        patch(
+            "homeassistant.components.trafikverket_ferry.config_flow.TrafikverketFerry.async_get_next_ferry_stop",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_ferry.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result4 = await hass.config_entries.flow.async_configure(
+            result4["flow_id"],
+            user_input={
+                CONF_API_KEY: "1234567890",
+                CONF_FROM: "Ekerö",
+                CONF_TO: "Slagsta",
+                CONF_TIME: "00:00",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth_flow(hass: HomeAssistant) -> None:

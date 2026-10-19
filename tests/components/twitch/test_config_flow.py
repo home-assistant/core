@@ -3,6 +3,8 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from twitchAPI.object.api import TwitchUser
 
 from homeassistant.components.twitch.const import (
@@ -17,9 +19,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import get_generator, setup_integration
 from .conftest import CLIENT_ID, TITLE
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
 
 
 async def _do_get_token(

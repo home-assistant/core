@@ -10,7 +10,7 @@ from .const import PLATFORMS
 from .coordinator import AxleConfigEntry, AxleCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AxleConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AxleConfigEntry) -> None:
     """Set up Axle Energy from a config entry."""
     coordinator = AxleCoordinator(
         hass, entry, AxleClient(async_get_clientsession(hass), entry.data[CONF_API_KEY])
@@ -18,9 +18,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AxleConfigEntry) -> bool
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: AxleConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AxleConfigEntry) -> None:
     """Unload Axle Energy."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -4,6 +4,14 @@ from unittest.mock import Mock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntityPlatform,
+    MockUser,
+    async_capture_events,
+    async_mock_service,
+    patch_yaml_files,
+)
 import yaml
 
 from homeassistant import config, core as ha
@@ -38,15 +46,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import entity, entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntityPlatform,
-    MockUser,
-    async_capture_events,
-    async_mock_service,
-    patch_yaml_files,
-)
 
 
 async def test_turn_on_without_entities(hass: HomeAssistant) -> None:
@@ -443,13 +442,16 @@ async def test_reload_config_entry_by_entry_id(
     "service", [SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP]
 )
 async def test_raises_when_db_upgrade_in_progress(
-    hass: HomeAssistant, service, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, service: str
 ) -> None:
     """Test an exception is raised when the database migration is in progress."""
     await async_setup_component(hass, DOMAIN, {})
 
     with (
-        pytest.raises(HomeAssistantError),
+        pytest.raises(
+            HomeAssistantError,
+            match=f"The system cannot {service} while a database upgrade is in progress",
+        ),
         patch(
             "homeassistant.helpers.recorder.async_migration_in_progress",
             return_value=True,
@@ -460,11 +462,7 @@ async def test_raises_when_db_upgrade_in_progress(
             service,
             blocking=True,
         )
-    assert "The system cannot" in caplog.text
-    assert "while a database upgrade is in progress" in caplog.text
-
     assert mock_async_migration_in_progress.called
-    caplog.clear()
 
     with (
         patch(
@@ -478,8 +476,6 @@ async def test_raises_when_db_upgrade_in_progress(
             service,
             blocking=True,
         )
-        assert "The system cannot" not in caplog.text
-        assert "while a database upgrade in progress" not in caplog.text
 
     assert mock_async_migration_in_progress.called
 
@@ -611,9 +607,7 @@ async def test_reload_custom_templates(hass: HomeAssistant) -> None:
         assert mock_load_custom_templates.called
 
 
-async def test_reload_all(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_reload_all(hass: HomeAssistant) -> None:
     """Test reload_all service."""
     await async_setup_component(hass, DOMAIN, {})
     test1 = async_mock_service(hass, "test1", "reload")
@@ -663,10 +657,6 @@ async def test_reload_all(
         )
 
     assert mock_async_check_ha_config_file.called
-    assert (
-        "The system cannot reload because the configuration is not valid: Oh no, drama!"
-        in caplog.text
-    )
 
     # None have been called again
     assert len(test1) == 1

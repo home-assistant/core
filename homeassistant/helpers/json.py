@@ -2,7 +2,7 @@
 
 from collections import deque
 from collections.abc import Callable
-import datetime
+import datetime as dt
 from functools import partial
 import json
 import logging
@@ -26,7 +26,7 @@ class JSONEncoder(json.JSONEncoder):
 
         Hand other objects to the original method.
         """
-        if isinstance(o, (datetime.date, datetime.time, datetime.datetime)):
+        if isinstance(o, (dt.date, dt.time, dt.datetime)):
             return o.isoformat()
         if isinstance(o, set):
             return list(o)
@@ -51,7 +51,7 @@ def json_encoder_default(obj: Any) -> Any:
         return obj.as_dict()
     if isinstance(obj, Path):
         return obj.as_posix()
-    if isinstance(obj, (datetime.date, datetime.time, datetime.datetime)):
+    if isinstance(obj, (dt.date, dt.time, dt.datetime)):
         return obj.isoformat()
     raise TypeError
 
@@ -77,11 +77,11 @@ class ExtendedJSONEncoder(JSONEncoder):
 
         Fall back to repr(o).
         """
-        if isinstance(o, datetime.timedelta):
+        if isinstance(o, dt.timedelta):
             return {"__type": str(type(o)), "total_seconds": o.total_seconds()}
-        if isinstance(o, datetime.datetime):
+        if isinstance(o, dt.datetime):
             return o.isoformat()
-        if isinstance(o, (datetime.date, datetime.time)):
+        if isinstance(o, (dt.date, dt.time)):
             return {"__type": str(type(o)), "isoformat": o.isoformat()}
         try:
             return super().default(o)

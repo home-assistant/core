@@ -4,12 +4,11 @@ import logging
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import assert_setup_component, mock_component
 
 from homeassistant.components import pilight, sensor
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import assert_setup_component, mock_component
 
 
 @pytest.fixture(autouse=True)

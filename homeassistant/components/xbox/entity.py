@@ -153,7 +153,10 @@ class XboxConsoleBaseEntity(CoordinatorEntity[XboxConsoleStatusCoordinator]):
     @override
     def available(self) -> bool:
         """Return if entity is available."""
-        return self.coordinator.data.get(self._console.id) is not None
+        return (
+            super().available
+            and self.coordinator.data.get(self._console.id) is not None
+        )
 
     @property
     @override
@@ -212,6 +215,7 @@ def check_deprecated_entity(
                     DOMAIN,
                     f"deprecated_entity_{xuid}_{entity_description.key}",
                     breaks_in_ha_version="2027.4.0",
+                    config_entry_id=entity_entry.config_entry_id,
                     is_fixable=True,
                     severity=IssueSeverity.WARNING,
                     translation_key="deprecated_entity",

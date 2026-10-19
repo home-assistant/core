@@ -9,6 +9,9 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.auth.models import User
@@ -46,10 +49,6 @@ from . import (
 )
 from .conftest import MarketplaceResponses
 from .const import REPOSITORY_INTEGRATION, REPOSITORY_INTEGRATION_ID
-
-from tests.common import MockConfigEntry, MockUser
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
