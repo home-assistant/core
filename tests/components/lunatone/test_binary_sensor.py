@@ -49,6 +49,7 @@ async def test_sensor_value_update(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Lunatone DALI scan status value update."""
+    fast_update_interval = timedelta(seconds=1)
     scan_states = iter(
         (
             (ScanState.ADDRESSING, ScanLineState.ADDRESSING),
@@ -60,7 +61,13 @@ async def test_sensor_value_update(
 
     coordinator = mock_config_entry.runtime_data.coordinator_scan
 
-    async def fake_update():
+    def get_entity_states() -> dict[str, str]:
+        return {
+            entity.entity_id: entity.state
+            for entity in hass.states.async_all(Platform.BINARY_SENSOR)
+        }
+
+    async def fake_update() -> None:
         scan_state, line_scan_state = next(scan_states)
         scan_data = deepcopy(mock_lunatone_scan.data)
         scan_data.status = scan_state
@@ -69,27 +76,27 @@ async def test_sensor_value_update(
 
     mock_lunatone_scan.async_update.side_effect = fake_update
 
-    entities = hass.states.async_all(Platform.BINARY_SENSOR)
-    assert all(entity.state == STATE_OFF for entity in entities)
-    assert coordinator.update_interval == timedelta(seconds=10)
+    entity_states = get_entity_states()
+    assert all(state == STATE_OFF for state in entity_states.values())
+    assert coordinator.update_interval == DEFAULT_SCAN_UPDATE_INTERVAL
 
     freezer.tick(DEFAULT_SCAN_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    entities = hass.states.async_all(Platform.BINARY_SENSOR)
-    assert entities[0].state == STATE_ON
-    assert entities[1].state == STATE_ON
-    assert entities[2].state == STATE_OFF
-    assert coordinator.update_interval == timedelta(seconds=1)
+    entity_states = get_entity_states()
+    assert entity_states["binary_sensor.test_scan_status"] == STATE_ON
+    assert entity_states["binary_sensor.dali_line_0_scan_status"] == STATE_ON
+    assert entity_states["binary_sensor.dali_line_1_scan_status"] == STATE_OFF
+    assert coordinator.update_interval == fast_update_interval
 
-    freezer.tick(timedelta(seconds=1))
+    freezer.tick(fast_update_interval)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    entities = hass.states.async_all(Platform.BINARY_SENSOR)
-    assert all(entity.state == STATE_OFF for entity in entities)
-    assert coordinator.update_interval == timedelta(seconds=10)
+    entity_states = get_entity_states()
+    assert all(state == STATE_OFF for state in entity_states.values())
+    assert coordinator.update_interval == DEFAULT_SCAN_UPDATE_INTERVAL
 
 
 async def test_line_scan_status_availability_updates_with_line_data(
