@@ -74,7 +74,7 @@ class SimplePushNotifyEntity(NotifyEntity):
             await self.hass.async_add_executor_job(
                 partial(
                     self._client.send_task,
-                    title=title or ATTR_TITLE_DEFAULT,
+                    title=title,
                     content=message,
                 )
             )

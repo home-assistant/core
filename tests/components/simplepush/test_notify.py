@@ -277,7 +277,7 @@ async def test_entity_send_message(
     mock_client.assert_called_once_with(api_token="token")
     assert mock_client.return_value.send_task.call_args_list == [
         call(title="Title", content="Hello"),
-        call(title="Home Assistant", content="Hello"),
+        call(title=None, content="Hello"),
     ]
 
 
