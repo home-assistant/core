@@ -2118,3 +2118,45 @@ async def test_reconfigure_missing_cloud_project(
     assert config_entry.data["cloud_project_id"] == CLOUD_PROJECT_ID
     assert config_entry.data["topic_name"] == NEW_TOPIC_NAME
     assert config_entry.data["subscription_name"] == NEW_SUBSCRIPTION_NAME
+
+
+@pytest.mark.parametrize("nest_test_config", [TEST_CONFIG_NO_CLOUD_PROJECT])
+@pytest.mark.parametrize("subscriber_id", ["invalid-subscriber-format"])
+@pytest.mark.parametrize("token_expiration_time", [EXPIRED_TOKEN_TIMESTAMP])
+async def test_reconfigure_missing_cloud_project_token_revoked(
+    hass: HomeAssistant,
+    oauth: OAuthFixture,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    auth: FakeAuth,
+    mock_pubsub_api_responses: MockPubSubAPIResponses,
+) -> None:
+    """Test reconfigure prompts for cloud project after reauthentication."""
+    config_entry.add_to_hass(hass)
+    aioclient_mock.post(OAUTH2_TOKEN, status=HTTPStatus.BAD_REQUEST)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    await oauth.async_oauth_web_flow(result)
+
+    # Replace the failing token response so the auth code exchange succeeds
+    aioclient_mock.clear_requests()
+    auth.register_mock_requests()
+    mock_pubsub_api_responses.register_mock_requests()
+    oauth.async_mock_refresh()
+
+    result = await oauth.async_configure(result, None)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "cloud_project"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"cloud_project_id": CLOUD_PROJECT_ID}
+    )
+    result = await _async_reconfigure(
+        hass, result, "create_new_topic", "create_new_subscription"
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data["token"]["access_token"] == "mock-access-token"
+    assert config_entry.data["cloud_project_id"] == CLOUD_PROJECT_ID
+    assert config_entry.data["topic_name"] == NEW_TOPIC_NAME
+    assert config_entry.data["subscription_name"] == NEW_SUBSCRIPTION_NAME
