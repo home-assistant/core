@@ -8,7 +8,7 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import TextEntity
+    from .entity import TextEntity
 
 DOMAIN: Final = "text"
 DATA_COMPONENT: HassKey[EntityComponent[TextEntity]] = HassKey(DOMAIN)
@@ -29,3 +29,10 @@ ATTR_PATTERN = "pattern"
 ATTR_VALUE = "value"
 
 SERVICE_SET_VALUE = "set_value"
+
+
+class TextMode(StrEnum):
+    """Modes for text entities."""
+
+    PASSWORD = "password"
+    TEXT = "text"

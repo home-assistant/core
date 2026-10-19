@@ -8,6 +8,16 @@ from unittest.mock import Mock, patch
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    async_capture_events,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+    mock_restore_cache_with_extra_data,
+)
 from universal_silabs_flasher.flasher import DeviceSpecificFlasher
 
 from homeassistant.components.homeassistant import (
@@ -51,17 +61,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
 
 from .common import TEST_DOMAIN, TEST_FIRMWARE_RELEASES_URL, TEST_MANIFEST
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    async_capture_events,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-    mock_restore_cache_with_extra_data,
-)
 
 TEST_DEVICE = "/dev/serial/by-id/some-unique-serial-device-12345"
 TEST_UPDATE_ENTITY_ID = "update.mock_name_firmware"

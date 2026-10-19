@@ -1,6 +1,7 @@
 {
   "domain": "tibber",
   "name": "Tibber",
+  "categories": ["energy.energy_prices", "energy.meters_monitoring"],
   "codeowners": ["@danielhiversen"],
   "config_flow": true,
   "dependencies": ["application_credentials", "recorder"],

@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from aiorecollect.errors import RecollectError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.recollect_waste.const import (
     CONF_PLACE_ID,
@@ -17,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_PLACE_ID, TEST_SERVICE_ID
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_aiorecollect")

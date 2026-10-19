@@ -5,6 +5,11 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    assert_platform_setup_creates_issue,
+    mock_restore_cache,
+)
 
 from homeassistant.components import utility_meter
 from homeassistant.components.select import (
@@ -36,12 +41,6 @@ from homeassistant.helpers import (
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    MockConfigEntry,
-    assert_platform_setup_creates_issue,
-    mock_restore_cache,
-)
 
 
 @pytest.fixture
@@ -1020,3 +1019,34 @@ async def test_migration_from_future_version(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
+
+
+async def test_setup_entry_unregistered_uuid(hass: HomeAssistant) -> None:
+    """Test setup fails when the source is an unknown entity registry id."""
+    fake_uuid = "a266a680b608c32770e6c45bfe6b8411"
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "cycle": "monthly",
+            "delta_values": False,
+            "name": "My utility meter",
+            "net_consumption": False,
+            "offset": 0,
+            "periodically_resetting": True,
+            "source": fake_uuid,
+            "tariffs": [],
+        },
+        title="My utility meter",
+        version=ConfigFlowHandler.VERSION,
+        minor_version=ConfigFlowHandler.MINOR_VERSION,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.reason == (
+        f"Failed to set up utility_meter for unknown entity {fake_uuid}"
+    )
