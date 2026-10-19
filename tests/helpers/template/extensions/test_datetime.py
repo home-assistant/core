@@ -218,6 +218,45 @@ def test_as_datetime_default(
     assert render(hass, f"{{{{ {input} | as_datetime({default}) }}}}") == output
 
 
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param(1.7e18, id="nanoseconds"),
+        pytest.param(1e20, id="overflow"),
+    ],
+)
+@pytest.mark.parametrize(
+    "template",
+    [
+        pytest.param(
+            "{{{{ {value} | timestamp_custom('%Y', default='fallback') }}}}",
+            id="timestamp_custom",
+        ),
+        pytest.param(
+            "{{{{ {value} | timestamp_local(default='fallback') }}}}",
+            id="timestamp_local",
+        ),
+        pytest.param(
+            "{{{{ {value} | timestamp_utc(default='fallback') }}}}",
+            id="timestamp_utc",
+        ),
+        pytest.param(
+            "{{{{ as_datetime({value}, default='fallback') }}}}",
+            id="as_datetime_function",
+        ),
+        pytest.param(
+            "{{{{ '{value}' | as_datetime('fallback') }}}}",
+            id="as_datetime_filter_string",
+        ),
+    ],
+)
+def test_timestamp_out_of_range_default(
+    hass: HomeAssistant, template: str, value: float
+) -> None:
+    """Test out of range timestamps return the default value."""
+    assert render(hass, template.format(value=value)) == "fallback"
+
+
 def test_as_local(hass: HomeAssistant) -> None:
     """Test converting time to local."""
 
