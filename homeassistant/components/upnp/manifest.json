@@ -1,6 +1,7 @@
 {
   "domain": "upnp",
   "name": "UPnP/IGD",
+  "categories": ["computers_network.routers_network"],
   "codeowners": ["@StevenLooman"],
   "config_flow": true,
   "dependencies": ["network", "ssdp"],

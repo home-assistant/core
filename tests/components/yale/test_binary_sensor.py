@@ -1,6 +1,6 @@
 """The binary_sensor tests for the yale platform."""
 
-import datetime
+import datetime as dt
 
 from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
@@ -365,7 +365,7 @@ async def test_door_sense_update_via_socketio(hass: HomeAssistant) -> None:
         == STATE_ON
     )
 
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(seconds=30))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(seconds=30))
     await hass.async_block_till_done()
     assert (
         states.get(
@@ -375,7 +375,7 @@ async def test_door_sense_update_via_socketio(hass: HomeAssistant) -> None:
     )
 
     socketio.connected = True
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(seconds=30))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(seconds=30))
     await hass.async_block_till_done()
     assert (
         states.get(
@@ -385,7 +385,7 @@ async def test_door_sense_update_via_socketio(hass: HomeAssistant) -> None:
     )
 
     # Ensure socketio status is always preserved
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=2))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(hours=2))
     await hass.async_block_till_done()
     assert (
         states.get(
@@ -408,7 +408,7 @@ async def test_door_sense_update_via_socketio(hass: HomeAssistant) -> None:
         == STATE_ON
     )
 
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=4))
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(hours=4))
     await hass.async_block_till_done()
     assert (
         states.get(
