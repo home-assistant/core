@@ -202,10 +202,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             self.options.update(user_input)
 
             if not errors:
-                title_hosts = ", ".join(self.options[CONF_HOSTS_LIST])
-                return self.async_create_entry(
-                    title=f"Nmap Tracker {title_hosts}", data=self.options
-                )
+                return self.async_create_entry(title="", data=self.options)
 
         return self.async_show_form(
             step_id="init",
