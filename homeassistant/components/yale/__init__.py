@@ -32,7 +32,7 @@ from .util import async_create_yale_clientsession
 type YaleConfigEntry = ConfigEntry[YaleData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> None:
     """Set up Yale from a config entry."""
     session = async_create_yale_clientsession(hass)
     implementation = await async_get_config_entry_implementation(hass, entry)
@@ -53,12 +53,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bool
     ) as err:
         raise ConfigEntryNotReady from err
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_setup_yale(

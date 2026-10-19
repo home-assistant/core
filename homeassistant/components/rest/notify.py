@@ -4,7 +4,7 @@ from http import HTTPStatus
 import logging
 from typing import Any, override
 
-import httpx
+import httpx2
 import probatio
 
 from homeassistant.components.notify import (
@@ -90,12 +90,12 @@ async def async_get_service(
     password: str | None = config.get(CONF_PASSWORD)
     verify_ssl: bool = config[CONF_VERIFY_SSL]
 
-    auth: httpx.Auth | None = None
+    auth: httpx2.Auth | None = None
     if username and password:
         if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
-            auth = httpx.DigestAuth(username, password)
+            auth = httpx2.DigestAuth(username, password)
         else:
-            auth = httpx.BasicAuth(username, password)
+            auth = httpx2.BasicAuth(username, password)
 
     return RestNotificationService(
         hass,
@@ -128,7 +128,7 @@ class RestNotificationService(BaseNotificationService):
         target_param_name: str | None,
         data: dict[str, Any] | None,
         data_template: dict[str, Any] | None,
-        auth: httpx.Auth | None,
+        auth: httpx2.Auth | None,
         verify_ssl: bool,
     ) -> None:
         """Initialize the service."""
@@ -186,7 +186,7 @@ class RestNotificationService(BaseNotificationService):
                 params=self._params,
                 data=data,
                 timeout=10,
-                auth=self._auth or httpx.USE_CLIENT_DEFAULT,
+                auth=self._auth or httpx2.USE_CLIENT_DEFAULT,
             )
         elif self._method == "POST_JSON":
             response = await websession.post(
@@ -195,7 +195,7 @@ class RestNotificationService(BaseNotificationService):
                 params=self._params,
                 json=data,
                 timeout=10,
-                auth=self._auth or httpx.USE_CLIENT_DEFAULT,
+                auth=self._auth or httpx2.USE_CLIENT_DEFAULT,
             )
         else:  # default GET
             response = await websession.get(
@@ -206,28 +206,23 @@ class RestNotificationService(BaseNotificationService):
                 auth=self._auth,
             )
 
-        if (
-            response.status_code >= HTTPStatus.INTERNAL_SERVER_ERROR
-            and response.status_code < 600
-        ):
+        if HTTPStatus.INTERNAL_SERVER_ERROR <= response.status_code < 600:
             _LOGGER.exception(
                 "Server error. Response %d: %s:",
                 response.status_code,
                 response.reason_phrase,
             )
         elif (
-            response.status_code >= HTTPStatus.BAD_REQUEST
-            and response.status_code < HTTPStatus.INTERNAL_SERVER_ERROR
+            HTTPStatus.BAD_REQUEST
+            <= response.status_code
+            < HTTPStatus.INTERNAL_SERVER_ERROR
         ):
             _LOGGER.exception(
                 "Client error. Response %d: %s:",
                 response.status_code,
                 response.reason_phrase,
             )
-        elif (
-            response.status_code >= HTTPStatus.OK
-            and response.status_code < HTTPStatus.MULTIPLE_CHOICES
-        ):
+        elif HTTPStatus.OK <= response.status_code < HTTPStatus.MULTIPLE_CHOICES:
             _LOGGER.debug(
                 "Success. Response %d: %s:",
                 response.status_code,

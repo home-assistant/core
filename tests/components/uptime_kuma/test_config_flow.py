@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pythonkuma import (
     UptimeKumaAuthenticationException,
     UptimeKumaConnectionException,
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import ADDON_SERVICE_INFO
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_pythonkuma")
@@ -38,6 +37,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "uptime.example.org"
     assert result["data"] == {
@@ -355,6 +355,7 @@ async def test_hassio_addon_discovery_confirm_only(
         CONF_VERIFY_SSL: True,
         CONF_API_KEY: None,
     }
+    assert result["result"].unique_id == "1234"
 
     assert len(mock_setup_entry.mock_calls) == 1
 

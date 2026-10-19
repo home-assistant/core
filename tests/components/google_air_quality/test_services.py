@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 from google_air_quality_api.model import AirQualityForecastData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.google_air_quality.const import DOMAIN
@@ -16,8 +17,6 @@ from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.mark.usefixtures("setup_integration")

@@ -9,14 +9,13 @@ from pyoverkiz.client import OverkizClient
 from pyoverkiz.enums import APIType
 from pyoverkiz.models import Event, ServerConfig, Setup
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.overkiz.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import DEFAULT_SETUP_FIXTURE, load_setup_fixture
 from .test_config_flow import TEST_EMAIL, TEST_GATEWAY_ID, TEST_PASSWORD, TEST_SERVER
-
-from tests.common import MockConfigEntry
 
 type SetupOverkizIntegration = Callable[..., Awaitable[MockConfigEntry]]
 

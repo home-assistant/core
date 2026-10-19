@@ -1,6 +1,7 @@
 {
   "domain": "telegram",
   "name": "Telegram",
+  "categories": ["messaging_notifications.chat_apps"],
   "codeowners": [],
   "dependencies": ["telegram_bot"],
   "documentation": "https://www.home-assistant.io/integrations/telegram",

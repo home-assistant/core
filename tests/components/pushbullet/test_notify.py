@@ -2,6 +2,7 @@
 
 from http import HTTPStatus
 
+from pytest_homeassistant.common import MockConfigEntry
 import requests_mock
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
@@ -9,8 +10,6 @@ from homeassistant.components.pushbullet.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_CONFIG
-
-from tests.common import MockConfigEntry
 
 
 async def test_pushbullet_push_default(
