@@ -129,6 +129,25 @@ async def test_media_player_select_unknown_source(
     assert state_tv.attributes[ATTR_INPUT_SOURCE] == MOCK_INPUTS[0]
 
 
+async def test_media_player_select_source_rejected(
+    hass: HomeAssistant, init_integration: MockConfigEntry, mock_remote: Mock
+) -> None:
+    """Test a rejected input change is not reported as the current source."""
+    mock_remote.set_input = Mock(side_effect=SOAPError)
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "HDMI2"},
+        blocking=True,
+    )
+
+    mock_remote.set_input.assert_called_once_with("HDMI2")
+    state_tv = hass.states.get(ENTITY_ID)
+    assert state_tv.state == STATE_ON
+    assert state_tv.attributes[ATTR_INPUT_SOURCE] == MOCK_INPUTS[0]
+
+
 async def test_media_player_current_input_failure(
     hass: HomeAssistant, init_integration: MockConfigEntry, mock_remote: Mock
 ) -> None:

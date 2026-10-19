@@ -204,7 +204,7 @@ class PanasonicVieraTVEntity(
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         await self._remote.async_select_source(source)
-        self.coordinator.async_update_listeners()
+        await self.coordinator.async_refresh()
 
     @override
     async def async_media_stop(self) -> None:
