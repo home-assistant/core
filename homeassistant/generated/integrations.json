@@ -2563,6 +2563,9 @@
     "ecosmart": {
       "name": "ecosmart",
       "integration_type": "service",
+      "categories": [
+        "energy.energy_prices"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
