@@ -1,14 +1,16 @@
 """Test the Backup SFTP Location platform."""
 
+from collections.abc import AsyncIterator
 from io import StringIO
 import json
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, call, patch
 
 from asyncssh.sftp import SFTPError
 import pytest
 
 from homeassistant.components.sftp_storage.backup import (
+    async_get_backup_agents,
     async_register_backup_agents_listener,
 )
 from homeassistant.components.sftp_storage.const import (
@@ -289,6 +291,32 @@ async def test_agents_upload(
         mock_ssh_connection._sftp._mock_open._mock_write.call_args_list[1].args[0]
     )["metadata"]
     assert uploaded_metadata == BACKUP_METADATA["metadata"]
+
+
+@pytest.mark.usefixtures("mock_ssh_connection")
+async def test_agents_upload_progress(hass: HomeAssistant) -> None:
+    """Test that upload progress is reported after each written chunk."""
+
+    async def backup_stream() -> AsyncIterator[bytes]:
+        yield b"abc"
+        yield b"defgh"
+
+    async def open_stream() -> AsyncIterator[bytes]:
+        return backup_stream()
+
+    on_progress = Mock()
+    (agent,) = await async_get_backup_agents(hass)
+
+    await agent.async_upload_backup(
+        open_stream=open_stream,
+        backup=TEST_AGENT_BACKUP,
+        on_progress=on_progress,
+    )
+
+    assert on_progress.call_args_list == [
+        call(bytes_uploaded=3),
+        call(bytes_uploaded=8),
+    ]
 
 
 async def test_agents_upload_fail(

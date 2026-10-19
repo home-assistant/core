@@ -128,7 +128,7 @@ class AtlanticDomesticHotWaterProductionMBLComponent(OverkizEntity, WaterHeaterE
         ):
             # STATE_ELECTRIC is a substitution for OverkizCommandParam.MANUAL
             # to keep up with the conventional state usage only
-            # https://developers.home-assistant.io/docs/core/entity/water-heater/#states
+            # https://contributors.home-assistant.io/core/entities/water-heater/#states
             return STATE_ELECTRIC
 
         return STATE_OFF
