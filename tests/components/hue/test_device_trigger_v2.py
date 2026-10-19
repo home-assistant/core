@@ -181,13 +181,22 @@ async def test_get_triggers_for_composite_device_id(
         config_entry_id=other_entry.entry_id, identifiers={("other", "1")}
     )
     composite_id = "composite00000000000000000000ab"
-    # Simulate a migration split: both devices carry the pre-migration composite id
+    # Simulate a migration split: both devices carry the pre-migration composite id,
+    # with the non-hue config entry as the composite's former primary
     device_registry._devices[hue_wall_switch_device.id] = attr.evolve(
-        hue_wall_switch_device, composite_device_id=composite_id
+        hue_wall_switch_device,
+        composite_device_id=composite_id,
+        composite_primary_config_entry=other_entry.entry_id,
     )
     device_registry._devices[other_device.id] = attr.evolve(
-        other_device, composite_device_id=composite_id
+        other_device,
+        composite_device_id=composite_id,
+        composite_primary_config_entry=other_entry.entry_id,
     )
+    # The restored composite is based on the non-hue split, so the hue config entry is
+    # only reachable through the composite's merged config entries
+    composite_device = device_registry.async_get(composite_id)
+    assert composite_device.config_entry_id == other_entry.entry_id
 
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, composite_id

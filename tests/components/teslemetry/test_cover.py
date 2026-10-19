@@ -17,16 +17,19 @@ from homeassistant.components.cover import (
     SERVICE_STOP_COVER,
     CoverState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.restore_state import async_get as async_get_restore_state
 
 from . import assert_entities, setup_platform
 from .const import (
     COMMAND_ERRORS,
     COMMAND_OK,
+    CYBERTRUCK_VIN,
     METADATA,
+    METADATA_CYBERTRUCK,
     METADATA_NOSCOPE,
     PRODUCTS,
     PRODUCTS_CYBERTRUCK,
@@ -34,7 +37,9 @@ from .const import (
     VEHICLE_DATA_NONE,
 )
 
-VIN = PRODUCTS_CYBERTRUCK["response"][0]["vin"]
+from tests.common import mock_restore_cache_with_extra_data
+
+WINDOWS_ENTITY_ID = "cover.test_windows"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -95,21 +100,24 @@ async def test_cover_noscope(
 
 
 @pytest.mark.parametrize(
-    ("products", "expected"),
+    ("products", "metadata", "expected"),
     [
-        pytest.param(PRODUCTS, False, id="model3"),
-        pytest.param(PRODUCTS_CYBERTRUCK, True, id="cybertruck"),
+        pytest.param(PRODUCTS, METADATA, False, id="model3"),
+        pytest.param(PRODUCTS_CYBERTRUCK, METADATA_CYBERTRUCK, True, id="cybertruck"),
     ],
 )
 async def test_cover_tonneau_model_gate(
     hass: HomeAssistant,
     mock_products: AsyncMock,
+    mock_metadata: AsyncMock,
     products: dict,
+    metadata: dict,
     expected: bool,
 ) -> None:
-    """Tests that the tonneau cover is only created for a Cybertruck."""
+    """Tests that the tonneau cover is only created for a Cybertruck VIN."""
 
     mock_products.return_value = products
+    mock_metadata.return_value = metadata
     await setup_platform(hass, [Platform.COVER])
     assert (hass.states.get("cover.test_tonneau") is not None) == expected
 
@@ -131,8 +139,8 @@ async def test_cover_tonneau_firmware_gate(
     """Tests that the tonneau cover is only created on firmware >= 2024.44.25."""
 
     mock_products.return_value = PRODUCTS_CYBERTRUCK
-    metadata = deepcopy(METADATA)
-    metadata["vehicles"][VIN]["firmware"] = firmware
+    metadata = deepcopy(METADATA_CYBERTRUCK)
+    metadata["vehicles"][CYBERTRUCK_VIN]["firmware"] = firmware
     mock_metadata.return_value = metadata
 
     await setup_platform(hass, [Platform.COVER])
@@ -145,10 +153,12 @@ async def test_cover_cybertruck(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_products: AsyncMock,
+    mock_metadata: AsyncMock,
 ) -> None:
     """Tests that the cover entities are correct for a Cybertruck."""
 
     mock_products.return_value = PRODUCTS_CYBERTRUCK
+    mock_metadata.return_value = METADATA_CYBERTRUCK
     entry = await setup_platform(hass, [Platform.COVER])
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
@@ -157,10 +167,12 @@ async def test_cover_cybertruck(
 async def test_cover_tonneau_services(
     hass: HomeAssistant,
     mock_products: AsyncMock,
+    mock_metadata: AsyncMock,
 ) -> None:
     """Tests that the tonneau cover commands work for a Cybertruck."""
 
     mock_products.return_value = PRODUCTS_CYBERTRUCK
+    mock_metadata.return_value = METADATA_CYBERTRUCK
     await setup_platform(hass, [Platform.COVER])
 
     entity_id = "cover.test_tonneau"
@@ -207,19 +219,19 @@ async def test_cover_tonneau_services(
 async def test_cover_tonneau_streaming(
     hass: HomeAssistant,
     mock_products: AsyncMock,
+    mock_metadata: AsyncMock,
     mock_add_listener: AsyncMock,
 ) -> None:
     """Tests that the tonneau cover reflects streamed position and percent."""
 
     mock_products.return_value = PRODUCTS_CYBERTRUCK
+    mock_metadata.return_value = METADATA_CYBERTRUCK
     await setup_platform(hass, [Platform.COVER])
 
     entity_id = "cover.test_tonneau"
-    vin = PRODUCTS_CYBERTRUCK["response"][0]["vin"]
-
     mock_add_listener.send(
         {
-            "vin": vin,
+            "vin": CYBERTRUCK_VIN,
             "data": {
                 Signal.TONNEAU_POSITION: "TonneauPositionStateClosed",
                 Signal.TONNEAU_OPEN_PERCENT: 0,
@@ -236,7 +248,7 @@ async def test_cover_tonneau_streaming(
 
     mock_add_listener.send(
         {
-            "vin": vin,
+            "vin": CYBERTRUCK_VIN,
             "data": {
                 Signal.TONNEAU_POSITION: "TonneauPositionStateFullyOpen",
                 Signal.TONNEAU_OPEN_PERCENT: 100,
@@ -565,3 +577,77 @@ async def test_cover_streaming(
     assert hass.states.get("cover.test_charge_port_door").state == "unknown"
     assert hass.states.get("cover.test_frunk").state == "unknown"
     assert hass.states.get("cover.test_trunk").state == "unknown"
+
+
+@pytest.mark.parametrize(
+    ("restored_state", "extra_data", "expected_state", "expected_extra_data"),
+    [
+        pytest.param(
+            CoverState.CLOSED,
+            {"fd": True, "fp": True, "rd": True, "rp": True},
+            CoverState.CLOSED,
+            {"fd": True, "fp": True, "rd": True, "rp": True},
+            id="closed",
+        ),
+        pytest.param(
+            CoverState.OPEN,
+            {"fd": False, "fp": True, "rd": True, "rp": True},
+            CoverState.CLOSED,
+            {"fd": True, "fp": True, "rd": True, "rp": True},
+            id="open_window_closes",
+        ),
+        pytest.param(
+            CoverState.OPEN,
+            {"fd": False, "fp": False, "rd": True, "rp": True},
+            CoverState.OPEN,
+            {"fd": True, "fp": False, "rd": True, "rp": True},
+            id="other_window_still_open",
+        ),
+        pytest.param(
+            CoverState.CLOSED,
+            None,
+            CoverState.CLOSED,
+            {"fd": True, "fp": True, "rd": True, "rp": True},
+            id="no_extra_data_closed",
+        ),
+        pytest.param(
+            CoverState.OPEN,
+            None,
+            STATE_UNKNOWN,
+            {"fd": True, "fp": None, "rd": None, "rp": None},
+            id="no_extra_data_open",
+        ),
+    ],
+)
+async def test_cover_streaming_windows_restore(
+    hass: HomeAssistant,
+    mock_add_listener: AsyncMock,
+    restored_state: CoverState,
+    extra_data: dict[str, bool] | None,
+    expected_state: str,
+    expected_extra_data: dict[str, bool | None],
+) -> None:
+    """Tests the windows cover restores its per-window state."""
+
+    mock_restore_cache_with_extra_data(
+        hass, ((State(WINDOWS_ENTITY_ID, restored_state), extra_data),)
+    )
+
+    await setup_platform(hass, [Platform.COVER])
+    assert hass.states.get(WINDOWS_ENTITY_ID).state == restored_state
+
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {Signal.FD_WINDOW: "WindowStateClosed"},
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(WINDOWS_ENTITY_ID).state == expected_state
+    stored_states = {
+        stored.state.entity_id: stored
+        for stored in async_get_restore_state(hass).async_get_stored_states()
+    }
+    assert stored_states[WINDOWS_ENTITY_ID].extra_data.as_dict() == expected_extra_data

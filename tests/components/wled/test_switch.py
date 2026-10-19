@@ -84,6 +84,12 @@ async def test_snapshots(
             {"send": True},
             {"send": False},
         ),
+        (
+            "switch.wled_rgb_light_audio_reactive",
+            "audio_reactive",
+            {"on": True},
+            {"on": False},
+        ),
     ],
 )
 async def test_switch_state(
@@ -207,3 +213,62 @@ async def test_switch_dynamically_handle_segments(
         segment1_reverse := hass.states.get("switch.wled_rgb_light_segment_1_reverse")
     )
     assert segment1_reverse.state == STATE_UNAVAILABLE
+
+
+async def test_audio_reactive_switch_follows_device(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_wled: MagicMock,
+) -> None:
+    """Test the AudioReactive switch follows the usermod's state on the device."""
+    assert (state := hass.states.get("switch.wled_rgb_light_audio_reactive"))
+    assert state.state == STATE_OFF
+
+    data = await async_load_json_object_fixture(hass, "rgb.json", DOMAIN)
+    data["state"]["AudioReactive"]["on"] = True
+    mock_wled.update.return_value.update_from_dict(data)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("switch.wled_rgb_light_audio_reactive"))
+    assert state.state == STATE_ON
+
+    # The usermod is gone, like after flashing firmware without it.
+    del data["state"]["AudioReactive"]
+    mock_wled.update.return_value.update_from_dict(data)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("switch.wled_rgb_light_audio_reactive"))
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("device_fixture", ["rgb_single_segment"])
+async def test_audio_reactive_switch_once_usermod_shows_up(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_wled: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the AudioReactive switch is added once the usermod shows up."""
+    assert not hass.states.get("switch.wled_rgb_light_audio_reactive")
+
+    # Like after flashing firmware with the usermod.
+    data = await async_load_json_object_fixture(hass, "rgb_single_segment.json", DOMAIN)
+    data["state"]["AudioReactive"] = {"on": True}
+    mock_wled.update.return_value.update_from_dict(data)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("switch.wled_rgb_light_audio_reactive"))
+    assert state.state == STATE_ON
+
+    # Later updates don't add it a second time.
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert "does not generate unique IDs" not in caplog.text

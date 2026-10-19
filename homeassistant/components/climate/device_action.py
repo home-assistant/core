@@ -19,7 +19,8 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_capability, get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import DOMAIN, const
+from . import const
+from .const import DOMAIN
 
 ACTION_TYPES = {"set_hvac_mode", "set_preset_mode"}
 
@@ -39,7 +40,9 @@ SET_PRESET_MODE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     }
 )
 
-_ACTION_SCHEMA = probatio.Any(SET_HVAC_MODE_SCHEMA, SET_PRESET_MODE_SCHEMA)
+_ACTION_SCHEMA = probatio.TaggedUnion(
+    CONF_TYPE, [SET_HVAC_MODE_SCHEMA, SET_PRESET_MODE_SCHEMA]
+)
 
 
 async def async_validate_action_config(

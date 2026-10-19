@@ -123,6 +123,13 @@ class DeconzDevice[_DeviceT: _DeviceType](DeconzBase[_DeviceT], Entity):
         self.hub.entities[self.TYPE].remove(self.unique_id)
 
     @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Re-key the deCONZ id mapping on the new entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+        self.hub.deconz_ids[self.entity_id] = self.hub.deconz_ids.pop(old_entity_id)
+
+    @callback
     def async_update_connection_state(self) -> None:
         """Update the device's available state."""
         self.async_write_ha_state()

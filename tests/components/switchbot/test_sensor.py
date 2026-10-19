@@ -41,6 +41,7 @@ from . import (
     PRESENCE_SENSOR_SERVICE_INFO,
     RELAY_SWITCH_2PM_SERVICE_INFO,
     REMOTE_SERVICE_INFO,
+    UNIVERSAL_REMOTE_SERVICE_INFO,
     WEATHER_STATION_SERVICE_INFO,
     WOHAND_SERVICE_INFO,
     WOHUB2_SERVICE_INFO,
@@ -71,7 +72,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(hass.states.async_all("sensor")) == 2
 
@@ -104,14 +105,14 @@ async def test_co2_sensor(hass: HomeAssistant) -> None:
             CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
             CONF_NAME: "test-name",
             CONF_PASSWORD: "test-password",
-            CONF_SENSOR_TYPE: "hygrometer_co2",
+            CONF_SENSOR_TYPE: "meter_pro_co2",
         },
         unique_id="aabbccddeeaa",
     )
     entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(hass.states.async_all("sensor")) == 5
 
@@ -169,7 +170,7 @@ async def test_relay_switch_1pm_sensor(hass: HomeAssistant) -> None:
         entry.add_to_hass(hass)
 
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(hass.states.async_all("sensor")) == 5
 
@@ -230,7 +231,7 @@ async def test_leak_sensor(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     battery_sensor = hass.states.get("sensor.test_name_battery")
     battery_sensor_attrs = battery_sensor.attributes
@@ -272,13 +273,52 @@ async def test_remote(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(hass.states.async_all("sensor")) == 2
 
     battery_sensor = hass.states.get("sensor.test_name_battery")
     battery_sensor_attrs = battery_sensor.attributes
     assert battery_sensor.state == "86"
+    assert battery_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Battery"
+    assert battery_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert battery_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+
+    rssi_sensor = hass.states.get("sensor.test_name_bluetooth_signal")
+    rssi_sensor_attrs = rssi_sensor.attributes
+    assert rssi_sensor.state == "-60"
+    assert rssi_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Bluetooth signal"
+    assert rssi_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "dBm"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_universal_remote_sensor(hass: HomeAssistant) -> None:
+    """Test setting up the Universal Remote battery sensor."""
+    await async_setup_component(hass, DOMAIN, {})
+    inject_bluetooth_service_info(hass, UNIVERSAL_REMOTE_SERVICE_INFO)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
+            CONF_NAME: "test-name",
+            CONF_SENSOR_TYPE: "universal_remote",
+        },
+        unique_id="aabbccddeeff",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(hass.states.async_all("sensor")) == 2
+
+    battery_sensor = hass.states.get("sensor.test_name_battery")
+    battery_sensor_attrs = battery_sensor.attributes
+    assert battery_sensor.state == "80"
     assert battery_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Battery"
     assert battery_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "%"
     assert battery_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
@@ -311,7 +351,7 @@ async def test_hub2_sensor(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(hass.states.async_all("sensor")) == 5
 
@@ -368,7 +408,7 @@ async def test_hubmini_matter_sensor(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(hass.states.async_all("sensor")) == 3
 
@@ -419,7 +459,7 @@ async def test_fan_sensors(hass: HomeAssistant) -> None:
         return_value=True,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert len(hass.states.async_all("sensor")) == 2
 
@@ -458,7 +498,7 @@ async def test_hub3_sensor(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(hass.states.async_all("sensor")) == 5
 
@@ -523,7 +563,7 @@ async def test_evaporative_humidifier_sensor(hass: HomeAssistant) -> None:
         return_value=True,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert len(hass.states.async_all("sensor")) == 4
 
@@ -588,7 +628,7 @@ async def test_plug_mini_eu_sensor(hass: HomeAssistant) -> None:
         entry.add_to_hass(hass)
 
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(hass.states.async_all("sensor")) == 5
 
@@ -670,7 +710,7 @@ async def test_relay_switch_2pm_sensor(hass: HomeAssistant) -> None:
         entry.add_to_hass(hass)
 
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(hass.states.async_all("sensor")) == 9
 
@@ -759,7 +799,7 @@ async def test_climate_panel_sensor(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(hass.states.async_all("sensor")) == 4
     assert len(hass.states.async_all("binary_sensor")) == 2
@@ -822,7 +862,7 @@ async def test_presence_sensor(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(hass.states.async_all("sensor")) == 4
     assert len(hass.states.async_all("binary_sensor")) == 1
@@ -904,7 +944,7 @@ async def test_presence_sensor_without_battery(hass: HomeAssistant) -> None:
         entry.add_to_hass(hass)
 
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert len(hass.states.async_all("sensor")) == 3
         assert len(hass.states.async_all("binary_sensor")) == 1
@@ -991,7 +1031,7 @@ async def test_presence_sensor_battery_range_mapping(
         entry.add_to_hass(hass)
 
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         battery_range_sensor = hass.states.get("sensor.test_name_battery_range")
         assert battery_range_sensor is not None
@@ -1065,7 +1105,7 @@ async def test_keypad_vision_sensor(
         return_value=True,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert len(hass.states.async_all("sensor")) == 2 + len(trigger_sensors)
         assert len(hass.states.async_all("binary_sensor")) == 6
@@ -1165,7 +1205,7 @@ async def test_air_purifier_sensor(hass: HomeAssistant) -> None:
         entry.add_to_hass(hass)
 
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert {state.entity_id for state in hass.states.async_all("sensor")} == {
         "sensor.test_name_pm2_5",
@@ -1227,7 +1267,7 @@ async def test_air_purifier_pm25_sensor_unknown_before_first_poll(
         entry.add_to_hass(hass)
 
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     # PM2.5 entity must exist even when the initial poll returned no data.
     pm25_sensor = hass.states.get("sensor.test_name_pm2_5")
@@ -1260,7 +1300,7 @@ async def test_weather_station_sensor(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(hass.states.async_all("sensor")) == 4
 

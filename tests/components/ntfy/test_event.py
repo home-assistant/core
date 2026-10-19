@@ -163,6 +163,13 @@ async def test_event_exceptions(
     assert state.state == expected_state
 
 
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param("event.mytopic", id="not_renamed"),
+        pytest.param("event.renamed", id="renamed"),
+    ],
+)
 async def test_event_topic_protected(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -171,6 +178,7 @@ async def test_event_topic_protected(
     issue_registry: ir.IssueRegistry,
     entity_registry: er.EntityRegistry,
     hass_client: ClientSessionGenerator,
+    entity_id: str,
 ) -> None:
     """Test ntfy events cannot subscribe to protected topic."""
     mock_aiontfy.subscribe.side_effect = NtfyForbiddenError(403, 403, "forbidden")
@@ -193,6 +201,10 @@ async def test_event_topic_protected(
         domain=DOMAIN, issue_id="topic_protected_mytopic"
     )
 
+    # The repair flow disables the entity also if it was renamed after the issue
+    entity_registry.async_update_entity("event.mytopic", new_entity_id=entity_id)
+    await hass.async_block_till_done()
+
     client = await hass_client()
     result = await start_repair_fix_flow(client, DOMAIN, "topic_protected_mytopic")
 
@@ -202,6 +214,6 @@ async def test_event_topic_protected(
     result = await process_repair_fix_flow(client, flow_id)
     assert result["type"] == "create_entry"
 
-    assert (entity := entity_registry.async_get("event.mytopic"))
+    assert (entity := entity_registry.async_get(entity_id))
     assert entity.disabled
     assert entity.disabled_by is er.RegistryEntryDisabler.USER

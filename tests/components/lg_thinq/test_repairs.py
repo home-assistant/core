@@ -57,6 +57,7 @@ async def test_deprecated_fan_speed_number_repair_flow(
     )
     assert issue is not None
     assert issue.is_fixable is True
+    assert issue.config_entry_id == mock_config_entry.entry_id
 
     # Start the repair flow
     client = await hass_client()

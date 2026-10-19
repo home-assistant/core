@@ -1,6 +1,7 @@
 {
   "domain": "librenms",
   "name": "LibreNMS",
+  "categories": ["computers_network.monitoring"],
   "codeowners": ["@mib1185"],
   "config_flow": true,
   "dependencies": ["http"],
@@ -8,6 +9,6 @@
   "integration_type": "service",
   "iot_class": "local_polling",
   "loggers": ["aiolibrenms"],
-  "quality_scale": "bronze",
+  "quality_scale": "silver",
   "requirements": ["aiolibrenms==0.0.4"]
 }
