@@ -11,7 +11,8 @@
   "requirements": [
     "PlexAPI==4.18.2",
     "plexauth==0.0.6",
-    "plexwebsocket==0.0.14"
+    "plexwebsocket==0.0.14",
+    "rapidfuzz==3.14.6"
   ],
   "zeroconf": ["_plexmediasvr._tcp.local."]
 }

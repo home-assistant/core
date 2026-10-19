@@ -1,6 +1,5 @@
 """Helper methods to search for Plex media."""
 
-from difflib import SequenceMatcher
 import logging
 import re
 from typing import TYPE_CHECKING, Any
@@ -9,6 +8,7 @@ import unicodedata
 from plexapi.base import PlexObject
 from plexapi.exceptions import BadRequest, NotFound
 from plexapi.library import LibrarySection
+from rapidfuzz import fuzz
 
 from .errors import MediaNotFound
 
@@ -151,11 +151,13 @@ def title_score(query: str, title: str) -> float:
         return 0.0
     if normalized == query:
         return 1.0
-    score = SequenceMatcher(None, query, normalized).ratio()
-    score = max(
-        score,
-        0.95
-        * SequenceMatcher(None, phonetic_key(query), phonetic_key(normalized)).ratio(),
+    score = (
+        max(
+            fuzz.ratio(query, normalized),
+            fuzz.token_sort_ratio(query, normalized),
+            0.95 * fuzz.ratio(phonetic_key(query), phonetic_key(normalized)),
+        )
+        / 100
     )
     if len(query) >= 4 and query in normalized:
         score = max(score, 0.85)

@@ -399,3 +399,10 @@ def test_title_score_keeps_non_latin_titles() -> None:
     assert title_score(query, "Шерлок") == 1.0
     assert title_score(query, "Шерлок Холмс") > title_score(query, "Мастер")
     assert normalize_title("Amélie") == "amelie"
+
+
+def test_title_score_ignores_word_order() -> None:
+    """Test a title is found when the words are said in another order."""
+    query = normalize_title("Reloaded Matrix")
+    assert title_score(query, "Matrix Reloaded") > 0.9
+    assert title_score(query, "Inception") < 0.6
