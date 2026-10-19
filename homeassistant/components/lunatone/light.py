@@ -18,7 +18,6 @@ from homeassistant.components.light import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.color import brightness_to_value, value_to_brightness
@@ -89,28 +88,23 @@ class LunatoneLight(
         super().__init__(coordinator)
         self._line_id = line_id
         self._device_id = device_id
-        self._config_entry_unique_id = config_entry_unique_id
         self._device = self.coordinator.data[line_id][device_id]
 
-        self._attr_unique_id = f"{config_entry_unique_id}-device{device_id}"
+        unique_id = f"{config_entry_unique_id}-device{device_id}"
 
-    @property
-    @override
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        assert self.unique_id
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
+        device_info = dr.DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
             name=self._device.data.name,
-            via_device_id=dr.async_get_device_id_by_identifier(
-                self.hass,
-                (
-                    DOMAIN,
-                    f"{self._config_entry_unique_id}-line{self._device.data.line}",
-                ),
-                config_entry_id=self.coordinator.config_entry.entry_id,
-            ),
         )
+        with contextlib.suppress(ValueError):
+            device_info.via_device_id = dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, f"{config_entry_unique_id}-line{line_id}"),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            )
+
+        self._attr_device_info = device_info
+        self._attr_unique_id = unique_id
 
     @property
     @override
@@ -272,7 +266,7 @@ class LunatoneLineBroadcastLight(
         self._broadcast = broadcast
 
         line_unique_id = f"{config_entry_unique_id}-line{broadcast.line}"
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, line_unique_id)})
+        self._attr_device_info = dr.DeviceInfo(identifiers={(DOMAIN, line_unique_id)})
         self._attr_unique_id = line_unique_id
 
     @override
