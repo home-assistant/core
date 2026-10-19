@@ -2034,7 +2034,13 @@ async def test_reconfigure_token_refresh_failure(
     assert result["reason"] == "cannot_connect"
 
 
-@pytest.mark.parametrize("nest_test_config", [TEST_CONFIG_LEGACY_TOPIC])
+@pytest.mark.parametrize(
+    "nest_test_config",
+    [
+        pytest.param(TEST_CONFIG_LEGACY_TOPIC, id="legacy-topic"),
+        pytest.param(TEST_CONFIG_NO_CLOUD_PROJECT, id="no-cloud-project"),
+    ],
+)
 @pytest.mark.parametrize("token_expiration_time", [EXPIRED_TOKEN_TIMESTAMP])
 async def test_reconfigure_token_revoked(
     hass: HomeAssistant,
@@ -2066,6 +2072,7 @@ async def test_reconfigure_token_revoked(
     assert result["reason"] == "reconfigure_successful"
 
     assert config_entry.data["token"]["access_token"] == "mock-access-token"
+    assert config_entry.data["cloud_project_id"] == CLOUD_PROJECT_ID
     assert config_entry.data["topic_name"] == NEW_TOPIC_NAME
     assert config_entry.data["subscription_name"] == NEW_SUBSCRIPTION_NAME
 

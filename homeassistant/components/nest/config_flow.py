@@ -195,18 +195,6 @@ class NestFlowHandler(
             _LOGGER.debug("Error refreshing token: %s", err)
             return self.async_abort(reason="cannot_connect")
         self._data["token"] = session.token
-        if CONF_CLOUD_PROJECT_ID not in self._data:
-            # Oldest entries did not store the cloud project
-            subscription_name = self._data.get(
-                CONF_SUBSCRIPTION_NAME, self._data.get(CONF_SUBSCRIBER_ID, "")
-            )
-            if not (
-                cloud_project_id := api.cloud_project_from_subscription(
-                    subscription_name
-                )
-            ):
-                return await self.async_step_cloud_project()
-            self._data[CONF_CLOUD_PROJECT_ID] = cloud_project_id
         return await self.async_step_pubsub_topic()
 
     @override
@@ -309,6 +297,18 @@ class NestFlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Configure and create Pub/Sub topic."""
+        if CONF_CLOUD_PROJECT_ID not in self._data:
+            # Oldest entries did not store the cloud project
+            subscription_name = self._data.get(
+                CONF_SUBSCRIPTION_NAME, self._data.get(CONF_SUBSCRIBER_ID, "")
+            )
+            if not (
+                cloud_project_id := api.cloud_project_from_subscription(
+                    subscription_name
+                )
+            ):
+                return await self.async_step_cloud_project()
+            self._data[CONF_CLOUD_PROJECT_ID] = cloud_project_id
         cloud_project_id = self._data[CONF_CLOUD_PROJECT_ID]
         if self._admin_client is None:
             access_token = self._data["token"]["access_token"]
