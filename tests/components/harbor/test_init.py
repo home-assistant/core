@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.harbor.const import DOMAIN
@@ -18,8 +19,6 @@ from .conftest import (
     emit_message,
     set_connected,
 )
-
-from tests.common import MockConfigEntry
 
 # The default test fixture reports no device data on connect, so the device
 # keeps its placeholder name and the entity id derives from that.

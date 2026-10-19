@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from radiotherm import CommonThermostat
 from radiotherm.validate import RadiothermTstatError
 
@@ -11,8 +12,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-
-from tests.common import MockConfigEntry
 
 
 def _mock_radiotherm():

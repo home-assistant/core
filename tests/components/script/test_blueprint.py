@@ -7,6 +7,7 @@ import pathlib
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_mock_service
 
 from homeassistant.components import script
 from homeassistant.components.blueprint import (
@@ -26,8 +27,6 @@ from homeassistant.helpers import device_registry as dr, template
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import yaml as yaml_util
-
-from tests.common import MockConfigEntry, async_mock_service
 
 BUILTIN_BLUEPRINT_FOLDER = pathlib.Path(script.__file__).parent / "blueprints"
 

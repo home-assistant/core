@@ -4,6 +4,7 @@ import logging
 from unittest.mock import mock_open, patch
 
 import pytest
+from pytest_homeassistant.common import patch_yaml_files
 
 from homeassistant.components.python_script.const import DOMAIN, FOLDER
 from homeassistant.components.python_script.helpers import execute
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.setup import async_setup_component
-
-from tests.common import patch_yaml_files
 
 
 async def test_setup(hass: HomeAssistant) -> None:

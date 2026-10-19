@@ -10,6 +10,16 @@ from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockEntityPlatform,
+    MockPlatform,
+    RegistryEntryWithDefaults,
+    async_fire_time_changed,
+    mock_platform,
+    mock_registry,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentryData
@@ -44,17 +54,6 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockEntityPlatform,
-    MockPlatform,
-    RegistryEntryWithDefaults,
-    async_fire_time_changed,
-    mock_platform,
-    mock_registry,
-)
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "test_domain"

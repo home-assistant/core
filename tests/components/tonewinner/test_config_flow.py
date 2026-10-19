@@ -2,14 +2,14 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.tonewinner.const import CONF_SERIAL_PORT, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 def _mock_receiver(model: str | None = "AT-500") -> MagicMock:

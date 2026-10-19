@@ -14,6 +14,7 @@ from bsblan import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.bsblan.const import (
     CONF_HEATING_CIRCUITS,
@@ -34,8 +35,6 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 CLIMATE_ENTITY_ID = "climate.heating_circuit_1"
 

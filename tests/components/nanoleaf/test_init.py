@@ -17,14 +17,13 @@ from aionanoleaf2 import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import get_reauth_flows, setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 # The coordinator polls every minute; add a second for the update jitter
 POLL_INTERVAL = timedelta(minutes=1, seconds=1)

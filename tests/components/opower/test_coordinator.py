@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, patch
 from opower import AggregateType, CostRead
 from opower.exceptions import ApiException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 from syrupy.assertion import SnapshotAssertion
 
@@ -29,8 +30,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import EnergyConverter
-
-from tests.common import MockConfigEntry
 
 
 async def test_coordinator_first_run(

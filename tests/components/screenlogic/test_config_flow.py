@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from screenlogicpy import ScreenLogicError
 from screenlogicpy.const.common import (
     SL_GATEWAY_IP,
@@ -21,8 +22,6 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-
-from tests.common import MockConfigEntry
 
 
 async def test_flow_discovery(hass: HomeAssistant) -> None:

@@ -1,6 +1,7 @@
 """Test reproduce state for Vacuum."""
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED,
@@ -15,8 +16,6 @@ from homeassistant.components.vacuum import (
 from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
-
-from tests.common import async_mock_service
 
 FAN_SPEED_LOW = "low"
 FAN_SPEED_HIGH = "high"
