@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from ritualsgenie import RitualsGenieConnectionError, Sensor
 
 from homeassistant.components.rituals_perfume_genie.const import DOMAIN
@@ -12,6 +13,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .common import (
     init_integration,
@@ -21,8 +23,6 @@ from .common import (
     mock_diffuser_v1_battery_cartridge,
     mock_diffuser_v2_no_battery_no_cartridge,
 )
-
-from tests.common import async_fire_time_changed
 
 
 async def _tick(
@@ -172,6 +172,10 @@ async def test_diffuser_removed_from_account(
         state = hass.states.get(entity_id)
         assert state
         assert state.state == STATE_UNAVAILABLE
+
+    error = config_entry.runtime_data.sensors["lot123"].last_exception
+    assert isinstance(error, UpdateFailed)
+    assert error.translation_key == "diffuser_not_found"
 
 
 async def test_disabled_sensors_not_fetched(

@@ -16,6 +16,10 @@ from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
+__all__ = [
+    "DOMAIN",
+]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the template integration."""

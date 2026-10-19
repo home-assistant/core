@@ -1,6 +1,7 @@
 {
   "domain": "met",
   "name": "Meteorologisk institutt (Met.no)",
+  "categories": ["weather_alerts.forecasts"],
   "codeowners": ["@danielhiversen"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/met",

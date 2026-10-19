@@ -8,13 +8,12 @@ from unittest.mock import patch
 import aiohttp
 import aiotractive
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant import config_entries
 from homeassistant.components.tractive.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 USER_INPUT = {
     "email": "test-email@example.com",

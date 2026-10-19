@@ -1,6 +1,7 @@
 {
   "domain": "google_weather",
   "name": "Google Weather",
+  "categories": ["weather_alerts.forecasts"],
   "codeowners": ["@tronikos"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/google_weather",

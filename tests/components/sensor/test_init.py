@@ -8,6 +8,18 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntityPlatform,
+    MockModule,
+    MockPlatform,
+    async_mock_restore_state_shutdown_restart,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+    mock_restore_cache_with_extra_data,
+    setup_test_component_platform,
+)
 
 from homeassistant.components import sensor
 from homeassistant.components.number import (
@@ -75,19 +87,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from .common import MockRestoreSensor, MockSensor
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntityPlatform,
-    MockModule,
-    MockPlatform,
-    async_mock_restore_state_shutdown_restart,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-    mock_restore_cache_with_extra_data,
-    setup_test_component_platform,
-)
 
 TEST_DOMAIN = "test"
 

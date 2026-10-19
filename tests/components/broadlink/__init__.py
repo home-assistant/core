@@ -5,11 +5,10 @@ import inspect
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import broadlink_async as blk
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.broadlink.const import DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 # Do not edit/remove. Adding is ok.
 BROADLINK_DEVICES = {

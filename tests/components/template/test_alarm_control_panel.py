@@ -3,6 +3,8 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.plugins import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import template
@@ -41,9 +43,6 @@ from .conftest import (
     setup_mock_template_entity_restore_state,
     setup_restore_template_entity,
 )
-
-from tests.common import MockConfigEntry
-from tests.conftest import WebSocketGenerator
 
 TEST_STATE_ENTITY_ID = "sensor.test_state"
 TEST_AVAILABILITY_ENTITY = "binary_sensor.availability"

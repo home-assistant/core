@@ -3,14 +3,13 @@
 from unittest.mock import patch
 
 from pyfireservicerota import InvalidAuthError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.fireservicerota.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 MOCK_CONF = {
     CONF_USERNAME: "my@email.address",
