@@ -233,6 +233,22 @@ async def async_validate_trigger_config(
         except probatio.Invalid as err:
             raise InvalidDeviceAutomationConfig(err.msg) from err
 
+        # On an endpoint child device, the configured endpoint must be one the child
+        # covers. The capabilities form already pins this, but a manually authored
+        # trigger would otherwise listen to an unrelated endpoint while reporting the
+        # child device's id.
+        device = dr.async_get(hass).async_get(config[CONF_DEVICE_ID])
+        if (
+            trigger_type == VALUE_VALUE_UPDATED
+            and isinstance(device, dr.ChildDeviceEntry)
+            and (endpoints := get_endpoint_indices_from_child_device(device, node))
+            and config[ATTR_ENDPOINT] not in endpoints
+        ):
+            raise InvalidDeviceAutomationConfig(
+                f"Endpoint {config[ATTR_ENDPOINT]} is not covered by device "
+                f"{config[CONF_DEVICE_ID]}"
+            )
+
     return config
 
 

@@ -1382,6 +1382,48 @@ async def test_if_value_updated_value_fires_endpoint_child_device(
     )
 
 
+async def test_validate_value_updated_endpoint_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    climate_heatit_z_trm3: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test endpoint scope is enforced in validation for endpoint child devices.
+
+    The capabilities form pins the endpoint to the child device's endpoint(s), but a
+    manually authored trigger must be rejected by backend validation too. Otherwise it
+    could listen to an unrelated endpoint while reporting the child device's id.
+    """
+    child_device = device_registry.async_get_child_device_by_identifier(
+        get_device_id(client.driver, climate_heatit_z_trm3, 2), integration.entry_id
+    )
+    assert child_device
+
+    base_config = {
+        "platform": "device",
+        "domain": DOMAIN,
+        "device_id": child_device.id,
+        "type": "zwave_js.value_updated.value",
+        "command_class": CommandClass.SENSOR_MULTILEVEL.value,
+        "property": "Air temperature",
+        "property_key": None,
+    }
+
+    # The endpoint the child device covers validates.
+    result = await device_trigger.async_validate_trigger_config(
+        hass, {**base_config, "endpoint": 2}
+    )
+    assert result["endpoint"] == 2
+
+    # A value on a different endpoint (3) exists on the node but is not covered by the
+    # endpoint 2 child device, so validation rejects it.
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await device_trigger.async_validate_trigger_config(
+            hass, {**base_config, "endpoint": 3}
+        )
+
+
 async def test_if_notification_notification_fires_endpoint_child_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
