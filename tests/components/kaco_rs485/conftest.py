@@ -15,6 +15,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.kaco_rs485.const import DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_ADDRESSES, MOCK_ENTRY_DATA, MOCK_PORT, MOCK_PORT_DESCRIPTION
@@ -90,13 +91,21 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
+def platforms() -> list[Platform]:
+    """Platforms to set up; test modules override this."""
+    return [Platform.BINARY_SENSOR, Platform.SENSOR]
+
+
+@pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_bus: FakeBus,
+    platforms: list[Platform],
 ) -> MockConfigEntry:
     """Set the integration up against the fake bus."""
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.kaco_rs485.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
     return mock_config_entry
