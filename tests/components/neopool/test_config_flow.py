@@ -1,5 +1,6 @@
 """Test the NeoPool config flow."""
 
+import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -360,6 +361,45 @@ async def test_reconfigure_flow_relink_aborts_on_failed_unload(
     assert mock_unload.called
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_unload_failed"
+    assert mock_config_entry_serial.data[CONF_BAUDRATE] == DEFAULT_BAUDRATE
+
+    await hass.config_entries.async_unload(mock_config_entry_serial.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("mock_neopool_client")
+async def test_reconfigure_flow_relink_restores_on_cancellation(
+    hass: HomeAssistant,
+    mock_config_entry_serial: MockConfigEntry,
+) -> None:
+    """A cancelled probe restores the entry it took off the bus.
+
+    Config-flow steps are awaited directly by the HTTP handler; a client
+    disconnect cancels the coroutine. The try/finally around the probe must
+    put the entry back even when CancelledError is raised mid-probe.
+    """
+    await setup_integration(hass, mock_config_entry_serial)
+    assert mock_config_entry_serial.state is ConfigEntryState.LOADED
+
+    result = await mock_config_entry_serial.start_reconfigure_flow(hass)
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(
+            config_flow,
+            "async_probe_serial_unit",
+            AsyncMock(side_effect=asyncio.CancelledError),
+        )
+        with pytest.raises(asyncio.CancelledError):
+            await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_DEVICE: "/dev/ttyUSB0",
+                    CONF_BAUDRATE: 9600,
+                    SECTION_MORE_OPTIONS: {CONF_UNIT_ID: DEFAULT_UNIT_ID},
+                },
+            )
+
+    await hass.async_block_till_done()
+    assert mock_config_entry_serial.state is ConfigEntryState.LOADED
     assert mock_config_entry_serial.data[CONF_BAUDRATE] == DEFAULT_BAUDRATE
 
     await hass.config_entries.async_unload(mock_config_entry_serial.entry_id)

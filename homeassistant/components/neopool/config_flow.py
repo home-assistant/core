@@ -233,12 +233,15 @@ class NeoPoolConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_abort(reason="reconfigure_unload_failed")
                 relinking = True
 
-            serial, error_key = await _async_probe(self.hass, merged)
-
-            # A mismatch or probe error left the entry off the bus: put it back.
-            # A match falls through to the reload below on the new settings.
-            if relinking and serial != entry.unique_id:
-                await self.hass.config_entries.async_setup(entry.entry_id)
+            serial: str | None = None
+            error_key: str | None = None
+            try:
+                serial, error_key = await _async_probe(self.hass, merged)
+            finally:
+                # A mismatch, probe error, or cancellation left the entry off
+                # the bus: put it back. A match falls through to the reload.
+                if relinking and serial != entry.unique_id:
+                    await self.hass.config_entries.async_setup(entry.entry_id)
 
             if error_key:
                 errors["base"] = error_key
