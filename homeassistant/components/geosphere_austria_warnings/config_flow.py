@@ -37,7 +37,7 @@ def _build_schema(hass: HomeAssistant) -> probatio.Schema:
 class GeoSphereConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for GeoSphere Austria Warnings."""
 
-    VERSION = 1
+    VERSION = 2
 
     async def _async_validate_location(
         self, location: dict[str, float], errors: dict[str, str]

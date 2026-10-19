@@ -87,3 +87,30 @@ async def test_devices_with_various_mocks_errors(
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {}
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_no_device_discovered(
+    hass: HomeAssistant, mock_start: AsyncMock, mock_stop: AsyncMock
+) -> None:
+    """Test the discovery timeout shows no device found, then finish the flow."""
+
+    # The mocked hub is discovered after 0.1 seconds, so it is missed by a
+    # 0.01 second discovery timeout and found on the retry.
+    with patch(
+        "homeassistant.components.weatherflow.config_flow.DISCOVERY_TIMEOUT", 0.01
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"]["base"] == ERROR_MSG_NO_DEVICE_FOUND
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {}

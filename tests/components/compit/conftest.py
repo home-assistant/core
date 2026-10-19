@@ -68,6 +68,7 @@ def mock_connector():
         MagicMock(code="__aerokonfbypass", value="off"),
         MagicMock(code="__rd_alarmwent", value="no_alarm"),
         MagicMock(code="__rd_co2", value="normal"),
+        MagicMock(code="__rd_filtrwent", value="dirty"),
         MagicMock(code="__rd_pm10", value="warning"),
         MagicMock(code="__rr_wietrzenie", value="on"),
         MagicMock(code="__tempzadkomf", value=21),  # Target temperature comfort

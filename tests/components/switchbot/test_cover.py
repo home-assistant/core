@@ -62,7 +62,7 @@ async def test_curtain3_setup(
     """Test setting up the Curtain3."""
     inject_bluetooth_service_info(hass, WOCURTAIN3_SERVICE_INFO)
 
-    entry = mock_entry_factory(sensor_type="curtain")
+    entry = mock_entry_factory(sensor_type="curtain_3")
 
     entity_id = "cover.test_name"
     mock_restore_cache(
@@ -78,7 +78,7 @@ async def test_curtain3_setup(
 
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
     assert state.state == CoverState.OPEN
@@ -91,7 +91,7 @@ async def test_curtain3_controlling(
     """Test Curtain3 controlling."""
     inject_bluetooth_service_info(hass, WOCURTAIN3_SERVICE_INFO)
 
-    entry = mock_entry_factory(sensor_type="curtain")
+    entry = mock_entry_factory(sensor_type="curtain_3")
     entry.add_to_hass(hass)
 
     with (
@@ -113,7 +113,7 @@ async def test_curtain3_controlling(
         ) as mock_set_position,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         entity_id = "cover.test_name"
         address = "AA:BB:CC:DD:EE:FF"
@@ -192,7 +192,7 @@ async def test_curtain3_custom_speed_controlling(
     """Test Curtain3 controlling with custom speed."""
     inject_bluetooth_service_info(hass, WOCURTAIN3_SERVICE_INFO)
 
-    entry = mock_entry_factory(sensor_type="curtain")
+    entry = mock_entry_factory(sensor_type="curtain_3")
     entry.add_to_hass(hass)
 
     # Update entry options using async_update_entry
@@ -215,7 +215,7 @@ async def test_curtain3_custom_speed_controlling(
         ) as mock_close,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         entity_id = "cover.test_name"
 
@@ -251,7 +251,7 @@ async def test_curtain3_speed(
     """Test the curtain forwards the requested cover speed to the device."""
     inject_bluetooth_service_info(hass, WOCURTAIN3_SERVICE_INFO)
 
-    entry = mock_entry_factory(sensor_type="curtain")
+    entry = mock_entry_factory(sensor_type="curtain_3")
     entry.add_to_hass(hass)
 
     with (
@@ -269,7 +269,7 @@ async def test_curtain3_speed(
         ) as mock_set_position,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         entity_id = "cover.test_name"
 
@@ -326,7 +326,7 @@ async def test_curtain_speed_not_supported(
         new=AsyncMock(return_value=True),
     ) as mock_open:
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         entity_id = "cover.test_name"
 
@@ -370,7 +370,7 @@ async def test_blindtilt_setup(
         new=AsyncMock(return_value=True),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         state = hass.states.get(entity_id)
         assert state.state == CoverState.OPEN
@@ -416,7 +416,7 @@ async def test_blindtilt_controlling(
         ) as mock_set_position,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         entity_id = "cover.test_name"
         address = "AA:BB:CC:DD:EE:FF"
@@ -526,7 +526,7 @@ async def test_blindtilt_idle_advertisement(
         new=AsyncMock(return_value={}),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         entity_id = "cover.test_name"
         address = "AA:BB:CC:DD:EE:FF"
@@ -569,7 +569,7 @@ async def test_roller_shade_setup(
         new=AsyncMock(return_value=True),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         state = hass.states.get(entity_id)
         assert state.state == CoverState.OPEN
@@ -608,7 +608,7 @@ async def test_roller_shade_controlling(
         ) as mock_set_position,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         entity_id = "cover.test_name"
         address = "AA:BB:CC:DD:EE:FF"
@@ -741,7 +741,7 @@ async def test_roller_shade_speed(
         ) as mock_set_position,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         state = hass.states.get(ROLLER_SHADE_ENTITY_ID)
         assert state.attributes[CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS] == [
@@ -819,7 +819,7 @@ async def test_roller_shade_invalid_speed(
         ) as mock_set_position,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         with pytest.raises(ServiceValidationError) as exc_info:
             await hass.services.async_call(
@@ -859,7 +859,7 @@ async def test_roller_shade_invalid_speed(
     ),
     [
         (
-            "curtain",
+            "curtain_3",
             WOCURTAIN3_SERVICE_INFO,
             "SwitchbotCurtain",
             SERVICE_CLOSE_COVER,
@@ -867,7 +867,7 @@ async def test_roller_shade_invalid_speed(
             "close",
         ),
         (
-            "curtain",
+            "curtain_3",
             WOCURTAIN3_SERVICE_INFO,
             "SwitchbotCurtain",
             SERVICE_OPEN_COVER,
@@ -875,7 +875,7 @@ async def test_roller_shade_invalid_speed(
             "open",
         ),
         (
-            "curtain",
+            "curtain_3",
             WOCURTAIN3_SERVICE_INFO,
             "SwitchbotCurtain",
             SERVICE_STOP_COVER,
@@ -883,7 +883,7 @@ async def test_roller_shade_invalid_speed(
             "stop",
         ),
         (
-            "curtain",
+            "curtain_3",
             WOCURTAIN3_SERVICE_INFO,
             "SwitchbotCurtain",
             SERVICE_SET_COVER_POSITION,
@@ -981,7 +981,7 @@ async def test_exception_handling_cover_service(
         **{mock_method: AsyncMock(side_effect=exception)},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         with pytest.raises(HomeAssistantError, match=error_message):
             await hass.services.async_call(
@@ -1019,7 +1019,7 @@ async def test_garage_door_opener_controlling(
         **{mock_method: mocked_instance},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             COVER_DOMAIN,

@@ -1,6 +1,7 @@
 """Test the media browser interface."""
 
-from unittest.mock import MagicMock, patch
+from typing import Any
+from unittest.mock import ANY, MagicMock, call, patch
 
 import pytest
 
@@ -70,17 +71,17 @@ async def test_async_browse_media_root(
 
 
 @pytest.mark.parametrize(
-    ("category", "child_count"),
+    ("category", "child_count", "can_search"),
     [
-        ("favorites", 4),
-        ("artists", 4),
-        ("albums", 4),
-        ("playlists", 4),
-        ("genres", 4),
-        ("new music", 4),
-        ("album artists", 4),
-        ("apps", 3),
-        ("radios", 3),
+        ("favorites", 4, False),
+        ("artists", 4, True),
+        ("albums", 4, True),
+        ("playlists", 4, False),
+        ("genres", 4, True),
+        ("new music", 4, True),
+        ("album artists", 4, True),
+        ("apps", 3, False),
+        ("radios", 3, False),
     ],
 )
 async def test_async_browse_media_with_subitems(
@@ -89,6 +90,7 @@ async def test_async_browse_media_with_subitems(
     hass_ws_client: WebSocketGenerator,
     category: str,
     child_count: int,
+    can_search: bool,
 ) -> None:
     """Test each category with subitems."""
     with patch(
@@ -110,6 +112,7 @@ async def test_async_browse_media_with_subitems(
         category_level = response["result"]
         assert category_level["title"] == MEDIA_TYPE_TO_SQUEEZEBOX[category]
         assert category_level["children"][0]["title"] == "Fake Item 1"
+        assert category_level["children"][0]["can_search"] is can_search
         assert len(category_level["children"]) == child_count
 
         # Look up a subitem
@@ -128,6 +131,49 @@ async def test_async_browse_media_with_subitems(
         assert response["success"]
         search = response["result"]
         assert search["title"] == "Fake Item 1"
+        assert search["can_search"] is can_search
+
+
+async def test_async_browse_playlist(
+    hass: HomeAssistant,
+    lms: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the children of a playlist are tracks that can be played."""
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.test_player",
+            "media_content_id": FAKE_VALID_ITEM_ID,
+            "media_content_type": MediaType.PLAYLIST,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    child = response["result"]["children"][0]
+    assert child["media_class"] == MediaClass.TRACK
+    assert child["media_content_type"] == MediaType.TRACK
+    assert child["media_content_id"] == FAKE_VALID_ITEM_ID
+    assert not child["can_expand"]
+    assert child["can_play"]
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_MEDIA_CONTENT_TYPE: child["media_content_type"],
+            ATTR_MEDIA_CONTENT_ID: child["media_content_id"],
+        },
+        blocking=True,
+    )
+    player = (await lms.async_get_players())[0]
+    player.async_browse.assert_called_with(
+        "titles", limit=ANY, browse_id=("track_id", FAKE_VALID_ITEM_ID)
+    )
+    player.async_load_playlist.assert_called_once()
 
 
 async def test_async_browse_media_for_apps(
@@ -214,6 +260,82 @@ async def test_async_search_media(
         assert category_level[0]["title"] == "Fake Item 1"
 
 
+@pytest.mark.parametrize(
+    ("media_content_type", "category", "id_key", "first_item"),
+    [
+        pytest.param(
+            MediaType.ARTIST,
+            "artist",
+            "artist_id",
+            ("Love Album", MediaClass.ALBUM, MediaType.ALBUM, "1", True),
+            id="artist",
+        ),
+        pytest.param(
+            MediaType.GENRE,
+            "genre",
+            "genre_id",
+            ("Love Band", MediaClass.ARTIST, MediaType.ARTIST, "1", True),
+            id="genre",
+        ),
+    ],
+)
+async def test_async_search_media_in_container(
+    hass: HomeAssistant,
+    lms: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+    media_content_type: MediaType,
+    category: str,
+    id_key: str,
+    first_item: tuple[str, MediaClass, MediaType, str, bool],
+) -> None:
+    """Test a search inside an artist or genre also matches track titles."""
+
+    async def mock_browse(
+        category: str,
+        limit: int,
+        browse_id: tuple[str, str] | None = None,
+        search_query: str | None = None,
+    ) -> dict[str, Any]:
+        items = {
+            "titles": [{"id": "2", "title": "Love Song"}],
+        }.get(category, [{"id": "1", "title": first_item[0]}])
+        return {"title": category, "items": items}
+
+    player = (await lms.async_get_players())[0]
+    player.async_browse.side_effect = mock_browse
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/search_media",
+            "entity_id": "media_player.test_player",
+            "media_content_id": "42",
+            "media_content_type": media_content_type,
+            "search_query": "love",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert [
+        (
+            item["title"],
+            item["media_class"],
+            item["media_content_type"],
+            item["media_content_id"],
+            item["can_search"],
+        )
+        for item in response["result"]["result"]
+    ] == [
+        first_item,
+        ("Love Song", MediaClass.TRACK, MediaType.TRACK, "2", False),
+    ]
+    assert player.async_browse.call_args_list == [
+        call(category, limit=ANY, browse_id=(id_key, "42"), search_query="love"),
+        call("titles", limit=ANY, browse_id=(id_key, "42"), search_query="love"),
+    ]
+
+
 async def test_async_search_media_invalid_filter(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -241,10 +363,19 @@ async def test_async_search_media_invalid_filter(
         assert len(response["result"]["result"]) == 0
 
 
+@pytest.mark.parametrize(
+    "media_content_type",
+    [
+        pytest.param("Fake Type", id="unknown"),
+        pytest.param("artist tracks", id="internal_artist"),
+        pytest.param("genre tracks", id="internal_genre"),
+    ],
+)
 async def test_async_search_media_invalid_type(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     hass_ws_client: WebSocketGenerator,
+    media_content_type: str,
 ) -> None:
     """Test search_media action with invalid media_content_type."""
     with patch(
@@ -258,7 +389,7 @@ async def test_async_search_media_invalid_type(
                 "type": "media_player/search_media",
                 "entity_id": "media_player.test_player",
                 "media_content_id": "",
-                "media_content_type": "Fake Type",
+                "media_content_type": media_content_type,
                 "search_query": "Fake Item 1",
             },
         )
@@ -266,6 +397,8 @@ async def test_async_search_media_invalid_type(
         assert not response["success"]
         err_message = "If specified, Media content type must be one of"
         assert err_message in response["error"]["message"]
+        assert "artist tracks" not in response["error"]["message"]
+        assert "genre tracks" not in response["error"]["message"]
 
 
 async def test_async_search_media_not_found(

@@ -75,7 +75,7 @@ async def _async_discover_current_ip(device_id: int) -> str | None:
     return device[CONF_IP_ADDRESS] if device else None
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> None:
     """Set up Midea from a config entry."""
 
     data: Mapping[str, Any] = entry.data
@@ -130,10 +130,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> boo
     entry.runtime_data = device
     entry.async_on_unload(device.close)
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
-    return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> None:
     """Migrate an old config entry."""
     if entry.minor_version < 2:
         # minor_version 2 adds mac/serial number; discovery already parses both
@@ -165,9 +164,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> b
 
         hass.config_entries.async_update_entry(entry, data=new_data, minor_version=2)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

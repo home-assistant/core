@@ -82,7 +82,7 @@ class HikvisionConfigFlow(ConfigFlow, domain=DOMAIN):
                     probatio.Required(CONF_HOST): str,
                     probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
                     probatio.Required(CONF_USERNAME): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                     probatio.Required(CONF_SSL, default=False): bool,
                 }
             ),

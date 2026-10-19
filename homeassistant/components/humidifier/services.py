@@ -25,7 +25,7 @@ from .const import (
 )
 
 if TYPE_CHECKING:
-    from . import HumidifierEntity
+    from .entity import HumidifierEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_SET_HUMIDITY,
         {
             probatio.Required(ATTR_HUMIDITY): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=0, max=100)
+                probatio.Coerce(int), probatio.Percentage()
             )
         },
         _async_service_humidity_set,

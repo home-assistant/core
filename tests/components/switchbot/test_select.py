@@ -39,7 +39,7 @@ async def test_time_format_select_initial_state(
     await async_setup_component(hass, DOMAIN, {})
     inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
 
-    entry = mock_entry_factory("hygrometer_co2")
+    entry = mock_entry_factory("meter_pro_co2")
     entry.add_to_hass(hass)
 
     with patch(
@@ -55,7 +55,7 @@ async def test_time_format_select_initial_state(
         },
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         state = hass.states.get("select.test_name_time_format")
         assert state is not None
@@ -80,7 +80,7 @@ async def test_set_time_format(
     await async_setup_component(hass, DOMAIN, {})
     inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
 
-    entry = mock_entry_factory("hygrometer_co2")
+    entry = mock_entry_factory("meter_pro_co2")
     entry.add_to_hass(hass)
 
     mock_get_datetime = AsyncMock(
@@ -107,7 +107,7 @@ async def test_set_time_format(
         ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             SELECT_DOMAIN,
@@ -156,7 +156,7 @@ async def test_standing_fan_night_light_select(
         set_night_light=mocked_set,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             SELECT_DOMAIN,

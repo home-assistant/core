@@ -11,6 +11,17 @@ from unittest.mock import ANY, Mock, patch
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.components.recorder.common import (
+    assert_dict_of_states_equal_without_context_and_last_changed,
+    assert_multiple_states_equal_without_context_and_last_changed,
+    async_recorder_block_till_done,
+    async_wait_recording_done,
+    db_state_attributes_to_native,
+    db_state_to_native,
+    do_adhoc_statistics,
+    get_start_time,
+    statistics_during_period,
+)
 
 from homeassistant import loader
 from homeassistant.components.recorder import (
@@ -50,7 +61,7 @@ from homeassistant.components.sensor.recorder import (
     STATE_CLASS_REMOVED_ISSUE,
     UNITS_CHANGED_ISSUE,
 )
-from homeassistant.const import ATTR_FRIENDLY_NAME, DEGREE, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_FRIENDLY_NAME, DEGREE, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -60,17 +71,6 @@ from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 from .common import MockSensor
 
 from tests.common import mock_platform, setup_test_component_platform
-from tests.components.recorder.common import (
-    assert_dict_of_states_equal_without_context_and_last_changed,
-    assert_multiple_states_equal_without_context_and_last_changed,
-    async_recorder_block_till_done,
-    async_wait_recording_done,
-    db_state_attributes_to_native,
-    db_state_to_native,
-    do_adhoc_statistics,
-    get_start_time,
-    statistics_during_period,
-)
 from tests.typing import (
     MockHAClientWebSocket,
     RecorderInstanceContextManager,
@@ -198,6 +198,7 @@ def assert_issues(
         expected_issue = ir.IssueEntry(
             active=True,
             breaks_in_ha_version=None,
+            config_entry_id=None,
             created=ANY,
             data=expected_issue_data,
             dismissed_version=None,
@@ -1875,6 +1876,10 @@ async def test_compile_hourly_sum_statistics_nan_inf_state(
     ],
 )
 @pytest.mark.parametrize("state_class", ["total_increasing"])
+@patch(
+    "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+    [Platform.SENSOR],
+)
 async def test_compile_hourly_sum_statistics_negative_state(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,

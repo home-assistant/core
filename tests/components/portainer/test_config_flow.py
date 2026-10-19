@@ -16,7 +16,7 @@ from homeassistant.const import CONF_API_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import MOCK_TEST_CONFIG
+from .conftest import MOCK_TEST_CONFIG, TEST_INSTANCE_ID
 
 from tests.common import MockConfigEntry
 
@@ -52,6 +52,7 @@ async def test_form(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "https://127.0.0.1:9000/"
     assert result["data"] == MOCK_TEST_CONFIG
+    assert result["result"].unique_id == TEST_INSTANCE_ID
 
 
 @pytest.mark.parametrize(

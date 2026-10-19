@@ -74,6 +74,13 @@ def mock_dsm_with_usb():
 
 
 @pytest.fixture
+def mock_dsm_with_usb_no_devices(mock_dsm_with_usb: MagicMock) -> MagicMock:
+    """Mock a successful service with USB support but no USB device connected."""
+    mock_dsm_with_usb.external_usb.get_devices = mock_dsm_external_usb_devices_usb0()
+    return mock_dsm_with_usb
+
+
+@pytest.fixture
 def mock_dsm_without_usb():
     """Mock a successful service without USB devices."""
     with patch("homeassistant.components.synology_dsm.common.SynologyDSM") as dsm:
@@ -214,6 +221,7 @@ async def test_external_usb(
 async def test_external_usb_new_device(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
     setup_dsm_with_usb: MagicMock,
 ) -> None:
     """Test Synology DSM USB adding new device."""
@@ -275,10 +283,9 @@ async def test_external_usb_new_device(
 
     # Mock the get_devices method to simulate a USB disk being added
     setup_dsm_with_usb.external_usb.get_devices = mock_dsm_external_usb_devices_usb2()
-    # Coordinator refresh
-    coordinator = setup_dsm_with_usb.mock_entry.runtime_data.coordinator_central
-    await coordinator.async_request_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(timedelta(minutes=15, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     for sensor_id, (expected_state, expected_attrs) in chain(
         expected_sensors_disk_1.items(), expected_sensors_disk_2.items()
@@ -290,9 +297,56 @@ async def test_external_usb_new_device(
             assert sensor.attributes[attr_key] == attr_value
 
 
+async def test_external_usb_first_device(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_dsm_with_usb_no_devices: MagicMock,
+    setup_dsm_with_usb: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test Synology DSM USB adding a device when none was connected at setup."""
+    entity_id = "sensor.nas_meontheinternet_com_usb_disk_1_status"
+    entry = setup_dsm_with_usb.mock_entry
+
+    freezer.tick(timedelta(minutes=15, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id) is None
+
+    # Simulate a USB disk being added, which is only seen by the next update
+    def _update(with_information: bool) -> None:
+        setup_dsm_with_usb.external_usb.get_devices = (
+            mock_dsm_external_usb_devices_usb1()
+        )
+
+    setup_dsm_with_usb.update.side_effect = _update
+    freezer.tick(timedelta(minutes=15, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "normal"
+
+    # The API is no longer updated once all entities of the device are disabled
+    for entity_entry in er.async_entries_for_config_entry(
+        entity_registry, entry.entry_id
+    ):
+        if "USB Disk" in entity_entry.unique_id and not entity_entry.disabled:
+            entity_registry.async_update_entity(
+                entity_entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
+            )
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(minutes=15, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert entry.runtime_data.api.external_usb is None
+
+
 async def test_external_usb_availability(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
     setup_dsm_with_usb: MagicMock,
 ) -> None:
     """Test Synology DSM USB availability."""
@@ -341,10 +395,9 @@ async def test_external_usb_availability(
 
     # Mock the get_devices method to simulate no USB devices being connected
     setup_dsm_with_usb.external_usb.get_devices = mock_dsm_external_usb_devices_usb0()
-    # Coordinator refresh
-    coordinator = setup_dsm_with_usb.mock_entry.runtime_data.coordinator_central
-    await coordinator.async_request_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(timedelta(minutes=15, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     for sensor_id, (
         expected_state,

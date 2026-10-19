@@ -1,6 +1,6 @@
 """Test the Rfxtrx config flow."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, Mock, patch
 
 from RFXtrx import RFXtrxTransportError
 
@@ -74,6 +74,7 @@ async def test_setup_network(transport_mock, hass: HomeAssistant) -> None:
         "automatic_add": False,
         "devices": {},
     }
+    assert result["result"].unique_id == DOMAIN
 
 
 @patch(
@@ -115,6 +116,7 @@ async def test_setup_serial(com_mock, transport_mock, hass: HomeAssistant) -> No
         "automatic_add": False,
         "devices": {},
     }
+    assert result["result"].unique_id == DOMAIN
 
 
 @patch(
@@ -164,9 +166,10 @@ async def test_setup_serial_manual(
         "automatic_add": False,
         "devices": {},
     }
+    assert result["result"].unique_id == DOMAIN
 
 
-async def test_setup_network_fail(transport_mock, hass: HomeAssistant) -> None:
+async def test_setup_network_fail(transport_mock: Mock, hass: HomeAssistant) -> None:
     """Test we can setup network."""
     transport_mock.return_value.connect.side_effect = RFXtrxTransportError
     result = await hass.config_entries.flow.async_init(
@@ -194,12 +197,22 @@ async def test_setup_network_fail(transport_mock, hass: HomeAssistant) -> None:
     assert result["step_id"] == "setup_network"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    transport_mock.return_value.connect.side_effect = None
+    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "10.10.0.1", "port": 1234}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @patch(
     "homeassistant.components.rfxtrx.config_flow.usb.async_scan_serial_ports",
     return_value=[com_port()],
 )
-async def test_setup_serial_fail(com_mock, transport_mock, hass: HomeAssistant) -> None:
+async def test_setup_serial_fail(
+    com_mock: MagicMock, transport_mock: Mock, hass: HomeAssistant
+) -> None:
     """Test setup serial failed connection."""
     transport_mock.return_value.connect.side_effect = RFXtrxTransportError
     port = com_port()
@@ -229,13 +242,21 @@ async def test_setup_serial_fail(com_mock, transport_mock, hass: HomeAssistant) 
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    transport_mock.return_value.connect.side_effect = None
+    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"device": port.device}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @patch(
     "homeassistant.components.rfxtrx.config_flow.usb.async_scan_serial_ports",
     return_value=[com_port()],
 )
 async def test_setup_serial_manual_fail(
-    com_mock, transport_mock, hass: HomeAssistant
+    com_mock: MagicMock, transport_mock: Mock, hass: HomeAssistant
 ) -> None:
     """Test setup serial failed connection."""
     transport_mock.return_value.connect.side_effect = RFXtrxTransportError
@@ -271,6 +292,14 @@ async def test_setup_serial_manual_fail(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial_manual_path"
     assert result["errors"] == {"base": "cannot_connect"}
+
+    transport_mock.return_value.connect.side_effect = None
+    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"device": "/dev/ttyUSB0"}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_options_global(hass: HomeAssistant) -> None:
@@ -442,6 +471,12 @@ async def test_options_add_duplicate_device(hass: HomeAssistant) -> None:
     assert result["step_id"] == "prompt_options"
     assert result["errors"]
     assert result["errors"]["event_code"] == "already_configured_device"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"automatic_add": True}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_options_replace_sensor_device(

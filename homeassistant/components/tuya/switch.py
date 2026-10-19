@@ -344,6 +344,12 @@ SWITCHES: dict[DeviceCategory, tuple[TuyaSwitchEntityDescription, ...]] = {
             translation_key="sleep_aid",
         ),
     ),
+    DeviceCategory.HWSB: (
+        TuyaSwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name=None,
+        ),
+    ),
     DeviceCategory.JSQ: (
         TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_SOUND,
@@ -511,6 +517,13 @@ SWITCHES: dict[DeviceCategory, tuple[TuyaSwitchEntityDescription, ...]] = {
             key=DPCode.SWITCH_ALARM_LIGHT,
             # This switch is called "Siren" in the official Tuya app
             translation_key="siren",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    DeviceCategory.MJJ: (
+        TuyaSwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            translation_key="child_lock",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
