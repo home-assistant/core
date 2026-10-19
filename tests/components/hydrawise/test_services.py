@@ -9,6 +9,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pydrawise import APIError, NotAuthorizedError
 from pydrawise.schema import Zone
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.hydrawise.const import (
     ATTR_DURATION,
@@ -22,8 +23,6 @@ from homeassistant.components.hydrawise.const import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_start_watering(

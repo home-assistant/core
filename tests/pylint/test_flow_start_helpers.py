@@ -39,7 +39,7 @@ result = await hass.config_entries.flow.async_init(
     DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
 )
 """,
-            "tests.common",
+            "pytest_homeassistant.common",
             id="outside_integration_tests",
         ),
         pytest.param(

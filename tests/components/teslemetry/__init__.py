@@ -3,6 +3,7 @@
 import time
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.teslemetry.const import (
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .const import ADDRESS, VIN
-
-from tests.common import MockConfigEntry
 
 
 def mock_config_entry() -> MockConfigEntry:

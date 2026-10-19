@@ -27,6 +27,7 @@ from dsmr_parser.obis_references import (
 )
 from dsmr_parser.objects import CosemObject, MBusObject, Telegram
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, patch
 
 from homeassistant.components.dsmr.sensor import SENSORS, SENSORS_MBUS_DEVICE_TYPE
 from homeassistant.components.sensor import (
@@ -47,8 +48,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, patch
 
 
 async def test_default_setup(

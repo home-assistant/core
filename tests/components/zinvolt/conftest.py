@@ -4,14 +4,13 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 from zinvolt.models import BatteryListResponse, BatteryState, BatteryUnit, UnitsResponse
 
 from homeassistant.components.zinvolt.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN
 
 from .const import TOKEN
-
-from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture

@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.qingping.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -12,8 +14,6 @@ from . import (
     NO_DATA_SERVICE_INFO,
     NOT_QINGPING_SERVICE_INFO,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
