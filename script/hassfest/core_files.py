@@ -21,7 +21,6 @@ MISSING_ALL = {
     "input_select",
     "llm",
     "person",
-    "shopping_list",
     "sun",
     "timer",
     "zone",
