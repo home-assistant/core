@@ -4,7 +4,7 @@ For more details about this platform, please refer to the documentation at
 """
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Coroutine
 import contextlib
 from dataclasses import dataclass, field
 from datetime import timedelta
@@ -153,6 +153,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> 
     entry.runtime_data = withings_data
 
     webhook_manager = WithingsWebhookManager(hass, entry)
+    entry.async_on_unload(webhook_manager.async_cancel_tasks)
 
     async def manage_cloudhook(state: cloud.CloudConnectionState) -> None:
         LOGGER.debug("Cloudconnection state changed to %s", state)
@@ -162,7 +163,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> 
         if state is cloud.CloudConnectionState.CLOUD_DISCONNECTED:
             await webhook_manager.unregister_webhook(None)
             entry.async_on_unload(
-                async_call_later(hass, 30, webhook_manager.register_webhook)
+                async_call_later(
+                    hass, 30, webhook_manager.async_schedule_register_webhook
+                )
             )
 
     @callback
@@ -170,7 +173,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> 
         """Register the webhook once Home Assistant answers for it."""
         entry.async_on_unload(
             async_call_later(
-                hass, WEBHOOK_REGISTER_DELAY, webhook_manager.register_webhook
+                hass,
+                WEBHOOK_REGISTER_DELAY,
+                webhook_manager.async_schedule_register_webhook,
             )
         )
 
@@ -233,11 +238,35 @@ class WithingsWebhookManager:
         self._ha_webhook_registered: bool = False
         self._cancel_retry: CALLBACK_TYPE | None = None
         self._register_lock = asyncio.Lock()
+        self._tasks: set[asyncio.Task[None]] = set()
 
     @property
     def withings_data(self) -> WithingsData:
         """Return Withings data."""
         return self.entry.runtime_data
+
+    @callback
+    def _async_create_task(self, target: Coroutine[Any, Any, None]) -> None:
+        """Create a task that is cancelled when the config entry unloads."""
+        task = self.hass.async_create_task(target)
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.discard)
+
+    @callback
+    def async_cancel_tasks(self) -> None:
+        """Cancel in-flight webhook registrations."""
+        for task in self._tasks:
+            task.cancel()
+
+    @callback
+    def async_schedule_register_webhook(self, _: Any) -> None:
+        """Register webhooks at Withings in a cancellable task."""
+        self._async_create_task(self.register_webhook(None))
+
+    @callback
+    def _async_schedule_subscribe_webhook(self, _: Any) -> None:
+        """Retry subscribing to Withings webhooks in a cancellable task."""
+        self._async_create_task(self._async_subscribe_webhook())
 
     def _cancel_pending_retry(self) -> None:
         """Cancel any pending retry."""
@@ -249,7 +278,7 @@ class WithingsWebhookManager:
         """Schedule a webhook registration retry."""
         self._cancel_pending_retry()
         self._cancel_retry = async_call_later(
-            self.hass, delay, self._async_subscribe_webhook
+            self.hass, delay, self._async_schedule_subscribe_webhook
         )
 
     async def unregister_webhook(
@@ -328,7 +357,7 @@ class WithingsWebhookManager:
 
         await self._async_subscribe_webhook()
 
-    async def _async_subscribe_webhook(self, _: Any = None) -> None:
+    async def _async_subscribe_webhook(self) -> None:
         """Attempt to subscribe to Withings webhooks."""
 
         async with self._register_lock:
