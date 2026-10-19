@@ -122,7 +122,7 @@ class ExposedEntity:
     # None if it currently has a state. Kept on the record in memory so a
     # store full of orphaned legacy records doesn't need a second, equally
     # large index alongside it; see to_json for why storage differs.
-    orphaned_since: float | None = None
+    orphaned_since: int | None = None
 
     def to_json(self) -> dict[str, Any]:
         """Return a JSON serializable representation for storage."""
@@ -141,7 +141,7 @@ class SerializedExposedEntities(TypedDict):
     # No minor-version bump for this key: older cores ignore it, and a version
     # mismatch rewrites the whole store at load, which on affected installs is
     # a multi-GB write before the sweep has removed anything.
-    orphaned: NotRequired[dict[str, float]]
+    orphaned: NotRequired[dict[str, int]]
 
 
 class ExposedEntities:
@@ -302,7 +302,7 @@ class ExposedEntities:
         millions of legacy records can't block it for a full pass. Entities
         added after the snapshot is taken are picked up on the next sweep.
         """
-        now = time.time()
+        now = int(time.time())
         purge_after = LEGACY_ENTITY_PURGE_INTERVAL.total_seconds()
         entity_ids = list(self.entities)
         purged_assistants: set[str] = set()
