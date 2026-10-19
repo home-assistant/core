@@ -85,21 +85,19 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
             async with asyncio.timeout(UPDATE_TIMEOUT):
                 fresh_devices = await self._device_manager.async_get_devices()
         except TimeoutError as err:
+            self.open_api_quota_exceeded = False
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_timeout",
             ) from err
         except InvalidAppIdOrSecretException as err:
+            self.open_api_quota_exceeded = False
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
             ) from err
         except ImouException as err:
-            self.open_api_quota_exceeded = _quota_exceeded(err)
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="fetch_devices_failed",
-            ) from err
+            raise self._update_failed(err, "fetch_devices_failed") from err
 
         fresh_by_key = {
             imou_device_identifier(device): device for device in fresh_devices
@@ -114,23 +112,35 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
             async with asyncio.timeout(UPDATE_TIMEOUT):
                 await self._device_manager.async_update_devices_status(devices)
         except TimeoutError as err:
+            self.open_api_quota_exceeded = False
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_timeout",
             ) from err
         except InvalidAppIdOrSecretException as err:
+            self.open_api_quota_exceeded = False
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
             ) from err
         except ImouException as err:
-            self.open_api_quota_exceeded = _quota_exceeded(err)
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_devices_failed",
-            ) from err
+            raise self._update_failed(err, "update_devices_failed") from err
 
         self.open_api_quota_exceeded = False
+
+    def _update_failed(
+        self, error: ImouException, translation_key: str
+    ) -> UpdateFailed:
+        """Record whether this failure is a used-up monthly quota."""
+        if _quota_exceeded(error):
+            self.open_api_quota_exceeded = True
+            translation_key = "quota_exceeded"
+        else:
+            self.open_api_quota_exceeded = False
+        return UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key=translation_key,
+        )
 
     def _async_add_remove_devices(self, fresh_by_key: dict[str, ImouHaDevice]) -> None:
         """Add new devices, remove devices no longer in the account.
@@ -170,7 +180,6 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 new_device_callback(new_devices)
 
 
-def _quota_exceeded(error: BaseException) -> bool:
+def _quota_exceeded(error: ImouException) -> bool:
     """Return True when the Open Platform monthly call limit is used up."""
-    text = getattr(error, "message", None) or str(error)
-    return _QUOTA_CODE in str(text).upper()
+    return _QUOTA_CODE in error.message
