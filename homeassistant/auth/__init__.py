@@ -52,6 +52,10 @@ class InvalidProvider(Exception):
     """Authentication provider not found."""
 
 
+class LastLoginMethodError(Exception):
+    """Raised when removing credentials would leave the owner unable to log in."""
+
+
 async def auth_manager_from_config(
     hass: HomeAssistant,
     provider_configs: list[dict[str, Any]],
@@ -412,10 +416,31 @@ class AuthManager:
 
     async def async_remove_credentials(self, credentials: models.Credentials) -> None:
         """Remove credentials."""
+        # Enforced here to cover every way of removing credentials.
+        if (
+            (user := await self.async_get_user_by_credentials(credentials))
+            and user.is_owner
+            and not self.async_has_other_login_method(user, credentials)
+        ):
+            raise LastLoginMethodError("Unable to remove the last login of the owner")
+
         if (provider := self._async_get_auth_provider(credentials)) is not None:
             await provider.async_will_remove_credentials(credentials)
 
         await self._store.async_remove_credentials(credentials)
+
+    @callback
+    def async_has_other_login_method(
+        self, user: models.User, *credentials: models.Credentials
+    ) -> bool:
+        """Return if the user can still log in without the given credentials."""
+        removed = {credential.id for credential in credentials}
+        return any(
+            credential.id not in removed
+            and (provider := self._async_get_auth_provider(credential)) is not None
+            and provider.async_is_fallback_login(credential)
+            for credential in user.credentials
+        )
 
     async def async_enable_user_mfa(
         self, user: models.User, mfa_module_id: str, data: Any

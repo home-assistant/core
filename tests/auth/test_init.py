@@ -1,6 +1,7 @@
 """Tests for the Home Assistant auth module."""
 
 import asyncio
+from contextlib import AbstractContextManager, nullcontext
 from datetime import timedelta
 from ipaddress import ip_address
 from pathlib import Path
@@ -307,6 +308,73 @@ async def test_linking_user_to_two_auth_providers(
     with pytest.raises(ValueError):
         await manager.async_link_user(user_2, new_credential)
     assert len(user_2.credentials) == 0
+
+
+@pytest.mark.parametrize(
+    ("target", "other_logins", "expectation", "kept"),
+    [
+        pytest.param(
+            "owner",
+            [],
+            pytest.raises(auth.LastLoginMethodError),
+            True,
+            id="owner-without-other-login",
+        ),
+        pytest.param(
+            "owner",
+            [("trusted_networks", None, {"user_id": "owner"})],
+            pytest.raises(auth.LastLoginMethodError),
+            True,
+            id="owner-with-trusted-network",
+        ),
+        pytest.param(
+            "owner",
+            [("insecure_example", "another-provider", {"username": "alice"})],
+            nullcontext(),
+            False,
+            id="owner-with-other-login",
+        ),
+        pytest.param("user", [], nullcontext(), False, id="not-the-owner"),
+    ],
+)
+async def test_remove_the_last_login_of_the_owner(
+    mock_hass: HomeAssistant,
+    target: str,
+    other_logins: list[tuple[str, str | None, dict[str, str]]],
+    expectation: AbstractContextManager[Any],
+    kept: bool,
+) -> None:
+    """Test the owner keeps a login they can count on, however it is removed."""
+    manager = await auth.auth_manager_from_config(
+        mock_hass,
+        [
+            {"type": "insecure_example", "users": []},
+            {"type": "insecure_example", "id": "another-provider", "users": []},
+            {"type": "trusted_networks", "trusted_networks": ["192.168.0.1"]},
+        ],
+        [],
+    )
+    users = {
+        "owner": await manager.async_create_user("Owner"),
+        "user": await manager.async_create_user("User"),
+    }
+    user = users[target]
+    assert users["owner"].is_owner
+    provider = manager.get_auth_provider("insecure_example", None)
+    assert provider is not None
+    password = provider.async_create_credentials({"username": "alice"})
+    await manager.async_link_user(user, password)
+    for provider_type, provider_id, data in other_logins:
+        other_provider = manager.get_auth_provider(provider_type, provider_id)
+        assert other_provider is not None
+        await manager.async_link_user(
+            user, other_provider.async_create_credentials(data)
+        )
+
+    with expectation:
+        await manager.async_remove_credentials(password)
+
+    assert (password in user.credentials) is kept
 
 
 async def test_saving_loading(
