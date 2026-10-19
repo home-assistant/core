@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "wrong_account": "The access token belongs to a different Nature account"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -9,6 +10,15 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_token": "[%key:component::nature_remo::config::step::user::data::api_token%]"
+        },
+        "data_description": {
+          "api_token": "Personal access token for the same Nature account."
+        },
+        "description": "The access token is no longer valid. Enter a new personal access token issued at {token_url}."
+      },
       "user": {
         "data": {
           "api_token": "Access token"
