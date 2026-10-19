@@ -73,6 +73,7 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
         self.known_atw: set[str] = set()
         self.new_ata_callbacks: list[Callable[[list[ATAUnit]], None]] = []
         self.new_atw_callbacks: list[Callable[[list[ATWUnit]], None]] = []
+        self._deltas_during_fetch: list[UnitStateDelta] | None = None
 
     def _async_sync_units(self, data: UserContext) -> None:
         """Add entities for new units and remove devices of units that are gone."""
@@ -126,6 +127,8 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
     @override
     async def _async_update_data(self) -> UserContext:
         """Fetch data from the MELCloud Home API."""
+        deltas: list[UnitStateDelta] = []
+        self._deltas_during_fetch = deltas
         try:
             data = await self.client.get_context()
         except MelCloudHomeAuthenticationError as err:
@@ -148,6 +151,8 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
                 translation_domain=DOMAIN,
                 translation_key="api_error",
             ) from err
+        finally:
+            self._deltas_during_fetch = None
 
         self.ata_units = {
             unit.id: unit
@@ -159,6 +164,9 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
             for building in data.buildings
             for unit in building.air_to_water_units
         }
+        # The snapshot can predate deltas that arrived while it was fetched
+        for delta in deltas:
+            self._apply_delta(delta)
 
         return data
 
@@ -196,11 +204,19 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
     def async_handle_delta(self, delta: UnitStateDelta) -> None:
         """Apply a websocket delta to the cached unit."""
         _LOGGER.debug("Received websocket delta: %s", delta)
-        if (delta.unit_type == DEVICE_ATA and _apply_delta(self.ata_units, delta)) or (
-            delta.unit_type == DEVICE_ATW and _apply_delta(self.atw_units, delta)
-        ):
+        if self._deltas_during_fetch is not None:
+            self._deltas_during_fetch.append(delta)
+        if self._apply_delta(delta):
             self.last_update_success = True
             self.async_update_listeners()
+
+    def _apply_delta(self, delta: UnitStateDelta) -> bool:
+        """Apply a delta to the cached unit of its type; return whether it changed."""
+        if delta.unit_type == DEVICE_ATA:
+            return _apply_unit_delta(self.ata_units, delta)
+        if delta.unit_type == DEVICE_ATW:
+            return _apply_unit_delta(self.atw_units, delta)
+        return False
 
     @callback
     def async_handle_connection(self, connected: bool) -> None:
@@ -214,7 +230,7 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
         self.config_entry.async_create_task(self.hass, self.async_request_refresh())
 
 
-def _apply_delta[_UnitT: (ATAUnit, ATWUnit)](
+def _apply_unit_delta[_UnitT: (ATAUnit, ATWUnit)](
     units: dict[str, _UnitT], delta: UnitStateDelta
 ) -> bool:
     """Apply a websocket delta to a cached unit; return whether it changed."""

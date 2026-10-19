@@ -450,6 +450,62 @@ async def test_websocket_delta_skips_none_values(
     assert state.attributes[ATTR_TEMPERATURE] == 25.0
 
 
+async def test_websocket_delta_during_fetch_kept(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a delta received while the context is fetched survives the older snapshot."""
+    await setup_integration(hass, mock_config_entry)
+    context = mock_melcloud_client.get_context.return_value
+
+    async def _get_context_with_delta() -> UserContext:
+        _send_delta(
+            mock_websocket,
+            UnitStateDelta(
+                unit_id="ata-unit-uuid-1", unit_type="ata", changes={"Power": False}
+            ),
+        )
+        return context
+
+    mock_melcloud_client.get_context.side_effect = _get_context_with_delta
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_melcloud_client.get_context.call_count == 2
+    assert hass.states.get(ATA_ENTITY_ID).state == HVACMode.OFF
+
+
+async def test_websocket_delta_restores_availability(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a websocket delta makes entities available again after a failed poll."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_melcloud_client.get_context.side_effect = MelCloudHomeConnectionError
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(ATA_ENTITY_ID).state == STATE_UNAVAILABLE
+
+    _send_delta(
+        mock_websocket,
+        UnitStateDelta(
+            unit_id="ata-unit-uuid-1", unit_type="ata", changes={"Power": False}
+        ),
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ATA_ENTITY_ID).state == HVACMode.OFF
+
+
 async def test_live_updates_slow_down_polling(
     hass: HomeAssistant,
     mock_melcloud_client: AsyncMock,
