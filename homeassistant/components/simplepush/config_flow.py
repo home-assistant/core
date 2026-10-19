@@ -95,8 +95,11 @@ class SimplePushFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="app",
-            data_schema=probatio.Schema(
-                {probatio.Required(probatio.Secret(CONF_API_TOKEN)): str}
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {probatio.Required(probatio.Secret(CONF_API_TOKEN)): str}
+                ),
+                user_input,
             ),
             errors=errors,
         )

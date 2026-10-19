@@ -116,6 +116,9 @@ async def test_flow_error(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
+    assert next(iter(result["data_schema"].schema)).description == {
+        "suggested_value": MOCK_CONFIG[CONF_API_TOKEN]
+    }
 
     mock_client.return_value.send_task.side_effect = None
     result = await hass.config_entries.flow.async_configure(
