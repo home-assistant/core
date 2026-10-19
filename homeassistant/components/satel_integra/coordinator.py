@@ -160,9 +160,19 @@ class SatelIntegraPartitionsCoordinator(
             immediate=False,
             function=callback(
                 lambda: self.async_set_updated_data(
-                    self.client.controller.partition_states
+                    self.client.controller.state.partition_states
                 )
             ),
+        )
+
+    @override
+    def setup(self) -> None:
+        """Set up client callbacks for this coordinator."""
+        super().setup()
+        self.config_entry.async_on_unload(
+            self.client.controller.add_alarm_status_callback(
+                self.partitions_update_callback
+            )
         )
 
     @callback
