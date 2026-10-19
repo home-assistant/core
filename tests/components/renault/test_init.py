@@ -656,6 +656,17 @@ async def test_vehicle_added_with_failed_sibling(
     )
     assert entities
     assert all(hass.states.get(entity.entity_id) for entity in entities)
+    # The scan interval of all vehicles is adjusted despite the failure.
+    assert (
+        len(
+            {
+                coordinator.update_interval
+                for vehicle in config_entry.runtime_data.vehicles.values()
+                for coordinator in vehicle.coordinators.values()
+            }
+        )
+        == 1
+    )
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert len(flows) == 1
     assert flows[0]["context"]["source"] == SOURCE_REAUTH

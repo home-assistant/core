@@ -222,7 +222,7 @@ class RenaultHub:
         )
 
         device_registry = dr.async_get(self._hass)
-        await asyncio.gather(
+        results = await asyncio.gather(
             *(
                 self.async_initialise_vehicle(
                     vehicle_link,
@@ -232,9 +232,13 @@ class RenaultHub:
                     device_registry,
                 )
                 for vehicle_link in vehicle_links
-            )
+            ),
+            return_exceptions=True,
         )
         self._async_update_scan_interval()
+        for result in results:
+            if isinstance(result, BaseException):
+                raise result
 
     @callback
     def _async_update_scan_interval(self) -> None:
