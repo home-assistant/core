@@ -5,14 +5,15 @@ from unittest.mock import AsyncMock, patch
 
 from lighthouse_ble import BaseStationV2, DeviceInfo, LighthouseConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    inject_bluetooth_service_info_bleak,
+)
 
 from homeassistant.components.steamvr_base_station.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import STATION_SERVICE_INFO, TEST_ADDRESS, TEST_NAME
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info_bleak
 
 DEVICE_INFO = DeviceInfo(
     model="1004",

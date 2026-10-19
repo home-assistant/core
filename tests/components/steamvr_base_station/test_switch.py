@@ -10,6 +10,10 @@ from lighthouse_ble import (
     Version,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.components.bluetooth import (
+    inject_bluetooth_service_info_bleak,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -26,9 +30,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import TEST_NAME, make_service_info, payload
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.bluetooth import inject_bluetooth_service_info_bleak
 
 SWITCH = "switch.lhb_747a9bc5"
 

@@ -5,6 +5,8 @@ from unittest.mock import AsyncMock, patch
 
 from lighthouse_ble import LighthouseConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import generate_ble_device
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.steamvr_base_station.const import DOMAIN
@@ -14,9 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import STATION_SERVICE_INFO, TEST_ADDRESS, TEST_NAME, make_service_info
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import generate_ble_device
 
 FLOW = "homeassistant.components.steamvr_base_station.config_flow"
 OTHER_ADDRESS = "AA:BB:CC:DD:EE:07"
@@ -151,6 +150,7 @@ async def test_bluetooth_confirm_device_gone(
     hass: HomeAssistant, mock_ble_device: AsyncMock, mock_read_device_info: AsyncMock
 ) -> None:
     """Test the check fails without connecting when the station is out of range."""
+    ble_device = mock_ble_device.return_value
     mock_ble_device.return_value = None
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_BLUETOOTH}, data=STATION_SERVICE_INFO
@@ -158,6 +158,10 @@ async def test_bluetooth_confirm_device_gone(
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["errors"] == {"base": "cannot_connect"}
     mock_read_device_info.assert_not_awaited()
+
+    mock_ble_device.return_value = ble_device
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_discovered_service_info")
