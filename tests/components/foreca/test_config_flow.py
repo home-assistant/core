@@ -120,7 +120,11 @@ async def test_duplicate_location_aborts(
 
 @pytest.mark.parametrize(
     ("exception", "error"),
-    [(ForecaConnectionError, "cannot_connect"), (RuntimeError, "unknown")],
+    [
+        (ForecaAuthError, "invalid_auth"),
+        (ForecaConnectionError, "cannot_connect"),
+        (RuntimeError, "unknown"),
+    ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_subentry_errors(
