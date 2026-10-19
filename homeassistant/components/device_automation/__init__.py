@@ -33,12 +33,7 @@ from homeassistant.requirements import (
     async_get_integration_with_requirements,
 )
 
-from .const import (  # noqa: F401
-    CONF_IS_OFF,
-    CONF_IS_ON,
-    CONF_TURNED_OFF,
-    CONF_TURNED_ON,
-)
+from .const import CONF_IS_OFF, CONF_IS_ON, CONF_TURNED_OFF, CONF_TURNED_ON  # noqa: F401
 from .exceptions import DeviceNotFound, EntityNotFound, InvalidDeviceAutomationConfig
 
 if TYPE_CHECKING:

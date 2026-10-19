@@ -45,11 +45,7 @@ from .const import (  # noqa: F401
     EVENT_AUTOMATION_TRIGGERED,
     LOGGER,
 )
-from .entity import (  # noqa: F401
-    AutomationEntity,
-    BaseAutomationEntity,
-    UnavailableAutomationEntity,
-)
+from .entity import AutomationEntity, BaseAutomationEntity, UnavailableAutomationEntity  # noqa: F401
 from .helpers import async_get_blueprints
 from .services import async_setup_services
 from .util import async_process_config
