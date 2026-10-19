@@ -36,17 +36,14 @@
     "forecast_rate_limited": {
       "message": "The ecosmart API key is out of requests; try again in {retry_after} seconds"
     },
-    "icp_not_found": {
-      "message": "This ecosmart API key does not cover ICP {icp}. It covers: {icps}"
-    },
-    "icp_required": {
-      "message": "This ecosmart API key covers connection points on more than one grid exit point, so name the ICP to forecast: {icps}"
+    "icp_not_on_key": {
+      "message": "The ecosmart API key no longer covers connection point {icp}"
     },
     "invalid_auth": {
       "message": "The ecosmart API key was rejected. Creating a new key in the ecosmart app disables the previous one."
     },
-    "no_icps": {
-      "message": "This ecosmart API key covers no connection points, so there is no price to forecast"
+    "invalid_device": {
+      "message": "Device {device_id} is not an ecosmart connection point"
     },
     "rate_limited": {
       "message": "The ecosmart API key is out of requests; waiting at least {retry_after} seconds before trying again"
@@ -56,13 +53,9 @@
     "get_forecasts": {
       "description": "Retrieves the wholesale price forecast for a connection point.",
       "fields": {
-        "config_entry_id": {
-          "description": "The ecosmart account to get the forecast for.",
-          "name": "Config entry"
-        },
-        "icp": {
-          "description": "The connection point (ICP number) to get the forecast for. Only needed when the account has connection points on more than one grid exit point.",
-          "name": "ICP"
+        "device_id": {
+          "description": "The connection point (ICP) to get the price forecast for.",
+          "name": "Connection point"
         }
       },
       "name": "Get price forecast"

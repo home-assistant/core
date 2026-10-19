@@ -10,7 +10,7 @@ from aioecosmart import (
 )
 import probatio
 
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID
+from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -19,54 +19,55 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, service
-from homeassistant.helpers.selector import ConfigEntrySelector
+from homeassistant.helpers import service
+from homeassistant.helpers.selector import DeviceSelector
 from homeassistant.util.json import JsonValueType
 
 from .const import DOMAIN, FORECAST_HOURS
 from .coordinator import EcosmartConfigEntry, EcosmartCoordinator, retry_delay
 
 SERVICE_GET_FORECASTS: Final = "get_forecasts"
-ATTR_ICP: Final = "icp"
 
 GET_FORECASTS_SCHEMA = probatio.Schema(
     {
-        probatio.Required(ATTR_CONFIG_ENTRY_ID): ConfigEntrySelector(
-            {"integration": DOMAIN}
+        probatio.Required(ATTR_DEVICE_ID): DeviceSelector(
+            {"filter": [{"integration": DOMAIN}]}
         ),
-        probatio.Optional(ATTR_ICP): cv.string,
     }
 )
 
 
-def _grid_exit_point(coordinator: EcosmartCoordinator, icp: str | None) -> str:
-    """Return the grid exit point whose forecast the caller asked for.
+def _coordinator_and_grid_exit_point(
+    hass: HomeAssistant, device_id: str
+) -> tuple[EcosmartCoordinator, str]:
+    """Return the coordinator and grid exit point behind a connection point device.
 
-    Prices are published per grid exit point, so the ICP only has to be named
-    when the key reaches connection points behind more than one.
+    Each ICP has its own device, so the caller names exactly one connection
+    point and nothing is chosen on their behalf.
     """
-    scopes = coordinator.identity.allowed_icps
-    if not scopes:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN, translation_key="no_icps"
-        )
-    icps = ", ".join(scope.icp for scope in scopes)
-    if icp is not None:
-        for scope in scopes:
-            if scope.icp == icp:
-                return scope.poc
+    entry: EcosmartConfigEntry
+    device, entry = service.async_get_device_and_config_entry(
+        hass, DOMAIN, device_id, include_child_devices=False
+    )
+    icp = next(
+        (value for domain, value in device.identifiers if domain == DOMAIN), None
+    )
+    if icp is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
-            translation_key="icp_not_found",
-            translation_placeholders={"icp": icp, "icps": icps},
+            translation_key="invalid_device",
+            translation_placeholders={"device_id": device_id},
         )
-    if len(coordinator.pocs) > 1:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="icp_required",
-            translation_placeholders={"icps": icps},
-        )
-    return coordinator.pocs[0]
+    coordinator = entry.runtime_data
+    for scope in coordinator.identity.allowed_icps:
+        if scope.icp == icp:
+            return coordinator, scope.poc
+    # The device outlived the key's access to its ICP.
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="icp_not_on_key",
+        translation_placeholders={"icp": icp},
+    )
 
 
 def _serialize(forecast: Forecast) -> ServiceResponse:
@@ -83,16 +84,14 @@ def _serialize(forecast: Forecast) -> ServiceResponse:
 
 
 async def _async_get_forecasts(call: ServiceCall) -> ServiceResponse:
-    """Fetch the wholesale price forecast for one grid exit point.
+    """Fetch the wholesale price forecast for one connection point.
 
     The request is made on demand rather than polled, so the spot price
     sensor's request budget is untouched until someone asks.
     """
-    entry: EcosmartConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    coordinator, poc = _coordinator_and_grid_exit_point(
+        call.hass, call.data[ATTR_DEVICE_ID]
     )
-    coordinator = entry.runtime_data
-    poc = _grid_exit_point(coordinator, call.data.get(ATTR_ICP))
     try:
         forecast = await coordinator.client.forecast(poc, FORECAST_HOURS)
     except EcosmartAuthError as err:

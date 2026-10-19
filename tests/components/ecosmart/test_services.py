@@ -11,15 +11,17 @@ from aioecosmart import (
     EcosmartUnknownPocError,
     IcpScope,
 )
+import probatio
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ecosmart.const import DOMAIN, FORECAST_HOURS
-from homeassistant.components.ecosmart.services import ATTR_ICP, SERVICE_GET_FORECASTS
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID
+from homeassistant.components.ecosmart.services import SERVICE_GET_FORECASTS
+from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 from .conftest import TEST_ICP, TEST_POC, load_forecast, load_identity
@@ -32,14 +34,23 @@ OTHER_ICP = IcpScope(
 )
 
 
-async def _get_forecasts(
-    hass: HomeAssistant, entry_id: str, **extra: str
-) -> dict[str, object]:
+def _device_id(
+    device_registry: dr.DeviceRegistry, entry: MockConfigEntry, icp: str = TEST_ICP
+) -> str:
+    """Return the ID of the device ecosmart created for an ICP."""
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, icp), entry.entry_id
+    )
+    assert device is not None
+    return device.id
+
+
+async def _get_forecasts(hass: HomeAssistant, device_id: str) -> dict[str, object]:
     """Call the action and return its response."""
     response = await hass.services.async_call(
         DOMAIN,
         SERVICE_GET_FORECASTS,
-        {ATTR_CONFIG_ENTRY_ID: entry_id, **extra},
+        {ATTR_DEVICE_ID: device_id},
         blocking=True,
         return_response=True,
     )
@@ -51,12 +62,15 @@ async def test_get_forecasts(
     hass: HomeAssistant,
     mock_ecosmart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the forecast for the key's only grid exit point is returned."""
+    """Test the forecast for the chosen connection point is returned."""
     await setup_integration(hass, mock_config_entry)
 
-    response = await _get_forecasts(hass, mock_config_entry.entry_id)
+    response = await _get_forecasts(
+        hass, _device_id(device_registry, mock_config_entry)
+    )
 
     assert response == snapshot
     mock_ecosmart_client.forecast.assert_awaited_once_with(TEST_POC, FORECAST_HOURS)
@@ -66,12 +80,13 @@ async def test_get_forecasts_leaves_the_spot_poll_alone(
     hass: HomeAssistant,
     mock_ecosmart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test the action makes one forecast request and no spot request."""
     await setup_integration(hass, mock_config_entry)
     mock_ecosmart_client.spot.reset_mock()
 
-    await _get_forecasts(hass, mock_config_entry.entry_id)
+    await _get_forecasts(hass, _device_id(device_registry, mock_config_entry))
 
     mock_ecosmart_client.spot.assert_not_awaited()
     mock_ecosmart_client.forecast.assert_awaited_once()
@@ -81,12 +96,15 @@ async def test_get_forecasts_empty(
     hass: HomeAssistant,
     mock_ecosmart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test an empty forecast is a valid answer, not an error."""
     mock_ecosmart_client.forecast.return_value = load_forecast("forecast_empty.json")
     await setup_integration(hass, mock_config_entry)
 
-    response = await _get_forecasts(hass, mock_config_entry.entry_id)
+    response = await _get_forecasts(
+        hass, _device_id(device_registry, mock_config_entry)
+    )
 
     assert response == {"forecasts": []}
 
@@ -95,6 +113,7 @@ async def test_get_forecasts_negative_price(
     hass: HomeAssistant,
     mock_ecosmart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test a negative wholesale price passes through with its sign."""
     forecast = load_forecast()
@@ -106,7 +125,9 @@ async def test_get_forecasts_negative_price(
     mock_ecosmart_client.forecast.return_value = replace(forecast, points=[negative])
     await setup_integration(hass, mock_config_entry)
 
-    response = await _get_forecasts(hass, mock_config_entry.entry_id)
+    response = await _get_forecasts(
+        hass, _device_id(device_registry, mock_config_entry)
+    )
 
     assert response["forecasts"] == [
         {
@@ -140,6 +161,7 @@ async def test_get_forecasts_api_errors(
     hass: HomeAssistant,
     mock_ecosmart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
     error: EcosmartError,
     translation_key: str,
     placeholders: dict[str, str] | None,
@@ -149,7 +171,7 @@ async def test_get_forecasts_api_errors(
     mock_ecosmart_client.forecast.side_effect = error
 
     with pytest.raises(HomeAssistantError) as exc_info:
-        await _get_forecasts(hass, mock_config_entry.entry_id)
+        await _get_forecasts(hass, _device_id(device_registry, mock_config_entry))
 
     # An API failure is not the caller's mistake, so never a validation error.
     assert not isinstance(exc_info.value, ServiceValidationError)
@@ -158,149 +180,151 @@ async def test_get_forecasts_api_errors(
     assert exc_info.value.translation_placeholders == placeholders
 
 
-async def test_get_forecasts_entry_not_loaded(
+async def test_get_forecasts_second_grid_exit_point(
+    hass: HomeAssistant,
+    mock_ecosmart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test each connection point fetches the forecast for its own grid exit point."""
+    identity = load_identity()
+    mock_ecosmart_client.me.return_value = replace(
+        identity, allowed_icps=[identity.allowed_icps[0], OTHER_ICP]
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    await _get_forecasts(
+        hass, _device_id(device_registry, mock_config_entry, OTHER_ICP.icp)
+    )
+    mock_ecosmart_client.forecast.assert_awaited_once_with(
+        OTHER_ICP.poc, FORECAST_HOURS
+    )
+
+    mock_ecosmart_client.forecast.reset_mock()
+    await _get_forecasts(hass, _device_id(device_registry, mock_config_entry))
+    mock_ecosmart_client.forecast.assert_awaited_once_with(TEST_POC, FORECAST_HOURS)
+
+
+async def test_get_forecasts_requires_a_device(
     hass: HomeAssistant,
     mock_ecosmart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the action refuses an entry that is not loaded."""
+    """Test the connection point must be chosen; nothing is picked by default."""
     await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(probatio.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_FORECASTS,
+            {},
+            blocking=True,
+            return_response=True,
+        )
+
+    mock_ecosmart_client.forecast.assert_not_awaited()
+
+
+async def test_get_forecasts_unknown_device(
+    hass: HomeAssistant,
+    mock_ecosmart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the action refuses a device ID that does not exist."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await _get_forecasts(hass, "not_a_real_device")
+
+    assert exc_info.value.translation_key == "service_device_not_found"
+    mock_ecosmart_client.forecast.assert_not_awaited()
+
+
+async def test_get_forecasts_other_integration_device(
+    hass: HomeAssistant,
+    mock_ecosmart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the action refuses a device that belongs to another integration."""
+    await setup_integration(hass, mock_config_entry)
+    other_entry = MockConfigEntry(domain="other_domain")
+    other_entry.add_to_hass(hass)
+    other_device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers={("other_domain", TEST_ICP)},
+    )
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await _get_forecasts(hass, other_device.id)
+
+    assert exc_info.value.translation_key == "service_device_wrong_domain"
+    mock_ecosmart_client.forecast.assert_not_awaited()
+
+
+async def test_get_forecasts_entry_not_loaded(
+    hass: HomeAssistant,
+    mock_ecosmart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the action refuses a device whose config entry is not loaded."""
+    await setup_integration(hass, mock_config_entry)
+    device_id = _device_id(device_registry, mock_config_entry)
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     with pytest.raises(ServiceValidationError) as exc_info:
-        await _get_forecasts(hass, mock_config_entry.entry_id)
+        await _get_forecasts(hass, device_id)
 
     assert exc_info.value.translation_key == "service_config_entry_not_loaded"
     mock_ecosmart_client.forecast.assert_not_awaited()
 
 
-async def test_get_forecasts_unknown_entry(
+async def test_get_forecasts_icp_no_longer_on_key(
     hass: HomeAssistant,
     mock_ecosmart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test the action refuses a config entry ID that does not exist."""
-    await setup_integration(hass, mock_config_entry)
-
-    with pytest.raises(ServiceValidationError) as exc_info:
-        await _get_forecasts(hass, "not_a_real_entry")
-
-    assert exc_info.value.translation_key == "service_config_entry_not_found"
-    mock_ecosmart_client.forecast.assert_not_awaited()
-
-
-async def test_get_forecasts_other_integration_entry(
-    hass: HomeAssistant,
-    mock_ecosmart_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the action refuses a config entry that belongs to another integration."""
-    await setup_integration(hass, mock_config_entry)
-    other_entry = MockConfigEntry(domain="other_domain")
-    other_entry.add_to_hass(hass)
-
-    with pytest.raises(ServiceValidationError) as exc_info:
-        await _get_forecasts(hass, other_entry.entry_id)
-
-    assert exc_info.value.translation_key == "service_config_entry_wrong_domain"
-    mock_ecosmart_client.forecast.assert_not_awaited()
-
-
-async def test_get_forecasts_icp_on_shared_grid_exit_point(
-    hass: HomeAssistant,
-    mock_ecosmart_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test two ICPs behind one grid exit point need no ICP to be named."""
-    identity = load_identity()
-    second = replace(identity.allowed_icps[0], icp="0000123456AB124")
-    mock_ecosmart_client.me.return_value = replace(
-        identity, allowed_icps=[identity.allowed_icps[0], second]
-    )
-    await setup_integration(hass, mock_config_entry)
-
-    await _get_forecasts(hass, mock_config_entry.entry_id)
-
-    mock_ecosmart_client.forecast.assert_awaited_once_with(TEST_POC, FORECAST_HOURS)
-
-
-async def test_get_forecasts_named_icp(
-    hass: HomeAssistant,
-    mock_ecosmart_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test naming an ICP fetches the forecast for its own grid exit point."""
+    """Test a device left behind by an ICP the key no longer covers is refused."""
     identity = load_identity()
     mock_ecosmart_client.me.return_value = replace(
         identity, allowed_icps=[identity.allowed_icps[0], OTHER_ICP]
     )
     await setup_integration(hass, mock_config_entry)
+    stale_device_id = _device_id(device_registry, mock_config_entry, OTHER_ICP.icp)
 
-    await _get_forecasts(hass, mock_config_entry.entry_id, **{ATTR_ICP: OTHER_ICP.icp})
-
-    mock_ecosmart_client.forecast.assert_awaited_once_with(
-        OTHER_ICP.poc, FORECAST_HOURS
-    )
-
-
-async def test_get_forecasts_icp_required(
-    hass: HomeAssistant,
-    mock_ecosmart_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test a key spanning two grid exit points needs the ICP named."""
-    identity = load_identity()
-    mock_ecosmart_client.me.return_value = replace(
-        identity, allowed_icps=[identity.allowed_icps[0], OTHER_ICP]
-    )
-    await setup_integration(hass, mock_config_entry)
+    mock_ecosmart_client.me.return_value = identity
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     with pytest.raises(ServiceValidationError) as exc_info:
-        await _get_forecasts(hass, mock_config_entry.entry_id)
+        await _get_forecasts(hass, stale_device_id)
 
     assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "icp_required"
-    assert exc_info.value.translation_placeholders == {
-        "icps": f"{TEST_ICP}, {OTHER_ICP.icp}"
-    }
+    assert exc_info.value.translation_key == "icp_not_on_key"
+    assert exc_info.value.translation_placeholders == {"icp": OTHER_ICP.icp}
     mock_ecosmart_client.forecast.assert_not_awaited()
 
 
-async def test_get_forecasts_icp_not_on_key(
+async def test_get_forecasts_device_without_icp(
     hass: HomeAssistant,
     mock_ecosmart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test naming an ICP the key does not cover is refused before any request."""
+    """Test an ecosmart device that names no ICP is refused before any request."""
     await setup_integration(hass, mock_config_entry)
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("other_domain", TEST_ICP)},
+    )
 
     with pytest.raises(ServiceValidationError) as exc_info:
-        await _get_forecasts(
-            hass, mock_config_entry.entry_id, **{ATTR_ICP: "0000999999ZZ999"}
-        )
+        await _get_forecasts(hass, device.id)
 
     assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "icp_not_found"
-    assert exc_info.value.translation_placeholders == {
-        "icp": "0000999999ZZ999",
-        "icps": TEST_ICP,
-    }
-    mock_ecosmart_client.forecast.assert_not_awaited()
-
-
-async def test_get_forecasts_key_without_icps(
-    hass: HomeAssistant,
-    mock_ecosmart_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test a key that has lost its connection points is refused, not crashed."""
-    mock_ecosmart_client.me.return_value = load_identity("me_no_icps.json")
-    await setup_integration(hass, mock_config_entry)
-
-    with pytest.raises(ServiceValidationError) as exc_info:
-        await _get_forecasts(hass, mock_config_entry.entry_id)
-
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "no_icps"
+    assert exc_info.value.translation_key == "invalid_device"
+    assert exc_info.value.translation_placeholders == {"device_id": device.id}
     mock_ecosmart_client.forecast.assert_not_awaited()

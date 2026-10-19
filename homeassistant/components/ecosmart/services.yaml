@@ -1,12 +1,8 @@
 get_forecasts:
   fields:
-    config_entry_id:
+    device_id:
       required: true
       selector:
-        config_entry:
-          integration: ecosmart
-    icp:
-      required: false
-      example: "0000123456AB123"
-      selector:
-        text:
+        device:
+          filter:
+            - integration: ecosmart
