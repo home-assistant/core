@@ -334,6 +334,12 @@ async def _setup_ble_vehicles(
     def _create_bluetooth(vin: str, **kwargs: object) -> AsyncMock:
         bluetooth_vehicle = bluetooth_vehicles[vin] = AsyncMock()
         bluetooth_vehicle.set_device = MagicMock()
+        bluetooth_vehicle.listen_vehicle_lock_state = MagicMock()
+        bluetooth_vehicle.listen_charge_port = MagicMock()
+        bluetooth_vehicle.listen_closure_statuses = MagicMock()
+        bluetooth_vehicle.listen_gear = MagicMock()
+        bluetooth_vehicle.listen_tonneau = MagicMock()
+        bluetooth_vehicle.listen_tonneau_percent_open = MagicMock()
         return bluetooth_vehicle
 
     # TeslaBluetooth is mocked so no vehicle key file is written.

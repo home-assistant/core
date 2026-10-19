@@ -817,6 +817,12 @@ async def _setup_paired_entry(
         ble_vehicle = AsyncMock()
         # set_device is sync; an AsyncMock child would leak an un-awaited coroutine.
         ble_vehicle.set_device = MagicMock()
+        ble_vehicle.listen_vehicle_lock_state = MagicMock()
+        ble_vehicle.listen_charge_port = MagicMock()
+        ble_vehicle.listen_closure_statuses = MagicMock()
+        ble_vehicle.listen_gear = MagicMock()
+        ble_vehicle.listen_tonneau = MagicMock()
+        ble_vehicle.listen_tonneau_percent_open = MagicMock()
         mock_parent.return_value.vehicles.createBluetooth.return_value = ble_vehicle
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
