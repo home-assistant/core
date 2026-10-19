@@ -477,6 +477,7 @@ def thermostat_gen2_device(
     device.device_services = []
     device.deleted = False
     device.status = "AVAILABLE"
+    device.supports_temperature_offset = False
     device.supports_display_configuration = supports_display_configuration
     device.humidity_warning_enabled = humidity_warning_enabled
     device.supports_display_direction = (
