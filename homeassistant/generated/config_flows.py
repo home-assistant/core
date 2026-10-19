@@ -163,6 +163,7 @@ FLOWS = {
         "cync",
         "daikin",
         "daikin_infrared",
+        "dali",
         "data_grand_lyon",
         "datadog",
         "deako",

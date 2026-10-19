@@ -389,6 +389,8 @@ AGENTS.md @home-assistant/core
 /tests/components/daikin/ @fredrike
 /homeassistant/components/daikin_infrared/ @javitonino
 /tests/components/daikin_infrared/ @javitonino
+/homeassistant/components/dali/ @markus-becker-tridonic-com
+/tests/components/dali/ @markus-becker-tridonic-com
 /homeassistant/components/data_grand_lyon/ @Crocmagnon
 /tests/components/data_grand_lyon/ @Crocmagnon
 /homeassistant/components/datadog/ @bm1549
