@@ -28,7 +28,6 @@ class Config:
     root: pathlib.Path
     action: Literal["validate", "generate"]
     requirements: bool
-    requirements_path: pathlib.Path | None = None
     core_integrations_path: pathlib.Path = field(init=False)
     errors: list[Error] = field(default_factory=list)
     cache: dict[str, Any] = field(default_factory=dict)

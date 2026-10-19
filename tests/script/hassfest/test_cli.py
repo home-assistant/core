@@ -55,6 +55,46 @@ def test_custom_plugin_selection(
     assert output in result.stdout
 
 
+def test_null_codeowners(tmp_path: Path) -> None:
+    """A null codeowners field reaches manifest validation without crashing."""
+    integration_path = tmp_path / "custom_components/test"
+    integration_path.mkdir(parents=True)
+    (integration_path / "manifest.json").write_text(
+        json.dumps(
+            {
+                "domain": "test",
+                "name": "Test",
+                "codeowners": None,
+                "documentation": "https://example.com",
+                "iot_class": "local_push",
+                "version": "1.0.0",
+            }
+        )
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "script.hassfest",
+            "--integration-path",
+            str(integration_path),
+            "--plugins",
+            "codeowners,manifest",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    assert (
+        "[ERROR] [MANIFEST] Invalid manifest: expected a list at 'codeowners'. Got None"
+        in result.stdout
+    )
+    assert "Traceback" not in result.stderr
+
+
 def test_core_plugin_selection() -> None:
     """A Core run can select a Core-only plugin without importing other plugins."""
     result = subprocess.run(

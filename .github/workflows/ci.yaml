@@ -837,13 +837,11 @@ jobs:
           python-version: ${{ needs.info.outputs.default_python }}
       - name: Build hassfest source distribution and wheel
         run: uv build packages/hassfest --out-dir dist/hassfest
-      - name: Build matching Home Assistant wheel
-        run: uv build --wheel --out-dir dist/homeassistant
-      - name: Install wheels in a clean environment
+      - name: Install wheel in a clean environment
         run: |
           uv venv "${RUNNER_TEMP}/hassfest-venv"
           uv pip install --python "${RUNNER_TEMP}/hassfest-venv/bin/python" \
-            dist/homeassistant/*.whl dist/hassfest/*.whl
+            dist/hassfest/*.whl
       - name: Check installed package outside the checkout
         working-directory: ${{ runner.temp }}
         run: |

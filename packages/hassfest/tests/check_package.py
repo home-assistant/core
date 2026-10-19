@@ -1,7 +1,8 @@
 """Exercise the installed shared hassfest package outside the checkout."""
 
-from importlib.metadata import requires, version
+from importlib.metadata import version
 from importlib.resources import files
+from importlib.util import find_spec
 import json
 from pathlib import Path
 import sys
@@ -15,8 +16,7 @@ from hassfest.serializer import format_python_namespace
 
 def main() -> None:
     """Check the installed artifact and runner with the shared validators."""
-    assert f"homeassistant=={version('homeassistant')}" in requires("hassfest")
-    assert version("hassfest") == version("homeassistant")
+    assert find_spec("homeassistant") is None
     data = files("hassfest") / "_data"
     assert json.loads((data / "build.json").read_text())["version"] == version(
         "hassfest"
@@ -42,6 +42,11 @@ def main() -> None:
             plugins=set(INTEGRATION_PLUGINS),
         )
         plugins = load_plugins(config)
+        assert run(config, plugins) == 0
+
+        # Leave invalid field types for the manifest validator to report.
+        manifest["codeowners"] = None
+        manifest_path.write_text(json.dumps(manifest))
         assert run(config, plugins) == 0
 
         manifest["codeowners"] = ["invalid-owner"]

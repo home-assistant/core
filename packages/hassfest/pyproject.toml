@@ -4,7 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hassfest"
-dynamic = ["version", "requires-python", "dependencies"]
+dynamic = ["version", "requires-python"]
+dependencies = ["ruff"]
 license = "Apache-2.0"
 license-files = ["LICENSE.md"]
 description = "Validate Home Assistant integrations."

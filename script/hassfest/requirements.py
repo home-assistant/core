@@ -513,11 +513,8 @@ def validate_custom_requirements(integration: Integration, config: Config) -> bo
 
     start_errors = len(integration.errors)
 
-    requirements_path = config.requirements_path or config.root
-    core_requirements = _load_requirement_file(requirements_path / "requirements.txt")
-    all_requirements = _load_requirement_file(
-        requirements_path / "requirements_all.txt"
-    )
+    core_requirements = _load_requirement_file(config.root / "requirements.txt")
+    all_requirements = _load_requirement_file(config.root / "requirements_all.txt")
     constraints = _load_requirement_file(
         config.root / "homeassistant/package_constraints.txt"
     )

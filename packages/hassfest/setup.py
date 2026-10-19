@@ -57,8 +57,4 @@ setup(
     cmdclass={"build_py": BuildPy, "sdist": Sdist},
     version=metadata["version"],
     python_requires=metadata["requires-python"],
-    install_requires=[
-        f"homeassistant=={metadata['version']}",
-        "ruff",
-    ],
 )
