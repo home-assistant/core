@@ -1,0 +1,54 @@
+{
+  "vehicle": {
+    "name": "Superb",
+    "vin": "TMBJM7NP2M1TMP511",
+    "odometer": {
+      "mileageInKm": 23140,
+      "carCapturedTimestamp": "2024-01-10T11:55:00Z"
+    },
+    "charging": {
+      "isVehicleInSavedLocation": true,
+      "status": {
+        "chargingRateInKilometersPerHour": 0.0,
+        "chargePowerInKw": 0.0,
+        "state": "CONSERVING",
+        "chargeType": "OFF",
+        "battery": {
+          "remainingCruisingRangeInMeters": 61000,
+          "stateOfChargeInPercent": 80
+        }
+      },
+      "carCapturedTimestamp": "2024-01-10T11:55:00Z"
+    },
+    "fuelStatus": {
+      "carType": "HYBRID",
+      "totalRangeInKm": 701,
+      "primaryEngineRange": {
+        "engineType": "ELECTRIC",
+        "currentSocInPercent": 80,
+        "remainingRangeInKm": 61
+      },
+      "secondaryEngineRange": {
+        "engineType": "GASOLINE",
+        "currentFuelLevelInPercent": 42,
+        "remainingRangeInKm": 640
+      },
+      "carCapturedTimestamp": "2024-01-10T11:55:00Z"
+    },
+    "airConditioning": {
+      "state": "HEATING",
+      "estimatedReachOfTargetTemperatureAt": "2024-01-10T12:30:00Z",
+      "targetTemperature": {
+        "value": 72.0,
+        "unit": "FAHRENHEIT"
+      },
+      "carCapturedTimestamp": "2024-01-10T11:55:00Z"
+    },
+    "auxiliaryHeating": {
+      "state": "HEATING",
+      "startMode": "HEATING",
+      "durationInSeconds": 1200,
+      "carCapturedTimestamp": "2024-01-10T11:55:00Z"
+    }
+  }
+}

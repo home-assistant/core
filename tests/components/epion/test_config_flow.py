@@ -4,14 +4,13 @@ from unittest.mock import MagicMock, patch
 
 from epion import EpionAuthenticationError, EpionConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.epion.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 API_KEY = "test-key-123"
 NEW_API_KEY = "new-key-456"

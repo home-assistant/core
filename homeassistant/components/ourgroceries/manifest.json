@@ -1,6 +1,7 @@
 {
   "domain": "ourgroceries",
   "name": "OurGroceries",
+  "categories": ["productivity_information.shopping_groceries"],
   "codeowners": ["@OnFreund"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ourgroceries",

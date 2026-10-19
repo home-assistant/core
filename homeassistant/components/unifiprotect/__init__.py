@@ -11,11 +11,6 @@ from uiprotect.data import Bootstrap
 from uiprotect.data.public_devices import PublicDeviceModel, PublicNVR
 from uiprotect.exceptions import BadRequest, ClientError, NotAuthorized
 
-# Import the test_util.anonymize module from the uiprotect package
-# in __init__ to ensure it gets imported in the executor since the
-# diagnostics module will not be imported in the executor.
-from uiprotect.test_util.anonymize import anonymize_data  # noqa: F401
-
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -375,15 +370,16 @@ async def async_remove_config_entry_device(
         if connection[0] == dr.CONNECTION_NETWORK_MAC
     }
     api = config_entry.runtime_data.api
+    # all_devices() walks every public device family (and the NVR), including
+    # the ones the private bootstrap does not have, like fobs and relays.
+    if any(
+        device.mac and _async_unifi_mac_from_hass(device.mac) in unifi_macs
+        for device in api.public_bootstrap.all_devices(include_nvr=True)
+        if isinstance(device, PublicDeviceModel | PublicNVR)
+    ):
+        return False
     if api.is_public_only:
-        # No private bootstrap: judge against the public cache. all_devices()
-        # walks every public device family (and the NVR), so new families are
-        # covered without changes here.
-        return not any(
-            device.mac and _async_unifi_mac_from_hass(device.mac) in unifi_macs
-            for device in api.public_bootstrap.all_devices(include_nvr=True)
-            if isinstance(device, PublicDeviceModel | PublicNVR)
-        )
+        return True
     if api.bootstrap.nvr.mac in unifi_macs:
         return False
     for device in async_get_devices(api.bootstrap, DEVICES_THAT_ADOPT):

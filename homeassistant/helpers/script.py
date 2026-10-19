@@ -564,7 +564,7 @@ class _ScriptRun:
                     enabled = self._action[CONF_ENABLED]
                     if isinstance(enabled, Template):
                         try:
-                            enabled = enabled.async_render(limited=True)
+                            enabled = enabled.async_render(self._variables)
                         except exceptions.TemplateError as ex:
                             self._handle_exception(
                                 trace_element,
@@ -803,7 +803,11 @@ class _ScriptRun:
         self._script.last_action = self._action.get(
             CONF_ALIAS, self._action[CONF_CONDITION]
         )
-        cond = await self._async_get_condition(self._action)
+        # The enabled option was already rendered with the run variables when
+        # this step started, don't let the condition render it again.
+        cond = await self._async_get_condition(
+            {key: value for key, value in self._action.items() if key != CONF_ENABLED}
+        )
         try:
             trace_element = trace_stack_top(trace_stack_cv)
             if trace_element:

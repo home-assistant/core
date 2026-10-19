@@ -1,6 +1,7 @@
 {
   "domain": "ombi",
   "name": "Ombi",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@larssont"],
   "documentation": "https://www.home-assistant.io/integrations/ombi",
   "iot_class": "local_polling",

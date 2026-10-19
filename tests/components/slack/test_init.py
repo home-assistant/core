@@ -1,12 +1,12 @@
 """Test Slack integration."""
 
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+
 from homeassistant.components.slack.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import CONF_DATA, async_init_integration
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:

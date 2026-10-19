@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from denonavr.exceptions import AvrNetworkError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.denonavr.config_flow import (
@@ -27,8 +28,6 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_SERIAL,
     SsdpServiceInfo,
 )
-
-from tests.common import MockConfigEntry
 
 TEST_HOST = "1.2.3.4"
 TEST_HOST2 = "5.6.7.8"
