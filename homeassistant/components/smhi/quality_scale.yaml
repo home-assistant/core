@@ -70,14 +70,18 @@ rules:
   dynamic-devices:
     status: exempt
     comment: Each config entry represents a single location.
-  entity-category: todo
+  entity-category:
+    status: exempt
+    comment: All entities are primary entities.
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: todo
   icon-translations: done
   reconfiguration-flow: done
-  repair-issues: todo
+  repair-issues:
+    status: exempt
+    comment: Integration has no cases that need a repair issue.
   stale-devices:
     status: exempt
     comment: Each config entry represents a single location.
