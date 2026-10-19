@@ -1,12 +1,15 @@
 """Support for Litter-Robot cameras."""
 
+import asyncio
 import functools
 import logging
 from pathlib import Path
 from typing import Any, override
 
+from aiohttp import ClientError
 from pylitterbot import LitterRobot5
 from pylitterbot.camera import CameraSession, CameraSignalingRelay
+from pylitterbot.exceptions import LitterRobotException
 from webrtc_models import RTCConfiguration, RTCIceCandidateInit, RTCIceServer
 
 from homeassistant.components.camera import (
@@ -99,7 +102,7 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
     """Litter-Robot camera entity with WebRTC support."""
 
     _attr_supported_features = CameraEntityFeature.STREAM
-    _attr_is_streaming = True
+    _attr_is_streaming = False
     _attr_translation_key = "camera"
 
     def __init__(
@@ -141,17 +144,21 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Pre-cache a session for TURN credentials when added to hass."""
+        """Fetch a first session for TURN credentials when added to hass.
+
+        It is not renewed afterwards, see `_refresh_cached_session`.
+        """
         await super().async_added_to_hass()
         await self._refresh_cached_session()
 
     async def _refresh_cached_session(self) -> None:
         """Fetch a camera session to get TURN credentials for viewers.
 
-        Sessions are short-lived (about a minute, as observed), so they are
-        fetched when a viewer asks for its configuration rather than renewed
-        ahead of time: renewing in the background would create a session every
-        minute for a camera nobody is watching.
+        Sessions are short-lived, so they are fetched when a viewer asks for
+        its configuration and none is usable, rather than renewed ahead of
+        time: renewing in the background would create a session every few
+        minutes for a camera nobody is watching. Failures are logged at debug
+        level and the cache is left empty, so the next request tries again.
         """
         if self._refreshing:
             return
@@ -165,7 +172,7 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
                 "Camera session refreshed (expires %s)",
                 self._cached_session.session_expiration,
             )
-        except Exception:
+        except LitterRobotException, ClientError, TimeoutError:
             _LOGGER.debug("Failed to refresh camera session", exc_info=True)
         finally:
             self._refreshing = False
@@ -179,14 +186,18 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
             (expires := session.session_expiration) is not None
             and expires <= dt_util.utcnow()
         ):
-            # nothing usable: withhold stale credentials, and try again now
-            # rather than wait for the next scheduled attempt
+            # nothing usable: withhold stale credentials and fetch a
+            # replacement now. This call cannot wait for it (it is a
+            # synchronous callback), so this client gets no TURN servers and
+            # the next one gets the new credentials.
             if session is not None:
-                _LOGGER.debug("Camera session expired, will refresh in background")
+                _LOGGER.debug("Camera session expired, fetching a new one")
             session = None
             self._cached_session = None
             self.hass.async_create_task(self._refresh_cached_session())
         ice_servers = _build_ice_servers(session) if session else []
+        if not ice_servers:
+            _LOGGER.debug("Serving the WebRTC configuration without TURN servers")
         return WebRTCClientConfiguration(
             configuration=RTCConfiguration(ice_servers=ice_servers),
         )
@@ -198,7 +209,7 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
         """Handle a WebRTC offer by relaying signaling to the camera."""
         try:
             client = self.robot.get_camera_client()
-        except Exception as err:
+        except LitterRobotException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="camera_not_available",
@@ -230,7 +241,11 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
 
         try:
             session = await relay.start(offer_sdp, on_answer, on_candidate)
-        except Exception as err:
+        except asyncio.CancelledError:
+            # the client went away mid-offer
+            self._relays.pop(session_id, None)
+            raise
+        except (LitterRobotException, ClientError, TimeoutError) as err:
             self._relays.pop(session_id, None)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -238,8 +253,17 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
                 translation_placeholders={"error": str(err)},
             ) from err
 
-        # Update cached session for fresh TURN creds
+        if self._relays.get(session_id) is not relay:
+            # the viewer went away while start() was connecting, and the
+            # teardown has already run: nothing owns this relay any more
+            await relay.close()
+            return
+
+        # keep the session the relay started with; the next viewer reuses its
+        # TURN credentials until it expires
         self._cached_session = session
+        self._attr_is_streaming = True
+        self.async_write_ha_state()
         _LOGGER.debug("Started WebRTC session %s", session_id)
 
     @override
@@ -266,20 +290,29 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
         if relay := self._relays.pop(session_id, None):
             _LOGGER.debug("Closing WebRTC session %s", session_id)
             self.hass.async_create_task(relay.close())
+            self._update_streaming()
         super().close_webrtc_session(session_id)
 
-    async def async_close_webrtc_session(self, session_id: str) -> None:
-        """Close a WebRTC session, awaiting the relay teardown."""
+    async def _async_close_relay(self, session_id: str) -> None:
+        """Close a WebRTC session, awaiting the relay teardown.
+
+        Used when the entity is removed, where a scheduled task may never run.
+        """
         if relay := self._relays.pop(session_id, None):
             _LOGGER.debug("Closing WebRTC session %s", session_id)
             await relay.close()
+            self._update_streaming()
         super().close_webrtc_session(session_id)
+
+    def _update_streaming(self) -> None:
+        """Report streaming only while a viewer is connected."""
+        self._attr_is_streaming = bool(self._relays)
+        self.async_write_ha_state()
 
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Close all active relays when the entity is removed."""
         for session_id in list(self._relays):
-            # awaited, not fire-and-forget: the entity is going away and a
-            # scheduled task may never run
-            await self.async_close_webrtc_session(session_id)
+            # awaited, not fire-and-forget
+            await self._async_close_relay(session_id)
         await super().async_will_remove_from_hass()

@@ -1,16 +1,26 @@
 """Test the Litter-Robot camera entity."""
 
+import asyncio
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pylitterbot.camera import CameraSession
+from pylitterbot.exceptions import CameraNotAvailableException, CameraStreamException
 import pytest
+from webrtc_models import RTCIceCandidateInit
 
-from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.camera import (
+    DOMAIN as CAMERA_DOMAIN,
+    WebRTCAnswer,
+    WebRTCCandidate,
+)
 from homeassistant.components.litterrobot.camera import _build_ice_servers
+from homeassistant.components.litterrobot.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util import dt as dt_util
 
 from .conftest import create_mock_robot, setup_integration
 
@@ -47,7 +57,8 @@ async def test_camera_entity_created(
 
     camera = hass.states.get(CAMERA_ENTITY_ID)
     assert camera is not None
-    assert camera.state == "streaming"
+    # nothing is streaming until a viewer connects
+    assert camera.state == "idle"
 
 
 async def test_camera_not_created_for_standard_lr5(
@@ -73,20 +84,29 @@ async def test_camera_not_created_for_lr3(
 async def test_webrtc_offer_relays_and_cleans_up(
     hass: HomeAssistant, mock_account_with_litterrobot_5_pro: MagicMock
 ) -> None:
-    """An offer opens a relay; closing the session tears it down."""
+    """An offer relays signaling both ways; closing the session tears it down."""
     mock_client = mock_account_with_litterrobot_5_pro.robots[0].get_camera_client()
     mock_client.generate_session = AsyncMock(
         return_value=CameraSession.from_response(MOCK_SESSION_DATA)
     )
     await setup_integration(hass, mock_account_with_litterrobot_5_pro, CAMERA_DOMAIN)
 
-    component = hass.data[CAMERA_DOMAIN]
-    entity = component.get_entity(CAMERA_ENTITY_ID)
+    entity = hass.data[CAMERA_DOMAIN].get_entity(CAMERA_ENTITY_ID)
     assert entity is not None
 
+    started_with = CameraSession.from_response(
+        {**MOCK_SESSION_DATA, "sessionId": "started-session"}
+    )
+
+    async def start(offer_sdp, on_answer, on_candidate):
+        on_answer("answer-sdp")
+        on_candidate({"candidate": "candidate:a", "sdpMid": "1", "sdpMLineIndex": 2})
+        # a candidate without the optional fields gets the defaults
+        on_candidate({})
+        return started_with
+
     relay = MagicMock()
-    # the real start() returns the session the camera was started with
-    relay.start = AsyncMock(return_value=CameraSession.from_response(MOCK_SESSION_DATA))
+    relay.start = AsyncMock(side_effect=start)
     relay.send_candidate = AsyncMock()
     relay.close = AsyncMock()
     send_message = MagicMock()
@@ -96,22 +116,53 @@ async def test_webrtc_offer_relays_and_cleans_up(
         return_value=relay,
     ):
         await entity.async_handle_async_webrtc_offer(
-            "v=0\r\n", "session-1", send_message
+            "offer-sdp", "session-1", send_message
         )
+    assert relay.start.call_args.args[0] == "offer-sdp"
     assert "session-1" in entity._relays
+    assert entity._cached_session is started_with
 
-    # a candidate for a live session is forwarded to its relay
-    candidate = MagicMock()
-    candidate.candidate = "candidate:1 1 udp 2130706431 192.0.2.1 3478 typ host"
-    candidate.sdp_mid = "0"
-    candidate.sdp_m_line_index = 0
-    await entity.async_on_webrtc_candidate("session-1", candidate)
-    assert relay.send_candidate.called
+    assert send_message.call_args_list[0].args[0] == WebRTCAnswer(answer="answer-sdp")
+    assert send_message.call_args_list[1].args[0] == WebRTCCandidate(
+        RTCIceCandidateInit(candidate="candidate:a", sdp_mid="1", sdp_m_line_index=2)
+    )
+    assert send_message.call_args_list[2].args[0] == WebRTCCandidate(
+        RTCIceCandidateInit(candidate="", sdp_mid="0", sdp_m_line_index=0)
+    )
+    assert hass.states.get(CAMERA_ENTITY_ID).state == "streaming"
+
+    # a browser candidate for a live session is forwarded to its relay
+    await entity.async_on_webrtc_candidate(
+        "session-1",
+        RTCIceCandidateInit(
+            candidate="candidate:1 1 udp 2130706431 192.0.2.1 3478 typ host",
+            sdp_mid="1",
+            sdp_m_line_index=3,
+        ),
+    )
+    relay.send_candidate.assert_awaited_once_with(
+        {
+            "candidate": "candidate:1 1 udp 2130706431 192.0.2.1 3478 typ host",
+            "sdpMid": "1",
+            "sdpMLineIndex": 3,
+        }
+    )
+
+    # missing mid and index fall back to the first media section
+    await entity.async_on_webrtc_candidate(
+        "session-1", RTCIceCandidateInit(candidate="candidate:2")
+    )
+    assert relay.send_candidate.await_args.args[0] == {
+        "candidate": "candidate:2",
+        "sdpMid": "0",
+        "sdpMLineIndex": 0,
+    }
 
     entity.close_webrtc_session("session-1")
     await hass.async_block_till_done()
     assert "session-1" not in entity._relays
-    assert relay.close.called
+    relay.close.assert_awaited_once()
+    assert hass.states.get(CAMERA_ENTITY_ID).state == "idle"
 
 
 async def test_webrtc_candidate_for_unknown_session_is_ignored(
@@ -234,20 +285,114 @@ async def test_webrtc_offer_failure_drops_the_relay(
 
     entity = hass.data[CAMERA_DOMAIN].get_entity(CAMERA_ENTITY_ID)
     relay = MagicMock()
-    relay.start = AsyncMock(side_effect=Exception("signaling refused"))
+    relay.start = AsyncMock(side_effect=CameraStreamException("signaling refused"))
 
     with (
         patch(
             "homeassistant.components.litterrobot.camera.CameraSignalingRelay",
             return_value=relay,
         ),
-        pytest.raises(HomeAssistantError),
+        pytest.raises(HomeAssistantError) as exc_info,
     ):
         await entity.async_handle_async_webrtc_offer(
             "v=0\r\n", "session-fail", MagicMock()
         )
 
+    assert exc_info.value.translation_key == "camera_stream_failed"
+    assert exc_info.value.translation_placeholders == {"error": "signaling refused"}
     assert "session-fail" not in entity._relays
+    assert hass.states.get(CAMERA_ENTITY_ID).state == "idle"
+
+
+async def test_webrtc_offer_cancelled_drops_the_relay(
+    hass: HomeAssistant, mock_account_with_litterrobot_5_pro: MagicMock
+) -> None:
+    """A client that disconnects mid-offer leaves no relay behind."""
+    mock_client = mock_account_with_litterrobot_5_pro.robots[0].get_camera_client()
+    mock_client.generate_session = AsyncMock(
+        return_value=CameraSession.from_response(MOCK_SESSION_DATA)
+    )
+    await setup_integration(hass, mock_account_with_litterrobot_5_pro, CAMERA_DOMAIN)
+
+    entity = hass.data[CAMERA_DOMAIN].get_entity(CAMERA_ENTITY_ID)
+    relay = MagicMock()
+    relay.start = AsyncMock(side_effect=asyncio.CancelledError)
+
+    with (
+        patch(
+            "homeassistant.components.litterrobot.camera.CameraSignalingRelay",
+            return_value=relay,
+        ),
+        pytest.raises(asyncio.CancelledError),
+    ):
+        await entity.async_handle_async_webrtc_offer(
+            "v=0\r\n", "session-cancel", MagicMock()
+        )
+
+    assert "session-cancel" not in entity._relays
+
+
+async def test_webrtc_offer_without_a_camera_client(
+    hass: HomeAssistant, mock_account_with_litterrobot_5_pro: MagicMock
+) -> None:
+    """A robot that can no longer provide a camera client reports it."""
+    robot = mock_account_with_litterrobot_5_pro.robots[0]
+    robot.get_camera_client().generate_session = AsyncMock(
+        return_value=CameraSession.from_response(MOCK_SESSION_DATA)
+    )
+    await setup_integration(hass, mock_account_with_litterrobot_5_pro, CAMERA_DOMAIN)
+
+    entity = hass.data[CAMERA_DOMAIN].get_entity(CAMERA_ENTITY_ID)
+    robot.get_camera_client = MagicMock(
+        side_effect=CameraNotAvailableException("no camera")
+    )
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await entity.async_handle_async_webrtc_offer("v=0\r\n", "s", MagicMock())
+
+    assert exc_info.value.translation_key == "camera_not_available"
+    assert exc_info.value.translation_placeholders == {"error": "no camera"}
+
+
+async def test_viewer_leaving_during_the_offer_does_not_leak_the_relay(
+    hass: HomeAssistant, mock_account_with_litterrobot_5_pro: MagicMock
+) -> None:
+    """A session closed while start() connects must not be left running."""
+    mock_client = mock_account_with_litterrobot_5_pro.robots[0].get_camera_client()
+    mock_client.generate_session = AsyncMock(
+        return_value=CameraSession.from_response(MOCK_SESSION_DATA)
+    )
+    await setup_integration(hass, mock_account_with_litterrobot_5_pro, CAMERA_DOMAIN)
+
+    entity = hass.data[CAMERA_DOMAIN].get_entity(CAMERA_ENTITY_ID)
+    cached = entity._cached_session
+
+    async def start(offer_sdp, on_answer, on_candidate):
+        # the browser closes the dialog while the relay is still connecting
+        entity.close_webrtc_session("session-gone")
+        return CameraSession.from_response(
+            {**MOCK_SESSION_DATA, "sessionId": "late-session"}
+        )
+
+    relay = MagicMock()
+    relay.start = AsyncMock(side_effect=start)
+    relay.close = AsyncMock()
+
+    with patch(
+        "homeassistant.components.litterrobot.camera.CameraSignalingRelay",
+        return_value=relay,
+    ):
+        await entity.async_handle_async_webrtc_offer(
+            "v=0\r\n", "session-gone", MagicMock()
+        )
+    await hass.async_block_till_done()
+
+    # closed again once start() returned, so its websocket and tasks are not
+    # left running with no owner
+    assert relay.close.await_count == 2
+    assert "session-gone" not in entity._relays
+    assert entity._cached_session is cached
+    assert hass.states.get(CAMERA_ENTITY_ID).state == "idle"
 
 
 async def test_expired_session_offers_no_ice_servers(
@@ -269,10 +414,7 @@ async def test_expired_session_offers_no_ice_servers(
     config = entity._async_get_webrtc_client_configuration()
     # stale TURN credentials are withheld rather than served
     assert config.configuration.ice_servers == []
-    # exactly one replacement is fetched, not one per request. the session is
-    # cleared before scheduling, but hass.async_create_task starts eagerly, so
-    # the refresh has already filled it back in by the time this returns --
-    # the None is never observable from here.
+    # exactly one replacement is fetched
     assert mock_client.generate_session.call_count == before + 1
 
     await hass.async_block_till_done()
@@ -342,13 +484,20 @@ async def test_session_is_not_renewed_in_the_background(
 ) -> None:
     """An idle camera must not keep creating sessions.
 
-    A session only lasts about a minute, so renewing one ahead of its expiry
-    would mean a new camera session every minute, whether or not anyone is
-    watching.
+    Guards against reintroducing a renewal timer. Sessions are short-lived, so
+    renewing one ahead of its expiry would create a new camera session every
+    few minutes, whether or not anyone is watching.
     """
     mock_client = mock_account_with_litterrobot_5_pro.robots[0].get_camera_client()
+    # expires inside the interval advanced below, so a renewal scheduled
+    # before expiry, or after it, would fire
+    expires = (dt_util.utcnow() + timedelta(seconds=60)).strftime(
+        "%Y-%m-%dT%H:%M:%S.%fZ"
+    )
     mock_client.generate_session = AsyncMock(
-        return_value=CameraSession.from_response(MOCK_SESSION_DATA)
+        return_value=CameraSession.from_response(
+            {**MOCK_SESSION_DATA, "sessionExpiration": expires}
+        )
     )
     await setup_integration(hass, mock_account_with_litterrobot_5_pro, CAMERA_DOMAIN)
     fetched = mock_client.generate_session.call_count
@@ -392,3 +541,119 @@ async def test_camera_added_for_a_robot_discovered_after_setup(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(CAMERA_DOMAIN)) == 1
+
+
+async def test_failed_session_fetch_leaves_the_entity_usable(
+    hass: HomeAssistant, mock_account_with_litterrobot_5_pro: MagicMock
+) -> None:
+    """A failed fetch only costs the TURN servers, and the next request retries."""
+    mock_client = mock_account_with_litterrobot_5_pro.robots[0].get_camera_client()
+    mock_client.generate_session = AsyncMock(
+        side_effect=CameraStreamException("no session")
+    )
+    await setup_integration(hass, mock_account_with_litterrobot_5_pro, CAMERA_DOMAIN)
+
+    entity = hass.data[CAMERA_DOMAIN].get_entity(CAMERA_ENTITY_ID)
+    assert hass.states.get(CAMERA_ENTITY_ID) is not None
+    assert entity._cached_session is None
+    config = entity._async_get_webrtc_client_configuration()
+    assert config.configuration.ice_servers == []
+
+    mock_client.generate_session = AsyncMock(
+        return_value=CameraSession.from_response(MOCK_SESSION_DATA)
+    )
+    await hass.async_block_till_done()
+    entity._async_get_webrtc_client_configuration()
+    await hass.async_block_till_done()
+    config = entity._async_get_webrtc_client_configuration()
+    assert config.configuration.ice_servers != []
+
+
+async def test_concurrent_requests_fetch_one_session(
+    hass: HomeAssistant, mock_account_with_litterrobot_5_pro: MagicMock
+) -> None:
+    """Requests arriving while a fetch is running do not start another."""
+    mock_client = mock_account_with_litterrobot_5_pro.robots[0].get_camera_client()
+    mock_client.generate_session = AsyncMock(
+        return_value=CameraSession.from_response(MOCK_SESSION_DATA)
+    )
+    await setup_integration(hass, mock_account_with_litterrobot_5_pro, CAMERA_DOMAIN)
+
+    entity = hass.data[CAMERA_DOMAIN].get_entity(CAMERA_ENTITY_ID)
+    release = asyncio.Event()
+
+    async def slow_session(auto_start: bool):
+        await release.wait()
+        return CameraSession.from_response(MOCK_SESSION_DATA)
+
+    mock_client.generate_session = AsyncMock(side_effect=slow_session)
+    entity._cached_session = None
+
+    entity._async_get_webrtc_client_configuration()
+    entity._async_get_webrtc_client_configuration()
+    entity._async_get_webrtc_client_configuration()
+    release.set()
+    await hass.async_block_till_done()
+
+    assert mock_client.generate_session.call_count == 1
+
+
+def test_ice_servers_turn_url_as_a_string() -> None:
+    """A bare turnUrl string is wrapped, and the stun url follows it."""
+    (server,) = _build_ice_servers(
+        _session(
+            {
+                "turnUrl": "turn:turn.example.com:443",
+                "stunUrl": "stun:stun.example.com:3478",
+            }
+        )
+    )
+    assert server.urls == ["turn:turn.example.com:443", "stun:stun.example.com:3478"]
+
+
+def test_ice_servers_empty_urls_fall_back_to_turn_url() -> None:
+    """An empty "urls" list does not hide the Watford fields."""
+    (server,) = _build_ice_servers(
+        _session({"urls": [], "turnUrl": ["turn:turn.example.com:443"]})
+    )
+    assert server.urls == ["turn:turn.example.com:443"]
+
+
+def test_ice_servers_multiple_credentials() -> None:
+    """Every credential with a url becomes its own server."""
+    servers = _build_ice_servers(
+        _session(
+            {"urls": ["turn:a.example.com"], "username": "a", "credential": "x"},
+            {"username": "no-url"},
+            {"urls": ["turn:b.example.com"], "username": "b", "credential": "y"},
+        )
+    )
+    assert [server.username for server in servers] == ["a", "b"]
+
+
+async def test_unloading_closes_open_relays(
+    hass: HomeAssistant, mock_account_with_litterrobot_5_pro: MagicMock
+) -> None:
+    """Unloading the integration tears down live streams."""
+    mock_client = mock_account_with_litterrobot_5_pro.robots[0].get_camera_client()
+    mock_client.generate_session = AsyncMock(
+        return_value=CameraSession.from_response(MOCK_SESSION_DATA)
+    )
+    await setup_integration(hass, mock_account_with_litterrobot_5_pro, CAMERA_DOMAIN)
+
+    entity = hass.data[CAMERA_DOMAIN].get_entity(CAMERA_ENTITY_ID)
+    relay = MagicMock()
+    relay.start = AsyncMock(return_value=CameraSession.from_response(MOCK_SESSION_DATA))
+    relay.close = AsyncMock()
+    with patch(
+        "homeassistant.components.litterrobot.camera.CameraSignalingRelay",
+        return_value=relay,
+    ):
+        await entity.async_handle_async_webrtc_offer("v=0\r\n", "live", MagicMock())
+
+    (entry,) = hass.config_entries.async_entries(DOMAIN)
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.NOT_LOADED
+    relay.close.assert_awaited_once()
