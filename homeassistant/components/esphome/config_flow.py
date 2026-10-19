@@ -11,6 +11,7 @@ from aioesphomeapi import (
     APIConnectionError,
     BluetoothProxyFeature,
     ConnectionClosedEvent,
+    DeviceCapabilities,
     DeviceInfo,
     DisconnectReason,
     InvalidAuthAPIError,
@@ -115,6 +116,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self._noise_required: bool | None = None
         self._noise_psk: str | None = None
         self._device_info: DeviceInfo | None = None
+        self._device_capabilities: DeviceCapabilities | None = None
         # The ESPHome name as per its config
         self._device_name: str | None = None
         self._device_mac: str | None = None
@@ -593,6 +595,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         """Create the config entry."""
         assert self._name is not None
         assert self._device_info is not None
+        assert self._device_capabilities is not None
 
         # Check if Z-Wave capabilities are present and start discovery flow
         next_flow_id: str | None = None
@@ -602,10 +605,8 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         # zwave_home_id present. If it's a fresh adapter, the manager
         # will handle starting the flow once it gets the home id changed
         # request from the ESPHome device.
-        if (
-            self._device_info.zwave_proxy_feature_flags
-            and self._device_info.zwave_home_id
-        ):
+        zwave_proxy = self._device_capabilities.zwave_proxy
+        if zwave_proxy.feature_flags and zwave_proxy.home_id:
             assert self._connected_address is not None
             assert self._port is not None
 
@@ -622,7 +623,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 },
                 data=ESPHomeServiceInfo(
                     name=self._device_info.name,
-                    zwave_home_id=self._device_info.zwave_home_id,
+                    zwave_home_id=zwave_proxy.home_id,
                     ip_address=self._connected_address,
                     port=self._port,
                     noise_psk=self._noise_psk,
@@ -847,6 +848,9 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             await cli.connect()
             self._device_info = await cli.device_info()
+            self._device_capabilities = await cli.device_capabilities_compat(
+                self._device_info
+            )
             self._connected_address = cli.connected_address
         except InvalidAuthAPIError:
             return ERROR_INVALID_PASSWORD_AUTH
@@ -1050,11 +1054,7 @@ def _entry_has_bluetooth_scanner(entry: ESPHomeConfigEntry) -> bool:
     # saved value isn't silently dropped on the next options save.
     if CONF_BLUETOOTH_SCANNING_MODE in entry.options:
         return True
-    if entry.state is ConfigEntryState.LOADED and (
-        device_info := entry.runtime_data.device_info
-    ):
-        flags = device_info.bluetooth_proxy_feature_flags_compat(
-            entry.runtime_data.api_version
-        )
+    if entry.state is ConfigEntryState.LOADED:
+        flags = entry.runtime_data.device_capabilities.bluetooth_proxy.feature_flags
         return bool(flags & BluetoothProxyFeature.FEATURE_STATE_AND_MODE)
     return False

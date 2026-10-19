@@ -62,7 +62,7 @@ def _async_scan_serial_ports(
                 manufacturer=manufacturer,
                 description=f"{model} ({proxy.name})",
             )
-            for proxy in device_info.serial_proxies
+            for proxy in entry_data.device_capabilities.serial_proxies
         )
 
     return ports

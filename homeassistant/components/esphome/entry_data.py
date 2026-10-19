@@ -21,6 +21,7 @@ from aioesphomeapi import (
     CoverInfo,
     DateInfo,
     DateTimeInfo,
+    DeviceCapabilities,
     DeviceInfo,
     EntityInfo,
     EntityState,
@@ -139,10 +140,37 @@ def async_migrate_unique_id(
     ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
 
+def _device_capabilities_from_device_info(
+    device_info: DeviceInfo, api_version: APIVersion
+) -> DeviceCapabilities:
+    """Return the capabilities of a device stored before they were fetched."""
+    return DeviceCapabilities.from_dict(
+        {
+            "bluetooth_proxy": {
+                "feature_flags": device_info.bluetooth_proxy_feature_flags_compat(
+                    api_version
+                ),
+                "mac_address": device_info.bluetooth_mac_address,
+            },
+            "voice_assistant": {
+                "feature_flags": device_info.voice_assistant_feature_flags_compat(
+                    api_version
+                )
+            },
+            "zwave_proxy": {
+                "feature_flags": device_info.zwave_proxy_feature_flags,
+                "home_id": device_info.zwave_home_id,
+            },
+            "serial_proxies": [proxy.to_dict() for proxy in device_info.serial_proxies],
+        }
+    )
+
+
 class StoreData(TypedDict, total=False):
     """ESPHome storage data."""
 
     device_info: dict[str, Any]
+    device_capabilities: dict[str, Any]
     services: list[dict[str, Any]]
     api_version: dict[str, Any]
     states: dict[str, list[dict[str, Any]]]
@@ -175,6 +203,7 @@ class RuntimeEntryData:
     available: bool = False
     expected_disconnect: bool = False  # Last disconnect was expected (e.g. deep sleep)
     device_info: DeviceInfo | None = None
+    device_capabilities: DeviceCapabilities = field(default_factory=DeviceCapabilities)
     bluetooth_device: ESPHomeBluetoothDevice | None = None
     api_version: APIVersion = field(default_factory=APIVersion)
     cleanup_callbacks: list[CALLBACK_TYPE] = field(default_factory=list)
@@ -355,7 +384,7 @@ class RuntimeEntryData:
                 # and we don't want to load the update platform since it needs
                 # a complete device_info.
                 needed_platforms.add(Platform.UPDATE)
-            if self.device_info.voice_assistant_feature_flags_compat(self.api_version):
+            if self.device_capabilities.voice_assistant.feature_flags:
                 needed_platforms.add(Platform.BINARY_SENSOR)
                 needed_platforms.add(Platform.SELECT)
 
@@ -504,6 +533,12 @@ class RuntimeEntryData:
 
         self.device_info = DeviceInfo.from_dict(restored.pop("device_info"))
         self.api_version = APIVersion.from_dict(restored.pop("api_version", {}))
+        if (device_capabilities := restored.pop("device_capabilities", None)) is None:
+            self.device_capabilities = _device_capabilities_from_device_info(
+                self.device_info, self.api_version
+            )
+        else:
+            self.device_capabilities = DeviceCapabilities.from_dict(device_capabilities)
         restored_states = restored.pop("states", {})
         expected_disconnect = restored.pop("expected_disconnect", False)
         infos: list[EntityInfo] = []
@@ -553,6 +588,7 @@ class RuntimeEntryData:
             assert self.device_info is not None
         store_data: StoreData = {
             "device_info": self.device_info.to_dict(),
+            "device_capabilities": self.device_capabilities.to_dict(),
             "services": [],
             "api_version": self.api_version.to_dict(),
         }
@@ -614,7 +650,11 @@ class RuntimeEntryData:
 
     @callback
     def async_on_connect(
-        self, hass: HomeAssistant, device_info: DeviceInfo, api_version: APIVersion
+        self,
+        hass: HomeAssistant,
+        device_info: DeviceInfo,
+        device_capabilities: DeviceCapabilities,
+        api_version: APIVersion,
     ) -> None:
         """Call when the entry has been connected."""
         self.available = True
@@ -622,6 +662,7 @@ class RuntimeEntryData:
             self.bluetooth_device.available = True
 
         self.device_info = device_info
+        self.device_capabilities = device_capabilities
         self.api_version = api_version
         # Reset expected disconnect flag on successful reconnect
         # as it will be flipped to False on unexpected disconnect.
@@ -630,7 +671,7 @@ class RuntimeEntryData:
         # be marked as unavailable or not.
         self.expected_disconnect = True
 
-        if not device_info.zwave_proxy_feature_flags:
+        if not device_capabilities.zwave_proxy.feature_flags:
             return
 
         assert self.client.connected_address
@@ -642,10 +683,10 @@ class RuntimeEntryData:
         # Since we cannot tell the difference, and it could
         # just be the cable is unplugged we only
         # automatically start the flow if we have a home ID.
-        if not device_info.zwave_home_id:
+        if not (zwave_home_id := device_capabilities.zwave_proxy.home_id):
             return
 
-        self.async_create_zwave_js_flow(hass, device_info, device_info.zwave_home_id)
+        self.async_create_zwave_js_flow(hass, device_info, zwave_home_id)
 
     def async_create_zwave_js_flow(
         self, hass: HomeAssistant, device_info: DeviceInfo, zwave_home_id: int

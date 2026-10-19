@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 from aioesphomeapi import (
     APIClient,
-    APIVersion,
     BluetoothProxyFeature,
     BluetoothScannerMode,
     BluetoothScannerStateResponse,
@@ -53,8 +52,7 @@ def async_connect_scanner(
     scanner = client_data.scanner
     if TYPE_CHECKING:
         assert scanner is not None
-    api_version = cli.api_version or APIVersion()
-    feature_flags = device_info.bluetooth_proxy_feature_flags_compat(api_version)
+    feature_flags = entry_data.device_capabilities.bluetooth_proxy.feature_flags
     state_and_mode = bool(feature_flags & BluetoothProxyFeature.FEATURE_STATE_AND_MODE)
     # Pin mode before async_register_scanner so habluetooth spawns the AUTO worker.
     deferred_migration: CALLBACK_TYPE | None = None

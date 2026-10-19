@@ -133,11 +133,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Assist satellite entity."""
-    entry_data = entry.runtime_data
-    assert entry_data.device_info is not None
-    if entry_data.device_info.voice_assistant_feature_flags_compat(
-        entry_data.api_version
-    ):
+    if entry.runtime_data.device_capabilities.voice_assistant.feature_flags:
         async_add_entities([EsphomeAssistSatellite(entry)])
 
 
@@ -263,11 +259,8 @@ class EsphomeAssistSatellite(
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
 
-        assert self._entry_data.device_info is not None
         feature_flags = (
-            self._entry_data.device_info.voice_assistant_feature_flags_compat(
-                self._entry_data.api_version
-            )
+            self._entry_data.device_capabilities.voice_assistant.feature_flags
         )
         if feature_flags & VoiceAssistantFeature.API_AUDIO:
             # TCP audio
@@ -398,11 +391,8 @@ class EsphomeAssistSatellite(
                 url = async_process_play_media_url(self.hass, path)
                 data_to_send = {"url": url}
 
-                assert self._entry_data.device_info is not None
                 feature_flags = (
-                    self._entry_data.device_info.voice_assistant_feature_flags_compat(
-                        self._entry_data.api_version
-                    )
+                    self._entry_data.device_capabilities.voice_assistant.feature_flags
                 )
                 if feature_flags & VoiceAssistantFeature.SPEAKER and (
                     stream := tts.async_get_stream(self.hass, tts_output["token"])
@@ -539,11 +529,8 @@ class EsphomeAssistSatellite(
 
         # API or UDP output audio
         port: int = 0
-        assert self._entry_data.device_info is not None
         feature_flags = (
-            self._entry_data.device_info.voice_assistant_feature_flags_compat(
-                self._entry_data.api_version
-            )
+            self._entry_data.device_capabilities.voice_assistant.feature_flags
         )
         if (feature_flags & VoiceAssistantFeature.SPEAKER) and not (
             feature_flags & VoiceAssistantFeature.API_AUDIO
