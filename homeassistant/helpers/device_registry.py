@@ -2828,6 +2828,24 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         return device
 
     @callback
+    def _resolve_device_info_name(
+        self, config_entry: ConfigEntry, device_info: ChildDeviceInfo
+    ) -> str | UndefinedType | None:
+        """Return the name of a device info, translated if it has a translation key."""
+        if isinstance(translation_key := device_info.translation_key, str) and (
+            translation_key
+        ):
+            translation_placeholders = device_info.translation_placeholders
+            return self._resolve_translated_name(
+                config_entry,
+                translation_key,
+                None
+                if translation_placeholders is UNDEFINED
+                else translation_placeholders,
+            )
+        return device_info.name
+
+    @callback
     def _resolve_translated_name(
         self,
         config_entry: ConfigEntry,
@@ -2865,7 +2883,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         If identifiers match those of an existing device, that device is converted to
         a child device, preserving its id.
         """
-        return self._async_get_or_create_child(
+        return self.async_get_or_create_child_from_device_info(
             config_entry_id=config_entry_id,
             config_subentry_id=config_subentry_id,
             disabled_by=disabled_by,
@@ -2893,31 +2911,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         If identifiers match those of an existing device, that device is converted to
         a child device, preserving its id.
         """
-        return self._async_get_or_create_child(
-            config_entry_id=config_entry_id,
-            config_subentry_id=config_subentry_id,
-            disabled_by=disabled_by,
-            device_info=device_info,
-        )
-
-    @callback
-    def _async_get_or_create_child(
-        self,
-        *,
-        config_entry_id: str,
-        config_subentry_id: str | UndefinedType | None,
-        disabled_by: DeviceEntryDisabler | UndefinedType | None,
-        device_info: ChildDeviceInfo,
-    ) -> ChildDeviceEntry:
-        """Get child device. Create if it doesn't exist.
-
-        If identifiers match those of an existing device, that device is converted to
-        a child device, preserving its id.
-        """
-        identifiers = device_info.identifiers
-        name = device_info.name
-        parent_device_id = device_info.parent_device_id
-        suggested_area = device_info.suggested_area
         config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
         if config_entry is None:
             raise HomeAssistantError(
@@ -2933,19 +2926,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 f"Config entry {config_entry_id} has no subentry {config_subentry_id}"
             )
 
-        if isinstance(translation_key := device_info.translation_key, str) and (
-            translation_key
-        ):
-            translation_placeholders = device_info.translation_placeholders
-            name = self._resolve_translated_name(
-                config_entry,
-                translation_key,
-                None
-                if translation_placeholders is UNDEFINED
-                else translation_placeholders,
-            )
-
+        name = self._resolve_device_info_name(config_entry, device_info)
         domain = config_entry.domain
+        identifiers = device_info.identifiers
+        parent_device_id = device_info.parent_device_id
+        suggested_area = device_info.suggested_area
 
         if not identifiers:
             raise DeviceInfoError(
