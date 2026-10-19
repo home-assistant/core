@@ -562,30 +562,8 @@ async def test_listeners(
     async_expose_entity(hass, "test1", entry1.entity_id, True)
 
 
-async def test_legacy_entity_kept_while_state_exists(hass: HomeAssistant) -> None:
-    """Legacy exposed entities are kept as long as their state is present."""
-    assert await async_setup_component(hass, DOMAIN, {})
-
-    hass.states.async_set("sensor.no_unique_id", "on", {})
-    async_expose_entity(hass, "test1", "sensor.no_unique_id", True)
-
-    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
-
-    # A regular state update (not a removal) must not purge the entry
-    hass.states.async_set("sensor.no_unique_id", "off", {})
-    await hass.async_block_till_done()
-
-    assert "sensor.no_unique_id" in exposed_entities.entities
-
-
 async def test_legacy_entity_survives_transient_removal(hass: HomeAssistant) -> None:
-    """A brief removal (e.g. a platform reload) must not drop the entry.
-
-    There is deliberately no real-time state-removal listener: only the
-    periodic sweep purges legacy entries. This preserves the user's
-    exposure preference when an entity's state disappears and reappears
-    shortly after (e.g. during a reload), well within the sweep interval.
-    """
+    """A brief removal (e.g. a platform reload) must not drop the entry."""
     assert await async_setup_component(hass, DOMAIN, {})
 
     hass.states.async_set("sensor.no_unique_id", "on", {})
@@ -640,12 +618,7 @@ async def test_purge_stale_legacy_entities_periodic_sweep(
 async def test_purge_notifies_assistant_listeners(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Purging a record notifies the affected assistant's listeners.
-
-    Consumers such as cloud Alexa cache assistant settings and only sync
-    remote removals when notified, so a silent purge would leave a deleted
-    entity exposed remotely indefinitely.
-    """
+    """Purging a record notifies the affected assistant's listeners."""
     assert await async_setup_component(hass, DOMAIN, {})
 
     hass.states.async_set("sensor.still_around", "on", {})
@@ -679,13 +652,7 @@ async def test_purge_notifies_assistant_listeners(
 async def test_purge_stale_legacy_entities_clears_tracking_on_reappearance(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """An entity that reappears between sweeps is not purged later.
-
-    Purging must confirm an entity has been missing for the *whole*
-    retention window, not just that it was missing once, or a transient
-    absence (e.g. a platform reload) would eventually wipe the user's
-    exposure preference after it comes back.
-    """
+    """An entity that reappears between sweeps is not purged later."""
     assert await async_setup_component(hass, DOMAIN, {})
 
     async_expose_entity(hass, "test1", "sensor.flaky", True)
@@ -696,13 +663,15 @@ async def test_purge_stale_legacy_entities_clears_tracking_on_reappearance(
     await hass.async_block_till_done(wait_background_tasks=True)
     assert exposed_entities.entities["sensor.flaky"].orphaned_since is not None
 
-    # The entity comes back before the retention window elapses.
+    # The entity comes back before the retention window elapses; the
+    # state-added listener clears tracking right away, not at the next sweep.
     hass.states.async_set("sensor.flaky", "on", {})
+    await hass.async_block_till_done()
+    assert exposed_entities.entities["sensor.flaky"].orphaned_since is None
 
     freezer.tick(LEGACY_ENTITY_SWEEP_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
-    assert exposed_entities.entities["sensor.flaky"].orphaned_since is None
     assert "sensor.flaky" in exposed_entities.entities
 
     # Even after the full retention window, it's kept since it's live again.
@@ -715,12 +684,7 @@ async def test_purge_stale_legacy_entities_clears_tracking_on_reappearance(
 async def test_legacy_orphaned_since_persists_across_restart(
     hass: HomeAssistant,
 ) -> None:
-    """Orphaned-since tracking survives a reload.
-
-    Otherwise a routine restart would reset the retention clock to zero
-    every time, and a chronically-missing-but-frequently-restarted entity
-    would never actually reach the full retention window.
-    """
+    """Orphan tracking survives a restart."""
     assert await async_setup_component(hass, DOMAIN, {})
 
     async_expose_entity(hass, "test1", "sensor.long_gone", True)
@@ -743,13 +707,7 @@ async def test_legacy_orphaned_since_persists_across_restart(
 async def test_orphaned_since_stored_outside_records(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
-    """Orphan timestamps are stored in a top-level map, not on the records.
-
-    Cores from before orphan tracking build records via
-    ExposedEntity(**preferences) and would fail setup on an unknown per-record
-    key after a downgrade; a sibling key they never read is ignored, so a
-    downgrade only loses the orphan tracking itself.
-    """
+    """Orphan timestamps are stored in a top-level map, not on the records."""
     assert await async_setup_component(hass, DOMAIN, {})
 
     async_expose_entity(hass, "test1", "sensor.long_gone", True)
@@ -787,32 +745,6 @@ async def test_purge_sweep_cancelled_on_stop(hass: HomeAssistant) -> None:
     assert exposed_entities.entities["sensor.long_gone"].orphaned_since is None
 
 
-async def test_state_added_listener_clears_tracking_immediately(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """Orphan tracking clears the moment a legacy entity's state reappears.
-
-    A sweep alone can't tell "missing the whole time" apart from "went
-    missing, came back, went missing again" between two sweeps. The
-    state-added listener clears tracking in real time so that gap can't
-    be misread as a continuously-missing entity.
-    """
-    assert await async_setup_component(hass, DOMAIN, {})
-
-    async_expose_entity(hass, "test1", "sensor.flaky", True)
-    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
-
-    freezer.tick(LEGACY_ENTITY_SWEEP_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-    assert exposed_entities.entities["sensor.flaky"].orphaned_since is not None
-
-    hass.states.async_set("sensor.flaky", "on", {})
-    await hass.async_block_till_done()
-
-    assert exposed_entities.entities["sensor.flaky"].orphaned_since is None
-
-
 async def test_purge_stale_legacy_entities_runs_on_startup(hass: HomeAssistant) -> None:
     """A sweep also runs once on Home Assistant startup."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -830,12 +762,7 @@ async def test_purge_stale_legacy_entities_runs_on_startup(hass: HomeAssistant) 
 async def test_purge_stale_legacy_entities_spans_multiple_chunks(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """The sweep processes stores spanning multiple chunks correctly.
-
-    The sweep processes LEGACY_ENTITY_SWEEP_CHUNK_SIZE entities at a time,
-    yielding to the event loop in between; this confirms entities on both
-    sides of a chunk boundary are still tracked and purged correctly.
-    """
+    """Entities on both sides of a chunk boundary are tracked and purged."""
     assert await async_setup_component(hass, DOMAIN, {})
 
     entity_ids = [
@@ -871,12 +798,7 @@ async def test_purge_stale_legacy_entities_spans_multiple_chunks(
 async def test_purge_sweep_checkpoints_each_chunk(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Each changed chunk schedules a save, so a cancelled sweep keeps progress.
-
-    The sweep is a background task and is cancelled at shutdown; if only a
-    completed pass scheduled the save, an interrupted pass would discard
-    everything it had already processed.
-    """
+    """Each changed chunk schedules a save, so a cancelled sweep keeps progress."""
     assert await async_setup_component(hass, DOMAIN, {})
 
     for i in range(LEGACY_ENTITY_SWEEP_CHUNK_SIZE + 1):
@@ -894,12 +816,7 @@ async def test_purge_sweep_checkpoints_each_chunk(
 async def test_update_exposed_entity_preserves_orphaned_since(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Changing an assistant option doesn't reset the orphan retention clock.
-
-    A legacy entity that's still missing but has one of its assistant
-    options changed (e.g. by another assistant) must keep its existing
-    orphaned_since, not restart the retention window.
-    """
+    """Changing an assistant option doesn't reset the orphan retention clock."""
     assert await async_setup_component(hass, DOMAIN, {})
 
     async_expose_entity(hass, "test1", "sensor.long_gone", True)

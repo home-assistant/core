@@ -49,17 +49,11 @@ STORAGE_VERSION = 1
 
 SAVE_DELAY = 10
 
-# How often to check for legacy exposed-entity records whose entity no
-# longer exists.
+# Legacy records are purged once their entity has been missing for the whole
+# purge interval, mirroring the entity registry's orphan cleanup.
 LEGACY_ENTITY_SWEEP_INTERVAL = timedelta(hours=24)
-# How long a record must be continuously missing across sweeps before it's
-# actually purged. Mirrors entity_registry's ORPHANED_ENTITY_KEEP_SECONDS: a
-# single missing observation isn't enough, since the entity could reappear
-# moments later (e.g. a platform reload).
 LEGACY_ENTITY_PURGE_INTERVAL = timedelta(days=30)
-# Entities processed per sweep chunk before yielding to the event loop, so a
-# sweep over a store with millions of legacy records -- the exact installs
-# this is meant to fix -- can't block it for the length of a full pass.
+# Entities processed per sweep chunk before yielding to the event loop.
 LEGACY_ENTITY_SWEEP_CHUNK_SIZE = 1000
 
 DEFAULT_EXPOSED_DOMAINS = {
@@ -118,18 +112,14 @@ class ExposedEntity:
     """An exposed entity without a unique_id."""
 
     assistants: dict[str, dict[str, Any]]
-    # time.time() when this entity's state was first observed missing, or
-    # None if it currently has a state. Kept on the record in memory so a
-    # store full of orphaned legacy records doesn't need a second, equally
-    # large index alongside it; see to_json for why storage differs.
+    # Unix time the entity's state was first seen missing; None while it has one.
     orphaned_since: int | None = None
 
     def to_json(self) -> dict[str, Any]:
         """Return a JSON serializable representation for storage."""
-        # orphaned_since deliberately stays off the record: loaders from
-        # before orphan tracking build records via ExposedEntity(**prefs) and
-        # a downgrade after a sweep would fail setup on an unknown key. It is
-        # persisted in a top-level "orphaned" map those loaders never read.
+        # orphaned_since lives in the top-level "orphaned" map, not on the
+        # record: older cores build records via ExposedEntity(**prefs) and would
+        # fail setup on an unknown key after a downgrade.
         return {"assistants": self.assistants}
 
 
@@ -175,13 +165,11 @@ class ExposedEntities:
             self._hass, MATCH_ALL, self._async_state_added_listener
         )
 
-        # Run once shortly after startup, in addition to the periodic sweep
-        # below: async_track_time_interval only fires after a full interval
-        # elapses, so an install that restarts more often than that would
-        # otherwise never sweep at all.
+        # Sweep once at startup too: the interval timer first fires a full
+        # interval after setup, so installs restarted more often would never sweep.
         @callback
         def _on_homeassistant_started(_event: Event) -> None:
-            """Run one sweep shortly after startup."""
+            """Run one sweep at startup."""
             self._hass.async_create_background_task(
                 self._async_purge_stale_legacy_entities(dt_util.utcnow()),
                 "exposed_entities_startup_sweep",
@@ -272,13 +260,9 @@ class ExposedEntities:
 
     @callback
     def _async_state_added_listener(self, event: Event[EventStateChangedData]) -> None:
-        """Clear orphan tracking the moment a legacy entity's state reappears.
-
-        Runs in real time rather than waiting for the next sweep: an entity
-        can go missing, come back, and go missing again between two sweeps,
-        and a sweep alone can't tell that apart from having been missing the
-        whole time. Only ever clears tracking, never deletes anything.
-        """
+        """Clear orphan tracking when a legacy entity's state reappears."""
+        # Done in real time: a sweep alone can't tell "missing the whole time"
+        # from "came back and went missing again" between two passes.
         entity_id = event.data["entity_id"]
         if (
             exposed_entity := self.entities.get(entity_id)
@@ -289,19 +273,7 @@ class ExposedEntities:
             self._async_schedule_save()
 
     async def _async_purge_stale_legacy_entities(self, _now: datetime) -> None:
-        """Sweep to drop legacy entries with no entity behind them.
-
-        A record is only purged once it's been continuously missing for the
-        full LEGACY_ENTITY_PURGE_INTERVAL, not on a single observation -- the
-        entity could reappear moments later (e.g. a platform reload). Runs
-        once at startup and then on LEGACY_ENTITY_SWEEP_INTERVAL, so installs
-        that restart more often than the sweep interval still make progress.
-
-        Processes a snapshot of entity IDs in LEGACY_ENTITY_SWEEP_CHUNK_SIZE
-        chunks, yielding to the event loop between chunks, so a store with
-        millions of legacy records can't block it for a full pass. Entities
-        added after the snapshot is taken are picked up on the next sweep.
-        """
+        """Mark stateless legacy entries orphaned and purge long-orphaned ones."""
         now = int(time.time())
         purge_after = LEGACY_ENTITY_PURGE_INTERVAL.total_seconds()
         entity_ids = list(self.entities)
@@ -331,23 +303,17 @@ class ExposedEntities:
                     purged_assistants.update(exposed_entity.assistants)
                     changed = True
 
-            # Schedule a save per changed chunk so a sweep cancelled at
-            # shutdown keeps its progress: async_delay_save postpones the
-            # write on each call (one write per pass in practice), and a
-            # pending save is flushed at final write.
+            # Save per chunk so a sweep cancelled at shutdown keeps its progress;
+            # async_delay_save debounces, so this is one write per pass in practice.
             if changed:
                 self._async_schedule_save()
 
             await asyncio.sleep(0)
 
-        # Purged records vanish from async_get_assistant_settings(); consumers
-        # like cloud Alexa cache those settings and only sync remote removals
-        # when notified. Notify once per assistant after the pass: listeners
-        # debounce-resync on every call (cloud SYNC_DELAY is 1s), so per-chunk
-        # calls could trigger repeated full syncs mid-sweep. A shutdown here
-        # drops the notification -- accepted: a sync scheduled at shutdown
-        # couldn't complete either, and a stale remote device is the
-        # pre-purge status quo.
+        # Cloud caches assistant settings and only syncs removals when notified.
+        # Once per pass, since listeners resync on every call. A shutdown before
+        # this point drops the notification; the stale remote device that leaves
+        # is the pre-purge status quo.
         for assistant in purged_assistants:
             for listener in self._listeners.get(assistant, []):
                 listener()
@@ -544,9 +510,7 @@ class ExposedEntities:
     @callback
     def _data_to_save(self) -> SerializedExposedEntities:
         """Return JSON-compatible date for storing to file."""
-        # Intermediate lists let this run from the executor thread Store
-        # uses for serialize_in_event_loop=False, without racing entities/
-        # _assistants being mutated on the event loop mid-iteration.
+        # Intermediate lists: Store calls this from an executor thread.
         assistants = list(self._assistants.items())
         entities = list(self.entities.items())
         data: SerializedExposedEntities = {
