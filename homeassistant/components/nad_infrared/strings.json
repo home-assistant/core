@@ -15,6 +15,26 @@
         "description": "Select the infrared emitter to use for controlling your NAD amplifier. The amplifier must be set to IR channel 0.",
         "title": "Set up NAD amplifier"
       },
+      "cassette_deck": {
+        "data": {
+          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]"
+        },
+        "data_description": {
+          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]"
+        },
+        "description": "Select the infrared emitter to use for controlling your NAD cassette deck.",
+        "title": "Set up NAD cassette deck"
+      },
+      "cd_player": {
+        "data": {
+          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]"
+        },
+        "data_description": {
+          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]"
+        },
+        "description": "Select the infrared emitter to use for controlling your NAD CD player.",
+        "title": "Set up NAD CD player"
+      },
       "receiver": {
         "data": {
           "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]"
@@ -29,6 +49,8 @@
         "description": "Select the type of NAD device to set up.",
         "menu_options": {
           "amplifier": "Amplifier",
+          "cassette_deck": "Cassette deck",
+          "cd_player": "CD player",
           "receiver": "Receiver (amplifier with tuner)"
         },
         "title": "Set up NAD IR Remote"

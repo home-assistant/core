@@ -51,6 +51,18 @@ class NadIrConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle amplifier emitter selection."""
         return await self._async_step_device(NADDeviceType.AMPLIFIER, user_input)
 
+    async def async_step_cd_player(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle CD player emitter selection."""
+        return await self._async_step_device(NADDeviceType.CD_PLAYER, user_input)
+
+    async def async_step_cassette_deck(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle cassette deck emitter selection."""
+        return await self._async_step_device(NADDeviceType.CASSETTE_DECK, user_input)
+
     async def _async_step_device(
         self, device_type: NADDeviceType, user_input: dict[str, Any] | None
     ) -> ConfigFlowResult:

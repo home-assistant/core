@@ -24,6 +24,8 @@ from tests.common import MockConfigEntry
     [
         (NADDeviceType.RECEIVER, "NAD receiver"),
         (NADDeviceType.AMPLIFIER, "NAD amplifier"),
+        (NADDeviceType.CD_PLAYER, "NAD CD player"),
+        (NADDeviceType.CASSETTE_DECK, "NAD cassette deck"),
     ],
 )
 async def test_user_flow_success(
@@ -39,7 +41,12 @@ async def test_user_flow_success(
 
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
-    assert result["menu_options"] == ["receiver", "amplifier"]
+    assert result["menu_options"] == [
+        "receiver",
+        "amplifier",
+        "cd_player",
+        "cassette_deck",
+    ]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": device_type.value}

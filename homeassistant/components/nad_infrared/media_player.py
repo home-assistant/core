@@ -3,8 +3,6 @@
 from dataclasses import dataclass
 from typing import Any, override
 
-from infrared_protocols.codes.nad.amplifier import NADAmplifierCode
-
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
@@ -17,7 +15,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 
 from . import NadIrConfigEntry
-from .const import DOMAIN
+from .codes import NADAmplifierCode, NADCassetteCode, NADCDCode
+from .const import CONF_DEVICE_TYPE, DOMAIN, NADDeviceType
 from .entity import NadIrEntity
 
 PARALLEL_UPDATES = 1
@@ -51,10 +50,10 @@ SOUND_MODE_TO_CODE: dict[str, NADAmplifierCode] = {
 
 
 @dataclass
-class _NadReceiverExtraData(ExtraStoredData):
-    """Persisted assumed-state data for a NAD receiver.
+class _NadAmplifierExtraData(ExtraStoredData):
+    """Persisted assumed-state data for a NAD amplifier or receiver.
 
-    Stored separately from the entity state because while the receiver is
+    Stored separately from the entity state because while the device is
     OFF, ``MediaPlayerEntity.state_attributes`` strips ``source`` and
     ``sound_mode``, so a restart in the OFF state would otherwise lose them.
     The power state is stored too, because the entity state is saved as
@@ -81,11 +80,17 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up NAD Infrared media player from config entry."""
-    async_add_entities([NadIrReceiverMediaPlayer(entry)])
+    device_type = entry.data[CONF_DEVICE_TYPE]
+    if device_type in (NADDeviceType.RECEIVER, NADDeviceType.AMPLIFIER):
+        async_add_entities([NadIrAmplifierMediaPlayer(entry)])
+    elif device_type == NADDeviceType.CD_PLAYER:
+        async_add_entities([NadIrCDPlayerMediaPlayer(entry)])
+    elif device_type == NADDeviceType.CASSETTE_DECK:
+        async_add_entities([NadIrCassetteDeckMediaPlayer(entry)])
 
 
-class NadIrReceiverMediaPlayer(NadIrEntity, MediaPlayerEntity, RestoreEntity):
-    """NAD Infrared receiver or amplifier media player entity."""
+class NadIrAmplifierMediaPlayer(NadIrEntity, MediaPlayerEntity, RestoreEntity):
+    """NAD Infrared amplifier or receiver media player entity."""
 
     _attr_name = None
     _attr_assumed_state = True
@@ -103,14 +108,14 @@ class NadIrReceiverMediaPlayer(NadIrEntity, MediaPlayerEntity, RestoreEntity):
     )
 
     def __init__(self, entry: NadIrConfigEntry) -> None:
-        """Initialize NAD Infrared receiver media player."""
+        """Initialize NAD Infrared amplifier media player."""
         super().__init__(entry, unique_id_suffix="media_player")
 
     @property
     @override
     def extra_restore_state_data(self) -> ExtraStoredData:
         """Persist power state, source and sound mode."""
-        return _NadReceiverExtraData(
+        return _NadAmplifierExtraData(
             power_state=self._attr_state,
             source=self._attr_source,
             sound_mode=self._attr_sound_mode,
@@ -161,7 +166,7 @@ class NadIrReceiverMediaPlayer(NadIrEntity, MediaPlayerEntity, RestoreEntity):
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute toggle command.
 
-        NAD receivers only have a mute toggle, so the mute state is not tracked.
+        NAD amplifiers only have a mute toggle, so the mute state is not tracked.
         """
         await self._send_nad_command(NADAmplifierCode.MUTE)
 
@@ -195,4 +200,99 @@ class NadIrReceiverMediaPlayer(NadIrEntity, MediaPlayerEntity, RestoreEntity):
             )
         await self._send_nad_command(code)
         self._attr_sound_mode = sound_mode
+        self.async_write_ha_state()
+
+
+class NadIrCDPlayerMediaPlayer(NadIrEntity, MediaPlayerEntity):
+    """NAD Infrared CD player media player entity.
+
+    NAD CD player remotes have no discrete power codes, so only playback is
+    controlled here.
+    """
+
+    _attr_name = None
+    _attr_assumed_state = True
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    )
+
+    def __init__(self, entry: NadIrConfigEntry) -> None:
+        """Initialize NAD Infrared CD player media player."""
+        super().__init__(entry, unique_id_suffix="media_player")
+
+    @override
+    async def async_media_play(self) -> None:
+        """Send play command."""
+        await self._send_nad_command(NADCDCode.PLAY)
+        self._attr_state = MediaPlayerState.PLAYING
+        self.async_write_ha_state()
+
+    @override
+    async def async_media_pause(self) -> None:
+        """Send pause command."""
+        await self._send_nad_command(NADCDCode.PAUSE)
+        self._attr_state = MediaPlayerState.PAUSED
+        self.async_write_ha_state()
+
+    @override
+    async def async_media_stop(self) -> None:
+        """Send stop command."""
+        await self._send_nad_command(NADCDCode.STOP)
+        self._attr_state = MediaPlayerState.IDLE
+        self.async_write_ha_state()
+
+    @override
+    async def async_media_next_track(self) -> None:
+        """Send skip forward command."""
+        await self._send_nad_command(NADCDCode.SKIP_FORWARD)
+
+    @override
+    async def async_media_previous_track(self) -> None:
+        """Send skip back command."""
+        await self._send_nad_command(NADCDCode.SKIP_BACK)
+
+
+class NadIrCassetteDeckMediaPlayer(NadIrEntity, MediaPlayerEntity):
+    """NAD Infrared cassette deck media player entity.
+
+    Controls deck B, which is also the deck single-cassette decks respond to.
+    Fast forward, rewind, reverse play and recording have no media player
+    equivalent.
+    """
+
+    _attr_name = None
+    _attr_assumed_state = True
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.STOP
+    )
+
+    def __init__(self, entry: NadIrConfigEntry) -> None:
+        """Initialize NAD Infrared cassette deck media player."""
+        super().__init__(entry, unique_id_suffix="media_player")
+
+    @override
+    async def async_media_play(self) -> None:
+        """Send play command."""
+        await self._send_nad_command(NADCassetteCode.DECK_B_PLAY)
+        self._attr_state = MediaPlayerState.PLAYING
+        self.async_write_ha_state()
+
+    @override
+    async def async_media_pause(self) -> None:
+        """Send pause command."""
+        await self._send_nad_command(NADCassetteCode.DECK_B_PAUSE)
+        self._attr_state = MediaPlayerState.PAUSED
+        self.async_write_ha_state()
+
+    @override
+    async def async_media_stop(self) -> None:
+        """Send stop command."""
+        await self._send_nad_command(NADCassetteCode.DECK_B_STOP)
+        self._attr_state = MediaPlayerState.IDLE
         self.async_write_ha_state()
