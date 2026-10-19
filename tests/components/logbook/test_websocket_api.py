@@ -1,7 +1,7 @@
 """The tests for the logbook component."""
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from typing import Any
 from unittest.mock import ANY, patch
@@ -3976,11 +3976,42 @@ async def test_get_action_calls_context_older_than_start_time(
     ]
 
 
+async def _async_call_parent_action(hass: HomeAssistant, context: core.Context) -> None:
+    """Call an action in the parent context."""
+    await hass.services.async_call("test", "parent", blocking=True, context=context)
+
+
+async def _async_set_parent_state(hass: HomeAssistant, context: core.Context) -> None:
+    """Change a state in the parent context, like a sensor update."""
+    hass.states.async_set("sensor.temperature", "18", context=context)
+
+
+@pytest.mark.parametrize(
+    ("async_make_parent", "parent_origin"),
+    [
+        pytest.param(
+            _async_call_parent_action,
+            {
+                "context_event_type": EVENT_CALL_SERVICE,
+                "context_domain": "test",
+                "context_service": "parent",
+            },
+            id="action",
+        ),
+        pytest.param(
+            _async_set_parent_state,
+            {"context_state": "18", "context_entity_id": "sensor.temperature"},
+            id="state",
+        ),
+    ],
+)
 async def test_get_action_calls_parent_context_older_than_start_time(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     hass_admin_user: MockUser,
+    async_make_parent: Callable[[HomeAssistant, core.Context], Awaitable[None]],
+    parent_origin: dict[str, str],
 ) -> None:
     """Test an action call is described by a parent context from before start_time."""
     now = dt_util.utcnow()
@@ -3991,9 +4022,9 @@ async def test_get_action_calls_parent_context_older_than_start_time(
 
     parent_context = core.Context(user_id=hass_admin_user.id)
     with freeze_time(now - timedelta(hours=1)):
-        await hass.services.async_call(
-            "test", "parent", blocking=True, context=parent_context
-        )
+        await async_make_parent(hass, parent_context)
+        await hass.async_block_till_done()
+    # A child context, like a thermostat switching its heater
     child_context = core.Context(parent_id=parent_context.id)
     await hass.services.async_call(
         "test", "child", blocking=True, context=child_context
@@ -4017,9 +4048,7 @@ async def test_get_action_calls_parent_context_older_than_start_time(
             "service_data": {},
             "context_id": child_context.id,
             "context_user_id": hass_admin_user.id,
-            "context_event_type": EVENT_CALL_SERVICE,
-            "context_domain": "test",
-            "context_service": "parent",
+            **parent_origin,
         },
     ]
 
