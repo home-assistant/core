@@ -4,11 +4,10 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.vilfo.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

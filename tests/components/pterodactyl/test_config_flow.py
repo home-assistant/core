@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 from aiohttp import ClientResponseError
 from pydactyl.exceptions import BadRequestError, PterodactylApiError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.pterodactyl.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -14,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import TEST_API_KEY, TEST_URL, TEST_USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_pterodactyl", "mock_setup_entry")

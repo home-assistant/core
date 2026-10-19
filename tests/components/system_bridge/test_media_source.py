@@ -1,6 +1,7 @@
 """Test the System Bridge integration."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import paths
 
@@ -14,8 +15,6 @@ from homeassistant.components.media_source import (
 from homeassistant.components.system_bridge.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

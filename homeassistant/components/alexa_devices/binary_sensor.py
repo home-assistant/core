@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Final, override
 
-from aioamazondevices.const.metadata import SENSOR_STATE_OFF
+from aioamazondevices.const.sensors import SENSOR_STATE_OFF
 from aioamazondevices.structures import AmazonDevice
 
 from homeassistant.components.binary_sensor import (

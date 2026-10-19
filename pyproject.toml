@@ -116,9 +116,9 @@ init-hook = """\
 
     from pylint.config import find_default_config_files; \
 
-    sys.path.append( \
-        str(Path(next(find_default_config_files())).parent.joinpath('pylint/plugins'))
-    ) \
+    sys.path.extend([ \
+        str(Path(next(find_default_config_files())).parent.joinpath('packages/pylint-home-assistant'))\
+    ]) \
     """
 load-plugins = [
   "pylint.extensions.code_style",
@@ -415,6 +415,7 @@ per-file-ignores = [
   # use-implicit-booleaness-not-comparison: Tests need to validate that a list
   # or a dict is returned
   "tests/**:redefined-outer-name,use-implicit-booleaness-not-comparison",
+  "packages/pytest-home-assistant/**:redefined-outer-name,use-implicit-booleaness-not-comparison",
 ]
 
 [tool.pylint.REPORTS]
@@ -443,7 +444,8 @@ runtime-typing = false
 max-line-length-suggestions = 72
 
 [tool.pytest.ini_options]
-pythonpath = ["pylint/plugins"]
+ha_test_config_dir = "tests/testing_config"
+pythonpath = ["packages/pylint-home-assistant"]
 # The respx plugin imports httpx before tests/__init__.py can alias it to
 # httpx2 (see homeassistant/__init__.py). Tests use respx directly instead.
 addopts = "-p no:respx"
@@ -649,7 +651,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.16.10"
+required-version = ">=0.17.0"
 extend-exclude = [
   # Recorded HTTP response bodies, served verbatim by the Marketplace test harness
   "tests/components/marketplace/fixtures/proxy",

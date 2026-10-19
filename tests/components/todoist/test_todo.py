@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 from zoneinfo import ZoneInfo
 
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 from todoist_api_python.models import Task
 
 from homeassistant.components.todo import (
@@ -23,8 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 
 from .conftest import PROJECT_ID, make_api_due, make_api_response, make_api_task
-
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)

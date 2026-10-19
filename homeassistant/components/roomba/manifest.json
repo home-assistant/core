@@ -1,6 +1,7 @@
 {
   "domain": "roomba",
   "name": "iRobot Roomba and Braava",
+  "categories": ["appliances_cleaning.cleaning"],
   "codeowners": ["@pschmitt", "@cyr-ius", "@shenxn"],
   "config_flow": true,
   "dhcp": [

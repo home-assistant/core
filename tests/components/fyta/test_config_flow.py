@@ -8,6 +8,7 @@ from fyta_cli.fyta_exceptions import (
     FytaPasswordError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.fyta.const import CONF_EXPIRATION, DOMAIN
@@ -17,8 +18,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import ACCESS_TOKEN, EXPIRATION, PASSWORD, USERNAME
-
-from tests.common import MockConfigEntry
 
 
 async def user_step(

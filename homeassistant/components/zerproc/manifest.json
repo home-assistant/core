@@ -1,6 +1,7 @@
 {
   "domain": "zerproc",
   "name": "Zerproc",
+  "categories": ["lighting.bulbs_lamps"],
   "codeowners": ["@emlove"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zerproc",

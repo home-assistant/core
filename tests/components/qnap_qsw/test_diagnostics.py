@@ -28,6 +28,8 @@ from aioqsw.const import (
     QSD_UPTIME_SECONDS,
     QSD_VERSION,
 )
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.qnap_qsw.const import DOMAIN
@@ -43,9 +45,6 @@ from .util import (
     SYSTEM_TIME_MOCK,
     async_init_integration,
 )
-
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_config_entry_diagnostics(
