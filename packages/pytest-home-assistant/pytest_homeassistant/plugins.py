@@ -184,7 +184,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 
 
 def pytest_load_initial_conftests(early_config: pytest.Config) -> None:
-    """Make fixture loaders available while importing the project's conftest."""
+    """Configure fixture paths when the plugin is loaded early."""
     _paths.configure(early_config)
 
 
