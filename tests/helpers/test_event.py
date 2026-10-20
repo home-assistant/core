@@ -12,6 +12,10 @@ from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import jinja2
 import pytest
+from pytest_homeassistant.common import (
+    async_fire_time_changed,
+    async_fire_time_changed_exact,
+)
 
 from homeassistant import core as ha
 from homeassistant.const import MATCH_ALL
@@ -53,8 +57,6 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.template import Template, result_as_boolean
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed, async_fire_time_changed_exact
 
 DEFAULT_TIME_ZONE = dt_util.get_default_time_zone()
 

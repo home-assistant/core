@@ -147,7 +147,7 @@ def async_create_api_client(
 
 
 if TYPE_CHECKING:
-    from aioesphomeapi.api_pb2 import SubscribeLogsResponse  # type: ignore[attr-defined]  # noqa: I001
+    from aioesphomeapi.api_pb2 import SubscribeLogsResponse  # type: ignore[attr-defined]
 
 
 _LOGGER = logging.getLogger(__name__)

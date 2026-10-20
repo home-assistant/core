@@ -8,6 +8,8 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import system_log
 from homeassistant.components.system_log.const import RAW_UPDATE_COOLDOWN
@@ -19,9 +21,6 @@ from homeassistant.const import KEY_DATA_LOGGING
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.logging import HomeAssistantQueueHandler
-
-from tests.common import async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 _LOGGER = logging.getLogger("test_logger")
 

@@ -24,6 +24,8 @@ from unittest.mock import (
 from aiohttp import FormData
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from securetar import SecureTarArchive, SecureTarFile
 
 from homeassistant.components.backup import (
@@ -67,9 +69,6 @@ from .common import (
     setup_backup_integration,
     setup_backup_platform,
 )
-
-from tests.common import async_fire_time_changed
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 _EXPECTED_FILES = [
     "test.txt",

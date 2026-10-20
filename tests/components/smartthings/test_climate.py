@@ -14,6 +14,7 @@ from pysmartthings import (
 )
 from pysmartthings.models import HealthStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -68,8 +69,6 @@ from . import (
     trigger_health_update,
     trigger_update,
 )
-
-from tests.common import MockConfigEntry
 
 
 def report_switch_on_after_command(hass: HomeAssistant, devices: AsyncMock) -> None:

@@ -9,6 +9,11 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockUser,
+    load_json_object_fixture,
+)
 
 from homeassistant.components import lovelace
 from homeassistant.components.lovelace import LOVELACE_DATA
@@ -39,8 +44,6 @@ from homeassistant.setup import async_setup_component
 
 from . import create_install_folders, setup_integration
 from .const import REPOSITORY_INTEGRATION_ID, TOKEN, WARNING_ACCEPTANCE
-
-from tests.common import MockConfigEntry, MockUser, load_json_object_fixture
 
 UPDATE_ENTITY_ID = "update.hacs_basic_integration"
 SWITCH_ENTITY_ID = "switch.hacs_basic_integration_pre_release"

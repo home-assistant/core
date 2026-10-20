@@ -6,13 +6,12 @@ from unittest.mock import AsyncMock, patch
 
 from powerfox import LocalResponse
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.powerfox_local.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 
 from . import MOCK_API_KEY, MOCK_DEVICE_ID, MOCK_HOST
-
-from tests.common import MockConfigEntry
 
 
 def _local_response() -> LocalResponse:

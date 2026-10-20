@@ -5,11 +5,12 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from ritualsgenie import RitualsGenieConnectionError, Sensor
 
 from homeassistant.components.rituals_perfume_genie.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -21,8 +22,6 @@ from .common import (
     mock_diffuser_v1_battery_cartridge,
     mock_diffuser_v2_no_battery_no_cartridge,
 )
-
-from tests.common import async_fire_time_changed
 
 
 async def _tick(
@@ -159,19 +158,124 @@ async def test_sensors_failure_does_not_block_setup(
 
 
 async def test_diffuser_removed_from_account(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test the entities of a diffuser that is no longer on the account."""
+    """Test a diffuser that left the account loses its device and entities."""
     config_entry = mock_config_entry(unique_id="id_123_diffuser_removed")
     client = await init_integration(hass, config_entry, [mock_diffuser("lot123")])
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "lot123"), config_entry.entry_id
+    )
 
     client.hubs.side_effect = list
-    await _tick(hass, freezer, timedelta(hours=1))
+    await _tick(hass, freezer, timedelta(minutes=5))
 
-    for entity_id in ("switch.genie", "sensor.genie_perfume"):
-        state = hass.states.get(entity_id)
-        assert state
-        assert state.state == STATE_UNAVAILABLE
+    assert "lot123" not in config_entry.runtime_data.sensors
+
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, "lot123"), config_entry.entry_id
+    )
+    assert not er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
+    assert hass.states.get("switch.genie") is None
+    assert hass.states.get("sensor.genie_perfume") is None
+
+
+async def test_diffuser_added_to_account(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test a diffuser added to the account gets its entities, without a reload."""
+    config_entry = mock_config_entry(unique_id="id_123_diffuser_added")
+    diffusers = [mock_diffuser_v1_battery_cartridge()]
+    client = await init_integration(hass, config_entry, diffusers)
+    assert hass.states.get("switch.genie_v2") is None
+
+    diffusers.append(mock_diffuser_v2_no_battery_no_cartridge())
+    await _tick(hass, freezer, timedelta(minutes=5))
+    # The first update of its sensors waits a moment for all its entities.
+    await _tick(hass, freezer, timedelta(seconds=1))
+
+    state = hass.states.get("switch.genie_v2")
+    assert state
+    assert state.state == STATE_ON
+
+    # The sensors of the new diffuser are there right away, not an hour later.
+    state = hass.states.get("binary_sensor.genie_v2_cartridge")
+    assert state
+    assert state.state == STATE_OFF
+    assert client.sensors.call_args.kwargs["only"] == {Sensor.PERFUME}
+
+    # Nothing changes for the diffuser that was already there.
+    state = hass.states.get("switch.genie")
+    assert state
+    assert state.state == STATE_ON
+
+
+async def test_diffuser_returns_to_account(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a diffuser that returns to the account gets its entities back."""
+    config_entry = mock_config_entry(unique_id="id_123_diffuser_returns")
+    config_entry.add_to_hass(hass)
+
+    # Enabled by the user while it was on the account: it comes back enabled.
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "lot123-wifi_percentage",
+        config_entry=config_entry,
+        suggested_object_id="genie_wi_fi_signal",
+    )
+
+    diffusers = [mock_diffuser("lot123")]
+    client = await init_integration(hass, config_entry, diffusers)
+
+    diffusers.clear()
+    await _tick(hass, freezer, timedelta(minutes=5))
+    assert hass.states.get("switch.genie") is None
+
+    diffusers.append(mock_diffuser("lot123"))
+    await _tick(hass, freezer, timedelta(minutes=5))
+    # The first update of its sensors waits a moment for all its entities.
+    await _tick(hass, freezer, timedelta(seconds=1))
+
+    state = hass.states.get("switch.genie")
+    assert state
+    assert state.state == STATE_ON
+
+    state = hass.states.get("sensor.genie_perfume")
+    assert state
+    assert state.state == "Ritual of Sakura"
+
+    # The first update fetched what the returned entities need.
+    state = hass.states.get("sensor.genie_wi_fi_signal")
+    assert state
+    assert state.state == "75"
+    assert Sensor.WIFI in client.sensors.call_args.kwargs["only"]
+
+
+async def test_stale_device_removed_on_setup(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test a device left behind by a diffuser no longer on the account is removed."""
+    config_entry = mock_config_entry(unique_id="id_123_stale_device")
+    config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, "lot999")}
+    )
+
+    await init_integration(hass, config_entry, [mock_diffuser("lot123")])
+
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, "lot999"), config_entry.entry_id
+    )
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "lot123"), config_entry.entry_id
+    )
 
 
 async def test_disabled_sensors_not_fetched(

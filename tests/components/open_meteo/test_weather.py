@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from open_meteo import Forecast
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.weather import (
@@ -12,8 +13,6 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.freeze_time("2021-11-24T03:00:00+00:00")

@@ -18,6 +18,12 @@ from motioneye_client.const import (
     KEY_WEB_HOOK_STORAGE_URL,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from yarl import URL
 
 from homeassistant.components.motioneye.const import (
@@ -49,9 +55,6 @@ from . import (
     create_mock_motioneye_config_entry,
     setup_mock_motioneye_config_entry,
 )
-
-from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
-from tests.typing import ClientSessionGenerator
 
 WEB_HOOK_MOTION_DETECTED_QUERY_STRING = (
     "camera_id=%t&changed_pixels=%D&despeckle_labels=%Q&event=%v&fps=%{fps}"

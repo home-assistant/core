@@ -5,13 +5,13 @@ import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch as async_patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.aws import DOMAIN, AWSData
 from homeassistant.components.aws.const import DATA_AWS
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 class MockAioSession:

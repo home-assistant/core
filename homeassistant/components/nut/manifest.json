@@ -1,6 +1,7 @@
 {
   "domain": "nut",
   "name": "Network UPS Tools (NUT)",
+  "categories": ["energy.backup_power"],
   "codeowners": ["@bdraco", "@ollo69", "@pestevez", "@tdfountain"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nut",

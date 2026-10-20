@@ -5,6 +5,9 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyfronius import FroniusError
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.fronius.const import DOMAIN, SOLAR_NET_RESCAN_TIMER
 from homeassistant.config_entries import ConfigEntryState
@@ -13,10 +16,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import mock_responses, setup_fronius_integration
-
-from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import WebSocketGenerator
 
 
 async def test_unload_config_entry(

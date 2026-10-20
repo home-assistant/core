@@ -30,11 +30,15 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 
-from homeassistant.const import EntityStateAttribute
+from homeassistant.const import (
+    EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
+    EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
+    EntityStateAttribute,
+)
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.frame import report_usage
-from homeassistant.helpers.recorder import DATA_RECORDER
+from homeassistant.helpers.recorder import DATA_RECORDER, get_instance, session_scope
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
@@ -78,8 +82,6 @@ from homeassistant.util.unit_conversion import (
 
 from .const import (
     DOMAIN,
-    EVENT_RECORDER_5MIN_STATISTICS_GENERATED,
-    EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
     INTEGRATION_PLATFORM_COMPILE_STATISTICS,
     INTEGRATION_PLATFORM_CUSTOM_EQUIVALENT_UNITS,
     INTEGRATION_PLATFORM_LIST_STATISTIC_IDS,
@@ -109,9 +111,7 @@ from .util import (
     execute,
     execute_stmt_lambda_element,
     filter_unique_constraint_integrity_error,
-    get_instance,
     retryable_database_job,
-    session_scope,
 )
 
 if TYPE_CHECKING:

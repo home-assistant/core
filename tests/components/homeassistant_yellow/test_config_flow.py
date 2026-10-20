@@ -6,6 +6,7 @@ from unittest.mock import ANY, AsyncMock, Mock, call, patch
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import YellowOptions
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockModule, mock_integration
 from universal_silabs_flasher.flasher import YellowFlasher
 
 from homeassistant.components.hassio import (
@@ -30,8 +31,6 @@ from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, MockModule, mock_integration
 
 
 @pytest.fixture(autouse=True)
