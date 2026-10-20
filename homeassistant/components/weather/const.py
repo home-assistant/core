@@ -172,7 +172,6 @@ VALID_UNITS: dict[str, set[str]] = {
 class WeatherService(StrEnum):
     """Store keys for weather services."""
 
-    GET_FORECAST = "get_forecast"
     GET_FORECASTS = "get_forecasts"
 
 

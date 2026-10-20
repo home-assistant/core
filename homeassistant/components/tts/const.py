@@ -41,7 +41,6 @@ class TextToSpeechService(StrEnum):
     """Store keys for text-to-speech services."""
 
     CLEAR_CACHE = "clear_cache"
-    SAY = "say"
     SPEAK = "speak"
 
 
@@ -49,7 +48,6 @@ class TextToSpeechServiceArgument(StrEnum):
     """Store keys for text-to-speech service arguments."""
 
     CACHE = "cache"
-    ENTITY_ID = "entity_id"
     LANGUAGE = "language"
     MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"
     MESSAGE = "message"

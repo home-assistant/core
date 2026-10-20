@@ -82,11 +82,7 @@ class VacuumService(StrEnum):
     SEND_COMMAND = "send_command"
     SET_FAN_SPEED = "set_fan_speed"
     START = "start"
-    START_PAUSE = "start_pause"
     STOP = "stop"
-    TOGGLE = "toggle"
-    TURN_OFF = "turn_off"
-    TURN_ON = "turn_on"
 
 
 class VacuumServiceArgument(StrEnum):
