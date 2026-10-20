@@ -1,15 +1,22 @@
 """The tests for Core components."""
 
+from typing import Any
 from unittest.mock import Mock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntityPlatform,
+    MockUser,
+    async_capture_events,
+    async_mock_service,
+    patch_yaml_files,
+)
 import yaml
 
 from homeassistant import config, core as ha
 from homeassistant.components.homeassistant import (
-    ATTR_ENTRY_ID,
-    ATTR_SAFE_MODE,
     DOMAIN,
     SERVICE_CHECK_CONFIG,
     SERVICE_HOMEASSISTANT_RESTART,
@@ -18,6 +25,10 @@ from homeassistant.components.homeassistant import (
     SERVICE_RELOAD_CORE_CONFIG,
     SERVICE_RELOAD_CUSTOM_TEMPLATES,
     SERVICE_SET_LOCATION,
+)
+from homeassistant.components.homeassistant.services import (
+    ATTR_ENTRY_ID,
+    ATTR_SAFE_MODE,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -36,15 +47,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import entity, entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntityPlatform,
-    MockUser,
-    async_capture_events,
-    async_mock_service,
-    patch_yaml_files,
-)
 
 
 async def test_turn_on_without_entities(hass: HomeAssistant) -> None:
@@ -130,7 +132,7 @@ async def test_reload_core_conf(hass: HomeAssistant) -> None:
 
 
 @patch("homeassistant.config.os.path.isfile", Mock(return_value=True))
-@patch("homeassistant.components.homeassistant._LOGGER.error")
+@patch("homeassistant.components.homeassistant.services._LOGGER.error")
 @patch("homeassistant.core_config.async_process_ha_core_config")
 @pytest.mark.parametrize(
     ("files_patch", "expected_error"),
@@ -244,7 +246,7 @@ async def test_entity_update(hass: HomeAssistant) -> None:
     await async_setup_component(hass, DOMAIN, {})
 
     with patch(
-        "homeassistant.components.homeassistant.async_update_entity",
+        "homeassistant.components.homeassistant.services.async_update_entity",
         return_value=None,
     ) as mock_update:
         await hass.services.async_call(
@@ -338,7 +340,7 @@ async def test_turn_on_off_toggle_schema(
 
     for service in SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE:
         for invalid in None, "nothing", ENTITY_MATCH_ALL, ENTITY_MATCH_NONE:
-            with pytest.raises(vol.Invalid):
+            with pytest.raises(probatio.Invalid):
                 await hass.services.async_call(
                     ha.DOMAIN,
                     service,
@@ -441,13 +443,16 @@ async def test_reload_config_entry_by_entry_id(
     "service", [SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP]
 )
 async def test_raises_when_db_upgrade_in_progress(
-    hass: HomeAssistant, service, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, service: str
 ) -> None:
     """Test an exception is raised when the database migration is in progress."""
     await async_setup_component(hass, DOMAIN, {})
 
     with (
-        pytest.raises(HomeAssistantError),
+        pytest.raises(
+            HomeAssistantError,
+            match=f"The system cannot {service} while a database upgrade is in progress",
+        ),
         patch(
             "homeassistant.helpers.recorder.async_migration_in_progress",
             return_value=True,
@@ -458,11 +463,7 @@ async def test_raises_when_db_upgrade_in_progress(
             service,
             blocking=True,
         )
-    assert "The system cannot" in caplog.text
-    assert "while a database upgrade is in progress" in caplog.text
-
     assert mock_async_migration_in_progress.called
-    caplog.clear()
 
     with (
         patch(
@@ -476,8 +477,6 @@ async def test_raises_when_db_upgrade_in_progress(
             service,
             blocking=True,
         )
-        assert "The system cannot" not in caplog.text
-        assert "while a database upgrade in progress" not in caplog.text
 
     assert mock_async_migration_in_progress.called
 
@@ -598,7 +597,7 @@ async def test_reload_custom_templates(hass: HomeAssistant) -> None:
     """Test we can call reload_custom_templates."""
     await async_setup_component(hass, DOMAIN, {})
     with patch(
-        "homeassistant.components.homeassistant.async_load_custom_templates",
+        "homeassistant.components.homeassistant.services.async_load_custom_templates",
         return_value=None,
     ) as mock_load_custom_templates:
         await hass.services.async_call(
@@ -609,9 +608,7 @@ async def test_reload_custom_templates(hass: HomeAssistant) -> None:
         assert mock_load_custom_templates.called
 
 
-async def test_reload_all(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_reload_all(hass: HomeAssistant) -> None:
     """Test reload_all service."""
     await async_setup_component(hass, DOMAIN, {})
     test1 = async_mock_service(hass, "test1", "reload")
@@ -661,10 +658,6 @@ async def test_reload_all(
         )
 
     assert mock_async_check_ha_config_file.called
-    assert (
-        "The system cannot reload because the configuration is not valid: Oh no, drama!"
-        in caplog.text
-    )
 
     # None have been called again
     assert len(test1) == 1
@@ -815,3 +808,56 @@ async def test_deprecated_installation_issue_container_32bit(
     assert issue.domain == DOMAIN
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_placeholders == {"arch": arch}
+
+
+async def test_remove_legacy_almond_user(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test the system user of the removed almond integration is removed."""
+    almond_user = await hass.auth.async_create_system_user("Almond")
+    other_user = await hass.auth.async_create_system_user("Other")
+    hass_storage["almond"] = {
+        "version": 1,
+        "key": "almond",
+        "data": {"almond_user": almond_user.id},
+    }
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert await hass.auth.async_get_user(almond_user.id) is None
+    assert await hass.auth.async_get_user(other_user.id) is not None
+    assert "almond" not in hass_storage
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        pytest.param({"almond_user": "unknown"}, id="unknown_user"),
+        pytest.param({}, id="no_user"),
+    ],
+)
+async def test_remove_legacy_almond_store_without_user(
+    hass: HomeAssistant, hass_storage: dict[str, Any], data: dict[str, Any]
+) -> None:
+    """Test the almond store is removed if it does not reference an existing user."""
+    other_user = await hass.auth.async_create_system_user("Other")
+    hass_storage["almond"] = {"version": 1, "key": "almond", "data": data}
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert await hass.auth.async_get_user(other_user.id) is not None
+    assert "almond" not in hass_storage
+
+
+async def test_no_legacy_almond_store(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test no user is removed without an almond store."""
+    other_user = await hass.auth.async_create_system_user("Other")
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert await hass.auth.async_get_user(other_user.id) is not None

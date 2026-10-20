@@ -4,8 +4,8 @@ from contextlib import suppress
 import logging
 from typing import cast
 
+import probatio
 from synology_dsm.api.file_station.models import SynoFileSharedFolder
-import voluptuous as vol
 
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
@@ -78,9 +78,9 @@ class MissingBackupSetupRepairFlow(RepairsFlow):
             return self.async_abort(reason="no_shares")
 
         return self.async_show_form(
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_BACKUP_SHARE,
                         default=self.entry.options[CONF_BACKUP_SHARE],
                     ): SelectSelector(
@@ -92,7 +92,7 @@ class MissingBackupSetupRepairFlow(RepairsFlow):
                             mode=SelectSelectorMode.DROPDOWN,
                         ),
                     ),
-                    vol.Required(
+                    probatio.Required(
                         CONF_BACKUP_PATH,
                         default=self.entry.options[CONF_BACKUP_PATH],
                     ): str,

@@ -5,7 +5,8 @@ from collections.abc import Mapping
 from datetime import timedelta
 from typing import TypeVar, cast, override
 
-from aiocomelit.api import ComelitCommonApi, ComeliteSerialBridgeApi, ComelitVedoApi
+from aiocomelit import ComeliteSerialBridgeApi, ComelitVedoApi
+from aiocomelit.api import ComelitHttpApi
 from aiocomelit.const import (
     ALARM_AREA,
     ALARM_ZONE,
@@ -51,7 +52,7 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
 
     _hw_version: str
     config_entry: ComelitConfigEntry
-    api: ComelitCommonApi
+    api: ComelitHttpApi
 
     def __init__(
         self, hass: HomeAssistant, entry: ComelitConfigEntry, device: str, host: str
@@ -69,14 +70,16 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
         device_registry = dr.async_get(self.hass)
-        device_registry.async_get_or_create(
-            configuration_url=self.api.base_url,
+        device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, entry.entry_id)},
-            model=device,
-            name=f"{device} ({self._host})",
-            manufacturer="Comelit",
-            hw_version=self._hw_version,
+            device_info=dr.DeviceInfo(
+                configuration_url=self.api.base_url,
+                identifiers={(DOMAIN, entry.entry_id)},
+                model=device,
+                name=f"{device} ({self._host})",
+                manufacturer="Comelit",
+                hw_version=self._hw_version,
+            ),
         )
 
     def platform_device_info(

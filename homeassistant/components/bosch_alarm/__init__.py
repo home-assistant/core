@@ -31,7 +31,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: BoschAlarmConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BoschAlarmConfigEntry) -> None:
     """Set up Bosch Alarm from a config entry."""
 
     panel = Panel(
@@ -62,21 +62,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschAlarmConfigEntry) -
 
     mac = entry.data.get(CONF_MAC)
 
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        connections={(CONNECTION_NETWORK_MAC, mac)} if mac else set(),
-        identifiers={(DOMAIN, entry.unique_id or entry.entry_id)},
-        name=f"Bosch {panel.model.name}",
-        manufacturer="Bosch Security Systems",
-        model=panel.model.name,
-        sw_version=panel.firmware_version,
+        device_info=dr.DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, mac)} if mac else set(),
+            identifiers={(DOMAIN, entry.unique_id or entry.entry_id)},
+            name=f"Bosch {panel.model.name}",
+            manufacturer="Bosch Security Systems",
+            model=panel.model.name,
+            sw_version=panel.firmware_version,
+        ),
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: BoschAlarmConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BoschAlarmConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.disconnect()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.disconnect()

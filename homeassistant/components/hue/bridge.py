@@ -9,6 +9,7 @@ import aiohttp
 from aiohttp import client_exceptions
 from aiohue import HueBridgeV1, HueBridgeV2, LinkButtonNotPressed, Unauthorized
 from aiohue.errors import AiohueException, BridgeBusy
+from aiohue.v2.scene_activity import SceneActivityTracker
 
 from homeassistant import core
 from homeassistant.components import persistent_notification
@@ -31,6 +32,7 @@ PLATFORMS_v2 = [
     Platform.EVENT,
     Platform.LIGHT,
     Platform.SCENE,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
@@ -49,6 +51,7 @@ class HueBridge:
         # Jobs to be executed when API is reset.
         self.reset_jobs: list[core.CALLBACK_TYPE] = []
         self.sensor_manager: SensorManager | None = None
+        self.scene_activity_tracker: SceneActivityTracker | None = None
         self.logger = logging.getLogger(__name__)
         # store actual api connection to bridge as api
         app_key: str = self.config_entry.data[CONF_API_KEY]
@@ -121,6 +124,9 @@ class HueBridge:
         else:
             await async_setup_devices(self)
             await async_setup_hue_events(self)
+            self.scene_activity_tracker = SceneActivityTracker(self.api.scenes)
+            self.scene_activity_tracker.start()
+            self.reset_jobs.append(self.scene_activity_tracker.stop)
             await self.hass.config_entries.async_forward_entry_setups(
                 self.config_entry, PLATFORMS_v2
             )
@@ -197,14 +203,16 @@ def _async_register_bridge_device(
     """Add the bridge device to the device registry."""
     device_registry = dr.async_get(hass)
     if api_version == 1:
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=config_entry.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, api.config.mac_address)},
-            identifiers={(DOMAIN, api.config.bridge_id)},
-            manufacturer="Signify",
-            name=api.config.name,
-            model_id=api.config.model_id,
-            sw_version=api.config.software_version,
+            device_info=dr.DeviceInfo(
+                connections={(dr.CONNECTION_NETWORK_MAC, api.config.mac_address)},
+                identifiers={(DOMAIN, api.config.bridge_id)},
+                manufacturer="Signify",
+                name=api.config.name,
+                model_id=api.config.model_id,
+                sw_version=api.config.software_version,
+            ),
         )
         # create persistent notification if we found a bridge version
         # with security vulnerability
@@ -223,17 +231,19 @@ def _async_register_bridge_device(
                 "hue_hub_firmware",
             )
     else:
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=config_entry.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, api.config.mac_address)},
-            identifiers={
-                (DOMAIN, api.config.bridge_id),
-                (DOMAIN, api.config.bridge_device.id),
-            },
-            manufacturer=api.config.bridge_device.product_data.manufacturer_name,
-            name=api.config.name,
-            model_id=api.config.model_id,
-            sw_version=api.config.software_version,
+            device_info=dr.DeviceInfo(
+                connections={(dr.CONNECTION_NETWORK_MAC, api.config.mac_address)},
+                identifiers={
+                    (DOMAIN, api.config.bridge_id),
+                    (DOMAIN, api.config.bridge_device.id),
+                },
+                manufacturer=api.config.bridge_device.product_data.manufacturer_name,
+                name=api.config.name,
+                model_id=api.config.model_id,
+                sw_version=api.config.software_version,
+            ),
         )
 
 

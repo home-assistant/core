@@ -3,18 +3,20 @@
 import asyncio
 from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
-import datetime
+import datetime as dt
 import logging
-from typing import override
+from typing import TYPE_CHECKING, Any, override
 
-import httpx
-from mcp import McpError
+import httpx2
+from mcp import MCPError
 from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
 from mcp.client.streamable_http import streamable_http_client
-from mcp.types import InitializeResult
+from mcp.types import InitializeResult, ToolAnnotations
+import probatio
+
+# Imported by name because the tests patch it on this module.
 from probatio import from_openapi
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
@@ -25,39 +27,59 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers import llm
-from homeassistant.helpers.httpx_client import create_async_httpx_client
+from homeassistant.helpers.httpx_client import SERVER_SOFTWARE, USER_AGENT
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.json import JsonObjectType
 from homeassistant.util.ssl import SSL_ALPN_HTTP11, SSLCipherList, client_context
 
 from .auth import AuthenticateHeader
 from .const import DOMAIN
 
+if TYPE_CHECKING:
+    from .types import ModelContextProtocolConfigEntry
+
 _LOGGER = logging.getLogger(__name__)
 
-UPDATE_INTERVAL = datetime.timedelta(minutes=30)
+UPDATE_INTERVAL = dt.timedelta(minutes=30)
 TIMEOUT = 10
 
 type TokenManager = Callable[[], Awaitable[str]]
 
 
-def _create_sse_httpx_client(
-    headers: dict[str, str] | None = None,
-    timeout: httpx.Timeout | None = None,
-    auth: httpx.Auth | None = None,
-) -> httpx.AsyncClient:
-    """Create the httpx client used by the SSE transport.
+async def _raise_on_post_error(response: httpx2.Response) -> None:
+    """Raise HTTPStatusError for non-404 error responses on POST requests."""
+    if response.request.method == "POST" and response.status_code != 404:
+        response.raise_for_status()
 
-    The SSE transport closes the client itself, so it cannot be handed one of
-    the Home Assistant managed clients. Building it here keeps it off the SDK
-    default, which reads the CA bundle from disk inside the event loop.
+
+def _first_exception(err: ExceptionGroup) -> Exception:
+    """Return the first leaf exception from a possibly nested ExceptionGroup."""
+    exc: Exception = err
+    while isinstance(exc, ExceptionGroup):
+        exc = exc.exceptions[0]
+    return exc
+
+
+def create_mcp_httpx_client(
+    headers: dict[str, str] | None = None,
+    timeout: httpx2.Timeout | None = None,
+    auth: httpx2.Auth | None = None,
+) -> httpx2.AsyncClient:
+    """Create an httpx client for talking to an MCP server.
+
+    The caller closes the client, so it cannot be one of the Home Assistant
+    managed clients. Reuses the shared SSL context instead of loading
+    certificates for every client.
     """
-    return httpx.AsyncClient(
+    kwargs: dict[str, Any] = {}
+    if timeout is not None:
+        kwargs["timeout"] = timeout
+    return httpx2.AsyncClient(
         verify=client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP11),
         follow_redirects=True,
-        headers=headers,
-        timeout=timeout,
+        headers={USER_AGENT: SERVER_SOFTWARE, **(headers or {})},
         auth=auth,
+        event_hooks={"response": [_raise_on_post_error]},
+        **kwargs,
     )
 
 
@@ -79,34 +101,36 @@ async def mcp_client(
 
     try:
         async with (
-            streamable_http_client(
-                url=url,
-                http_client=create_async_httpx_client(hass, headers=headers),
-            ) as (read_stream, write_stream, _),
+            create_mcp_httpx_client(headers=headers) as http_client,
+            streamable_http_client(url=url, http_client=http_client) as (
+                read_stream,
+                write_stream,
+            ),
             ClientSession(read_stream, write_stream) as session,
         ):
             result = await session.initialize()
             yield session, result
     except ExceptionGroup as streamable_err:
-        main_error = streamable_err.exceptions[0]
+        main_error = _first_exception(streamable_err)
         # Method not Allowed likely means this is not a streamable HTTP server,
         # but it may be an SSE server. This is part of the MCP Transport
         # backwards compatibility specification.
-        # We also handle other generic McpErrors since proxies may not respond
+        # We also handle other generic MCPErrors since proxies may not respond
         # consistently with a 405.
         if (
-            isinstance(main_error, httpx.HTTPStatusError)
+            isinstance(main_error, httpx2.HTTPStatusError)
             and main_error.response.status_code == 405
-        ) or isinstance(main_error, McpError):
+        ) or isinstance(main_error, MCPError):
             _LOGGER.debug(
                 "Streamable HTTP client failed, attempting SSE client: %s", main_error
             )
             try:
+                # pylint: disable-next=contextmanager-generator-missing-cleanup
                 async with (
                     sse_client(
                         url=url,
                         headers=headers,
-                        httpx_client_factory=_create_sse_httpx_client,
+                        httpx_client_factory=create_mcp_httpx_client,
                     ) as streams,
                     ClientSession(*streams) as session,
                 ):
@@ -114,28 +138,54 @@ async def mcp_client(
                     yield session, result
             except ExceptionGroup as sse_err:
                 _LOGGER.debug("Error creating SSE MCP client: %s", sse_err)
-                raise sse_err.exceptions[0] from sse_err
+                raise _first_exception(sse_err) from sse_err
         else:
             _LOGGER.debug("Error creating MCP client: %s", streamable_err)
             raise main_error from streamable_err
 
 
+def _tool_annotations(remote: ToolAnnotations | None) -> llm.ToolAnnotations:
+    """Return the annotations the remote server declares for a tool.
+
+    A hint the server leaves out keeps the conservative default.
+    """
+    if remote is None:
+        return llm.ToolAnnotations()
+    declared = {
+        field: value
+        for field, value in (
+            ("read_only", remote.read_only_hint),
+            ("destructive", remote.destructive_hint),
+            ("idempotent", remote.idempotent_hint),
+            ("open_world", remote.open_world_hint),
+        )
+        if value is not None
+    }
+    return llm.ToolAnnotations(**declared)
+
+
 class ModelContextProtocolTool(llm.Tool):
     """A Tool exposed over the Model Context Protocol."""
+
+    integration = DOMAIN
 
     def __init__(
         self,
         name: str,
+        title: str | None,
         description: str | None,
-        parameters: vol.Schema,
+        parameters: probatio.Schema,
         server_url: str,
         config_entry: ConfigEntry,
         token_manager: TokenManager | None = None,
+        annotations: llm.ToolAnnotations = llm.ToolAnnotations(),
     ) -> None:
         """Initialize the tool."""
         self.name = name
+        self.title = title
         self.description = description
         self.parameters = parameters
+        self.annotations = annotations
         self.server_url = server_url
         self.config_entry = config_entry
         self.token_manager = token_manager
@@ -146,7 +196,7 @@ class ModelContextProtocolTool(llm.Tool):
         hass: HomeAssistant,
         tool_input: llm.ToolInput,
         llm_context: llm.LLMContext,
-    ) -> JsonObjectType:
+    ) -> llm.ToolResult:
         """Call the tool."""
         try:
             async with asyncio.timeout(TIMEOUT):
@@ -166,7 +216,7 @@ class ModelContextProtocolTool(llm.Tool):
             raise ConfigEntryAuthFailed(
                 "OAuth token request failed when calling tool"
             ) from error
-        except httpx.HTTPStatusError as error:
+        except httpx2.HTTPStatusError as error:
             _LOGGER.debug("Error when calling tool: %s", error)
             if error.response.status_code == 401:
                 auth_header = AuthenticateHeader.from_header(
@@ -179,25 +229,30 @@ class ModelContextProtocolTool(llm.Tool):
                     "The MCP server requires authentication"
                 ) from error
             raise HomeAssistantError(f"Error when calling tool: {error}") from error
-        except httpx.HTTPError as error:
+        except httpx2.HTTPError as error:
             _LOGGER.debug(
                 "Error communicating with MCP server when calling tool: %s", error
             )
             raise HomeAssistantError(
                 f"Error communicating with MCP server when calling tool: {error}"
             ) from error
-        return result.model_dump(exclude_unset=True, exclude_none=True)
+        return llm.ToolResult(
+            data=result.model_dump(
+                by_alias=True, exclude_unset=True, exclude_none=True
+            ),
+            error=bool(result.is_error),
+        )
 
 
 class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
     """Define an object to hold MCP data."""
 
-    config_entry: ConfigEntry
+    config_entry: ModelContextProtocolConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: ModelContextProtocolConfigEntry,
         token_manager: TokenManager | None = None,
     ) -> None:
         """Initialize ModelContextProtocolCoordinator."""
@@ -229,7 +284,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
         except OAuth2TokenRequestReauthError as error:
             _LOGGER.debug("OAuth token request failed: %s", error)
             raise ConfigEntryAuthFailed("OAuth token request failed") from error
-        except httpx.HTTPStatusError as error:
+        except httpx2.HTTPStatusError as error:
             _LOGGER.debug("Error communicating with API: %s", error)
             if error.response.status_code == 401:
                 auth_header = AuthenticateHeader.from_header(
@@ -242,7 +297,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
                     "The MCP server requires authentication"
                 ) from error
             raise UpdateFailed(f"Error communicating with API: {error}") from error
-        except httpx.HTTPError as err:
+        except httpx2.HTTPError as err:
             _LOGGER.debug("Error communicating with API: %s", err)
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
@@ -250,19 +305,21 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
         tools: list[llm.Tool] = []
         for tool in result.tools:
             try:
-                parameters = from_openapi(tool.inputSchema)
+                parameters = from_openapi(tool.input_schema)
             except Exception as err:
                 raise UpdateFailed(
-                    f"Error converting schema {err}: {tool.inputSchema}"
+                    f"Error converting schema {err}: {tool.input_schema}"
                 ) from err
             tools.append(
                 ModelContextProtocolTool(
                     tool.name,
+                    tool.title,
                     tool.description,
                     parameters,
                     self.config_entry.data[CONF_URL],
                     self.config_entry,
                     self.token_manager,
+                    _tool_annotations(tool.annotations),
                 )
             )
         return tools

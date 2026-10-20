@@ -15,9 +15,10 @@ from aiohomeconnect.model import (
 )
 from aiohomeconnect.model.error import HomeConnectError, NoProgramActiveError
 from aiohomeconnect.model.program import ProgramDefinitionOption
+from probatio.error import MultipleInvalid
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
-from voluptuous.error import MultipleInvalid
 
 from homeassistant.components import home_connect
 from homeassistant.components.home_connect.const import (
@@ -32,8 +33,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util.yaml import load_yaml_dict
-
-from tests.common import MockConfigEntry
 
 SERVICE_KV_CALL_PARAMS = [
     {

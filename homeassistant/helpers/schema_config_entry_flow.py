@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import types
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -37,11 +37,13 @@ class SchemaFlowFormStep(SchemaFlowStep):
     """Define a config or options flow form step."""
 
     schema: (
-        vol.Schema
-        | Callable[[SchemaCommonFlowHandler], Coroutine[Any, Any, vol.Schema | None]]
+        probatio.Schema
+        | Callable[
+            [SchemaCommonFlowHandler], Coroutine[Any, Any, probatio.Schema | None]
+        ]
         | None
     ) = None
-    """Optional voluptuous schema, or function which returns a schema or None, for
+    """Optional schema, or function which returns a schema or None, for
     requesting and validating user input.
 
     - If a function is specified, the function will be passed the current
@@ -168,10 +170,12 @@ class SchemaCommonFlowHandler:
             return form_step.options
         return await form_step.options(self)
 
-    async def _get_schema(self, form_step: SchemaFlowFormStep) -> vol.Schema | None:
+    async def _get_schema(
+        self, form_step: SchemaFlowFormStep
+    ) -> probatio.Schema | None:
         if form_step.schema is None:
             return None
-        if isinstance(form_step.schema, vol.Schema):
+        if isinstance(form_step.schema, probatio.Schema):
             return form_step.schema
         return await form_step.schema(self)
 
@@ -203,13 +207,13 @@ class SchemaCommonFlowHandler:
         self,
         values: dict[str, Any],
         user_input: dict[str, Any],
-        data_schema: vol.Schema | None,
+        data_schema: probatio.Schema | None,
     ) -> None:
         values.update(user_input)
         if data_schema and data_schema.schema:
             for key in data_schema.schema:
                 if (
-                    isinstance(key, vol.Optional)
+                    isinstance(key, probatio.Optional)
                     and key not in user_input
                     and not (
                         # don't remove read_only keys
@@ -244,11 +248,11 @@ class SchemaCommonFlowHandler:
         """Show form for next step."""
         if isinstance(self._flow[next_step_id], SchemaFlowMenuStep):
             menu_step = cast(SchemaFlowMenuStep, self._flow[next_step_id])
-            return self._handler.async_show_menu(
-                step_id=next_step_id,
-                menu_options=await self._get_options(menu_step),
-                sort=menu_step.sort,
-            )
+            menu_options = await self._get_options(menu_step)
+            with self._handler._as_step(next_step_id):  # noqa: SLF001
+                return self._handler.async_show_menu(
+                    menu_options=menu_options, sort=menu_step.sort
+                )
 
         form_step = cast(SchemaFlowFormStep, self._flow[next_step_id])
 
@@ -284,25 +288,25 @@ class SchemaCommonFlowHandler:
         last_step = None
         if not callable(form_step.next_step):
             last_step = form_step.next_step is None
-        return self._handler.async_show_form(
-            step_id=next_step_id,
-            data_schema=data_schema,
-            description_placeholders=description_placeholders,
-            errors=errors,
-            last_step=last_step,
-            preview=form_step.preview,
-        )
+        with self._handler._as_step(next_step_id):  # noqa: SLF001
+            return self._handler.async_show_form(
+                data_schema=data_schema,
+                description_placeholders=description_placeholders,
+                errors=errors,
+                last_step=last_step,
+                preview=form_step.preview,
+            )
 
     async def _async_menu_step(
         self, step_id: str, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a menu step."""
         menu_step: SchemaFlowMenuStep = cast(SchemaFlowMenuStep, self._flow[step_id])
-        return self._handler.async_show_menu(
-            step_id=step_id,
-            menu_options=await self._get_options(menu_step),
-            sort=menu_step.sort,
-        )
+        menu_options = await self._get_options(menu_step)
+        with self._handler._as_step(step_id):  # noqa: SLF001
+            return self._handler.async_show_menu(
+                menu_options=menu_options, sort=menu_step.sort
+            )
 
 
 class SchemaConfigFlowHandler(ConfigFlow, ABC):

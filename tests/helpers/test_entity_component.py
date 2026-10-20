@@ -7,9 +7,19 @@ import re
 from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun import freeze_time
+import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockModule,
+    MockPlatform,
+    MockUser,
+    async_fire_time_changed,
+    mock_integration,
+    mock_platform,
+)
 from pytest_unordered import unordered
-import voluptuous as vol
 
 from homeassistant.const import (
     ENTITY_MATCH_ALL,
@@ -28,22 +38,14 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady, Unauthorized
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity_component import EntityComponent, async_update_entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_platforms,
+)
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockModule,
-    MockPlatform,
-    MockUser,
-    async_fire_time_changed,
-    mock_integration,
-    mock_platform,
-)
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "test_domain"
@@ -408,16 +410,19 @@ async def test_unload_entry_resets_platform(hass: HomeAssistant) -> None:
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     entry = MockConfigEntry(domain="entry_domain")
 
-    assert await component.async_setup_entry(entry)
-    assert len(mock_setup_entry.mock_calls) == 1
-    add_entities = mock_setup_entry.mock_calls[0][1][2]
-    add_entities([MockEntity()])
-    await hass.async_block_till_done()
+    for _ in range(3):
+        assert await component.async_setup_entry(entry)
+        add_entities = mock_setup_entry.call_args.args[2]
+        add_entities([MockEntity()])
+        await hass.async_block_till_done()
 
-    assert len(hass.states.async_entity_ids()) == 1
+        assert len(hass.states.async_entity_ids()) == 1
+        assert len(async_get_platforms(hass, "entry_domain")) == 1
 
-    assert await component.async_unload_entry(entry)
-    assert len(hass.states.async_entity_ids()) == 0
+        assert await component.async_unload_entry(entry)
+        assert len(hass.states.async_entity_ids()) == 0
+        assert async_get_platforms(hass, "entry_domain") == []
+    assert mock_setup_entry.await_count == 3
 
 
 async def test_unload_entry_tolerates_never_loaded(
@@ -553,7 +558,7 @@ async def test_register_entity_service(
         "test_placeholder": "beer"
     }
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             "hello",
@@ -761,7 +766,7 @@ async def test_register_batched_entity_service(hass: HomeAssistant) -> None:
         "test_placeholder": "beer"
     }
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             "hello",
@@ -851,9 +856,9 @@ async def test_register_entity_service_non_entity_service_schema(
 
     for idx, schema in enumerate(
         (
-            vol.Schema({"some": str}),
-            vol.All(vol.Schema({"some": str})),
-            vol.Any(vol.Schema({"some": str})),
+            probatio.Schema({"some": str}),
+            probatio.All(probatio.Schema({"some": str})),
+            probatio.Any(probatio.Schema({"some": str})),
         )
     ):
         expected_message = (
@@ -870,8 +875,8 @@ async def test_register_entity_service_non_entity_service_schema(
     for idx, schema in enumerate(
         (
             cv.make_entity_service_schema({"some": str}),
-            vol.Schema(cv.make_entity_service_schema({"some": str})),
-            vol.All(cv.make_entity_service_schema({"some": str})),
+            probatio.Schema(cv.make_entity_service_schema({"some": str})),
+            probatio.All(cv.make_entity_service_schema({"some": str})),
         )
     ):
         component.async_register_entity_service(f"test_service_{idx}", schema, Mock())
@@ -902,3 +907,26 @@ async def test_platforms_shutdown_on_stop(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert mock_async_shutdown.called
+
+
+async def test_reset_preserves_only_component_platform(hass: HomeAssistant) -> None:
+    """Reset releases entry platforms and permits registering them again."""
+    mock_platform(
+        hass,
+        "entry_domain.test_domain",
+        MockPlatform(async_setup_entry=AsyncMock(return_value=True)),
+    )
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    entries = [MockConfigEntry(domain="entry_domain") for _ in range(2)]
+    for entry in entries:
+        assert await component.async_setup_entry(entry)
+    assert len(async_get_platforms(hass, "entry_domain")) == 2
+
+    await component._async_reset()
+
+    assert async_get_platforms(hass, "entry_domain") == []
+    assert len(async_get_platforms(hass, DOMAIN)) == 1
+    for entry in entries:
+        assert await component.async_setup_entry(entry)
+        assert await component.async_unload_entry(entry)
+    assert async_get_platforms(hass, "entry_domain") == []

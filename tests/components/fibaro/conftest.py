@@ -5,12 +5,11 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from pyfibaro.fibaro_device import SceneEvent
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.fibaro import CONF_IMPORT_PLUGINS, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 TEST_SERIALNUMBER = "HC2-111111"
 TEST_NAME = "my_fibaro_home_center"
@@ -165,6 +164,69 @@ def mock_light() -> Mock:
     light.actions = {"setValue": 1, "on": 0, "off": 0}
     light.supported_features = {}
     light.raw_data = {"fibaro_id": 3, "name": "Test light", "properties": {"value": 20}}
+    value_mock = Mock()
+    value_mock.has_value = True
+    value_mock.int_value.return_value = 20
+    light.value = value_mock
+    return light
+
+
+@pytest.fixture
+def mock_fgd212_light() -> Mock:
+    """Fixture for an FGD212 dimmer without setValue in actions."""
+    light = Mock()
+    light.fibaro_id = 116
+    light.parent_fibaro_id = 113
+    light.name = "8 Spots"
+    light.room_id = 1
+    light.dead = False
+    light.visible = True
+    light.enabled = True
+    light.type = "com.fibaro.FGD212"
+    light.base_type = "com.fibaro.multilevelSwitch"
+    light.properties = {"manufacturer": "", "isLight": True}
+    light.actions = {
+        "configureFavoritePositions": 1,
+        "setAutoOff": 0,
+        "setFavoritePosition": 1,
+    }
+    light.supported_features = {}
+    light.has_interface.side_effect = lambda name: name == "levelChange"
+    light.raw_data = {
+        "fibaro_id": 116,
+        "name": "8 Spots",
+        "interfaces": ["levelChange", "light"],
+        "properties": {"value": 50},
+    }
+    value_mock = Mock()
+    value_mock.has_value = True
+    value_mock.int_value.return_value = 50
+    light.value = value_mock
+    return light
+
+
+@pytest.fixture
+def mock_multilevel_base_type_light() -> Mock:
+    """Fixture for dimming via multilevelSwitch base_type without levelChange."""
+    light = Mock()
+    light.fibaro_id = 42
+    light.parent_fibaro_id = 0
+    light.name = "Base type dimmer"
+    light.room_id = 1
+    light.dead = False
+    light.visible = True
+    light.enabled = True
+    light.type = "com.fibaro.FGD212"
+    light.base_type = "com.fibaro.multilevelSwitch"
+    light.properties = {"manufacturer": "", "isLight": True}
+    light.actions = {"setValue": 1, "turnOn": 0, "turnOff": 0}
+    light.supported_features = {}
+    light.has_interface.return_value = False
+    light.raw_data = {
+        "fibaro_id": 42,
+        "name": "Base type dimmer",
+        "properties": {"value": 20},
+    }
     value_mock = Mock()
     value_mock.has_value = True
     value_mock.int_value.return_value = 20

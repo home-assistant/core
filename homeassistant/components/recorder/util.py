@@ -16,6 +16,7 @@ from awesomeversion import (
     AwesomeVersionStrategy,
 )
 import ciso8601
+import probatio
 from sqlalchemy import inspect, text
 from sqlalchemy.engine import Result, Row
 from sqlalchemy.engine.interfaces import DBAPIConnection
@@ -23,7 +24,6 @@ from sqlalchemy.exc import OperationalError, SQLAlchemyError, StatementError
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
-import voluptuous as vol
 
 from homeassistant.const import WEEKDAYS
 from homeassistant.core import HomeAssistant, callback
@@ -33,6 +33,7 @@ from homeassistant.generated.recorder_database_versions import (
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.recorder import (  # noqa: F401
     DATA_INSTANCE,
+    SESSION_INFO_READ_ONLY,
     get_instance,
     session_scope,
 )
@@ -152,6 +153,22 @@ SUNDAY_WEEKDAY = 6
 DAYS_IN_WEEK = 7
 
 
+def _rollback_read_only_session(session: Session) -> None:
+    """Roll back a read-only session so a retried query can reconnect.
+
+    A query after a lost connection otherwise raises PendingRollbackError. Only a
+    read-only session is rolled back: it is never committed, so nothing is lost. A
+    session holding writes is left alone, a rollback would discard them while the
+    retry succeeds and the caller commits what is left of its unit of work.
+    """
+    if not session.info.get(SESSION_INFO_READ_ONLY):
+        return
+    try:
+        session.rollback()
+    except SQLAlchemyError as err:
+        _LOGGER.error("Error rolling back the session: %s", err)
+
+
 def execute(qry: Query) -> list[Row]:
     """Query the database and convert the objects to HA native form.
 
@@ -177,6 +194,7 @@ def execute(qry: Query) -> list[Row]:
 
             if tryno == RETRIES - 1:
                 raise
+            _rollback_read_only_session(qry.session)
             time.sleep(QUERY_RETRY_WAIT)
         else:
             return result
@@ -218,6 +236,7 @@ def execute_stmt_lambda_element(
             _LOGGER.error("Error executing query: %s", err)
             if tryno == RETRIES - 1:
                 raise
+            _rollback_read_only_session(session)
             time.sleep(QUERY_RETRY_WAIT)
 
     # Unreachable
@@ -695,6 +714,16 @@ def setup_connection_for_dialect(
             result = query_on_connection(dbapi_connection, "SHOW server_version")
             version_string = result[0][0]
             version = _extract_version_from_server_response(version_string)
+            if version is None:
+                # PostgreSQL prereleases such as 19beta3 are not SimpleVer.
+                result = query_on_connection(
+                    dbapi_connection, "SHOW server_version_num"
+                )
+                version_num = int(result[0][0])
+                # PostgreSQL < 12 is rejected regardless of the minor version.
+                version = _simple_version(
+                    f"{version_num // 10000}.{version_num % 10000}"
+                )
             if not version or version < MIN_VERSION_PGSQL:
                 _raise_if_version_unsupported(
                     version or version_string, "PostgreSQL", MIN_VERSION_PGSQL
@@ -943,25 +972,31 @@ def is_second_sunday(date_time: datetime) -> bool:
     return bool(second_sunday(date_time.year, date_time.month).day == date_time.day)
 
 
-PERIOD_SCHEMA = vol.Schema(
+PERIOD_SCHEMA = probatio.Schema(
     {
-        vol.Exclusive("calendar", "period"): vol.Schema(
+        probatio.Exclusive("calendar", "period"): probatio.Schema(
             {
-                vol.Required("period"): vol.Any("hour", "day", "week", "month", "year"),
-                vol.Optional("offset"): int,
-                vol.Optional("first_weekday"): vol.Any(*WEEKDAYS),
+                probatio.Required("period"): probatio.Any(
+                    "hour", "day", "week", "month", "year"
+                ),
+                probatio.Optional("offset"): int,
+                probatio.Optional("first_weekday"): probatio.Any(*WEEKDAYS),
             }
         ),
-        vol.Exclusive("fixed_period", "period"): vol.Schema(
+        probatio.Exclusive("fixed_period", "period"): probatio.Schema(
             {
-                vol.Optional("start_time"): vol.All(cv.datetime, dt_util.as_utc),
-                vol.Optional("end_time"): vol.All(cv.datetime, dt_util.as_utc),
+                probatio.Optional("start_time"): probatio.All(
+                    cv.datetime, dt_util.as_utc
+                ),
+                probatio.Optional("end_time"): probatio.All(
+                    cv.datetime, dt_util.as_utc
+                ),
             }
         ),
-        vol.Exclusive("rolling_window", "period"): vol.Schema(
+        probatio.Exclusive("rolling_window", "period"): probatio.Schema(
             {
-                vol.Required("duration"): cv.time_period_dict,
-                vol.Optional("offset"): cv.time_period_dict,
+                probatio.Required("duration"): cv.time_period_dict,
+                probatio.Optional("offset"): cv.time_period_dict,
             }
         ),
     }

@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
-from hotspring import Spa
+from hotspring import Spa, TemperatureUnit
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -29,6 +29,7 @@ class HotSpringSensorEntityDescription(SensorEntityDescription):
 
     exists_fn: Callable[[Spa], bool] = lambda _: True
     value_fn: Callable[[Spa], StateType]
+    unit_fn: Callable[[Spa], str | None] | None = None
 
 
 SENSORS: tuple[HotSpringSensorEntityDescription, ...] = (
@@ -37,8 +38,12 @@ SENSORS: tuple[HotSpringSensorEntityDescription, ...] = (
         translation_key="current_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         value_fn=lambda spa: spa.heater.current_temperature,
+        unit_fn=lambda spa: (
+            UnitOfTemperature.CELSIUS
+            if spa.heater.temperature_unit is TemperatureUnit.CELSIUS
+            else UnitOfTemperature.FAHRENHEIT
+        ),
     ),
     HotSpringSensorEntityDescription(
         key="water_care_120_day_timer",
@@ -117,6 +122,14 @@ class HotSpringSensorEntity(HotSpringEntity, SensorEntity):
         """Initialize the sensor entity."""
         super().__init__(coordinator, description.key)
         self.entity_description = description
+
+    @property
+    @override
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement."""
+        if self.entity_description.unit_fn is not None:
+            return self.entity_description.unit_fn(self.coordinator.data)
+        return super().native_unit_of_measurement
 
     @property
     @override

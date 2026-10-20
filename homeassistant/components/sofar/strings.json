@@ -6,22 +6,57 @@
     },
     "error": {
       "cannot_connect": "Failed to connect: {error}",
-      "unrecognized_inverter": "The device answered, but its serial number doesn't match a known Sofar model."
+      "inverter_silent": "The adapter is reachable, but the inverter behind it did not answer. A PV inverter switches off without sunlight, so try again in daylight. Otherwise, check the unit ID and the adapter's serial settings.",
+      "unrecognized_inverter": "The device answered, but neither its serial number nor its register masks identify a known Sofar model."
     },
     "step": {
       "reconfigure": {
+        "description": "Update where this inverter is reached, for example after it moved to another address or its RS485 bus was rewired. Moving it between a network and a serial connection keeps this entry and its history.\n\nIt has to stay the same inverter: the serial number that answers is checked against the one this entry was set up with.",
+        "menu_options": {
+          "reconfigure_serial": "[%key:component::sofar::config::step::user::menu_options::serial%]",
+          "reconfigure_tcp": "[%key:component::sofar::config::step::user::menu_options::tcp%]"
+        }
+      },
+      "reconfigure_serial": {
+        "data": {
+          "baudrate": "[%key:component::sofar::config::step::serial::data::baudrate%]",
+          "device": "[%key:component::sofar::config::step::serial::data::device%]",
+          "unit_id": "[%key:component::sofar::config::step::tcp::data::unit_id%]"
+        },
+        "data_description": {
+          "baudrate": "[%key:component::sofar::config::step::serial::data_description::baudrate%]",
+          "device": "[%key:component::sofar::config::step::serial::data_description::device%]",
+          "unit_id": "[%key:component::sofar::config::step::tcp::data_description::unit_id%]"
+        },
+        "description": "Reach this inverter over a serial port wired to its RS485 terminals."
+      },
+      "reconfigure_tcp": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "unit_id": "Modbus unit ID"
+          "unit_id": "[%key:component::sofar::config::step::tcp::data::unit_id%]"
         },
         "data_description": {
-          "host": "[%key:component::sofar::config::step::user::data_description::host%]",
-          "port": "[%key:component::sofar::config::step::user::data_description::port%]",
-          "unit_id": "[%key:component::sofar::config::step::user::data_description::unit_id%]"
-        }
+          "host": "[%key:component::sofar::config::step::tcp::data_description::host%]",
+          "port": "[%key:component::sofar::config::step::tcp::data_description::port%]",
+          "unit_id": "[%key:component::sofar::config::step::tcp::data_description::unit_id%]"
+        },
+        "description": "Reach this inverter over the network, either directly or through a Modbus TCP bridge."
       },
-      "user": {
+      "serial": {
+        "data": {
+          "baudrate": "Baud rate",
+          "device": "Serial port",
+          "unit_id": "[%key:component::sofar::config::step::tcp::data::unit_id%]"
+        },
+        "data_description": {
+          "baudrate": "The speed of the RS485 bus, as set on the inverter. The Sofar default is 9600.",
+          "device": "The serial port the inverter's RS485 bus is wired to. Ports shared over the network by a serial proxy, such as an ESPHome device, are listed here alongside the local ones.",
+          "unit_id": "[%key:component::sofar::config::step::tcp::data_description::unit_id%]"
+        },
+        "description": "Set up an inverter wired to a serial port over RS485. The inverter model and register map are detected automatically from its serial number."
+      },
+      "tcp": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
@@ -32,7 +67,14 @@
           "port": "The Modbus TCP port to connect on.",
           "unit_id": "The inverter's Modbus unit ID, also called its Modbus device address."
         },
-        "description": "Connect over Modbus TCP. The inverter model and register map are detected automatically from its serial number."
+        "description": "Set up an inverter reached over the network, either directly or through a Modbus TCP bridge. The inverter model and register map are detected automatically from its serial number."
+      },
+      "user": {
+        "description": "A Sofar inverter can be set up in Home Assistant in two different ways.\n\nYou can reach it over the network, which covers a Modbus TCP bridge or a stick that speaks Modbus TCP, or over a serial port its RS485 terminals are wired to, which covers ports shared over the network by a serial proxy.",
+        "menu_options": {
+          "serial": "Serial port (Modbus RTU)",
+          "tcp": "Network (Modbus TCP)"
+        }
       }
     }
   },
@@ -205,6 +247,9 @@
           "ternary": "Ternary"
         }
       },
+      "bat_config_charge_cutoff_soc": {
+        "name": "Charge cut-off state of charge"
+      },
       "bat_config_charging_voltage": {
         "name": "Battery config charging voltage"
       },
@@ -366,6 +411,12 @@
       "module_temperature_2": {
         "name": "Module temperature 2"
       },
+      "off_grid_discharge_cutoff_soc": {
+        "name": "Off-grid discharge cut-off state of charge"
+      },
+      "off_grid_recovery_soc": {
+        "name": "Off-grid discharge recovery state of charge"
+      },
       "offgrid_active_power_output": {
         "name": "Off-grid active power output"
       },
@@ -458,6 +509,9 @@
       },
       "offgrid_voltage_output_l2n": {
         "name": "Off-grid voltage output L2N"
+      },
+      "on_grid_discharge_cutoff_soc": {
+        "name": "On-grid discharge cut-off state of charge"
       },
       "passive_eps_wait_time": {
         "name": "EPS wait time"
@@ -565,8 +619,10 @@
           "emergency_power_supply": "Emergency power supply",
           "grid_connected": "Grid connected",
           "permanent_fault": "Permanent fault",
+          "pid_state": "PID",
           "recoverable_fault": "Recoverable fault",
           "self_charging": "Self charging",
+          "svg_state": "SVG",
           "upgrading": "Upgrading",
           "waiting": "Waiting"
         }
@@ -617,7 +673,7 @@
       "message": "No component answered."
     },
     "unrecognized_inverter_model": {
-      "message": "Unrecognized Sofar inverter model for {title}."
+      "message": "Neither the serial number nor the register masks identify the Sofar inverter model."
     },
     "unsupported_action": {
       "message": "{title} does not support this action."

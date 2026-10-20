@@ -3,8 +3,8 @@
 from dataclasses import dataclass
 from typing import Any, Final, TypedDict
 
+import probatio
 from pylutron_caseta.smartbridge import Smartbridge
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -30,7 +30,7 @@ class LutronKeypadData:
     keypads: dict[int, LutronKeypad]
     buttons: dict[int, LutronButton]
     button_names_to_leap: dict[int, dict[str, int]]
-    trigger_schemas: dict[int, vol.Schema]
+    trigger_schemas: dict[int, probatio.Schema]
 
 
 class LutronKeypad(TypedDict):

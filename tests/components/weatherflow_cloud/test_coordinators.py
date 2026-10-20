@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, Mock
 
 from aiohttp import ClientResponseError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from weatherflow4py.models.ws.types import EventType
 from weatherflow4py.models.ws.websocket_request import (
     ListenStartMessage,
@@ -23,8 +24,6 @@ from homeassistant.components.weatherflow_cloud.coordinator import (
 from homeassistant.config_entries import ConfigEntryAuthFailed
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
-
-from tests.common import MockConfigEntry
 
 
 async def test_wind_coordinator_setup(

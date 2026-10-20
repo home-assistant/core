@@ -4,13 +4,12 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.madvr.const import DEFAULT_NAME, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 from .const import MOCK_CONFIG, MOCK_MAC
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -39,7 +38,6 @@ def mock_madvr_client() -> Generator[AsyncMock]:
         client.connected.return_value = True
         client.is_device_connectable.return_value = True
         client.loop = AsyncMock()
-        client.tasks = AsyncMock()
         client.set_update_callback = MagicMock()
 
         # mock the property to be off on startup (which it is)

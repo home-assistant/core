@@ -6,21 +6,29 @@ from typing import Any
 from unittest.mock import patch
 
 import aiounifi
+from aiounifi import EndpointNotFound
+from aiounifi.interfaces.api_handlers import ItemEvent
+from aiounifi.models.message import MessageKey
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
-from homeassistant.components.unifi.const import DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.unifi.const import CONF_BLOCK_CLIENT, DOMAIN
+from homeassistant.components.unifi.coordinator import IDLE_POLL_INTERVAL, POLL_INTERVAL
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.components.unifi.hub import get_unifi_api
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_HOST, EVENT_STATE_REPORTED, Platform
+from homeassistant.core import Event, EventStateReportedData, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
-from .conftest import ConfigEntryFactoryType, WebsocketStateManager
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
+from .conftest import (
+    ConfigEntryFactoryType,
+    WebsocketMessageMock,
+    WebsocketStateManager,
+)
 
 
 async def test_hub_setup(
@@ -56,6 +64,436 @@ async def test_hub_setup(
     assert device_entry.sw_version == "7.4.162"
 
 
+async def test_coordinators_preserve_handler_update_sources(
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Ensure coordinator polling matches the handler's existing update source."""
+    loader = config_entry_setup.runtime_data.entity_loader
+    api = config_entry_setup.runtime_data.api
+
+    clients_coordinator = loader.get_data_update_coordinator(api.clients)
+    devices_coordinator = loader.get_data_update_coordinator(api.devices)
+    assert clients_coordinator.update_interval is None
+    assert devices_coordinator.update_interval is None
+
+    assert loader.get_data_update_coordinator(api.ports) is devices_coordinator
+    assert loader.get_data_update_coordinator(api.outlets) is devices_coordinator
+
+    for handler in (
+        api.object_oriented_network_configs,
+        api.traffic_rules,
+        api.traffic_routes,
+    ):
+        coordinator = loader.get_data_update_coordinator(handler)
+        assert coordinator.update_interval == IDLE_POLL_INTERVAL
+
+
+async def test_get_data_update_coordinator_requires_registered_handler(
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Ensure a handler without a coordinator fails at lookup time."""
+    loader = config_entry_setup.runtime_data.entity_loader
+    api = config_entry_setup.runtime_data.api
+
+    with pytest.raises(KeyError):
+        loader.get_data_update_coordinator(api.sites)
+
+
+async def test_polling_coordinator_refreshes_after_interval(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Ensure polling coordinators refresh when their interval elapses."""
+    loader = config_entry_setup.runtime_data.entity_loader
+    api = config_entry_setup.runtime_data.api
+    coordinator = loader.get_data_update_coordinator(
+        api.object_oriented_network_configs
+    )
+
+    assert coordinator.update_interval == IDLE_POLL_INTERVAL
+
+    with patch.object(coordinator.handler, "items", return_value=[("id", object())]):
+        async_fire_time_changed(hass, dt_util.utcnow() + IDLE_POLL_INTERVAL)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert coordinator.update_interval == POLL_INTERVAL
+
+    with patch.object(
+        api.object_oriented_network_configs,
+        "update",
+        wraps=api.object_oriented_network_configs.update,
+    ) as mock_update:
+        async_fire_time_changed(hass, dt_util.utcnow() + POLL_INTERVAL)
+        await hass.async_block_till_done()
+
+    assert mock_update.call_count >= 1
+
+
+async def test_endpoint_not_found_disables_object_oriented_network_config_polling(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Ensure an unavailable optional endpoint stops polling after one warning."""
+    loader = config_entry_setup.runtime_data.entity_loader
+    api = config_entry_setup.runtime_data.api
+    coordinator = loader.get_data_update_coordinator(
+        api.object_oriented_network_configs
+    )
+    traffic_rules_coordinator = loader.get_data_update_coordinator(api.traffic_rules)
+
+    with patch.object(
+        coordinator.handler,
+        "update",
+        side_effect=EndpointNotFound("endpoint not found"),
+    ) as mock_update:
+        async_fire_time_changed(hass, dt_util.utcnow() + IDLE_POLL_INTERVAL)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert coordinator.update_interval is None
+        assert coordinator.last_update_success is False
+        assert mock_update.call_count == 1
+
+        async_fire_time_changed(hass, dt_util.utcnow() + POLL_INTERVAL)
+        await hass.async_block_till_done()
+
+        assert mock_update.call_count == 1
+
+        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+
+    assert mock_update.call_count == 2
+    assert traffic_rules_coordinator.update_interval == IDLE_POLL_INTERVAL
+    assert (
+        caplog.text.count(
+            "UniFi ObjectOrientedNetworkConfigs endpoint is unavailable; disabling polling"
+        )
+        == 1
+    )
+
+
+@pytest.mark.parametrize(
+    "object_oriented_network_config_payload",
+    [
+        [
+            {
+                "id": "69f6b0a5e0e3ee2d4614cb5c",
+                "enabled": True,
+                "name": "Nintendo Switch - Block Internet",
+                "target_type": "CLIENTS",
+                "targets": ["00:00:00:00:00:01"],
+                "qos": {"enabled": False},
+                "route": {"enabled": False},
+                "secure": {
+                    "enabled": True,
+                    "internet": {
+                        "mode": "TURN_OFF_INTERNET",
+                        "schedule": {"mode": "ALWAYS"},
+                    },
+                },
+            }
+        ]
+    ],
+)
+async def test_entity_unavailable_on_polling_coordinator_failure(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Ensure polling failures make entities unavailable until recovery."""
+    entity_id = "switch.unifi_network_nintendo_switch_block_internet"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != "unavailable"
+
+    coordinator = (
+        config_entry_setup.runtime_data.entity_loader.get_data_update_coordinator(
+            config_entry_setup.runtime_data.api.object_oriented_network_configs
+        )
+    )
+
+    with patch.object(
+        coordinator.handler,
+        "update",
+        side_effect=RuntimeError("Polling error"),
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + POLL_INTERVAL)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert coordinator.last_update_success is False
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "unavailable"
+
+    async_fire_time_changed(hass, dt_util.utcnow() + POLL_INTERVAL)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert coordinator.last_update_success is True
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != "unavailable"
+
+
+async def test_websocket_updates_notify_coordinator(
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_message: WebsocketMessageMock,
+) -> None:
+    """Ensure websocket handler updates are forwarded through the coordinator."""
+    coordinator = (
+        config_entry_setup.runtime_data.entity_loader.get_data_update_coordinator(
+            config_entry_setup.runtime_data.api.clients
+        )
+    )
+    assert coordinator is not None
+
+    with patch.object(
+        coordinator, "async_set_updated_data", wraps=coordinator.async_set_updated_data
+    ) as set_updated_data:
+        mock_websocket_message(
+            message=MessageKey.CLIENT,
+            data={
+                "hostname": "client",
+                "ip": "10.0.0.1",
+                "is_wired": True,
+                "last_seen": 1562600145,
+                "mac": "00:00:00:00:00:01",
+                "name": "Client",
+            },
+        )
+
+    set_updated_data.assert_called_once_with((ItemEvent.ADDED, "00:00:00:00:00:01"))
+
+
+async def test_coordinator_filters_websocket_listeners_and_broadcasts_polling(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_message: WebsocketMessageMock,
+) -> None:
+    """Ensure websocket updates filter listeners and polling updates broadcast."""
+    clients_coordinator = (
+        config_entry_setup.runtime_data.entity_loader.get_data_update_coordinator(
+            config_entry_setup.runtime_data.api.clients
+        )
+    )
+    client_calls: list[str] = []
+    other_calls: list[str] = []
+
+    @callback
+    def client_listener() -> None:
+        client_calls.append("called")
+
+    @callback
+    def other_listener() -> None:
+        other_calls.append("called")
+
+    remove_client_listener = clients_coordinator.async_add_listener(
+        client_listener, context=("00:00:00:00:00:01",)
+    )
+    remove_other_listener = clients_coordinator.async_add_listener(
+        other_listener, context=("00:00:00:00:00:02",)
+    )
+
+    mock_websocket_message(
+        message=MessageKey.CLIENT,
+        data={
+            "hostname": "client",
+            "ip": "10.0.0.1",
+            "is_wired": True,
+            "last_seen": 1562600145,
+            "mac": "00:00:00:00:00:01",
+            "name": "Client",
+        },
+    )
+
+    assert client_calls == ["called"]
+    assert other_calls == []
+
+    polling_coordinator = (
+        config_entry_setup.runtime_data.entity_loader.get_data_update_coordinator(
+            config_entry_setup.runtime_data.api.object_oriented_network_configs
+        )
+    )
+    polling_calls: list[str] = []
+    other_polling_calls: list[str] = []
+
+    @callback
+    def polling_listener() -> None:
+        polling_calls.append("called")
+
+    @callback
+    def other_polling_listener() -> None:
+        other_polling_calls.append("called")
+
+    remove_polling_listener = polling_coordinator.async_add_listener(
+        polling_listener, context=("any-object",)
+    )
+    remove_other_polling_listener = polling_coordinator.async_add_listener(
+        other_polling_listener, context=("another-object",)
+    )
+    polling_coordinator.async_set_updated_data(None)
+    await hass.async_block_till_done()
+
+    assert polling_calls == ["called"]
+    assert other_polling_calls == ["called"]
+
+    remove_client_listener()
+    remove_other_listener()
+    remove_polling_listener()
+    remove_other_polling_listener()
+
+
+@pytest.mark.parametrize(
+    "config_entry_options",
+    [{CONF_BLOCK_CLIENT: ["00:00:00:00:00:01", "00:00:00:00:00:02"]}],
+)
+@pytest.mark.parametrize(
+    "client_payload",
+    [
+        [
+            {
+                "blocked": True,
+                "hostname": "client_1",
+                "ip": "10.0.0.1",
+                "is_wired": True,
+                "last_seen": 1562600145,
+                "mac": "00:00:00:00:00:01",
+                "name": "Client 1",
+            },
+            {
+                "blocked": True,
+                "hostname": "client_2",
+                "ip": "10.0.0.2",
+                "is_wired": True,
+                "last_seen": 1562600145,
+                "mac": "00:00:00:00:00:02",
+                "name": "Client 2",
+            },
+        ]
+    ],
+)
+async def test_coordinator_update_only_refreshes_changed_entity(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_message: WebsocketMessageMock,
+) -> None:
+    """Ensure a coordinator update for one object does not refresh unrelated entities."""
+    changed_entity_id = "switch.client_1_blocked"
+    other_entity_id = "switch.client_2_blocked"
+    assert hass.states.get(changed_entity_id) is not None
+    assert hass.states.get(other_entity_id) is not None
+
+    written_entity_ids: list[str] = []
+
+    @callback
+    def track_state_reported(event: Event[EventStateReportedData]) -> None:
+        written_entity_ids.append(event.data["entity_id"])
+
+    @callback
+    def filter_tracked_entities(data: EventStateReportedData) -> bool:
+        return data["entity_id"] in (changed_entity_id, other_entity_id)
+
+    hass.bus.async_listen(
+        EVENT_STATE_REPORTED, track_state_reported, filter_tracked_entities
+    )
+
+    mock_websocket_message(
+        message=MessageKey.CLIENT,
+        data={
+            "hostname": "client_1",
+            "ip": "10.0.0.1",
+            "is_wired": True,
+            "last_seen": 1562600146,
+            "mac": "00:00:00:00:00:01",
+            "name": "Client 1",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert changed_entity_id in written_entity_ids
+    assert other_entity_id not in written_entity_ids
+
+
+OLD_SITE_ID = "5f0a1b2c3d4e5f6a7b8c9d0e"
+NEW_SITE_ID = "0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d"
+
+
+def site(name: str, site_id: str) -> list[dict[str, Any]]:
+    """Return a site payload."""
+    return [{"desc": "Site name", "name": name, "role": "admin", "_id": site_id}]
+
+
+@pytest.mark.parametrize("site_payload", [site("site_id", NEW_SITE_ID)])
+async def test_site_id_changed(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Follow a site from its ObjectId to the UUID UniFi Network 11 gives it."""
+    hass.config_entries.async_update_entry(config_entry, unique_id=OLD_SITE_ID)
+    devices = {
+        domain: device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id, identifiers={(domain, OLD_SITE_ID)}
+        )
+        for domain in (DOMAIN, SWITCH_DOMAIN)
+    }
+
+    await config_entry_factory()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.unique_id == NEW_SITE_ID
+    for domain, device in devices.items():
+        assert device_registry.async_get_device_by_identifier(
+            (domain, NEW_SITE_ID), config_entry.entry_id
+        ) == device_registry.async_get(device.id)
+
+
+@pytest.mark.parametrize(
+    ("unique_id", "site_payload", "other_entry_unique_id"),
+    [
+        pytest.param(
+            OLD_SITE_ID,
+            site("other", NEW_SITE_ID),
+            "2",
+            id="no_site_with_configured_name",
+        ),
+        pytest.param(
+            OLD_SITE_ID,
+            site("site_id", NEW_SITE_ID),
+            NEW_SITE_ID,
+            id="new_id_already_configured",
+        ),
+        pytest.param(
+            "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+            site("site_id", NEW_SITE_ID),
+            "2",
+            id="old_id_not_object_id",
+        ),
+        pytest.param(
+            OLD_SITE_ID,
+            site("site_id", "6f0a1b2c3d4e5f6a7b8c9d0e"),
+            "2",
+            id="new_id_not_uuid",
+        ),
+    ],
+)
+async def test_site_id_changed_not_followed(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
+    unique_id: str,
+    other_entry_unique_id: str,
+) -> None:
+    """Keep the entry untouched unless it is the ObjectId to UUID site change."""
+    hass.config_entries.async_update_entry(config_entry, unique_id=unique_id)
+    MockConfigEntry(domain=DOMAIN, unique_id=other_entry_unique_id).add_to_hass(hass)
+
+    await config_entry_factory()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.unique_id == unique_id
+
+
 async def test_reset_after_successful_setup(
     hass: HomeAssistant, config_entry_setup: MockConfigEntry
 ) -> None:
@@ -78,6 +516,7 @@ async def test_reset_fails(
     ):
         assert not await hass.config_entries.async_unload(config_entry_setup.entry_id)
         assert config_entry_setup.state is ConfigEntryState.FAILED_UNLOAD
+        assert config_entry_setup.reason == "Failed to unload UniFi Network"
 
 
 @pytest.mark.usefixtures("mock_device_registry")

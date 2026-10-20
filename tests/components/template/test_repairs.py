@@ -2,6 +2,12 @@
 
 import attr
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.template.const import DOMAIN
 from homeassistant.const import CONF_DEVICE_ID
@@ -13,10 +19,6 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import ClientSessionGenerator
 
 COMPOSITE_ID = "composite00000000000000000000ab"
 TEMPLATE_ENTITY_ID = "sensor.my_template"
@@ -91,16 +93,20 @@ async def test_composite_device_id_creates_issue(
     """Test a composite device id in the config entry options creates an issue."""
     entry = await _setup_template_entry(hass, COMPOSITE_ID)
 
-    issue = issue_registry.async_get_issue(
-        DOMAIN, f"composite_device_id_{entry.entry_id}"
-    )
+    issue_id = f"composite_device_id_{entry.entry_id}"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
+    assert issue.config_entry_id == entry.entry_id
     assert issue.translation_placeholders == {"name": "My template"}
 
     # The template entity is not linked to the composite device
     entity_entry = entity_registry.async_get(TEMPLATE_ENTITY_ID)
     assert entity_entry is not None
     assert entity_entry.device_id is None
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 async def test_live_device_id_no_issue(
@@ -285,22 +291,6 @@ async def test_composite_device_id_repair_flow_entry_removed(
     result = await process_repair_fix_flow(client, result["flow_id"], json={})
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "entry_removed"
-
-
-@pytest.mark.usefixtures("split_devices")
-async def test_issue_deleted_on_entry_removal(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test the issue is deleted when the config entry is removed."""
-    entry = await _setup_template_entry(hass, COMPOSITE_ID)
-    issue_id = f"composite_device_id_{entry.entry_id}"
-    assert issue_registry.async_get_issue(DOMAIN, issue_id)
-
-    await hass.config_entries.async_remove(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
 @pytest.mark.usefixtures("split_devices")

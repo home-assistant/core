@@ -26,7 +26,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.CAMERA]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.CAMERA, Platform.EVENT]
 
 
 @dataclass
@@ -46,7 +46,7 @@ class HikvisionData:
 type HikvisionConfigEntry = ConfigEntry[HikvisionData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) -> None:
     """Set up Hikvision from a config entry."""
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
@@ -160,23 +160,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
 
     # Register the main device before platforms that use via_device
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, device_id)},
-        name=device_name,
-        manufacturer="Hikvision",
-        model=device_type,
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, device_id)},
+            name=device_name,
+            manufacturer="Hikvision",
+            model=device_type,
+        ),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        # Stop the event stream
-        await hass.async_add_executor_job(entry.runtime_data.camera.disconnect)
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    # Stop the event stream
+    await hass.async_add_executor_job(entry.runtime_data.camera.disconnect)

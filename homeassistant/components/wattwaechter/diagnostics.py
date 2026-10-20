@@ -12,8 +12,17 @@ from homeassistant.core import HomeAssistant
 from .coordinator import WattwaechterConfigEntry
 
 # The device exposes network identifiers as system info values; redact the
-# credential and hardware/network identifiers. Local IPs are kept for support.
-TO_REDACT = {CONF_TOKEN, CONF_MAC, "ssid", "mac_address", "mdns_name"}
+# credential and hardware/network identifiers, and the meter serial number
+# register. Local IPs are kept for support.
+TO_REDACT = {
+    CONF_TOKEN,
+    CONF_MAC,
+    "ssid",
+    "mac_address",
+    "mdns_name",
+    "0.0.0",
+    "96.1.0",
+}
 
 
 def _flatten_system(system: SystemInfo) -> dict[str, dict[str, Any]]:

@@ -18,7 +18,7 @@ from homematicip.exceptions.connection_exceptions import (
 import homeassistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.httpx_client import get_async_client
 
@@ -105,6 +105,9 @@ class HomematicipAuth:
             _LOGGER.debug("Connection request result: %s", result)
         except HmipConnectionError:
             return None
+        # a rejected SGTIN or PIN comes back as a failed result, not an exception
+        if not result.success:
+            return None
         return auth
 
 
@@ -136,6 +139,8 @@ class HomematicipHAP:
                 self.config_entry.data.get(HMIPC_NAME),
             )
 
+        except HmipAuthenticationError as err:
+            raise ConfigEntryAuthFailed from err
         except HmipcConnectionError as err:
             raise ConfigEntryNotReady from err
         except Exception as err:  # noqa: BLE001
@@ -165,11 +170,11 @@ class HomematicipHAP:
             if home.label != self.config_entry.unique_id
             else f"Home-{home.label}"
         )
-        dr.async_get(self.hass).async_get_or_create(
+        dr.async_get(self.hass).async_get_or_create_device(
             config_entry_id=self.config_entry.entry_id,
-            identifiers={(DOMAIN, home.id)},
-            manufacturer="eQ-3",
-            name=hapname,
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, home.id)}, manufacturer="eQ-3", name=hapname
+            ),
         )
 
     @callback
@@ -409,6 +414,8 @@ class HomematicipHAP:
             context = await build_context_async(hass, hapid, authtoken)
             home.init_with_context(context, True, get_async_client(hass))
             await home.get_current_state_async()
+        except HmipAuthenticationError:
+            raise
         except HmipConnectionError as err:
             raise HmipcConnectionError from err
         home.on_update(self.async_update)

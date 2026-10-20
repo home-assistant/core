@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator, Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hikvision import PLATFORMS
 from homeassistant.components.hikvision.const import DOMAIN
@@ -15,8 +16,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-
-from tests.common import MockConfigEntry
 
 TEST_HOST = "192.168.1.100"
 TEST_PORT = 80
@@ -121,8 +120,10 @@ def mock_hikcamera(mock_hik_get_channels: MagicMock) -> Generator[MagicMock]:
             None,
             None,
             "2024-01-01T00:00:00Z",
+            None,
         )
         camera.get_event_triggers.return_value = {}
+        camera.stream_connected = True
 
         # pyHik 0.4.0 methods
         camera.get_channels.return_value = [1]

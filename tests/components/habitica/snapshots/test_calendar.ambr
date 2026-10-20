@@ -20,51 +20,6 @@
     dict({
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
-        'date': '2024-09-22',
-      }),
-      'location': None,
-      'recurrence_id': None,
-      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
-      'start': dict({
-        'date': '2024-09-21',
-      }),
-      'status': None,
-      'summary': '5 Minuten ruhig durchatmen',
-      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
-    }),
-    dict({
-      'description': 'Ein einstündiges Workout im Fitnessstudio absolvieren.',
-      'end': dict({
-        'date': '2024-09-22',
-      }),
-      'location': None,
-      'recurrence_id': None,
-      'rrule': 'FREQ=WEEKLY;BYDAY=WE,SA,SU',
-      'start': dict({
-        'date': '2024-09-21',
-      }),
-      'status': None,
-      'summary': 'Fitnessstudio besuchen',
-      'uid': '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1',
-    }),
-    dict({
-      'description': 'Klicke um Änderungen zu machen!',
-      'end': dict({
-        'date': '2024-09-23',
-      }),
-      'location': None,
-      'recurrence_id': None,
-      'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR,SA,SU',
-      'start': dict({
-        'date': '2024-09-22',
-      }),
-      'status': None,
-      'summary': 'Zahnseide benutzen',
-      'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
-    }),
-    dict({
-      'description': 'Klicke um Deinen Terminplan festzulegen!',
-      'end': dict({
         'date': '2024-09-23',
       }),
       'location': None,
@@ -669,21 +624,6 @@
     dict({
       'description': 'Klicke um Deinen Terminplan festzulegen!',
       'end': dict({
-        'dateTime': '2024-09-21T21:00:00+02:00',
-      }),
-      'location': None,
-      'recurrence_id': None,
-      'rrule': None,
-      'start': dict({
-        'dateTime': '2024-09-21T20:00:00+02:00',
-      }),
-      'status': None,
-      'summary': '5 Minuten ruhig durchatmen',
-      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
-    }),
-    dict({
-      'description': 'Klicke um Deinen Terminplan festzulegen!',
-      'end': dict({
         'dateTime': '2024-09-22T21:00:00+02:00',
       }),
       'location': None,
@@ -1033,11 +973,11 @@
     'attributes': ReadOnlyDict({
       <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: True,
       <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: 'Klicke um Deinen Terminplan festzulegen!',
-      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-09-22 00:00:00',
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-09-23 00:00:00',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Dailies',
       <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
       <CalendarEntityStateAttribute.MESSAGE: 'message'>: '5 Minuten ruhig durchatmen',
-      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-09-21 00:00:00',
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-09-22 00:00:00',
       'yesterdaily': False,
     }),
     'context': <ANY>,
@@ -1045,7 +985,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_calendar_platform[calendar.test_user_daily_reminders-entry]
@@ -1090,11 +1030,11 @@
     'attributes': ReadOnlyDict({
       <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: False,
       <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: 'Klicke um Deinen Terminplan festzulegen!',
-      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-09-21 21:00:00',
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-09-22 21:00:00',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Daily reminders',
       <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
       <CalendarEntityStateAttribute.MESSAGE: 'message'>: '5 Minuten ruhig durchatmen',
-      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-09-21 20:00:00',
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-09-22 20:00:00',
     }),
     'context': <ANY>,
     'entity_id': 'calendar.test_user_daily_reminders',
