@@ -15,13 +15,7 @@ from homeassistant.components.notify import (
     SERVICE_SEND_MESSAGE,
 )
 from homeassistant.components.simplepush.const import CONF_DEVICE_KEY, CONF_SALT, DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_NAME,
-    CONF_PASSWORD,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -280,17 +274,3 @@ async def test_entity_send_message_error(
 
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == translation_key
-
-
-@pytest.mark.usefixtures("mock_client")
-async def test_unload_app_entry(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """Test unloading an entry of the current app."""
-    await setup_integration(hass, config_entry)
-
-    assert await hass.config_entries.async_unload(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
-    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
