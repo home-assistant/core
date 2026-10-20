@@ -99,7 +99,7 @@ _ENVIRONMENT_STRICT: HassKey[TemplateEnvironment] = HassKey(
 _HASS_LOADER = "template.hass_loader"
 
 # Match "simple" ints and floats. -1.0, 1, +5, 5.0
-_IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?$")
+_IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?$", re.ASCII)
 
 EVAL_CACHE_SIZE = 512
 
