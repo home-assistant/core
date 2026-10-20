@@ -4,13 +4,16 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 INDOOR_AIR_QUALITY_ENTITY_ID = "sensor.001122334455_indoor_air_quality"
 INDOOR_AIR_TEMPERATURE_ENTITY_ID = "sensor.001122334455_indoor_air_temperature"

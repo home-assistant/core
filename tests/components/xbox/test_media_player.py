@@ -8,6 +8,15 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 from httpx2 import HTTPStatusError, RequestError, TimeoutException
 import pytest
+from pytest_homeassistant.common import (
+    AsyncMock,
+    Mock,
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import MagicMock, WebSocketGenerator
 from pythonxbox.api.provider.catalog.models import CatalogResponse
 from pythonxbox.api.provider.smartglass.models import (
     CommandResponse,
@@ -44,16 +53,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import (
-    AsyncMock,
-    Mock,
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
-from tests.typing import MagicMock, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)

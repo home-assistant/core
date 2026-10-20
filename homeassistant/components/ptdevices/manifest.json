@@ -1,6 +1,7 @@
 {
   "domain": "ptdevices",
   "name": "PTDevices",
+  "categories": ["water"],
   "codeowners": ["@ParemTech-Inc", "@frogman85978"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ptdevices",

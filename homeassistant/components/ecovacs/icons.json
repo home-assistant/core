@@ -27,14 +27,29 @@
       "reset_lifespan_dust_bag": {
         "default": "mdi:delete-outline"
       },
+      "reset_lifespan_dust_bucket": {
+        "default": "mdi:bucket-outline"
+      },
+      "reset_lifespan_dust_case_heap": {
+        "default": "mdi:air-filter"
+      },
+      "reset_lifespan_dust_container_filter": {
+        "default": "mdi:air-filter"
+      },
       "reset_lifespan_filter": {
         "default": "mdi:air-filter"
       },
       "reset_lifespan_hand_filter": {
         "default": "mdi:air-filter"
       },
+      "reset_lifespan_heavy_duty_cleaning_solution": {
+        "default": "mdi:flask-outline"
+      },
       "reset_lifespan_lens_brush": {
         "default": "mdi:broom"
+      },
+      "reset_lifespan_mop_washing_tray": {
+        "default": "mdi:tray"
       },
       "reset_lifespan_round_mop": {
         "default": "mdi:broom"
@@ -47,6 +62,9 @@
       },
       "reset_lifespan_station_filter": {
         "default": "mdi:air-filter"
+      },
+      "reset_lifespan_strainer": {
+        "default": "mdi:filter-outline"
       },
       "reset_lifespan_trimmer_brush": {
         "default": "mdi:broom"
@@ -125,14 +143,29 @@
       "lifespan_dust_bag": {
         "default": "mdi:delete-outline"
       },
+      "lifespan_dust_bucket": {
+        "default": "mdi:bucket-outline"
+      },
+      "lifespan_dust_case_heap": {
+        "default": "mdi:air-filter"
+      },
+      "lifespan_dust_container_filter": {
+        "default": "mdi:air-filter"
+      },
       "lifespan_filter": {
         "default": "mdi:air-filter"
       },
       "lifespan_hand_filter": {
         "default": "mdi:air-filter"
       },
+      "lifespan_heavy_duty_cleaning_solution": {
+        "default": "mdi:flask-outline"
+      },
       "lifespan_lens_brush": {
         "default": "mdi:broom"
+      },
+      "lifespan_mop_washing_tray": {
+        "default": "mdi:tray"
       },
       "lifespan_round_mop": {
         "default": "mdi:broom"
@@ -145,6 +178,9 @@
       },
       "lifespan_station_filter": {
         "default": "mdi:air-filter"
+      },
+      "lifespan_strainer": {
+        "default": "mdi:filter-outline"
       },
       "lifespan_trimmer_brush": {
         "default": "mdi:broom"

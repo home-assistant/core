@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from victron_mqtt import Hub as VictronVenusHub
 from victron_mqtt.testing import create_mocked_hub
 
@@ -23,8 +24,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .const import MOCK_HOST, MOCK_INSTALLATION_ID, MOCK_MODEL, MOCK_SERIAL
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

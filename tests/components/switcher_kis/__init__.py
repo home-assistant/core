@@ -1,10 +1,10 @@
 """Test cases and object for the Switcher integration tests."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.switcher_kis.const import DOMAIN
 from homeassistant.const import CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def init_integration(

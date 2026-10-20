@@ -4,12 +4,11 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.pjlink.const import DOMAIN
 
 from .const import DEFAULT_DATA
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

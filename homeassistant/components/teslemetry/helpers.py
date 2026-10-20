@@ -136,7 +136,7 @@ async def handle_vehicle_command(command: Awaitable[dict[str, Any]]) -> Any:
         )
     if (result := response.get("result")) is not True:
         if reason := response.get("reason"):
-            if reason in ("already_set", "not_charging", "requested"):
+            if reason in ("already_set", "is_charging", "not_charging", "requested"):
                 # Reason is acceptable
                 return result
             # Result of false with reason

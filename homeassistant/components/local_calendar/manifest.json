@@ -1,6 +1,7 @@
 {
   "domain": "local_calendar",
   "name": "Local calendar",
+  "categories": ["productivity_information.calendars_todos"],
   "codeowners": ["@allenporter"],
   "config_flow": true,
   "dependencies": ["file_upload"],
