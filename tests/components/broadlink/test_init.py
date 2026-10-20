@@ -1,5 +1,7 @@
 """Tests for the Broadlink integration setup."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.broadlink.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
@@ -7,8 +9,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import get_device
-
-from tests.common import MockConfigEntry
 
 
 async def test_migrate_remove_clock_entities(

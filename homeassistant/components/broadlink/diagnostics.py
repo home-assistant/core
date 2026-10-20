@@ -27,11 +27,17 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    device = hass.data[BROADLINK_DATA].devices[entry.entry_id]
-    assert device.update_manager is not None
-    coordinator = device.update_manager.coordinator
     diagnostics: dict[str, Any] = {
         "entry": async_redact_data(entry.data, TO_REDACT),
+        "options": dict(entry.options),
+    }
+    # The device is only registered once its setup succeeds.
+    if (device := hass.data[BROADLINK_DATA].devices.get(entry.entry_id)) is None:
+        return diagnostics
+
+    assert device.update_manager is not None
+    coordinator = device.update_manager.coordinator
+    diagnostics |= {
         "device": {
             "type": device.api.type,
             "devtype": device.api.devtype,

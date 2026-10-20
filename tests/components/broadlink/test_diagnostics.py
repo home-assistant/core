@@ -1,14 +1,15 @@
 """Tests for Broadlink diagnostics."""
 
+import broadlink_async.exceptions as blke
 import pytest
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import get_device
-
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.freeze_time("2026-10-21 12:35:10+00:00")
@@ -41,3 +42,26 @@ async def test_diagnostics(
         await get_diagnostics_for_config_entry(hass, hass_client, mock_setup.entry)
         == snapshot
     )
+
+
+async def test_diagnostics_device_not_loaded(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test diagnostics for an entry whose device failed to set up."""
+    device = get_device("Guest room")
+    mock_api = device.get_mock_api()
+    mock_api.auth.side_effect = blke.NetworkTimeoutError()
+    mock_setup = await device.setup_entry(hass, mock_api=mock_api)
+    assert mock_setup.entry.state is ConfigEntryState.SETUP_RETRY
+
+    assert await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_setup.entry
+    ) == {
+        "entry": {
+            "host": "**REDACTED**",
+            "mac": "**REDACTED**",
+            "type": device.devtype,
+            "timeout": device.timeout,
+        },
+        "options": {},
+    }
