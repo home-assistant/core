@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from powersensor_local import VirtualHousehold
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.powersensor_au.config_flow import PowersensorConfigFlow
 from homeassistant.components.powersensor_au.const import DOMAIN, ROLE_SOLAR
@@ -14,8 +15,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 PLUG_MAC = "aabbccddeeff"
 SENSOR_MAC = "112233445566"

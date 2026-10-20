@@ -1,6 +1,7 @@
 {
   "domain": "powersensor_au",
   "name": "Powersensor",
+  "categories": ["energy.meters_monitoring", "water.meters_leak_detection"],
   "codeowners": ["@bookman-dius", "@jmattsson"],
   "config_flow": true,
   "dependencies": ["zeroconf"],

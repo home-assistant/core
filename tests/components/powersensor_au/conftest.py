@@ -6,12 +6,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from powersensor_local.zeroconf_devices import PowersensorZeroconfDevices
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.powersensor_au.config_flow import PowersensorConfigFlow
 from homeassistant.components.powersensor_au.const import DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 def _make_mock_devices() -> MagicMock:

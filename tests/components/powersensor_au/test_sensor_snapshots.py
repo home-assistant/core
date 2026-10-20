@@ -17,6 +17,7 @@ Coverage targets:
 from collections.abc import Callable, Coroutine
 from typing import Any
 
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.powersensor_au.const import (
@@ -27,8 +28,6 @@ from homeassistant.components.powersensor_au.const import (
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 PLUG_MAC = "aabbccddeeff"
 SENSOR_MAC = "112233445566"
