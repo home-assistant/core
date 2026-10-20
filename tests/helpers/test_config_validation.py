@@ -1476,6 +1476,20 @@ def test_comp_entity_ids() -> None:
             schema(invalid)
 
 
+@pytest.mark.parametrize(
+    "validator",
+    [
+        pytest.param(cv.entity_ids, id="entity_ids"),
+        pytest.param(cv.comp_entity_ids, id="comp_entity_ids"),
+        pytest.param(cv.comp_entity_ids_or_uuids, id="comp_entity_ids_or_uuids"),
+    ],
+)
+def test_comp_entity_ids_rejects_none(validator: Callable[[Any], Any]) -> None:
+    """Test None is rejected and not treated as the 'none' keyword."""
+    with pytest.raises(probatio.Invalid):
+        probatio.Schema(validator)(None)
+
+
 def test_uuid4_hex(caplog: pytest.LogCaptureFixture) -> None:
     """Test uuid validation."""
     schema = probatio.Schema(cv.uuid4_hex)
