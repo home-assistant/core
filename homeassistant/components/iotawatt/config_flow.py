@@ -6,14 +6,9 @@ from typing import Any, override
 from iotawattpy.iotawatt import Iotawatt
 import probatio
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlowWithReload,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import httpx_client
 
@@ -115,36 +110,6 @@ class IOTaWattConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title=data[CONF_HOST], data=data, options={CONF_LEGACY_ENERGY: False}
-        )
-
-    @staticmethod
-    @callback
-    @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> IOTaWattOptionsFlow:
-        """Get the options flow for this handler."""
-        return IOTaWattOptionsFlow()
-
-
-class IOTaWattOptionsFlow(OptionsFlowWithReload):
-    """Handle an options flow for iotawatt."""
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(data=user_input)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required(
-                        CONF_LEGACY_ENERGY,
-                        default=self.config_entry.options.get(CONF_LEGACY_ENERGY, True),
-                    ): bool,
-                }
-            ),
         )
 
 

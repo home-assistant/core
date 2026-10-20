@@ -1,15 +1,13 @@
 """Test the IoTawatt config flow."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import httpx2
-from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.iotawatt.const import CONF_LEGACY_ENERGY, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.setup import async_setup_component
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -209,23 +207,3 @@ async def test_new_entry_defaults_to_lifetime_sensors(hass: HomeAssistant) -> No
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].options == {CONF_LEGACY_ENERGY: False}
-
-
-async def test_options_flow(
-    hass: HomeAssistant, mock_iotawatt: MagicMock, entry: MockConfigEntry
-) -> None:
-    """Test the legacy energy sensors can be toggled via options."""
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {CONF_LEGACY_ENERGY: False}
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options == {CONF_LEGACY_ENERGY: False}
