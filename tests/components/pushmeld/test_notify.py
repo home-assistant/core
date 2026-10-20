@@ -16,6 +16,7 @@ from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TITLE,
     DOMAIN as NOTIFY_DOMAIN,
+    legacy as notify_legacy,
 )
 from homeassistant.components.pushmeld import notify
 from homeassistant.components.pushmeld.const import ATTR_DETAILS, CONF_MAXCODE, DOMAIN
@@ -410,6 +411,88 @@ async def test_stale_setup_error_does_not_fail_retry(
 
     assert entry.state is ConfigEntryState.LOADED
     assert hass.services.has_service(NOTIFY_DOMAIN, "test_channel")
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_stale_discovery_callback_does_not_register_after_retry(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Ignore a discovery callback that belongs to an earlier setup attempt."""
+    monkeypatch.setattr(pushmeld, "NOTIFY_SERVICE_SETUP_TIMEOUT", 0.01)
+    old_callback_started = asyncio.Event()
+    new_callback_started = asyncio.Event()
+    release_old_callback = asyncio.Event()
+    release_new_callback = asyncio.Event()
+    callback_count = 0
+    original_get_service = notify.async_get_service
+
+    async def delayed_get_service(
+        *args: Any,
+        **kwargs: Any,
+    ) -> notify.PushMeldNotificationService | None:
+        nonlocal callback_count
+        callback_count += 1
+        if callback_count == 1:
+            old_callback_started.set()
+            await release_old_callback.wait()
+        else:
+            new_callback_started.set()
+            await release_new_callback.wait()
+        return await original_get_service(*args, **kwargs)
+
+    monkeypatch.setattr(notify, "async_get_service", delayed_get_service)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Old channel",
+        data={CONF_MAXCODE: "test-maxcode"},
+    )
+    entry.add_to_hass(hass)
+
+    first_setup = asyncio.create_task(hass.config_entries.async_setup(entry.entry_id))
+    await old_callback_started.wait()
+    assert not await first_setup
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+    object.__setattr__(entry, "title", "New channel")
+    entry.async_cancel_retry_setup()
+    entry._async_setup_again(hass)
+    await new_callback_started.wait()
+
+    release_old_callback.set()
+    release_new_callback.set()
+    await asyncio.wait_for(entry.runtime_data.notify_service_ready, timeout=1)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert not hass.services.has_service(NOTIFY_DOMAIN, "old_channel")
+    assert hass.services.has_service(NOTIFY_DOMAIN, "new_channel")
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_notify_reset_deletes_registry_after_services_unregister(
+    hass: HomeAssistant,
+) -> None:
+    """Let the notify loader delete its registry after unregistering services."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Test channel",
+        data={CONF_MAXCODE: "test-maxcode"},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert DOMAIN in hass.data[f"{NOTIFY_DOMAIN}_services"]
+
+    await notify_legacy.async_reset_platform(hass, DOMAIN)
+
+    assert DOMAIN not in hass.data[f"{NOTIFY_DOMAIN}_services"]
+    assert not hass.services.has_service(NOTIFY_DOMAIN, "test_channel")
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

@@ -10,3 +10,4 @@ ATTR_DETAILS: Final = "details"
 API_URL: Final = "https://api.pushmeld.de/api/v1/notify/"
 REQUEST_TIMEOUT: Final = 10.0
 DATA_HASS_CONFIG: Final = f"{DOMAIN}_hass_config"
+SETUP_ATTEMPT_ID: Final = "setup_attempt_id"

@@ -13,9 +13,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import slugify
+from homeassistant.util import slugify, ulid as ulid_util
 
-from .const import CONF_MAXCODE, DATA_HASS_CONFIG, DOMAIN
+from .const import CONF_MAXCODE, DATA_HASS_CONFIG, DOMAIN, SETUP_ATTEMPT_ID
 
 if TYPE_CHECKING:
     from .notify import PushMeldNotificationService
@@ -30,6 +30,7 @@ class PushMeldRuntimeData:
     """Runtime data for a PushMeld config entry."""
 
     notify_service_ready: Future[None]
+    setup_attempt_id: str
     notify_service: PushMeldNotificationService | None = None
 
 
@@ -51,8 +52,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: PushMeldConfigEntry) -> 
             translation_key="config_entry_error_invalid_name",
         )
 
+    setup_attempt_id = ulid_util.ulid_now()
     entry.runtime_data = PushMeldRuntimeData(
-        notify_service_ready=hass.loop.create_future()
+        notify_service_ready=hass.loop.create_future(),
+        setup_attempt_id=setup_attempt_id,
     )
 
     service_name = slugify(title)
@@ -73,6 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PushMeldConfigEntry) -> 
                 CONF_MAXCODE: entry.data[CONF_MAXCODE],
                 CONF_NAME: title,
                 "entry_id": entry.entry_id,
+                SETUP_ATTEMPT_ID: setup_attempt_id,
             },
             hass.data[DATA_HASS_CONFIG],
         ),

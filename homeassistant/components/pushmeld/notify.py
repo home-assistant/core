@@ -24,7 +24,14 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 
-from .const import API_URL, ATTR_DETAILS, CONF_MAXCODE, DOMAIN, REQUEST_TIMEOUT
+from .const import (
+    API_URL,
+    ATTR_DETAILS,
+    CONF_MAXCODE,
+    DOMAIN,
+    REQUEST_TIMEOUT,
+    SETUP_ATTEMPT_ID,
+)
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
@@ -48,7 +55,8 @@ async def async_get_service(
     maxcode = discovery_info.get(CONF_MAXCODE)
     name = discovery_info.get(CONF_NAME)
     entry_id = discovery_info.get("entry_id")
-    if not isinstance(entry_id, str):
+    setup_attempt_id = discovery_info.get(SETUP_ATTEMPT_ID)
+    if not isinstance(entry_id, str) or not isinstance(setup_attempt_id, str):
         return None
 
     entry = hass.config_entries.async_get_entry(entry_id)
@@ -59,6 +67,9 @@ async def async_get_service(
         return None
 
     if not hasattr(entry, "runtime_data"):
+        return None
+
+    if entry.runtime_data.setup_attempt_id != setup_attempt_id:
         return None
 
     if entry.runtime_data.notify_service_ready.done():
@@ -152,8 +163,6 @@ class PushMeldNotificationService(BaseNotificationService):
         services = notify_services[DOMAIN]
         if self in services:
             services.remove(self)
-            if not services:
-                del notify_services[DOMAIN]
 
     def _signal_setup_error(self, error: BaseException) -> None:
         """Make config-entry setup report an error from the legacy loader."""
