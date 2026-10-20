@@ -25,6 +25,7 @@ from homeassistant.components.powersensor_au.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
@@ -307,6 +308,52 @@ async def test_reconfigure_step_shows_current_role_and_device_name(
         key.description["suggested_value"] for key in result["data_schema"].schema
     ]
     assert suggested == [expected_role]
+
+
+@pytest.mark.parametrize(
+    ("change_device", "expected_name"),
+    [
+        pytest.param(
+            lambda registry, device: registry.async_update_device(
+                device.id, name_by_user="Kitchen meter"
+            ),
+            "Kitchen meter",
+            id="renamed_by_user",
+        ),
+        pytest.param(
+            lambda registry, device: registry.async_remove_device(device.id),
+            UNKNOWN_MAC,
+            id="no_device",
+        ),
+    ],
+)
+async def test_reconfigure_step_names_sensor_from_device_registry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+    device_registry: dr.DeviceRegistry,
+    change_device: Callable[[dr.DeviceRegistry, dr.DeviceEntry], Any],
+    expected_name: str,
+) -> None:
+    """The step uses the user's name for the sensor's device, or the MAC without one."""
+    await fire({"event": "device_found", "mac": UNKNOWN_MAC, "device_type": "sensor"})
+    await hass.async_block_till_done()
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, UNKNOWN_MAC), config_entry.entry_id
+    )
+    assert device is not None
+    change_device(device_registry, device)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": config_entry.entry_id,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["description_placeholders"]["sensor"] == expected_name
 
 
 async def test_reconfigure_suggests_unknown_for_unrecognised_role(
