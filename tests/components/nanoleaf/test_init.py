@@ -1,7 +1,8 @@
 """Tests for the Nanoleaf integration init."""
 
+import asyncio
 from datetime import timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 from aionanoleaf2 import (
     AuthError,
@@ -17,14 +18,13 @@ from aionanoleaf2 import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import get_reauth_flows, setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 # The coordinator polls every minute; add a second for the update jitter
 POLL_INTERVAL = timedelta(minutes=1, seconds=1)
@@ -160,3 +160,116 @@ async def test_update_auth_failure_starts_reauth(
 
     assert len(get_reauth_flows(hass, mock_config_entry)) == 1
     assert hass.states.get("light.nanoleaf").state == STATE_UNAVAILABLE
+
+
+async def test_event_listener_is_cancelled_on_unload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nanoleaf: AsyncMock,
+) -> None:
+    """Test the running event listener is cancelled when the entry is unloaded."""
+    started = asyncio.Event()
+    cancelled = asyncio.Event()
+
+    async def listen_events(**kwargs: object) -> None:
+        """Run until cancelled, like the real listener."""
+        started.set()
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            cancelled.set()
+            raise
+
+    mock_nanoleaf.listen_events.side_effect = listen_events
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert started.is_set()
+    assert not cancelled.is_set()
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert cancelled.is_set()
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(InvalidToken("invalid"), id="invalid_token"),
+        pytest.param(AuthError("auth"), id="auth_error"),
+    ],
+)
+async def test_event_listener_auth_error_starts_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nanoleaf: AsyncMock,
+    error: AuthError,
+) -> None:
+    """Test a token rejected by the event stream starts the reauth flow."""
+    mock_nanoleaf.listen_events.side_effect = error
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert len(get_reauth_flows(hass, mock_config_entry)) == 1
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(EndpointNotFoundError("events"), id="endpoint_not_found"),
+        pytest.param(NanoleafConnectionError("connection"), id="connection"),
+        pytest.param(NanoleafError("generic"), id="generic"),
+    ],
+)
+async def test_event_listener_other_error_falls_back_to_polling(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_nanoleaf: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+    error: NanoleafError,
+) -> None:
+    """Test a listener that ends with another error leaves polling in place."""
+    mock_nanoleaf.listen_events.side_effect = error
+    mock_nanoleaf.is_on = False
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert not get_reauth_flows(hass, mock_config_entry)
+    assert "falling back to polling" in caplog.text
+    assert hass.states.get("light.nanoleaf").state == STATE_OFF
+
+    # The device changes while no events arrive anymore: polling must pick it up
+    mock_nanoleaf.is_on = True
+    mock_nanoleaf.get_info.reset_mock()
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_nanoleaf.get_info.assert_called_once()
+    assert hass.states.get("light.nanoleaf").state == STATE_ON
+
+
+@pytest.mark.parametrize("callback_name", ["state_callback", "effects_callback"])
+async def test_pushed_event_refreshes_entities(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nanoleaf: AsyncMock,
+    callback_name: str,
+) -> None:
+    """Test a pushed state or effect event updates the entities."""
+    mock_nanoleaf.is_on = False
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get("light.nanoleaf").state == STATE_OFF
+
+    callback = mock_nanoleaf.listen_events.call_args.kwargs[callback_name]
+    mock_nanoleaf.is_on = True
+    await callback(MagicMock())
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.nanoleaf").state == STATE_ON

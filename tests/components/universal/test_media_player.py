@@ -5,6 +5,11 @@ from unittest.mock import Mock, patch
 
 from probatio.error import MultipleInvalid
 import pytest
+from pytest_homeassistant.common import (
+    MockEntityPlatform,
+    async_mock_service,
+    get_fixture_path,
+)
 
 from homeassistant import config as hass_config
 from homeassistant.components import input_number, input_select, media_player, switch
@@ -27,8 +32,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityPlatformState
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockEntityPlatform, async_mock_service, get_fixture_path
 
 CONFIG_CHILDREN_ONLY = {
     "name": "test",

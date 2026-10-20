@@ -1,6 +1,7 @@
 """Tests for the Novy Cooker Hood integration setup."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.novy_cooker_hood.const import CONF_TRANSMITTER, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -9,8 +10,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import TRANSMITTER_ENTITY_ID
-
-from tests.common import MockConfigEntry
 
 UNKNOWN_TRANSMITTER_UUID = "0123456789abcdef0123456789abcdef"
 

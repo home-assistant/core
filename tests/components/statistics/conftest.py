@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.statistics import DOMAIN
 from homeassistant.components.statistics.sensor import (
@@ -27,8 +28,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .test_sensor import VALUES_NUMERIC
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

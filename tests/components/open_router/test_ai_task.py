@@ -15,6 +15,7 @@ from openai.types.chat.chat_completion_chunk import (
 )
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import ai_task, media_source
@@ -25,8 +26,6 @@ from homeassistant.helpers import entity_registry as er, selector
 
 from . import setup_integration
 from .conftest import get_generator_from_data
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 def _image_completion(

@@ -19,6 +19,7 @@ from lifx import (
 )
 import probatio
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components import lifx
 from homeassistant.components.lifx import DOMAIN
@@ -111,8 +112,6 @@ from .helpers import (
     create_mock_multizone_light,
     create_reference_matrix_light,
 )
-
-from tests.common import async_fire_time_changed
 
 ENTITY_ID = "light.my_group_my_bulb"
 OTHER_IP_ADDRESS = "127.0.0.2"

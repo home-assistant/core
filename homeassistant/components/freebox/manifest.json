@@ -6,7 +6,7 @@
     "presence_location.network_presence",
     "security_safety.alarm_systems"
   ],
-  "codeowners": ["@hacf-fr/reviewers", "@Quentame"],
+  "codeowners": ["@Quentame"],
   "config_flow": true,
   "dependencies": ["ffmpeg"],
   "documentation": "https://www.home-assistant.io/integrations/freebox",

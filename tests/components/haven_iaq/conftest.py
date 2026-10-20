@@ -5,13 +5,12 @@ from unittest.mock import AsyncMock, patch
 
 from haveniaq import DeviceInfo, SensorData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.haven_iaq.const import DOMAIN
 from homeassistant.const import CONF_HOST
 
 from . import TEST_CAM_SERIAL, TEST_HOST, TEST_INFO, TEST_SENSORS, TEST_SERIAL
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

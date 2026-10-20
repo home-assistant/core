@@ -7,6 +7,8 @@ from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, async_mock_service
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup import (
@@ -39,9 +41,6 @@ from .common import (
     setup_backup_integration,
     setup_backup_platform,
 )
-
-from tests.common import async_fire_time_changed, async_mock_service
-from tests.typing import WebSocketGenerator
 
 BACKUP_CALL = call(
     agent_ids=["test.test-agent"],

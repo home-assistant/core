@@ -11,6 +11,8 @@ from homeassistant.components.device_automation import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.homeassistant.triggers import event, state
+from homeassistant.components.homeassistant.triggers.event import EventTriggerArgument
+from homeassistant.components.homeassistant.triggers.state import StateTriggerArgument
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -150,9 +152,9 @@ BASE_STATE_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 NODE_STATUS_SCHEMA = BASE_STATE_SCHEMA.extend(
     {
         probatio.Required(CONF_TYPE): NODE_STATUS,
-        probatio.Optional(state.CONF_FROM): probatio.In(NODE_STATUSES),
-        probatio.Optional(state.CONF_TO): probatio.In(NODE_STATUSES),
-        probatio.Optional(state.CONF_FOR): cv.positive_time_period_dict,
+        probatio.Optional(StateTriggerArgument.FROM): probatio.In(NODE_STATUSES),
+        probatio.Optional(StateTriggerArgument.TO): probatio.In(NODE_STATUSES),
+        probatio.Optional(StateTriggerArgument.FOR): cv.positive_time_period_dict,
     }
 )
 
@@ -376,19 +378,19 @@ async def async_attach_trigger(
     # attaching to
     if trigger_platform == "event":
         event_data = {CONF_DEVICE_ID: config[CONF_DEVICE_ID]}
-        event_config = {
-            event.CONF_PLATFORM: "event",
-            event.CONF_EVENT_DATA: event_data,
+        event_config: ConfigType = {
+            EventTriggerArgument.PLATFORM: "event",
+            EventTriggerArgument.EVENT_DATA: event_data,
         }
 
         if ATTR_COMMAND_CLASS in config:
             event_data[ATTR_COMMAND_CLASS] = config[ATTR_COMMAND_CLASS]
 
         if trigger_type == ENTRY_CONTROL_NOTIFICATION:
-            event_config[event.CONF_EVENT_TYPE] = ZWAVE_JS_NOTIFICATION_EVENT
+            event_config[EventTriggerArgument.EVENT_TYPE] = ZWAVE_JS_NOTIFICATION_EVENT
             copy_available_params(config, event_data, [ATTR_EVENT_TYPE, ATTR_DATA_TYPE])
         elif trigger_type == NOTIFICATION_NOTIFICATION:
-            event_config[event.CONF_EVENT_TYPE] = ZWAVE_JS_NOTIFICATION_EVENT
+            event_config[EventTriggerArgument.EVENT_TYPE] = ZWAVE_JS_NOTIFICATION_EVENT
             copy_available_params(
                 config, event_data, [ATTR_LABEL, ATTR_EVENT_LABEL, ATTR_EVENT]
             )
@@ -399,7 +401,9 @@ async def async_attach_trigger(
             CENTRAL_SCENE_VALUE_NOTIFICATION,
             SCENE_ACTIVATION_VALUE_NOTIFICATION,
         ):
-            event_config[event.CONF_EVENT_TYPE] = ZWAVE_JS_VALUE_NOTIFICATION_EVENT
+            event_config[EventTriggerArgument.EVENT_TYPE] = (
+                ZWAVE_JS_VALUE_NOTIFICATION_EVENT
+            )
             copy_available_params(
                 config, event_data, [ATTR_PROPERTY, ATTR_PROPERTY_KEY, ATTR_ENDPOINT]
             )
@@ -415,11 +419,17 @@ async def async_attach_trigger(
 
     if trigger_platform == "state":
         if trigger_type == NODE_STATUS:
-            state_config = {state.CONF_PLATFORM: "state"}
+            state_config: ConfigType = {StateTriggerArgument.PLATFORM: "state"}
 
-            state_config[state.CONF_ENTITY_ID] = config[CONF_ENTITY_ID]
+            state_config[StateTriggerArgument.ENTITY_ID] = config[CONF_ENTITY_ID]
             copy_available_params(
-                config, state_config, [state.CONF_FOR, state.CONF_FROM, state.CONF_TO]
+                config,
+                state_config,
+                [
+                    StateTriggerArgument.FOR,
+                    StateTriggerArgument.FROM,
+                    StateTriggerArgument.TO,
+                ],
             )
         else:
             raise HomeAssistantError(f"Unhandled trigger type {trigger_type}")
@@ -512,9 +522,15 @@ async def async_get_trigger_capabilities(
         return {
             "extra_fields": probatio.Schema(
                 {
-                    probatio.Optional(state.CONF_FROM): probatio.In(NODE_STATUSES),
-                    probatio.Optional(state.CONF_TO): probatio.In(NODE_STATUSES),
-                    probatio.Optional(state.CONF_FOR): cv.positive_time_period_dict,
+                    probatio.Optional(StateTriggerArgument.FROM): probatio.In(
+                        NODE_STATUSES
+                    ),
+                    probatio.Optional(StateTriggerArgument.TO): probatio.In(
+                        NODE_STATUSES
+                    ),
+                    probatio.Optional(
+                        StateTriggerArgument.FOR
+                    ): cv.positive_time_period_dict,
                 }
             )
         }

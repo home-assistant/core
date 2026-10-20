@@ -16,11 +16,10 @@ from pyintelliclima.intelliclima_types import (
     IntelliClimaModelType,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.intelliclima.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
