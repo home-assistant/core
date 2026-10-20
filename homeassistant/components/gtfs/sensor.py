@@ -18,9 +18,23 @@ from homeassistant.components.sensor import (
 from homeassistant.const import CONF_NAME, CONF_OFFSET, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, slugify
+
+from .const import (
+    CONF_DATA,
+    CONF_DESTINATION,
+    CONF_ORIGIN,
+    CONF_TOMORROW,
+    DEFAULT_PATH,
+    DOMAIN,
+)
+from .feed import GtfsConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,13 +58,7 @@ ATTR_WHEELCHAIR = "trip_wheelchair_access_available"
 ATTR_WHEELCHAIR_DESTINATION = "destination_station_wheelchair_boarding_available"
 ATTR_WHEELCHAIR_ORIGIN = "origin_station_wheelchair_boarding_available"
 
-CONF_DATA = "data"
-CONF_DESTINATION = "destination"
-CONF_ORIGIN = "origin"
-CONF_TOMORROW = "include_tomorrow"
-
 DEFAULT_NAME = "GTFS Sensor"
-DEFAULT_PATH = "gtfs"
 
 BICYCLE_ALLOWED_DEFAULT = STATE_UNKNOWN
 BICYCLE_ALLOWED_OPTIONS = {1: True, 2: False}
@@ -476,6 +484,37 @@ def get_next_departure(
     }
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: GtfsConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up departure sensors for each route subentry."""
+    feed = entry.runtime_data
+    for subentry_id, subentry in entry.subentries.items():
+        async_add_entities(
+            [
+                GTFSDepartureSensor(
+                    gtfs=feed.schedule,
+                    name=None,
+                    origin=subentry.data[CONF_ORIGIN],
+                    destination=subentry.data[CONF_DESTINATION],
+                    offset=cv.time_period(subentry.data[CONF_OFFSET]),
+                    include_tomorrow=subentry.data[CONF_TOMORROW],
+                    lock=feed.lock,
+                    unique_id=subentry_id,
+                    device_info=DeviceInfo(
+                        identifiers={(DOMAIN, subentry_id)},
+                        name=subentry.title,
+                        entry_type=DeviceEntryType.SERVICE,
+                    ),
+                )
+            ],
+            update_before_add=True,
+            config_subentry_id=subentry_id,
+        )
+
+
 def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -506,9 +545,11 @@ def setup_platform(
     if not gtfs.feeds:
         pygtfs.append_feed(gtfs, os.path.join(gtfs_dir, data))
 
-    add_entities(
-        [GTFSDepartureSensor(gtfs, name, origin, destination, offset, include_tomorrow)]
+    sensor = GTFSDepartureSensor(
+        gtfs, name, origin, destination, offset, include_tomorrow, threading.Lock()
     )
+    sensor.update()
+    add_entities([sensor])
 
 
 class GTFSDepartureSensor(SensorEntity):
@@ -524,8 +565,16 @@ class GTFSDepartureSensor(SensorEntity):
         destination: Any,
         offset: dt.timedelta,
         include_tomorrow: bool,
+        lock: threading.Lock,
+        *,
+        unique_id: str | None = None,
+        device_info: DeviceInfo | None = None,
     ) -> None:
         """Initialize the sensor."""
+        self._attr_unique_id = unique_id
+        if device_info:
+            self._attr_device_info = device_info
+            self._attr_has_entity_name = True
         self._pygtfs = gtfs
         self.origin = origin
         self.destination = destination
@@ -546,13 +595,14 @@ class GTFSDepartureSensor(SensorEntity):
         self._route = None
         self._trip = None
 
-        self.lock = threading.Lock()
-        self.update()
+        self.lock = lock
 
     @property
     @override
-    def name(self) -> str:
+    def name(self) -> str | None:
         """Return the name of the sensor."""
+        if self.has_entity_name:
+            return None
         return self._name
 
     @property
