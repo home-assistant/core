@@ -178,6 +178,9 @@
       "input_with_number": {
         "name": "Input {input_number}"
       },
+      "motion_with_channel_name": {
+        "name": "{channel_name} motion"
+      },
       "mute": {
         "name": "Mute"
       },
@@ -234,6 +237,9 @@
       },
       "tilt": {
         "name": "Tilt"
+      },
+      "zone_motion_with_number": {
+        "name": "Zone {zone_number} motion"
       }
     },
     "button": {

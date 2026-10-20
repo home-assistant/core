@@ -449,6 +449,7 @@ homeassistant.components.ntfy.*
 homeassistant.components.number.*
 homeassistant.components.nut.*
 homeassistant.components.ohme.*
+homeassistant.components.okok_scale.*
 homeassistant.components.onboarding.*
 homeassistant.components.oncue.*
 homeassistant.components.onedrive.*
@@ -548,6 +549,7 @@ homeassistant.components.script.*
 homeassistant.components.search.*
 homeassistant.components.season.*
 homeassistant.components.select.*
+homeassistant.components.sensecap_lorawan.*
 homeassistant.components.sensibo.*
 homeassistant.components.sensirion_ble.*
 homeassistant.components.sensor.*
@@ -579,6 +581,7 @@ homeassistant.components.sonarr.*
 homeassistant.components.spaceapi.*
 homeassistant.components.specialized_turbo.*
 homeassistant.components.speedtestdotnet.*
+homeassistant.components.spin_ble.*
 homeassistant.components.spotify.*
 homeassistant.components.sql.*
 homeassistant.components.squeezebox.*
