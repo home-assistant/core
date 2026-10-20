@@ -63,7 +63,9 @@ class DaliConfigFlow(ConfigFlow, domain=DOMAIN):
         finally:
             if transport := getattr(driver, "_transport", None):
                 transport.close()
-        return bool(descriptor and descriptor.has_bus_power_supply)
+        if descriptor is None:
+            raise OSError("Unable to read the DALI interface descriptor")
+        return bool(descriptor.has_bus_power_supply)
 
     @override
     async def async_step_user(
