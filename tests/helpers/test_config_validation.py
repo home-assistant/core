@@ -219,6 +219,9 @@ def test_entity_id() -> None:
     with pytest.raises(probatio.MultipleInvalid):
         schema("invalid_entity")
 
+    with pytest.raises(probatio.MultipleInvalid):
+        schema("sensor.light\n")
+
     assert schema("sensor.LIGHT") == "sensor.light"
 
 
@@ -1900,6 +1903,9 @@ def test_color_hex() -> None:
 
     with pytest.raises(probatio.Invalid, match=msg):
         cv.color_hex("#FFFFFFF")
+
+    with pytest.raises(probatio.Invalid, match=msg):
+        cv.color_hex("#FFFFFF\n")
 
     with pytest.raises(probatio.Invalid, match=msg):
         cv.color_hex(123456)

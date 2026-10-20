@@ -455,7 +455,7 @@ def icon(value: Any) -> str:
     raise probatio.Invalid('Icons should be specified in the form "prefix:name"')
 
 
-_COLOR_HEX = re.compile(r"^#[0-9A-F]{6}$", re.IGNORECASE)
+_COLOR_HEX = re.compile(r"^#[0-9A-F]{6}\Z", re.IGNORECASE)
 
 
 def color_hex(value: Any) -> str:

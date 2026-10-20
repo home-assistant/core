@@ -179,8 +179,8 @@ def split_entity_id(entity_id: str) -> tuple[str, str]:
 
 _OBJECT_ID = r"(?!_)[\da-z_]+(?<!_)"
 _DOMAIN = r"(?!.+__)" + _OBJECT_ID
-VALID_DOMAIN = re.compile(r"^" + _DOMAIN + r"$")
-VALID_ENTITY_ID = re.compile(r"^" + _DOMAIN + r"\." + _OBJECT_ID + r"$")
+VALID_DOMAIN = re.compile(r"^" + _DOMAIN + r"\Z")
+VALID_ENTITY_ID = re.compile(r"^" + _DOMAIN + r"\." + _OBJECT_ID + r"\Z")
 
 
 @functools.lru_cache(64)
