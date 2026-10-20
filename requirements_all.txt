@@ -298,7 +298,7 @@ aioharmanluxury==0.2.3
 aioharmony==1.0.10
 
 # homeassistant.components.hassio
-aiohasupervisor==0.7.0
+aiohasupervisor==0.8.0
 
 # homeassistant.components.home_connect
 aiohomeconnect==0.39.1
@@ -565,7 +565,7 @@ anova-wifi==1.0.1
 anthemav==1.4.2
 
 # homeassistant.components.anthropic
-anthropic==1.12.0
+anthropic==1.15.0
 
 # homeassistant.components.mcp_server
 anyio==4.15.1

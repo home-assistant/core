@@ -325,16 +325,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> No
     # register the hub device info separately as the hub has sometimes no entities
     fibaro_info = controller.read_fibaro_info()
     device_registry = dr.async_get(hass)
-    hub_device = device_registry.async_get_or_create(
+    hub_device = device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, controller.hub_serial)},
-        serial_number=controller.hub_serial,
-        manufacturer=fibaro_info.manufacturer_name,
-        name=fibaro_info.hc_name,
-        model=fibaro_info.model_name,
-        sw_version=fibaro_info.current_version,
-        configuration_url=controller.get_frontend_url(),
-        connections={(dr.CONNECTION_NETWORK_MAC, fibaro_info.mac_address)},
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, controller.hub_serial)},
+            serial_number=controller.hub_serial,
+            manufacturer=fibaro_info.manufacturer_name,
+            name=fibaro_info.hc_name,
+            model=fibaro_info.model_name,
+            sw_version=fibaro_info.current_version,
+            configuration_url=controller.get_frontend_url(),
+            connections={(dr.CONNECTION_NETWORK_MAC, fibaro_info.mac_address)},
+        ),
     )
     controller.link_main_devices_to_hub(hub_device.id)
 

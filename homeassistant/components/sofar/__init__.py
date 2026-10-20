@@ -171,8 +171,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
         await device.async_read_identity()
 
     # Up front: a part's device must name an inverter that has an id.
-    inverter = dr.async_get(hass).async_get_or_create(
-        config_entry_id=entry.entry_id, **readings.device_info
+    inverter = dr.async_get(hass).async_get_or_create_device(
+        config_entry_id=entry.entry_id, device_info=readings.device_info
     )
     entry.runtime_data = SofarRuntimeData(readings, settings, inverter.id)
     # Until the masks settle the type, nothing is served or denied.
