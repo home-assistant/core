@@ -1,8 +1,8 @@
 """Test data redaction helpers."""
 
-from homeassistant.components.google_assistant.data_redaction import async_redact_msg
+from pytest_homeassistant.common import load_json_array_fixture
 
-from tests.common import load_json_array_fixture
+from homeassistant.components.google_assistant.data_redaction import async_redact_msg
 
 
 def test_redact_msg() -> None:

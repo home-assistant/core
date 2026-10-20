@@ -22,11 +22,11 @@ from .const import (
     DATA_EXPOSED_ENTITIES,
     DATA_STOP_HANDLER,
     DOMAIN,
-    SERVICE_HOMEASSISTANT_RESTART,  # noqa: F401
-    SERVICE_HOMEASSISTANT_STOP,  # noqa: F401
+    SERVICE_HOMEASSISTANT_RESTART,
+    SERVICE_HOMEASSISTANT_STOP,
     HomeAssistantService,
 )
-from .exposed_entities import ExposedEntities, async_should_expose  # noqa: F401
+from .exposed_entities import ExposedEntities, async_should_expose
 from .services import async_setup_services
 
 # To be deprecated at a later stage, replaced by HomeAssistantService
@@ -42,6 +42,18 @@ DEPRECATION_URL = (
     "https://www.home-assistant.io/blog/2025/05/22/"
     "deprecating-core-and-supervised-installation-methods-and-32-bit-systems/"
 )
+
+__all__ = [
+    "DOMAIN",
+    "SERVICE_HOMEASSISTANT_RESTART",
+    "SERVICE_HOMEASSISTANT_STOP",
+    "SERVICE_RELOAD_ALL",
+    "SERVICE_RELOAD_CONFIG_ENTRY",
+    "SERVICE_RELOAD_CORE_CONFIG",
+    "SERVICE_RELOAD_CUSTOM_TEMPLATES",
+    "async_set_stop_handler",
+    "async_should_expose",
+]
 
 
 def _is_32_bit() -> bool:

@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.steamist.const import DOMAIN
@@ -25,8 +26,6 @@ from . import (
     _patch_discovery,
     _patch_status,
 )
-
-from tests.common import MockConfigEntry
 
 MODULE = "homeassistant.components.steamist"
 

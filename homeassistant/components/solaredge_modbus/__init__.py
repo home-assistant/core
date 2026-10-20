@@ -37,6 +37,7 @@ from .const import (
     DISCOVERY_SUBSYSTEMS,
     DOMAIN,
     LOGGER,
+    READ_TIMEOUT,
     SCAN_INTERVAL,
     SETTINGS_SCAN_INTERVAL,
     SUBSYSTEM_BATTERIES,
@@ -67,7 +68,7 @@ PLATFORMS = [
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: SolarEdgeModbusConfigEntry
-) -> bool:
+) -> None:
     """Set up SolarEdge Modbus from a config entry."""
     serial_number = entry.unique_id
     if TYPE_CHECKING:
@@ -105,6 +106,9 @@ async def async_setup_entry(
             translation_domain=DOMAIN,
             translation_key="no_solaredge_device",
         ) from err
+
+    # Only now: the probe gives up on a silent block after the link's default.
+    unit.require_timeout(READ_TIMEOUT)
 
     readings = SolarEdgeModbusDataUpdateCoordinator(
         hass,
@@ -188,8 +192,6 @@ async def async_setup_entry(
             ATTACHMENT_SCAN_INTERVAL,
         )
     )
-
-    return True
 
 
 def _known_silent_blocks(entry: SolarEdgeModbusConfigEntry) -> frozenset[str]:
@@ -349,6 +351,6 @@ def _async_remove_stale_devices(
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: SolarEdgeModbusConfigEntry
-) -> bool:
+) -> None:
     """Unload SolarEdge Modbus config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

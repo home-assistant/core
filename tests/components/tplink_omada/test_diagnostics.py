@@ -2,16 +2,15 @@
 
 import json
 
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_array_fixture
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 from tplink_omada_client.clients import OmadaWirelessClient
 
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_load_json_array_fixture
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_entry_diagnostics(

@@ -2,6 +2,7 @@
 
 from unittest.mock import PropertyMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from pyvesync.utils.errors import VeSyncLoginError
 
 from homeassistant.components.vesync import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-
-from tests.common import MockConfigEntry
 
 
 async def test_abort_duplicate_unique_id(hass: HomeAssistant, config_entry) -> None:

@@ -3,6 +3,7 @@
 from collections.abc import Generator
 
 import pytest
+from pytest_homeassistant.common import AsyncMock, MockConfigEntry, patch
 from watergate_local_api.models import AutoShutOffState
 
 from homeassistant.components.watergate.const import DOMAIN
@@ -16,8 +17,6 @@ from .const import (
     MOCK_CONFIG,
     MOCK_WEBHOOK_ID,
 )
-
-from tests.common import AsyncMock, MockConfigEntry, patch
 
 
 @pytest.fixture

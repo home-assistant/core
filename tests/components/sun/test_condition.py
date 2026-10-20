@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from freezegun import freeze_time
 import probatio
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import automation
 from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
@@ -15,8 +16,6 @@ from homeassistant.helpers.condition import async_validate_condition_config
 from homeassistant.helpers.sun import get_astral_event_next
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.typing import WebSocketGenerator
 
 # San Diego (default test location), Kotzebue, Alaska (just inside the Arctic
 # Circle - brief midnight sun in June) and Longyearbyen, Svalbard (deep polar -

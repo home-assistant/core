@@ -1,5 +1,12 @@
 """Base class for Nanoleaf entity."""
 
+from collections.abc import Callable, Coroutine
+from functools import wraps
+from typing import Any, Concatenate
+
+from aionanoleaf2 import AuthError, InvalidEffect, NanoleafError, NoAuthToken
+
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -24,3 +31,33 @@ class NanoleafEntity(CoordinatorEntity[NanoleafCoordinator]):
             sw_version=nanoleaf.firmware_version,
             configuration_url=f"http://{nanoleaf.host}",
         )
+
+
+def async_handle_nanoleaf_errors[EntityT: NanoleafEntity, **P](
+    func: Callable[Concatenate[EntityT, P], Coroutine[Any, Any, None]],
+) -> Callable[Concatenate[EntityT, P], Coroutine[Any, Any, None]]:
+    """Map aionanoleaf2 errors of an entity action to Home Assistant errors."""
+
+    @wraps(func)
+    async def wrapper(self: EntityT, /, *args: P.args, **kwargs: P.kwargs) -> None:
+        try:
+            await func(self, *args, **kwargs)
+        except InvalidEffect as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="effect_not_supported",
+            ) from err
+        except (AuthError, NoAuthToken) as err:
+            # The token was revoked while the integration is running.
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_token",
+            ) from err
+        except NanoleafError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
+
+    return wrapper

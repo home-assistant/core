@@ -5,13 +5,12 @@ from unittest.mock import AsyncMock, patch
 
 from evolutionhttp import BryantEvolutionLocalClient
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bryant_evolution.const import CONF_SYSTEM_ZONE, DOMAIN
 from homeassistant.const import CONF_FILENAME
 from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

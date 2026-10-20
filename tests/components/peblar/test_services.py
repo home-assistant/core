@@ -13,6 +13,7 @@ from peblar import (
 )
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.peblar.const import DOMAIN
 from homeassistant.components.peblar.services import (
@@ -28,8 +29,6 @@ from homeassistant.components.peblar.services import (
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-
-from tests.common import MockConfigEntry
 
 
 async def test_services_registered_on_setup(
