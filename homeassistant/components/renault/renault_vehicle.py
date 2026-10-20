@@ -50,7 +50,6 @@ def with_error_wrapping[**_P, _R](
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="unknown_error",
-                translation_placeholders={"error": str(err)},
             ) from err
 
     return wrapper

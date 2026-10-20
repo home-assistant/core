@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from tesla_fleet_api.router import VehicleRouter
+
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -34,6 +36,8 @@ VEHICLE_REDACT = [
     # Schedule lists are not flattened, so their entries keep plain keys
     "latitude",
     "longitude",
+    # Bluetooth address of a paired vehicle
+    "address",
 ]
 
 ENERGY_LIVE_REDACT = ["vin", "din"]
@@ -98,16 +102,28 @@ async def async_get_config_entry_diagnostics(
         and platform.config_entry.entry_id == entry.entry_id
         for entity in platform.entities.values()
     }
-    vehicles = [
-        {
-            "data": async_redact_data(x.coordinator.data, VEHICLE_REDACT),
-            "entities": _async_vehicle_entity_sources(entity_entries, entities, x),
-            "stream": {
-                "config": x.stream_vehicle.config,
-            },
-        }
-        for x in entry.runtime_data.vehicles
-    ]
+    vehicles = []
+    for x in entry.runtime_data.vehicles:
+        # A paired vehicle stays on the cloud API when its Bluetooth key fails to load.
+        router = x.api if isinstance(x.api, VehicleRouter) else None
+        vehicles.append(
+            {
+                "data": async_redact_data(x.coordinator.data, VEHICLE_REDACT),
+                "entities": _async_vehicle_entity_sources(entity_entries, entities, x),
+                "stream": {
+                    "config": x.stream_vehicle.config,
+                },
+                "bluetooth": async_redact_data(
+                    {
+                        "paired": x.ble_address is not None,
+                        "address": x.ble_address,
+                        "backend": "router" if router else "cloud",
+                        "in_range": await router.is_healthy() if router else None,
+                    },
+                    VEHICLE_REDACT,
+                ),
+            }
+        )
     energysites = [
         {
             # Wall connectors are keyed by DIN, which embeds the serial number

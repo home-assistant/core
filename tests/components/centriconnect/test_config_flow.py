@@ -12,6 +12,7 @@ from aiocentriconnect.exceptions import (
     CentriConnectTooManyRequestsError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.centriconnect.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
@@ -20,8 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import TEST_PASSWORD, TEST_TANK_ID, TEST_TANK_NAME, TEST_USERNAME
-
-from tests.common import MockConfigEntry
 
 
 async def test_full_flow(

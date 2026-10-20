@@ -532,10 +532,12 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
         if entity is None:
             raise RuntimeError("Alarm has been deleted by accident.")
 
-        new_device = device_registry.async_get_or_create(
+        new_device = device_registry.async_get_or_create_device(
             config_entry_id=cast(str, entity.config_entry_id),
-            identifiers={(DOMAIN, self.soco.uid)},
-            connections={(dr.CONNECTION_NETWORK_MAC, self.speaker.mac_address)},
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, self.soco.uid)},
+                connections={(dr.CONNECTION_NETWORK_MAC, self.speaker.mac_address)},
+            ),
         )
         if (
             device := entity_registry.async_get(self.entity_id)
