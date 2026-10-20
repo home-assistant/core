@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from aioairzone.const import API_DATA, API_SYSTEMS
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.airzone.coordinator import SCAN_INTERVAL
@@ -22,8 +23,6 @@ from .util import (
     HVAC_WEBSERVER_MOCK,
     async_init_integration,
 )
-
-from tests.common import async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)

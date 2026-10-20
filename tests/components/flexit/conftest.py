@@ -6,11 +6,10 @@ from unittest.mock import MagicMock, patch
 
 from modbus_connection.mock import MockModbusUnit
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.flexit.const import CONF_UNIT, DOMAIN, TYPE_TCP
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

@@ -24,6 +24,9 @@ from pyoverkiz.exceptions import (
     UnknownUserError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries
 from homeassistant.components.application_credentials import (
@@ -37,10 +40,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -1461,8 +1460,7 @@ async def test_rexel_full_flow_single_gateway(
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert REXEL_OAUTH_AUTHORIZE_URL in result["url"]
-    # Azure AD B2C needs the policy on the authorize URL; the helper rebuilds
-    # the query string, so it must survive via extra_authorize_data.
+    # Azure AD B2C needs the policy on the authorize URL.
     assert f"p={REXEL_OAUTH_POLICY}" in result["url"]
     # offline_access is required for B2C to return a refresh token.
     assert f"{REXEL_OAUTH_SCOPE}+offline_access" in result["url"]

@@ -4,13 +4,12 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from pytrydan.models.trydan import TrydanData
 
 from homeassistant.components.v2c.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.json import json_dumps
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture

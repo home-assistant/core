@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from opower import CannotConnect, InvalidAuth, MfaChallenge
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant import config_entries
 from homeassistant.components.opower.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.components.recorder import Recorder
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 @pytest.fixture(autouse=True, name="mock_setup_entry")

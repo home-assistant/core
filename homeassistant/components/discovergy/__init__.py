@@ -15,7 +15,7 @@ from .coordinator import DiscovergyConfigEntry, DiscovergyUpdateCoordinator
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: DiscovergyConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: DiscovergyConfigEntry) -> None:
     """Set up Discovergy from a config entry."""
     client = Discovergy(
         email=entry.data[CONF_EMAIL],
@@ -59,12 +59,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: DiscovergyConfigEntry) -
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: DiscovergyConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DiscovergyConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: DiscovergyConfigEntry) -> None:

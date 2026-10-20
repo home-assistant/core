@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import MAX_RETRIES
+from .const import DOMAIN, MAX_RETRIES
 
 SCAN_INTERVAL = timedelta(minutes=5)
 LOGGER = logging.getLogger(__name__)
@@ -72,7 +72,12 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[CometBlueCoordinatorD
             except (InvalidByteValueError, TimeoutError, BleakError) as ex:
                 if retry_count >= MAX_RETRIES:
                     raise HomeAssistantError(
-                        f"Error sending command to '{self.name}': {ex}"
+                        translation_domain=DOMAIN,
+                        translation_key="command_failed",
+                        translation_placeholders={
+                            "name": self.name,
+                            "error": str(ex),
+                        },
                     ) from ex
                 LOGGER.info(
                     "Retry sending command to %s after %s (%s)",
@@ -83,9 +88,15 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[CometBlueCoordinatorD
                 await asyncio.sleep(COMMAND_RETRY_INTERVAL)
             except ValueError as ex:
                 raise ServiceValidationError(
-                    f"Invalid payload '{payload}' for '{self.name}': {ex}"
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_command_payload",
+                    translation_placeholders={
+                        "payload": str(payload),
+                        "name": self.name,
+                        "error": str(ex),
+                    },
                 ) from ex
-        return None
+        return None  # pragma: no cover
 
     @override
     async def _async_update_data(self) -> CometBlueCoordinatorData:
@@ -124,7 +135,12 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[CometBlueCoordinatorD
             except (InvalidByteValueError, TimeoutError, BleakError) as ex:
                 if retry_count >= MAX_RETRIES:
                     raise UpdateFailed(
-                        f"Error retrieving data: {ex}", retry_after=30
+                        translation_domain=DOMAIN,
+                        translation_key="update_failed",
+                        translation_placeholders={
+                            "error": str(ex),
+                        },
+                        retry_after=30,
                     ) from ex
                 LOGGER.info(
                     "Retry updating %s after error: %s (%s)",
@@ -135,7 +151,12 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[CometBlueCoordinatorD
                 await asyncio.sleep(COMMAND_RETRY_INTERVAL)
             except Exception as ex:
                 raise UpdateFailed(
-                    f"({type(ex).__name__}) {ex}", retry_after=30
+                    translation_domain=DOMAIN,
+                    translation_key="update_failed",
+                    translation_placeholders={
+                        "error": f"({type(ex).__name__}) {ex}",
+                    },
+                    retry_after=30,
                 ) from ex
 
         # If one value was not retrieved correctly, keep the old value

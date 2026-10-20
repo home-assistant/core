@@ -14,10 +14,12 @@ from python_dropbox_api import (
 )
 
 from homeassistant.components.backup import (
+    DOMAIN as BACKUP_DOMAIN,
     AgentBackup,
     BackupAgent,
     BackupAgentError,
     BackupNotFound,
+    OnProgressCallback,
     suggested_filename,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -54,14 +56,17 @@ def handle_backup_errors[_R, **P](
         try:
             return await func(self, *args, **kwargs)
         except DropboxFileOrFolderNotFoundException as err:
-            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupNotFound(
-                f"Failed to {func.__name__.removeprefix('async_').replace('_', ' ')}"
+                translation_domain=DOMAIN,
+                translation_key="file_not_found",
+                translation_placeholders={"service": "Dropbox"},
             ) from err
         except DropboxAuthException as err:
             self._entry.async_start_reauth(self._hass)
-            # pylint: disable-next=home-assistant-exception-not-translated
-            raise BackupAgentError("Authentication error") from err
+            raise BackupAgentError(
+                translation_domain=BACKUP_DOMAIN,
+                translation_key="agent_authentication_failed",
+            ) from err
         except DropboxUnknownException as err:
             _LOGGER.error(
                 "Error during %s: %s",
@@ -69,9 +74,9 @@ def handle_backup_errors[_R, **P](
                 err,
             )
             _LOGGER.debug("Full error: %s", err, exc_info=True)
-            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupAgentError(
-                f"Failed to {func.__name__.removeprefix('async_').replace('_', ' ')}"
+                translation_domain=BACKUP_DOMAIN,
+                translation_key="agent_operation_failed",
             ) from err
 
     return wrapper
@@ -171,6 +176,7 @@ class DropboxBackupAgent(BackupAgent):
         *,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
+        on_progress: OnProgressCallback,
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
@@ -179,7 +185,13 @@ class DropboxBackupAgent(BackupAgent):
         metadata_path = f"/{metadata_filename}"
 
         file_stream = await open_stream()
-        await self._api.upload_file(backup_path, file_stream)
+        await self._api.upload_file(
+            backup_path,
+            file_stream,
+            progress_callback=lambda bytes_uploaded: on_progress(
+                bytes_uploaded=bytes_uploaded
+            ),
+        )
 
         metadata_stream = _async_string_iterator(json.dumps(backup.as_dict()))
 
@@ -211,8 +223,11 @@ class DropboxBackupAgent(BackupAgent):
             if backup.backup_id == backup_id:
                 return self._api.download_file(f"/{filename}")
 
-        # pylint: disable-next=home-assistant-exception-not-translated
-        raise BackupNotFound(f"Backup {backup_id} not found")
+        raise BackupNotFound(
+            translation_domain=BACKUP_DOMAIN,
+            translation_key="backup_not_found",
+            translation_placeholders={"backup_id": backup_id},
+        )
 
     @handle_backup_errors
     @override
@@ -228,8 +243,11 @@ class DropboxBackupAgent(BackupAgent):
             if backup.backup_id == backup_id:
                 return backup
 
-        # pylint: disable-next=home-assistant-exception-not-translated
-        raise BackupNotFound(f"Backup {backup_id} not found")
+        raise BackupNotFound(
+            translation_domain=BACKUP_DOMAIN,
+            translation_key="backup_not_found",
+            translation_placeholders={"backup_id": backup_id},
+        )
 
     @handle_backup_errors
     @override
@@ -247,5 +265,8 @@ class DropboxBackupAgent(BackupAgent):
                 await self._api.delete_file(f"/{metadata_filename}")
                 return
 
-        # pylint: disable-next=home-assistant-exception-not-translated
-        raise BackupNotFound(f"Backup {backup_id} not found")
+        raise BackupNotFound(
+            translation_domain=BACKUP_DOMAIN,
+            translation_key="backup_not_found",
+            translation_placeholders={"backup_id": backup_id},
+        )
