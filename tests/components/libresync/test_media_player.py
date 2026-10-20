@@ -258,6 +258,16 @@ async def test_position_time_kept_on_other_writes(
     assert attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.3
     assert attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == read_at
 
+    # Also when the position it carries was pushed but not written.
+    freezer.tick(timedelta(milliseconds=100))
+    push(mock_client, playing.evolve(volume=30, position_ms=11000))
+    freezer.tick(timedelta(milliseconds=900))
+    push(mock_client, playing.evolve(volume=40, position_ms=11000))
+    await hass.async_block_till_done()
+    attributes = hass.states.get(ENTITY_ID).attributes
+    assert attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.4
+    assert attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == read_at
+
 
 async def test_position_time_restamped_on_seek_back(
     hass: HomeAssistant, mock_client: MagicMock, freezer: FrozenDateTimeFactory

@@ -89,15 +89,13 @@ class LibreSyncMediaPlayer(LibreSyncEntity, MediaPlayerEntity):
         if self._position_on_course(state):
             return
         # A write for another reason keeps the time the position was read,
-        # unless the position jumped, also back to the written one, or playback
-        # started or stopped: the frontend extrapolates from that time only
-        # while playing.
-        if (
-            state.position_ms != self._written.position_ms
-            or state.position_ms != received
-            or (state.playback is PlayState.PLAYING)
-            != (self._written.playback is PlayState.PLAYING)
-        ):
+        # unless the position changed since the last push, or playback started
+        # or stopped: the frontend extrapolates from that time only while
+        # playing. The last push, not the last write, since a position pushed
+        # on course is not written.
+        playing = state.playback is PlayState.PLAYING
+        was_playing = self._written.playback is PlayState.PLAYING
+        if state.position_ms != received or playing != was_playing:
             self._take_position(state)
         self._written = state
         super()._handle_state(state)
