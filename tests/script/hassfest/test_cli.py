@@ -1,17 +1,11 @@
-"""Test hassfest plugin loading and execution."""
+"""Test Core's hassfest plugin selection."""
 
-from dataclasses import replace
 import json
 from pathlib import Path
 import subprocess
 import sys
-from typing import Literal
 
 import pytest
-
-from script.hassfest import bluetooth
-from script.hassfest.model import Config
-from script.hassfest.runner import run
 
 
 @pytest.mark.parametrize(
@@ -39,7 +33,7 @@ def test_custom_plugin_selection(
             "-c",
             "import sys; from script.hassfest.__main__ import main; "
             "result = main(); "
-            "assert 'script.hassfest.json' in sys.modules; "
+            "assert 'hassfest.json' in sys.modules; "
             "assert 'script.hassfest.metadata' not in sys.modules; "
             "assert 'script.hassfest.docker' not in sys.modules; "
             "assert 'script.hassfest.requirements' not in sys.modules; "
@@ -59,6 +53,46 @@ def test_custom_plugin_selection(
 
     assert result.returncode == returncode, result.stderr
     assert output in result.stdout
+
+
+def test_null_codeowners(tmp_path: Path) -> None:
+    """A null codeowners field reaches manifest validation without crashing."""
+    integration_path = tmp_path / "custom_components/test"
+    integration_path.mkdir(parents=True)
+    (integration_path / "manifest.json").write_text(
+        json.dumps(
+            {
+                "domain": "test",
+                "name": "Test",
+                "codeowners": None,
+                "documentation": "https://example.com",
+                "iot_class": "local_push",
+                "version": "1.0.0",
+            }
+        )
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "script.hassfest",
+            "--integration-path",
+            str(integration_path),
+            "--plugins",
+            "codeowners,manifest",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    assert (
+        "[ERROR] [MANIFEST] Invalid manifest: expected a list at 'codeowners'. Got None"
+        in result.stdout
+    )
+    assert "Traceback" not in result.stderr
 
 
 def test_core_plugin_selection() -> None:
@@ -86,36 +120,3 @@ def test_core_plugin_selection() -> None:
     assert result.returncode == 0, result.stderr
     assert "Validating metadata..." in result.stdout
     assert "Invalid integrations: 0" in result.stdout
-
-
-@pytest.mark.parametrize(
-    ("action", "returncode", "generated"),
-    [("validate", 1, False), ("generate", 0, True)],
-)
-def test_fixable_errors(
-    config: Config,
-    tmp_path: Path,
-    action: Literal["validate", "generate"],
-    returncode: int,
-    generated: bool,
-) -> None:
-    """Fixable errors fail validation but allow generation using the supplied plugins."""
-    config = replace(config, root=tmp_path, action=action)
-    integration_path = config.core_integrations_path / "test"
-    integration_path.mkdir(parents=True)
-    (integration_path / "manifest.json").write_text(
-        json.dumps(
-            {
-                "domain": "test",
-                "name": "Test",
-                "bluetooth": [{"local_name": "Test-*"}],
-            }
-        )
-    )
-    generated_path = tmp_path / "homeassistant/generated/bluetooth.py"
-    generated_path.parent.mkdir()
-    generated_path.write_text("stale")
-
-    assert run(config, [bluetooth]) == returncode
-
-    assert ("Test-*" in generated_path.read_text()) is generated

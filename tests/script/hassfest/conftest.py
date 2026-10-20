@@ -3,16 +3,17 @@
 from pathlib import Path
 from unittest.mock import patch
 
+from hassfest.model import Config, Integration
 import pytest
 
-from script.hassfest.model import Config, Integration
+import homeassistant
 
 
 @pytest.fixture
-def config():
+def config() -> Config:
     """Fixture for hassfest Config."""
     return Config(
-        root=Path(".").absolute(),
+        root=Path(homeassistant.__file__).parent.parent,
         specific_integrations=None,
         action="validate",
         requirements=True,

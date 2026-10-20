@@ -2,6 +2,7 @@
 
 import ast
 
+from hassfest.model import Config
 import pytest
 
 from script.hassfest.dependencies import (
@@ -9,7 +10,6 @@ from script.hassfest.dependencies import (
     ImportCollector,
     _validate_dependencies,
 )
-from script.hassfest.model import Config
 
 from . import get_integration
 

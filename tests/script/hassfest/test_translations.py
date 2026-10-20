@@ -4,11 +4,11 @@ from dataclasses import replace
 import json
 from pathlib import Path
 
+from hassfest.model import Config
 import probatio
 import pytest
 
 from script.hassfest import translations
-from script.hassfest.model import Config
 
 from . import get_integration
 

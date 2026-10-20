@@ -11,15 +11,12 @@ import sys
 import tomllib
 from typing import Any
 
+from hassfest.model import Config, Integration
+from hassfest.requirements_util import EXCLUDED_REQUIREMENTS_ALL, normalize_package_name
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 
 from homeassistant.util.yaml.loader import load_yaml
-from script.hassfest.model import Config, Integration
-from script.hassfest.requirements_util import (
-    EXCLUDED_REQUIREMENTS_ALL,
-    normalize_package_name,
-)
 
 # Requirements excluded by EXCLUDED_REQUIREMENTS_ALL which should be included when
 # building integration wheels for all architectures.

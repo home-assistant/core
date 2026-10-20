@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from script.hassfest.model import Config, Integration
+from hassfest.model import Config, Integration
 
 
 def get_integration(domain: str, config: Config):

@@ -7,10 +7,11 @@ import os
 from pathlib import Path
 from typing import Final
 
+from hassfest.model import Config, Integration
+
 from homeassistant.const import REQUIRED_PYTHON_VER
 
 from .core_files import MISSING_ALL, get_core_integrations
-from .model import Config, Integration
 
 # Component modules which should set no_implicit_reexport = true.
 NO_IMPLICIT_REEXPORT_MODULES: set[str] = {
