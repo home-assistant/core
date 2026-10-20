@@ -1,10 +1,10 @@
 """Tests for the Nanoleaf integration."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.nanoleaf.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:

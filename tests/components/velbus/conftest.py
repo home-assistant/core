@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from velbusaio.channels import (
     Blind,
     Button,
@@ -22,8 +23,6 @@ from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from .const import PORT_TCP
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="controller")
@@ -121,6 +120,8 @@ def mock_button() -> AsyncMock:
     channel.get_module_serial.return_value = "a1b2c3d4e5f6"
     channel.is_sub_device.return_value = False
     channel.is_closed.return_value = True
+    channel.is_long_pressed.return_value = False
+    channel.get_channel_info.return_value = {"long": False}
     channel.is_on.return_value = False
     return channel
 

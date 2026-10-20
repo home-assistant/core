@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from probatio import to_field_list
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from skoda_public_api.api_layer.exceptions import (
     OpenApiAuthenticationError,
     OpenApiError,
@@ -21,8 +22,6 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv
-
-from tests.common import MockConfigEntry
 
 VIN = "TMBJM7NP2M1TMP511"
 API_KEY = "test-api-key"

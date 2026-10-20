@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from boschshcpy import AlarmService
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
 
@@ -13,8 +14,6 @@ from .conftest import (
     setup_integration,
     smoke_detector_device,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

@@ -58,6 +58,7 @@ from boschshcpy.services_impl import (
     VibrationSensorService,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bosch_shc.const import (
     CONF_SSL_CERTIFICATE,
@@ -66,8 +67,6 @@ from homeassistant.components.bosch_shc.const import (
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

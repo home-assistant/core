@@ -5,12 +5,11 @@ from unittest.mock import AsyncMock, patch
 
 from pyheltycloud import HeltyDevice, HeltyState, VmcMode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.helty_cloud.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
 
 EMAIL = "user@example.com"
 PASSWORD = "hunter2"

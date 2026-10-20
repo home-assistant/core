@@ -4,6 +4,8 @@ from unittest.mock import MagicMock, NonCallableMock, patch
 
 import aiohttp
 from nexia.home import NexiaHome
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.nexia import _preregister_devices
 from homeassistant.components.nexia.const import DOMAIN
@@ -15,9 +17,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
 
 from .conftest import setup_integration
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def test_setup_retry_client_os_error(

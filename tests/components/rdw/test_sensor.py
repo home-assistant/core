@@ -1,5 +1,7 @@
 """Tests for the sensors provided by the RDW integration."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.rdw.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorDeviceClass
 from homeassistant.const import (
@@ -10,8 +12,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 async def test_vehicle_sensors(

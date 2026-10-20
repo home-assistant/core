@@ -11,6 +11,11 @@ from aiogithubapi import (
     GitHubRateLimitModel,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.github.const import (
     CONF_REPOSITORY,
@@ -22,12 +27,6 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 
 from .const import MOCK_ACCESS_TOKEN
-
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_object_fixture,
-    load_json_object_fixture,
-)
 
 
 @pytest.fixture
