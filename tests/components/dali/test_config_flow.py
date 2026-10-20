@@ -1,8 +1,10 @@
 """Test the Tridonic DALI config flow."""
 
+import inspect
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from dali.driver.serial import DriverLubaRs232
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.dali.const import CONF_BUS_POWER, DOMAIN
@@ -53,6 +55,15 @@ USB_PORT = USBDevice(
 
 BY_ID_PATH = "/dev/serial/by-id/usb-Lunatone_USB-DALI2"
 PORT_LABEL = "Lunatone USB-DALI2 (123456)"
+
+
+def test_probe_uses_a_supported_connect_argument() -> None:
+    """Guard against pinning a python-dali that rejects the read-only probe.
+
+    ``_async_probe`` connects with ``apply_settings=False``; a pinned release
+    without that argument would raise ``TypeError`` during setup and discovery.
+    """
+    assert "apply_settings" in inspect.signature(DriverLubaRs232.connect).parameters
 
 
 async def test_usb_discovery(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
