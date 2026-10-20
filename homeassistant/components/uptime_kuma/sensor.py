@@ -295,5 +295,6 @@ class UptimeKumaSensorEntity(
                 device_registry.async_update_device(
                     device_entry.id, sw_version=self.coordinator.api.version.version
                 )
+                self.device_info.sw_version = self.coordinator.api.version.version
 
         super()._handle_coordinator_update()
