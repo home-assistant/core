@@ -466,6 +466,7 @@ FLOWS = {
         "local_file",
         "local_ip",
         "local_todo",
+        "local_vision",
         "locative",
         "lojack",
         "london_underground",

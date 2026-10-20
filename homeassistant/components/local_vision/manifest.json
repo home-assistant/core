@@ -1,0 +1,22 @@
+{
+  "domain": "local_vision",
+  "name": "Local vision",
+  "categories": [
+    "ai_voice.image_recognition"
+  ],
+  "codeowners": [
+    "@RaHehl"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "ai_task"
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/local_vision",
+  "integration_type": "service",
+  "iot_class": "calculated",
+  "quality_scale": "bronze",
+  "requirements": [
+    "tarsius==0.4.0"
+  ],
+  "single_config_entry": true
+}

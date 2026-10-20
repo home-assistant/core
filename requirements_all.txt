@@ -3270,6 +3270,9 @@ tank-utility==1.5.1
 # homeassistant.components.tapsaff
 tapsaff==0.2.1
 
+# homeassistant.components.local_vision
+tarsius==0.4.0
+
 # homeassistant.components.tellstick
 tellcore-net==0.4
 

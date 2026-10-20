@@ -6342,6 +6342,16 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "local_vision": {
+      "name": "Local vision",
+      "integration_type": "service",
+      "categories": [
+        "ai_voice.image_recognition"
+      ],
+      "config_flow": true,
+      "iot_class": "calculated",
+      "single_config_entry": true
+    },
     "locative": {
       "name": "Locative",
       "integration_type": "hub",

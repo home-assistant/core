@@ -1,0 +1,26 @@
+{
+  "config": {
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "step": {
+      "user": {
+        "description": "Classifies camera images on this device by comparing them with example images. No account or API key is needed."
+      }
+    }
+  },
+  "exceptions": {
+    "blank_example": {
+      "message": "An example of {label} shows nothing to compare in the region."
+    },
+    "blank_frame": {
+      "message": "The image shows nothing, the camera may be offline."
+    },
+    "model_unavailable": {
+      "message": "The image model could not be loaded: {error}"
+    },
+    "unreadable_image": {
+      "message": "An image could not be read."
+    }
+  }
+}
