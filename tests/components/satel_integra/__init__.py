@@ -4,6 +4,7 @@ from collections.abc import Callable
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.satel_integra.const import (
@@ -24,8 +25,6 @@ from homeassistant.components.satel_integra.const import (
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_CODE, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 MOCK_CODE = "1234"
 MOCK_CONFIG_DATA = {

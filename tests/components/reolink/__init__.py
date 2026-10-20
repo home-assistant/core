@@ -1,9 +1,9 @@
 """Tests for the Reolink integration."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 async def setup_integration(

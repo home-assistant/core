@@ -1,8 +1,12 @@
 """Constants for OwnTracks."""
 
-from typing import Final
+from typing import Any, Final
+
+from homeassistant.util.hass_dict import HassKey
 
 DOMAIN: Final = "owntracks"
+
+DATA_OWNTRACKS_CONFIG: HassKey[dict[str, Any]] = HassKey(DOMAIN)
 
 ATTR_ADDRESS: Final = "address"
 ATTR_BATTERY_STATUS: Final = "battery_status"

@@ -7,6 +7,7 @@ from typing import Any
 
 from probatio import to_field_list
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from zha.application.const import ATTR_TYPE, ZHA_GW_MSG
 from zigpy.application import ControllerApplication
 from zigpy.types.basic import uint16_t
@@ -27,8 +28,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

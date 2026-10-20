@@ -4,14 +4,13 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from sensorpush_ha import SensorPushCloudApi
 
 from homeassistant.components.sensorpush_cloud.const import DOMAIN
 from homeassistant.const import CONF_EMAIL
 
 from .const import CONF_DATA, MOCK_DATA
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

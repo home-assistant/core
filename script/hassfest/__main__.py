@@ -1,84 +1,12 @@
-"""Validate manifests."""
+"""Run hassfest from the command line."""
 
 import argparse
-from operator import attrgetter
 from pathlib import Path
 import sys
-from time import monotonic
 
-from . import (
-    application_credentials,
-    bluetooth,
-    codeowners,
-    conditions,
-    config_flow,
-    config_schema,
-    core_files,
-    dependencies,
-    device_classes,
-    dhcp,
-    docker,
-    icons,
-    integration_info,
-    integration_type,
-    json,
-    labs,
-    manifest,
-    mdi_icons,
-    metadata,
-    mqtt,
-    mypy_config,
-    quality_scale,
-    requirements,
-    sensor,
-    services,
-    ssdp,
-    translations,
-    triggers,
-    usb,
-    zeroconf,
-)
-from .model import Config, Integration
-
-INTEGRATION_PLUGINS = [
-    application_credentials,
-    bluetooth,
-    codeowners,
-    conditions,
-    config_schema,
-    dependencies,
-    dhcp,
-    icons,
-    integration_info,
-    integration_type,
-    json,
-    labs,
-    manifest,
-    mqtt,
-    quality_scale,
-    requirements,
-    services,
-    ssdp,
-    translations,
-    triggers,
-    usb,
-    zeroconf,
-    config_flow,  # This needs to run last, after translations are processed
-]
-HASS_PLUGINS = [
-    core_files,
-    device_classes,
-    docker,
-    mdi_icons,
-    mypy_config,
-    metadata,
-    sensor,
-]
-
-ALL_PLUGIN_NAMES = [
-    plugin.__name__.rsplit(".", maxsplit=1)[-1]
-    for plugin in (*INTEGRATION_PLUGINS, *HASS_PLUGINS)
-]
+from .model import Config
+from .plugins import ALL_PLUGIN_NAMES, load_plugins
+from .runner import run
 
 
 def valid_integration_path(integration_path: Path | str) -> Path:
@@ -169,115 +97,14 @@ def get_config() -> Config:
 
 
 def main() -> int:
-    """Validate manifests."""
+    """Run hassfest with the selected plugins."""
     try:
         config = get_config()
     except RuntimeError as err:
         print(err)
         return 1
 
-    plugins = [*INTEGRATION_PLUGINS]
-
-    if config.specific_integrations:
-        integrations = {}
-
-        for int_path in config.specific_integrations:
-            integration = Integration(int_path, config)
-            integration.load_manifest()
-            integrations[integration.domain] = integration
-
-    else:
-        integrations = Integration.load_dir(config.core_integrations_path, config)
-        plugins += HASS_PLUGINS
-
-    for plugin in plugins:
-        plugin_name = plugin.__name__.rsplit(".", maxsplit=1)[-1]
-        if plugin_name not in config.plugins:
-            continue
-        try:
-            start = monotonic()
-            print(f"Validating {plugin_name}...", end="", flush=True)
-            if (
-                plugin is requirements
-                and config.requirements
-                and not config.specific_integrations
-            ):
-                print()
-            plugin.validate(integrations, config)
-            print(f" done in {monotonic() - start:.2f}s")
-        except RuntimeError as err:
-            print()
-            print()
-            print("Error!")
-            print(err)
-            return 1
-
-    # When we generate, all errors that are fixable will be ignored,
-    # as generating them will be fixed.
-    if config.action == "generate":
-        general_errors = [err for err in config.errors if not err.fixable]
-        invalid_itg = [
-            itg
-            for itg in integrations.values()
-            if any(not error.fixable for error in itg.errors)
-        ]
-    else:
-        # action == validate
-        general_errors = config.errors
-        invalid_itg = [itg for itg in integrations.values() if itg.errors]
-
-    warnings_itg = [itg for itg in integrations.values() if itg.warnings]
-
-    print()
-    print("Integrations:", len(integrations))
-    print("Invalid integrations:", len(invalid_itg))
-    print()
-
-    if not invalid_itg and not general_errors:
-        print_integrations_status(config, warnings_itg, show_fixable_errors=False)
-
-        if config.action == "generate":
-            for plugin in plugins:
-                plugin_name = plugin.__name__.rsplit(".", maxsplit=1)[-1]
-                if plugin_name not in config.plugins:
-                    continue
-                if hasattr(plugin, "generate"):
-                    plugin.generate(integrations, config)
-        return 0
-
-    if config.action == "generate":
-        print("Found errors. Generating files canceled.")
-        print()
-
-    if general_errors:
-        print("General errors:")
-        for error in general_errors:
-            print("*", error)
-        print()
-
-    invalid_itg.extend(itg for itg in warnings_itg if itg not in invalid_itg)
-
-    print_integrations_status(config, invalid_itg, show_fixable_errors=False)
-
-    return 1
-
-
-def print_integrations_status(
-    config: Config,
-    integrations: list[Integration],
-    *,
-    show_fixable_errors: bool = True,
-) -> None:
-    """Print integration status."""
-    for integration in sorted(integrations, key=attrgetter("domain")):
-        extra = f" - {integration.path}" if config.specific_integrations else ""
-        print(f"Integration {integration.domain}{extra}:")
-        for error in integration.errors:
-            if show_fixable_errors or not error.fixable:
-                print("*", "[ERROR]", error)
-        for warning in integration.warnings:
-            print("*", "[WARNING]", warning)
-        print()
+    return run(config, load_plugins(config))
 
 
 if __name__ == "__main__":

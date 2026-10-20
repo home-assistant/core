@@ -9,6 +9,7 @@ from homeassistant.components.device_automation import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.homeassistant.triggers import event as event_trigger
+from homeassistant.components.homeassistant.triggers.event import EventTriggerArgument
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -165,9 +166,12 @@ async def async_attach_trigger(
     trigger = REMOTES[device_entry.model][trigger_key]
 
     event_config = {
-        event_trigger.CONF_PLATFORM: "event",
-        event_trigger.CONF_EVENT_TYPE: ATTR_HUE_EVENT,
-        event_trigger.CONF_EVENT_DATA: {CONF_UNIQUE_ID: hue_event.unique_id, **trigger},
+        EventTriggerArgument.PLATFORM: "event",
+        EventTriggerArgument.EVENT_TYPE: ATTR_HUE_EVENT,
+        EventTriggerArgument.EVENT_DATA: {
+            CONF_UNIQUE_ID: hue_event.unique_id,
+            **trigger,
+        },
     }
 
     event_config = event_trigger.TRIGGER_SCHEMA(event_config)

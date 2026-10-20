@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "unique_id_mismatch": "The provided token belongs to a different account than the configured one."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -12,6 +13,23 @@
       "user": "[%key:common::config_flow::initiate_flow::account%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "token": "[%key:component::nyt_games::config::step::user::data::token%]"
+        },
+        "data_description": {
+          "token": "[%key:component::nyt_games::config::step::user::data_description::token%]"
+        },
+        "description": "The token for your NYT Games account has expired or is invalid. Please enter a new token."
+      },
+      "reconfigure": {
+        "data": {
+          "token": "[%key:component::nyt_games::config::step::user::data::token%]"
+        },
+        "data_description": {
+          "token": "[%key:component::nyt_games::config::step::user::data_description::token%]"
+        }
+      },
       "user": {
         "data": {
           "token": "Token"
@@ -51,6 +69,14 @@
       "wordles_played": {
         "name": "Played"
       }
+    }
+  },
+  "exceptions": {
+    "authentication_error": {
+      "message": "Authentication with NYT Games failed. Please reauthenticate."
+    },
+    "update_error": {
+      "message": "An error occurred while fetching data from NYT Games: {error}"
     }
   }
 }

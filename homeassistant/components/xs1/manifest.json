@@ -1,6 +1,7 @@
 {
   "domain": "xs1",
   "name": "EZcontrol XS1",
+  "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/xs1",
   "iot_class": "local_polling",
