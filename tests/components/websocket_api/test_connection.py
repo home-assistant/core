@@ -18,13 +18,19 @@ from homeassistant.components.websocket_api.messages import (
     message_to_json_bytes,
     result_message,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.redact import REDACTED
 
 
 @pytest.fixture
+def send_message() -> Mock:
+    """Return the callback the connection queues its messages with."""
+    return Mock()
+
+
+@pytest.fixture
 def revocable_connection(
-    hass: HomeAssistant,
+    hass: HomeAssistant, send_message: Mock
 ) -> tuple[websocket_api.ActiveConnection, Mock]:
     """Return an authenticated connection with an observable close callback."""
     hass.data[DOMAIN] = {}
@@ -32,7 +38,7 @@ def revocable_connection(
     connection = websocket_api.ActiveConnection(
         logging.getLogger(__name__),
         hass,
-        Mock(),
+        send_message,
         MockUser(),
         Mock(),
         remote=None,
@@ -203,25 +209,60 @@ async def test_deferred_auth_close_blocks_further_commands(
 async def test_deferred_auth_close_sends_only_the_reply(
     hass: HomeAssistant,
     revocable_connection: tuple[websocket_api.ActiveConnection, Mock],
+    send_message: Mock,
 ) -> None:
     """Test work resuming elsewhere sends nothing once the token is revoked."""
     connection, _ = revocable_connection
-    send_message = connection.send_message
+    # Queries and subscriptions keep the method to send after an await.
+    send = connection.send_message
+    resume = asyncio.Event()
 
-    async def late_subscription_event() -> None:
-        connection.send_event(2, "late")
+    async def query() -> None:
+        await resume.wait()
+        send(message_to_json_bytes(result_message(2, "late")))
 
+    query_task = hass.async_create_task(query())
     with (
         patch("homeassistant.components.websocket_api.connection.AUTH_CLOSE_DELAY", 0),
         connection.async_defer_auth_close(),
     ):
         connection.async_auth_revoked()
-        await asyncio.create_task(late_subscription_event())
+        resume.set()
+        await query_task
         connection.send_result(1)
-    connection.send_event(2, "after the reply")
     await hass.async_block_till_done()
 
     send_message.assert_called_once_with(message_to_json_bytes(result_message(1, None)))
+
+
+async def test_deferred_auth_close_sends_the_error_reply(
+    hass: HomeAssistant,
+    revocable_connection: tuple[websocket_api.ActiveConnection, Mock],
+    send_message: Mock,
+) -> None:
+    """Test a command that revokes its own token and then fails still reports it."""
+    connection, cancel_ws = revocable_connection
+
+    @callback
+    def revoke_and_fail(
+        hass: HomeAssistant,
+        connection: websocket_api.ActiveConnection,
+        msg: dict[str, Any],
+    ) -> None:
+        with connection.async_defer_auth_close():
+            connection.async_auth_revoked()
+            raise ValueError("Removal failed")
+
+    connection.handlers["test/revoke"] = (revoke_and_fail, False)
+    with patch("homeassistant.components.websocket_api.connection.AUTH_CLOSE_DELAY", 0):
+        connection.async_handle({"id": 1, "type": "test/revoke"})
+        await hass.async_block_till_done()
+
+    send_message.assert_called_once()
+    reply = send_message.call_args[0][0]
+    assert reply["id"] == 1
+    assert reply["error"]["code"] == websocket_api.ERR_UNKNOWN_ERROR
+    cancel_ws.assert_called_once_with()
 
 
 async def test_auth_close_from_another_task_is_not_deferred(
