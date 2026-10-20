@@ -467,9 +467,6 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             probatio.Optional(
                 SET_WATER_HEATER_TEMPERATURE_ACTION
             ): selector.ActionSelector(),
-            probatio.Optional(CONF_AWAY_MODE): selector.TemplateSelector(),
-            probatio.Optional(TURN_AWAY_MODE_ON_ACTION): selector.ActionSelector(),
-            probatio.Optional(TURN_AWAY_MODE_OFF_ACTION): selector.ActionSelector(),
             probatio.Optional(CONF_TURN_ON): selector.ActionSelector(),
             probatio.Optional(CONF_TURN_OFF): selector.ActionSelector(),
             probatio.Optional(CONF_TEMPERATURE_UNIT): selector.SelectSelector(
@@ -481,6 +478,9 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             ),
         }
         additional_options |= {
+            probatio.Optional(CONF_AWAY_MODE): selector.TemplateSelector(),
+            probatio.Optional(TURN_AWAY_MODE_ON_ACTION): selector.ActionSelector(),
+            probatio.Optional(TURN_AWAY_MODE_OFF_ACTION): selector.ActionSelector(),
             probatio.Optional(
                 CONF_WATER_HEATER_MIN_TEMPERATURE
             ): selector.NumberSelector(
