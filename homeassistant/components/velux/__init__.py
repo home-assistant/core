@@ -14,7 +14,6 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .const import DOMAIN, LOGGER, PLATFORMS, PYVLX_FROM_CONFIG_FLOW
 from .coordinator import VeluxLimitationCoordinator
@@ -86,30 +85,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> Non
         pyvlx=pyvlx, limitation_coordinators=limitation_coordinators
     )
 
-    connections: set[tuple[str, str]] | UndefinedType = UNDEFINED
+    connections = None
     if (mac := entry.data.get(CONF_MAC)) is not None:
         connections = {(dr.CONNECTION_NETWORK_MAC, mac)}
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, f"gateway_{entry.entry_id}")},
-            name="KLF 200 Gateway",
-            manufacturer="Velux",
-            model="KLF 200",
-            hw_version=(
-                str(pyvlx.klf200.version.hardwareversion)
-                if pyvlx.klf200.version
-                else None
-            ),
-            sw_version=(
-                str(pyvlx.klf200.version.softwareversion)
-                if pyvlx.klf200.version
-                else None
-            ),
-            connections=connections,
+        identifiers={(DOMAIN, f"gateway_{entry.entry_id}")},
+        name="KLF 200 Gateway",
+        manufacturer="Velux",
+        model="KLF 200",
+        hw_version=(
+            str(pyvlx.klf200.version.hardwareversion) if pyvlx.klf200.version else None
         ),
+        sw_version=(
+            str(pyvlx.klf200.version.softwareversion) if pyvlx.klf200.version else None
+        ),
+        connections=connections,
     )
 
     async def on_hass_stop(_: Event) -> None:
