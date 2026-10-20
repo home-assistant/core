@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from jvcprojector import JvcProjectorAuthError, JvcProjectorTimeoutError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.jvc_projector.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_HOST, MOCK_MAC_FORMATED, MOCK_PASSWORD, MOCK_PORT
-
-from tests.common import MockConfigEntry
 
 TARGET = "homeassistant.components.jvc_projector.config_flow.JvcProjector"
 
@@ -89,13 +88,6 @@ async def test_user_config_flow_bad_connect_errors(
 
     mock_device.connect.side_effect = None
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -159,13 +151,6 @@ async def test_user_config_flow_bad_host_errors(
 
     # Finish flow with success
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -212,13 +197,6 @@ async def test_user_config_flow_bad_auth_errors(
     # Finish flow with success
 
     mock_device.connect.side_effect = None
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

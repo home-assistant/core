@@ -4,6 +4,8 @@ from pyblu import PairedPlayer
 
 from homeassistant.helpers.device_registry import format_mac
 
+DISPATCHER_ENTITY_ID_CHANGED_SIGNAL = "bluesound_entity_id_changed"
+
 
 def format_unique_id(mac: str, port: int) -> str:
     """Generate a unique ID based on the MAC address and port number."""

@@ -23,12 +23,13 @@ from homeassistant.core import (
     async_noop,
     callback as hass_callback,
 )
+from homeassistant.generated.usb import SERIAL_PORT_SELECTOR_INTEGRATIONS
 from homeassistant.helpers import config_validation as cv, discovery_flow
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import USBMatcher, async_get_usb
+from homeassistant.loader import USBMatcher, async_get_custom_components, async_get_usb
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
@@ -54,6 +55,7 @@ REQUEST_SCAN_COOLDOWN = 10  # 10 second cooldown
 ADD_REMOVE_SCAN_COOLDOWN = 5  # 5 second cooldown to give devices a chance to register
 
 __all__ = [
+    "DOMAIN",
     "SerialDevice",
     "SerialPortConsumer",
     "USBCallbackMatcher",
@@ -188,6 +190,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[_USB_DATA] = usb_discovery
     websocket_api.async_register_command(hass, websocket_usb_scan)
     websocket_api.async_register_command(hass, websocket_usb_list_serial_ports)
+    websocket_api.async_register_command(hass, websocket_usb_list_serial_integrations)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, register_serialx_transport())
 
@@ -650,3 +653,25 @@ async def websocket_usb_list_serial_ports(
         entry["discovery_flows"] = _async_get_discovery_flows(hass, device)
 
     connection.send_result(msg["id"], result)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {probatio.Required("type"): "usb/list_serial_integrations"}
+)
+@websocket_api.async_response
+async def websocket_usb_list_serial_integrations(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """List the core integrations whose config flow uses SerialPortSelector."""
+    custom_components = await async_get_custom_components(hass)
+    connection.send_result(
+        msg["id"],
+        [
+            domain
+            for domain in SERIAL_PORT_SELECTOR_INTEGRATIONS
+            if domain not in custom_components
+        ],
+    )

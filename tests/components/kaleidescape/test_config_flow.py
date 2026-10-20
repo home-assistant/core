@@ -56,6 +56,15 @@ async def test_user_config_flow_bad_connect_errors(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    mock_device.connect.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: MOCK_HOST},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_config_flow_unsupported_device_errors(
     hass: HomeAssistant, mock_device: MagicMock
@@ -78,6 +87,15 @@ async def test_user_config_flow_unsupported_device_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "unsupported"}
+
+    mock_device.is_server_only = False
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: MOCK_HOST},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_device", "mock_integration")

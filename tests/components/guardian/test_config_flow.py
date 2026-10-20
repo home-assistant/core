@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from aioguardian.errors import GuardianError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.guardian import CONF_UID, DOMAIN
 from homeassistant.components.guardian.config_flow import (
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -44,6 +43,7 @@ async def test_duplicate_error(hass: HomeAssistant, config: dict[str, Any]) -> N
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("setup_guardian")
 async def test_connect_error(hass: HomeAssistant, config: dict[str, Any]) -> None:
     """Test that the config entry errors out if the device cannot connect."""
 
@@ -64,6 +64,11 @@ async def test_connect_error(hass: HomeAssistant, config: dict[str, Any]) -> Non
         )
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {CONF_IP_ADDRESS: "cannot_connect"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=config
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_get_pin_from_discovery_hostname() -> None:

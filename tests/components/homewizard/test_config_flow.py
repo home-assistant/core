@@ -10,6 +10,7 @@ from homewizard_energy.errors import (
     UnsupportedError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -179,6 +178,7 @@ async def test_discovery_flow_during_onboarding_disabled_api(
     assert len(mock_onboarding.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_discovery_disabled_api(
     hass: HomeAssistant,
     mock_homewizardenergy: MagicMock,
@@ -215,6 +215,14 @@ async def test_discovery_disabled_api(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "api_not_enabled"}
+
+    mock_homewizardenergy.device.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"ip_address": "127.0.0.1"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_discovery_missing_data_in_service_info(hass: HomeAssistant) -> None:
@@ -512,6 +520,7 @@ async def test_reauth_flow(
     assert result["reason"] == "reauth_enable_api_successful"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_error(
     hass: HomeAssistant,
     mock_homewizardenergy: MagicMock,
@@ -530,6 +539,13 @@ async def test_reauth_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "api_not_enabled"}
+
+    mock_homewizardenergy.device.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_enable_api_successful"
 
 
 async def test_reconfigure(

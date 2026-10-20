@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from automower_ble.protocol import ResponseResult
 from gardena_bluetooth.parse import ManufacturerData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bluetooth import async_last_service_info
 from homeassistant.components.husqvarna_automower_ble.const import DOMAIN
@@ -14,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.loader import async_get_bluetooth
 
 from . import AUTOMOWER_SERVICE_INFO_SERIAL
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True, scope="module")

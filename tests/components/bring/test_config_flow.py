@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from bring_api import BringAuthException, BringParseException, BringRequestException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bring.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import EMAIL, PASSWORD, UUID
-
-from tests.common import MockConfigEntry
 
 MOCK_DATA_STEP = {
     CONF_EMAIL: EMAIL,
@@ -56,6 +55,7 @@ async def test_form(
         (IndexError(), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_user_init_data_unknown_error_and_recover(
     hass: HomeAssistant, mock_bring_client: AsyncMock, raise_error, text_error
 ) -> None:
@@ -75,9 +75,6 @@ async def test_flow_user_init_data_unknown_error_and_recover(
 
     # Recover
     mock_bring_client.login.side_effect = None
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
-    )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input=MOCK_DATA_STEP,

@@ -3,14 +3,13 @@
 from unittest.mock import patch
 
 from pyfireservicerota import InvalidAuthError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.fireservicerota.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 MOCK_CONF = {
     CONF_USERNAME: "my@email.address",
@@ -89,6 +88,24 @@ async def test_invalid_credentials(hass: HomeAssistant) -> None:
             user_input=MOCK_CONF,
         )
         assert result["errors"] == {"base": "invalid_auth"}
+
+    with (
+        patch(
+            "homeassistant.components.fireservicerota.config_flow.FireServiceRota"
+        ) as mock_fsr,
+        patch(
+            "homeassistant.components.fireservicerota.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        mock_fsr.return_value.request_tokens.return_value = MOCK_TOKEN_INFO
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=MOCK_CONF,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_step_user(hass: HomeAssistant) -> None:

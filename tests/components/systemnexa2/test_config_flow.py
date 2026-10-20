@@ -5,6 +5,7 @@ import socket
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from sn2 import InformationData, InformationUpdate
 
 from homeassistant.components.systemnexa2 import DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_system_nexa_2_device")
@@ -322,6 +321,7 @@ async def test_reconfigure_flow(
     assert mock_config_entry.data[CONF_NAME] == "Outdoor Smart Plug"
 
 
+@pytest.mark.usefixtures("mock_system_nexa_2_device")
 async def test_reconfigure_flow_invalid_host(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -343,6 +343,13 @@ async def test_reconfigure_flow_invalid_host(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_host"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "10.0.0.132"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 async def test_reconfigure_flow_cannot_connect(
@@ -376,6 +383,15 @@ async def test_reconfigure_flow_cannot_connect(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
+
+    mock_system_nexa_2_device.initiate_device.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "10.0.0.132"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 async def test_reconfigure_flow_wrong_device(

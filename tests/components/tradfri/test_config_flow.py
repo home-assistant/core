@@ -1,9 +1,10 @@
 """Test the Tradfri config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.tradfri import DOMAIN, config_flow
@@ -16,8 +17,6 @@ from homeassistant.helpers.service_info.zeroconf import (
 
 from . import TRADFRI_PATH
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture(name="mock_auth")
 def mock_auth_fixture():
@@ -26,7 +25,8 @@ def mock_auth_fixture():
         yield auth
 
 
-async def test_already_paired(hass: HomeAssistant, mock_entry_setup) -> None:
+@pytest.mark.usefixtures("mock_entry_setup")
+async def test_already_paired(hass: HomeAssistant) -> None:
     """Test Gateway already paired."""
     with patch(
         f"{TRADFRI_PATH}.config_flow.APIFactory",
@@ -44,6 +44,20 @@ async def test_already_paired(hass: HomeAssistant, mock_entry_setup) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_authenticate"}
+
+    with patch(
+        f"{TRADFRI_PATH}.config_flow.APIFactory",
+        autospec=True,
+    ) as mock_lib:
+        mock_it = AsyncMock()
+        mock_it.generate_psk.return_value = "abcd-key"
+        mock_it.request.return_value.id = "bla"
+        mock_lib.init.return_value = mock_it
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "123.123.123.123", "security_code": "abcd"}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_connection_successful(
@@ -71,7 +85,7 @@ async def test_user_connection_successful(
 
 
 async def test_user_connection_timeout(
-    hass: HomeAssistant, mock_auth, mock_entry_setup
+    hass: HomeAssistant, mock_auth: MagicMock, mock_entry_setup: AsyncMock
 ) -> None:
     """Test a connection timeout."""
     mock_auth.side_effect = config_flow.AuthError("timeout")
@@ -89,9 +103,16 @@ async def test_user_connection_timeout(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "timeout"}
 
+    mock_auth.side_effect = None
+    mock_auth.return_value = {"host": "127.0.0.1", "gateway_id": "bla"}
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], {"host": "127.0.0.1", "security_code": "abcd"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_connection_bad_key(
-    hass: HomeAssistant, mock_auth, mock_entry_setup
+    hass: HomeAssistant, mock_auth: MagicMock, mock_entry_setup: AsyncMock
 ) -> None:
     """Test a connection with bad key."""
     mock_auth.side_effect = config_flow.AuthError("invalid_security_code")
@@ -108,6 +129,13 @@ async def test_user_connection_bad_key(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_security_code"}
+
+    mock_auth.side_effect = None
+    mock_auth.return_value = {"host": "127.0.0.1", "gateway_id": "bla"}
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], {"host": "127.0.0.1", "security_code": "abcd"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_discovery_connection(

@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.harmony.const import DOMAIN, PREVIOUS_ACTIVE_ACTIVITY
@@ -12,8 +13,6 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
-
-from tests.common import MockConfigEntry
 
 
 def _get_mock_harmonyapi(connect=None, close=None):
@@ -233,6 +232,30 @@ async def test_form_errors(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error}
+
+    harmonyapi = _get_mock_harmonyapi(connect=True)
+    harmonyapi.name = "friend"
+    with (
+        patch(
+            "homeassistant.components.harmony.util.HarmonyAPI",
+            return_value=harmonyapi,
+        ),
+        patch(
+            "homeassistant.components.harmony.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.2.3.4",
+                "activity": "Watch TV",
+                "delay_secs": 0.2,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_options_flow_entry_not_loaded(hass: HomeAssistant) -> None:

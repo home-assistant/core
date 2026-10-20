@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 from nextdns import ApiError, InvalidApiKeyError, ProfileInfo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from tenacity import RetryError
 
 from homeassistant.components.nextdns.const import (
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_form_create_entry(

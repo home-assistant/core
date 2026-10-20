@@ -4,6 +4,7 @@ import dataclasses
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from rokuecp import Device as RokuDevice, RokuConnectionError
 
 from homeassistant.components.roku.const import CONF_PLAY_MEDIA_APP_ID, DOMAIN
@@ -26,8 +27,6 @@ from . import (
     UPNP_FRIENDLY_NAME,
     UPNP_SERIAL,
 )
-
-from tests.common import MockConfigEntry
 
 RECONFIGURE_HOST = "192.168.1.190"
 
@@ -90,6 +89,7 @@ async def test_form(hass: HomeAssistant, mock_roku_config_flow: MagicMock) -> No
     assert result["result"].unique_id == "1GU48T017973"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_cannot_connect(
     hass: HomeAssistant, mock_roku_config_flow: MagicMock
 ) -> None:
@@ -106,6 +106,13 @@ async def test_form_cannot_connect(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_roku_config_flow.update.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        flow_id=result["flow_id"], user_input={CONF_HOST: HOST}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_unknown_error(

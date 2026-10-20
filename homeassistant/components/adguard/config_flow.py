@@ -64,6 +64,7 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a AdGuard Home config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     _hassio_discovery: dict[str, Any] | None = None
 

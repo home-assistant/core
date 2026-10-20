@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.mill.const import CLOUD, CONNECTION_TYPE, DOMAIN, LOCAL
@@ -10,8 +11,6 @@ from homeassistant.components.recorder import Recorder
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -131,6 +130,18 @@ async def test_connection_error(recorder_mock: Recorder, hass: HomeAssistant) ->
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    with patch("mill.Mill.connect", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_USERNAME: "user",
+                CONF_PASSWORD: "pswd",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_local_create_entry(recorder_mock: Recorder, hass: HomeAssistant) -> None:
@@ -260,3 +271,19 @@ async def test_local_connection_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    with patch(
+        "mill_local.Mill.connect",
+        return_value={
+            "name": "panel heater gen. 3",
+            "version": "0x210927",
+            "operation_key": "",
+            "status": "ok",
+        },
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            test_data,
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY

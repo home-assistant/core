@@ -16,6 +16,7 @@ from unittest.mock import MagicMock, patch
 from freezegun import freeze_time
 import probatio
 import pytest
+from pytest_homeassistant.common import async_capture_events, async_mock_service
 from pytest_unordered import unordered
 
 from homeassistant import core as ha
@@ -59,8 +60,6 @@ from homeassistant.helpers.json import json_dumps
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.read_only_dict import ReadOnlyDict
-
-from .common import async_capture_events, async_mock_service
 
 PST = dt_util.get_time_zone("America/Los_Angeles")
 
@@ -3336,7 +3335,7 @@ async def test_async_run_job_deprecated(
     hass.async_run_job(_test)
     assert (
         "Detected code that calls `async_run_job`, which should be reviewed against "
-        "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
+        "https://contributors.home-assistant.io/blog/2024/03/13/deprecate_add_run_job/"
         " for replacement options. This will stop working in Home Assistant 2025.4"
     ) in caplog.text
 
@@ -3352,7 +3351,7 @@ async def test_async_add_job_deprecated(
     hass.async_add_job(_test)
     assert (
         "Detected code that calls `async_add_job`, which should be reviewed against "
-        "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
+        "https://contributors.home-assistant.io/blog/2024/03/13/deprecate_add_run_job/"
         " for replacement options. This will stop working in Home Assistant 2025.4"
     ) in caplog.text
 
@@ -3369,7 +3368,7 @@ async def test_async_add_hass_job_deprecated(
     assert (
         "Detected code that calls `async_add_hass_job`,"
         " which should be reviewed against "
-        "https://developers.home-assistant.io/blog/2024/04/07/deprecate_add_hass_job"
+        "https://contributors.home-assistant.io/blog/2024/04/07/deprecate_add_hass_job/"
         " for replacement options. This will stop working in Home Assistant 2025.5"
     ) in caplog.text
 
@@ -3602,7 +3601,7 @@ async def test_thread_safety_message(hass: HomeAssistant) -> None:
             "Detected code that calls test from a thread other than the event loop, "
             "which may cause Home Assistant to crash or data to corrupt. For more "
             "information, see "
-            "https://developers.home-assistant.io/docs/asyncio_thread_safety/#test"
+            "https://contributors.home-assistant.io/core/internals/thread-safety/#test"
             ". Please report this issue",
         ),
     ):

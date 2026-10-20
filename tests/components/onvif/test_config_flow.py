@@ -4,6 +4,7 @@ import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.onvif import config_flow
@@ -27,8 +28,6 @@ from . import (
     setup_mock_onvif_camera,
     setup_onvif_integration,
 )
-
-from tests.common import MockConfigEntry
 
 DISCOVERY = [
     {
@@ -617,6 +616,7 @@ async def test_flow_manual_entry_fails(hass: HomeAssistant) -> None:
             await hass.async_block_till_done()
             assert len(mock_setup_entry.mock_calls) == 1
 
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == f"{NAME} - {MAC}"
         assert result["data"] == {
             config_flow.CONF_NAME: NAME,
@@ -698,6 +698,7 @@ async def test_flow_manual_entry_wrong_password(hass: HomeAssistant) -> None:
             await hass.async_block_till_done()
             assert len(mock_setup_entry.mock_calls) == 1
 
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == f"{NAME} - {MAC}"
         assert result["data"] == {
             config_flow.CONF_NAME: NAME,
@@ -1094,6 +1095,7 @@ async def test_flow_manual_entry_wrong_port(hass: HomeAssistant) -> None:
             await hass.async_block_till_done()
             assert len(mock_setup_entry.mock_calls) == 1
 
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == f"{NAME} - {MAC}"
         assert result["data"] == {
             config_flow.CONF_NAME: NAME,

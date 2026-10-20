@@ -125,6 +125,23 @@ async def test_form_discover_error(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": expected_error}
 
+    with (
+        patch(
+            "homeassistant.components.solax.config_flow.discover",
+            return_value={_build_inverter(X1MiniV34)},
+        ),
+        patch("solax.RealTimeAPI.get_data", return_value=__mock_get_data()),
+        patch(
+            "homeassistant.components.solax.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], CONNECTION_INPUT
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
@@ -176,6 +193,23 @@ async def test_form_finalize_error(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == expected_step_id
     assert result["errors"] == {"base": expected_error}
+
+    with (
+        patch(
+            "homeassistant.components.solax.config_flow.discover",
+            return_value=discovered,
+        ),
+        patch("solax.RealTimeAPI.get_data", return_value=__mock_get_data()),
+        patch(
+            "homeassistant.components.solax.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], steps[-1]
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_select_model_step_options(hass: HomeAssistant) -> None:

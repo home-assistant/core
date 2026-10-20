@@ -7,13 +7,12 @@ from unittest.mock import Mock, create_autospec, patch, seal
 from async_upnp_client.client import UpnpDevice, UpnpService
 from async_upnp_client.client_factory import UpnpFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.dlna_dmr.const import DOMAIN
 from homeassistant.components.dlna_dmr.data import DlnaDmrData
 from homeassistant.const import CONF_DEVICE_ID, CONF_MAC, CONF_TYPE, CONF_URL
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 MOCK_DEVICE_HOST_ADDR = "198.51.100.4"
 MOCK_DEVICE_LOCATION = f"http://{MOCK_DEVICE_HOST_ADDR}/dmr_description.xml"

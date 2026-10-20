@@ -1,6 +1,7 @@
 {
   "domain": "subaru",
   "name": "Subaru",
+  "categories": ["vehicles_transport.cars_evs"],
   "codeowners": ["@G-Two", "@jpettitt"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/subaru",

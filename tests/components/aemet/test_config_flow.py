@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aemet_opendata.exceptions import AuthError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.aemet.const import (
     CONF_RADAR_UPDATES,
@@ -17,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .util import mock_api_call
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -174,3 +173,11 @@ async def test_form_auth_error(hass: HomeAssistant) -> None:
         )
 
         assert result["errors"] == {"base": "invalid_api_key"}
+
+        mocked_aemet.select_coordinates = AsyncMock()
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG,
+        )
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY

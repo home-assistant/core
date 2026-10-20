@@ -7,6 +7,7 @@ from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 from pyatv import exceptions
 from pyatv.const import PairingRequirement, Protocol
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.apple_tv import CONF_ADDRESS, config_flow
@@ -21,8 +22,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .common import airplay_service, create_conf, mrp_service, raop_service
-
-from tests.common import MockConfigEntry
 
 DMAP_SERVICE = ZeroconfServiceInfo(
     ip_address=ip_address("127.0.0.1"),
@@ -70,7 +69,7 @@ def mock_setup_entry() -> Generator[Mock]:
 # User Flows
 
 
-@pytest.mark.usefixtures("mrp_device")
+@pytest.mark.usefixtures("mrp_device", "pairing")
 async def test_user_input_device_not_found(hass: HomeAssistant) -> None:
     """Test when user specifies a non-existing device."""
     result = await hass.config_entries.flow.async_init(
@@ -87,7 +86,23 @@ async def test_user_input_device_not_found(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "no_devices_found"}
 
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"device_input": "MRP Device"},
+    )
+    assert result3["type"] is FlowResultType.FORM
 
+    result4 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result4["type"] is FlowResultType.FORM
+    assert result4["step_id"] == "pair_with_pin"
+
+    result5 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"pin": "1111"}
+    )
+    assert result5["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("pairing")
 async def test_user_input_unexpected_error(
     hass: HomeAssistant, mock_scan: AsyncMock
 ) -> None:
@@ -104,6 +119,23 @@ async def test_user_input_unexpected_error(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+    mock_scan.side_effect = None
+    mock_scan.return_value = [create_conf("127.0.0.1", "dummy", mrp_service())]
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"device_input": "dummy"},
+    )
+    assert result3["type"] is FlowResultType.FORM
+
+    result4 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result4["type"] is FlowResultType.FORM
+    assert result4["step_id"] == "pair_with_pin"
+
+    result5 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"pin": "1111"}
+    )
+    assert result5["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("full_device", "pairing")
@@ -354,7 +386,7 @@ async def test_user_adds_device_by_ip_uses_unicast_scan(
     assert str(mock_scan.hosts[0]) == "127.0.0.1"
 
 
-@pytest.mark.usefixtures("mrp_device")
+@pytest.mark.usefixtures("mrp_device", "pairing")
 async def test_user_adds_existing_device(hass: HomeAssistant) -> None:
     """Test that it is not possible to add existing device."""
     MockConfigEntry(domain=DOMAIN, unique_id="mrpid").add_to_hass(hass)
@@ -369,6 +401,21 @@ async def test_user_adds_existing_device(hass: HomeAssistant) -> None:
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "already_configured"}
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"device_input": "127.0.0.2"},
+    )
+    assert result3["type"] is FlowResultType.FORM
+
+    result4 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result4["type"] is FlowResultType.FORM
+    assert result4["step_id"] == "pair_with_pin"
+
+    result5 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"pin": "1111"}
+    )
+    assert result5["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mrp_device")
@@ -528,6 +575,14 @@ async def test_user_pair_invalid_pin(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
+    pairing_mock.finish.side_effect = None
+    pairing_mock.service.credentials = "mrp_creds"
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"pin": 1111},
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.usefixtures("mrp_device")
 async def test_user_pair_unexpected_error(
@@ -556,6 +611,14 @@ async def test_user_pair_unexpected_error(
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+    pairing_mock.finish.side_effect = None
+    pairing_mock.service.credentials = "mrp_creds"
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"pin": 1111},
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mrp_device")

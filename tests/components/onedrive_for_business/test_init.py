@@ -11,6 +11,8 @@ from onedrive_personal_sdk.exceptions import (
 )
 from onedrive_personal_sdk.models.items import Folder
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.onedrive_for_business.const import (
     CONF_FOLDER_ID,
@@ -25,9 +27,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_load_unload_config_entry(
