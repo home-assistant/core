@@ -439,7 +439,6 @@ async def async_setup_entry(
 
     entry_id = entry.entry_id
 
-    # Role update handling
     @callback
     def handle_role_update(mac_address: str, new_role: str | None) -> None:
         """Persist a role change and add whatever entities the new role enables.
@@ -508,7 +507,6 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, ROLE_UPDATE_SIGNAL, handle_role_update)
     )
 
-    # Sensor discovery
     @callback
     def handle_discovered_sensor(sensor_mac: str, sensor_role: str | None) -> None:
         """Create entities for a newly discovered sensor."""
@@ -533,7 +531,6 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, CREATE_SENSOR_SIGNAL, handle_discovered_sensor)
     )
 
-    # Plug discovery
     @callback
     def handle_discovered_plug(plug_mac: str) -> None:
         """Create entities for a newly discovered plug."""
@@ -550,7 +547,6 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, CREATE_PLUG_SIGNAL, handle_discovered_plug)
     )
 
-    # Virtual Household
     @callback
     def update_virtual_household_entities() -> None:
         """Add VHH sensor entities once the required sensor roles are present.

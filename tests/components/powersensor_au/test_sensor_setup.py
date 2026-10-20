@@ -40,13 +40,11 @@ SOLAR_MAC = "665544332211"
 UNRECOGNISED_ROLE = "gas"
 
 # Expected entity counts from sensor.py description tuples.
-# 7 total; 3 universal (battery_level, device_role, rssi_ble) + role-gated.
 _UNIVERSAL_SENSOR_COUNT = 3  # battery_level, device_role, rssi_ble
-_HOUSENET_SENSOR_COUNT = 9  # 3 universal + 2 role-gated (power, total_energy)
-# + 4 VHH consumption entities
-_WATER_SENSOR_COUNT = (
-    5  # 3 universal + 2 role-gated (water_flow_rate, total_water_consumption)
-)
+# 3 universal + 2 role-gated (power, total_energy) + 4 VHH consumption entities
+_HOUSENET_SENSOR_COUNT = 9
+# 3 universal + 2 role-gated (water_flow_rate, total_water_consumption)
+_WATER_SENSOR_COUNT = 5
 _PLUG_COUNT = 7  # all PLUG_DESCRIPTIONS
 _CONSUMPTION_VHH_COUNT = 4  # CONSUMPTION_DESCRIPTIONS
 _PRODUCTION_VHH_COUNT = 4  # PRODUCTION_DESCRIPTIONS
@@ -55,11 +53,6 @@ _PRODUCTION_VHH_COUNT = 4  # PRODUCTION_DESCRIPTIONS
 def _registered(hass: HomeAssistant, entry: MockConfigEntry) -> list[er.RegistryEntry]:
     reg = er.async_get(hass)
     return er.async_entries_for_config_entry(reg, entry.entry_id)
-
-
-# ---------------------------------------------------------------------------
-# Plug discovery
-# ---------------------------------------------------------------------------
 
 
 async def test_plug_discovery_creates_entities(
@@ -154,11 +147,6 @@ async def test_devices_found_before_platform_setup_are_seeded(
     assert "vhh_home_usage" in unique_ids
 
 
-# ---------------------------------------------------------------------------
-# Sensor discovery — no role
-# ---------------------------------------------------------------------------
-
-
 async def test_sensor_no_role_creates_universal_entities_only(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -178,11 +166,6 @@ async def test_sensor_no_role_creates_universal_entities_only(
     # Role-gated entities must NOT be present.
     assert f"{SENSOR_MAC}_power" not in unique_ids
     assert f"{SENSOR_MAC}_total_energy" not in unique_ids
-
-
-# ---------------------------------------------------------------------------
-# Sensor discovery — with role from persisted data
-# ---------------------------------------------------------------------------
 
 
 async def test_sensor_with_persisted_housenet_role_creates_full_entities(
@@ -218,11 +201,6 @@ async def test_sensor_with_persisted_housenet_role_creates_full_entities(
     unique_ids = {e.unique_id for e in entities}
     assert f"{SENSOR_MAC}_power" in unique_ids
     assert f"{SENSOR_MAC}_total_energy" in unique_ids
-
-
-# ---------------------------------------------------------------------------
-# Role assignment via now_relaying_for
-# ---------------------------------------------------------------------------
 
 
 async def test_now_relaying_for_triggers_role_update(
@@ -262,11 +240,6 @@ async def test_now_relaying_for_without_role_is_a_noop(
     await hass.async_block_till_done()
 
     assert len(_registered(hass, config_entry)) == count_before
-
-
-# ---------------------------------------------------------------------------
-# Role update (measurement event path)
-# ---------------------------------------------------------------------------
 
 
 async def test_measurement_with_role_creates_role_gated_entities(
@@ -388,11 +361,6 @@ async def test_energy_converted_from_joules(
     assert float(state.state) == pytest.approx(1.0, rel=1e-4)
 
 
-# ---------------------------------------------------------------------------
-# Water sensor
-# ---------------------------------------------------------------------------
-
-
 async def test_water_sensor_creates_water_entities(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -409,11 +377,6 @@ async def test_water_sensor_creates_water_entities(
     unique_ids = {e.unique_id for e in entities}
     assert f"{SENSOR_MAC}_water_flow_rate" in unique_ids
     assert f"{SENSOR_MAC}_total_water_consumption" in unique_ids
-
-
-# ---------------------------------------------------------------------------
-# Role change adds entities without duplicates
-# ---------------------------------------------------------------------------
 
 
 async def test_role_change_adds_entities_without_duplicates(
@@ -456,11 +419,6 @@ async def test_role_change_adds_entities_without_duplicates(
     )
     await hass.async_block_till_done()
     assert len(_registered(hass, config_entry)) == count_after_water
-
-
-# ---------------------------------------------------------------------------
-# Virtual Household
-# ---------------------------------------------------------------------------
 
 
 async def test_vhh_mains_entities_created_when_housenet_sensor_found(
@@ -530,11 +488,6 @@ async def test_vhh_mains_not_duplicated_on_repeated_signal(
     assert len(_registered(hass, config_entry)) == count_after_first
 
 
-# ---------------------------------------------------------------------------
-# Unavailability
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.parametrize(
     ("mac", "device_type", "message", "key", "timeout"),
     [
@@ -602,11 +555,6 @@ async def test_entity_becomes_unavailable_after_timeout(
     assert unavailable_state.state == "unavailable"
 
 
-# ---------------------------------------------------------------------------
-# device_lost
-# ---------------------------------------------------------------------------
-
-
 async def test_device_lost_does_not_remove_entities(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -621,11 +569,6 @@ async def test_device_lost_does_not_remove_entities(
     await hass.async_block_till_done()
 
     assert len(_registered(hass, config_entry)) == count_before
-
-
-# ---------------------------------------------------------------------------
-# Unload teardown
-# ---------------------------------------------------------------------------
 
 
 async def test_unload_unsubscribes_all_devices(
@@ -645,11 +588,6 @@ async def test_unload_unsubscribes_all_devices(
     unsubbed = {call.args[0] for call in mock_devices.unsubscribe.call_args_list}
     assert PLUG_MAC in unsubbed
     assert SENSOR_MAC in unsubbed
-
-
-# ---------------------------------------------------------------------------
-# Dispatcher — guard-clause paths (mac is None)
-# ---------------------------------------------------------------------------
 
 
 async def test_device_found_with_no_mac_is_ignored(
@@ -714,11 +652,6 @@ async def test_measurement_with_no_mac_is_ignored(
     assert len(_registered(hass, config_entry)) == count_before
 
 
-# ---------------------------------------------------------------------------
-# Dispatcher — plug re-discovered after expiry re-subscribes
-# ---------------------------------------------------------------------------
-
-
 async def test_plug_rediscovery_resubscribes(
     hass: HomeAssistant,
     mock_devices: MagicMock,
@@ -735,7 +668,6 @@ async def test_plug_rediscovery_resubscribes(
     await fire({"event": "device_found", "mac": PLUG_MAC, "device_type": "plug"})
     await hass.async_block_till_done()
 
-    # No new entities.
     assert len(_registered(hass, config_entry)) == count_after_first
     # subscribe() called a second time so events flow again.
     assert mock_devices.subscribe.call_count == subscribe_count + 1
@@ -758,11 +690,6 @@ async def test_sensor_rediscovery_resubscribes(
 
     assert len(_registered(hass, config_entry)) == count_after_first
     assert mock_devices.subscribe.call_count == subscribe_count + 1
-
-
-# ---------------------------------------------------------------------------
-# sensor.py — role-update no-ops
-# ---------------------------------------------------------------------------
 
 
 async def test_role_update_noop_when_role_unchanged(
@@ -833,11 +760,6 @@ async def test_schedule_unavailable_before_added_to_hass_is_noop(
     assert state.state != "unavailable"
 
 
-# ---------------------------------------------------------------------------
-# sensor.py — remaining coverage gaps (lines 445, 485/495, 578, 708)
-# ---------------------------------------------------------------------------
-
-
 async def test_role_update_signal_noop_when_persisted_role_matches(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -855,7 +777,7 @@ async def test_role_update_signal_noop_when_persisted_role_matches(
 
     # entry.data now has ROLE_HOUSENET persisted for SENSOR_MAC.
     # Sending the same role directly bypasses the dispatcher dedup and lands
-    # straight in the sensor.py closure — which should return early (line 708).
+    # straight in the sensor.py closure — which should return early.
     async_dispatcher_send(hass, ROLE_UPDATE_SIGNAL, SENSOR_MAC, ROLE_HOUSENET)
     await hass.async_block_till_done()
 

@@ -63,11 +63,6 @@ def _zc_info(mac: str, ip: str = "192.168.0.33") -> ZeroconfServiceInfo:
     )
 
 
-# ---------------------------------------------------------------------------
-# User flow
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.usefixtures("bypass_setup")
 async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
     """User-initiated flow reaches the confirm form then creates an entry."""
@@ -112,11 +107,6 @@ async def test_user_flow_aborts_when_already_in_progress(hass: HomeAssistant) ->
     )
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_in_progress"
-
-
-# ---------------------------------------------------------------------------
-# Zeroconf flow
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.usefixtures("bypass_setup")
@@ -199,11 +189,6 @@ async def test_zeroconf_missing_id_aborts(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "firmware_not_compatible"
-
-
-# ---------------------------------------------------------------------------
-# Reconfigure flow
-# ---------------------------------------------------------------------------
 
 
 @pytest.fixture

@@ -43,11 +43,6 @@ def _entity(hass: HomeAssistant, entry: MockConfigEntry, unique_id: str):
     return reg.async_get(entity_id), hass.states.get(entity_id)
 
 
-# ---------------------------------------------------------------------------
-# Plug snapshot
-# ---------------------------------------------------------------------------
-
-
 async def test_plug_entity_snapshot(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -65,11 +60,6 @@ async def test_plug_entity_snapshot(
     assert entities == snapshot
 
 
-# ---------------------------------------------------------------------------
-# Sensor snapshot — no role
-# ---------------------------------------------------------------------------
-
-
 async def test_sensor_no_role_entity_snapshot(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -84,11 +74,6 @@ async def test_sensor_no_role_entity_snapshot(
     entities = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
     entities.sort(key=lambda e: e.unique_id)
     assert entities == snapshot
-
-
-# ---------------------------------------------------------------------------
-# Sensor snapshot — house-net role with state values
-# ---------------------------------------------------------------------------
 
 
 async def test_sensor_housenet_state_snapshot(
@@ -145,11 +130,6 @@ async def test_sensor_housenet_state_snapshot(
     assert states == snapshot
 
 
-# ---------------------------------------------------------------------------
-# VHH snapshot — mains + solar
-# ---------------------------------------------------------------------------
-
-
 async def test_vhh_full_state_snapshot(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -158,7 +138,6 @@ async def test_vhh_full_state_snapshot(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Snapshot VHH entity states after mains and solar sensors are active."""
-    # Mains sensor
     await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
     await fire({"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_HOUSENET})
     await fire(
@@ -172,7 +151,6 @@ async def test_vhh_full_state_snapshot(
         }
     )
 
-    # Solar sensor
     await fire({"event": "device_found", "mac": SOLAR_MAC, "device_type": "sensor"})
     await fire({"event": "now_relaying_for", "mac": SOLAR_MAC, "role": ROLE_SOLAR})
     await fire(
@@ -200,11 +178,6 @@ async def test_vhh_full_state_snapshot(
         for e in sorted(vhh_entries, key=lambda e: e.unique_id)
     }
     assert states == snapshot
-
-
-# ---------------------------------------------------------------------------
-# Device registry snapshot
-# ---------------------------------------------------------------------------
 
 
 async def test_plug_device_registry_snapshot(
