@@ -1500,6 +1500,7 @@ async def test_migration_from_v2_7(
         assert entity.config_subentry_id == evaluation_subentry.subentry_id
         assert hass.states.get(entity.entity_id).attributes["supported_features"] == (
             ai_task.AITaskEntityFeature.EVALUATE
+            | ai_task.AITaskEntityFeature.CLASSIFY_IMAGE
             | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS
         )
         preferences = hass.data[ai_task.DATA_PREFERENCES]

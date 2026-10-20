@@ -1,4 +1,114 @@
 # serializer version: 1
+# name: test_classify_image[defaults]
+  dict({
+    'input': list([
+      dict({
+        'content': list([
+          dict({
+            'text': 'Examples of "empty": The bay is empty',
+            'type': 'input_text',
+          }),
+          dict({
+            'image_url': 'data:image/jpeg;base64,ZW1wdHlfMQ==',
+            'type': 'input_image',
+          }),
+          dict({
+            'image_url': 'data:image/jpeg;base64,ZW1wdHlfMg==',
+            'type': 'input_image',
+          }),
+          dict({
+            'text': 'Examples of "car"',
+            'type': 'input_text',
+          }),
+          dict({
+            'image_url': 'data:image/jpeg;base64,Y2FyXzE=',
+            'type': 'input_image',
+          }),
+          dict({
+            'text': 'Image to classify:',
+            'type': 'input_text',
+          }),
+          dict({
+            'image_url': 'data:image/jpeg;base64,Y2FtZXJhLmdhcmFnZQ==',
+            'type': 'input_image',
+          }),
+        ]),
+        'role': 'user',
+      }),
+    ]),
+    'model': 'gpt-6-luna',
+    'questions': list([
+      dict({
+        'choices': list([
+          dict({
+            'description': 'The bay is empty',
+            'value': 'empty',
+          }),
+          dict({
+            'value': 'car',
+          }),
+        ]),
+        'instructions': 'Left garage bay: Which label matches the image to classify? Each label is shown by its examples.',
+        'type': 'choice',
+      }),
+    ]),
+  })
+# ---
+# name: test_classify_image[instructions-and-region]
+  dict({
+    'input': list([
+      dict({
+        'content': list([
+          dict({
+            'text': 'Examples of "empty": The bay is empty',
+            'type': 'input_text',
+          }),
+          dict({
+            'image_url': 'data:image/jpeg;base64,ZW1wdHlfMQ==',
+            'type': 'input_image',
+          }),
+          dict({
+            'image_url': 'data:image/jpeg;base64,ZW1wdHlfMg==',
+            'type': 'input_image',
+          }),
+          dict({
+            'text': 'Examples of "car"',
+            'type': 'input_text',
+          }),
+          dict({
+            'image_url': 'data:image/jpeg;base64,Y2FyXzE=',
+            'type': 'input_image',
+          }),
+          dict({
+            'text': 'Image to classify:',
+            'type': 'input_text',
+          }),
+          dict({
+            'image_url': 'data:image/jpeg;base64,Y2FtZXJhLmdhcmFnZQ==',
+            'type': 'input_image',
+          }),
+        ]),
+        'role': 'user',
+      }),
+    ]),
+    'model': 'gpt-6-luna',
+    'questions': list([
+      dict({
+        'choices': list([
+          dict({
+            'description': 'The bay is empty',
+            'value': 'empty',
+          }),
+          dict({
+            'value': 'car',
+          }),
+        ]),
+        'instructions': 'Is a car parked in the left bay?',
+        'type': 'choice',
+      }),
+    ]),
+  })
+# ---
 # name: test_evaluate[json]
   dict({
     'answers': dict({

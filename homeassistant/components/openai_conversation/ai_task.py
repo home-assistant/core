@@ -7,14 +7,18 @@ from pathlib import Path
 from typing import TYPE_CHECKING, override
 
 import openai
-from openai.types.decision_create_params import Question
+from openai.types.decision import AnswerAnswerResourceChoice
+from openai.types.decision_create_params import (
+    Question,
+    QuestionQuestionParamChoiceChoice,
+)
 from openai.types.decision_input_message_param import DecisionInputMessageParam
 from openai.types.decision_input_part_union_param import DecisionInputPartUnionParam
 from openai.types.responses.response_output_item import ImageGenerationCall
 
 from homeassistant.components import ai_task, conversation
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util.json import json_loads
@@ -22,6 +26,7 @@ from homeassistant.util.json import json_loads
 from .const import (
     CONF_CHAT_MODEL,
     CONF_IMAGE_MODEL,
+    DOMAIN,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_DECISION_MODEL,
     RECOMMENDED_IMAGE_MODEL,
@@ -37,6 +42,9 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
+
+# Limit of the Decisions API across all messages of one request
+MAX_DECISION_IMAGES = 128
 
 
 async def async_setup_entry(
@@ -175,11 +183,50 @@ def _read_image_base64(path: Path) -> str:
     return base64.b64encode(path.read_bytes()).decode("ascii")
 
 
+def _classification_content(
+    task: ai_task.ClassifyImageTask,
+) -> list[DecisionInputPartUnionParam]:
+    """Build the examples of each label and the image to classify; blocking I/O."""
+
+    def image_part(attachment: conversation.Attachment) -> DecisionInputPartUnionParam:
+        encoded = base64.b64encode(ai_task.crop_image(attachment.path, task.region))
+        return {
+            "type": "input_image",
+            "image_url": f"data:image/jpeg;base64,{encoded.decode('ascii')}",
+        }
+
+    content: list[DecisionInputPartUnionParam] = []
+    for label_id, label in task.labels.items():
+        text = f'Examples of "{label_id}"'
+        if label.description is not None:
+            text = f"{text}: {label.description}"
+        content.append({"type": "input_text", "text": text})
+        content.extend(image_part(example) for example in label.examples)
+    content.append({"type": "input_text", "text": "Image to classify:"})
+    content.append(image_part(task.image))
+    return content
+
+
+def _choice_answer(answer: AnswerAnswerResourceChoice) -> ai_task.ChoiceAnswer:
+    """Convert a choice answer of the Decisions API."""
+    if not isinstance(answer.choice, str) or any(
+        not isinstance(option.value, str) for option in answer.probabilities
+    ):
+        raise HomeAssistantError("OpenAI returned an invalid choice")
+    probabilities = {
+        str(option.value): option.probability for option in answer.probabilities
+    }
+    if len(probabilities) != len(answer.probabilities):
+        raise HomeAssistantError("OpenAI returned duplicate choice probabilities")
+    return ai_task.ChoiceAnswer(choice=answer.choice, probabilities=probabilities)
+
+
 class OpenAIEvaluationEntity(ai_task.AITaskEntity, OpenAIBaseLLMEntity):
     """OpenAI decision task entity."""
 
     _attr_supported_features = (
         ai_task.AITaskEntityFeature.EVALUATE
+        | ai_task.AITaskEntityFeature.CLASSIFY_IMAGE
         | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS
     )
 
@@ -285,21 +332,7 @@ class OpenAIEvaluationEntity(ai_task.AITaskEntity, OpenAIBaseLLMEntity):
             if answer.type == "predicate":
                 answers[question_id] = ai_task.NoulAnswer(noul=answer.probability)
             elif answer.type == "choice":
-                if not isinstance(answer.choice, str) or any(
-                    not isinstance(option.value, str) for option in answer.probabilities
-                ):
-                    raise HomeAssistantError("OpenAI returned an invalid choice")
-                probabilities = {
-                    str(option.value): option.probability
-                    for option in answer.probabilities
-                }
-                if len(probabilities) != len(answer.probabilities):
-                    raise HomeAssistantError(
-                        "OpenAI returned duplicate choice probabilities"
-                    )
-                answers[question_id] = ai_task.ChoiceAnswer(
-                    choice=answer.choice, probabilities=probabilities
-                )
+                answers[question_id] = _choice_answer(answer)
             elif answer.type == "score":
                 levels = sorted(answer.probabilities, key=lambda level: level.value)
                 if [level.value for level in levels] != list(range(len(levels))):
@@ -311,3 +344,68 @@ class OpenAIEvaluationEntity(ai_task.AITaskEntity, OpenAIBaseLLMEntity):
             else:
                 raise HomeAssistantError("OpenAI returned an unsupported answer type")
         return ai_task.EvaluationTaskResult(answers=answers)
+
+    @override
+    async def _async_classify_image(
+        self, task: ai_task.ClassifyImageTask
+    ) -> ai_task.ChoiceAnswer:
+        """Classify an image by the examples of each label using the Decisions API."""
+        image_count = 1 + sum(len(label.examples) for label in task.labels.values())
+        if image_count > MAX_DECISION_IMAGES:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="too_many_classification_images",
+                translation_placeholders={
+                    "images": str(image_count),
+                    "max_images": str(MAX_DECISION_IMAGES),
+                },
+            )
+        try:
+            content = await self.hass.async_add_executor_job(
+                _classification_content, task
+            )
+        except OSError as err:
+            raise HomeAssistantError("Unable to read classification image") from err
+        choices: list[QuestionQuestionParamChoiceChoice] = []
+        for label_id, label in task.labels.items():
+            choice: QuestionQuestionParamChoiceChoice = {"value": label_id}
+            if label.description is not None:
+                choice["description"] = label.description
+            choices.append(choice)
+
+        try:
+            response = await self.entry.runtime_data.decisions.create(
+                model=self.subentry.data.get(
+                    CONF_CHAT_MODEL, RECOMMENDED_DECISION_MODEL
+                ),
+                input=[{"role": "user", "content": content}],
+                questions=[
+                    {
+                        "type": "choice",
+                        "instructions": task.instructions
+                        or (
+                            f"{task.name}: Which label matches the image to classify? "
+                            "Each label is shown by its examples."
+                        ),
+                        "choices": choices,
+                    }
+                ],
+            )
+        except openai.OpenAIError as err:
+            raise HomeAssistantError(
+                f"Error classifying image with OpenAI: {err}"
+            ) from err
+
+        if len(response.answers) != 1:
+            raise HomeAssistantError("OpenAI returned an unexpected number of answers")
+        answer = response.answers[0]
+        if answer.type == "refusal":
+            raise HomeAssistantError("OpenAI refused the image classification")
+        if answer.type != "choice":
+            raise HomeAssistantError("OpenAI returned an unsupported answer type")
+        probabilities = _choice_answer(answer).probabilities
+        return ai_task.ChoiceAnswer(
+            # A missing label fails the core validation of the probabilities
+            choice=max(task.labels, key=lambda label: probabilities.get(label, 0.0)),
+            probabilities=probabilities,
+        )

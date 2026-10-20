@@ -1,6 +1,8 @@
 """Test AI Task platform of OpenAI Conversation integration."""
 
+import base64
 from collections.abc import Generator
+import io
 import json
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
@@ -8,6 +10,7 @@ from unittest.mock import AsyncMock, patch
 import httpx2
 from openai import APIConnectionError, PermissionDeniedError
 from openai.types.decision import Decision
+from PIL import Image
 import probatio
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -26,7 +29,7 @@ from homeassistant.components.openai_conversation.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir, selector
 from homeassistant.util.json import JsonValueType
 
@@ -614,6 +617,7 @@ async def test_evaluate(
     )
     assert hass.states.get(evaluation_entity).attributes["supported_features"] == (
         ai_task.AITaskEntityFeature.EVALUATE
+        | ai_task.AITaskEntityFeature.CLASSIFY_IMAGE
         | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS
     )
 
@@ -915,3 +919,269 @@ async def test_reconfigure_model(
     assert updated.title == subentry.title
     assert updated.data["chat_model"] == "custom-decision-model"
     reload.assert_awaited_once_with(mock_config_entry.entry_id)
+
+
+CLASSIFY_IMAGE = {
+    "media_content_id": "media-source://camera/camera.garage",
+    "media_content_type": "image/jpeg",
+}
+
+
+def _example(name: str) -> dict[str, str]:
+    return {
+        "media_content_id": f"media-source://media_source/local/garage/{name}",
+        "media_content_type": "image/jpeg",
+    }
+
+
+CLASSIFY_LABELS = {
+    "empty": {
+        "description": "The bay is empty",
+        "examples": [_example("empty_1"), _example("empty_2")],
+    },
+    "car": {"examples": [_example("car_1")]},
+}
+CLASSIFY_ANSWER = {
+    "type": "choice",
+    "choice": "car",
+    "probabilities": [
+        {"value": "empty", "probability": 0.08},
+        {"value": "car", "probability": 0.92},
+    ],
+    "confidence": 0.8,
+}
+
+
+@pytest.fixture
+def mock_media_image() -> Generator[AsyncMock]:
+    """Return every media source as an image holding the last part of its ID."""
+
+    async def get_image(
+        hass: HomeAssistant, media_content_id: str
+    ) -> media_source.MediaImage:
+        return media_source.MediaImage(
+            mime_type="image/jpeg", content=media_content_id.rpartition("/")[2].encode()
+        )
+
+    with patch(
+        "homeassistant.components.media_source.async_get_media_image",
+        side_effect=get_image,
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_crop_image(mock_media_image: AsyncMock) -> Generator[AsyncMock]:
+    """Pass image contents through instead of decoding them."""
+    with patch(
+        "homeassistant.components.ai_task.crop_image",
+        side_effect=lambda path, region: path.read_bytes(),
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture
+def classify_decisions(mock_decisions: AsyncMock) -> AsyncMock:
+    """Answer image classifications."""
+    mock_decisions.return_value = decision([CLASSIFY_ANSWER])
+    return mock_decisions
+
+
+@pytest.mark.parametrize(
+    ("instructions", "region", "expected_region"),
+    [
+        pytest.param(None, None, None, id="defaults"),
+        pytest.param(
+            "Is a car parked in the left bay?",
+            {"left": 0.5, "top": 0.25},
+            ai_task.Region(left=0.5, top=0.25),
+            id="instructions-and-region",
+        ),
+    ],
+)
+async def test_classify_image(
+    hass: HomeAssistant,
+    evaluation_entity: str,
+    classify_decisions: AsyncMock,
+    mock_crop_image: AsyncMock,
+    instructions: str | None,
+    region: dict[str, float] | None,
+    expected_region: ai_task.Region | None,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Send the examples of each label before the image to classify."""
+    result = await ai_task.async_classify_image(
+        hass,
+        task_name="Left garage bay",
+        entity_id=evaluation_entity,
+        image=CLASSIFY_IMAGE,
+        labels=CLASSIFY_LABELS,
+        region=region,
+        instructions=instructions,
+    )
+    assert result == ai_task.ChoiceAnswer(
+        choice="car", probabilities={"empty": 0.08, "car": 0.92}
+    )
+    assert classify_decisions.call_args.kwargs == snapshot
+    assert [call.args[1] for call in mock_crop_image.call_args_list] == [
+        expected_region
+    ] * 4
+
+
+async def test_classify_image_choice_follows_probabilities(
+    hass: HomeAssistant,
+    evaluation_entity: str,
+    classify_decisions: AsyncMock,
+    mock_crop_image: AsyncMock,
+) -> None:
+    """Pick the label with the highest probability as the choice."""
+    classify_decisions.return_value = decision([{**CLASSIFY_ANSWER, "choice": "empty"}])
+    result = await ai_task.async_classify_image(
+        hass,
+        task_name="Left garage bay",
+        entity_id=evaluation_entity,
+        image=CLASSIFY_IMAGE,
+        labels=CLASSIFY_LABELS,
+    )
+    assert result.choice == "car"
+
+
+async def test_classify_image_crop(
+    hass: HomeAssistant,
+    evaluation_entity: str,
+    classify_decisions: AsyncMock,
+) -> None:
+    """Send every image as a JPEG cropped to the region."""
+    image = io.BytesIO()
+    Image.new("RGB", (100, 50)).save(image, format="PNG")
+    with patch(
+        "homeassistant.components.media_source.async_get_media_image",
+        return_value=media_source.MediaImage(
+            mime_type="image/png", content=image.getvalue()
+        ),
+    ):
+        await ai_task.async_classify_image(
+            hass,
+            task_name="Left garage bay",
+            entity_id=evaluation_entity,
+            image=CLASSIFY_IMAGE,
+            labels=CLASSIFY_LABELS,
+            region={"left": 0.5, "bottom": 0.5},
+        )
+    content = classify_decisions.call_args.kwargs["input"][0]["content"]
+    images = [
+        Image.open(io.BytesIO(base64.b64decode(part["image_url"].split(",")[1])))
+        for part in content
+        if part["type"] == "input_image"
+    ]
+    assert [(image.format, image.size) for image in images] == [("JPEG", (50, 25))] * 4
+
+
+async def test_classify_image_too_many_images(
+    hass: HomeAssistant,
+    evaluation_entity: str,
+    classify_decisions: AsyncMock,
+    mock_crop_image: AsyncMock,
+) -> None:
+    """Reject more images than the Decisions API accepts in one request."""
+    labels = {
+        "empty": {"examples": [_example(f"empty_{index}") for index in range(64)]},
+        "car": {"examples": [_example(f"car_{index}") for index in range(64)]},
+    }
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await ai_task.async_classify_image(
+            hass,
+            task_name="Left garage bay",
+            entity_id=evaluation_entity,
+            image=CLASSIFY_IMAGE,
+            labels=labels,
+        )
+    assert exc_info.value.translation_key == "too_many_classification_images"
+    assert exc_info.value.translation_placeholders == {
+        "images": "129",
+        "max_images": "128",
+    }
+    mock_crop_image.assert_not_called()
+    classify_decisions.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_crop_image")
+@pytest.mark.parametrize(
+    ("answers", "error"),
+    [
+        pytest.param([], "unexpected number of answers", id="no-answer"),
+        pytest.param(
+            [CLASSIFY_ANSWER, CLASSIFY_ANSWER],
+            "unexpected number of answers",
+            id="two-answers",
+        ),
+        pytest.param(
+            [{"type": "refusal"}], "refused the image classification", id="refusal"
+        ),
+        pytest.param([ANSWERS[0]], "unsupported answer type", id="predicate"),
+        pytest.param(
+            [{**CLASSIFY_ANSWER, "choice": True}], "invalid choice", id="boolean-choice"
+        ),
+        pytest.param(
+            [
+                {
+                    **CLASSIFY_ANSWER,
+                    "probabilities": [CLASSIFY_ANSWER["probabilities"][1]],
+                }
+            ],
+            "invalid classification",
+            id="missing-label",
+        ),
+    ],
+)
+async def test_classify_image_invalid_responses(
+    hass: HomeAssistant,
+    evaluation_entity: str,
+    classify_decisions: AsyncMock,
+    answers: list[dict],
+    error: str,
+) -> None:
+    """Handle refusals and malformed provider responses as action errors."""
+    classify_decisions.return_value = decision(answers)
+    with pytest.raises(HomeAssistantError, match=error):
+        await ai_task.async_classify_image(
+            hass,
+            task_name="Left garage bay",
+            entity_id=evaluation_entity,
+            image=CLASSIFY_IMAGE,
+            labels=CLASSIFY_LABELS,
+        )
+
+
+@pytest.mark.usefixtures("mock_crop_image")
+async def test_classify_image_api_error(
+    hass: HomeAssistant, evaluation_entity: str, classify_decisions: AsyncMock
+) -> None:
+    """Translate SDK errors into Home Assistant errors."""
+    classify_decisions.side_effect = APIConnectionError(
+        request=httpx2.Request("POST", "https://api.openai.com/v1/decisions")
+    )
+    with pytest.raises(HomeAssistantError, match="Error classifying image with OpenAI"):
+        await ai_task.async_classify_image(
+            hass,
+            task_name="Left garage bay",
+            entity_id=evaluation_entity,
+            image=CLASSIFY_IMAGE,
+            labels=CLASSIFY_LABELS,
+        )
+
+
+@pytest.mark.usefixtures("mock_media_image")
+async def test_classify_image_unreadable(
+    hass: HomeAssistant, evaluation_entity: str, classify_decisions: AsyncMock
+) -> None:
+    """Report images that cannot be decoded as action errors."""
+    with pytest.raises(HomeAssistantError, match="Unable to read classification image"):
+        await ai_task.async_classify_image(
+            hass,
+            task_name="Left garage bay",
+            entity_id=evaluation_entity,
+            image=CLASSIFY_IMAGE,
+            labels=CLASSIFY_LABELS,
+        )
+    classify_decisions.assert_not_called()
