@@ -5,6 +5,7 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from ritualsgenie import RitualsGenieResponseError
 
 from homeassistant.components.rituals_perfume_genie.const import DOMAIN
@@ -27,8 +28,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .common import init_integration, mock_config_entry, mock_diffuser
-
-from tests.common import async_fire_time_changed
 
 ENTITY_ID = "update.genie_firmware"
 

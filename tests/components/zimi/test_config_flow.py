@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from zcc import (
     ControlPointCannotConnectError,
     ControlPointConnectionRefusedError,
@@ -19,8 +20,6 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.device_registry import format_mac
-
-from tests.common import MockConfigEntry
 
 INPUT_MAC = "aa:bb:cc:dd:ee:ff"
 INPUT_MAC_EXTRA = "aa:bb:cc:dd:ee:ee"

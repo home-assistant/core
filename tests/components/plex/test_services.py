@@ -9,6 +9,7 @@ from plexapi.exceptions import NotFound
 import plexapi.playqueue
 import plexapi.video
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import requests_mock
 
 from homeassistant.components.media_player import MediaType
@@ -26,8 +27,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, SECONDARY_DATA
-
-from tests.common import MockConfigEntry
 
 
 async def test_refresh_library(

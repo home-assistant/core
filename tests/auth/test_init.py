@@ -1,6 +1,9 @@
 """Tests for the Home Assistant auth module."""
 
+import asyncio
 from datetime import timedelta
+from ipaddress import ip_address
+from pathlib import Path
 import time
 from typing import Any
 from unittest.mock import Mock, patch
@@ -9,6 +12,14 @@ from freezegun import freeze_time
 import jwt
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    CLIENT_ID,
+    MockUser,
+    async_capture_events,
+    async_fire_time_changed,
+    ensure_auth_manager_loaded,
+    flush_store,
+)
 
 from homeassistant import auth, data_entry_flow
 from homeassistant.auth import (
@@ -22,15 +33,6 @@ from homeassistant.auth.const import GROUP_ID_ADMIN, MFA_SESSION_EXPIRATION
 from homeassistant.auth.models import Credentials
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    CLIENT_ID,
-    MockUser,
-    async_capture_events,
-    async_fire_time_changed,
-    ensure_auth_manager_loaded,
-    flush_store,
-)
 
 INVALID_SIGNING_KEY = b"invalid-signing-key-for-testing0"
 
@@ -880,6 +882,92 @@ async def test_login_with_auth_module(mock_hass) -> None:
     assert step["result"].id == "mock-id"
 
 
+async def test_login_command_line_with_auth_module(mock_hass: HomeAssistant) -> None:
+    """Test the command line provider asks for an enabled auth module."""
+    manager = await auth.auth_manager_from_config(
+        mock_hass,
+        [
+            {
+                "type": "command_line",
+                "command": str(
+                    Path(__file__).parent / "providers/test_command_line_cmd.sh"
+                ),
+            }
+        ],
+        [
+            {
+                "type": "insecure_example",
+                "data": [{"user_id": "mock-user", "pin": "test-pin"}],
+            }
+        ],
+    )
+    mock_hass.auth = manager
+    ensure_auth_manager_loaded(manager)
+
+    user = MockUser(id="mock-user").add_to_auth_manager(manager)
+    user.credentials.append(
+        auth_models.Credentials(
+            id="mock-id",
+            auth_provider_type="command_line",
+            auth_provider_id=None,
+            data={"username": "good-user"},
+            is_new=False,
+        )
+    )
+
+    step = await manager.login_flow.async_init(("command_line", None))
+    step = await manager.login_flow.async_configure(
+        step["flow_id"], {"username": "good-user", "password": "good-pass"}
+    )
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
+    assert step["step_id"] == "mfa"
+
+    step = await manager.login_flow.async_configure(
+        step["flow_id"], {"pin": "test-pin"}
+    )
+    assert step["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert step["result"].id == "mock-id"
+
+
+async def test_login_trusted_networks_skips_auth_module(
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test a provider without an MFA login flow does not ask for auth modules."""
+    manager = await auth.auth_manager_from_config(
+        mock_hass,
+        [{"type": "trusted_networks", "trusted_networks": ["192.168.0.1"]}],
+        [
+            {
+                "type": "insecure_example",
+                "data": [{"user_id": "mock-user", "pin": "test-pin"}],
+            }
+        ],
+    )
+    mock_hass.auth = manager
+    ensure_auth_manager_loaded(manager)
+
+    user = MockUser(id="mock-user").add_to_auth_manager(manager)
+    user.credentials.append(
+        auth_models.Credentials(
+            id="mock-id",
+            auth_provider_type="trusted_networks",
+            auth_provider_id=None,
+            data={"user_id": "mock-user"},
+            is_new=False,
+        )
+    )
+    assert await manager.async_get_enabled_mfa(user)
+
+    step = await manager.login_flow.async_init(
+        ("trusted_networks", None), context={"ip_address": ip_address("192.168.0.1")}
+    )
+    step = await manager.login_flow.async_configure(
+        step["flow_id"], {"user": "mock-user"}
+    )
+    assert step["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert step["result"].id == "mock-id"
+
+
 async def test_login_with_multi_auth_module(mock_hass) -> None:
     """Test login as existing user with multiple auth modules."""
     manager = await auth.auth_manager_from_config(
@@ -1426,3 +1514,50 @@ async def test_access_token_from_the_future(mock_hass) -> None:
     with freeze_time(now + timedelta(days=365)):
         rt = manager.async_validate_access_token(access_token)
         assert rt.id == refresh_token.id
+
+
+_EXAMPLE_PROVIDER = "homeassistant.auth.providers.insecure_example.ExampleAuthProvider"
+
+
+async def test_every_provider_is_initialized(mock_hass: HomeAssistant) -> None:
+    """Test providers are initialized before anybody tries to log in."""
+    with patch(f"{_EXAMPLE_PROVIDER}.async_initialize") as mock_initialize:
+        await auth.auth_manager_from_config(
+            mock_hass,
+            [
+                {"type": "insecure_example", "users": []},
+                {"type": "insecure_example", "id": "another", "users": []},
+            ],
+            [],
+        )
+
+    assert mock_initialize.call_count == 2
+
+
+async def test_a_provider_that_cannot_initialize_is_not_fatal(
+    mock_hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a broken provider leaves the other ways into the instance working."""
+    with patch(f"{_EXAMPLE_PROVIDER}.async_initialize", side_effect=ValueError("boom")):
+        manager = await auth.auth_manager_from_config(
+            mock_hass, [{"type": "insecure_example", "users": []}], []
+        )
+
+    assert "Error initializing auth provider insecure_example" in caplog.text
+    assert len(manager.auth_providers) == 1
+
+
+async def test_provider_initialization_is_not_swallowed_when_cancelled(
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test only errors of a provider are logged, not a cancellation."""
+    with (
+        patch(
+            f"{_EXAMPLE_PROVIDER}.async_initialize",
+            side_effect=asyncio.CancelledError,
+        ),
+        pytest.raises(asyncio.CancelledError),
+    ):
+        await auth.auth_manager_from_config(
+            mock_hass, [{"type": "insecure_example", "users": []}], []
+        )

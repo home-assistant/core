@@ -16,6 +16,11 @@ from aioamazondevices.structures import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
@@ -41,8 +46,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import assert_device_removed_and_readded, setup_integration
 from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN, TEST_DEVICE_AQM, TEST_DEVICE_AQM_SN
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "media_player.echo_test"
 

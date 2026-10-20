@@ -6,6 +6,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from demetriek import AuthChallenge, CloudDevice, Device
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_fixture,
+    load_json_array_fixture,
+)
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
@@ -16,8 +21,6 @@ from homeassistant.components.lametric.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, load_fixture, load_json_array_fixture
 
 
 @pytest.fixture(autouse=True)
