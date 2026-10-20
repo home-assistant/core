@@ -10,6 +10,7 @@ from unittest.mock import Mock, patch
 from aioshelly.const import MODEL_25
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -35,8 +36,6 @@ from homeassistant.helpers.device_registry import (
     DeviceEntry,
     DeviceRegistry,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 MOCK_MAC = "123456789ABC"
 

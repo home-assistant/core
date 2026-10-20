@@ -7,16 +7,25 @@ from homeassistant.helpers.service_info.lorawan import LoRaWANDiscoveryInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_lorawan
 
+from . import websocket_api
 from .connection import DATA_REGISTRY, ConnectionRegistry, async_register_connection
 from .const import DOMAIN
 from .device_manager import DeviceManager, device_identifier
 from .entity import LoRaWANEntity
+from .validation import (
+    NoConnectionsError,
+    NoSupportedDevicesError,
+    async_validate_devices,
+)
 
 __all__ = [
     "DeviceManager",
     "LoRaWANDiscoveryInfo",
     "LoRaWANEntity",
+    "NoConnectionsError",
+    "NoSupportedDevicesError",
     "async_register_connection",
+    "async_validate_devices",
     "device_identifier",
 ]
 
@@ -28,6 +37,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     registry = hass.data[DATA_REGISTRY] = ConnectionRegistry(
         await async_get_lorawan(hass)
     )
+
+    websocket_api.async_setup(hass)
 
     @callback
     def shutdown(event: Event) -> None:

@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from victron_mqtt import (
     AuthenticationError,
     CannotConnectError,
@@ -26,8 +27,6 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 
 from .const import MOCK_INSTALLATION_ID
-
-from tests.common import MockConfigEntry
 
 LEGACY_SENSOR_UNIQUE_ID = (
     f"{MOCK_INSTALLATION_ID}_evcharger_0_evcharger_max_set_current"

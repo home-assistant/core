@@ -196,6 +196,7 @@ class AutoUpdateStoreData(TypedDict):
 
     first_seen: dict[str, str]
     skipped: list[str]
+    withdrawn: list[str]
     window_offset: float
     attempted_window: str | None
     pending: PendingUpdate | None
@@ -227,6 +228,7 @@ class _AutoUpdateStore(Store[AutoUpdateStoreData]):
             # updates, and the window it last tried to update in
             old_data["window_offset"] = random.random()
             old_data["attempted_window"] = None
+            old_data["withdrawn"] = []
         if old_minor_version < 4:
             # Version 1.4 adds the update in progress and the past updates
             old_data["pending"] = None
@@ -276,6 +278,8 @@ class AutoUpdateManager:
         self._store = _AutoUpdateStore(hass)
         self._first_seen: dict[str, datetime] = {}
         self._skipped: set[str] = set()
+        # Offered once, then pulled again by rolling back the version file
+        self._withdrawn: set[str] = set()
         self._window_offset = random.random()
         self._attempted_window: datetime | None = None
         self._pending: PendingUpdate | None = None
@@ -292,6 +296,7 @@ class AutoUpdateManager:
                 for version, first_seen in data["first_seen"].items()
             }
             self._skipped = set(data["skipped"])
+            self._withdrawn = set(data["withdrawn"])
             self._window_offset = data["window_offset"]
             if (attempted_window := data["attempted_window"]) is not None:
                 self._attempted_window = datetime.fromisoformat(attempted_window)
@@ -567,6 +572,7 @@ class AutoUpdateManager:
             AwesomeVersion(version)
             for version in self._first_seen
             if _major(version) == _major(core.version)
+            and version not in self._withdrawn
             and running < AwesomeVersion(version) <= offered
         ]
         if not patches:
@@ -611,20 +617,24 @@ class AutoUpdateManager:
         )
 
     @callback
-    def _async_is_backing_up(self) -> bool:
-        """Return if a backup is running."""
+    def _async_backup_manager_busy(self) -> bool:
+        """Return if Core's backup manager is creating, uploading or restoring.
+
+        Supervisor's backup job ends before Core uploads to the backup agents.
+        """
         # Imported here like update_helper does, to keep backup out of startup
-        from homeassistant.components.backup import (  # noqa: PLC0415
-            DATA_MANAGER,
-            IdleEvent,
-        )
+        from homeassistant.components.backup import IdleEvent, async_get_manager  # noqa: PLC0415
 
-        # Supervisor's backup job ends before Core uploads to the backup agents
-        if (backup_manager := self._hass.data.get(DATA_MANAGER)) is not None and (
-            not isinstance(backup_manager.last_event, IdleEvent)
-        ):
-            return True
+        try:
+            backup_manager = async_get_manager(self._hass)
+        except HomeAssistantError:
+            # Without the backup integration there is no backup to wait for
+            return False
+        return not isinstance(backup_manager.last_event, IdleEvent)
 
+    @callback
+    def _async_backup_job_running(self) -> bool:
+        """Return if Supervisor runs a backup job."""
         return any(
             job.done is False
             and job.name is not None
@@ -681,7 +691,8 @@ class AutoUpdateManager:
         if (
             (version := self._async_due_version(now)) is None
             or self._async_is_unsafe()
-            or self._async_is_backing_up()
+            or self._async_backup_manager_busy()
+            or self._async_backup_job_running()
         ):
             return
 
@@ -713,13 +724,15 @@ class AutoUpdateManager:
 
             # Checked again, with nothing awaited until the request: the saves
             # and the backup let the version be skipped or pulled, the data go
-            # stale or another update start. The window only bounds the start,
-            # so a long backup may run past its end. After our own backup the
-            # backup check is left out; it may not show as finished yet.
+            # stale or another update or backup start. The window only bounds
+            # the start, so a long backup may run past its end. After our own
+            # backup, Supervisor's job for it may still show as running; the
+            # backup manager is idle again by the time it returns.
             if (
                 self._async_eligible_version(dt_util.now()) != version
                 or self._async_is_unsafe()
-                or (not backup and self._async_is_backing_up())
+                or self._async_backup_manager_busy()
+                or (not backup and self._async_backup_job_running())
             ):
                 _LOGGER.info(
                     "Not installing Home Assistant %s automatically, "
@@ -788,15 +801,26 @@ class AutoUpdateManager:
             self._first_seen[core.version_latest] = dt_util.utcnow()
             changed = True
 
+        # A version offered before but newer than the offer now was pulled.
+        # It stays out, even once a newer major is offered, until offered again.
+        offered = AwesomeVersion(core.version_latest)
+        withdrawn = {
+            version for version in self._first_seen if AwesomeVersion(version) > offered
+        }
+        if withdrawn - self._withdrawn or core.version_latest in self._withdrawn:
+            self._withdrawn = (self._withdrawn | withdrawn) - {core.version_latest}
+            changed = True
+
         running_major = _major(core.version)
         for version in list(self._first_seen):
             if _major(version) < running_major:
                 del self._first_seen[version]
                 changed = True
-        for version in list(self._skipped):
-            if _major(version) < running_major:
-                self._skipped.discard(version)
-                changed = True
+        for versions in (self._skipped, self._withdrawn):
+            for version in list(versions):
+                if _major(version) < running_major:
+                    versions.discard(version)
+                    changed = True
 
         if changed:
             self._async_save()
@@ -821,6 +845,7 @@ class AutoUpdateManager:
                 for version, first_seen in self._first_seen.items()
             },
             "skipped": sorted(self._skipped),
+            "withdrawn": sorted(self._withdrawn),
             "window_offset": self._window_offset,
             "attempted_window": (
                 self._attempted_window.isoformat()

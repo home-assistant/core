@@ -5,6 +5,11 @@ from unittest.mock import MagicMock
 from freezegun.api import FrozenDateTimeFactory
 from pyhaseiq import Phase, Status
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.hase_iq.coordinator import SCAN_INTERVAL
@@ -13,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("mock_client")

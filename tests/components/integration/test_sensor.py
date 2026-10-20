@@ -5,6 +5,11 @@ from typing import Any
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.integration.const import DOMAIN
@@ -36,12 +41,6 @@ from homeassistant.helpers import (
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    mock_restore_cache_with_extra_data,
-)
 
 DEFAULT_MAX_SUB_INTERVAL = {"minutes": 1}
 

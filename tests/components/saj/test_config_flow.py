@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pysaj
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.saj.const import CONNECTION_TYPES, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_SERIAL_NUMBER, MOCK_USER_INPUT_ETHERNET, MOCK_USER_INPUT_WIFI
-
-from tests.common import MockConfigEntry
 
 IMPORT_DATA_ETHERNET = {
     CONF_HOST: "192.168.1.88",

@@ -8,10 +8,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import ACCOUNT_HASH
+from .const import ACCOUNT_HASH, DOMAIN
 from .coordinator import (
     RitualsConfigEntry,
     RitualsHubsCoordinator,
@@ -25,6 +25,7 @@ PLATFORMS = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.UPDATE,
 ]
 
 
@@ -33,7 +34,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: RitualsConfigEntry) -> N
     # Initiate reauth for old config entries which don't have
     # username / password in the entry data
     if CONF_EMAIL not in entry.data or CONF_PASSWORD not in entry.data:
-        raise ConfigEntryAuthFailed("Missing credentials")
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="missing_credentials"
+        )
 
     client = RitualsGenie(
         email=entry.data[CONF_EMAIL],
@@ -54,6 +57,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: RitualsConfigEntry) -> N
     }
 
     entry.runtime_data = RitualsRuntimeData(hubs=hubs, sensors=sensors)
+    async_update_diffusers(hass, entry)
+
+    # Before the platforms: they look for the sensors coordinator of a new
+    # diffuser when the same update tells them about it.
+    entry.async_on_unload(
+        hubs.async_add_listener(lambda: async_update_diffusers(hass, entry))
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Only now the entities are listening, so the coordinators know which
@@ -63,6 +74,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: RitualsConfigEntry) -> N
     await asyncio.gather(
         *(coordinator.async_refresh() for coordinator in sensors.values())
     )
+
+
+@callback
+def async_update_diffusers(hass: HomeAssistant, entry: RitualsConfigEntry) -> None:
+    """Follow the diffusers being added to and removed from the account.
+
+    A new diffuser gets a sensors coordinator. A removed one loses its
+    device, and with that its entities.
+    """
+    runtime_data = entry.runtime_data
+    hubs = runtime_data.hubs.data
+
+    for hublot in hubs.keys() - runtime_data.sensors.keys():
+        runtime_data.sensors[hublot] = RitualsSensorsCoordinator(
+            hass, entry, runtime_data.hubs, hublot, added=True
+        )
+
+    for hublot in runtime_data.sensors.keys() - hubs.keys():
+        del runtime_data.sensors[hublot]
+
+    device_registry = dr.async_get(hass)
+    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+        if not any(
+            domain == DOMAIN and hublot in hubs for domain, hublot in device.identifiers
+        ):
+            device_registry.async_remove_device(device.id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: RitualsConfigEntry) -> None:

@@ -7,6 +7,13 @@ from unittest.mock import Mock, patch
 from lorawan_connection import DeviceDescriptor, Unsubscribe
 from lorawan_connection.mock import MockConnection
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant.components.lorawan import DeviceManager, async_register_connection
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
@@ -16,14 +23,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
 
 from .helpers import ExampleCoordinator, ExampleDevices, ExampleSensor
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
 
 
 @pytest.fixture

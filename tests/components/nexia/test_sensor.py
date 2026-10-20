@@ -8,6 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 from nexia.home import NexiaHome
 from nexia.sensor import NexiaSensor
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.nexia.coordinator import (
     DEFAULT_UPDATE_RATE as COORDINATOR_UPDATE_RATE,
@@ -21,8 +22,6 @@ from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from .conftest import setup_integration
-
-from tests.common import async_fire_time_changed
 
 
 async def test_create_sensors(hass: HomeAssistant, patch_nexia_home: NexiaHome) -> None:

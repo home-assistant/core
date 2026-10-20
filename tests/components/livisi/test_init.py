@@ -16,6 +16,7 @@ from livisi import (
     WrongCredentialException,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
@@ -47,8 +48,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import CONTROLLER, VALID_CONFIG
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 def _device(
