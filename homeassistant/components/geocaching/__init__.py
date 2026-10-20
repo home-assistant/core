@@ -25,6 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GeocachingConfigEntry) -
 
     entry.runtime_data = coordinator
     entry.async_on_unload(entry.add_update_listener(async_update_entry))
+    await async_update_entry(hass, entry)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 

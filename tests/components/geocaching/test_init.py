@@ -68,6 +68,59 @@ async def test_update_listener(
     assert async_schedule_reload.call_count == 2
 
 
+async def test_subentry_added_during_initial_refresh_schedules_reload(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test subentries added during the first refresh are not missed."""
+    mock_config_entry.add_to_hass(hass)
+    coordinator = MagicMock()
+    coordinator.subentry_ids = frozenset()
+
+    async def add_subentry_during_refresh() -> None:
+        hass.config_entries.async_add_subentry(
+            mock_config_entry,
+            ConfigSubentry(
+                data=MappingProxyType({CONF_CODE: "GC12345"}),
+                subentry_type=SUBENTRY_TYPE_TRACKED_CACHE,
+                title="GC12345",
+                unique_id="GC12345",
+            ),
+        )
+
+    coordinator.async_config_entry_first_refresh = AsyncMock(
+        side_effect=add_subentry_during_refresh
+    )
+
+    with (
+        patch(
+            "homeassistant.components.geocaching.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.geocaching.OAuth2Session",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.geocaching.GeocachingDataUpdateCoordinator",
+            return_value=coordinator,
+        ),
+        patch.object(
+            hass.config_entries, "async_forward_entry_setups", new=AsyncMock()
+        ),
+        patch.object(
+            hass.config_entries, "async_schedule_reload"
+        ) as async_schedule_reload,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+        async_schedule_reload.assert_called_once_with(mock_config_entry.entry_id)
+
+        await async_update_entry(hass, mock_config_entry)
+        async_schedule_reload.assert_called_once_with(mock_config_entry.entry_id)
+
+
 async def test_oauth_token_refresh_does_not_reload_entry(
     hass: HomeAssistant,
 ) -> None:
