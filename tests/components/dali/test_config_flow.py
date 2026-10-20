@@ -3,6 +3,8 @@
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.dali.const import CONF_BUS_POWER, DOMAIN
 from homeassistant.components.usb import (
     SerialDevice,
@@ -15,8 +17,6 @@ from homeassistant.const import CONF_DEVICE, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
-
-from tests.common import MockConfigEntry
 
 
 def _mock_driver(
