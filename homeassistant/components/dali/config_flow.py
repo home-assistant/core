@@ -82,8 +82,11 @@ class DaliConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_serial_ports")
 
         errors: dict[str, str] = {}
-        if user_input is not None:
-            port = self._ports[user_input[CONF_DEVICE]]
+        # The form was rendered from an earlier scan, so the chosen port may have
+        # been unplugged before submission; fall back to the refreshed list.
+        if user_input is not None and (
+            port := self._ports.get(user_input[CONF_DEVICE])
+        ):
             if isinstance(port, USBDevice):
                 await self.async_set_unique_id(
                     usb_unique_id_from_service_info(usb_service_info_from_device(port))
@@ -103,6 +106,8 @@ class DaliConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._device = device
                 self._title = _serial_port_label(port)
                 return await self.async_step_bus_power()
+        elif user_input is not None:
+            errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user",
