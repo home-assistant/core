@@ -126,6 +126,7 @@ DESCRIPTIONS: tuple[SenseCapSensorDescription[Any], ...] = (
         value_fn=lambda device: device.pressure,
         device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         native_unit_of_measurement=UnitOfPressure.PA,
+        suggested_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SenseCapSensorDescription[S2120](
@@ -213,6 +214,7 @@ DESCRIPTIONS: tuple[SenseCapSensorDescription[Any], ...] = (
             S2102,
             S2103,
             S2104,
+            S2105,
             S2106,
             S2107,
             S2120,
