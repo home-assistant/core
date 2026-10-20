@@ -164,7 +164,7 @@ class DaliConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="bus_power",
             data_schema=probatio.Schema(
-                {probatio.Required(CONF_BUS_POWER, default=True): bool}
+                {probatio.Required(CONF_BUS_POWER, default=False): bool}
             ),
         )
 
