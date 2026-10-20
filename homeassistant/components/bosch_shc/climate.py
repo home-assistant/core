@@ -43,7 +43,7 @@ async def async_setup_entry(
     if TYPE_CHECKING:
         assert shc_info is not None and shc_info.unique_id is not None
 
-    async_add_entities(
+    entities: list[ClimateControl | HeatingCircuit] = [
         ClimateControl(
             hass=hass,
             device=device,
@@ -52,8 +52,8 @@ async def async_setup_entry(
             room_name=session.room(device.room_id).name,
         )
         for device in session.device_helper.climate_controls
-    )
-    async_add_entities(
+    ]
+    entities.extend(
         HeatingCircuit(
             hass=hass,
             device=device,
@@ -62,6 +62,7 @@ async def async_setup_entry(
         )
         for device in session.device_helper.heating_circuits
     )
+    async_add_entities(entities)
 
 
 class ClimateControl(SHCEntity, ClimateEntity):
