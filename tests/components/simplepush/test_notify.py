@@ -234,6 +234,9 @@ async def setup_app_entry(hass: HomeAssistant) -> MockConfigEntry:
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+
     return entry
 
 
