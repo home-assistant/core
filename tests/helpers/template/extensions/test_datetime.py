@@ -278,6 +278,27 @@ def test_as_timestamp(hass: HomeAssistant) -> None:
     assert render(hass, "{{ as_timestamp('invalid', default=1) }}") == 1
 
 
+@pytest.mark.parametrize(
+    ("time_zone", "expected"),
+    [
+        pytest.param("America/New_York", 1704128400.0, id="new_york"),
+        pytest.param("Asia/Kolkata", 1704090600.0, id="kolkata"),
+    ],
+)
+async def test_as_timestamp_naive_uses_configured_time_zone(
+    hass: HomeAssistant, time_zone: str, expected: float
+) -> None:
+    """Test as_timestamp reads naive date/times in the configured time zone."""
+    await hass.config.async_set_time_zone(time_zone)
+
+    assert render(hass, "{{ as_timestamp('2024-01-01 12:00:00') }}") == expected
+    assert render(hass, "{{ '2024-01-01 12:00:00' | as_timestamp }}") == expected
+    assert (
+        render(hass, "{{ as_timestamp(as_datetime('2024-01-01 12:00:00')) }}")
+        == expected
+    )
+
+
 def test_as_timedelta(hass: HomeAssistant) -> None:
     """Test the as_timedelta function/filter."""
 
