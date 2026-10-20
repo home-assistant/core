@@ -4,6 +4,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from bleak.backends.device import BLEDevice
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from spinev_ble import SpinEvError
@@ -96,39 +97,40 @@ async def test_discovery_of_a_configured_charger(
     assert result["reason"] == "already_configured"
 
 
-async def test_discovery_when_the_charger_does_not_answer(
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_discovery_can_be_retried(
     hass: HomeAssistant,
     service_info: BluetoothServiceInfoBleak,
+    ble_device: BLEDevice,
     mock_charger: AsyncMock,
-) -> None:
-    """A charger held by the phone app cannot be set up yet."""
-    mock_charger.async_get_state_value.side_effect = SpinEvError("busy")
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_BLUETOOTH}, data=service_info
-    )
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
-
-
-@pytest.mark.usefixtures("mock_charger")
-async def test_discovery_when_the_charger_is_out_of_range(
-    hass: HomeAssistant,
-    service_info: BluetoothServiceInfoBleak,
     mock_ble_device: MagicMock,
 ) -> None:
-    """An address the Bluetooth manager no longer resolves cannot be set up."""
-    mock_ble_device.return_value = None
-
+    """A charger out of range or held by the phone app stays on offer."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_BLUETOOTH}, data=service_info
     )
+
+    mock_ble_device.return_value = None
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_ble_device.return_value = ble_device
+    mock_charger.async_get_state_value.side_effect = SpinEvError("busy")
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_charger.async_get_state_value.side_effect = None
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == ENTRY_DATA
+    assert result["result"].unique_id == ADDRESS
 
 
 @pytest.mark.usefixtures("mock_charger", "mock_setup_entry")

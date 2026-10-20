@@ -128,17 +128,20 @@ class SpinEvConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm a discovered charger."""
+        errors: dict[str, str] = {}
+
         if user_input is not None:
             if await self._async_charger_answers(self._address, self._serial):
                 return self._async_create(self._address, self._serial)
-            # There is nothing to correct on a confirm step, so a charger that
-            # will not answer ends the flow rather than looping on itself.
-            return self.async_abort(reason="cannot_connect")
+            # An unchanged advertisement is not rediscovered, so aborting would
+            # lose the charger until it is added by hand.
+            errors["base"] = "cannot_connect"
 
         self._set_confirm_only()
         return self.async_show_form(
             step_id="bluetooth_confirm",
             description_placeholders={"name": self._serial},
+            errors=errors,
         )
 
     @override
