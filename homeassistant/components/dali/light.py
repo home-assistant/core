@@ -113,7 +113,7 @@ class DaliLight(CoordinatorEntity[DaliCoordinator], LightEntity):
                 level = min(level, gear_data.max_level)
             await self.coordinator.driver.send(DAPC(GearShort(self._address), level))
             optimistic_level = _dali_level_to_brightness(
-                level, gear_data.linear_dimming, gear_data.min_level
+                level, gear_data.linear_dimming
             )
             await self.coordinator.async_update_gear(self._address, optimistic_level)
         except (

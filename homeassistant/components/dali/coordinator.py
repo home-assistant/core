@@ -202,9 +202,7 @@ class DaliCoordinator(DataUpdateCoordinator[dict[int, DaliGearData]]):
             return None
 
         return DaliGearData(
-            level=_dali_level_to_brightness(
-                _response_value(level), linear_dimming, min_level
-            ),
+            level=_dali_level_to_brightness(_response_value(level), linear_dimming),
             min_level=min_level,
             max_level=max_level,
             linear_dimming=linear_dimming,
@@ -331,24 +329,20 @@ def _gear_type_label(device_type: int) -> str:
     return f"{name} (DT{device_type}, IEC 62386-{201 + device_type})"
 
 
-def _dali_level_to_brightness(
-    level: object, linear_dimming: bool, min_level: int
-) -> int | None:
-    """Convert a DALI arc-power level to Home Assistant brightness."""
+def _dali_level_to_brightness(level: object, linear_dimming: bool) -> int | None:
+    """Convert a DALI arc-power level to Home Assistant brightness.
+
+    The curve depends only on the level and dimming type (IEC 62386-207); the
+    configured minimum level clamps commands, it does not rescale the readback.
+    """
     if not isinstance(level, int) or level >= 255:
         return None
     if level <= 0:
         return 0
-    # Full arc power maps to full brightness before the minimum-level shortcut,
-    # which would otherwise report level 254 as brightness 1 when min_level is 254.
     if level >= 254:
         return 255
     if linear_dimming:
-        # The minimum level is the dimmest linear step; the logarithmic curve is
-        # continuous down to the minimum, so it keeps its own mapping there.
-        if level <= min_level:
-            return 1
-        return round(1 + (level - min_level) * 254 / (254 - min_level))
+        return round(1 + (level - 1) * 254 / 253)
     return max(1, round(255 * 10 ** (((level - 254) * 3) / 253)))
 
 
@@ -367,10 +361,7 @@ def _brightness_to_dali_level(
     return min(
         range(min_level, 255),
         key=lambda level: (
-            abs(
-                (_dali_level_to_brightness(level, linear_dimming, min_level) or 0)
-                - brightness
-            ),
+            abs((_dali_level_to_brightness(level, linear_dimming) or 0) - brightness),
             level,
         ),
     )

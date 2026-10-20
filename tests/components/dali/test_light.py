@@ -134,15 +134,14 @@ async def test_light_turn_on_transmission_error_raises_home_assistant_error(
         await light.async_turn_on(brightness=255)
 
 
-@pytest.mark.parametrize("min_level", [1, 86, 96, 128, 200])
-def test_dali_level_to_brightness_never_rounds_on_level_to_zero(min_level: int) -> None:
+def test_dali_level_to_brightness_never_rounds_on_level_to_zero() -> None:
     """Test a nonzero on-level never maps to a brightness of 0.
 
     The logarithmic curve rounds the lowest on-levels toward 0; a gear that is
     on must still report at least brightness 1 so it does not read as off.
     """
     for level in range(1, 255):
-        assert _dali_level_to_brightness(level, False, min_level) >= 1
+        assert _dali_level_to_brightness(level, False) >= 1
 
 
 @pytest.mark.parametrize(
@@ -197,7 +196,7 @@ def test_brightness_level_round_trip_is_stable(
     for brightness in range(1, 256):
         level = _brightness_to_dali_level(brightness, linear_dimming, min_level)
         assert min_level <= level <= 254
-        read_back = _dali_level_to_brightness(level, linear_dimming, min_level)
+        read_back = _dali_level_to_brightness(level, linear_dimming)
         assert _brightness_to_dali_level(read_back, linear_dimming, min_level) == level
 
 
@@ -210,11 +209,11 @@ def test_brightness_to_level_snaps_to_closest_readback(
     for brightness in range(1, 256):
         level = _brightness_to_dali_level(brightness, linear_dimming, min_level)
         chosen_error = abs(
-            _dali_level_to_brightness(level, linear_dimming, min_level) - brightness
+            _dali_level_to_brightness(level, linear_dimming) - brightness
         )
         for other in range(max(min_level, level - 5), min(254, level + 5) + 1):
             other_error = abs(
-                _dali_level_to_brightness(other, linear_dimming, min_level) - brightness
+                _dali_level_to_brightness(other, linear_dimming) - brightness
             )
             assert chosen_error <= other_error
 
