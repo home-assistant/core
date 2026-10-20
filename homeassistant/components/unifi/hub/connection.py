@@ -59,6 +59,7 @@ class UnifiConnectionManager:
         self._reconnect_task: asyncio.Task[None] | None = None
         self._stable_handle: asyncio.TimerHandle | None = None
         self._recovering = False
+        self._recovery_failed = False
         self._recovery_callback: Callable[[], Awaitable[None]] | None = None
         self._reauth_required = False
         self._stopped = False
@@ -73,11 +74,7 @@ class UnifiConnectionManager:
     @property
     def _reconnect_in_flight(self) -> bool:
         """Return if a login attempt is running."""
-        return (
-            not self._recovering
-            and self._reconnect_task is not None
-            and not self._reconnect_task.done()
-        )
+        return self._reconnect_task is not None and not self._reconnect_task.done()
 
     @callback
     def report_failure(
@@ -85,6 +82,10 @@ class UnifiConnectionManager:
     ) -> None:
         """Mark the shared session unavailable and schedule one retry."""
         if self._stopped or self._reauth_required:
+            return
+        if self._recovering:
+            self._recovery_failed = True
+            self._set_available(False)
             return
         if self._retry_handle is not None or self._reconnect_in_flight:
             return
@@ -146,6 +147,7 @@ class UnifiConnectionManager:
                 return
 
             self._recovering = True
+            self._recovery_failed = False
             self._set_available(True)
             try:
                 if self._recovery_callback is not None:
@@ -154,7 +156,10 @@ class UnifiConnectionManager:
                 self._recovering = False
                 self._reconnect_task = None
 
-            if self.available and not self._stopped:
+            if self._recovery_failed:
+                self._cancel_stable_timer()
+                self._schedule_retry()
+            elif not self._stopped:
                 self._stable_handle = self.hass.loop.call_later(
                     CONNECTION_STABLE_PERIOD, self._async_connection_stable
                 )
