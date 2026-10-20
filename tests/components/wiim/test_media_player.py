@@ -9,6 +9,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import aiohttp
 from async_upnp_client.exceptions import UpnpError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from wiim.consts import PlayingStatus
 from wiim.exceptions import (
     WiimDeviceException,
@@ -82,10 +85,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import fire_general_update, fire_transport_update, setup_integration
-
-from tests.common import MockConfigEntry, async_capture_events
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 MEDIA_PLAYER_ENTITY_ID = "media_player.test_wiim_device"
 

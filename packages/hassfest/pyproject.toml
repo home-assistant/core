@@ -25,6 +25,6 @@ include = ["hassfest*"]
 hassfest = ["_data/build.json"]
 
 [tool.pytest.ini_options]
-addopts = "-p no:respx"
+addopts = "-p no:respx -p no:pytest_homeassistant"
 pythonpath = ["."]
 testpaths = ["tests"]

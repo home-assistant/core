@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
@@ -19,8 +20,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .conftest import MOCK_DEVICE_1, MOCK_DEVICE_2, MOCK_DEVICE_3
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 YAML_CONFIG = {
     DEVICE_TRACKER_DOMAIN: {
