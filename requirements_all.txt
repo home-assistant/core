@@ -3527,7 +3527,7 @@ wsdot==0.0.1
 wyoming==1.10.2
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==1.16.1
+xiaomi-ble==1.21.1
 
 # homeassistant.components.xiaomi_weather
 xiaomi-weather==0.1.0
