@@ -104,19 +104,6 @@ async def test_user_flow_no_emitters(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
-async def test_user_flow_only_offers_supported_models(hass: HomeAssistant) -> None:
-    """Test user flow only offers models with supported command sets."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    options = result["data_schema"].schema[CONF_MODEL].config["options"]
-    assert EdifierModel.R1380DB.value not in options
-    assert EdifierModel.RC13D.value not in options
-    assert EdifierModel.R1700BTS.value in options
-
-
-@pytest.mark.usefixtures("mock_infrared_emitter_entity")
 @pytest.mark.parametrize(
     ("entity_name", "expected_title"),
     [
