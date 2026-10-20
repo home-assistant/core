@@ -5,12 +5,11 @@ from unittest.mock import MagicMock, create_autospec, patch
 
 from concord232 import client as concord232_client
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.concord232.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

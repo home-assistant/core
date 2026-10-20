@@ -10,6 +10,7 @@ from py_rejseplan.dataclasses.departure import Departure
 from py_rejseplan.dataclasses.product_type import ProductType
 from py_rejseplan.enums import TransportClass
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.rejseplanen.const import (
     CONF_DEPARTURE_TYPE,
@@ -20,8 +21,6 @@ from homeassistant.components.rejseplanen.const import (
 from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 def make_mock_departures(stop_id: int) -> list[Departure]:

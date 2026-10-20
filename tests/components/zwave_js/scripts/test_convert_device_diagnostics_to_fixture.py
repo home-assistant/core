@@ -7,6 +7,7 @@ import sys
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import load_fixture, load_json_object_fixture
 
 from homeassistant.components.zwave_js.scripts.convert_device_diagnostics_to_fixture import (
     extract_fixture_data,
@@ -14,8 +15,6 @@ from homeassistant.components.zwave_js.scripts.convert_device_diagnostics_to_fix
     load_file,
     main,
 )
-
-from tests.common import load_fixture, load_json_object_fixture
 
 
 def _minify(text: str) -> str:

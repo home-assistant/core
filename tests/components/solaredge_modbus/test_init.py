@@ -12,6 +12,7 @@ from modbus_connection import (
 )
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from solaredged import SolarEdge, SolarEdgeConnectionError
 
 from homeassistant.components.select import (
@@ -50,8 +51,6 @@ from .conftest import (
     async_seed_unit,
     tcp_data,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 POWER_ENTITY = "sensor.solaredge_se10000h_power"
 

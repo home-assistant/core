@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import Mock
 
 import pytest
+from pytest_homeassistant.common import async_capture_events
 from uiprotect.data import (
     Camera,
     Event,
@@ -61,8 +62,6 @@ from .utils import (
     setup_public_light,
     setup_public_sensor,
 )
-
-from tests.common import async_capture_events
 
 LIGHT_SENSOR_WRITE = LIGHT_SENSORS[:2]
 SENSE_SENSORS_WRITE = SENSE_SENSORS[:3]

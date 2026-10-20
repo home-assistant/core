@@ -1,7 +1,6 @@
 """DataUpdateCoordinator for INDI Allsky integration."""
 
 import asyncio
-from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
@@ -9,6 +8,7 @@ from typing import override
 
 from aioindiallsky import (
     ExposureData,
+    IndiAllSkyAuthError,
     IndiAllSkyClient,
     IndiAllSkyError,
     MediaData,
@@ -16,8 +16,16 @@ from aioindiallsky import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -61,6 +69,8 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
                 entry.data[CONF_SSL],
                 entry.data[CONF_VERIFY_SSL],
             ),
+            username=entry.data.get(CONF_USERNAME),
+            password=entry.data.get(CONF_PASSWORD),
             session=async_get_clientsession(hass),
         )
         self.latest_exposure: ExposureData | None = None
@@ -147,8 +157,12 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         while True:
             self._sensor_fetch_queued = False
             try:
-                with suppress(IndiAllSkyError):
+                try:
                     await self.client.fetch_sensors()
+                except IndiAllSkyAuthError:
+                    self.config_entry.async_start_reauth(self.hass)
+                except IndiAllSkyError:
+                    pass
             finally:
                 if not self._sensor_fetch_queued:
                     self._sensor_fetch_task = None
@@ -197,6 +211,9 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         image_bytes: bytes | None
         try:
             image_bytes = await self.client.fetch_image("latestkeogram")
+        except IndiAllSkyAuthError:
+            self.config_entry.async_start_reauth(self.hass)
+            image_bytes = None
         except IndiAllSkyError as err:
             _LOGGER.warning("Failed to fetch latest keogram image: %s", err)
             image_bytes = None
@@ -244,6 +261,9 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         image_bytes: bytes | None
         try:
             image_bytes = await self.client.fetch_image("lateststartrail")
+        except IndiAllSkyAuthError:
+            self.config_entry.async_start_reauth(self.hass)
+            image_bytes = None
         except IndiAllSkyError as err:
             _LOGGER.warning("Failed to fetch latest startrail image: %s", err)
             image_bytes = None
@@ -332,6 +352,11 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
             if not self.client.is_connected:
                 await self.client.connect()
             await self.client.fetch_sensors()
+        except IndiAllSkyAuthError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
         except IndiAllSkyError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

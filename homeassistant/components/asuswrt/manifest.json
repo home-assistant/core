@@ -1,6 +1,10 @@
 {
   "domain": "asuswrt",
   "name": "ASUSWRT",
+  "categories": [
+    "computers_network.routers_network",
+    "presence_location.network_presence"
+  ],
   "codeowners": ["@kennedyshead", "@ollo69", "@Vaskivskyi"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/asuswrt",

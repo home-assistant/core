@@ -17,6 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -50,6 +51,14 @@ TRIGGER_ENTITY_OPTIONS = (
     CONF_STATE_CLASS,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
+)
+
+SENSOR_CONFIG_ENTRY_SCHEMA = TEMPLATE_SENSOR_BASE_SCHEMA.extend(
+    {
+        # The unit of measurement selector returns None when no unit is set
+        probatio.Optional(CONF_UNIT_OF_MEASUREMENT): probatio.Any(None, cv.string),
+    },
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -115,9 +124,7 @@ async def async_setup_entry(
         sensor[CONF_UNIQUE_ID] = subentry.subentry_id
         sensor[CONF_NAME] = subentry.title
 
-        sensor_config: ConfigType = probatio.Schema(
-            TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=probatio.ALLOW_EXTRA
-        )(sensor)
+        sensor_config: ConfigType = SENSOR_CONFIG_ENTRY_SCHEMA(sensor)
 
         value_string: str | None = sensor_config.get(CONF_VALUE_TEMPLATE)
 

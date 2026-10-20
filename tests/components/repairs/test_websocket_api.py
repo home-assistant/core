@@ -9,6 +9,20 @@ from unittest.mock import ANY, AsyncMock, Mock
 import orjson
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockUser,
+    async_capture_events,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 
 from homeassistant import data_entry_flow
 from homeassistant.components.repairs import FlowType, RepairsFlow, RepairsFlowResult
@@ -22,21 +36,6 @@ from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockUser,
-    async_capture_events,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
-from tests.typing import (
-    ClientSessionGenerator,
-    MockHAClientWebSocket,
-    WebSocketGenerator,
-)
 
 DEFAULT_ISSUES = [
     {

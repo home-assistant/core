@@ -25,7 +25,7 @@ from homeassistant.components.alexa import (
     entities as alexa_entities,
     errors as alexa_errors,
 )
-from homeassistant.components.frontend import DATA_THEMES
+from homeassistant.components.frontend import async_get_theme_names
 from homeassistant.components.google_assistant import helpers as google_helpers
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
@@ -562,10 +562,10 @@ class DownloadSupportPackageView(HomeAssistantView):
     @callback
     def _get_themes_info(self, hass: HomeAssistant) -> dict[str, Any]:
         """Collect information about user-installed custom themes."""
-        themes: dict[str, Any] = hass.data.get(DATA_THEMES, {})
+        themes = async_get_theme_names(hass)
         return {
             "count": len(themes),
-            "themes": sorted(themes),
+            "themes": themes,
         }
 
     async def _generate_markdown(

@@ -5,13 +5,12 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.filesize.const import DOMAIN, PLATFORMS
 from homeassistant.const import CONF_FILE_PATH, Platform
 
 from . import TEST_FILE_NAME
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="load_platforms")

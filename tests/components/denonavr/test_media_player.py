@@ -9,6 +9,7 @@ from denonavr import DenonAVR
 from denonavr.exceptions import AvrIncompleteResponseError, AvrInvalidResponseError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import media_player
 from homeassistant.components.denonavr.config_flow import (
@@ -32,8 +33,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 TEST_HOST = "1.2.3.4"
 TEST_NAME = "Test_Receiver"

@@ -9,6 +9,11 @@ from neopool_modbus import NeoPoolError
 from neopool_modbus.exceptions import InvalidStateReason, NeoPoolInvalidStateError
 from neopool_modbus.registers import ConfigKind, FiltValveMode, RelayKind, RelayMode
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.neopool.const import DEFAULT_SCAN_INTERVAL
@@ -20,8 +25,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import MOCK_POOL_DATA
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 def _select_entity_id(

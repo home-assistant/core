@@ -87,6 +87,20 @@
       }
     },
     "select": {
+      "display_direction": {
+        "name": "Display orientation",
+        "state": {
+          "normal": "[%key:common::state::normal%]",
+          "reversed": "Rotated by 180°"
+        }
+      },
+      "displayed_temperature": {
+        "name": "Displayed temperature",
+        "state": {
+          "measured": "Measured",
+          "setpoint": "Set temperature"
+        }
+      },
       "motion_sensitivity": {
         "name": "Motion sensitivity",
         "state": {

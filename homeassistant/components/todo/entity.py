@@ -3,7 +3,7 @@
 from collections.abc import Callable, Iterable
 import copy
 import dataclasses
-import datetime
+import datetime as dt
 from typing import Any, final, override
 
 from propcache.api import cached_property
@@ -27,13 +27,13 @@ class TodoItem:
     status: TodoItemStatus | None = None
     """A status or confirmation of the To-do item."""
 
-    due: datetime.date | datetime.datetime | None = None
+    due: dt.date | dt.datetime | None = None
     """The date and time that a to-do is expected to be completed."""
 
     description: str | None = None
     """A more complete description than that provided by the summary."""
 
-    completed: datetime.datetime | None = None
+    completed: dt.datetime | None = None
     """The date and time that a to-do item was marked completed."""
 
 
@@ -148,7 +148,7 @@ def api_items_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, str]:
     for name, value in obj:
         if value is None:
             continue
-        if isinstance(value, (datetime.date, datetime.datetime)):
+        if isinstance(value, (dt.date, dt.datetime)):
             result[name] = value.isoformat()
         else:
             result[name] = str(value)

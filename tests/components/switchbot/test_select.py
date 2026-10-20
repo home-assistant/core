@@ -4,6 +4,8 @@ from collections.abc import Callable
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 from switchbot import NightLightState
 
 from homeassistant.components.select import (
@@ -16,9 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import DOMAIN, STANDING_FAN_SERVICE_INFO, WOMETERTHPC_SERVICE_INFO
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 @pytest.mark.parametrize(
@@ -55,7 +54,7 @@ async def test_time_format_select_initial_state(
         },
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         state = hass.states.get("select.test_name_time_format")
         assert state is not None
@@ -107,7 +106,7 @@ async def test_set_time_format(
         ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             SELECT_DOMAIN,
@@ -156,7 +155,7 @@ async def test_standing_fan_night_light_select(
         set_night_light=mocked_set,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             SELECT_DOMAIN,

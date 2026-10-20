@@ -12,7 +12,7 @@ from homeassistant.util import dt as dt_util
 from .const import ATTR_DATETIME, DATA_COMPONENT, SERVICE_SET_VALUE
 
 if TYPE_CHECKING:
-    from . import DateTimeEntity
+    from .entity import DateTimeEntity
 
 
 async def _async_set_value(entity: DateTimeEntity, service_call: ServiceCall) -> None:

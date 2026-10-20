@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 
 from pynetgear import DEFAULT_USER
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.netgear.const import (
     CONF_CONSIDER_HOME,
@@ -28,8 +29,6 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_SERIAL,
     SsdpServiceInfo,
 )
-
-from tests.common import MockConfigEntry
 
 URL = "http://routerlogin.net"
 URL_SSL = "https://routerlogin.net"
