@@ -25546,7 +25546,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current',
-    'unique_id': '00000000000004D2-0000000000000045-MatterNodeDevice-1-ElectricalPowerMeasurementActiveCurrent-144-5',
+    'unique_id': '00000000000004D2-0000000000000040-MatterNodeDevice-1-ElectricalPowerMeasurementActiveCurrent-144-5',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -25607,7 +25607,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current',
-    'unique_id': '00000000000004D2-0000000000000045-MatterNodeDevice-2-ElectricalPowerMeasurementActiveCurrent-144-5',
+    'unique_id': '00000000000004D2-0000000000000040-MatterNodeDevice-2-ElectricalPowerMeasurementActiveCurrent-144-5',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -25668,7 +25668,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current',
-    'unique_id': '00000000000004D2-0000000000000045-MatterNodeDevice-3-ElectricalPowerMeasurementActiveCurrent-144-5',
+    'unique_id': '00000000000004D2-0000000000000040-MatterNodeDevice-3-ElectricalPowerMeasurementActiveCurrent-144-5',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -25729,7 +25729,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'esa_state',
-    'unique_id': '00000000000004D2-0000000000000045-MatterNodeDevice-1-ESAState-152-2',
+    'unique_id': '00000000000004D2-0000000000000040-MatterNodeDevice-1-ESAState-152-2',
     'unit_of_measurement': None,
   })
 # ---
@@ -25789,7 +25789,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000045-MatterNodeDevice-1-PowerSource-47-12',
+    'unique_id': '00000000000004D2-0000000000000040-MatterNodeDevice-1-PowerSource-47-12',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
@@ -25848,7 +25848,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_charge_state',
-    'unique_id': '00000000000004D2-0000000000000045-MatterNodeDevice-1-PowerSourceBatChargeState-47-26',
+    'unique_id': '00000000000004D2-0000000000000040-MatterNodeDevice-1-PowerSourceBatChargeState-47-26',
     'unit_of_measurement': None,
   })
 # ---
@@ -25912,7 +25912,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_voltage',
-    'unique_id': '00000000000004D2-0000000000000045-MatterNodeDevice-1-PowerSourceBatVoltage-47-11',
+    'unique_id': '00000000000004D2-0000000000000040-MatterNodeDevice-1-PowerSourceBatVoltage-47-11',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -25973,7 +25973,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_exported',
-    'unique_id': '00000000000004D2-0000000000000045-MatterNodeDevice-3-ElectricalEnergyMeasurementCumulativeEnergyExported-145-2',
+    'unique_id': '00000000000004D2-0000000000000040-MatterNodeDevice-3-ElectricalEnergyMeasurementCumulativeEnergyExported-145-2',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -26033,7 +26033,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'esa_opt_out_state',
-    'unique_id': '00000000000004D2-0000000000000045-MatterNodeDevice-1-ESAOptOutState-152-7',
+    'unique_id': '00000000000004D2-0000000000000040-MatterNodeDevice-1-ESAOptOutState-152-7',
     'unit_of_measurement': None,
   })
 # ---
@@ -26098,7 +26098,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000045-MatterNodeDevice-1-ElectricalPowerMeasurementWatt-144-8',
+    'unique_id': '00000000000004D2-0000000000000040-MatterNodeDevice-1-ElectricalPowerMeasurementWatt-144-8',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -26159,7 +26159,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000045-MatterNodeDevice-3-ElectricalPowerMeasurementWatt-144-8',
+    'unique_id': '00000000000004D2-0000000000000040-MatterNodeDevice-3-ElectricalPowerMeasurementWatt-144-8',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -26214,7 +26214,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reboot_count',
-    'unique_id': '00000000000004D2-0000000000000045-MatterNodeDevice-0-GeneralDiagnosticsRebootCount-51-1',
+    'unique_id': '00000000000004D2-0000000000000040-MatterNodeDevice-0-GeneralDiagnosticsRebootCount-51-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -26270,7 +26270,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000045-MatterNodeDevice-2-TemperatureSensor-1026-0',
+    'unique_id': '00000000000004D2-0000000000000040-MatterNodeDevice-2-TemperatureSensor-1026-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -26331,7 +26331,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_time_remaining',
-    'unique_id': '00000000000004D2-0000000000000045-MatterNodeDevice-1-PowerSourceBatTimeRemaining-47-13',
+    'unique_id': '00000000000004D2-0000000000000040-MatterNodeDevice-1-PowerSourceBatTimeRemaining-47-13',
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
@@ -26392,7 +26392,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_time_to_full_charge',
-    'unique_id': '00000000000004D2-0000000000000045-MatterNodeDevice-1-PowerSourceBatTimeToFullCharge-47-27',
+    'unique_id': '00000000000004D2-0000000000000040-MatterNodeDevice-1-PowerSourceBatTimeToFullCharge-47-27',
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
@@ -26445,7 +26445,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uptime',
-    'unique_id': '00000000000004D2-0000000000000045-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
+    'unique_id': '00000000000004D2-0000000000000040-MatterNodeDevice-0-GeneralDiagnosticsUpTime-51-2',
     'unit_of_measurement': None,
   })
 # ---
@@ -26504,7 +26504,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage',
-    'unique_id': '00000000000004D2-0000000000000045-MatterNodeDevice-1-ElectricalPowerMeasurementVoltage-144-4',
+    'unique_id': '00000000000004D2-0000000000000040-MatterNodeDevice-1-ElectricalPowerMeasurementVoltage-144-4',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -26565,7 +26565,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage',
-    'unique_id': '00000000000004D2-0000000000000045-MatterNodeDevice-2-ElectricalPowerMeasurementVoltage-144-4',
+    'unique_id': '00000000000004D2-0000000000000040-MatterNodeDevice-2-ElectricalPowerMeasurementVoltage-144-4',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -26626,7 +26626,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage',
-    'unique_id': '00000000000004D2-0000000000000045-MatterNodeDevice-3-ElectricalPowerMeasurementVoltage-144-4',
+    'unique_id': '00000000000004D2-0000000000000040-MatterNodeDevice-3-ElectricalPowerMeasurementVoltage-144-4',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---

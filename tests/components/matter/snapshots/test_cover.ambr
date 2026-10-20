@@ -53,60 +53,6 @@
     'state': 'closed',
   })
 # ---
-# name: test_covers[aqara_thermostat_w500_presets][cover.mock_closure_tilt_only-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'cover',
-    'entity_category': None,
-    'entity_id': 'cover.mock_closure_tilt_only',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <CoverEntityFeature: 139>,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000041-MatterNodeDevice-1-MatterClosure-260-3',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_covers[aqara_thermostat_w500_presets][cover.mock_closure_tilt_only-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 100,
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock closure tilt only',
-      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 139>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'cover.mock_closure_tilt_only',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'open',
-  })
-# ---
 # name: test_covers[eve_shutter][cover.eve_shutter_switch_20eci1701-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -462,7 +408,7 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000040-MatterNodeDevice-1-MatterClosure-260-3',
+    'unique_id': '00000000000004D2-000000000000004A-MatterNodeDevice-1-MatterClosure-260-3',
     'unit_of_measurement': None,
   })
 # ---
@@ -477,6 +423,60 @@
     }),
     'context': <ANY>,
     'entity_id': 'cover.mock_closure_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_covers[mock_closure_tilt_only][cover.mock_closure_tilt_only-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.mock_closure_tilt_only',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 139>,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000004C-MatterNodeDevice-1-MatterClosure-260-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_covers[mock_closure_tilt_only][cover.mock_closure_tilt_only-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock closure tilt only',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 139>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.mock_closure_tilt_only',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
