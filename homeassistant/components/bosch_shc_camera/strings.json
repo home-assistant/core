@@ -5,8 +5,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "wrong_account": "You must authenticate with the same Bosch SingleKey ID account that was originally configured."
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -14,11 +13,15 @@
     "step": {
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
-      },
-      "reauth_confirm": {
-        "description": "Bosch Smart Home Camera needs to re-authenticate your Bosch SingleKey ID account.",
-        "title": "[%key:common::config_flow::title::reauth%]"
       }
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Authentication with Bosch failed, please sign in again."
+    },
+    "cannot_connect": {
+      "message": "Unable to fetch the cameras from Bosch."
     }
   }
 }

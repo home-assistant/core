@@ -61,11 +61,18 @@ async def setup_application_credentials(hass: HomeAssistant) -> None:
 @pytest.fixture(autouse=True)
 def mock_list_cameras() -> Generator[AsyncMock]:
     """Mock the camera list of the library."""
-    with patch(
-        "homeassistant.components.bosch_shc_camera.config_flow.list_cameras",
-        autospec=True,
-        return_value=[],
-    ) as mock:
+    with (
+        patch(
+            "homeassistant.components.bosch_shc_camera.config_flow.list_cameras",
+            autospec=True,
+            return_value=[],
+        ) as mock,
+        patch(
+            "homeassistant.components.bosch_shc_camera.coordinator.list_cameras",
+            autospec=True,
+            return_value=[],
+        ),
+    ):
         yield mock
 
 
@@ -136,106 +143,6 @@ async def test_single_instance_allowed(hass: HomeAssistant) -> None:
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_reauth(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test reauthentication updates the existing entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=ACCOUNT_ID,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": {
-                "access_token": "old-access-token",
-                "refresh_token": "old-refresh-token",
-                "expires_at": 0,
-            },
-        },
-    )
-    entry.add_to_hass(hass)
-
-    result = await entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
-    assert result["type"] is FlowResultType.EXTERNAL_STEP
-
-    state = config_entry_oauth2_flow._encode_jwt(
-        hass, {"flow_id": result["flow_id"], "redirect_uri": REDIRECT_URI}
-    )
-    client = await hass_client_no_auth()
-    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == HTTPStatus.OK
-
-    aioclient_mock.post(
-        OAUTH2_TOKEN,
-        json={
-            "refresh_token": "new-refresh-token",
-            "access_token": _fake_access_token({"sub": ACCOUNT_ID}),
-            "token_type": "Bearer",
-            "expires_in": 60,
-        },
-    )
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert entry.data["token"]["access_token"] == _fake_access_token(
-        {"sub": ACCOUNT_ID}
-    )
-    assert entry.data["token"]["refresh_token"] == "new-refresh-token"
-
-
-async def test_reauth_wrong_account(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test reauthenticating with a different account is rejected."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=ACCOUNT_ID,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": {"access_token": "old", "refresh_token": "old", "expires_at": 0},
-        },
-    )
-    entry.add_to_hass(hass)
-
-    result = await entry.start_reauth_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
-    state = config_entry_oauth2_flow._encode_jwt(
-        hass, {"flow_id": result["flow_id"], "redirect_uri": REDIRECT_URI}
-    )
-    client = await hass_client_no_auth()
-    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == HTTPStatus.OK
-
-    aioclient_mock.post(
-        OAUTH2_TOKEN,
-        json={
-            "refresh_token": "new-refresh-token",
-            "access_token": _fake_access_token({"sub": "other-account-sub"}),
-            "token_type": "Bearer",
-            "expires_in": 60,
-        },
-    )
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "wrong_account"
-    assert entry.data["token"]["access_token"] == "old"
-
-
 @pytest.mark.parametrize(
     "access_token",
     [
@@ -297,7 +204,6 @@ async def test_invalid_token(
         (BoschCameraInvalidResponseError, "cannot_connect"),
     ],
 )
-@pytest.mark.parametrize("reauth", [False, True])
 async def test_api_access_checked_before_entry(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -305,28 +211,12 @@ async def test_api_access_checked_before_entry(
     mock_list_cameras: AsyncMock,
     error: type[Exception],
     reason: str,
-    reauth: bool,
 ) -> None:
     """Test the flow aborts when the camera API cannot be reached with the token."""
     mock_list_cameras.side_effect = error
-    if reauth:
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            unique_id=ACCOUNT_ID,
-            data={
-                "auth_implementation": DOMAIN,
-                "token": {"access_token": "old", "refresh_token": "old"},
-            },
-        )
-        entry.add_to_hass(hass)
-        result = await entry.start_reauth_flow(hass)
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-    else:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
     state = config_entry_oauth2_flow._encode_jwt(
         hass, {"flow_id": result["flow_id"], "redirect_uri": REDIRECT_URI}
     )
@@ -347,5 +237,4 @@ async def test_api_access_checked_before_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
-    expected = 1 if reauth else 0
-    assert len(hass.config_entries.async_entries(DOMAIN)) == expected
+    assert not hass.config_entries.async_entries(DOMAIN)
