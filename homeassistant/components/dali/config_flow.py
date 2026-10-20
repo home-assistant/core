@@ -172,6 +172,10 @@ class DaliConfigFlow(ConfigFlow, domain=DOMAIN):
         """Create the config entry for the selected interface."""
         assert self._device is not None
         assert self._title is not None
+        # Another manual flow may have configured the same port while this one
+        # waited at the bus-power step; manual ports have no unique ID for the
+        # flow manager to deduplicate, so re-check before creating the entry.
+        self._async_abort_entries_match({CONF_DEVICE: self._device})
         return self.async_create_entry(
             title=self._title,
             data={CONF_DEVICE: self._device, CONF_BUS_POWER: bus_power},

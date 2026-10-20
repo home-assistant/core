@@ -188,6 +188,61 @@ async def test_user_flow_selected_port_removed(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_two_manual_flows_same_port_abort_duplicate(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test a second manual flow for the same port aborts instead of duplicating."""
+    serial_port = SerialDevice(
+        device="/dev/ttyUSB0",
+        serial_number=None,
+        manufacturer=None,
+        description=None,
+    )
+    with (
+        patch(
+            "homeassistant.components.dali.config_flow.async_scan_serial_ports",
+            return_value=[serial_port],
+        ),
+        patch(
+            "homeassistant.components.dali.config_flow.usb.get_serial_by_id",
+            return_value="/dev/ttyUSB0",
+        ),
+        patch("homeassistant.components.dali.config_flow.DriverLubaRs232") as driver,
+    ):
+        _mock_driver(driver, has_bus_power_supply=True)
+
+        # Two flows for the same port both reach the bus-power step before either
+        # has created an entry.
+        first = await hass.config_entries.flow.async_init(
+            DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+        )
+        first = await hass.config_entries.flow.async_configure(
+            first["flow_id"], {CONF_DEVICE: "/dev/ttyUSB0"}
+        )
+        second = await hass.config_entries.flow.async_init(
+            DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+        )
+        second = await hass.config_entries.flow.async_configure(
+            second["flow_id"], {CONF_DEVICE: "/dev/ttyUSB0"}
+        )
+        assert first["step_id"] == "bus_power"
+        assert second["step_id"] == "bus_power"
+
+        first = await hass.config_entries.flow.async_configure(
+            first["flow_id"], {CONF_BUS_POWER: False}
+        )
+        assert first["type"] is FlowResultType.CREATE_ENTRY
+        assert first["result"].unique_id is None
+
+        second = await hass.config_entries.flow.async_configure(
+            second["flow_id"], {CONF_BUS_POWER: False}
+        )
+
+    assert second["type"] is FlowResultType.ABORT
+    assert second["reason"] == "already_configured"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test the manual flow selects a serial port and creates an entry."""
     with (
