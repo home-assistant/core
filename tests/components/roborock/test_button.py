@@ -26,7 +26,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import FakeDevice
 
-RESOLVE_DOCK_ERROR_ENTITY_ID = "button.roborock_s7_maxv_dock_resolve_error"
+RESOLVE_DOCK_ERROR_ENTITY_ID = "button.roborock_s7_maxv_dock_resolve_dock_error"
 DOCK_ERROR_SENSOR_ENTITY_ID = "sensor.roborock_s7_maxv_dock_dock_error"
 
 

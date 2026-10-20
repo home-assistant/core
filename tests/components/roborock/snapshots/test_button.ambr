@@ -99,7 +99,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[button.roborock_s7_2_dock_resolve_error-entry]
+# name: test_buttons[button.roborock_s7_2_dock_resolve_dock_error-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -113,7 +113,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.roborock_s7_2_dock_resolve_error',
+    'entity_id': 'button.roborock_s7_2_dock_resolve_dock_error',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -121,12 +121,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Resolve error',
+    'object_id_base': 'Resolve dock error',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Resolve error',
+    'original_name': 'Resolve dock error',
     'platform': 'roborock',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -136,13 +136,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[button.roborock_s7_2_dock_resolve_error-state]
+# name: test_buttons[button.roborock_s7_2_dock_resolve_dock_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Dock Resolve error',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Dock Resolve dock error',
     }),
     'context': <ANY>,
-    'entity_id': 'button.roborock_s7_2_dock_resolve_error',
+    'entity_id': 'button.roborock_s7_2_dock_resolve_dock_error',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -499,7 +499,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[button.roborock_s7_maxv_dock_resolve_error-entry]
+# name: test_buttons[button.roborock_s7_maxv_dock_resolve_dock_error-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -513,7 +513,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.roborock_s7_maxv_dock_resolve_error',
+    'entity_id': 'button.roborock_s7_maxv_dock_resolve_dock_error',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -521,12 +521,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Resolve error',
+    'object_id_base': 'Resolve dock error',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Resolve error',
+    'original_name': 'Resolve dock error',
     'platform': 'roborock',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -536,13 +536,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_buttons[button.roborock_s7_maxv_dock_resolve_error-state]
+# name: test_buttons[button.roborock_s7_maxv_dock_resolve_dock_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Dock Resolve error',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Dock Resolve dock error',
     }),
     'context': <ANY>,
-    'entity_id': 'button.roborock_s7_maxv_dock_resolve_error',
+    'entity_id': 'button.roborock_s7_maxv_dock_resolve_dock_error',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
