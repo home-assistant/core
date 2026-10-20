@@ -20,6 +20,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .const import DOMAIN, INTEGRATION_SUPPORTED_COMMANDS, PLATFORMS
 from .coordinator import NutConfigEntry, NutCoordinator, NutRuntimeData
@@ -137,22 +138,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> None:
         coordinator, data, unique_id, user_available_commands
     )
 
-    connections: set[tuple[str, str]] | None = None
+    connections: set[tuple[str, str]] | UndefinedType = UNDEFINED
     if data.device_info.mac_address is not None:
         connections = {(CONNECTION_NETWORK_MAC, data.device_info.mac_address)}
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, unique_id)},
-        connections=connections,
-        name=data.name.title(),
-        manufacturer=data.device_info.manufacturer,
-        model=data.device_info.model,
-        model_id=data.device_info.model_id,
-        sw_version=data.device_info.firmware,
-        serial_number=data.device_info.serial,
-        suggested_area=data.device_info.device_location,
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            connections=connections,
+            name=data.name.title(),
+            manufacturer=data.device_info.manufacturer,
+            model=data.device_info.model,
+            model_id=data.device_info.model_id,
+            sw_version=data.device_info.firmware,
+            serial_number=data.device_info.serial,
+            suggested_area=data.device_info.device_location,
+        ),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
