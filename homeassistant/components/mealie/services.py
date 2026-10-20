@@ -1,6 +1,7 @@
 """Define services for the Mealie integration."""
 
 from dataclasses import asdict
+from enum import StrEnum
 
 from aiomealie import (
     MealieConnectionError,
@@ -26,15 +27,46 @@ from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.typing import VolDictType
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    CONF_PARSER,
-    DEFAULT_PARSER,
-    DOMAIN,
-    MINIMUM_PARSER_CONFIDENCE,
-    MealieService,
-    MealieServiceArgument,
-)
+from .const import CONF_PARSER, DEFAULT_PARSER, DOMAIN, MINIMUM_PARSER_CONFIDENCE
 from .coordinator import MealieConfigEntry
+
+
+class MealieService(StrEnum):
+    """Service names for Mealie."""
+
+    ADD_INGREDIENT = "add_ingredient"
+    DELETE_MEALPLAN = "delete_mealplan"
+    GET_MEALPLAN = "get_mealplan"
+    GET_RECIPE = "get_recipe"
+    GET_RECIPES = "get_recipes"
+    GET_SHOPPING_LIST_ITEMS = "get_shopping_list_items"
+    IMPORT_RECIPE = "import_recipe"
+    PARSE_INGREDIENT = "parse_ingredient"
+    SET_MEALPLAN = "set_mealplan"
+    SET_RANDOM_MEALPLAN = "set_random_mealplan"
+    UPDATE_MEALPLAN = "update_mealplan"
+
+
+class MealieServiceArgument(StrEnum):
+    """Service argument names for Mealie."""
+
+    END_DATE = "end_date"
+    ENTRY_TYPE = "entry_type"
+    FOOD_ID = "food_id"
+    INCLUDE_TAGS = "include_tags"
+    INGREDIENT = "ingredient"
+    MEALPLAN_ID = "mealplan_id"
+    NOTE = "note"
+    NOTE_TEXT = "note_text"
+    NOTE_TITLE = "note_title"
+    QUANTITY = "quantity"
+    RECIPE_ID = "recipe_id"
+    RESULT_LIMIT = "result_limit"
+    SEARCH_TERMS = "search_terms"
+    START_DATE = "start_date"
+    UNIT_ID = "unit_id"
+    URL = "url"
+
 
 SERVICE_ADD_INGREDIENT_SCHEMA: VolDictType = {
     probatio.Optional(MealieServiceArgument.FOOD_ID): str,

@@ -21,8 +21,8 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, load_fixture
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.mealie.const import (
-    DOMAIN,
+from homeassistant.components.mealie.const import DOMAIN
+from homeassistant.components.mealie.services import (
     MealieService,
     MealieServiceArgument,
 )
