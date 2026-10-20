@@ -51,6 +51,7 @@ class SteamVRBaseStationCoordinator(PassiveBluetoothDataUpdateCoordinator):
         self.entry = entry
         self.station = station
         self.device_info = device_info
+        self.rssi: int | None = None
 
     @callback
     @override
@@ -71,6 +72,7 @@ class SteamVRBaseStationCoordinator(PassiveBluetoothDataUpdateCoordinator):
         if not self._available:
             _LOGGER.info("%s is available again", self.entry.title)
         self.station.set_ble_device(service_info.device)
+        self.rssi = service_info.rssi
         if advertisement := parse_advertisement(
             service_info.name, service_info.manufacturer_data
         ):
