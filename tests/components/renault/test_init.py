@@ -755,16 +755,31 @@ async def test_vehicle_missing_details_retried(
     freezer: FrozenDateTimeFactory,
     mock_get_vehicles: AsyncMock,
     mock_get_vehicle_details: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the details of a vehicle are requested again at the next update."""
     mock_get_vehicles.return_value = _get_vehicles(ZOE_VIN, MISSING_DETAILS_VIN)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_get_vehicle_details.await_count == 1
+    assert [
+        record.levelname
+        for record in caplog.records
+        if record.getMessage()
+        == f"Ignoring vehicle with missing details: {MISSING_DETAILS_VIN}"
+    ] == ["WARNING"]
 
+    caplog.clear()
     await _async_poll_vehicle_list(hass, freezer)
 
     assert mock_get_vehicle_details.await_count == 2
+    # The warning is only logged once for each vehicle.
+    assert [
+        record.levelname
+        for record in caplog.records
+        if record.getMessage()
+        == f"Ignoring vehicle with missing details: {MISSING_DETAILS_VIN}"
+    ] == ["DEBUG"]
     assert set(config_entry.runtime_data.vehicles) == {ZOE_VIN}
 
 

@@ -44,17 +44,22 @@ LOGGER = logging.getLogger(__name__)
 async def _get_filtered_vehicles(account: RenaultAccount) -> list[KamereonVehiclesLink]:
     """Get the vehicles, filtering out those with missing details."""
     vehicles = await account.get_vehicles()
-    return await _filter_vehicles_with_details(account, vehicles.vehicleLinks or [])
+    return await _filter_vehicles_with_details(
+        account, vehicles.vehicleLinks or [], set()
+    )
 
 
 async def _filter_vehicles_with_details(
-    account: RenaultAccount, vehicle_links: list[KamereonVehiclesLink]
+    account: RenaultAccount,
+    vehicle_links: list[KamereonVehiclesLink],
+    missing_details_vins: set[str | None],
 ) -> list[KamereonVehiclesLink]:
     """Filter out the vehicles with missing details.
 
     The vehicle list sometimes omits the details, so they are requested
     separately. They may still be missing for new purchases, or due to an
-    issue with the Renault servers.
+    issue with the Renault servers. A warning is logged once for each vehicle,
+    `missing_details_vins` keeps track of the vehicles already logged.
     """
     result: list[KamereonVehiclesLink] = []
     for link in vehicle_links:
@@ -63,7 +68,11 @@ async def _filter_vehicles_with_details(
             with contextlib.suppress(KamereonResponseException):
                 link.vehicleDetails = await vehicle.get_details()
         if link.vehicleDetails is None:
-            LOGGER.warning("Ignoring vehicle with missing details: %s", link.vin)
+            if link.vin in missing_details_vins:
+                LOGGER.debug("Ignoring vehicle with missing details: %s", link.vin)
+            else:
+                LOGGER.warning("Ignoring vehicle with missing details: %s", link.vin)
+                missing_details_vins.add(link.vin)
             continue
         result.append(link)
     return result
@@ -89,6 +98,7 @@ class RenaultHub:
         self._vehicles: dict[str, RenaultVehicleProxy] = {}
         self._vehicle_listeners: list[Callable[[RenaultVehicleProxy], None]] = []
         self._vehicles_lock = asyncio.Lock()
+        self._missing_details_vins: set[str | None] = set()
 
         self._got_throttled_at_time: float | None = None
 
@@ -185,7 +195,7 @@ class RenaultHub:
         vehicles = await self._account.get_vehicles()
         all_vehicle_links = vehicles.vehicleLinks or []
         vehicle_links = await _filter_vehicles_with_details(
-            self._account, all_vehicle_links
+            self._account, all_vehicle_links, self._missing_details_vins
         )
         # An empty list is more likely a server issue than all vehicles removed.
         if vins := {link.vin for link in all_vehicle_links if link.vin}:
@@ -292,6 +302,7 @@ class RenaultHub:
                         for link in vehicle_links
                         if link.vin and link.vin not in self._vehicles
                     ],
+                    self._missing_details_vins,
                 )
                 if new_vehicle_links:
                     await self._async_add_vehicles(new_vehicle_links)
