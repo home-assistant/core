@@ -1,6 +1,7 @@
 """UniFi Network abstraction."""
 
 from datetime import datetime
+import re
 from typing import TYPE_CHECKING
 
 import aiounifi
@@ -23,6 +24,9 @@ from .websocket import UnifiWebsocket
 
 if TYPE_CHECKING:
     from .. import UnifiConfigEntry
+
+OBJECT_ID = re.compile(r"[0-9a-f]{24}")
+UUID = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
 
 
 class UnifiHub:
@@ -99,12 +103,15 @@ class UnifiHub:
 
     @callback
     def _async_update_site_unique_id(self, old_id: str) -> str:
-        """Move the entry to the new ID UniFi Network 11 gives existing sites.
+        """Move the entry from the ObjectId to the UUID UniFi Network 11 gives sites.
 
         The site name is kept and is unique per controller.
         """
+        if not OBJECT_ID.fullmatch(old_id):
+            return old_id
         site_ids = {site.name: site.site_id for site in self.api.sites.values()}
-        if (new_id := site_ids.get(self.site)) is None:
+        new_id = site_ids.get(self.site)
+        if new_id is None or not UUID.fullmatch(new_id):
             return old_id
         if self.hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, new_id):
             return old_id
