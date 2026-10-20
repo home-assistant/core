@@ -23,6 +23,7 @@ from homeassistant.components.bizkaibus.coordinator import BizkaibusUpdateCoordi
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -41,7 +42,11 @@ async def test_setup_platform_imports_yaml(hass: HomeAssistant) -> None:
     """Test importing the legacy YAML configuration."""
     config: ConfigType = {"stopid": "1234", "route": "A"}
 
-    with patch.object(hass.config_entries.flow, "async_init") as mock_async_init:
+    with patch.object(
+        hass.config_entries.flow,
+        "async_init",
+        return_value={"type": FlowResultType.CREATE_ENTRY},
+    ) as mock_async_init:
         await sensor.async_setup_platform(hass, config, Mock())
 
     mock_async_init.assert_awaited_once_with(
@@ -49,6 +54,59 @@ async def test_setup_platform_imports_yaml(hass: HomeAssistant) -> None:
         context={"source": "import"},
         data=config,
     )
+
+
+async def test_setup_platform_failed_import_creates_issue(hass: HomeAssistant) -> None:
+    """Test a failed YAML import creates a repair issue."""
+    with (
+        patch.object(
+            hass.config_entries.flow,
+            "async_init",
+            return_value={
+                "type": FlowResultType.ABORT,
+                "reason": "cannot_connect",
+            },
+        ),
+        patch(
+            "homeassistant.components.bizkaibus.sensor.ir.async_create_issue"
+        ) as mock_create_issue,
+    ):
+        await sensor.async_setup_platform(hass, {}, Mock())
+
+    assert mock_create_issue.call_args.args == (
+        hass,
+        DOMAIN,
+        "deprecated_yaml_import_issue_cannot_connect",
+    )
+    assert mock_create_issue.call_args.kwargs["translation_key"] == (
+        "deprecated_yaml_import_issue"
+    )
+
+
+@pytest.mark.parametrize(
+    "reason",
+    [
+        pytest.param("already_configured", id="already-configured"),
+        pytest.param("import_updated", id="import-updated"),
+    ],
+)
+async def test_setup_platform_successful_abort_does_not_create_issue(
+    hass: HomeAssistant, reason: str
+) -> None:
+    """Test successful import aborts do not create a repair issue."""
+    with (
+        patch.object(
+            hass.config_entries.flow,
+            "async_init",
+            return_value={"type": FlowResultType.ABORT, "reason": reason},
+        ),
+        patch(
+            "homeassistant.components.bizkaibus.sensor.ir.async_create_issue"
+        ) as mock_create_issue,
+    ):
+        await sensor.async_setup_platform(hass, {}, Mock())
+
+    mock_create_issue.assert_not_called()
 
 
 async def test_setup_entry_removes_obsolete_entities_and_devices(

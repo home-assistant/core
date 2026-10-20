@@ -78,6 +78,12 @@
       }
     }
   },
+  "issues": {
+    "deprecated_yaml_import_issue": {
+      "description": "The Bizkaibus YAML configuration could not be imported, so no config entry or sensors were created. Check that the stop identifier is valid and Bizkaibus is reachable, then restart Home Assistant to retry. You can also remove the Bizkaibus YAML configuration and set up the integration from Settings > Devices & services.",
+      "title": "Bizkaibus YAML import failed"
+    }
+  },
   "options": {
     "abort": {
       "api_parse_error": "Error parsing the Bizkaibus response.",
