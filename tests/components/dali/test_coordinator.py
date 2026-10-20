@@ -6,6 +6,7 @@ from unittest.mock import patch
 from dali.exceptions import TransmissionError
 from dali.gear.general import QueryControlGearPresent
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.dali.const import CONF_BUS_POWER, DOMAIN
 from homeassistant.components.dali.coordinator import (
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .conftest import FakeDaliDriver
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

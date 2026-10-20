@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 from dali.exceptions import TransmissionError
 from dali.gear.general import DAPC
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.dali.const import DOMAIN
 from homeassistant.components.dali.coordinator import (
@@ -21,8 +22,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import FakeDaliDriver
-
-from tests.common import MockConfigEntry
 
 
 async def test_light_commands_clamp_dali_mask(
