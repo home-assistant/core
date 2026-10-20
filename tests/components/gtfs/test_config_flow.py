@@ -138,7 +138,11 @@ async def test_user_flow(
             id="missing_stops",
         ),
         pytest.param(
-            {"content": build_feed_zip(exclude=frozenset({"calendar.txt"}))},
+            {
+                "content": build_feed_zip(
+                    exclude=frozenset({"calendar.txt", "calendar_dates.txt"})
+                )
+            },
             "invalid_feed",
             id="missing_calendar",
         ),
