@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 import pytest
 from pytest_homeassistant.common import (
+    MockUser,
     assert_setup_component,
     async_fire_time_changed,
     setup_test_component_platform,
@@ -45,11 +46,12 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceNotSupported,
     ServiceValidationError,
+    Unauthorized,
 )
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -1324,6 +1326,39 @@ async def test_speed_member_failure(
             )
 
     assert [entity.last_kwargs for entity in mock_speed_covers] == expected_kwargs
+
+
+async def test_speed_member_without_permission(
+    hass: HomeAssistant,
+    mock_speed_covers: list[MockCover],
+    hass_read_only_user: MockUser,
+) -> None:
+    """Test no member moves if the user may not control one of them."""
+    # The user may control the group and the two members with the speed,
+    # but not the member without it, which gets its own call
+    hass_read_only_user.mock_policy(
+        {
+            "entities": {
+                "entity_ids": {
+                    COVER_GROUP: True,
+                    SLOW_FAST_COVER: True,
+                    SILENT_FAST_COVER: True,
+                }
+            }
+        }
+    )
+
+    with pytest.raises(Unauthorized) as exc_info:
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: COVER_GROUP, ATTR_SPEED: "fast"},
+            blocking=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
+
+    assert exc_info.value.entity_id == NO_SPEED_COVER
+    assert [entity.last_kwargs for entity in mock_speed_covers] == [None, None, None]
 
 
 async def test_speed_member_not_delayed(

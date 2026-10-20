@@ -5,6 +5,7 @@ from typing import Any, override
 
 import probatio
 
+from homeassistant.auth.permissions.const import POLICY_CONTROL
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_SPEED,
@@ -36,6 +37,7 @@ from homeassistant.const import (
     EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -202,6 +204,24 @@ class CoverGroup(GroupEntity, CoverEntity):
             context=self._context,
         )
 
+    async def _async_check_control(self, entity_ids: set[str]) -> None:
+        """Raise if the user may not control all given members.
+
+        Core checks this per call, so split calls check it before the first.
+        """
+        if self._context is None or self._context.user_id is None:
+            return
+        user = await self.hass.auth.async_get_user(self._context.user_id)
+        for entity_id in entity_ids:
+            if user is None or not user.permissions.check_entity(
+                entity_id, POLICY_CONTROL
+            ):
+                raise Unauthorized(
+                    context=self._context,
+                    entity_id=entity_id,
+                    permission=POLICY_CONTROL,
+                )
+
     async def _async_call_with_speed(
         self,
         service: str,
@@ -226,6 +246,7 @@ class CoverGroup(GroupEntity, CoverEntity):
             await self._async_call_members(service, entity_ids, data)
             return
 
+        await self._async_check_control(entity_ids)
         with_speed = {
             entity_id
             for entity_id in entity_ids
