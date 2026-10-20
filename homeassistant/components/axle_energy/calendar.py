@@ -7,11 +7,9 @@ from aioaxlevpp import GridEvent
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
 from .coordinator import AxleConfigEntry, AxleCoordinator
 from .entity import AxleEntity
 
@@ -50,10 +48,6 @@ class AxleCalendar(AxleEntity, CalendarEntity):
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Return the cached grid event if it overlaps the requested range."""
-        if not self.available:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="cannot_connect"
-            )
         if (
             (event := self.coordinator.event) is None
             or start_date == end_date

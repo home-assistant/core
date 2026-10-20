@@ -227,6 +227,7 @@ async def test_failure_and_recovery(
     mock_client: AsyncMock,
     hass_client: ClientSessionGenerator,
     freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """An outage is unavailable, and a recovered feed returns its event."""
     await setup(hass, mock_config_entry)
@@ -240,10 +241,8 @@ async def test_failure_and_recovery(
         f"/api/calendars/{ENTITY_ID}",
         params={"start": "2026-09-11T16:00:00Z", "end": "2026-09-11T19:00:00Z"},
     )
-    assert response.status == HTTPStatus.INTERNAL_SERVER_ERROR
-    assert (await response.json())["message"] == (
-        "Error reading events: Unable to retrieve grid events from Axle"
-    )
+    assert response.status == HTTPStatus.OK
+    assert await response.json() == snapshot
     mock_client.get_status.side_effect = None
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)

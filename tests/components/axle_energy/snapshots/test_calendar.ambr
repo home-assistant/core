@@ -55,3 +55,22 @@
     'state': 'off',
   })
 # ---
+# name: test_failure_and_recovery
+  list([
+    dict({
+      'description': None,
+      'end': dict({
+        'dateTime': '2026-09-11T11:00:00-07:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2026-09-11T10:00:00-07:00',
+      }),
+      'status': None,
+      'summary': 'Export',
+      'uid': None,
+    }),
+  ])
+# ---
