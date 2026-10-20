@@ -4,7 +4,6 @@ import asyncio
 from dataclasses import dataclass, replace
 from datetime import timedelta
 import logging
-import math
 from typing import TYPE_CHECKING, override
 
 from dali.address import GearShort
@@ -352,26 +351,19 @@ def _brightness_to_dali_level(
 
     The DALI level axis is coarser than the 1-255 brightness axis, so rounding
     each direction independently makes a set level read back as a different
-    brightness and the UI slider jumps. The level is therefore snapped to the
-    one that ``_dali_level_to_brightness`` maps back closest to the requested
-    brightness, keeping set-then-read stable wherever a matching level exists.
+    brightness and the UI slider jumps. The lowest level whose readback is
+    closest to the request is chosen instead, making the mapping a stable right
+    inverse of the readback: every reported brightness maps back to the level it
+    came from, regardless of the gear's minimum level.
     """
-    if linear_dimming:
-        analytic = min_level + (brightness - 1) * (254 - min_level) / 254
-    elif brightness < 255:
-        analytic = 254 + 253 * math.log10(brightness / 255) / 3
-    else:
-        analytic = 254
-    base = max(min_level, min(round(analytic), 254))
-    candidates = range(max(min_level, base - 2), min(254, base + 2) + 1)
     return min(
-        candidates,
+        range(min_level, 255),
         key=lambda level: (
             abs(
                 (_dali_level_to_brightness(level, linear_dimming, min_level) or 0)
                 - brightness
             ),
-            abs(level - base),
+            level,
         ),
     )
 
