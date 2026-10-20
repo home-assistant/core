@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 from aiolibresync import NotConnectedError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.libresync.const import CONNECT_TIMEOUT
 from homeassistant.config_entries import ConfigEntryState
@@ -11,8 +12,6 @@ from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 from .conftest import HOST, STATE, push
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload(

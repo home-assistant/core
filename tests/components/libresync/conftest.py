@@ -12,11 +12,10 @@ from aiolibresync import (
     Source,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.libresync.const import DOMAIN
 from homeassistant.const import CONF_HOST
-
-from tests.common import MockConfigEntry
 
 HOST = "192.168.1.50"
 UDN = "uuid:1a2b3c4d-5e6f-11f0-9193-0123456789ab"

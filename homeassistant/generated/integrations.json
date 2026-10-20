@@ -3972,6 +3972,9 @@
     "libresync": {
       "name": "LibreSync",
       "integration_type": "device",
+      "categories": [
+        "media_entertainment.speakers_audio"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },

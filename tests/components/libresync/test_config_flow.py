@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 from aiolibresync import DiscoveredDevice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.libresync.const import DOMAIN
 from homeassistant.config_entries import (
@@ -19,8 +20,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .conftest import FOUND, HOST, UDN
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -276,4 +275,5 @@ async def test_ssdp_dropped_after_manual_add(hass: HomeAssistant) -> None:
         manual["flow_id"], {CONF_HOST: HOST}
     )
     assert manual["type"] is FlowResultType.CREATE_ENTRY
+    assert manual["result"].unique_id == UDN
     assert hass.config_entries.flow.async_progress() == []

@@ -1,6 +1,7 @@
 {
   "domain": "libresync",
   "name": "LibreSync",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@drsound"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/libresync",
