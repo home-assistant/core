@@ -165,9 +165,9 @@ def _generate_and_validate_mypy_config(config: Config) -> str:
         else:
             strict_core_modules.append(module)
 
-    # The package root of a core integration only exports the names in its __all__
+    # Core integrations do not re-export imported names implicitly, in any module
     reexport_modules = NO_IMPLICIT_REEXPORT_MODULES | {
-        f"homeassistant.components.{domain}"
+        f"homeassistant.components.{domain}.*"
         for domain in get_core_integrations(config.root) - MISSING_ALL
         if (config.root / "homeassistant" / "components" / domain).is_dir()
     }
@@ -209,7 +209,7 @@ def _generate_and_validate_mypy_config(config: Config) -> str:
             mypy_config.set(plugin_name, key, value)
 
     # By default enable no_implicit_reexport only for homeassistant.*
-    # Disable it afterwards for all components
+    # Disable it afterwards for all components, except the reexport_modules
     components_section = "mypy-homeassistant.*"
     mypy_config.add_section(components_section)
     mypy_config.set(components_section, "no_implicit_reexport", "true")
