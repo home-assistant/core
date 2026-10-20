@@ -1193,14 +1193,6 @@
     }
   },
   "exceptions": {
-    "entitlement_required": {
-      "message": "SmartThings subscription required. Reconnect your SmartThings account to restore access."
-    },
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
-    },
-    "quota_exceeded": {
-      "message": "SmartThings API quota exceeded. SmartThings requires an active API plan with remaining API usage quotas to access the SmartThings APIs. Visit the SmartThings Developer Center to manage your plans: {manage_plans_url}"
     "authentication_failed": {
       "message": "Authentication with SmartThings failed"
     },
@@ -1216,11 +1208,20 @@
     "dishwasher_machine_state": {
       "message": "Can only be changed when the dishwasher machine state is {machine_state}"
     },
+    "entitlement_required": {
+      "message": "SmartThings subscription required. Reconnect your SmartThings account to restore access."
+    },
     "missing_token": {
       "message": "The configuration entry is missing a token, please reauthenticate"
     },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
     "option_not_supported": {
       "message": "Option is not supported by the selected cycle"
+    },
+    "quota_exceeded": {
+      "message": "SmartThings API quota exceeded. SmartThings requires an active API plan with remaining API usage quotas to access the SmartThings APIs. Visit the SmartThings Developer Center to manage your plans: {manage_plans_url}"
     },
     "remote_control_status": {
       "message": "Can only be changed when remote control is enabled"
