@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from dali.exceptions import TransmissionError
 from dali.gear.general import QueryControlGearPresent
+from dali.gear.led import QueryDimmingCurve
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -97,6 +98,32 @@ async def test_linear_dimming_curve_is_read(
     """Test the DT6 dimming curve selects the linear mapping."""
     gear = await coordinator._query_gear(0)
 
+    assert gear is not None
+    assert gear.linear_dimming is True
+
+
+async def test_missing_dimming_curve_is_retried(
+    coordinator: DaliCoordinator, fake_dali_driver: FakeDaliDriver
+) -> None:
+    """Test a dropped dimming-curve reply re-reads instead of flipping the curve."""
+    # Seed the linear gear 0 as known so a miss triggers the retry.
+    coordinator.data = {0: await coordinator._query_gear_once(0)}
+
+    curve_reads = 0
+    original_send = fake_dali_driver.send
+
+    async def send(command: object) -> object:
+        nonlocal curve_reads
+        if isinstance(command, QueryDimmingCurve):
+            curve_reads += 1
+            if curve_reads == 1:
+                return SimpleNamespace(raw_value=None)
+        return await original_send(command)
+
+    with patch.object(fake_dali_driver, "send", side_effect=send):
+        gear = await coordinator._query_gear(0)
+
+    assert curve_reads == 2
     assert gear is not None
     assert gear.linear_dimming is True
 
