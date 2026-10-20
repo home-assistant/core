@@ -6,9 +6,16 @@ from unittest.mock import AsyncMock, patch
 from aiomelcloudhome import UserContext
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.melcloud_home.const import DOMAIN
+from homeassistant.components.melcloud_home.coordinator import TELEMETRY_UPDATE_INTERVAL
 from homeassistant.components.sensor import ATTR_LAST_RESET
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -16,14 +23,8 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
-
 OPERATION_STATUS_ENTITY_ID = "sensor.heat_pump_operation_status"
+OUTDOOR_TEMPERATURE_ENTITY_ID = "sensor.living_room_ac_outdoor_temperature"
 
 
 @pytest.fixture(autouse=True)
@@ -76,7 +77,7 @@ async def test_energy_measure_per_unit_type(
         pytest.param("HeatZones", "heating_zones", id="heating_zones"),
         pytest.param("Cool", "cooling", id="cool"),
         pytest.param("Heating", "heating_zones", id="heating"),
-        pytest.param("FreezeStat", "heating_zones", id="freeze_stat"),
+        pytest.param("FreezeStat", "frost_protection", id="freeze_stat"),
         pytest.param("Cooling", "cooling", id="cooling"),
         pytest.param("Defrost", STATE_UNKNOWN, id="unsupported_mode"),
     ],
@@ -144,3 +145,64 @@ async def test_energy_last_reset_month_rollover(
     ] == datetime(2026, 7, 1, tzinfo=UTC)
     assert (state := hass.states.get(entity_id))
     assert state.attributes[ATTR_LAST_RESET] == "2026-07-01T00:00:00+00:00"
+
+
+async def test_outdoor_temperature_sensor_added_when_reported(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the outdoor temperature sensor is only added once the unit reports one."""
+    mock_melcloud_client.get_outdoor_temperature.return_value = None
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(OUTDOOR_TEMPERATURE_ENTITY_ID) is None
+
+    mock_melcloud_client.get_outdoor_temperature.return_value = 19.5
+    freezer.tick(TELEMETRY_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(OUTDOOR_TEMPERATURE_ENTITY_ID))
+    assert state.state == "19.5"
+
+
+async def test_outdoor_temperature_sensor_restored_without_value(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a previously added outdoor temperature sensor stays without a value."""
+    mock_config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        "ata-unit-uuid-1_outdoor_temperature",
+        config_entry=mock_config_entry,
+        suggested_object_id="living_room_ac_outdoor_temperature",
+    )
+    mock_melcloud_client.get_outdoor_temperature.return_value = None
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get(OUTDOOR_TEMPERATURE_ENTITY_ID))
+    assert state.state == STATE_UNKNOWN
+
+
+async def test_outdoor_temperature_not_fetched_without_sensor(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test units reporting no outdoor temperature sensor are not probed."""
+    context = await async_load_json_object_fixture(hass, "context.json", DOMAIN)
+    context["buildings"][0]["airToAirUnits"][0]["capabilities"][
+        "hasOutdoorTemperatureSensor"
+    ] = False
+    mock_melcloud_client.get_context.return_value = UserContext.model_validate(context)
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_melcloud_client.get_outdoor_temperature.assert_not_called()
+    assert hass.states.get(OUTDOOR_TEMPERATURE_ENTITY_ID) is None

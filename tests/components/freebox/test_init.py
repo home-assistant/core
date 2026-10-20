@@ -8,6 +8,7 @@ from aiohttp import ClientError
 from freebox_api.exceptions import HttpRequestError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_unordered import unordered
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -25,8 +26,6 @@ from homeassistant.setup import async_setup_component
 
 from .common import setup_platform
 from .const import DATA_HOME_GET_NODES, MOCK_HOST, MOCK_PORT
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 MOCK_MAC = "68:A3:78:00:00:00"
 

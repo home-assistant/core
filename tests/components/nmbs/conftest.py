@@ -5,14 +5,13 @@ from unittest.mock import AsyncMock, patch
 
 from pyrail.models import StationsApiResponse
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.nmbs.const import (
     CONF_STATION_FROM,
     CONF_STATION_TO,
     DOMAIN,
 )
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture

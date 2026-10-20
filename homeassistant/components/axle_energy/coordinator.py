@@ -4,7 +4,13 @@ from datetime import datetime
 import logging
 from typing import override
 
-from aioaxlevpp import AxleAuthenticationError, AxleClient, AxleError, GridEvent
+from aioaxlevpp import (
+    AxleAuthenticationError,
+    AxleClient,
+    AxleError,
+    AxleStatus,
+    GridEvent,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -19,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 type AxleConfigEntry = ConfigEntry[AxleCoordinator]
 
 
-class AxleCoordinator(DataUpdateCoordinator[GridEvent | None]):
+class AxleCoordinator(DataUpdateCoordinator[AxleStatus]):
     """Fetch one event using the provider's documented polling interval."""
 
     config_entry: AxleConfigEntry
@@ -40,6 +46,13 @@ class AxleCoordinator(DataUpdateCoordinator[GridEvent | None]):
         )
         self.client = client
 
+    @property
+    def event(self) -> GridEvent | None:
+        """Return the event only when the household has not opted out."""
+        if self.data is None or self.data.opted_out:
+            return None
+        return self.data.event
+
     @callback
     def _cancel_event_update(self) -> None:
         """Cancel the scheduled event boundary."""
@@ -51,20 +64,17 @@ class AxleCoordinator(DataUpdateCoordinator[GridEvent | None]):
     @callback
     def _schedule_event_update(self) -> None:
         """Schedule the next boundary without an additional API request."""
-        if (
-            self._shutdown_requested
-            or not self.last_update_success
-            or self.data is None
-        ):
+        event = self.event
+        if self._shutdown_requested or not self.last_update_success or event is None:
             self._cancel_event_update()
             return
-        if self._unsub_event_update is not None and self._scheduled_event == self.data:
+        if self._unsub_event_update is not None and self._scheduled_event == event:
             return
         self._cancel_event_update()
         now = dt_util.utcnow()
-        for boundary in (self.data.start, self.data.end):
+        for boundary in (event.start, event.end):
             if boundary > now:
-                self._scheduled_event = self.data
+                self._scheduled_event = event
                 self._unsub_event_update = async_track_point_in_utc_time(
                     self.hass, self._handle_event_update, boundary
                 )
@@ -90,10 +100,10 @@ class AxleCoordinator(DataUpdateCoordinator[GridEvent | None]):
         self._cancel_event_update()
 
     @override
-    async def _async_update_data(self) -> GridEvent | None:
+    async def _async_update_data(self) -> AxleStatus:
         """Fetch the event without confusing outages with an empty schedule."""
         try:
-            event = await self.client.get_event()
+            return await self.client.get_status()
         except AxleAuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="authentication_failed"
@@ -102,4 +112,3 @@ class AxleCoordinator(DataUpdateCoordinator[GridEvent | None]):
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="cannot_connect"
             ) from err
-        return None if event is not None and event.opted_out else event

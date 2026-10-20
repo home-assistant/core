@@ -1,6 +1,7 @@
 """Test fixtures for the search integration."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.search import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -11,8 +12,6 @@ from homeassistant.helpers import (
     floor_registry as fr,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="search_item_ids")

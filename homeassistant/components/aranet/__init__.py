@@ -4,8 +4,10 @@ import logging
 
 from aranet4.client import Aranet4Advertisement
 
-from homeassistant.components.bluetooth import BluetoothScanningMode
-from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
+from homeassistant.components.bluetooth import (
+    BluetoothScanningMode,
+    BluetoothServiceInfoBleak,
+)
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothProcessorCoordinator,
 )
@@ -28,7 +30,7 @@ def _service_info_to_adv(
     return Aranet4Advertisement(service_info.device, service_info.advertisement)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AranetConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AranetConfigEntry) -> None:
     """Set up Aranet from a config entry."""
 
     address = entry.unique_id
@@ -44,9 +46,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AranetConfigEntry) -> bo
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     # only start after all platforms have had a chance to subscribe
     entry.async_on_unload(coordinator.async_start())
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: AranetConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AranetConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

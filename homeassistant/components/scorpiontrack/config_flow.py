@@ -107,6 +107,7 @@ class ScorpionTrackConfigFlow(ConfigFlow, domain=DOMAIN):
             else user_input
         )
 
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="reconfigure" if self.source == SOURCE_RECONFIGURE else "user",
             data_schema=self.add_suggested_values_to_schema(

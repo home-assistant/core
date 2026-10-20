@@ -1,11 +1,11 @@
 """Test Shopping List intents."""
 
+from pytest_homeassistant.common import async_capture_events
+
 from homeassistant.components.shopping_list.common import _get_shopping_data
-from homeassistant.components.shopping_list.const import EVENT_SHOPPING_LIST_UPDATED
+from homeassistant.const import EVENT_SHOPPING_LIST_UPDATED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
-
-from tests.common import async_capture_events
 
 
 async def test_add_item_intent_reactivates_first_completed_match(
