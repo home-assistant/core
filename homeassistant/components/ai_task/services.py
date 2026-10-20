@@ -1,5 +1,6 @@
 """Services for the AI Task integration."""
 
+from dataclasses import asdict
 from typing import Any
 
 import probatio
@@ -21,15 +22,20 @@ from homeassistant.core import (
 from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.service import async_register_admin_service
 
+from .classification import IMAGE_SCHEMA, LABELS_SCHEMA, REGION_SCHEMA
 from .const import (
     ATTR_ATTACHMENTS,
     ATTR_DAYS,
+    ATTR_IMAGE,
     ATTR_INSTRUCTIONS,
+    ATTR_LABELS,
     ATTR_QUESTIONS,
+    ATTR_REGION,
     ATTR_REQUIRED,
     ATTR_STRUCTURE,
     ATTR_TASK_NAME,
     DOMAIN,
+    SERVICE_CLASSIFY_IMAGE,
     SERVICE_CLEAR_IMAGES,
     SERVICE_EVALUATE,
     SERVICE_GENERATE_DATA,
@@ -37,7 +43,12 @@ from .const import (
 )
 from .evaluation import QUESTIONS_SCHEMA
 from .media_source import async_clear_images
-from .task import async_evaluate, async_generate_data, async_generate_image
+from .task import (
+    async_classify_image,
+    async_evaluate,
+    async_generate_data,
+    async_generate_image,
+)
 
 STRUCTURE_FIELD_SCHEMA = probatio.Schema(
     {
@@ -80,6 +91,14 @@ async def async_service_evaluate(call: ServiceCall) -> ServiceResponse:
     """Run an evaluation task."""
     result = await async_evaluate(hass=call.hass, context=call.context, **call.data)
     return result.as_dict()
+
+
+async def async_service_classify_image(call: ServiceCall) -> ServiceResponse:
+    """Run an image classification task."""
+    result = await async_classify_image(
+        hass=call.hass, context=call.context, **call.data
+    )
+    return asdict(result)
 
 
 async def async_service_clear_images(call: ServiceCall) -> None:
@@ -142,6 +161,24 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 probatio.Optional(ATTR_ATTACHMENTS): selector.MediaSelector(
                     {"accept": ["*/*"], "multiple": True}
                 ),
+            }
+        ),
+        supports_response=SupportsResponse.ONLY,
+        job_type=HassJobType.Coroutinefunction,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_CLASSIFY_IMAGE,
+        async_service_classify_image,
+        schema=probatio.Schema(
+            {
+                probatio.Required(ATTR_TASK_NAME): cv.string,
+                probatio.Optional(ATTR_ENTITY_ID): cv.entity_id,
+                probatio.Required(ATTR_IMAGE): IMAGE_SCHEMA,
+                probatio.Required(ATTR_LABELS): LABELS_SCHEMA,
+                probatio.Optional(ATTR_REGION): REGION_SCHEMA,
+                probatio.Optional(ATTR_INSTRUCTIONS): cv.string,
             }
         ),
         supports_response=SupportsResponse.ONLY,

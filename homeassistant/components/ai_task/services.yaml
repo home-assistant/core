@@ -89,6 +89,41 @@ evaluate:
             - "*"
           multiple: true
 
+classify_image:
+  fields:
+    task_name:
+      required: true
+      example: "Left garage bay"
+      selector:
+        text:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: ai_task
+            supported_features:
+              - ai_task.AITaskEntityFeature.CLASSIFY_IMAGE
+    image:
+      required: true
+      selector:
+        media:
+          accept:
+            - "image/*"
+    labels:
+      required: true
+      example: '{"empty": {"examples": [{"media_content_id": "media-source://media_source/local/garage/empty.jpg", "media_content_type": "image/jpeg"}]}, "car": {"examples": [{"media_content_id": "media-source://media_source/local/garage/car.jpg", "media_content_type": "image/jpeg"}]}}'
+      selector:
+        object:
+    region:
+      example: '{"left": 0.3, "top": 0.15, "right": 0.7, "bottom": 0.82}'
+      selector:
+        object:
+    instructions:
+      example: "Is a car parked in the left bay?"
+      selector:
+        text:
+          multiline: true
+
 clear_images:
   fields:
     days:

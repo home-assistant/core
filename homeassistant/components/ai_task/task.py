@@ -19,6 +19,14 @@ from homeassistant.helpers.chat_session import ChatSession, async_get_chat_sessi
 from homeassistant.util import RE_SANITIZE_FILENAME, dt as dt_util, slugify
 from homeassistant.util.json import JsonValueType
 
+from .classification import (
+    IMAGE_SCHEMA,
+    LABELS_SCHEMA,
+    REGION_SCHEMA,
+    ClassifyImageTask,
+    ImageLabel,
+    Region,
+)
 from .const import (
     DATA_COMPONENT,
     DATA_MEDIA_SOURCE,
@@ -30,6 +38,7 @@ from .const import (
 )
 from .evaluation import (
     QUESTIONS_SCHEMA,
+    ChoiceAnswer,
     EvaluationQuestion,
     EvaluationTask,
     EvaluationTaskResult,
@@ -43,6 +52,7 @@ _FEATURE_NOT_SUPPORTED_TRANSLATION_KEYS = {
     AITaskEntityFeature.GENERATE_DATA: "generate_data_not_supported",
     AITaskEntityFeature.GENERATE_IMAGE: "generate_image_not_supported",
     AITaskEntityFeature.EVALUATE: "evaluate_not_supported",
+    AITaskEntityFeature.CLASSIFY_IMAGE: "classify_image_not_supported",
 }
 
 
@@ -412,6 +422,53 @@ async def async_evaluate(
                 questions=questions,
                 state=state,
                 attachments=resolved_attachments or None,
+            ),
+            context,
+        )
+
+
+async def async_classify_image(
+    hass: HomeAssistant,
+    *,
+    task_name: str,
+    image: dict[str, Any],
+    labels: dict[str, dict[str, Any]],
+    region: dict[str, float] | None = None,
+    instructions: str | None = None,
+    entity_id: str | None = None,
+    context: Context | None = None,
+) -> ChoiceAnswer:
+    """Classify an image by the example images of each label."""
+    image = IMAGE_SCHEMA(image)
+    labels = LABELS_SCHEMA(labels)
+    examples = [example for label in labels.values() for example in label["examples"]]
+    await async_check_permissions(hass, entity_id, [image, *examples], context)
+    entity = _async_get_entity(
+        hass,
+        entity_id,
+        hass.data[DATA_PREFERENCES].classify_image_entity_id,
+        AITaskEntityFeature.CLASSIFY_IMAGE,
+        None,
+    )
+    with async_get_chat_session(hass) as session:
+        resolved_image, *resolved_examples = await _resolve_attachments(
+            hass, session, [image, *examples]
+        )
+        resolved_labels: dict[str, ImageLabel] = {}
+        for label_id, label in labels.items():
+            count = len(label["examples"])
+            resolved_labels[label_id] = ImageLabel(
+                examples=resolved_examples[:count],
+                description=label.get("description"),
+            )
+            resolved_examples = resolved_examples[count:]
+        return await entity.internal_async_classify_image(
+            ClassifyImageTask(
+                name=task_name,
+                image=resolved_image,
+                labels=resolved_labels,
+                region=None if region is None else Region(**REGION_SCHEMA(region)),
+                instructions=instructions,
             ),
             context,
         )

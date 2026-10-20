@@ -9,6 +9,7 @@ from homeassistant.helpers import config_validation as cv, storage
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
+from .classification import ClassifyImageTask, ImageLabel, Region, crop_image
 from .const import DATA_COMPONENT, DATA_PREFERENCES, DOMAIN, AITaskEntityFeature
 from .entity import AITaskEntity
 from .evaluation import (
@@ -31,6 +32,7 @@ from .task import (
     GenDataTaskResult,
     GenImageTask,
     GenImageTaskResult,
+    async_classify_image,
     async_evaluate,
     async_generate_data,
     async_generate_image,
@@ -42,6 +44,7 @@ __all__ = [
     "AITaskEntityFeature",
     "ChoiceAnswer",
     "ChoiceQuestion",
+    "ClassifyImageTask",
     "EvaluationAnswer",
     "EvaluationQuestion",
     "EvaluationTask",
@@ -50,14 +53,18 @@ __all__ = [
     "GenDataTaskResult",
     "GenImageTask",
     "GenImageTaskResult",
+    "ImageLabel",
     "NoulAnswer",
     "NoulQuestion",
+    "Region",
     "ScoreAnswer",
     "ScoreQuestion",
+    "async_classify_image",
     "async_evaluate",
     "async_generate_data",
     "async_generate_image",
     "async_is_automatic_evaluation_enabled",
+    "crop_image",
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -108,10 +115,12 @@ class AITaskPreferences:
         "gen_data_entity_id",
         "gen_image_entity_id",
         "evaluate_entity_id",
+        "classify_image_entity_id",
         "allow_automatic_evaluation",
     )
 
     allow_automatic_evaluation: bool = False
+    classify_image_entity_id: str | None = None
     evaluate_entity_id: str | None = None
     gen_data_entity_id: str | None = None
     gen_image_entity_id: str | None = None
@@ -135,6 +144,7 @@ class AITaskPreferences:
         self,
         *,
         allow_automatic_evaluation: bool | UndefinedType = UNDEFINED,
+        classify_image_entity_id: str | UndefinedType | None = UNDEFINED,
         evaluate_entity_id: str | UndefinedType | None = UNDEFINED,
         gen_data_entity_id: str | UndefinedType | None = UNDEFINED,
         gen_image_entity_id: str | UndefinedType | None = UNDEFINED,
@@ -143,6 +153,7 @@ class AITaskPreferences:
         changed = False
         for key, value in (
             ("allow_automatic_evaluation", allow_automatic_evaluation),
+            ("classify_image_entity_id", classify_image_entity_id),
             ("evaluate_entity_id", evaluate_entity_id),
             ("gen_data_entity_id", gen_data_entity_id),
             ("gen_image_entity_id", gen_image_entity_id),

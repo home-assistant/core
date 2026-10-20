@@ -20,6 +20,7 @@ async def test_ws_preferences(
     assert msg["success"]
     assert msg["result"] == {
         "allow_automatic_evaluation": False,
+        "classify_image_entity_id": None,
         "evaluate_entity_id": None,
         "gen_data_entity_id": None,
         "gen_image_entity_id": None,
@@ -36,6 +37,7 @@ async def test_ws_preferences(
     assert msg["success"]
     assert msg["result"] == {
         "allow_automatic_evaluation": False,
+        "classify_image_entity_id": None,
         "evaluate_entity_id": None,
         "gen_data_entity_id": "ai_task.summary_1",
         "gen_image_entity_id": None,
@@ -47,6 +49,7 @@ async def test_ws_preferences(
     assert msg["success"]
     assert msg["result"] == {
         "allow_automatic_evaluation": False,
+        "classify_image_entity_id": None,
         "evaluate_entity_id": None,
         "gen_data_entity_id": "ai_task.summary_1",
         "gen_image_entity_id": None,
@@ -63,6 +66,7 @@ async def test_ws_preferences(
     assert msg["success"]
     assert msg["result"] == {
         "allow_automatic_evaluation": False,
+        "classify_image_entity_id": None,
         "evaluate_entity_id": None,
         "gen_data_entity_id": "ai_task.summary_2",
         "gen_image_entity_id": None,
@@ -74,6 +78,7 @@ async def test_ws_preferences(
     assert msg["success"]
     assert msg["result"] == {
         "allow_automatic_evaluation": False,
+        "classify_image_entity_id": None,
         "evaluate_entity_id": None,
         "gen_data_entity_id": "ai_task.summary_2",
         "gen_image_entity_id": None,
@@ -89,6 +94,7 @@ async def test_ws_preferences(
     assert msg["success"]
     assert msg["result"] == {
         "allow_automatic_evaluation": False,
+        "classify_image_entity_id": None,
         "evaluate_entity_id": None,
         "gen_data_entity_id": "ai_task.summary_2",
         "gen_image_entity_id": None,
@@ -100,6 +106,7 @@ async def test_ws_preferences(
     assert msg["success"]
     assert msg["result"] == {
         "allow_automatic_evaluation": False,
+        "classify_image_entity_id": None,
         "evaluate_entity_id": None,
         "gen_data_entity_id": "ai_task.summary_2",
         "gen_image_entity_id": None,
@@ -116,6 +123,7 @@ async def test_ws_preferences(
     assert msg["success"]
     assert msg["result"] == {
         "allow_automatic_evaluation": False,
+        "classify_image_entity_id": None,
         "evaluate_entity_id": None,
         "gen_data_entity_id": "ai_task.summary_2",
         "gen_image_entity_id": "ai_task.image_gen_1",
@@ -133,6 +141,7 @@ async def test_ws_preferences(
     assert msg["success"]
     assert msg["result"] == {
         "allow_automatic_evaluation": False,
+        "classify_image_entity_id": None,
         "evaluate_entity_id": None,
         "gen_data_entity_id": "ai_task.summary_3",
         "gen_image_entity_id": "ai_task.image_gen_2",
@@ -144,6 +153,7 @@ async def test_ws_preferences(
     assert msg["success"]
     assert msg["result"] == {
         "allow_automatic_evaluation": False,
+        "classify_image_entity_id": None,
         "evaluate_entity_id": None,
         "gen_data_entity_id": "ai_task.summary_3",
         "gen_image_entity_id": "ai_task.image_gen_2",

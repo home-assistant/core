@@ -3,6 +3,9 @@
     "attachments_not_supported": {
       "message": "AI Task entity {entity_id} does not support attachments."
     },
+    "classify_image_not_supported": {
+      "message": "AI Task entity {entity_id} does not support image classification."
+    },
     "entity_not_found": {
       "message": "AI Task entity {entity_id} not found."
     },
@@ -18,6 +21,9 @@
     "generate_image_not_supported": {
       "message": "AI Task entity {entity_id} does not support generating images."
     },
+    "invalid_classification": {
+      "message": "AI Task entity {entity_id} returned an invalid classification."
+    },
     "local_attachments_only": {
       "message": "Only local attachments are currently supported."
     },
@@ -26,6 +32,36 @@
     }
   },
   "services": {
+    "classify_image": {
+      "description": "Classifies an image by example images of each label.",
+      "fields": {
+        "entity_id": {
+          "description": "Entity to run the task on. If omitted, uses the preferred image classification entity.",
+          "name": "Entity ID"
+        },
+        "image": {
+          "description": "Image to classify.",
+          "name": "Image"
+        },
+        "instructions": {
+          "description": "The question in words, for models that read text.",
+          "name": "Instructions"
+        },
+        "labels": {
+          "description": "Named labels, each with example images and an optional description.",
+          "name": "Labels"
+        },
+        "region": {
+          "description": "Part of the image and the examples to look at, as left, top, right and bottom in fractions of the image size.",
+          "name": "Region"
+        },
+        "task_name": {
+          "description": "Name of the task.",
+          "name": "Task name"
+        }
+      },
+      "name": "Classify image"
+    },
     "clear_images": {
       "description": "Deletes AI generated images.",
       "fields": {

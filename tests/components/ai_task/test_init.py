@@ -56,6 +56,7 @@ async def test_preferences_storage_load(
         "gen_data_entity_id": None,
         "gen_image_entity_id": None,
         "evaluate_entity_id": None,
+        "classify_image_entity_id": None,
         "allow_automatic_evaluation": False,
     }
 
@@ -63,6 +64,7 @@ async def test_preferences_storage_load(
         "gen_data_entity_id": "ai_task.data",
         "gen_image_entity_id": "ai_task.image",
         "evaluate_entity_id": "ai_task.decision",
+        "classify_image_entity_id": "ai_task.classify",
         "allow_automatic_evaluation": True,
     }
 

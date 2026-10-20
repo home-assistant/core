@@ -5,6 +5,9 @@
     }
   },
   "services": {
+    "classify_image": {
+      "service": "mdi:image-search-outline"
+    },
     "clear_images": {
       "service": "mdi:delete"
     },

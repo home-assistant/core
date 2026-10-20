@@ -22,6 +22,7 @@ DATA_MEDIA_SOURCE: HassKey[local_source.LocalSource] = HassKey(f"{DOMAIN}_media_
 IMAGE_DIR: Final = "image"
 IMAGE_EXPIRY_TIME = 60 * 60  # 1 hour
 
+SERVICE_CLASSIFY_IMAGE = "classify_image"
 SERVICE_CLEAR_IMAGES = "clear_images"
 SERVICE_EVALUATE = "evaluate"
 SERVICE_GENERATE_DATA = "generate_data"
@@ -34,6 +35,9 @@ ATTR_TASK_NAME: Final = "task_name"
 ATTR_STRUCTURE: Final = "structure"
 ATTR_REQUIRED: Final = "required"
 ATTR_ATTACHMENTS: Final = "attachments"
+ATTR_IMAGE: Final = "image"
+ATTR_LABELS: Final = "labels"
+ATTR_REGION: Final = "region"
 
 DEFAULT_SYSTEM_PROMPT = (
     "You are a Home Assistant expert and help users with their tasks."
@@ -54,3 +58,6 @@ class AITaskEntityFeature(IntFlag):
 
     EVALUATE = 8
     """Evaluate typed questions."""
+
+    CLASSIFY_IMAGE = 16
+    """Classify an image by example images of each label."""

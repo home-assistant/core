@@ -13,13 +13,15 @@ from homeassistant.components.conversation import (
 )
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import Context
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 from homeassistant.helpers.chat_session import ChatSession
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
+from .classification import ClassifyImageTask, validate_result
 from .const import DEFAULT_SYSTEM_PROMPT, DOMAIN, AITaskEntityFeature
-from .evaluation import EvaluationTask, EvaluationTaskResult
+from .evaluation import ChoiceAnswer, EvaluationTask, EvaluationTaskResult
 from .task import GenDataTask, GenDataTaskResult, GenImageTask, GenImageTaskResult
 
 
@@ -155,4 +157,26 @@ class AITaskEntity(RestoreEntity):
 
     async def _async_evaluate(self, task: EvaluationTask) -> EvaluationTaskResult:
         """Handle an evaluation task."""
+        raise NotImplementedError
+
+    @final
+    async def internal_async_classify_image(
+        self, task: ClassifyImageTask, context: Context | None = None
+    ) -> ChoiceAnswer:
+        """Run an image classification task."""
+        if context is not None:
+            self.async_set_context(context)
+        self.__last_activity = dt_util.utcnow().isoformat()
+        self.async_write_ha_state()
+        answer = await self._async_classify_image(task)
+        if not validate_result(answer, task.labels):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_classification",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
+        return answer
+
+    async def _async_classify_image(self, task: ClassifyImageTask) -> ChoiceAnswer:
+        """Handle an image classification task."""
         raise NotImplementedError
