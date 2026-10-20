@@ -816,12 +816,12 @@ def _async_discovered_device_exists(
     """Return if the device of a device discovery payload exists.
 
     This is the parent device of the child devices in the payload. The device the
-    entity was last registered with is checked first, as a failed update leaves
-    the device in the payload unregistered.
+    entity was last registered with is used when known, as a failed update leaves
+    the device in the payload unregistered, or refers to another device.
     """
     device_registry = dr.async_get(hass)
-    if main_device_id is not None and device_registry.async_get(main_device_id):
-        return True
+    if main_device_id is not None:
+        return device_registry.async_get(main_device_id) is not None
     device_config = MQTT_ENTITY_DEVICE_INFO_SCHEMA(discovery_payload[CONF_DEVICE])
     return bool(
         device_registry.async_get_devices(

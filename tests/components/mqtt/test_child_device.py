@@ -1036,6 +1036,44 @@ async def test_remove_child_device_after_failed_parent_update(
     mqtt_mock.async_publish.assert_not_called()
 
 
+async def test_remove_parent_device_after_failed_move_to_existing_parent(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test removing the parent device after its child devices could not be moved.
+
+    The device the child devices were moved to exists, but is not their parent.
+    """
+    mqtt_mock = await mqtt_mock_entry()
+    await _discover_switch(hass, "other", {"identifiers": ["other"], "name": "Other"})
+    payload: dict[str, Any] = {
+        "dev": {"ids": ["parent"], "name": "Parent"},
+        "o": {"name": "Foo2Mqtt"},
+        "cdevs": [{"ids": ["sub"], "name": "Sub", "cmps": {"sw": DISCOVERY_SWITCH}}],
+    }
+    async_fire_mqtt_message(hass, DEVICE_TOPIC, json.dumps(payload))
+    await hass.async_block_till_done()
+
+    payload["dev"] = {"ids": ["other"], "name": "Other"}
+    async_fire_mqtt_message(hass, DEVICE_TOPIC, json.dumps(payload))
+    await hass.async_block_till_done()
+    assert REGISTRATION_WARNING in caplog.text
+    assert _get_device(hass, device_registry, "other") is not None
+    parent = _get_device(hass, device_registry, "parent")
+    assert parent is not None
+    mqtt_mock.async_publish.reset_mock()
+
+    device_registry.async_remove_device(parent.id)
+    await hass.async_block_till_done()
+    assert not entity_registry.async_is_registered(SWITCH_ENTITY_ID)
+    mqtt_mock.async_publish.assert_any_call(
+        DEVICE_TOPIC, None, 0, True, message_expiry_interval=None
+    )
+
+
 async def test_rejected_entity_cleans_up_devices(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
