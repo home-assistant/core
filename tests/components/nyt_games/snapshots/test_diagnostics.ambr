@@ -47,3 +47,26 @@
     }),
   })
 # ---
+# name: test_diagnostics_new_account
+  dict({
+    'connections': None,
+    'spelling_bee': None,
+    'wordle': dict({
+      'current_streak': 0,
+      'games_played': 1,
+      'games_won': 1,
+      'guesses': dict({
+        '1': 0,
+        '2': 0,
+        '3': 0,
+        '4': 0,
+        '5': 1,
+        '6': 0,
+        'fail': 0,
+      }),
+      'last_completed': None,
+      'last_won': None,
+      'max_streak': 1,
+    }),
+  })
+# ---
