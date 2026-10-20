@@ -49,11 +49,17 @@ async def async_get_config_entry_diagnostics(
         "data": coordinator.data,
     }
 
-    if device.api.type == "HYS" and (data := coordinator.data):
+    if (
+        device.api.type == "HYS"
+        and (data := coordinator.data)
+        and (last_update := device.update_manager.last_update)
+    ):
+        # Compare the device clock with the local time it was read at, as
+        # the coordinator data may be a few polls old.
         diagnostics["device_clock"] = {
             "time": f"{data['hour']:02d}:{data['min']:02d}:{data['sec']:02d}",
             "day_of_week": DAY_ID_TO_NAME.get(data["dayofweek"]),
-            "local_time": dt_util.now().isoformat(),
+            "local_time_at_poll": dt_util.as_local(last_update).isoformat(),
         }
 
     return diagnostics

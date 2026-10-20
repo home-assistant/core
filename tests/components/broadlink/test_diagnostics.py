@@ -1,6 +1,9 @@
 """Tests for Broadlink diagnostics."""
 
+from datetime import timedelta
+
 import broadlink_async.exceptions as blke
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
 from pytest_homeassistant.typing import ClientSessionGenerator
@@ -17,6 +20,7 @@ async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test diagnostics for a Hysen thermostat."""
     await hass.config.async_set_time_zone("UTC")
@@ -38,6 +42,8 @@ async def test_diagnostics(
     }
     mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
+    # The clock is compared with the time it was read, not with the download.
+    freezer.tick(timedelta(seconds=30))
     assert (
         await get_diagnostics_for_config_entry(hass, hass_client, mock_setup.entry)
         == snapshot

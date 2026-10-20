@@ -25,7 +25,7 @@
     }),
     'device_clock': dict({
       'day_of_week': 'wednesday',
-      'local_time': '2026-10-21T12:35:10+00:00',
+      'local_time_at_poll': '2026-10-21T12:35:10+00:00',
       'time': '12:34:56',
     }),
     'entry': dict({

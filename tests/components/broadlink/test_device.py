@@ -449,12 +449,21 @@ async def test_thermostat_time_sync(
 
     mock_setup.api.set_time.assert_awaited_once_with(hour=2, minute=30, second=0, day=7)
 
+    # Run the pending half hour sync, so the next one must be newly scheduled.
+    freezer.move_to("2026-10-25 00:30:05+00:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_setup.api.set_time.await_args_list[1] == call(
+        hour=2, minute=30, second=5, day=7
+    )
+
     # The clock falls back from 3:00 CEST to 2:00 CET, and is synced right away.
     freezer.move_to("2026-10-25 01:00:05+00:00")
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_setup.api.set_time.await_args_list[1] == call(
+    assert mock_setup.api.set_time.await_args_list[2] == call(
         hour=2, minute=0, second=5, day=7
     )
 
@@ -463,7 +472,7 @@ async def test_thermostat_time_sync(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_setup.api.set_time.await_count == 2
+    assert mock_setup.api.set_time.await_count == 3
 
 
 async def test_thermostat_time_sync_half_hour_dst(
