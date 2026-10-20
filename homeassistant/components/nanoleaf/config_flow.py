@@ -6,7 +6,7 @@ import os
 from typing import Any, Final, cast, override
 
 from aionanoleaf2 import InvalidToken, Nanoleaf, Unauthorized, Unavailable
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -31,9 +31,9 @@ _LOGGER = logging.getLogger(__name__)
 # For discovery integration import
 CONFIG_FILE: Final = ".nanoleaf.conf"
 
-USER_SCHEMA: Final = vol.Schema(
+USER_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        probatio.Required(CONF_HOST): str,
     }
 )
 

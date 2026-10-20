@@ -4,7 +4,7 @@ import asyncio
 from dataclasses import dataclass, field
 import logging
 
-import voluptuous as vol
+import probatio
 from xiaomi_gateway import AsyncXiaomiGatewayMulticast, XiaomiGateway
 
 from homeassistant.components import persistent_notification
@@ -47,19 +47,23 @@ SERVICE_STOP_RINGTONE = "stop_ringtone"
 SERVICE_ADD_DEVICE = "add_device"
 SERVICE_REMOVE_DEVICE = "remove_device"
 
-SERVICE_SCHEMA_PLAY_RINGTONE = vol.Schema(
+SERVICE_SCHEMA_PLAY_RINGTONE = probatio.Schema(
     {
-        vol.Required(ATTR_RINGTONE_ID): vol.All(
-            vol.Coerce(int), vol.NotIn([9, 14, 15, 16, 17, 18, 19])
+        probatio.Required(ATTR_RINGTONE_ID): probatio.All(
+            probatio.Coerce(int), probatio.NotIn([9, 14, 15, 16, 17, 18, 19])
         ),
-        vol.Optional(ATTR_RINGTONE_VOL): vol.All(
-            vol.Coerce(int), vol.Clamp(min=0, max=100)
+        probatio.Optional(ATTR_RINGTONE_VOL): probatio.All(
+            probatio.Coerce(int), probatio.Clamp(min=0, max=100)
         ),
     }
 )
 
-SERVICE_SCHEMA_REMOVE_DEVICE = vol.Schema(
-    {vol.Required(ATTR_DEVICE_ID): vol.All(cv.string, vol.Length(min=14, max=14))}
+SERVICE_SCHEMA_REMOVE_DEVICE = probatio.Schema(
+    {
+        probatio.Required(ATTR_DEVICE_ID): probatio.All(
+            cv.string, probatio.Length(min=14, max=14)
+        )
+    }
 )
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -104,7 +108,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         gateway: XiaomiGateway = call.data[ATTR_GW_MAC]
         gateway.write_to_hub(gateway.sid, remove_device=device_id)
 
-    gateway_only_schema = _add_gateway_to_schema(hass, vol.Schema({}))
+    gateway_only_schema = _add_gateway_to_schema(hass, probatio.Schema({}))
 
     hass.services.register(
         DOMAIN,
@@ -237,8 +241,10 @@ async def async_unload_entry(
     return unload_ok
 
 
-def _add_gateway_to_schema(hass: HomeAssistant, schema: vol.Schema) -> vol.Schema:
-    """Extend a voluptuous schema with a gateway validator."""
+def _add_gateway_to_schema(
+    hass: HomeAssistant, schema: probatio.Schema
+) -> probatio.Schema:
+    """Extend a probatio schema with a gateway validator."""
 
     def gateway(sid: str) -> XiaomiGateway:
         """Convert sid to a gateway."""
@@ -249,7 +255,7 @@ def _add_gateway_to_schema(hass: HomeAssistant, schema: vol.Schema) -> vol.Schem
             if entry_gateway.sid == sid:
                 return entry_gateway
 
-        raise vol.Invalid(f"Unknown gateway sid {sid}")
+        raise probatio.Invalid(f"Unknown gateway sid {sid}")
 
     kwargs = {}
     gateways = [
@@ -260,4 +266,4 @@ def _add_gateway_to_schema(hass: HomeAssistant, schema: vol.Schema) -> vol.Schem
     if len(gateways) == 1:
         kwargs["default"] = gateways[0].sid
 
-    return schema.extend({vol.Required(ATTR_GW_MAC, **kwargs): gateway})
+    return schema.extend({probatio.Required(ATTR_GW_MAC, **kwargs): gateway})

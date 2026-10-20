@@ -50,7 +50,7 @@ from homeassistant.components.sensor.recorder import (
     STATE_CLASS_REMOVED_ISSUE,
     UNITS_CHANGED_ISSUE,
 )
-from homeassistant.const import ATTR_FRIENDLY_NAME, DEGREE, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_FRIENDLY_NAME, DEGREE, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -1875,6 +1875,10 @@ async def test_compile_hourly_sum_statistics_nan_inf_state(
     ],
 )
 @pytest.mark.parametrize("state_class", ["total_increasing"])
+@patch(
+    "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+    [Platform.SENSOR],
+)
 async def test_compile_hourly_sum_statistics_negative_state(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,

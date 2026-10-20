@@ -32,6 +32,16 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_radio_browser() -> Generator[MagicMock]:
+    """Mock the Radio Browser client in the config flow."""
+    with patch(
+        "homeassistant.components.radio_browser.config_flow.RadioBrowser",
+        autospec=True,
+    ) as radio_browser_mock:
+        yield radio_browser_mock.return_value
+
+
+@pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

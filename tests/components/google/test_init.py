@@ -3,6 +3,7 @@
 from collections.abc import Awaitable, Callable
 import datetime
 import http
+import re
 import time
 from typing import Any
 from unittest.mock import Mock, patch
@@ -10,12 +11,12 @@ import zoneinfo
 
 from aiohttp.client_exceptions import ClientError
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.google import DOMAIN
-from homeassistant.components.google.calendar import SERVICE_CREATE_EVENT
 from homeassistant.components.google.const import CONF_CALENDAR_ACCESS
+from homeassistant.components.google.services import SERVICE_CREATE_EVENT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF
 from homeassistant.core import HomeAssistant, State
@@ -167,6 +168,7 @@ async def test_calendar_yaml_missing_required_fields(
     assert not await component_setup()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.reason == "Configuration error in google_calendars.yaml"
 
 
 @pytest.mark.parametrize("calendars_config", [[{"missing-cal_id": "invalid-schema"}]])
@@ -181,6 +183,7 @@ async def test_invalid_calendar_yaml(
     assert not await component_setup()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.reason == "Configuration error in google_calendars.yaml"
 
 
 async def test_calendar_yaml_error(
@@ -289,36 +292,36 @@ async def test_multiple_config_entries(
     [
         (
             {},
-            vol.error.MultipleInvalid,
-            "must contain at least one of start_date, start_date_time, in",
+            probatio.error.MultipleInvalid,
+            "at least one of ['start_date', 'start_date_time', 'in'] is required",
         ),
         (
             {
                 "start_date": "2022-04-01",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "Start and end dates must both be specified",
         ),
         (
             {
                 "end_date": "2022-04-02",
             },
-            vol.error.MultipleInvalid,
-            "must contain at least one of start_date, start_date_time, in.",
+            probatio.error.MultipleInvalid,
+            "at least one of ['start_date', 'start_date_time', 'in'] is required",
         ),
         (
             {
                 "start_date_time": "2022-04-01T06:00:00",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "Start and end datetimes must both be specified",
         ),
         (
             {
                 "end_date_time": "2022-04-02T07:00:00",
             },
-            vol.error.MultipleInvalid,
-            "must contain at least one of start_date, start_date_time, in.",
+            probatio.error.MultipleInvalid,
+            "at least one of ['start_date', 'start_date_time', 'in'] is required",
         ),
         (
             {
@@ -326,8 +329,8 @@ async def test_multiple_config_entries(
                 "start_date_time": "2022-04-01T06:00:00",
                 "end_date_time": "2022-04-02T07:00:00",
             },
-            vol.error.MultipleInvalid,
-            "must contain at most one of start_date, start_date_time, in.",
+            probatio.error.MultipleInvalid,
+            "at most one of ['start_date', 'start_date_time', 'in'] is allowed",
         ),
         (
             {
@@ -335,7 +338,7 @@ async def test_multiple_config_entries(
                 "end_date_time": "2022-04-01T07:00:00",
                 "end_date": "2022-04-02",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "Start and end dates must both be specified",
         ),
         (
@@ -343,7 +346,7 @@ async def test_multiple_config_entries(
                 "start_date": "2022-04-01",
                 "end_date_time": "2022-04-02T07:00:00",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "Start and end dates must both be specified",
         ),
         (
@@ -351,7 +354,7 @@ async def test_multiple_config_entries(
                 "start_date_time": "2022-04-01T07:00:00",
                 "end_date": "2022-04-02",
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "Start and end dates must both be specified",
         ),
         (
@@ -361,7 +364,7 @@ async def test_multiple_config_entries(
                     "weeks": 2,
                 }
             },
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             "two or more values in the same group of exclusion 'event_types'",
         ),
         (
@@ -372,8 +375,8 @@ async def test_multiple_config_entries(
                     "days": 2,
                 },
             },
-            vol.error.MultipleInvalid,
-            "must contain at most one of start_date, start_date_time, in.",
+            probatio.error.MultipleInvalid,
+            "at most one of ['start_date', 'start_date_time', 'in'] is allowed",
         ),
         (
             {
@@ -383,8 +386,8 @@ async def test_multiple_config_entries(
                     "days": 2,
                 },
             },
-            vol.error.MultipleInvalid,
-            "must contain at most one of start_date, start_date_time, in.",
+            probatio.error.MultipleInvalid,
+            "at most one of ['start_date', 'start_date_time', 'in'] is allowed",
         ),
     ],
     ids=[
@@ -419,7 +422,7 @@ async def test_add_event_invalid_params(
     mock_events_list({})
     assert await component_setup()
 
-    with pytest.raises(expected_error, match=error_match):
+    with pytest.raises(expected_error, match=re.escape(error_match)):
         await add_event_call_service(date_fields)
 
 

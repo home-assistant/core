@@ -1,7 +1,7 @@
 """The aidot integration."""
 
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, async_noop
 
 from .coordinator import AidotConfigEntry, AidotDeviceManagerCoordinator
 
@@ -15,7 +15,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AidotConfigEntry) -> boo
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(coordinator.async_add_listener(lambda: None))
+    entry.async_on_unload(coordinator.async_add_listener(async_noop))
     return True
 
 

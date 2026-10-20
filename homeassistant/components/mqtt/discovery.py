@@ -10,7 +10,7 @@ import re
 import time
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_MQTT,
@@ -19,11 +19,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HassJobType, HomeAssistant, callback
-from homeassistant.helpers import (
-    config_validation as cv,
-    discovery_flow,
-    entity_registry as er,
-)
+from homeassistant.helpers import discovery_flow, entity_registry as er
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -80,8 +76,8 @@ TOPIC_BASE = "~"
 
 CONF_MIGRATE_DISCOVERY = "migrate_discovery"
 
-MIGRATE_DISCOVERY_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_MIGRATE_DISCOVERY): True},
+MIGRATE_DISCOVERY_SCHEMA = probatio.Schema(
+    {probatio.Optional(CONF_MIGRATE_DISCOVERY): True},
 )
 
 
@@ -110,7 +106,7 @@ def _async_process_discovery_migration(payload: MQTTDiscoveryPayload) -> bool:
     if CONF_MIGRATE_DISCOVERY in payload:
         try:
             MIGRATE_DISCOVERY_SCHEMA(payload)
-        except vol.Invalid as exc:
+        except probatio.Invalid as exc:
             _LOGGER.warning(exc)
             return False
         payload.migrate_discovery = True
@@ -193,7 +189,9 @@ def _replace_all_abbreviations(
     _replace_abbreviations(discovery_payload, ABBREVIATIONS, ABBREVIATIONS_SET)
 
     if CONF_AVAILABILITY in discovery_payload:
-        for availability_conf in cv.ensure_list(discovery_payload[CONF_AVAILABILITY]):
+        for availability_conf in probatio.EnsureList()(
+            discovery_payload[CONF_AVAILABILITY]
+        ):
             _replace_abbreviations(availability_conf, ABBREVIATIONS, ABBREVIATIONS_SET)
 
     if component_only:
@@ -231,7 +229,9 @@ def _replace_topic_base(discovery_payload: MQTTDiscoveryPayload) -> None:
             if value[-1] == TOPIC_BASE and key.endswith("topic"):
                 discovery_payload[key] = f"{value[:-1]}{base}"
     if discovery_payload.get(CONF_AVAILABILITY):
-        for availability_conf in cv.ensure_list(discovery_payload[CONF_AVAILABILITY]):
+        for availability_conf in probatio.EnsureList()(
+            discovery_payload[CONF_AVAILABILITY]
+        ):
             if not isinstance(availability_conf, dict):
                 continue
             if topic := str(availability_conf.get(CONF_TOPIC)):
@@ -303,7 +303,7 @@ def _parse_device_payload(
     _replace_all_abbreviations(device_payload)
     try:
         DEVICE_DISCOVERY_SCHEMA(device_payload)
-    except vol.Invalid as exc:
+    except probatio.Invalid as exc:
         _LOGGER.warning(
             "Invalid MQTT device discovery payload for %s, %s: '%s'",
             object_id,

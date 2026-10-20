@@ -10,6 +10,7 @@ import dns.rdatatype
 
 from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .api import MinecraftServer, MinecraftServerAddressError, MinecraftServerType
@@ -108,12 +109,12 @@ async def async_migrate_entry(
 
             try:
                 await api.async_initialize()
-            except MinecraftServerAddressError:
-                _LOGGER.exception(
-                    "Can't migrate configuration entry due to error"
-                    " while parsing server address, try again later"
-                )
-                return False
+            except MinecraftServerAddressError as error:
+                raise ConfigEntryError(
+                    translation_domain=DOMAIN,
+                    translation_key="address_lookup_failed",
+                    translation_placeholders={"host": config_data[CONF_HOST]},
+                ) from error
 
         _LOGGER.debug(
             "Migrating config entry, replacing host '%s' and"

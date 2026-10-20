@@ -1,17 +1,14 @@
 """Support for UpCloud."""
 
-import logging
-
 import requests.exceptions
 import upcloud_api
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
+from .const import DOMAIN
 from .coordinator import UpCloudConfigEntry, UpCloudDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SWITCH]
 
@@ -25,12 +22,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpCloudConfigEntry) -> b
 
     try:
         await hass.async_add_executor_job(manager.authenticate)
-    except upcloud_api.UpCloudAPIError:
-        _LOGGER.exception("Authentication failed")
-        return False
+    except upcloud_api.UpCloudAPIError as err:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="authentication_failed",
+        ) from err
     except requests.exceptions.RequestException as err:
-        _LOGGER.exception("Failed to connect")
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from err
 
     coordinator = UpCloudDataUpdateCoordinator(
         hass,

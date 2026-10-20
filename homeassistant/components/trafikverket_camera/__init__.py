@@ -7,6 +7,7 @@ from pytrafikverket import TrafikverketCamera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_LOCATION
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -48,11 +49,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: TVCameraConfigEntry) -
 
         try:
             camera_info = await camera_api.async_get_camera(location)
-        except Exception:  # noqa: BLE001
-            _LOGGER.error(
-                "Could not migrate the config entry. No connection to the api"
-            )
-            return False
+        except Exception as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="migration_cannot_connect",
+                translation_placeholders={"location": location},
+            ) from err
 
         if camera_id := camera_info.camera_id:
             hass.config_entries.async_update_entry(
@@ -65,8 +67,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: TVCameraConfigEntry) -
                 camera_id,
             )
         else:
-            _LOGGER.error("Could not migrate the config entry. Camera has no id")
-            return False
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="migration_no_camera_id",
+                translation_placeholders={"location": location},
+            )
 
     # Change entry data from location to id
     if entry.version == 2:
@@ -74,11 +79,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: TVCameraConfigEntry) -
 
         try:
             camera_info = await camera_api.async_get_camera(location)
-        except Exception:  # noqa: BLE001
-            _LOGGER.error(
-                "Could not migrate the config entry. No connection to the api"
-            )
-            return False
+        except Exception as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="migration_cannot_connect",
+                translation_placeholders={"location": location},
+            ) from err
 
         if camera_id := camera_info.camera_id:
             _LOGGER.debug(
@@ -90,6 +96,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: TVCameraConfigEntry) -
             new_data[CONF_ID] = camera_id
             hass.config_entries.async_update_entry(entry, data=new_data, version=3)
             return True
-        _LOGGER.error("Could not migrate the config entry. Camera has no id")
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="migration_no_camera_id",
+            translation_placeholders={"location": location},
+        )
     return True

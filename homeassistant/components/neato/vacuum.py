@@ -14,11 +14,12 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NeatoConfigEntry
-from .const import ACTION, ALERTS, ERRORS, MODE, SCAN_INTERVAL_MINUTES
+from .const import ACTION, ALERTS, DOMAIN, ERRORS, MODE, SCAN_INTERVAL_MINUTES
 from .entity import NeatoEntity
 from .hub import NeatoHub
 
@@ -275,22 +276,22 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
                     self.robot.start_cleaning()
                 elif self._state["state"] == 3:
                     self.robot.resume_cleaning()
-            # pylint: disable-next=home-assistant-action-swallowed-exception
             except NeatoRobotException as ex:
-                _LOGGER.error(
-                    "Neato vacuum connection error for '%s': %s", self.entity_id, ex
-                )
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="start_failed",
+                ) from ex
 
     @override
     def pause(self) -> None:
         """Pause the vacuum."""
         try:
             self.robot.pause_cleaning()
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except NeatoRobotException as ex:
-            _LOGGER.error(
-                "Neato vacuum connection error for '%s': %s", self.entity_id, ex
-            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="pause_failed",
+            ) from ex
 
     @override
     def return_to_base(self, **kwargs: Any) -> None:
@@ -300,44 +301,44 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
                 self.robot.pause_cleaning()
             self._attr_activity = VacuumActivity.RETURNING
             self.robot.send_to_base()
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except NeatoRobotException as ex:
-            _LOGGER.error(
-                "Neato vacuum connection error for '%s': %s", self.entity_id, ex
-            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="return_to_base_failed",
+            ) from ex
 
     @override
     def stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""
         try:
             self.robot.stop_cleaning()
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except NeatoRobotException as ex:
-            _LOGGER.error(
-                "Neato vacuum connection error for '%s': %s", self.entity_id, ex
-            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="stop_failed",
+            ) from ex
 
     @override
     def locate(self, **kwargs: Any) -> None:
         """Locate the robot by making it emit a sound."""
         try:
             self.robot.locate()
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except NeatoRobotException as ex:
-            _LOGGER.error(
-                "Neato vacuum connection error for '%s': %s", self.entity_id, ex
-            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="locate_failed",
+            ) from ex
 
     @override
     def clean_spot(self, **kwargs: Any) -> None:
         """Run a spot cleaning starting from the base."""
         try:
             self.robot.start_spot_cleaning()
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except NeatoRobotException as ex:
-            _LOGGER.error(
-                "Neato vacuum connection error for '%s': %s", self.entity_id, ex
-            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="clean_spot_failed",
+            ) from ex
 
     def neato_custom_cleaning(
         self, mode: str, navigation: str, category: str, zone: str | None = None

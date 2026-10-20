@@ -13,13 +13,31 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
-from .const import ATTR_ADDRESS, ATTR_BRIGHTNESS_PCT, ATTR_RATE, EVENT_UPB_SCENE_CHANGED
+from .const import (
+    ATTR_ADDRESS,
+    ATTR_BRIGHTNESS_PCT,
+    ATTR_RATE,
+    DOMAIN,
+    EVENT_UPB_SCENE_CHANGED,
+)
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.LIGHT, Platform.SCENE]
 
 type UpbConfigEntry = ConfigEntry[upb_lib.UpbPim]
+
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Universal Powerline Bus (UPB) integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: UpbConfigEntry) -> bool:

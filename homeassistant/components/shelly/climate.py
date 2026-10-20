@@ -14,6 +14,7 @@ from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityDescription,
     ClimateEntityFeature,
+    ClimateEntityStateAttribute,
     HVACAction,
     HVACMode,
 )
@@ -26,7 +27,6 @@ from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.unit_conversion import TemperatureConverter
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (
     BLU_TRV_TEMPERATURE_SETTINGS,
@@ -45,11 +45,11 @@ from .entity import (
     ShellyRpcEntity,
     async_setup_entry_rpc,
     get_entity_block_device_info,
+    get_entity_blu_trv_device_info,
     rpc_call,
 )
 from .utils import (
     async_remove_shelly_entity,
-    get_blu_trv_device_info,
     get_device_entry_gen,
     get_rpc_key_by_role,
     get_rpc_key_id,
@@ -79,7 +79,7 @@ class RpcLinkedgoThermostatClimate(ShellyRpcAttributeEntity, ClimateEntity):
     """Entity that controls a LINKEDGO Thermostat on RPC based Shelly devices."""
 
     entity_description: RpcClimateDescription
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "thermostat"
     _id: int
 
@@ -182,7 +182,7 @@ class RpcLinkedgoThermostatClimate(ShellyRpcAttributeEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if TYPE_CHECKING:
             assert self._current_temperature_key is not None
@@ -191,7 +191,7 @@ class RpcLinkedgoThermostatClimate(ShellyRpcAttributeEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return cast(float, self.attribute_value)
 
@@ -424,7 +424,7 @@ class BlockSleepingClimate(
         | ClimateEntityFeature.TURN_ON
     )
     _attr_target_temperature_step = SHTRV_01_TEMPERATURE_SETTINGS["step"]
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_has_entity_name = True
 
     def __init__(
@@ -441,7 +441,7 @@ class BlockSleepingClimate(
         self.control_result: dict[str, Any] | None = None
         self.device_block: Block | None = device_block
         self.last_state: State | None = None
-        self.last_state_attributes: Mapping[str, Any]
+        self.last_state_attributes: Mapping[str, Any] = {}
         self._preset_modes: list[str] = []
         self._last_target_temp = SHTRV_01_TEMPERATURE_SETTINGS["default"]
 
@@ -475,37 +475,38 @@ class BlockSleepingClimate(
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Set target temperature."""
         if self.block is not None:
             return cast(float, self.block.targetTemp)
-        # The restored value can be in Fahrenheit so we have to convert it to Celsius
-        # because we use this unit internally in integration.
-        target_temp = self.last_state_attributes.get("temperature")
-        if self.hass.config.units is US_CUSTOMARY_SYSTEM and target_temp:
-            return TemperatureConverter.convert(
-                cast(float, target_temp),
-                UnitOfTemperature.FAHRENHEIT,
-                UnitOfTemperature.CELSIUS,
-            )
-        return target_temp
+        return self._restored_temperature(
+            ClimateEntityStateAttribute.TARGET_TEMPERATURE
+        )
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return current temperature."""
         if self.block is not None:
             return cast(float, self.block.temp)
-        # The restored value can be in Fahrenheit so we have to convert it to Celsius
-        # because we use this unit internally in integration.
-        current_temp = self.last_state_attributes.get("current_temperature")
-        if self.hass.config.units is US_CUSTOMARY_SYSTEM and current_temp:
-            return TemperatureConverter.convert(
-                cast(float, current_temp),
-                UnitOfTemperature.FAHRENHEIT,
-                UnitOfTemperature.CELSIUS,
-            )
-        return current_temp
+        return self._restored_temperature(
+            ClimateEntityStateAttribute.CURRENT_TEMPERATURE
+        )
+
+    def _restored_temperature(self, attribute: str) -> float | None:
+        """Return a restored temperature attribute converted to the native unit."""
+        if (value := self.last_state_attributes.get(attribute)) is None:
+            return None
+        # States saved before temperature_unit was added are in the system unit
+        unit = self.last_state_attributes.get(
+            ClimateEntityStateAttribute.TEMPERATURE_UNIT,
+            self.hass.config.units.temperature_unit,
+        )
+        if unit not in TemperatureConverter.VALID_UNITS:
+            return None
+        return TemperatureConverter.convert(
+            float(value), unit, self.native_temperature_unit
+        )
 
     @property
     @override
@@ -561,8 +562,8 @@ class BlockSleepingClimate(
     def _check_is_off(self) -> bool:
         """Return if valve is off or on."""
         return bool(
-            self.target_temperature is None
-            or (self.target_temperature <= self._attr_min_temp)
+            self.native_target_temperature is None
+            or (self.native_target_temperature <= self._attr_min_temp)
         )
 
     async def set_state_full_path(self, **kwargs: Any) -> Any:
@@ -611,8 +612,8 @@ class BlockSleepingClimate(
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         if hvac_mode == HVACMode.OFF:
-            if isinstance(self.target_temperature, float):
-                self._last_target_temp = self.target_temperature
+            if isinstance(self.native_target_temperature, float):
+                self._last_target_temp = self.native_target_temperature
             await self.set_state_full_path(
                 target_t_enabled=1, target_t=self._attr_min_temp
             )
@@ -719,7 +720,7 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_target_temperature_step = RPC_THERMOSTAT_SETTINGS["step"]
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
         """Initialize."""
@@ -743,13 +744,13 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Set target temperature."""
         return cast(float, self.status["target_C"])
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return current temperature."""
         return cast(float, self.status["current_C"])
 
@@ -809,7 +810,7 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_hvac_mode = HVACMode.HEAT
     _attr_target_temperature_step = BLU_TRV_TEMPERATURE_SETTINGS["step"]
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
         """Initialize."""
@@ -819,19 +820,11 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
         self._config = coordinator.device.config[self.key]
         ble_addr: str = self._config["addr"]
         self._attr_unique_id = f"{ble_addr}-{self.key}"
-        fw_ver = coordinator.device.status[self.key].get("fw_ver")
-        self._attr_device_info = get_blu_trv_device_info(
-            coordinator.hass,
-            coordinator.config_entry.entry_id,
-            self._config,
-            ble_addr,
-            self.coordinator.mac,
-            fw_ver,
-        )
+        self._attr_device_info = get_entity_blu_trv_device_info(coordinator, self.key)
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Set target temperature."""
         if not self._config["enable"]:
             return None
@@ -840,7 +833,7 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return current temperature."""
         return cast(float, self.status["current_C"])
 

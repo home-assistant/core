@@ -43,7 +43,11 @@ from .const import (
     PUBLIC_ONLY_PLATFORMS,
 )
 from .data import ProtectData, UFPConfigEntry
-from .migrate import async_deprecate_sense_setting_mirrors, async_migrate_data
+from .migrate import (
+    async_deprecate_light_setting_mirrors,
+    async_migrate_data,
+    async_remove_sense_setting_mirrors,
+)
 from .services import async_setup_services
 from .utils import (
     _async_unifi_mac_from_hass,
@@ -258,6 +262,11 @@ async def _async_setup_public_only_entry(
     data_service.nvr_device_id = nvr_device.id
 
     await hass.config_entries.async_forward_entry_setups(entry, PUBLIC_ONLY_PLATFORMS)
+    async_remove_sense_setting_mirrors(
+        hass,
+        entry,
+        {sensor.mac for sensor in protect.public_bootstrap.sensors.values()},
+    )
 
 
 async def _async_setup_entry(
@@ -315,9 +324,12 @@ async def _async_setup_entry(
     data_service.nvr_device_id = nvr_device.id
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    # The replacement switch/number entities only exist once platforms are set
-    # up, so this migration runs here rather than with the others above.
-    async_deprecate_sense_setting_mirrors(hass, entry, bootstrap)
+    # The replacement entities only exist once platforms are set
+    # up, so these migrations run here rather than with the others above.
+    async_remove_sense_setting_mirrors(
+        hass, entry, {sensor.mac for sensor in bootstrap.sensors.values()}
+    )
+    async_deprecate_light_setting_mirrors(hass, entry, bootstrap)
     hass.http.register_view(ThumbnailProxyView(hass))
     hass.http.register_view(SnapshotProxyView(hass))
     hass.http.register_view(VideoProxyView(hass))

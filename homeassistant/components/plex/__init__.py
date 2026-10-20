@@ -1,5 +1,4 @@
 """Support to embed Plex."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from functools import partial
 import logging
@@ -16,7 +15,7 @@ from plexwebsocket import (
 import requests.exceptions
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, BrowseError
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL, CONF_VERIFY_SSL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -39,7 +38,6 @@ from .const import (
     CLIENT_SCAN_INTERVAL,
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
-    DISPATCHERS,
     DOMAIN,
     INVALID_TOKEN_MESSAGE,
     PLATFORMS,
@@ -47,11 +45,15 @@ from .const import (
     PLEX_UPDATE_LIBRARY_SIGNAL,
     PLEX_UPDATE_PLATFORMS_SIGNAL,
     PLEX_URI_SCHEME,
-    SERVERS,
-    WEBSOCKETS,
 )
 from .errors import ShouldUpdateConfigEntry
-from .helpers import PlexData, get_plex_data
+from .helpers import (
+    DATA_PLEX,
+    PlexConfigEntry,
+    PlexData,
+    PlexRuntimeData,
+    get_plex_servers,
+)
 from .media_browser import browse_media
 from .server import PlexServer
 from .services import async_setup_services
@@ -69,7 +71,7 @@ def is_plex_media_id(media_content_id):
 
 async def async_browse_media(hass, media_content_type, media_content_id, platform=None):
     """Browse Plex media."""
-    plex_server = next(iter(get_plex_data(hass)[SERVERS].values()), None)
+    plex_server = next(iter(get_plex_servers(hass).values()), None)
     if not plex_server:
         raise BrowseError("No Plex servers available")
     is_internal = is_internal_request(hass)
@@ -97,14 +99,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, _LOGGER, cooldown=10, immediate=True, function=gdm_scan, background=True
     ).async_call
 
-    hass_data = PlexData(
-        servers={},
-        dispatchers={},
-        websockets={},
-        gdm_scanner=gdm,
-        gdm_debouncer=debouncer,
-    )
-    hass.data.setdefault(DOMAIN, hass_data)
+    hass.data.setdefault(DATA_PLEX, PlexData(gdm_scanner=gdm, gdm_debouncer=debouncer))
 
     async_setup_services(hass)
 
@@ -113,7 +108,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PlexConfigEntry) -> bool:
     """Set up Plex from a config entry."""
     server_config = entry.data[PLEX_SERVER_CONFIG]
 
@@ -161,30 +156,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "Token not accepted, please reauthenticate Plex server"
                 f" '{entry.data[CONF_SERVER]}'"
             ) from error
-        _LOGGER.error(
-            "Login to %s failed, verify token and SSL settings: [%s]",
-            entry.data[CONF_SERVER],
-            error,
-        )
         # Retry as setups behind a proxy can return transient 404 or 502 errors
-        raise ConfigEntryNotReady from error
+        raise ConfigEntryNotReady(
+            f"Login to {entry.data[CONF_SERVER]} failed, verify token and SSL"
+            f" settings: [{error}]"
+        ) from error
 
     _LOGGER.debug(
         "Connected to: %s (%s)", plex_server.friendly_name, plex_server.url_in_use
     )
     server_id = plex_server.machine_identifier
-    hass_data = get_plex_data(hass)
-    hass_data[SERVERS][server_id] = plex_server
 
     entry.add_update_listener(async_options_updated)
 
-    unsub = async_dispatcher_connect(
-        hass,
-        PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id),
-        plex_server.async_update_platforms,
-    )
-    hass_data[DISPATCHERS].setdefault(server_id, [])
-    hass_data[DISPATCHERS][server_id].append(unsub)
+    dispatchers = [
+        async_dispatcher_connect(
+            hass,
+            PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id),
+            plex_server.async_update_platforms,
+        )
+    ]
 
     @callback
     def plex_websocket_callback(msgtype, data, error):
@@ -225,15 +216,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session=session,
         verify_ssl=verify_ssl,
     )
-    hass_data[WEBSOCKETS][server_id] = websocket
 
     def close_websocket_session(_):
         websocket.close()
 
-    unsub = hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, close_websocket_session
+    dispatchers.append(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_websocket_session)
     )
-    hass_data[DISPATCHERS][server_id].append(unsub)
+    entry.runtime_data = PlexRuntimeData(plex_server, websocket, dispatchers)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -267,33 +257,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PlexConfigEntry) -> bool:
     """Unload a config entry."""
-    server_id = entry.data[CONF_SERVER_IDENTIFIER]
+    entry.runtime_data.websocket.close()
 
-    hass_data = get_plex_data(hass)
-    websocket = hass_data[WEBSOCKETS].pop(server_id)
-    websocket.close()
-
-    dispatchers = hass_data[DISPATCHERS].pop(server_id)
-    for unsub in dispatchers:
+    for unsub in entry.runtime_data.dispatchers:
         unsub()
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    hass_data[SERVERS].pop(server_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_options_updated(hass: HomeAssistant, entry: PlexConfigEntry) -> None:
     """Triggered by config entry options updates."""
-    server_id = entry.data[CONF_SERVER_IDENTIFIER]
-
-    hass_data = get_plex_data(hass)
     # Guard incomplete setup during reauth flows
-    if server_id in hass_data[SERVERS]:
-        hass_data[SERVERS][server_id].options = entry.options
+    if entry.state is ConfigEntryState.LOADED:
+        entry.runtime_data.server.options = entry.options
 
 
 @callback

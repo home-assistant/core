@@ -38,6 +38,7 @@ async def test_user_flow(hass: HomeAssistant, mock_epion: MagicMock) -> None:
     assert result["data"] == {
         CONF_API_KEY: API_KEY,
     }
+    assert result["result"].unique_id == "account-dupe-123"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

@@ -1,5 +1,4 @@
 """Support for RFXtrx devices."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import binascii
 from collections.abc import Callable, Mapping
@@ -36,7 +35,6 @@ from .const import (
     CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
     CONF_PROTOCOLS,
-    DATA_RFXOBJECT,
     DEVICE_PACKET_TYPE_LIGHTING4,
     DOMAIN,
     EVENT_RFXTRX_EVENT,
@@ -49,6 +47,8 @@ DEFAULT_OFF_DELAY = 2.0
 CONNECT_TIMEOUT = 60.0
 
 _LOGGER = logging.getLogger(__name__)
+
+type RfxtrxConfigEntry = ConfigEntry[rfxtrxmod.Connect]
 
 
 class DeviceTuple(NamedTuple):
@@ -87,30 +87,24 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up RFXtrx services."""
-    hass.data.setdefault(DOMAIN, {})
     async_setup_services(hass)
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RfxtrxConfigEntry) -> bool:
     """Set up the RFXtrx component."""
-    hass.data.setdefault(DOMAIN, {})
-
     await async_setup_internal(hass, entry)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RfxtrxConfigEntry) -> bool:
     """Unload RFXtrx component."""
     if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         return False
 
-    rfx_object = hass.data[DOMAIN][DATA_RFXOBJECT]
-    await hass.async_add_executor_job(rfx_object.close_connection)
-
-    hass.data[DOMAIN].pop(DATA_RFXOBJECT)
+    await hass.async_add_executor_job(entry.runtime_data.close_connection)
 
     return True
 
@@ -164,7 +158,7 @@ def _get_device_lookup(
     return lookup
 
 
-async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_setup_internal(hass: HomeAssistant, entry: RfxtrxConfigEntry) -> None:
     """Set up the RFXtrx component."""
     config = entry.data
 
@@ -277,9 +271,7 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
         _create_rfx, config, lambda event: hass.add_job(async_handle_receive, event)
     )
 
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=home-assistant-use-runtime-data
-    hass.data[DOMAIN][DATA_RFXOBJECT] = rfx_object
+    entry.runtime_data = rfx_object
 
     entry.async_on_unload(
         hass.bus.async_listen(dr.EVENT_DEVICE_REGISTRY_UPDATED, _updated_device)
@@ -296,7 +288,7 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 async def async_setup_platform_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RfxtrxConfigEntry,
     async_add_entities: AddEntitiesCallback,
     supported: Callable[[rfxtrxmod.RFXtrxEvent], bool],
     constructor: Callable[

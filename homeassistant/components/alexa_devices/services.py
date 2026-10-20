@@ -2,7 +2,7 @@
 
 from aioamazondevices.const.metadata import ALEXA_INFO_SKILLS
 from aioamazondevices.const.sounds import SOUNDS_LIST
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -20,22 +20,22 @@ ATTR_TEXT_COMMAND = "text_command"
 ATTR_SOUND = "sound"
 ATTR_INFO_SKILL = "info_skill"
 
-SCHEMA_SOUND_SERVICE = vol.Schema(
+SCHEMA_SOUND_SERVICE = probatio.Schema(
     {
-        vol.Required(ATTR_SOUND): cv.string,
-        vol.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(ATTR_SOUND): cv.string,
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
     },
 )
-SCHEMA_CUSTOM_COMMAND = vol.Schema(
+SCHEMA_CUSTOM_COMMAND = probatio.Schema(
     {
-        vol.Required(ATTR_TEXT_COMMAND): cv.string,
-        vol.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(ATTR_TEXT_COMMAND): cv.string,
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
     }
 )
-SCHEMA_INFO_SKILL = vol.Schema(
+SCHEMA_INFO_SKILL = probatio.Schema(
     {
-        vol.Required(ATTR_INFO_SKILL): cv.string,
-        vol.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(ATTR_INFO_SKILL): cv.string,
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
     }
 )
 

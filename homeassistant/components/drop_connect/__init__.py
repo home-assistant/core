@@ -7,8 +7,9 @@ from homeassistant.components import mqtt
 from homeassistant.components.mqtt import ReceiveMessage
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 
-from .const import CONF_DATA_TOPIC, CONF_DEVICE_TYPE
+from .const import CONF_DATA_TOPIC, CONF_DEVICE_TYPE, DOMAIN
 from .coordinator import DROPConfigEntry, DROPDeviceDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,8 +27,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: DROPConfigEntry) 
 
     # Make sure MQTT integration is enabled and the client is available.
     if not await mqtt.async_wait_for_mqtt_client(hass):
-        _LOGGER.error("MQTT integration is not available")
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="mqtt_not_available",
+        )
 
     if TYPE_CHECKING:
         assert config_entry.unique_id is not None

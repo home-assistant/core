@@ -15,7 +15,11 @@ from onedrive_personal_sdk.exceptions import (
 
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -144,9 +148,16 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -
             folder = await client.get_drive_item(
                 f"{approot.id}:/backups_{instance_id[:8]}:"
             )
-        except OneDriveException:
-            _LOGGER.exception("Migration to version 1.2 failed")
-            return False
+        except AuthenticationError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN, translation_key="authentication_failed"
+            ) from err
+        except OneDriveException as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_get_folder",
+                translation_placeholders={"folder": f"backups_{instance_id[:8]}"},
+            ) from err
 
         hass.config_entries.async_update_entry(
             entry,

@@ -5,7 +5,7 @@ import logging
 from typing import cast
 
 from aiohttp import ClientResponseError
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_TEMPERATURE
 from homeassistant.core import (
@@ -27,30 +27,30 @@ ATTR_DURATION = "duration"
 
 
 SERVICE_SET_PROGRAM = "set_program"
-SERVICE_SET_PROGRAM_SCHEMA = vol.Schema(
+SERVICE_SET_PROGRAM_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): str,
-        vol.Required(ATTR_PROGRAM_ID): cv.positive_int,
+        probatio.Required(ATTR_DEVICE_ID): str,
+        probatio.Required(ATTR_PROGRAM_ID): cv.positive_int,
     },
 )
 
 SERVICE_SET_PROGRAM_OVEN = "set_program_oven"
-SERVICE_SET_PROGRAM_OVEN_SCHEMA = vol.Schema(
+SERVICE_SET_PROGRAM_OVEN_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): str,
-        vol.Required(ATTR_PROGRAM_ID): cv.positive_int,
-        vol.Optional(ATTR_TEMPERATURE): cv.positive_int,
-        vol.Optional(ATTR_DURATION): vol.All(
+        probatio.Required(ATTR_DEVICE_ID): str,
+        probatio.Required(ATTR_PROGRAM_ID): cv.positive_int,
+        probatio.Optional(ATTR_TEMPERATURE): cv.positive_int,
+        probatio.Optional(ATTR_DURATION): probatio.All(
             cv.time_period,
-            vol.Range(min=timedelta(minutes=1), max=timedelta(hours=12)),
+            probatio.Range(min=timedelta(minutes=1), max=timedelta(hours=12)),
         ),
     },
 )
 
 SERVICE_GET_PROGRAMS = "get_programs"
-SERVICE_GET_PROGRAMS_SCHEMA = vol.Schema(
+SERVICE_GET_PROGRAMS_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): str,
+        probatio.Required(ATTR_DEVICE_ID): str,
     },
 )
 

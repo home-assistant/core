@@ -1,17 +1,14 @@
 """The Version integration."""
 
-import logging
-
 from pyhaversion import HaVersion
 
 from homeassistant.const import CONF_SOURCE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import BOARD_MAP, CONF_BOARD, CONF_CHANNEL, CONF_IMAGE, PLATFORMS
+from .const import BOARD_MAP, CONF_BOARD, CONF_CHANNEL, CONF_IMAGE, DOMAIN, PLATFORMS
 from .coordinator import VersionConfigEntry, VersionDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: VersionConfigEntry) -> bool:
@@ -20,12 +17,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: VersionConfigEntry) -> b
     board = entry.data[CONF_BOARD]
 
     if board not in BOARD_MAP:
-        _LOGGER.error(
-            'Board "%s" is (no longer) valid. Please remove the integration "%s"',
-            board,
-            entry.title,
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_board",
+            translation_placeholders={"board": board, "title": entry.title},
         )
-        return False
 
     coordinator = VersionDataUpdateCoordinator(
         hass=hass,

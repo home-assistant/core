@@ -1,5 +1,15 @@
 {
   "services": {
+    "clear_images": {
+      "description": "Deletes AI generated images.",
+      "fields": {
+        "days": {
+          "description": "Only deletes images that are older than this many days. Leave empty to delete all images.",
+          "name": "Older than"
+        }
+      },
+      "name": "Clear images"
+    },
     "generate_data": {
       "description": "Uses AI to run a task that generates data.",
       "fields": {

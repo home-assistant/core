@@ -97,6 +97,9 @@
     "send_command_failed": {
       "message": "Failed to send IR command: {error}"
     },
+    "setup_failed": {
+      "message": "Failed to set up the device at {host}"
+    },
     "transmit_failed": {
       "message": "Failed to transmit RF command: {error}"
     }

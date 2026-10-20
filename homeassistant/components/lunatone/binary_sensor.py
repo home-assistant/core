@@ -24,13 +24,24 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Lunatone binary sensors from the config entry."""
+    coordinator_info = config_entry.runtime_data.coordinator_info
     coordinator_scan = config_entry.runtime_data.coordinator_scan
 
     assert config_entry.unique_id is not None
 
-    async_add_entities(
-        [LunatoneDALIScanStatus(coordinator_scan, config_entry.unique_id)]
+    entities: list[BinarySensorEntity] = [
+        LunatoneDALIScanStatus(coordinator_scan, config_entry.unique_id)
+    ]
+    entities.extend(
+        [
+            LunatoneDALIScanStatus(
+                coordinator_scan, config_entry.unique_id, int(line_id)
+            )
+            for line_id in coordinator_info.data.lines
+        ]
     )
+
+    async_add_entities(entities)
 
 
 class LunatoneDALIScanStatus(
@@ -47,19 +58,27 @@ class LunatoneDALIScanStatus(
         self,
         coordinator: LunatoneScanDataUpdateCoordinator,
         config_entry_unique_id: str,
+        line: int | None = None,
     ) -> None:
         """Initialize a Lunatone DALI scan status."""
         super().__init__(coordinator)
 
-        self._config_entry_unique_id = config_entry_unique_id
+        self._line = line
 
-        self._attr_unique_id = f"{config_entry_unique_id}-scan-progress"
+        device_unique_id = config_entry_unique_id
+        if line is not None:
+            device_unique_id += f"-line{line}"
+
+        self._attr_unique_id = f"{device_unique_id}-scan-progress"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._config_entry_unique_id)},
+            identifiers={(DOMAIN, device_unique_id)},
         )
 
     @property
     @override
     def is_on(self) -> bool:
         """Return true if the DALI scan is on."""
-        return self.coordinator.data.busy
+        if self._line is None:
+            return self.coordinator.data.busy
+        line_scan_status = self.coordinator.line_scan_status.get(self._line)
+        return line_scan_status.busy if line_scan_status is not None else False

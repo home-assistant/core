@@ -1,6 +1,5 @@
 """The AEMET OpenData component."""
 
-import logging
 import shutil
 
 from aemet_opendata.exceptions import AemetError, TownNotFound
@@ -9,14 +8,12 @@ from aemet_opendata.interface import AEMET, ConnectionOptions, UpdateFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import CONF_RADAR_UPDATES, CONF_STATION_UPDATES, DOMAIN, PLATFORMS
 from .coordinator import AemetConfigEntry, AemetData, WeatherUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AemetConfigEntry) -> bool:
@@ -38,8 +35,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: AemetConfigEntry) -> boo
     try:
         await aemet.select_coordinates(latitude, longitude)
     except TownNotFound as err:
-        _LOGGER.error(err)
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="town_not_found",
+            translation_placeholders={
+                "latitude": str(latitude),
+                "longitude": str(longitude),
+            },
+        ) from err
     except AemetError as err:
         raise ConfigEntryNotReady(err) from err
 

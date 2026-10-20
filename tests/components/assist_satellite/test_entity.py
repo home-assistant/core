@@ -5,8 +5,8 @@ from collections.abc import Generator
 from dataclasses import asdict
 from unittest.mock import Mock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import stt
 from homeassistant.components.assist_pipeline import (
@@ -199,7 +199,7 @@ async def test_pipeline_validation_error_ends_pipeline(
     )
 
     with patch(
-        "homeassistant.components.assist_pipeline.pipeline.PipelineRun.prepare_speech_to_text"
+        "homeassistant.components.assist_pipeline.default_pipeline._DefaultPipelineProcessor.prepare_speech_to_text"
     ):
         await entity.async_accept_pipeline_from_satellite(
             object(),  # type: ignore[arg-type]
@@ -927,7 +927,7 @@ async def test_ask_question(
     )
 
     async def speech_to_text(self, *args, **kwargs):
-        self.process_event(
+        self.host.process_event(
             PipelineEvent(
                 PipelineEventType.STT_END, {"stt_output": {"text": response_text}}
             )
@@ -950,10 +950,10 @@ async def test_ask_question(
         audio_stream = object()
         with (
             patch(
-                "homeassistant.components.assist_pipeline.pipeline.PipelineRun.prepare_speech_to_text"
+                "homeassistant.components.assist_pipeline.default_pipeline._DefaultPipelineProcessor.prepare_speech_to_text"
             ),
             patch(
-                "homeassistant.components.assist_pipeline.pipeline.PipelineRun.speech_to_text",
+                "homeassistant.components.assist_pipeline.default_pipeline._DefaultPipelineProcessor.speech_to_text",
                 speech_to_text,
             ),
         ):
@@ -1021,7 +1021,7 @@ async def test_ask_question_invalid_sentences(
     sentence: str,
 ) -> None:
     """Test that invalid sentences raise an exception."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             "ask_question",

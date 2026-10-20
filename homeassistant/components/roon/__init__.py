@@ -3,6 +3,7 @@
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
@@ -30,7 +31,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoonConfigEntry) -> bool
     roonserver = RoonServer(hass, entry)
 
     if not await roonserver.async_setup():
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="setup_failed",
+            translation_placeholders={"name": name},
+        )
 
     entry.runtime_data = roonserver
     device_registry = dr.async_get(hass)

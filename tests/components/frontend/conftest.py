@@ -1,9 +1,22 @@
 """Fixtures for frontend tests."""
 
 from collections.abc import Generator
+from copy import deepcopy
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
+from homeassistant.components.frontend import MANIFEST_JSON, Manifest
+
+
+@pytest.fixture(autouse=True)
+def isolated_manifest_json() -> Generator[None]:
+    """Prevent theme changes to the module-level manifest leaking between tests."""
+    with patch(
+        "homeassistant.components.frontend.MANIFEST_JSON",
+        Manifest(deepcopy(MANIFEST_JSON.manifest)),
+    ):
+        yield
 
 
 @pytest.fixture

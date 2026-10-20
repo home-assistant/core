@@ -58,11 +58,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> b
 
     required_scopes = api.get_api_scopes(entry.data["auth_implementation"])
     if not (set(session.token["scope"]) & set(required_scopes)):
-        _LOGGER.warning(
-            "Session is missing scopes: %s",
-            set(required_scopes) - set(session.token["scope"]),
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="missing_scopes",
+            translation_placeholders={
+                "scopes": ", ".join(
+                    sorted(set(required_scopes) - set(session.token["scope"]))
+                )
+            },
         )
-        raise ConfigEntryAuthFailed("Token scope not valid, trigger renewal")
 
     auth = api.AsyncConfigEntryNetatmoAuth(
         aiohttp_client.async_get_clientsession(hass), session

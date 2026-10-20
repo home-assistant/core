@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from modbus_connection import ModbusTcpParams
+from modbus_connection import ModbusTlsParams
 from pystiebeleltron import ControllerModel, StiebelEltronModbusError
 import pytest
 
@@ -38,6 +38,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
         USER_INPUT,
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Stiebel Eltron"
     assert result["data"] == USER_INPUT
@@ -79,9 +80,7 @@ async def test_form_conflicting_link_settings(hass: HomeAssistant) -> None:
     async_get_unit(
         hass,
         other_entry,
-        ModbusTcpParams(
-            host=USER_INPUT[CONF_HOST], port=USER_INPUT[CONF_PORT], framer="rtu"
-        ),
+        ModbusTlsParams(host=USER_INPUT[CONF_HOST], port=USER_INPUT[CONF_PORT]),
         UNIT_ID,
     )
 
@@ -95,6 +94,13 @@ async def test_form_conflicting_link_settings(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        RECONFIGURE_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_unknown_exception(

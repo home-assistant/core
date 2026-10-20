@@ -1,6 +1,6 @@
 """Provide the device automations for Humidifier."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import (
     async_get_entity_registry_entry_or_raise,
@@ -26,21 +26,22 @@ from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.entity import get_capability, get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import DOMAIN, const
+from . import const
+from .const import DOMAIN
 
 TOGGLE_CONDITION = toggle_entity.CONDITION_SCHEMA.extend(
-    {vol.Required(CONF_DOMAIN): DOMAIN}
+    {probatio.Required(CONF_DOMAIN): DOMAIN}
 )
 
 MODE_CONDITION = DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Required(CONF_TYPE): "is_mode",
-        vol.Required(ATTR_MODE): str,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Required(CONF_TYPE): "is_mode",
+        probatio.Required(ATTR_MODE): str,
     }
 )
 
-CONDITION_SCHEMA = vol.Any(TOGGLE_CONDITION, MODE_CONDITION)
+CONDITION_SCHEMA = probatio.Any(TOGGLE_CONDITION, MODE_CONDITION)
 
 # Maps a state attribute to the condition config key used to compare against it.
 _STATE_ATTRIBUTE_TO_CONFIG_KEY = {
@@ -103,7 +104,7 @@ def async_condition_from_config(
 
 async def async_get_condition_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List condition capabilities."""
     condition_type = config[CONF_TYPE]
 
@@ -125,8 +126,8 @@ async def async_get_condition_capabilities(
         except HomeAssistantError:
             modes = []
 
-        fields[vol.Required(ATTR_MODE)] = vol.In(modes)
+        fields[probatio.Required(ATTR_MODE)] = probatio.In(modes)
 
-        return {"extra_fields": vol.Schema(fields)}
+        return {"extra_fields": probatio.Schema(fields)}
 
     return await toggle_entity.async_get_condition_capabilities(hass, config)

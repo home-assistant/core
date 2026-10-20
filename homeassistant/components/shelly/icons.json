@@ -59,6 +59,9 @@
       "self_test": {
         "default": "mdi:progress-wrench"
       },
+      "storage_free_space": {
+        "default": "mdi:sd"
+      },
       "tilt": {
         "default": "mdi:angle-acute"
       },
@@ -116,6 +119,9 @@
   "services": {
     "get_kvs_value": {
       "service": "mdi:import"
+    },
+    "set_cover_position_and_tilt": {
+      "service": "mdi:window-shutter-cog"
     },
     "set_kvs_value": {
       "service": "mdi:export"

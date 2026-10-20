@@ -32,7 +32,7 @@ from aioesphomeapi import (
 )
 import aiohttp
 from awesomeversion import AwesomeVersion
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import bluetooth, tag, zeroconf
 from homeassistant.const import (
@@ -418,10 +418,13 @@ class ESPHomeManager:
                     response_dict = {"response": response}
 
                 except TemplateError as ex:
-                    # pylint: disable-next=home-assistant-exception-not-translated
-                    raise HomeAssistantError(
-                        f"Error rendering response template: {ex}"
-                    ) from ex
+                    self._send_service_call_response(
+                        call_id,
+                        success=False,
+                        error_message=f"Error rendering response template: {ex}",
+                        response_data=b"",
+                    )
+                    return
             else:
                 response_dict = {"response": action_response}
 
@@ -431,7 +434,7 @@ class ESPHomeManager:
         except (
             ServiceNotFound,
             ServiceValidationError,
-            vol.Invalid,
+            probatio.Invalid,
             HomeAssistantError,
         ) as ex:
             self._send_service_call_response(
@@ -455,7 +458,7 @@ class ESPHomeManager:
             await self.hass.services.async_call(
                 domain, service_name, service_data, blocking=True
             )
-        except (ServiceNotFound, ServiceValidationError, vol.Invalid) as ex:
+        except (ServiceNotFound, ServiceValidationError, probatio.Invalid) as ex:
             self._send_service_call_response(call_id, False, str(ex), b"")
         else:
             self._send_service_call_response(call_id, True, "", b"")
@@ -511,14 +514,18 @@ class ESPHomeManager:
         new_state = event_data["new_state"]
         old_state = event_data["old_state"]
 
-        if new_state is None or old_state is None:
+        if new_state is None:
             return
 
-        # Only communicate changes to the state or attribute tracked
-        if (not attribute and old_state.state == new_state.state) or (
-            attribute
-            and old_state.attributes.get(attribute)
-            == new_state.attributes.get(attribute)
+        # Only communicate changes to the state or attribute tracked, an entity
+        # created after the subscription has no old state and is always sent
+        if old_state is not None and (
+            (not attribute and old_state.state == new_state.state)
+            or (
+                attribute
+                and old_state.attributes.get(attribute)
+                == new_state.attributes.get(attribute)
+            )
         ):
             return
 
@@ -761,8 +768,6 @@ class ESPHomeManager:
                 hass, device_info.bluetooth_mac_address or device_info.mac_address
             )
 
-        entry_data.first_connect_done.set()
-
         if device_info.voice_assistant_feature_flags_compat(api_version) and (
             Platform.ASSIST_SATELLITE not in entry_data.loaded_platforms
         ):
@@ -771,6 +776,9 @@ class ESPHomeManager:
                 self.entry, [Platform.ASSIST_SATELLITE]
             )
             entry_data.loaded_platforms.add(Platform.ASSIST_SATELLITE)
+
+        # Setup can wait for this, so only after the platforms are forwarded
+        entry_data.first_connect_done.set()
 
         if device_info.zwave_proxy_feature_flags:
             entry_data.disconnect_callbacks.add(
@@ -802,9 +810,15 @@ class ESPHomeManager:
         # if it's a broken connection or Z-Wave controller or a not
         # yet provisioned controller.
         zwave_home_id: int = UNPACK_UINT32_BE(request.data[0:4])[0]
-        assert self.entry_data.device_info is not None
-        self.entry_data.async_create_zwave_js_flow(
-            self.hass, self.entry_data.device_info, zwave_home_id
+        entry_data = self.entry_data
+        assert entry_data.device_info is not None
+        # DeviceInfo is a snapshot from connect time; keep its home ID current.
+        entry_data.device_info = EsphomeDeviceInfo.from_dict(
+            {**entry_data.device_info.to_dict(), "zwave_home_id": zwave_home_id}
+        )
+        entry_data.async_save_to_store()
+        entry_data.async_create_zwave_js_flow(
+            self.hass, entry_data.device_info, zwave_home_id
         )
 
     async def on_disconnect(self, expected_disconnect: bool) -> None:
@@ -1374,12 +1388,12 @@ ARG_TYPE_METADATA = {
         selector={"boolean": None},
     ),
     UserServiceArgType.INT: ServiceMetadata(
-        validator=vol.Coerce(int),
+        validator=probatio.Coerce(int),
         example="42",
         selector={"number": {CONF_MODE: "box"}},
     ),
     UserServiceArgType.FLOAT: ServiceMetadata(
-        validator=vol.Coerce(float),
+        validator=probatio.Coerce(float),
         example="12.3",
         selector={"number": {CONF_MODE: "box", "step": 1e-3}},
     ),
@@ -1395,13 +1409,13 @@ ARG_TYPE_METADATA = {
         selector={"object": {}},
     ),
     UserServiceArgType.INT_ARRAY: ServiceMetadata(
-        validator=[vol.Coerce(int)],
+        validator=[probatio.Coerce(int)],
         description="A list of integer values.",
         example="[42, 34]",
         selector={"object": {}},
     ),
     UserServiceArgType.FLOAT_ARRAY: ServiceMetadata(
-        validator=[vol.Coerce(float)],
+        validator=[probatio.Coerce(float)],
         description="A list of floating point numbers.",
         example="[ 12.3, 34.5 ]",
         selector={"object": {}},
@@ -1551,7 +1565,7 @@ def _async_register_service(
             )
             return
         metadata = ARG_TYPE_METADATA[arg.type]
-        schema[vol.Required(arg.name)] = metadata.validator
+        schema[probatio.Required(arg.name)] = metadata.validator
         fields[arg.name] = {
             "name": arg.name,
             "required": True,
@@ -1573,7 +1587,7 @@ def _async_register_service(
             service,
             supports_response=esphome_supports_response,
         ),
-        vol.Schema(schema),
+        probatio.Schema(schema),
         supports_response=ha_supports_response,
     )
     async_set_service_schema(

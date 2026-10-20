@@ -67,8 +67,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: EcobeeConfigEntry) -> bo
     await runtime_data.update()
 
     if runtime_data.ecobee.thermostats is None:
-        LOGGER.error("No ecobee devices found to set up")
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="no_devices_found",
+        )
 
     entry.runtime_data = runtime_data
 

@@ -3,8 +3,8 @@
 import asyncio
 from unittest.mock import Mock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import data_entry_flow
 from homeassistant.auth import auth_manager_from_config, auth_store
@@ -40,7 +40,7 @@ async def test_not_allow_set_id() -> None:
     """Test we are not allowed to set an ID in config."""
     hass = Mock()
     hass.data = {}
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await auth_provider_from_config(
             hass, None, {"type": "homeassistant", "id": "invalid"}
         )

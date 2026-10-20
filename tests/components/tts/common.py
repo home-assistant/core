@@ -6,8 +6,8 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.tts import (
@@ -191,7 +191,11 @@ class MockTTS(MockPlatform):
     """A mock TTS platform."""
 
     PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
-        {vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES)}
+        {
+            probatio.Optional(CONF_LANG, default=DEFAULT_LANG): probatio.In(
+                SUPPORT_LANGUAGES
+            )
+        }
     )
 
     def __init__(self, provider: MockTTSProvider, **kwargs: Any) -> None:

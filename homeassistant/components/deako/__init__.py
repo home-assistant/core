@@ -1,7 +1,5 @@
 """The deako integration."""
 
-import logging
-
 from pydeako import Deako, DeakoDiscoverer, FindDevicesError
 
 from homeassistant.components import zeroconf
@@ -9,8 +7,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-
-_LOGGER: logging.Logger = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
 
@@ -28,7 +24,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: DeakoConfigEntry) -> boo
     try:
         await connection.find_devices()
     except FindDevicesError as exc:
-        _LOGGER.warning("Error finding devices: %s", exc)
         await connection.disconnect()
         raise ConfigEntryNotReady(exc) from exc
 

@@ -15,6 +15,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.wattwaechter.const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -66,6 +67,168 @@ async def test_minimal_meter_data(
     assert _get_entity_id("2.8.0") is None
     assert _get_entity_id("32.7.0") is None
     assert _get_entity_id("31.7.0") is None
+
+
+@pytest.mark.parametrize(
+    ("obis_code", "device_class", "state_class", "unit"),
+    [
+        pytest.param(
+            "21.7.0",
+            SensorDeviceClass.POWER,
+            SensorStateClass.MEASUREMENT,
+            "W",
+            id="mapped_power_unit",
+        ),
+        pytest.param(
+            "12.7.0",
+            SensorDeviceClass.VOLTAGE,
+            SensorStateClass.MEASUREMENT,
+            "V",
+            id="mapped_voltage_unit",
+        ),
+        pytest.param(
+            "91.7.0",
+            SensorDeviceClass.CURRENT,
+            SensorStateClass.MEASUREMENT,
+            "A",
+            id="mapped_current_unit",
+        ),
+        pytest.param(
+            "140.7.0",
+            SensorDeviceClass.FREQUENCY,
+            SensorStateClass.MEASUREMENT,
+            "Hz",
+            id="mapped_frequency_unit",
+        ),
+        pytest.param(
+            "1.8.3",
+            SensorDeviceClass.ENERGY,
+            SensorStateClass.TOTAL_INCREASING,
+            "kWh",
+            id="cumulative_energy",
+        ),
+        pytest.param(
+            "5.8.1",
+            SensorDeviceClass.REACTIVE_ENERGY,
+            SensorStateClass.TOTAL_INCREASING,
+            "kvarh",
+            id="cumulative_reactive_energy",
+        ),
+        pytest.param(
+            "23.7.0",
+            None,
+            None,
+            "var",
+            id="unmapped_unit_no_statistics",
+        ),
+        pytest.param(
+            "94.91.0",
+            None,
+            None,
+            None,
+            id="string_value_plain_sensor",
+        ),
+        pytest.param(
+            "96.5.0",
+            None,
+            None,
+            None,
+            id="observable_service_register",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_client", "entity_registry_enabled_by_default")
+async def test_generic_obis_sensor_classification(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    obis_code: str,
+    device_class: SensorDeviceClass | None,
+    state_class: SensorStateClass | None,
+    unit: str | None,
+) -> None:
+    """Test device/state class inference for OBIS codes without a description."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_{obis_code}"
+    )
+    assert entity_id is not None
+
+    attributes = hass.states.get(entity_id).attributes
+    assert attributes.get("device_class") == device_class
+    assert attributes.get("state_class") == state_class
+    assert attributes.get("unit_of_measurement") == unit
+
+
+@pytest.mark.usefixtures("mock_client", "entity_registry_enabled_by_default")
+async def test_generic_obis_sensor_name_fallback(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a register without a reported name falls back to the OBIS code."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_94.91.1"
+    )
+    assert entity_id is not None
+    assert entity_registry.async_get(entity_id).original_name == "OBIS 94.91.1"
+
+
+@pytest.mark.usefixtures("mock_client", "entity_registry_enabled_by_default")
+async def test_no_entities_for_metadata_registers(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test metadata registers (serial number, firmware) create no entities."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_96.1.0"
+        )
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id("sensor", DOMAIN, f"{MOCK_DEVICE_ID}_0.2.0")
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id("sensor", DOMAIN, f"{MOCK_DEVICE_ID}_0.0.0")
+        is None
+    )
+
+
+@pytest.mark.usefixtures("mock_client")
+async def test_generic_obis_sensors_disabled_by_default(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test generic OBIS sensors are disabled by default, curated ones are not."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    generic_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_21.7.0"
+    )
+    assert generic_id is not None
+    assert (
+        entity_registry.async_get(generic_id).disabled_by
+        is er.RegistryEntryDisabler.INTEGRATION
+    )
+
+    curated_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_15.8.0"
+    )
+    assert curated_id is not None
+    assert entity_registry.async_get(curated_id).disabled_by is None
 
 
 @pytest.mark.parametrize(

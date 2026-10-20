@@ -75,12 +75,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
         ) from ex
 
     site_client = await client.get_site_client(OmadaSite("", entry.data[CONF_SITE]))
-    controller = OmadaSiteController(hass, entry, site_client)
+    controller = OmadaSiteController(hass, entry, client, site_client)
     await controller.initialize_first_refresh()
 
     entry.runtime_data = controller
 
-    _remove_old_devices(hass, entry, controller.devices_coordinator.data)
+    _remove_old_devices(
+        hass,
+        entry,
+        controller.devices_coordinator.data,
+        controller.controller_status_coordinator.data.mac,
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -96,6 +101,7 @@ def _remove_old_devices(
     hass: HomeAssistant,
     entry: OmadaConfigEntry,
     omada_devices: dict[str, OmadaListDevice],
+    controller_mac: str,
 ) -> None:
     device_registry = dr.async_get(hass)
 
@@ -105,7 +111,7 @@ def _remove_old_devices(
         mac = next(
             (i[1] for i in registered_device.identifiers if i[0] == DOMAIN), None
         )
-        if mac and mac not in omada_devices:
+        if mac and mac != controller_mac and mac not in omada_devices:
             device_registry.async_remove_device(registered_device.id)
 
 

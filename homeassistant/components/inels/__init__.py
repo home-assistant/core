@@ -68,7 +68,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: InelsConfigEntry) -> boo
         async_unsubscribe_topics(hass, sub_state)
 
     if not await ha_mqtt.async_wait_for_mqtt_client(hass):
-        LOGGER.error("MQTT integration not available")
         raise ConfigEntryNotReady("MQTT integration not available")
 
     inels_mqtt = InelsMqtt(mqtt_publish, mqtt_subscribe, mqtt_unsubscribe)

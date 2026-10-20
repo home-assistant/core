@@ -25,6 +25,7 @@ from homeassistant.const import (
     ATTR_SW_VERSION,
     EntityCategory,
     UnitOfPressure,
+    UnitOfRadiationConcentration,
     UnitOfRatio,
     UnitOfTemperature,
     UnitOfTime,
@@ -107,7 +108,8 @@ SENSOR_DESCRIPTIONS = {
         key="radon_concentration",
         translation_key="radon_concentration",
         name="Radon Concentration",
-        native_unit_of_measurement="Bq/m³",
+        device_class=SensorDeviceClass.RADON,
+        native_unit_of_measurement=UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "battery": AranetSensorEntityDescription(
@@ -208,6 +210,17 @@ class Aranet4BluetoothSensorEntity(
     SensorEntity,
 ):
     """Representation of an Aranet sensor."""
+
+    def __init__(
+        self,
+        processor: PassiveBluetoothDataProcessor[
+            float | int | None, Aranet4Advertisement
+        ],
+        entity_key: PassiveBluetoothEntityKey,
+        description: EntityDescription,
+    ) -> None:
+        """Initialize with current metadata instead of a cached description."""
+        super().__init__(processor, entity_key, SENSOR_DESCRIPTIONS[entity_key.key])
 
     @property
     @override

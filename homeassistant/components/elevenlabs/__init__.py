@@ -5,7 +5,7 @@ import logging
 
 from elevenlabs import AsyncElevenLabs, Model
 from elevenlabs.core import ApiError
-from httpx import ConnectError
+from httpx2 import ConnectError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_MODEL, Platform
@@ -51,7 +51,7 @@ type ElevenLabsConfigEntry = ConfigEntry[ElevenLabsData]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ElevenLabsConfigEntry) -> bool:
     """Set up ElevenLabs text-to-speech from a config entry."""
-    entry.add_update_listener(update_listener)
+    entry.async_on_unload(entry.add_update_listener(update_listener))
     httpx_client = get_async_client(hass)
     client = AsyncElevenLabs(
         api_key=entry.data[CONF_API_KEY], httpx_client=httpx_client

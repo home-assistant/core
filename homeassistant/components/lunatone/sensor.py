@@ -95,16 +95,18 @@ async def async_setup_entry(
     assert config_entry.unique_id is not None
 
     entities: list[SensorEntity] = [
-        LunatoneSensor(
-            coordinator_sensors, description, sensor_id, config_entry.unique_id
-        )
-        for sensor_id, sensor_data in coordinator_sensors.data.items()
-        if (description := SENSOR_TYPES.get(sensor_data.data.type))
-    ]
-    entities.extend(
         LunatoneDALILineStatusSensor(coordinator_info, line_id, config_entry.unique_id)
         for line_id in coordinator_info.data.lines
-    )
+    ]
+
+    if coordinator_sensors is not None:
+        entities.extend(
+            LunatoneSensor(
+                coordinator_sensors, description, sensor_id, config_entry.unique_id
+            )
+            for sensor_id, sensor_data in coordinator_sensors.data.items()
+            if (description := SENSOR_TYPES.get(sensor_data.data.type))
+        )
 
     async_add_entities(entities)
 
@@ -150,10 +152,11 @@ class LunatoneSensor(
                         f"-d24-address{self.sensor.data.dali_sensor_address.address}",
                     )
                 },
-                name=(
-                    f"DALI Line {self.sensor.data.dali_sensor_address.line}"
-                    f" - A{self.sensor.data.dali_sensor_address.address}\u00b2"
-                ),
+                translation_key="dali_sensor",
+                translation_placeholders={
+                    "line_id": str(self.sensor.data.dali_sensor_address.line),
+                    "dali_address": str(self.sensor.data.dali_sensor_address.address),
+                },
                 via_device_id=dr.async_get_device_id_by_identifier(
                     self.coordinator.hass,
                     (DOMAIN, str(self._config_entry_unique_id)),
@@ -208,7 +211,8 @@ class LunatoneDALILineStatusSensor(
         # Name must match the light platform, either of them may create the device
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, line_unique_id)},
-            name=f"DALI Line {line_id}",
+            translation_key="dali_line",
+            translation_placeholders={"line_id": str(line_id)},
         )
         self._attr_unique_id = f"{line_unique_id}-status"
 

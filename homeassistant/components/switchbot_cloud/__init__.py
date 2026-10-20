@@ -20,7 +20,7 @@ from homeassistant.components import cloud, webhook
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.network import NoURLAvailableError
@@ -296,10 +296,10 @@ async def async_setup_entry(
     try:
         devices = await api.list_devices()
     except SwitchBotAuthenticationError as ex:
-        _LOGGER.error(
-            "Invalid authentication while connecting to SwitchBot API: %s", ex
-        )
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_auth",
+        ) from ex
     except SwitchBotConnectionError as ex:
         raise ConfigEntryNotReady from ex
     _LOGGER.debug("Devices: %s", devices)

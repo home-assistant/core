@@ -1,20 +1,22 @@
 """Test ReCollect Waste diagnostics."""
 
+import pytest
+
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.core import HomeAssistant
 
 from .conftest import TEST_SERVICE_ID
 
-from tests.common import ANY
+from tests.common import ANY, MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.usefixtures("setup_config_entry")
 async def test_entry_diagnostics(
     hass: HomeAssistant,
-    config_entry,
+    config_entry: MockConfigEntry,
     hass_client: ClientSessionGenerator,
-    setup_config_entry,
 ) -> None:
     """Test config entry diagnostics."""
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {

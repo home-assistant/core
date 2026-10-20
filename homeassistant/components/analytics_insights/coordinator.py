@@ -1,13 +1,15 @@
 """DataUpdateCoordinator for the Homeassistant Analytics integration."""
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, cast, override
 
 from python_homeassistant_analytics import (
     CustomIntegration,
     HomeassistantAnalyticsClient,
     HomeassistantAnalyticsConnectionError,
+    HomeassistantAnalyticsError,
     HomeassistantAnalyticsNotModifiedError,
 )
 from python_homeassistant_analytics.models import Addon
@@ -25,6 +27,8 @@ from .const import (
 
 if TYPE_CHECKING:
     from . import AnalyticsInsightsConfigEntry
+
+RETRY_AFTER = timedelta(minutes=15)
 
 
 @dataclass(frozen=True)
@@ -65,21 +69,49 @@ class HomeassistantAnalyticsDataUpdateCoordinator(DataUpdateCoordinator[Analytic
         self._tracked_custom_integrations = self.config_entry.options[
             CONF_TRACKED_CUSTOM_INTEGRATIONS
         ]
+        # The client keeps one ETag per endpoint, so a 304 only means that
+        # endpoint is unchanged: keep each last response to fall back on.
+        self._responses: dict[str, Any] = {}
+
+    async def _async_fetch[_T](
+        self, endpoint: str, fetch: Callable[[], Awaitable[_T]]
+    ) -> _T:
+        """Fetch one endpoint, falling back to its last response on 304."""
+        try:
+            result = await fetch()
+        except HomeassistantAnalyticsNotModifiedError as err:
+            if endpoint in self._responses:
+                return cast(_T, self._responses[endpoint])
+            raise UpdateFailed(
+                f"Homeassistant Analytics returned 304 for {endpoint} without "
+                "previous data",
+                retry_after=RETRY_AFTER.total_seconds(),
+            ) from err
+        except HomeassistantAnalyticsConnectionError as err:
+            raise UpdateFailed(
+                f"Could not reach Homeassistant Analytics while fetching {endpoint}: "
+                f"{err}",
+                retry_after=RETRY_AFTER.total_seconds(),
+            ) from err
+        except HomeassistantAnalyticsError as err:
+            raise UpdateFailed(
+                f"Unexpected response from Homeassistant Analytics for {endpoint}",
+                retry_after=RETRY_AFTER.total_seconds(),
+            ) from err
+        self._responses[endpoint] = result
+        return result
 
     @override
     async def _async_update_data(self) -> AnalyticsData:
-        try:
-            apps_data = (
-                await self._client.get_addons()
-            )  # Still add method name. Needs library update
-            data = await self._client.get_current_analytics()
-            custom_data = await self._client.get_custom_integrations()
-        except HomeassistantAnalyticsConnectionError as err:
-            raise UpdateFailed(
-                "Error communicating with Homeassistant Analytics"
-            ) from err
-        except HomeassistantAnalyticsNotModifiedError:
-            return self.data
+        apps_data = await self._async_fetch(
+            "addons.json", self._client.get_addons
+        )  # Still add method name. Needs library update
+        data = await self._async_fetch(
+            "current_data.json", self._client.get_current_analytics
+        )
+        custom_data = await self._async_fetch(
+            "custom_integrations.json", self._client.get_custom_integrations
+        )
         apps = {app: get_app_value(apps_data, app) for app in self._tracked_apps}
         core_integrations = {
             integration: data.integrations.get(integration, 0)

@@ -1,9 +1,9 @@
 """Provides the constants needed for the component."""
 
 from enum import StrEnum
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     DEGREE,
@@ -40,6 +40,7 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
     UnitOfVolumetricFlux,
 )
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.unit_conversion import (
     ApparentPowerConverter,
     AreaConverter,
@@ -75,6 +76,15 @@ from homeassistant.util.unit_conversion import (
     VolumeFlowRateConverter,
 )
 
+DOMAIN: Final = "number"
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from . import NumberEntity
+
+DATA_COMPONENT: HassKey[EntityComponent[NumberEntity]] = HassKey(DOMAIN)
+
 ATTR_VALUE = "value"
 ATTR_MIN = "min"
 ATTR_MAX = "max"
@@ -84,7 +94,6 @@ DEFAULT_MIN_VALUE = 0.0
 DEFAULT_MAX_VALUE = 100.0
 DEFAULT_STEP = 1.0
 
-DOMAIN: Final = "number"
 
 SERVICE_SET_VALUE = "set_value"
 
@@ -208,7 +217,7 @@ class NumberDeviceClass(StrEnum):
 
     Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `mWh`,
     `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`,
-    `Mcal`, `Gcal`
+    `Mcal`, `Gcal`, `thm`
     """
 
     ENERGY_DISTANCE = "energy_distance"
@@ -231,7 +240,7 @@ class NumberDeviceClass(StrEnum):
 
     Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `mWh`,
     `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`,
-    `Mcal`, `Gcal`
+    `Mcal`, `Gcal`, `thm`
     """
 
     FREQUENCY = "frequency"
@@ -518,7 +527,9 @@ class NumberDeviceClass(StrEnum):
     """
 
 
-DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(NumberDeviceClass))
+DEVICE_CLASSES_SCHEMA: Final = probatio.All(
+    probatio.Lower, probatio.Coerce(NumberDeviceClass)
+)
 DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.ABSOLUTE_HUMIDITY: {
         UnitOfDensity.GRAMS_PER_CUBIC_METER,

@@ -1,22 +1,23 @@
 """The Rituals Perfume Genie integration."""
 
 import asyncio
-import logging
 
-from aiohttp import ClientError, ClientResponseError
-from pyrituals import Account, AuthenticationException, Diffuser
+from ritualsgenie import RitualsGenie, RitualsGenieHub
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import ACCOUNT_HASH, UPDATE_INTERVAL
-from .coordinator import RitualsConfigEntry, RitualsDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
+from .const import ACCOUNT_HASH
+from .coordinator import (
+    RitualsConfigEntry,
+    RitualsHubsCoordinator,
+    RitualsRuntimeData,
+    RitualsSensorsCoordinator,
+)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -34,62 +35,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: RitualsConfigEntry) -> b
     if CONF_EMAIL not in entry.data or CONF_PASSWORD not in entry.data:
         raise ConfigEntryAuthFailed("Missing credentials")
 
-    session = async_get_clientsession(hass)
-
-    account = Account(
+    client = RitualsGenie(
         email=entry.data[CONF_EMAIL],
         password=entry.data[CONF_PASSWORD],
-        session=session,
+        session=async_get_clientsession(hass),
     )
 
-    try:
-        # Authenticate first so API token/cookies are available for subsequent calls
-        await account.authenticate()
-        account_devices = await account.get_devices()
-
-    except AuthenticationException as err:
-        # Credentials invalid/expired -> raise AuthFailed to trigger reauth flow
-
-        raise ConfigEntryAuthFailed(err) from err
-
-    except ClientResponseError as err:
-        _LOGGER.debug(
-            "HTTP error during Rituals setup: status=%s, url=%s, headers=%s",
-            err.status,
-            err.request_info,
-            dict(err.headers or {}),
-        )
-        raise ConfigEntryNotReady from err
-
-    except ClientError as err:
-        raise ConfigEntryNotReady from err
+    hubs = RitualsHubsCoordinator(hass, entry, client)
+    await hubs.async_config_entry_first_refresh()
 
     # Migrate old unique_ids to the new format
-    async_migrate_entities_unique_ids(hass, entry, account_devices)
+    async_migrate_entities_unique_ids(hass, entry, list(hubs.data.values()))
 
-    # The API provided by Rituals is currently rate limited to 30 requests
-    # per hour per IP address. To avoid hitting this limit, we will adjust
-    # the polling interval based on the number of diffusers one has.
-    update_interval = UPDATE_INTERVAL * len(account_devices)
-
-    # Create a coordinator for each diffuser
-    coordinators = {
-        diffuser.hublot: RitualsDataUpdateCoordinator(
-            hass, entry, account, diffuser, update_interval
-        )
-        for diffuser in account_devices
+    sensors = {
+        hublot: RitualsSensorsCoordinator(hass, entry, hubs, hublot)
+        for hublot in hubs.data
     }
 
-    # Refresh all coordinators
-    await asyncio.gather(
-        *[
-            coordinator.async_config_entry_first_refresh()
-            for coordinator in coordinators.values()
-        ]
-    )
-
-    entry.runtime_data = coordinators
+    entry.runtime_data = RitualsRuntimeData(hubs=hubs, sensors=sensors)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Only now the entities are listening, so the coordinators know which
+    # sensors to fetch. Not a first refresh on purpose: when the sensors fail,
+    # the diffusers can still be controlled. Rituals has blocked just the
+    # sensors before.
+    await asyncio.gather(
+        *(coordinator.async_refresh() for coordinator in sensors.values())
+    )
 
     return True
 
@@ -101,7 +73,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: RitualsConfigEntry) -> 
 
 @callback
 def async_migrate_entities_unique_ids(
-    hass: HomeAssistant, config_entry: ConfigEntry, diffusers: list[Diffuser]
+    hass: HomeAssistant, config_entry: ConfigEntry, hubs: list[RitualsGenieHub]
 ) -> None:
     """Migrate unique_ids in the entity registry to the new format."""
     entity_registry = er.async_get(hass)
@@ -120,17 +92,17 @@ def async_migrate_entities_unique_ids(
         (Platform.SWITCH, ""): "is_on",
     }
 
-    for diffuser in diffusers:
+    for hub in hubs:
         for registry_entry in registry_entries:
             if new_unique_id := conversion.get(
                 (
                     registry_entry.domain,
-                    registry_entry.unique_id.removeprefix(diffuser.hublot),
+                    registry_entry.unique_id.removeprefix(hub.hublot),
                 )
             ):
                 entity_registry.async_update_entity(
                     registry_entry.entity_id,
-                    new_unique_id=f"{diffuser.hublot}-{new_unique_id}",
+                    new_unique_id=f"{hub.hublot}-{new_unique_id}",
                 )
 
 

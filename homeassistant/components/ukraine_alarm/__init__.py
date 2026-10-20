@@ -9,6 +9,7 @@ from uasiren.client import Client
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_REGION
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -54,13 +55,10 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         try:
             regions_data = await Client(websession).get_regions()
         except (aiohttp.ClientError, TimeoutError) as err:
-            _LOGGER.warning(
-                "Could not migrate config entry %s:"
-                " failed to fetch current regions: %s",
-                config_entry.entry_id,
-                err,
-            )
-            return False
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
 
         if TYPE_CHECKING:
             assert isinstance(regions_data, dict)
@@ -85,11 +83,15 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 },
             )
 
-            return False
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="deprecated_state_region",
+                translation_placeholders={
+                    "region_name": config_entry.data.get(CONF_NAME, region_id),
+                },
+            )
 
         hass.config_entries.async_update_entry(config_entry, version=2)
         _LOGGER.info("Migration to version %s successful", 2)
-        return True
 
-    _LOGGER.error("Unknown version %s", config_entry.version)
-    return False
+    return True

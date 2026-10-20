@@ -6,8 +6,9 @@ server is wrapped in a DmsEntity, and the server's USN is used as the unique_id.
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 
-from .const import CONF_SOURCE_ID, LOGGER
+from .const import CONF_SOURCE_ID, DOMAIN, LOGGER
 from .dms import get_domain_data
 from .util import generate_source_id
 
@@ -24,7 +25,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(entry, data=data)
 
     # Forward setup to this domain's data manager
-    return await get_domain_data(hass).async_setup_entry(entry)
+    if not await get_domain_data(hass).async_setup_entry(entry):
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="setup_failed",
+            translation_placeholders={"name": entry.title},
+        )
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

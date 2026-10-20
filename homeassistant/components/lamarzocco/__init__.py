@@ -5,6 +5,7 @@ import logging
 import uuid
 
 from aiohttp import ClientSession
+from bleak.backends.device import BLEDevice
 from packaging import version
 from pylamarzocco import (
     LaMarzoccoBluetoothClient,
@@ -29,11 +30,21 @@ from homeassistant.const import (
     __version__,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import CONF_INSTALLATION_KEY, CONF_OFFLINE_MODE, CONF_USE_BLUETOOTH, DOMAIN
+from .const import (
+    BT_MODEL_PREFIXES,
+    CONF_INSTALLATION_KEY,
+    CONF_OFFLINE_MODE,
+    CONF_USE_BLUETOOTH,
+    DOMAIN,
+)
 from .coordinator import (
     LaMarzoccoBluetoothUpdateCoordinator,
     LaMarzoccoConfigEntry,
@@ -54,8 +65,6 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.UPDATE,
 ]
-
-BT_MODEL_PREFIXES = ("MICRA", "MINI", "GS3")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,12 +105,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
                     )
 
         if CONF_MAC in entry.data:
-            ble_device = async_ble_device_from_address(hass, entry.data[CONF_MAC])
-            if ble_device:
+            mac = entry.data[CONF_MAC]
+            if ble_device := async_ble_device_from_address(hass, mac):
                 _LOGGER.info("Setting up lamarzocco with Bluetooth")
+                latest_ble_device: BLEDevice = ble_device
+
+                def ble_device_callback() -> BLEDevice:
+                    """Return the current BLE device, or the last one seen."""
+                    nonlocal latest_ble_device
+                    latest_ble_device = (
+                        async_ble_device_from_address(hass, mac) or latest_ble_device
+                    )
+                    return latest_ble_device
+
                 bluetooth_client = LaMarzoccoBluetoothClient(
                     ble_device=ble_device,
                     ble_token=token,
+                    ble_device_callback=ble_device_callback,
                 )
 
                 async def disconnect_bluetooth(_: Event) -> None:
@@ -196,7 +216,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
     # to fetch only if the others failed
     if bluetooth_client:
         bluetooth_coordinator = LaMarzoccoBluetoothUpdateCoordinator(
-            hass, entry, device
+            hass, entry, device, coordinators.config_coordinator
         )
         await bluetooth_coordinator.async_config_entry_first_refresh()
         coordinators.bluetooth_coordinator = bluetooth_coordinator
@@ -219,12 +239,11 @@ async def async_migrate_entry(
     """Migrate config entry."""
 
     if entry.version in (1, 2):
-        _LOGGER.error(
-            "Migration from version 1 or 2 is no longer"
-            " supported, please remove and re-add"
-            " the integration"
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="migration_unsupported_version",
+            translation_placeholders={"version": str(entry.version)},
         )
-        return False
 
     if entry.version == 3:
         installation_key = generate_installation_key(str(uuid.uuid4()).lower())
@@ -236,9 +255,14 @@ async def async_migrate_entry(
         )
         try:
             await cloud_client.async_register_client()
-        except (AuthFail, RequestNotSuccessful) as exc:
-            _LOGGER.error("Migration failed with error %s", exc)
-            return False
+        except AuthFail as exc:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN, translation_key="authentication_failed"
+            ) from exc
+        except RequestNotSuccessful as exc:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN, translation_key="api_error"
+            ) from exc
 
         hass.config_entries.async_update_entry(
             entry,

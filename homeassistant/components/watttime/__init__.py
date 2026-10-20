@@ -5,10 +5,10 @@ from aiowatttime.errors import InvalidCredentialsError, WattTimeError
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers import aiohttp_client
 
-from .const import LOGGER
+from .const import DOMAIN
 from .coordinator import WattTimeConfigEntry, WattTimeCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -25,8 +25,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: WattTimeConfigEntry) -> 
     except InvalidCredentialsError as err:
         raise ConfigEntryAuthFailed("Invalid username/password") from err
     except WattTimeError as err:
-        LOGGER.error("Error while authenticating with WattTime: %s", err)
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="authentication_error",
+        ) from err
 
     coordinator = WattTimeCoordinator(hass, entry, client)
 

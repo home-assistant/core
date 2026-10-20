@@ -5,7 +5,11 @@ from electrickiwi_api.exceptions import ApiException, AuthException
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
@@ -13,6 +17,7 @@ from homeassistant.helpers import (
 )
 
 from . import api
+from .const import DOMAIN
 from .coordinator import (
     ElectricKiwiAccountDataCoordinator,
     ElectricKiwiConfigEntry,
@@ -93,11 +98,17 @@ async def async_migrate_entry(
         try:
             await ek_api.set_active_session()
             connection_details = await ek_api.get_connection_details()
-        except AuthException:
+        except AuthException as err:
             config_entry.async_start_reauth(hass)
-            return False
-        except ApiException:
-            return False
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+            ) from err
+        except ApiException as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="connection_failed",
+            ) from err
         unique_id = str(ek_api.customer_number)
         identifier = ek_api.electricity.identifier
         hass.config_entries.async_update_entry(

@@ -9,19 +9,28 @@ from pathlib import Path
 import tempfile
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
+from homeassistant import config as conf_util
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import MAX_LENGTH_STATE_STATE, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    MAX_LENGTH_STATE_STATE,
+    STATE_UNKNOWN,
+    EntityCategory,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    issue_registry as ir,
     template,
 )
+from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import async_get_integration
 from homeassistant.util.async_ import create_eager_task
 
 from .const import (
@@ -37,13 +46,13 @@ from .const import (
     DEFAULT_RETAIN,
     DOMAIN,
 )
-from .models import DATA_MQTT, DATA_MQTT_AVAILABLE, ReceiveMessage
+from .models import DATA_MQTT, DATA_MQTT_AVAILABLE, MqttData, ReceiveMessage
 
 AVAILABILITY_TIMEOUT = 50.0
 
 TEMP_DIR_NAME = f"home-assistant-{DOMAIN}"
 
-_VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
+_VALID_QOS_SCHEMA = probatio.All(probatio.Coerce(int), probatio.In([0, 1, 2]))
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -252,23 +261,29 @@ def valid_topic(topic: Any) -> str:
     try:
         raw_validated_topic = validated_topic.encode("utf-8")
     except UnicodeError as err:
-        raise vol.Invalid("MQTT topic name/filter must be valid UTF-8 string.") from err
+        raise probatio.Invalid(
+            "MQTT topic name/filter must be valid UTF-8 string."
+        ) from err
     if not raw_validated_topic:
-        raise vol.Invalid("MQTT topic name/filter must not be empty.")
+        raise probatio.Invalid("MQTT topic name/filter must not be empty.")
     if len(raw_validated_topic) > 65535:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             "MQTT topic name/filter must not be longer than 65535 encoded bytes."
         )
 
     for char in validated_topic:
         if char == "\0":
-            raise vol.Invalid("MQTT topic name/filter must not contain null character.")
+            raise probatio.Invalid(
+                "MQTT topic name/filter must not contain null character."
+            )
         if char <= "\u001f" or "\u007f" <= char <= "\u009f":
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 "MQTT topic name/filter must not contain control characters."
             )
         if "\ufdd0" <= char <= "\ufdef" or (ord(char) & 0xFFFF) in (0xFFFE, 0xFFFF):
-            raise vol.Invalid("MQTT topic name/filter must not contain non-characters.")
+            raise probatio.Invalid(
+                "MQTT topic name/filter must not contain non-characters."
+            )
 
     return validated_topic
 
@@ -282,7 +297,7 @@ def valid_subscribe_topic(topic: Any) -> str:
             if (i > 0 and validated_topic[i - 1] != "/") or (
                 i < len(validated_topic) - 1 and validated_topic[i + 1] != "/"
             ):
-                raise vol.Invalid(
+                raise probatio.Invalid(
                     "Single-level wildcard must occupy an entire level of the filter"
                 )
 
@@ -290,11 +305,11 @@ def valid_subscribe_topic(topic: Any) -> str:
     if index != -1:
         if index != len(validated_topic) - 1:
             # If there are multiple wildcards, this will also trigger
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 "Multi-level wildcard must be the last character in the topic filter."
             )
         if len(validated_topic) > 1 and validated_topic[index - 1] != "/":
-            raise vol.Invalid(
+            raise probatio.Invalid(
                 "Multi-level wildcard must be after a topic level separator."
             )
 
@@ -316,8 +331,23 @@ def valid_publish_topic(topic: Any) -> str:
     """Validate that we can publish using this MQTT topic."""
     validated_topic = valid_topic(topic)
     if "+" in validated_topic or "#" in validated_topic:
-        raise vol.Invalid("Wildcards cannot be used in topic names")
+        raise probatio.Invalid("Wildcards cannot be used in topic names")
     return validated_topic
+
+
+def entity_category_without_config(value: Any) -> EntityCategory:
+    """Validate the entity category of a platform not supporting `CONFIG`.
+
+    Entities of these platforms raise when they are added as config entities.
+    """
+    entity_category: EntityCategory = ENTITY_CATEGORIES_SCHEMA(value)
+    if entity_category is EntityCategory.CONFIG:
+        _options = ", ".join(sorted(set(EntityCategory) - {EntityCategory.CONFIG}))
+        raise probatio.Invalid(
+            f"Entity category '{entity_category}' is not supported by this platform."
+            f" Valid options are: {_options}"
+        )
+    return entity_category
 
 
 def valid_qos_schema(qos: Any) -> int:
@@ -326,12 +356,12 @@ def valid_qos_schema(qos: Any) -> int:
     return validated_qos
 
 
-_MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
+_MQTT_WILL_BIRTH_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_TOPIC): valid_publish_topic,
-        vol.Required(ATTR_PAYLOAD): cv.string,
-        vol.Optional(ATTR_QOS, default=DEFAULT_QOS): valid_qos_schema,
-        vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        probatio.Required(ATTR_TOPIC): valid_publish_topic,
+        probatio.Required(ATTR_PAYLOAD): cv.string,
+        probatio.Optional(ATTR_QOS, default=DEFAULT_QOS): valid_qos_schema,
+        probatio.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
     },
     required=True,
 )
@@ -452,3 +482,43 @@ async def async_cleanup_device_registry(
         and not tag.async_has_tags(hass, device_id)
     ):
         device_registry.async_remove_device(device_id)
+
+
+@callback
+def async_remove_mqtt_issues(hass: HomeAssistant, mqtt_data: MqttData) -> None:
+    """Unregister open config issues."""
+    issue_registry = ir.async_get(hass)
+    open_issues = [
+        issue_id
+        for (domain, issue_id), issue_entry in issue_registry.issues.items()
+        if domain == DOMAIN and issue_entry.translation_key == "invalid_platform_config"
+    ]
+    for issue in open_issues:
+        ir.async_delete_issue(hass, DOMAIN, issue)
+
+
+async def async_check_config_schema(
+    hass: HomeAssistant, config_yaml: ConfigType
+) -> None:
+    """Validate manually configured MQTT items."""
+    mqtt_data = hass.data[DATA_MQTT]
+    mqtt_config: list[dict[str, list[ConfigType]]] = config_yaml.get(DOMAIN, {})
+    for mqtt_config_item in mqtt_config:
+        for domain, config_items in mqtt_config_item.items():
+            schema = mqtt_data.reload_schema[domain]
+            for config in config_items:
+                try:
+                    schema(config)
+                except probatio.Invalid as exc:
+                    integration = await async_get_integration(hass, DOMAIN)
+                    message = conf_util.format_schema_error(
+                        hass, exc, domain, config, integration.documentation
+                    )
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="invalid_platform_config_message",
+                        translation_placeholders={
+                            "domain": domain,
+                            "message": message,
+                        },
+                    ) from exc

@@ -90,9 +90,6 @@ async def test_extracting_playlist_no_entries(
 
 
 @pytest.mark.parametrize(
-    "config_fixture", ["empty_media_extractor_config", "audio_media_extractor_config"]
-)
-@pytest.mark.parametrize(
     ("media_content_id", "media_content_type"),
     [
         (YOUTUBE_VIDEO, "VIDEO"),
@@ -105,14 +102,12 @@ async def test_play_media_service(
     mock_youtube_dl: MockYoutubeDL,
     service_calls: list[ServiceCall],
     snapshot: SnapshotAssertion,
-    request: pytest.FixtureRequest,
-    config_fixture: str,
+    empty_media_extractor_config: dict[str, Any],
     media_content_id: str,
     media_content_type: str,
 ) -> None:
     """Test play media service is registered."""
-    config: dict[str, Any] = request.getfixturevalue(config_fixture)
-    await async_setup_component(hass, DOMAIN, config)
+    await async_setup_component(hass, DOMAIN, empty_media_extractor_config)
     await hass.async_block_till_done()
 
     await hass.services.async_call(
@@ -139,7 +134,7 @@ async def test_download_error(
     """Test handling DownloadError."""
 
     with patch(
-        "homeassistant.components.media_extractor.YoutubeDL.extract_info",
+        "homeassistant.components.media_extractor.services.YoutubeDL.extract_info",
         side_effect=DownloadError("Message"),
     ):
         await async_setup_component(hass, DOMAIN, empty_media_extractor_config)
@@ -252,13 +247,13 @@ async def test_query_error(
 
     with (
         patch(
-            "homeassistant.components.media_extractor.YoutubeDL.extract_info",
+            "homeassistant.components.media_extractor.services.YoutubeDL.extract_info",
             return_value=await async_load_json_object_fixture(
                 hass, "youtube_1_info.json", DOMAIN
             ),
         ),
         patch(
-            "homeassistant.components.media_extractor.YoutubeDL.process_ie_result",
+            "homeassistant.components.media_extractor.services.YoutubeDL.process_ie_result",
             side_effect=DownloadError("Message"),
         ),
     ):

@@ -7,7 +7,7 @@ from pathlib import Path
 import time
 from typing import TYPE_CHECKING, Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.frontend import async_panel_exists
@@ -276,8 +276,8 @@ def _config_info(mode: str, config: dict[str, Any]) -> dict[str, Any]:
 class DashboardsCollection(collection.DictStorageCollection):
     """Collection of dashboards."""
 
-    CREATE_SCHEMA = vol.Schema(STORAGE_DASHBOARD_CREATE_FIELDS)
-    UPDATE_SCHEMA = vol.Schema(STORAGE_DASHBOARD_UPDATE_FIELDS)
+    CREATE_SCHEMA = probatio.Schema(STORAGE_DASHBOARD_CREATE_FIELDS)
+    UPDATE_SCHEMA = probatio.Schema(STORAGE_DASHBOARD_UPDATE_FIELDS)
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the dashboards collection."""
@@ -293,7 +293,7 @@ class DashboardsCollection(collection.DictStorageCollection):
         allow_single_word = data.pop(CONF_ALLOW_SINGLE_WORD, False)
 
         if not allow_single_word and "-" not in url_path:
-            raise vol.Invalid("Url path needs to contain a hyphen (-)")
+            raise probatio.Invalid("Url path needs to contain a hyphen (-)")
 
         if async_panel_exists(self.hass, url_path):
             raise HomeAssistantError(

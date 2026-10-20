@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 from functools import partial
-import logging
 
 from sense_energy import (
     ASyncSenseable,
@@ -26,8 +25,6 @@ from .const import (
     SENSE_WEBSOCKET_EXCEPTIONS,
 )
 from .coordinator import SenseRealtimeCoordinator, SenseTrendCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 type SenseConfigEntry = ConfigEntry[SenseData]
@@ -73,7 +70,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
         gateway.set_monitor_id(monitor_id)
         await gateway.get_monitor_data()
     except (SenseAuthenticationException, SenseMFARequiredException) as err:
-        _LOGGER.warning("Sense authentication expired")
         raise ConfigEntryAuthFailed(err) from err
     except SENSE_TIMEOUT_EXCEPTIONS as err:
         raise ConfigEntryNotReady(
@@ -94,6 +90,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
     except SenseAPIException as err:
         raise ConfigEntryNotReady(
             str(err) or "API error retrieving realtime data"
+        ) from err
+    except SenseAuthenticationException as err:
+        # We just authenticated, sense_energy also raises this for a 404 while
+        # the monitor is reconnecting
+        raise ConfigEntryNotReady(
+            str(err) or "Monitor not available for realtime data"
         ) from err
 
     trends_coordinator = SenseTrendCoordinator(hass, entry, gateway)

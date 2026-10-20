@@ -1,4 +1,7 @@
-"""Adds support for generic thermostat units."""
+"""Adds support for generic thermostat units.
+
+DEVELOPMENT OF THE GENERIC THERMOSTAT INTEGRATION IS FROZEN.
+"""
 
 import asyncio
 from collections.abc import Mapping
@@ -9,7 +12,7 @@ import math
 import time
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -66,6 +69,7 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolDictType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
     CONF_AC_MODE,
@@ -96,35 +100,39 @@ CONF_TEMP_STEP = "target_temp_step"
 
 
 PRESETS_SCHEMA: VolDictType = {
-    vol.Optional(v): vol.Coerce(float) for v in CONF_PRESETS.values()
+    probatio.Optional(v): probatio.Coerce(float) for v in CONF_PRESETS.values()
 }
 
-PLATFORM_SCHEMA_COMMON = vol.Schema(
+PLATFORM_SCHEMA_COMMON = probatio.Schema(
     {
-        vol.Required(CONF_HEATER): cv.entity_id,
-        vol.Required(CONF_SENSOR): cv.entity_id,
-        vol.Optional(CONF_AC_MODE): cv.boolean,
-        vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
-        vol.Optional(CONF_MIN_DUR): cv.positive_time_period,
-        vol.Optional(CONF_MAX_DUR): cv.positive_time_period,
-        vol.Optional(CONF_DUR_COOLDOWN): cv.positive_time_period,
-        vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_COLD_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
-        vol.Optional(CONF_HOT_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
-        vol.Optional(CONF_TARGET_TEMP): vol.Coerce(float),
-        vol.Optional(CONF_KEEP_ALIVE): cv.positive_time_period,
-        vol.Optional(CONF_INITIAL_HVAC_MODE): vol.In(
+        probatio.Required(CONF_HEATER): cv.entity_id,
+        probatio.Required(CONF_SENSOR): cv.entity_id,
+        probatio.Optional(CONF_AC_MODE): cv.boolean,
+        probatio.Optional(CONF_MAX_TEMP): probatio.Coerce(float),
+        probatio.Optional(CONF_MIN_DUR): cv.positive_time_period,
+        probatio.Optional(CONF_MAX_DUR): cv.positive_time_period,
+        probatio.Optional(CONF_DUR_COOLDOWN): cv.positive_time_period,
+        probatio.Optional(CONF_MIN_TEMP): probatio.Coerce(float),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(
+            CONF_COLD_TOLERANCE, default=DEFAULT_TOLERANCE
+        ): probatio.Coerce(float),
+        probatio.Optional(
+            CONF_HOT_TOLERANCE, default=DEFAULT_TOLERANCE
+        ): probatio.Coerce(float),
+        probatio.Optional(CONF_TARGET_TEMP): probatio.Coerce(float),
+        probatio.Optional(CONF_KEEP_ALIVE): cv.positive_time_period,
+        probatio.Optional(CONF_INITIAL_HVAC_MODE): probatio.In(
             [HVACMode.COOL, HVACMode.HEAT, HVACMode.OFF]
         ),
-        vol.Optional(CONF_PRECISION): vol.All(
-            vol.Coerce(float),
-            vol.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]),
+        probatio.Optional(CONF_PRECISION): probatio.All(
+            probatio.Coerce(float),
+            probatio.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]),
         ),
-        vol.Optional(CONF_TEMP_STEP): vol.All(
-            vol.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE])
+        probatio.Optional(CONF_TEMP_STEP): probatio.All(
+            probatio.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE])
         ),
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
         **PRESETS_SCHEMA,
     }
 )
@@ -282,7 +290,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self._max_temp = max_temp
         self._attr_preset_mode = PRESET_NONE
         self._target_temp = target_temp
-        self._attr_temperature_unit = unit
+        self._attr_native_temperature_unit = unit
         self._attr_unique_id = unique_id
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE
@@ -366,10 +374,17 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                         self._target_temp,
                     )
                 else:
-                    self._target_temp = float(
-                        old_state.attributes[
-                            ClimateEntityStateAttribute.TARGET_TEMPERATURE
-                        ]
+                    self._target_temp = TemperatureConverter.convert(
+                        float(
+                            old_state.attributes[
+                                ClimateEntityStateAttribute.TARGET_TEMPERATURE
+                            ]
+                        ),
+                        old_state.attributes.get(
+                            ClimateEntityStateAttribute.TEMPERATURE_UNIT,
+                            self.hass.config.units.temperature_unit,
+                        ),
+                        self.native_temperature_unit,
                     )
             if (
                 self.preset_modes
@@ -416,7 +431,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the sensor temperature."""
         return self._cur_temp
 
@@ -443,7 +458,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._target_temp
 
@@ -614,7 +629,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                         )
                         self._check_callback = async_call_later(
                             self.hass,
-                            now - self._last_toggled_time + self.min_cycle_duration,
+                            self._last_toggled_time + self.min_cycle_duration - now,
                             self._async_timer_control_heating,
                         )
                 elif called_by_timer:
@@ -636,7 +651,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                     )
                     self._check_callback = async_call_later(
                         self.hass,
-                        now - self._last_toggled_time + self.cycle_cooldown,
+                        self._last_toggled_time + self.cycle_cooldown - now,
                         self._async_timer_control_heating,
                     )
             elif called_by_timer:

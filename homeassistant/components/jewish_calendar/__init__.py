@@ -19,6 +19,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_CANDLE_LIGHT_MINUTES,
+    CONF_DAILY_EVENTS,
     CONF_DIASPORA,
     CONF_HAVDALAH_OFFSET_MINUTES,
     DEFAULT_CANDLE_LIGHT,
@@ -139,5 +140,16 @@ async def async_migrate_entry(
         new_data = {**config_entry.data}
         new_data[CONF_LANGUAGE] = config_entry.data[CONF_LANGUAGE][:2]
         hass.config_entries.async_update_entry(config_entry, data=new_data, version=3)
+
+    if config_entry.version == 3:
+        new_options = {**config_entry.options}
+        if CONF_DAILY_EVENTS in new_options:
+            new_options[CONF_DAILY_EVENTS] = [
+                "tset_hakohavim" if event == "tset_hakohavim_tsom" else event
+                for event in new_options[CONF_DAILY_EVENTS]
+            ]
+        hass.config_entries.async_update_entry(
+            config_entry, options=new_options, version=4
+        )
 
     return True

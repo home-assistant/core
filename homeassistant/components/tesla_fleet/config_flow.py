@@ -6,6 +6,7 @@ import re
 from typing import Any, cast, override
 
 import jwt
+import probatio
 from tesla_fleet_api import TeslaFleetApi
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
@@ -15,7 +16,6 @@ from tesla_fleet_api.exceptions import (
     PreconditionFailed,
     TeslaFleetError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_DOMAIN, CONF_REGION
@@ -128,9 +128,9 @@ class OAuth2FlowHandler(
 
         return self.async_show_form(
             step_id="region",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_REGION, default=self.region): SelectSelector(
+                    probatio.Required(CONF_REGION, default=self.region): SelectSelector(
                         SelectSelectorConfig(
                             options=REGIONS,
                             translation_key="region",
@@ -166,9 +166,9 @@ class OAuth2FlowHandler(
             description_placeholders={
                 "dashboard": "https://developer.tesla.com/en_AU/dashboard/"
             },
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_DOMAIN): str,
+                    probatio.Required(CONF_DOMAIN): str,
                 }
             ),
             errors=errors,
@@ -234,9 +234,9 @@ class OAuth2FlowHandler(
             return await self.async_step_domain_input()
 
         virtual_key_url = f"https://www.tesla.com/_ak/{self.domain}"
-        data_schema = vol.Schema({}).extend(
+        data_schema = probatio.Schema({}).extend(
             {
-                vol.Optional("qr_code"): QrCodeSelector(
+                probatio.Optional("qr_code"): QrCodeSelector(
                     config=QrCodeSelectorConfig(
                         data=virtual_key_url,
                         scale=6,

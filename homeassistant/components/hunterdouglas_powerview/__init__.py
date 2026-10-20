@@ -11,7 +11,7 @@ from aiopvapi.shades import Shades
 
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN, HUB_EXCEPTIONS, MANUFACTURER
@@ -55,14 +55,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) ->
     if hub.role != "Primary":
         # this should be caught in config_flow, but account for a hub changing roles
         # this will only happen manually by a user
-        _LOGGER.error(
-            "%s (%s) is performing role of %s Hub. "
-            "Only the Primary Hub can manage shades",
-            hub.name,
-            hub.hub_address,
-            hub.role,
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="not_primary_hub",
+            translation_placeholders={
+                "name": hub.name,
+                "address": hub.hub_address,
+                "role": hub.role,
+            },
         )
-        return False
 
     # manual registration of the hub
     device_registry = dr.async_get(hass)

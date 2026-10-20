@@ -49,6 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NASwebConfigEntry) -> bo
                 f"[{entry.data[CONF_HOST]}] Check connection failed"
             )
         if not await webio_api.refresh_device_info():
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error("[%s] Refresh device info failed", entry.data[CONF_HOST])
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
@@ -57,6 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NASwebConfigEntry) -> bo
             )
         webio_serial = webio_api.get_serial_number()
         if webio_serial is None:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error("[%s] Serial number not available", entry.data[CONF_HOST])
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
@@ -64,9 +66,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NASwebConfigEntry) -> bo
                 translation_placeholders={"support_email": SUPPORT_EMAIL},
             )
         if entry.unique_id != webio_serial:
-            _LOGGER.error(
-                "[%s] Serial number doesn't match config entry", entry.data[CONF_HOST]
-            )
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="config_entry_error_serial_mismatch",
@@ -80,6 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NASwebConfigEntry) -> bo
 
         webhook_url = nasweb_data.get_webhook_url(hass)
         if not await webio_api.status_subscription(webhook_url, True):
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error("Failed to subscribe for status updates from webio")
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
@@ -87,7 +87,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NASwebConfigEntry) -> bo
                 translation_placeholders={"support_email": SUPPORT_EMAIL},
             )
         if not await nasweb_data.notify_coordinator.check_connection(webio_serial):
-            _LOGGER.error("Did not receive status from device")
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="config_entry_error_no_status_update",

@@ -2,8 +2,9 @@
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 
-from .const import PLATFORMS
+from .const import DOMAIN, PLATFORMS
 from .entry_manager import CrownstoneConfigEntry, CrownstoneEntryManager
 
 
@@ -12,7 +13,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: CrownstoneConfigEntry) -
     manager = CrownstoneEntryManager(hass, entry)
 
     if not await manager.async_setup():
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="authentication_failed",
+        )
 
     entry.runtime_data = manager
 

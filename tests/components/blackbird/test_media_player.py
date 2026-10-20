@@ -3,8 +3,8 @@
 from collections import defaultdict
 from unittest import mock
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.blackbird.const import DOMAIN, SERVICE_SETALLZONES
 from homeassistant.components.blackbird.media_player import (
@@ -166,7 +166,7 @@ def test_invalid_schemas() -> None:
         },
     )
     for value in schemas:
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(probatio.MultipleInvalid):
             PLATFORM_SCHEMA(value)
 
 

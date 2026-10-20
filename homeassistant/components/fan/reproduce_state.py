@@ -19,13 +19,12 @@ from . import (
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
-    DOMAIN,
     SERVICE_OSCILLATE,
     SERVICE_SET_DIRECTION,
     SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
 )
-from .const import FanEntityStateAttribute
+from .const import DOMAIN, FanEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 

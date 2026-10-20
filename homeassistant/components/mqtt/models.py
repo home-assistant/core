@@ -265,7 +265,11 @@ class MqttCommandTemplate:
         if self._entity:
             values[ATTR_ENTITY_ID] = self._entity.entity_id
             values[ATTR_NAME] = self._entity.name
-            if not self._template_state and self._command_template.hass is not None:
+            # Created again when the entity_id is changed in place
+            if self._command_template.hass is not None and (
+                not self._template_state
+                or self._template_state.entity_id != self._entity.entity_id
+            ):
                 self._template_state = template.TemplateStateFromEntityId(
                     self._entity.hass, self._entity.entity_id
                 )
@@ -368,7 +372,11 @@ class MqttValueTemplate:
         if self._entity:
             values[ATTR_ENTITY_ID] = self._entity.entity_id
             values[ATTR_NAME] = self._entity.name
-            if not self._template_state and self._value_template.hass:
+            # Created again when the entity_id is changed in place
+            if self._value_template.hass and (
+                not self._template_state
+                or self._template_state.entity_id != self._entity.entity_id
+            ):
                 self._template_state = template.TemplateStateFromEntityId(
                     self._value_template.hass, self._entity.entity_id
                 )

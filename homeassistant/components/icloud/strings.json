@@ -70,6 +70,9 @@
     "invalid_view_type": {
       "message": "Invalid album view type"
     },
+    "no_device_found": {
+      "message": "No iCloud device found"
+    },
     "photo_not_found": {
       "message": "Photo not found"
     },

@@ -5,7 +5,7 @@ from typing import Any, override
 
 from duco_connectivity import DucoClient
 from duco_connectivity.exceptions import DucoConnectionError, DucoError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
@@ -19,9 +19,9 @@ from .validation import UnsupportedBoardError, async_get_supported_board_info
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_SCHEMA = vol.Schema(
+STEP_USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        probatio.Required(CONF_HOST): str,
     }
 )
 

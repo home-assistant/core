@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, call, patch
 
 import aiohttp
 from aiohttp import web
@@ -632,6 +632,33 @@ async def test_remote_enable(hass: HomeAssistant) -> None:
 
     await client.async_cloud_connect_update(True)
     prefs.async_update.assert_called_once_with(remote_enabled=True)
+
+
+@pytest.mark.parametrize(
+    ("stored_domain", "expected_calls"),
+    [
+        pytest.param(None, 1, id="changed"),
+        pytest.param("example.ui.nabu.casa", 0, id="unchanged"),
+    ],
+)
+async def test_remote_backend_up_updates_remote_domain(
+    hass: HomeAssistant, stored_domain: str | None, expected_calls: int
+) -> None:
+    """Test the remote domain preference is synced when the backend is up."""
+    prefs = MagicMock(
+        async_update=AsyncMock(return_value=None), remote_domain=stored_domain
+    )
+    client = CloudClient(hass, prefs, None, {}, {})
+    client.cloud = MagicMock()
+    client.cloud.remote.instance_domain = "example.ui.nabu.casa"
+
+    client.dispatcher_message("remote_backend_up")
+    await hass.async_block_till_done()
+
+    assert (
+        prefs.async_update.call_args_list
+        == [call(remote_domain="example.ui.nabu.casa")] * expected_calls
+    )
 
 
 async def test_remote_enable_not_allowed(hass: HomeAssistant) -> None:

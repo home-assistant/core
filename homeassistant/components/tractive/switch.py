@@ -1,29 +1,20 @@
 """Support for Tractive switches."""
 
 from dataclasses import dataclass
-import logging
 from typing import Any, Literal, override
 
+from aiotractive import Trackable
 from aiotractive.exceptions import TractiveError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import Trackables, TractiveClient, TractiveConfigEntry
-from .const import (
-    ATTR_BUZZER,
-    ATTR_LED,
-    ATTR_LIVE_TRACKING,
-    ATTR_POWER_SAVING,
-    DOMAIN,
-    TRACKER_SWITCH_STATUS_UPDATED,
-)
+from .const import ATTR_BUZZER, ATTR_LED, ATTR_LIVE_TRACKING, DOMAIN
+from .coordinator import TractiveConfigEntry, TractiveCoordinator
 from .entity import TractiveEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -61,16 +52,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tractive switches."""
-    client = entry.runtime_data.client
-    trackables = entry.runtime_data.trackables
+    coordinator = entry.runtime_data
 
-    entities = [
-        TractiveSwitch(hass, entry, client, item, description)
+    async_add_entities(
+        TractiveSwitch(coordinator, trackable, description)
         for description in SWITCH_TYPES
-        for item in trackables
-    ]
-
-    async_add_entities(entities)
+        for trackable in coordinator.trackables
+    )
 
 
 class TractiveSwitch(TractiveEntity, SwitchEntity):
@@ -80,70 +68,56 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
-        entry: TractiveConfigEntry,
-        client: TractiveClient,
-        item: Trackables,
+        coordinator: TractiveCoordinator,
+        trackable: Trackable,
         description: TractiveSwitchEntityDescription,
     ) -> None:
         """Initialize switch entity."""
-        super().__init__(
-            hass,
-            entry,
-            client,
-            item.trackable,
-            item.tracker_details,
-            f"{TRACKER_SWITCH_STATUS_UPDATED}-{item.tracker_details['_id']}",
-        )
+        super().__init__(coordinator, trackable)
 
-        self._attr_unique_id = f"{item.trackable['_id']}_{description.key}"
-        self._tracker = item.tracker
+        self._attr_unique_id = f"{trackable.pet_id}_{description.key}"
+        self._tracker = coordinator.client.tracker(trackable.tracker_id)
         self._method = getattr(self, description.method)
         self.entity_description = description
 
-    @callback
+    @property
     @override
-    def handle_status_update(self, event: dict[str, Any]) -> None:
-        """Handle status update."""
-        if ATTR_POWER_SAVING in event:
-            self._attr_available = not event[ATTR_POWER_SAVING]
+    def is_on(self) -> bool | None:
+        """Return the state of the switch."""
+        is_on: bool | None = getattr(self._tracker_status, self.entity_description.key)
+        return is_on
 
-        if self.entity_description.key in event:
-            self._attr_is_on = event[self.entity_description.key]
-
-        self.async_write_ha_state()
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and not self._tracker_status.power_saving_zone
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on a switch."""
         try:
-            result = await self._method(True)
+            await self._method(True)
         except TractiveError as error:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="failed_to_turn_on",
                 translation_placeholders={"entity": self.entity_id},
             ) from error
-        # Write state back to avoid switch flips with a slow response
-        if result["pending"]:
-            self._attr_is_on = True
-            self.async_write_ha_state()
+        self.async_write_ha_state()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off a switch."""
         try:
-            result = await self._method(False)
+            await self._method(False)
         except TractiveError as error:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="failed_to_turn_off",
                 translation_placeholders={"entity": self.entity_id},
             ) from error
-        # Write state back to avoid switch flips with a slow response
-        if result["pending"]:
-            self._attr_is_on = False
-            self.async_write_ha_state()
+        self.async_write_ha_state()
 
     async def async_set_buzzer(self, active: bool) -> dict[str, Any]:
         """Set the buzzer on/off."""

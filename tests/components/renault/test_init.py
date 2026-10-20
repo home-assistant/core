@@ -18,10 +18,15 @@ from homeassistant.config_entries import (
     ConfigEntryState,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from .const import MOCK_ACCOUNT_ID, MOCK_LOGIN_TOKEN
+from .const import (
+    FORBIDDEN_EXCEPTION,
+    MOCK_ACCOUNT_ID,
+    MOCK_LOGIN_TOKEN,
+    OTHER_ACCOUNT_ID,
+)
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
@@ -195,6 +200,84 @@ async def test_setup_entry_kamereon_exception(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("patch_renault_account", "patch_get_api_accounts")
+@pytest.mark.parametrize(
+    ("account_ids", "expected_issues"),
+    [
+        pytest.param([MOCK_ACCOUNT_ID], set(), id="account_listed"),
+        pytest.param(
+            [OTHER_ACCOUNT_ID],
+            {(DOMAIN, "account_not_found_123456")},
+            id="account_not_listed",
+        ),
+    ],
+)
+async def test_setup_entry_forbidden(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    issue_registry: ir.IssueRegistry,
+    expected_issues: set[tuple[str, str]],
+) -> None:
+    """Test a forbidden Kamereon account fails setup without retrying."""
+    with patch(
+        "renault_api.renault_account.RenaultAccount.get_vehicles",
+        side_effect=FORBIDDEN_EXCEPTION,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert set(issue_registry.issues) == expected_issues
+
+
+@pytest.mark.usefixtures(
+    "patch_renault_account", "patch_get_api_accounts", "patch_get_vehicles"
+)
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+@pytest.mark.parametrize("account_ids", [[OTHER_ACCOUNT_ID]])
+async def test_account_not_found_issue_deleted_on_setup(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the issue is deleted once the account loads again."""
+    with patch(
+        "renault_api.renault_account.RenaultAccount.get_vehicles",
+        side_effect=FORBIDDEN_EXCEPTION,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+    assert len(issue_registry.issues) == 1
+
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert len(issue_registry.issues) == 0
+
+
+@pytest.mark.usefixtures("patch_renault_account", "patch_get_api_accounts")
+@pytest.mark.parametrize("account_ids", [[OTHER_ACCOUNT_ID]])
+async def test_account_not_found_issue_deleted_on_removal(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the issue is deleted when the config entry is removed."""
+    with patch(
+        "renault_api.renault_account.RenaultAccount.get_vehicles",
+        side_effect=FORBIDDEN_EXCEPTION,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+    assert len(issue_registry.issues) == 1
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 0
 
 
 @pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")

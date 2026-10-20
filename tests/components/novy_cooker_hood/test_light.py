@@ -95,7 +95,7 @@ async def test_entity_follows_transmitter_availability(
 ) -> None:
     """The light becomes unavailable when the transmitter does, and back."""
     await assert_availability_follows_source_entity(
-        hass, ENTITY_ID, TRANSMITTER_ENTITY_ID
+        hass, ENTITY_ID, [TRANSMITTER_ENTITY_ID]
     )
 
 
@@ -112,7 +112,9 @@ async def test_tracking_follows_transmitter_rename(
     )
     await hass.async_block_till_done()
 
-    await assert_availability_follows_source_entity(hass, ENTITY_ID, new_transmitter_id)
+    await assert_availability_follows_source_entity(
+        hass, ENTITY_ID, [new_transmitter_id]
+    )
 
     await hass.services.async_call(
         LIGHT_DOMAIN,

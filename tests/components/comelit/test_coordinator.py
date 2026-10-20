@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock
 
 from aiocomelit.api import (
-    ComelitSerialBridgeObject,
+    ComelitDeviceObject,
     ComelitVedoAreaObject,
     ComelitVedoZoneObject,
 )
@@ -90,7 +90,7 @@ async def test_coordinator_stale_device_serial_bridge(
         COVER: {},
         LIGHT: {
             0: LIGHT0,
-            1: ComelitSerialBridgeObject(
+            1: ComelitDeviceObject(
                 index=1,
                 name="Light1",
                 status=0,

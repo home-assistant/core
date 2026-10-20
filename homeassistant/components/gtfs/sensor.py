@@ -6,9 +6,9 @@ import os
 import threading
 from typing import Any, override
 
+import probatio
 import pygtfs
 from sqlalchemy.sql import text
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -253,12 +253,12 @@ WHEELCHAIR_BOARDING_OPTIONS = {1: True, 2: False}
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ORIGIN): cv.string,
-        vol.Required(CONF_DESTINATION): cv.string,
-        vol.Required(CONF_DATA): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_OFFSET, default=0): cv.time_period,
-        vol.Optional(CONF_TOMORROW, default=False): cv.boolean,
+        probatio.Required(CONF_ORIGIN): cv.string,
+        probatio.Required(CONF_DESTINATION): cv.string,
+        probatio.Required(CONF_DATA): cv.string,
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_OFFSET, default=0): cv.time_period,
+        probatio.Optional(CONF_TOMORROW, default=False): cv.boolean,
     }
 )
 
