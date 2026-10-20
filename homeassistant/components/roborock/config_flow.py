@@ -161,10 +161,6 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             default_url = user_input[CONF_ROBOROCK_SERVER_URL]
-        elif self.source == SOURCE_RECONFIGURE:
-            default_url = self._get_reconfigure_entry().data.get(
-                CONF_BASE_URL, "https://usiot.roborock.com"
-            )
         else:
             default_url = "https://usiot.roborock.com"
         return self.async_show_form(
