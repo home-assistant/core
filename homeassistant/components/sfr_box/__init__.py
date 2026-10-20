@@ -73,15 +73,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFRConfigEntry) -> None:
     await asyncio.gather(*tasks)
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, system_info.mac_addr)},
-        identifiers={(DOMAIN, system_info.mac_addr)},
-        name="SFR Box",
-        model=None,
-        model_id=system_info.product_id,
-        sw_version=system_info.version_mainfirmware,
-        configuration_url=box.url,
+        device_info=dr.DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, system_info.mac_addr)},
+            identifiers={(DOMAIN, system_info.mac_addr)},
+            name="SFR Box",
+            model=None,
+            model_id=system_info.product_id,
+            sw_version=system_info.version_mainfirmware,
+            configuration_url=box.url,
+        ),
     )
 
     entry.runtime_data = data

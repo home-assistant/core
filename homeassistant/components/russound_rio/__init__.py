@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .const import CONF_BAUDRATE, DOMAIN, RUSSOUND_RIO_EXCEPTIONS, TYPE_TCP
 
@@ -72,7 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> 
             controller.mac_address
             or f"{client.controllers[1].mac_address}-{controller_id}"
         )
-        connections = None
+        connections: set[tuple[str, str]] | UndefinedType = UNDEFINED
         via_device_id: str | None = None
         configuration_url = None
         if controller_id != 1:
@@ -87,16 +88,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> 
             connections = {(CONNECTION_NETWORK_MAC, controller.mac_address)}
         if isinstance(client.connection_handler, RussoundTcpConnectionHandler):
             configuration_url = f"http://{client.connection_handler.host}"
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, _device_identifier)},
-            manufacturer="Russound",
-            name=controller.controller_type,
-            model=controller.controller_type,
-            sw_version=controller.firmware_version,
-            connections=connections,
-            via_device_id=via_device_id,
-            configuration_url=configuration_url,
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, _device_identifier)},
+                manufacturer="Russound",
+                name=controller.controller_type,
+                model=controller.controller_type,
+                sw_version=controller.firmware_version,
+                connections=connections,
+                via_device_id=via_device_id,
+                configuration_url=configuration_url,
+            ),
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
