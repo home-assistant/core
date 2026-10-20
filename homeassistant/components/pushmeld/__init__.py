@@ -22,6 +22,7 @@ if TYPE_CHECKING:
 
 PLATFORMS = [Platform.NOTIFY]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+NOTIFY_SERVICE_SETUP_TIMEOUT = 10
 
 
 @dataclass
@@ -83,14 +84,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: PushMeldConfigEntry) -> 
 
     try:
         await discovery_task
-        await hass.async_block_till_done()
+        async with asyncio.timeout(NOTIFY_SERVICE_SETUP_TIMEOUT):
+            await setup_future
+    except TimeoutError as err:
+        setup_error = ConfigEntryNotReady(
+            "Unable to set up the PushMeld notification service"
+        )
         if not setup_future.done():
-            setup_future.set_exception(
-                ConfigEntryNotReady(
-                    "Unable to set up the PushMeld notification service"
-                )
-            )
-        await setup_future
+            setup_future.set_exception(setup_error)
+        elif not setup_future.cancelled():
+            setup_future.exception()
+        if not discovery_task.done():
+            discovery_task.cancel()
+        raise setup_error from err
     except BaseException as err:
         if not discovery_task.done():
             discovery_task.cancel()

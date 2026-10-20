@@ -23,6 +23,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture
@@ -256,6 +257,7 @@ async def test_setup_retries_when_notification_platform_fails_to_load(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Retry setup when discovery cannot load the notification platform."""
+    monkeypatch.setattr(pushmeld, "NOTIFY_SERVICE_SETUP_TIMEOUT", 0.01)
     discovery_load = AsyncMock(return_value=None)
     monkeypatch.setattr(pushmeld.discovery, "async_load_platform", discovery_load)
     entry = MockConfigEntry(
@@ -268,7 +270,28 @@ async def test_setup_retries_when_notification_platform_fails_to_load(
     assert not await hass.config_entries.async_setup(entry.entry_id)
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    entry.async_cancel_retry_setup()
     discovery_load.assert_awaited_once()
+
+
+async def test_entry_setup_does_not_wait_for_parent_setup_task(
+    hass: HomeAssistant,
+) -> None:
+    """Set up an entry without waiting for its tracked component task."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Test channel",
+        data={CONF_MAXCODE: "test-maxcode"},
+    )
+    entry.add_to_hass(hass)
+
+    setup_task = hass.async_create_task(async_setup_component(hass, DOMAIN, {}))
+
+    assert await asyncio.wait_for(setup_task, timeout=1)
+    assert hass.services.has_service(NOTIFY_DOMAIN, "test_channel")
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
 
 async def test_entry_setup_waits_for_notification_registration(
