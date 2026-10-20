@@ -635,15 +635,13 @@ async def _async_setup_graphql_sensors(
             entity_creator = TibberRtEntityCreator(
                 async_add_entities, home, entity_registry
             )
-            rt_coordinator = TibberRtDataCoordinator(
-                hass,
-                entry,
-                entity_creator.add_sensors,
-                home,
-            )
             await home.rt_subscribe(
-                rt_coordinator.async_set_updated_data,
-                on_error=rt_coordinator.async_set_update_error,
+                TibberRtDataCoordinator(
+                    hass,
+                    entry,
+                    entity_creator.add_sensors,
+                    home,
+                ).async_set_updated_data
             )
 
     async_add_entities(entities)
@@ -871,21 +869,15 @@ class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"])
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        return (
-            super().available
-            and self.coordinator.get_live_measurement() is not None
-            and self._tibber_home.rt_subscription_running
-        )
+        return self._tibber_home.rt_subscription_running
 
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
         if not (live_measurement := self.coordinator.get_live_measurement()):
-            self.async_write_ha_state()
             return
         state = live_measurement.get(self.entity_description.key)
         if state is None:
-            self.async_write_ha_state()
             return
         if self.entity_description.key in (
             "accumulatedConsumption",
@@ -1037,8 +1029,6 @@ class TibberRtDataCoordinator(DataUpdateCoordinator):  # pylint: disable=home-as
 
     def get_live_measurement(self) -> Any:
         """Get live measurement data."""
-        if not self.last_update_success or self.data is None:
-            return None
         if errors := self.data.get("errors"):
             _LOGGER.error(errors[0])
             return None
