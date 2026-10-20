@@ -5,6 +5,8 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockUser, mock_component, mock_restore_cache
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.input_boolean import DOMAIN, is_on
 from homeassistant.components.input_boolean.const import CONF_INITIAL
@@ -24,9 +26,6 @@ from homeassistant.const import (
 from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockUser, mock_component, mock_restore_cache
-from tests.typing import WebSocketGenerator
 
 _LOGGER = logging.getLogger(__name__)
 

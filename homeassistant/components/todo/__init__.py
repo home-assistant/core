@@ -1,7 +1,7 @@
 """The todo integration."""
 
 import dataclasses
-import datetime
+import datetime as dt
 import logging
 from typing import Any
 
@@ -39,7 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
-SCAN_INTERVAL = datetime.timedelta(seconds=60)
+SCAN_INTERVAL = dt.timedelta(seconds=60)
 
 __all__ = [
     "ATTR_DESCRIPTION",

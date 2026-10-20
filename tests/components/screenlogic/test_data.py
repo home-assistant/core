@@ -2,6 +2,7 @@
 
 from unittest.mock import DEFAULT, patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from screenlogicpy import ScreenLogicGateway
 
 from homeassistant.components.screenlogic import DOMAIN
@@ -16,8 +17,6 @@ from . import (
     MOCK_ADAPTER_NAME,
     stub_async_connect,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_cleanup_entries(

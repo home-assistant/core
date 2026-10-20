@@ -1,6 +1,7 @@
 {
   "domain": "nina",
   "name": "NINA",
+  "categories": ["weather_alerts.public_warnings"],
   "codeowners": ["@DeerMaximum"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nina",

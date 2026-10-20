@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 from devolo_home_control_api.exceptions.gateway import GatewayOfflineError
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.devolo_home_control.const import DOMAIN
@@ -14,8 +15,6 @@ from homeassistant.setup import async_setup_component
 
 from . import configure_integration
 from .mocks import HomeControlMock, HomeControlMockBinarySensor
-
-from tests.typing import WebSocketGenerator
 
 
 async def test_setup_entry(hass: HomeAssistant) -> None:

@@ -364,12 +364,14 @@ async def async_setup_entry(
     serial = coordinator.data["serial"][0]
 
     device_registry = dr.async_get(hass)
-    main_device = device_registry.async_get_or_create(
+    main_device = device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, serial)},
-        manufacturer="Guntamatic",
-        serial_number=serial,
-        sw_version=coordinator.data["version"][0],
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, serial)},
+            manufacturer="Guntamatic",
+            serial_number=serial,
+            sw_version=coordinator.data["version"][0],
+        ),
     )
 
     entities: list[GuntamaticSensor] = []

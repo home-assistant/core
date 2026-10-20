@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pyvlx import (
     Blind,
     DualRollerShutter,
@@ -18,8 +19,6 @@ from pyvlx import (
 from homeassistant.components.velux import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 # Fixtures for the config flow tests

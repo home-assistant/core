@@ -3,6 +3,7 @@
 from http import HTTPStatus
 from unittest.mock import Mock, patch
 
+from pytest_homeassistant.typing import WebSocketGenerator
 import requests_mock
 from yarl import URL
 
@@ -15,8 +16,6 @@ from homeassistant.components.websocket_api import ERR_UNKNOWN_ERROR, TYPE_RESUL
 from homeassistant.core import HomeAssistant
 
 from .const import DEFAULT_DATA
-
-from tests.typing import WebSocketGenerator
 
 
 class MockPlexShow:

@@ -9,11 +9,10 @@ from zoneinfo import ZoneInfo
 from energyzero import EnergyPrices, Interval, PriceType
 from energyzero.models import REST_PRICE_STREAMS
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant.components.energyzero.const import DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.fixture

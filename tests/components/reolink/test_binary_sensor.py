@@ -5,6 +5,12 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.reolink.const import DOMAIN
@@ -24,9 +30,6 @@ from .conftest import (
     TEST_UID,
     TEST_UID_CAM,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "reolink_host")
