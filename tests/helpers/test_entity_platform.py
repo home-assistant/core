@@ -3102,10 +3102,18 @@ async def test_add_entity_unknown_subentry(
     ) in caplog.text
 
 
+@pytest.mark.parametrize(
+    "device_info_type",
+    [
+        pytest.param(dict, id="dict"),
+        pytest.param(dr.ChildDeviceInfo, id="child_device_info"),
+    ],
+)
 async def test_device_info_child_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    device_info_type: Callable[..., dr.ChildDeviceInfo | dict[str, Any]],
 ) -> None:
     """Test a child device info creates a child device and binds the entity."""
     config_entry = MockConfigEntry(entry_id="super-mock-id")
@@ -3128,11 +3136,11 @@ async def test_device_info_child_device(
                     unique_id="power",
                     has_entity_name=True,
                     name="Power",
-                    device_info={
-                        "identifiers": {(config_entry.domain, "strip_outlet_1")},
-                        "name": "Outlet 1",
-                        "parent_device_id": parent.id,
-                    },
+                    device_info=device_info_type(
+                        identifiers={(config_entry.domain, "strip_outlet_1")},
+                        name="Outlet 1",
+                        parent_device_id=parent.id,
+                    ),
                 ),
             ]
         )
@@ -3167,10 +3175,18 @@ async def test_device_info_child_device(
     assert state.name == "Outlet 1 Power"
 
 
+@pytest.mark.parametrize(
+    "device_info_type",
+    [
+        pytest.param(dict, id="dict"),
+        pytest.param(dr.ChildDeviceInfo, id="child_device_info"),
+    ],
+)
 async def test_device_info_child_device_invalid(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
+    device_info_type: Callable[..., dr.ChildDeviceInfo | dict[str, Any]],
 ) -> None:
     """Test an entity with an invalid child device info is not added."""
     config_entry = MockConfigEntry(entry_id="super-mock-id")
@@ -3186,11 +3202,11 @@ async def test_device_info_child_device_invalid(
             [
                 MockEntity(
                     unique_id="power",
-                    device_info={
-                        "identifiers": {(config_entry.domain, "strip_outlet_1")},
-                        "name": "Outlet 1",
-                        "parent_device_id": "nonexistent-device-id",
-                    },
+                    device_info=device_info_type(
+                        identifiers={(config_entry.domain, "strip_outlet_1")},
+                        name="Outlet 1",
+                        parent_device_id="nonexistent-device-id",
+                    ),
                 ),
             ]
         )

@@ -163,12 +163,6 @@ class SlaveSensor(
 ):
     """Modbus slave register sensor."""
 
-    @property
-    @override
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._attr_available
-
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[list[float | None] | None],
@@ -187,6 +181,12 @@ class SlaveSensor(
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
         self._attr_available = False
         super().__init__(coordinator)
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._attr_available
 
     @override
     async def async_added_to_hass(self) -> None:
