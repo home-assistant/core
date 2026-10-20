@@ -124,7 +124,6 @@ that link accounts with other cloud providers using LocalOAuth2Implementation
 as part of a config flow.
 """
 
-import asyncio
 import base64
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -141,11 +140,10 @@ from aiohttp import web
 from multidict import MultiDictProxy
 import probatio
 
-from homeassistant.auth import InvalidAuthError
+from homeassistant.auth import DuplicateCredentialsError, InvalidAuthError
 from homeassistant.auth.models import (
     TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
     Credentials,
-    RefreshToken,
     User,
 )
 from homeassistant.components import websocket_api
@@ -197,8 +195,6 @@ class StoreResultType(Protocol):
 type RetrieveResultType = Callable[[str, str], AuthCodeEntry | None]
 DATA_STORE: HassKey[StoreResultType] = HassKey(DOMAIN)
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
-
-DELETE_CURRENT_TOKEN_DELAY = 2
 
 
 def create_auth_code(
@@ -346,7 +342,7 @@ class TokenView(HomeAssistantView):
 
         entry = self._retrieve_auth(client_id, code)
 
-        if entry is None:
+        if entry is None or await _async_credentials_removed(hass, entry.credentials):
             return self.json(
                 {"error": "invalid_request", "error_description": "Invalid code"},
                 status_code=HTTPStatus.BAD_REQUEST,
@@ -381,7 +377,13 @@ class TokenView(HomeAssistantView):
             )
 
         credential = entry.credentials
-        user = await hass.auth.async_get_or_create_user(credential)
+        try:
+            user = await hass.auth.async_get_or_create_user(credential)
+        except DuplicateCredentialsError:
+            return self.json(
+                {"error": "invalid_grant", "error_description": "Sign in again"},
+                status_code=HTTPStatus.BAD_REQUEST,
+            )
 
         if user_access_error := async_user_not_allowed_do_auth(hass, user):
             return self.json(
@@ -508,7 +510,11 @@ class LinkUserView(HomeAssistantView):
 
         entry = self._retrieve_credentials(data["client_id"], data["code"])
 
-        if entry is None or entry.code_challenge is not None:
+        if (
+            entry is None
+            or entry.code_challenge is not None
+            or await _async_credentials_removed(hass, entry.credentials)
+        ):
             return self.json_message("Invalid code", status_code=HTTPStatus.BAD_REQUEST)
 
         linked_user = await hass.auth.async_get_user_by_credentials(entry.credentials)
@@ -521,6 +527,16 @@ class LinkUserView(HomeAssistantView):
         if linked_user != user:
             await hass.auth.async_link_user(user, entry.credentials)
         return self.json_message("User linked")
+
+
+async def _async_credentials_removed(
+    hass: HomeAssistant, credentials: Credentials
+) -> bool:
+    """Return if the credentials were removed after their code was issued."""
+    return (
+        not credentials.is_new
+        and await hass.auth.async_get_user_by_credentials(credentials) is None
+    )
 
 
 @callback
@@ -714,64 +730,32 @@ def websocket_delete_all_refresh_tokens(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle delete all refresh tokens request."""
-    current_refresh_token: RefreshToken | None = None
     remove_failed = False
     token_type = msg.get("token_type")
     delete_current_token = msg.get("delete_current_token")
-    limit_token_types = token_type is not None
 
-    for token in list(connection.user.refresh_tokens.values()):
-        if token.id == connection.refresh_token_id:
-            # Skip the current refresh token as it has revoke_callback,
-            # which cancels/closes the connection.
-            # It will be removed after sending the result.
-            current_refresh_token = token
-            continue
-        if limit_token_types and token_type != token.token_type:
-            continue
-        try:
-            hass.auth.async_remove_refresh_token(token)
-        except Exception:
-            getLogger(__name__).exception("Error during refresh token removal")
-            remove_failed = True
+    # Removing the current token closes the connection, which then waits for
+    # the result to be sent.
+    with connection.async_defer_auth_close():
+        for token in list(connection.user.refresh_tokens.values()):
+            if token.id == connection.refresh_token_id and not delete_current_token:
+                continue
+            if token_type is not None and token_type != token.token_type:
+                continue
+            try:
+                hass.auth.async_remove_refresh_token(token)
+            except Exception:
+                getLogger(__name__).exception("Error during refresh token removal")
+                remove_failed = True
 
-    if remove_failed:
-        connection.send_error(
-            msg["id"], "token_removing_error", "During removal, an error was raised."
-        )
-    else:
-        connection.send_result(msg["id"], {})
-
-    async def _delete_current_token_soon(current_refresh_token: RefreshToken) -> None:
-        """Delete the current token after a delay.
-
-        We do not want to delete the current token immediately as it will
-        close the connection.
-
-        This is implemented as a tracked task to ensure the token
-        is still deleted if Home Assistant is shut down during
-        the delay.
-
-        It should not be refactored to use a call_later as that
-        would not be tracked and the token would not be deleted
-        if Home Assistant was shut down during the delay.
-        """
-        try:
-            await asyncio.sleep(DELETE_CURRENT_TOKEN_DELAY)
-        finally:
-            # If the task is cancelled because we are shutting down, delete
-            # the token right away.
-            hass.auth.async_remove_refresh_token(current_refresh_token)
-
-    if (
-        delete_current_token
-        and current_refresh_token
-        and (not limit_token_types or current_refresh_token.token_type == token_type)
-    ):
-        # Deleting the token will close the connection so we need
-        # to do it with a delay in a tracked task to ensure it still
-        # happens if Home Assistant is shutting down.
-        hass.async_create_task(_delete_current_token_soon(current_refresh_token))
+        if remove_failed:
+            connection.send_error(
+                msg["id"],
+                "token_removing_error",
+                "During removal, an error was raised.",
+            )
+        else:
+            connection.send_result(msg["id"], {})
 
 
 @websocket_api.websocket_command(

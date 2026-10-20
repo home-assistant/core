@@ -126,7 +126,7 @@ async def test_config_flow_single_account(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "account_id_1"
+    assert result["title"] == "e***@test.com"
     assert result["data"][RenaultConfigurationKeys.USERNAME] == "email@test.com"
     assert result["data"][RenaultConfigurationKeys.PASSWORD] == "test"
     assert result["data"][RenaultConfigurationKeys.LOGIN_TOKEN] == MOCK_LOGIN_TOKEN
@@ -280,7 +280,7 @@ async def test_config_flow_multiple_accounts(
         user_input={RenaultConfigurationKeys.KAMEREON_ACCOUNT_ID: "account_id_2"},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "account_id_2"
+    assert result["title"] == "e***@test.com"
     assert result["data"][RenaultConfigurationKeys.USERNAME] == "email@test.com"
     assert result["data"][RenaultConfigurationKeys.PASSWORD] == "test"
     assert result["data"][RenaultConfigurationKeys.LOGIN_TOKEN] == MOCK_LOGIN_TOKEN
@@ -635,7 +635,7 @@ async def test_config_flow_two_factor_auth(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "account_id_1"
+    assert result["title"] == "e***@test.com"
     assert result["result"].unique_id == "account_id_1"
     assert result["data"][RenaultConfigurationKeys.PASSWORD] == "test"
     assert result["data"][RenaultConfigurationKeys.LOGIN_TOKEN] == MOCK_LOGIN_TOKEN
