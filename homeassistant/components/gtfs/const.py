@@ -1,6 +1,10 @@
 """Constants for the GTFS integration."""
 
+from homeassistant.util.hass_dict import HassKey
+
 DOMAIN = "gtfs"
+
+FLOW_DATABASES: HassKey[set[str]] = HassKey(f"{DOMAIN}_flow_databases")
 
 CONF_DATA = "data"
 CONF_DATABASE = "database"

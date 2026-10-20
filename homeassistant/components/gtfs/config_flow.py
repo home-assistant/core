@@ -39,6 +39,7 @@ from .const import (
     CONF_ORIGIN,
     CONF_TOMORROW,
     DOMAIN,
+    FLOW_DATABASES,
     SUBENTRY_TYPE_ROUTE,
 )
 from .feed import (
@@ -92,7 +93,7 @@ class GtfsConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors[CONF_URL] = "invalid_url"
             else:
                 self._async_abort_entries_match({CONF_URL: url})
-                self._database = f"{uuid4().hex}.sqlite"
+                self._set_database(f"{uuid4().hex}.sqlite")
                 return await self.async_step_load_feed()
         return self.async_show_form(
             step_id="user",
@@ -101,6 +102,14 @@ class GtfsConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    def _set_database(self, database: str) -> None:
+        """Track the database so the startup sweep leaves its files alone."""
+        flow_databases = self.hass.data.setdefault(FLOW_DATABASES, set())
+        if self._database is not None:
+            flow_databases.discard(self._database)
+        flow_databases.add(database)
+        self._database = database
 
     async def async_step_load_feed(
         self, user_input: dict[str, Any] | None = None
@@ -168,7 +177,10 @@ class GtfsConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_remove(self) -> None:
         """Delete the imported feed if the flow ends without creating an entry."""
-        if self._database is not None and not self._entry_created:
+        if self._database is None:
+            return
+        self.hass.data[FLOW_DATABASES].discard(self._database)
+        if not self._entry_created:
             self._cancelled.set()
             self.hass.async_add_executor_job(
                 partial(

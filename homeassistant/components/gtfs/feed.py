@@ -5,7 +5,9 @@ import csv
 from dataclasses import dataclass, field
 from functools import partial
 import io
+import logging
 from pathlib import Path
+import re
 import threading
 from typing import BinaryIO
 import zipfile
@@ -20,6 +22,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_PATH
+
+_LOGGER = logging.getLogger(__name__)
+
+_GENERATED_FILE = re.compile(r"(?P<stem>[0-9a-f]{32})\.(?:sqlite|sqlite\.tmp|zip)")
 
 # National feeds run to hundreds of megabytes, so only stalls are capped.
 DOWNLOAD_TIMEOUT = ClientTimeout(total=None, sock_connect=30, sock_read=60)
@@ -53,6 +59,33 @@ class GtfsFeed:
 def feed_database_path(hass: HomeAssistant, database: str) -> Path:
     """Return the path of a feed's SQLite database."""
     return Path(hass.config.path(DEFAULT_PATH, database))
+
+
+def list_generated_files(directory: Path) -> list[Path]:
+    """List the files in directory with names the config flow generates.
+
+    Files kept by YAML users never match these names.
+    """
+    try:
+        return [
+            path for path in directory.iterdir() if _GENERATED_FILE.fullmatch(path.name)
+        ]
+    except OSError as err:
+        _LOGGER.debug("Could not list %s: %s", directory, err)
+        return []
+
+
+def remove_files(paths: list[Path]) -> int:
+    """Remove paths, skipping any that cannot be removed; return how many were."""
+    removed = 0
+    for path in paths:
+        try:
+            path.unlink(missing_ok=True)
+        except OSError as err:
+            _LOGGER.debug("Could not remove %s: %s", path.name, err)
+        else:
+            removed += 1
+    return removed
 
 
 def _open_destination(destination: Path) -> BinaryIO:
