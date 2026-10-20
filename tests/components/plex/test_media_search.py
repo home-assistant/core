@@ -420,6 +420,13 @@ def test_title_score_finds_titles_that_sound_alike() -> None:
     assert title_score(normalize_title("avatar"), "Inception") < 0.6
 
 
+def test_title_score_prefers_closer_spelling_among_sound_alikes() -> None:
+    """Test titles that sound alike are ranked by their spelling."""
+    query = normalize_title("carry")
+    assert title_score(query, "Carrie") > title_score(query, "Gary")
+    assert title_score(query, "Gary") >= 0.6
+
+
 def test_normalize_title_folds_letters() -> None:
     """Test letters without an accented form are turned into plain letters."""
     assert normalize_title("Ørnen") == "ornen"

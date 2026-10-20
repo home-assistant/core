@@ -169,10 +169,17 @@ def title_score(query: str, title: str) -> float:
         return 0.0
     if normalized == query:
         return 1.0
+    spelling = _similarity(query, normalized)
+    # Among titles that sound alike, the closer spelling scores higher
+    sound = (
+        0.95
+        * _similarity(_sound_key(query), _sound_key(normalized))
+        * (0.9 + 0.1 * spelling)
+    )
     score = max(
-        _similarity(query, normalized),
+        spelling,
         _similarity(_sorted_words(query), _sorted_words(normalized)),
-        0.95 * _similarity(_sound_key(query), _sound_key(normalized)),
+        sound,
     )
     if len(query) >= 4 and query in normalized:
         score = max(score, 0.85)
