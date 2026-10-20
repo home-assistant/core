@@ -79,7 +79,7 @@ async def test_setup_retries_when_the_first_read_fails(
 
 
 @pytest.mark.parametrize(
-    ("status", "expected"),
+    ("status", "interval"),
     [
         pytest.param(STATUS, CHARGING_INTERVAL, id="charging"),
         pytest.param(IDLE_STATUS, IDLE_INTERVAL, id="idle"),
@@ -89,14 +89,26 @@ async def test_the_poll_interval_follows_the_session(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_charger: AsyncMock,
+    freezer: FrozenDateTimeFactory,
     status: ChargerStatus,
-    expected: timedelta,
+    interval: timedelta,
 ) -> None:
     """Polling is fast during a session and slow while idle."""
     mock_charger.async_get_status.return_value = status
     await setup_integration(hass, mock_config_entry)
+    mock_charger.async_get_status.reset_mock()
 
-    assert mock_config_entry.runtime_data.update_interval == expected
+    freezer.tick(interval / 2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_charger.async_get_status.assert_not_awaited()
+
+    freezer.tick(interval / 2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_charger.async_get_status.assert_awaited_once()
 
 
 async def test_a_per_poll_connection_is_released(
@@ -143,7 +155,7 @@ async def test_a_held_link_that_drops_is_rebuilt(
     await setup_persistent(hass, mock_config_entry)
 
     mock_charger.is_connected = False
-    freezer.tick(CHARGING_INTERVAL + timedelta(seconds=1))
+    freezer.tick(CHARGING_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -170,7 +182,7 @@ async def test_a_changed_connection_mode_takes_effect(
     await hass.async_block_till_done()
 
     mock_charger.async_disconnect.reset_mock()
-    freezer.tick(CHARGING_INTERVAL + timedelta(seconds=1))
+    freezer.tick(CHARGING_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -189,7 +201,7 @@ async def test_a_failed_poll_makes_entities_unavailable(
     assert hass.states.get(STATE_SENSOR).state != STATE_UNAVAILABLE
 
     mock_charger.async_get_status.side_effect = SpinEvError("gone")
-    freezer.tick(CHARGING_INTERVAL + timedelta(seconds=1))
+    freezer.tick(CHARGING_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -207,7 +219,7 @@ async def test_a_poll_fails_when_the_charger_goes_out_of_range(
     await setup_integration(hass, mock_config_entry)
 
     mock_ble_device.return_value = None
-    freezer.tick(CHARGING_INTERVAL + timedelta(seconds=1))
+    freezer.tick(CHARGING_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
