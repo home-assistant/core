@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from pyintelliclima.intelliclima_types import IntelliClimaFilterStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -68,13 +67,15 @@ async def test_filter_cleaning_unavailable_when_tracking_disabled(
     The vendor API keeps returning `change_filter: false` in this state, which
     would otherwise misreport a "clean filter" the integration can't actually vouch for.
     """
-    mock_cloud_interface.get_filter_status.return_value = IntelliClimaFilterStatus(
-        serial="11223344",
-        is_active=False,
-        from_date="2025-11-18 10:22:51",
-        stats=[],
-        totale=0,
-        change_filter=False,
+    mock_cloud_interface.ecocomfort2.get_filter_status.return_value = (
+        IntelliClimaFilterStatus(
+            serial="11223344",
+            is_active=False,
+            from_date="2025-11-18 10:22:51",
+            stats=[],
+            totale=0,
+            change_filter=False,
+        )
     )
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()

@@ -14,6 +14,17 @@ from unittest.mock import ANY, AsyncMock, patch
 import attr
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    async_capture_events,
+    async_fire_time_changed,
+    flush_store,
+    mock_config_flow,
+    mock_device_registry,
+    mock_integration,
+    mock_platform,
+)
 from yarl import URL
 
 from homeassistant import config_entries
@@ -28,18 +39,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util.dt import utcnow
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    async_capture_events,
-    async_fire_time_changed,
-    flush_store,
-    mock_config_flow,
-    mock_device_registry,
-    mock_integration,
-    mock_platform,
-)
 
 
 @pytest.fixture(autouse=True)
@@ -4629,6 +4628,78 @@ async def test_async_get_or_create_deprecated_parameters(
         ("via_device", ("some_domain", "via_id")),
     ],
 )
+def test_device_info_deprecated_parameters(parameter: str, value: Any) -> None:
+    """Test a device info can carry deprecated parameters.
+
+    They were dropped from the typed device info when they were deprecated, but an
+    integration can still set them until they are removed. Passing them on to
+    async_get_or_create is covered by its own deprecation tests.
+    """
+    assert dict(dr.DeviceInfo(**{parameter: value})) == {parameter: value}
+
+    device_info = dr.DeviceInfo()
+    device_info[parameter] = value
+    assert dict(device_info) == {parameter: value}
+
+
+def test_device_info_membership() -> None:
+    """Test `in` reports the set fields, while a device info is not iterable."""
+    device_info = dr.DeviceInfo(name="name")
+
+    assert "name" in device_info
+    assert "model" not in device_info
+    assert "unknown" not in device_info
+    with pytest.raises(TypeError):
+        list(device_info)
+
+
+def test_device_info_typed_dict_keys() -> None:
+    """Test the TypedDict key attributes integrations read to check for a field."""
+    assert dr.DeviceInfo.__required_keys__ == frozenset()
+    assert "via_device_id" in dr.DeviceInfo.__optional_keys__
+    assert "via_device" not in dr.DeviceInfo.__optional_keys__
+    assert dr.ChildDeviceInfo.__required_keys__ == {"identifiers", "parent_device_id"}
+    assert dr.ChildDeviceInfo.__optional_keys__ == {
+        "name",
+        "suggested_area",
+        "translation_key",
+        "translation_placeholders",
+    }
+
+
+def test_device_info_rejects_unknown_key() -> None:
+    """Test a device info rejects setting a key which is not a field."""
+    device_info = dr.DeviceInfo(name="name")
+    with pytest.raises(KeyError):
+        device_info["config_entry_id"] = "entry_id"
+
+
+@pytest.mark.parametrize(
+    ("args", "kwargs"),
+    [
+        pytest.param(({"name": "name"},), {}, id="mapping"),
+        pytest.param((), {"config_entry_id": "entry_id"}, id="unknown_keyword"),
+    ],
+)
+def test_device_info_rejected_arguments(
+    args: tuple[Any, ...], kwargs: dict[str, Any]
+) -> None:
+    """Test a device info rejects a mapping, or a keyword which is not a field."""
+    with pytest.raises(TypeError):
+        dr.DeviceInfo(*args, **kwargs)
+
+
+@pytest.mark.parametrize(
+    ("parameter", "value"),
+    [
+        ("created_at", "2024-01-01T00:00:00+00:00"),
+        ("default_manufacturer", "manufacturer"),
+        ("default_model", "model"),
+        ("default_name", "name"),
+        ("modified_at", "2024-01-01T00:00:00+00:00"),
+        ("via_device", ("some_domain", "via_id")),
+    ],
+)
 @pytest.mark.usefixtures("mock_integration_frame")
 async def test_async_get_or_create_deprecated_parameter_reported_before_mutation(
     hass: HomeAssistant,
@@ -7546,6 +7617,23 @@ async def test_get_or_create_rejects_field_and_its_default(
             config_entry_id=mock_config_entry.entry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
             **{field: "explicit value", default_field: "default value"},
+        )
+
+
+async def test_get_or_create_rejects_translation_key_and_default_name(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a translation key, which supplies the name, is rejected with default_name."""
+    with pytest.raises(
+        dr.DeviceInfoError,
+        match="passing both `name` and `default_name` is not allowed",
+    ):
+        device_registry.async_get_or_create(
+            config_entry_id=mock_config_entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+            translation_key="translated_name",
+            default_name="default name",
         )
 
 
@@ -13373,3 +13461,77 @@ async def test_clear_config_subentry_removes_orphaned_child_device(
     # The child in the cleared subentry is removed, the one in the other subentry kept
     assert device_registry.async_get(child_1.id, include_main_devices=False) is None
     assert device_registry.async_get(child_2.id, include_main_devices=False) is not None
+
+
+async def test_get_or_create_child_device(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry_with_subentries: MockConfigEntry,
+) -> None:
+    """Test getting or creating a child device from a child device info."""
+    config_entry_id = mock_config_entry_with_subentries.entry_id
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry_id,
+        config_subentry_id="mock-subentry-id-1-1",
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+
+    child_device = device_registry.async_get_or_create_child_device(
+        config_entry_id=config_entry_id,
+        config_subentry_id="mock-subentry-id-1-1",
+        disabled_by=dr.DeviceEntryDisabler.INTEGRATION,
+        device_info=dr.ChildDeviceInfo(
+            identifiers={("test", "strip_outlet_1")},
+            parent_device_id=parent.id,
+            name="Outlet 1",
+        ),
+    )
+    assert isinstance(child_device, dr.ChildDeviceEntry)
+    assert child_device.config_subentry_id == "mock-subentry-id-1-1"
+    assert child_device.disabled_by is dr.DeviceEntryDisabler.INTEGRATION
+    assert child_device.identifiers == {("test", "strip_outlet_1")}
+    assert child_device.name == "Outlet 1"
+    assert child_device.parent_device_id == parent.id
+
+    # Fields left unset in the child device info keep their value
+    same_child_device = device_registry.async_get_or_create_child_device(
+        config_entry_id=config_entry_id,
+        config_subentry_id="mock-subentry-id-1-1",
+        device_info=dr.ChildDeviceInfo(
+            identifiers={("test", "strip_outlet_1")}, parent_device_id=parent.id
+        ),
+    )
+    assert same_child_device.id == child_device.id
+    assert same_child_device.name == "Outlet 1"
+
+
+async def test_get_or_create_device(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry_with_subentries: MockConfigEntry,
+) -> None:
+    """Test getting or creating a device from a device info."""
+    config_entry_id = mock_config_entry_with_subentries.entry_id
+    device = device_registry.async_get_or_create_device(
+        config_entry_id=config_entry_id,
+        config_subentry_id="mock-subentry-id-1-1",
+        disabled_by=dr.DeviceEntryDisabler.INTEGRATION,
+        device_info=dr.DeviceInfo(
+            identifiers={("test", "strip")}, manufacturer="Acme", name="Power strip"
+        ),
+    )
+    assert isinstance(device, dr.DeviceEntry)
+    assert device.config_subentry_id == "mock-subentry-id-1-1"
+    assert device.disabled_by is dr.DeviceEntryDisabler.INTEGRATION
+    assert device.identifiers == {("test", "strip")}
+    assert device.manufacturer == "Acme"
+    assert device.name == "Power strip"
+
+    # Fields left unset in the device info keep their value
+    same_device = device_registry.async_get_or_create_device(
+        config_entry_id=config_entry_id,
+        config_subentry_id="mock-subentry-id-1-1",
+        device_info=dr.DeviceInfo(identifiers={("test", "strip")}),
+    )
+    assert same_device.id == device.id
+    assert same_device.manufacturer == "Acme"
+    assert same_device.name == "Power strip"

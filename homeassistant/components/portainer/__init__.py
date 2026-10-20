@@ -5,7 +5,12 @@ import logging
 from typing import TYPE_CHECKING
 
 from pyportainer import Portainer, PortainerImageWatcher
-from pyportainer.exceptions import PortainerError
+from pyportainer.exceptions import (
+    PortainerAuthenticationError,
+    PortainerConnectionError,
+    PortainerError,
+    PortainerTimeoutError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -18,6 +23,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
@@ -50,7 +56,7 @@ type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> None:
     """Set up Portainer from a config entry."""
 
     session = async_create_clientsession(
@@ -151,8 +157,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_event_listeners)
     )
 
-    return True
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Portainer integration."""
@@ -160,12 +164,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> None:
     """Migrate old entry."""
 
     if entry.version < 2:
@@ -242,17 +246,32 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
         )
         try:
             system_status = await client.portainer_system_status()
-        except PortainerError:
-            _LOGGER.exception("Failed to fetch instance ID during migration")
-            return False
+        except PortainerAuthenticationError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
+        except PortainerConnectionError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
+        except PortainerTimeoutError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="timeout_connect",
+            ) from err
+        except PortainerError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="instance_id_failed",
+            ) from err
 
         hass.config_entries.async_update_entry(
             entry=entry,
             unique_id=system_status.instance_id,
             version=5,
         )
-
-    return True
 
 
 async def async_remove_config_entry_device(

@@ -14,6 +14,7 @@ from boschshcpy import (
     ThermostatService,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -43,8 +44,6 @@ from .conftest import (
     thermostat_gen2_device,
     twinguard_device,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -198,6 +197,29 @@ async def test_light_switch_bsm_child_lock_unique_id(
     assert lightswitch_entry is not None
     assert child_lock_entry is not None
     assert lightswitch_entry.unique_id != child_lock_entry.unique_id
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "light_switches_bsm": [
+                light_switch_bsm_device(child_lock=False, has_child_protection=False)
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_no_child_lock_without_child_protection_service(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No child-lock switch is created for a device lacking ChildProtection."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.light_switch") is not None
+    assert hass.states.get("switch.light_switch_child_lock") is None
 
 
 @pytest.mark.parametrize(

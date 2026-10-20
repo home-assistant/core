@@ -30,44 +30,37 @@ NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
     CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL: (
         NumberEntityDescription(
             key=CharacteristicsTypes.VENDOR_VOCOLINC_HUMIDIFIER_SPRAY_LEVEL,
-            name="Spray Quantity",
             translation_key="spray_quantity",
             entity_category=EntityCategory.CONFIG,
         )
     ),
     CharacteristicsTypes.VENDOR_EVE_DEGREE_ELEVATION: NumberEntityDescription(
         key=CharacteristicsTypes.VENDOR_EVE_DEGREE_ELEVATION,
-        name="Elevation",
         translation_key="elevation",
         entity_category=EntityCategory.CONFIG,
     ),
     CharacteristicsTypes.VENDOR_AQARA_GATEWAY_VOLUME: NumberEntityDescription(
         key=CharacteristicsTypes.VENDOR_AQARA_GATEWAY_VOLUME,
-        name="Volume",
         translation_key="volume",
         entity_category=EntityCategory.CONFIG,
     ),
     CharacteristicsTypes.VENDOR_AQARA_E1_GATEWAY_VOLUME: NumberEntityDescription(
         key=CharacteristicsTypes.VENDOR_AQARA_E1_GATEWAY_VOLUME,
-        name="Volume",
         translation_key="volume",
         entity_category=EntityCategory.CONFIG,
     ),
     CharacteristicsTypes.VENDOR_EVE_MOTION_DURATION: NumberEntityDescription(
         key=CharacteristicsTypes.VENDOR_EVE_MOTION_DURATION,
-        name="Duration",
         translation_key="duration",
         entity_category=EntityCategory.CONFIG,
     ),
     CharacteristicsTypes.VENDOR_EVE_MOTION_SENSITIVITY: NumberEntityDescription(
         key=CharacteristicsTypes.VENDOR_EVE_MOTION_SENSITIVITY,
-        name="Sensitivity",
         translation_key="sensitivity",
         entity_category=EntityCategory.CONFIG,
     ),
     CharacteristicsTypes.SET_DURATION: NumberEntityDescription(
         key=CharacteristicsTypes.SET_DURATION,
-        name="Duration",
         device_class=NumberDeviceClass.DURATION,
         translation_key="duration",
         entity_category=EntityCategory.CONFIG,
@@ -119,14 +112,6 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
         """Initialise a HomeKit number control."""
         self.entity_description = description
         super().__init__(conn, info, char)
-
-    @property
-    @override
-    def name(self) -> str:
-        """Return the name of the device if any."""
-        if name := self.accessory.name:
-            return f"{name} {self.entity_description.name}"
-        return f"{self.entity_description.name}"
 
     @override
     def get_characteristic_types(self) -> list[str]:

@@ -1,5 +1,6 @@
 """Coordinators for the iCloud integration."""
 
+import asyncio
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, tzinfo
 import logging
@@ -17,7 +18,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .account import IcloudConfigEntry
-from .const import DOMAIN
+from .const import CONF_INCLUDE_COMPLETED, DEFAULT_INCLUDE_COMPLETED, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,6 +28,13 @@ CALENDAR_SCAN_INTERVAL = timedelta(minutes=15)
 # `async_get_events` queries iCloud directly for anything outside this window.
 LOOKBACK = timedelta(days=1)
 LOOKAHEAD = timedelta(days=30)
+
+# Bound how long the coordinator waits for a fetch so a slow or unresponsive
+# Apple request cannot stall the refresh indefinitely. This frees the
+# coordinator, not the executor thread running the request, which is released
+# only once that request itself returns. The refresh no longer runs on the
+# startup path, so the bound is a generous backstop.
+FETCH_TIMEOUT = 300  # seconds
 
 
 @dataclass(slots=True)
@@ -118,9 +126,12 @@ class IcloudCalendarCoordinator(DataUpdateCoordinator[dict[str, IcloudCalendarDa
     async def _async_update_data(self) -> dict[str, IcloudCalendarData]:
         """Fetch calendars and their upcoming events."""
         try:
-            return await self.hass.async_add_executor_job(self._fetch)
+            async with asyncio.timeout(FETCH_TIMEOUT):
+                return await self.hass.async_add_executor_job(self._fetch)
         except PyiCloudException as err:
             raise UpdateFailed(f"Error fetching calendars: {err}") from err
+        except TimeoutError as err:
+            raise UpdateFailed("Timed out fetching calendars") from err
 
 
 def _parse_apple_date(value: datetime | list[int] | None) -> datetime | None:
@@ -217,8 +228,9 @@ REMINDERS_ERRORS = (
 # Cloud Storage key. Such a reminder has no readable title and no notes, and
 # `update()` rewrites TitleDocument and NotesDocument unconditionally, so
 # writing one back would replace the real title with this placeholder and blank
-# the notes. They are left out of the to-do lists entirely until the library
-# requests Protected Cloud Storage access.
+# the notes. pyicloud requests that key before every Reminders access, so this
+# should not happen anymore, but any such reminder is still left out of the
+# to-do lists rather than risk overwriting it.
 UNDECODED_TITLE = "Error Decoding Title"
 
 # Reminders are fetched one list at a time, so keep the per-list page bounded.
@@ -264,6 +276,13 @@ class IcloudRemindersCoordinator(DataUpdateCoordinator[dict[str, IcloudReminderL
         self.account = entry.runtime_data
         self._warned_undecoded = False
         self._skipped_undecoded = False
+        # Fetching years of completed reminders means paging through tens of
+        # thousands of CloudKit records on every refresh, which is what made
+        # setup hang. The default excludes them; the option brings them back.
+        self._include_completed = entry.options.get(
+            CONF_INCLUDE_COMPLETED,
+            entry.data.get(CONF_INCLUDE_COMPLETED, DEFAULT_INCLUDE_COMPLETED),
+        )
 
     @property
     def reminders(self) -> RemindersService:
@@ -281,7 +300,7 @@ class IcloudRemindersCoordinator(DataUpdateCoordinator[dict[str, IcloudReminderL
         for list_id, name in _live_lists(service):
             batch = service.list_reminders(
                 list_id=list_id,
-                include_completed=True,
+                include_completed=self._include_completed,
                 results_limit=RESULTS_LIMIT,
             )
             reminders = []
@@ -303,9 +322,12 @@ class IcloudRemindersCoordinator(DataUpdateCoordinator[dict[str, IcloudReminderL
     async def _async_update_data(self) -> dict[str, IcloudReminderList]:
         """Fetch reminders from iCloud."""
         try:
-            data = await self.hass.async_add_executor_job(self._fetch)
+            async with asyncio.timeout(FETCH_TIMEOUT):
+                data = await self.hass.async_add_executor_job(self._fetch)
         except REMINDERS_ERRORS as err:
             raise UpdateFailed(f"Error fetching reminders: {err}") from err
+        except TimeoutError as err:
+            raise UpdateFailed("Timed out fetching reminders") from err
 
         self._warn_if_undecoded()
         return data
@@ -314,9 +336,10 @@ class IcloudRemindersCoordinator(DataUpdateCoordinator[dict[str, IcloudReminderL
         """Warn once if reminders had to be left out because of encryption.
 
         With Advanced Data Protection enabled, CloudKit only returns readable
-        content to a session holding a Protected Cloud Storage key, which
-        pyicloud does not yet request. Those reminders are skipped rather than
-        shown as placeholders, so say once why a list looks short.
+        content to a session holding a Protected Cloud Storage key. pyicloud
+        requests one, but if a reminder still comes back undecoded it is
+        skipped rather than shown as a placeholder, so say once why a list
+        looks short.
         """
         if self._warned_undecoded or not self._skipped_undecoded:
             return
@@ -324,8 +347,7 @@ class IcloudRemindersCoordinator(DataUpdateCoordinator[dict[str, IcloudReminderL
         self._warned_undecoded = True
         _LOGGER.warning(
             "Some reminders could not be decrypted and have been left out of "
-            "the to-do lists. This account uses Advanced Data Protection, "
-            "which Home Assistant cannot read Reminders from yet"
+            "the to-do lists"
         )
 
 
@@ -337,15 +359,15 @@ def _live_lists(service: RemindersService) -> list[tuple[str, str]]:
     list inside it can share a name, so leaving groups in shows that name
     twice, once as a permanently empty list.
 
-    Deleted lists leave tombstones that cannot be recognised yet. pyicloud
-    exposes ``deleted`` on a reminder but not on a list, and the model forbids
-    extra fields, so a tombstone is indistinguishable from an empty list until
-    timlaing/pyicloud#319 is released.
+    Deleted lists leave tombstones that still carry the list's name while
+    holding no reminders. Sharing a list replaces its record, so every shared
+    list leaves one behind: leaving them in showed a second, always empty,
+    entity next to the live list.
     """
     return [
         (reminder_list.id, reminder_list.title)
         for reminder_list in service.lists()
-        if not reminder_list.is_group
+        if not reminder_list.is_group and not reminder_list.deleted
     ]
 
 

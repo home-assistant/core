@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 from pycync import Cync, CyncHome
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.cync.const import (
     CONF_AUTHORIZE_STRING,
@@ -17,8 +18,6 @@ from homeassistant.components.cync.const import (
 from homeassistant.const import CONF_ACCESS_TOKEN
 
 from .const import MOCKED_EMAIL, MOCKED_USER
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture(autouse=True)
@@ -61,8 +60,7 @@ def cync_client():
         cync_mock.get_devices.return_value = available_mock_devices
 
         cync_mock.create.return_value = cync_mock
-        client_mock = cync_mock.return_value
-        yield client_mock
+        yield cync_mock
 
 
 @pytest.fixture

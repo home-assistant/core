@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.twinkly.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
@@ -12,8 +13,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import TEST_MAC, TEST_MODEL, TEST_NAME
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_twinkly_client", "mock_setup_entry")
@@ -185,6 +184,7 @@ async def test_user_flow_works_discovery(hass: HomeAssistant) -> None:
         {CONF_HOST: "10.0.0.131"},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_MAC
 
     # Verify the discovery flow was aborted
     assert not hass.config_entries.flow.async_progress(DOMAIN)

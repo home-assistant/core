@@ -2,10 +2,10 @@
 
 from typing import Final
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 MODULE = "homeassistant.components.vicare"
 

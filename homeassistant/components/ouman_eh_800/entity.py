@@ -29,12 +29,10 @@ class OumanEh800Entity(CoordinatorEntity[OumanEh800Coordinator]):
     def __init__(
         self,
         coordinator: OumanEh800Coordinator,
-        endpoint: OumanEndpoint,
         description: OumanEh800EntityDescription,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self._endpoint = endpoint
         self.entity_description = description
 
         self._attr_unique_id = (
@@ -47,3 +45,17 @@ class OumanEh800Entity(CoordinatorEntity[OumanEh800Coordinator]):
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return self.coordinator.device_info(self.entity_description.device)
+
+
+class OumanEh800EndpointEntity(OumanEh800Entity):
+    """Base entity for Ouman EH-800 entities backed by a single endpoint."""
+
+    def __init__(
+        self,
+        coordinator: OumanEh800Coordinator,
+        endpoint: OumanEndpoint,
+        description: OumanEh800EntityDescription,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator, description)
+        self._endpoint = endpoint

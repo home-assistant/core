@@ -170,6 +170,11 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             LOGGER.exception("Failed to probe device (%s): %s", self.address, exception)
             return None
 
+        # The library returns None for the values it couldn't read
+        if manufacturer is None or device_type is None:
+            LOGGER.debug("Failed to read the device info of %s", self.address)
+            return None
+
         title = manufacturer + " " + device_type
 
         LOGGER.debug("Found device: %s", title)

@@ -1,6 +1,7 @@
 """Test different accessory types: Fans."""
 
 from pyhap.const import HAP_REPR_AID, HAP_REPR_CHARS, HAP_REPR_IID, HAP_REPR_VALUE
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
@@ -32,8 +33,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, Event, HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import async_mock_service
 
 
 async def test_fan_basic(hass: HomeAssistant, hk_driver, events: list[Event]) -> None:

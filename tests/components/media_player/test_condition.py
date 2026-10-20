@@ -5,19 +5,7 @@ from typing import Any
 
 import probatio
 import pytest
-
-from homeassistant.components.media_player import (
-    ATTR_INPUT_SOURCE,
-    ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED,
-)
-from homeassistant.components.media_player.condition import CONDITIONS
-from homeassistant.components.media_player.const import MediaPlayerState
-from homeassistant.const import CONF_ENTITY_ID, CONF_OPTIONS, CONF_TARGET
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.condition import async_validate_condition_config
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     ConditionStateDescription,
     TargetSupport,
     assert_condition_behavior_all,
@@ -32,6 +20,17 @@ from tests.components.common import (
     parametrize_target_entities,
     target_entities,
 )
+
+from homeassistant.components.media_player import (
+    ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_VOLUME_LEVEL,
+    ATTR_MEDIA_VOLUME_MUTED,
+)
+from homeassistant.components.media_player.condition import CONDITIONS
+from homeassistant.components.media_player.const import MediaPlayerState
+from homeassistant.const import CONF_ENTITY_ID, CONF_OPTIONS, CONF_TARGET
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.condition import async_validate_condition_config
 
 # Volume is stored as 0.0-1.0 but the threshold is in percent.
 _VOLUME_VALUE_SCALE = 0.01

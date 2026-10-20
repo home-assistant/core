@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.smtp.const import (
     CONF_ENCRYPTION,
@@ -23,8 +24,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {
     CONF_SENDER: "email@example.com",
@@ -113,10 +112,10 @@ def mock_client_context() -> Generator[None]:
 
     with (
         patch(
-            "homeassistant.components.smtp.config_flow.client_context"
+            "homeassistant.components.smtp.config_flow.create_client_context"
         ) as mock_client,
         patch(
-            "homeassistant.components.smtp.client_context",
+            "homeassistant.components.smtp.create_client_context",
             new=mock_client,
         ),
     ):

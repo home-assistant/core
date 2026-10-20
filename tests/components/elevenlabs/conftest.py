@@ -6,8 +6,9 @@ from unittest.mock import AsyncMock, patch
 
 from elevenlabs.core import ApiError
 from elevenlabs.types import GetVoicesResponse
-from httpx import ConnectError
+from httpx2 import ConnectError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.elevenlabs.const import (
     CONF_STT_AUTO_LANGUAGE,
@@ -20,8 +21,6 @@ from homeassistant.const import CONF_API_KEY, CONF_MODEL
 from homeassistant.core import HomeAssistant
 
 from .const import MOCK_MODELS, MOCK_VOICES
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -82,6 +81,29 @@ def mock_async_client_api_error() -> Generator[AsyncMock]:
             new=mock_async_client,
         ),
     ):
+        yield mock_async_client
+
+
+@pytest.fixture
+def mock_async_client_api_key_id_error() -> Generator[AsyncMock]:
+    """Override async ElevenLabs client with an API key ID used as API key."""
+    client_mock = _client_mock()
+    api_error = ApiError()
+    api_error.body = {
+        "detail": {
+            "type": "authentication_error",
+            "code": "invalid_api_key",
+            "status": "api_key_id_used_as_api_key",
+            "message": "API key ID used as API key",
+        }
+    }
+    client_mock.models.list.side_effect = api_error
+    client_mock.voices.get_all.side_effect = api_error
+
+    with patch(
+        "homeassistant.components.elevenlabs.config_flow.AsyncElevenLabs",
+        return_value=client_mock,
+    ) as mock_async_client:
         yield mock_async_client
 
 
