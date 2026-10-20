@@ -275,7 +275,7 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
         if isinstance(self.last_reset, (datetime)):
             data["last_reset"] = self.last_reset.isoformat()
         data["last_valid_state"] = (
-            str(self.last_valid_state) if self.last_valid_state else None
+            str(self.last_valid_state) if self.last_valid_state is not None else None
         )
         data["status"] = self.status
         data["input_device_class"] = str(self.input_device_class)

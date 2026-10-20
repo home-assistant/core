@@ -1,6 +1,7 @@
 """The tests for the utility_meter sensor platform."""
 
 from datetime import timedelta
+from decimal import Decimal
 
 from freezegun import freeze_time
 import pytest
@@ -35,6 +36,7 @@ from homeassistant.components.utility_meter.sensor import (
     COLLECTING,
     PAUSED,
     UtilityMeterSensor,
+    UtilitySensorExtraStoredData,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -841,6 +843,29 @@ async def test_restore_state(
     for entity_id in ("sensor.energy_bill_tariff1",):
         state = hass.states.get(entity_id)
         assert state.attributes.get("status") == PAUSED
+
+
+@pytest.mark.parametrize(
+    "last_valid_state",
+    [
+        pytest.param(Decimal(0), id="zero"),
+        pytest.param(Decimal("12.5"), id="non_zero"),
+        pytest.param(None, id="none"),
+    ],
+)
+def test_extra_restore_state_data_roundtrip(last_valid_state: Decimal | None) -> None:
+    """Test the extra restore state data survives a roundtrip, including a 0 state."""
+    data = UtilitySensorExtraStoredData(
+        Decimal(3),
+        "kWh",
+        Decimal(1),
+        dt_util.utcnow(),
+        last_valid_state,
+        COLLECTING,
+        SensorDeviceClass.ENERGY,
+    )
+
+    assert UtilitySensorExtraStoredData.from_dict(data.as_dict()) == data
 
 
 @pytest.mark.parametrize(
