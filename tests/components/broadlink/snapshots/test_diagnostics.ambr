@@ -2,6 +2,7 @@
 # name: test_diagnostics
   dict({
     'data': dict({
+      'active': 1,
       'auto_mode': 0,
       'dayofweek': 3,
       'hour': 12,

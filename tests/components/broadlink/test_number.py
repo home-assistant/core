@@ -16,6 +16,7 @@ from . import get_device
 
 FULL_STATUS = {
     "power": 1,
+    "active": 0,
     "auto_mode": 1,
     "loop_mode": 2,
     "sensor": 0,

@@ -23,6 +23,7 @@ async def test_diagnostics(
     mock_api = device.get_mock_api()
     mock_api.get_full_status.return_value = {
         "power": 1,
+        "active": 1,
         "auto_mode": 0,
         "loop_mode": 1,
         "sensor": 0,
