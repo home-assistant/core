@@ -10,6 +10,7 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from solyx_energy_api.exceptions import SolyxEnergyDataError, SolyxEnergyTokenError
 
 from homeassistant.components.solyx_energy_cloud.const import (
@@ -20,8 +21,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 
 from .const import NYMO_DEVICE_ID, NYMO_DEVICE_ID_2
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant

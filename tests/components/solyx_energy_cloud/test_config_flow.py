@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from solyx_energy_api.exceptions import (
     SolyxEnergyAuthError,
     SolyxEnergyDataError,
@@ -23,8 +24,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import NYMO_CLIENT_ID, NYMO_CLIENT_SECRET
-
-from tests.common import MockConfigEntry
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant

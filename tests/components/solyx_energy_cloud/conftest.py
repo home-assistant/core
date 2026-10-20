@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from solyx_energy_api.client import SolyxEnergyApiClient
 
 from homeassistant.components.solyx_energy_cloud.const import (
@@ -16,8 +17,6 @@ from homeassistant.components.solyx_energy_cloud.const import (
 from homeassistant.util.json import json_loads
 
 from .const import NYMO_CLIENT_ID, NYMO_CLIENT_SECRET
-
-from tests.common import MockConfigEntry
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant

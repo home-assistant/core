@@ -1,6 +1,7 @@
 {
   "domain": "solyx_energy_cloud",
   "name": "Solyx Energy Cloud",
+  "categories": ["energy.meters_monitoring", "energy.solar_batteries"],
   "codeowners": ["@MartinaeyNL"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/solyx_energy_cloud",
