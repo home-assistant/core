@@ -1344,8 +1344,7 @@
         "security_safety.cameras"
       ],
       "config_flow": true,
-      "iot_class": "cloud_polling",
-      "single_config_entry": true
+      "iot_class": "cloud_polling"
     },
     "brandt": {
       "name": "Brandt Smart Control",

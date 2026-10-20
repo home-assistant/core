@@ -130,16 +130,36 @@ async def test_full_flow(
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_single_instance_allowed(hass: HomeAssistant) -> None:
-    """Test a second config entry is rejected."""
-    MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
-
+async def test_account_already_configured(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test the same account cannot be configured twice."""
+    MockConfigEntry(domain=DOMAIN, unique_id=ACCOUNT_ID).add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass, {"flow_id": result["flow_id"], "redirect_uri": REDIRECT_URI}
+    )
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == HTTPStatus.OK
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": _fake_access_token({"sub": ACCOUNT_ID}),
+            "token_type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(
