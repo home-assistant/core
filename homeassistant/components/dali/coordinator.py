@@ -182,11 +182,12 @@ class DaliCoordinator(DataUpdateCoordinator[dict[int, DaliGearData]]):
             linear_dimming = False
             if DEVICE_TYPE_LED in device_types:
                 curve = await self.driver.send(QueryDimmingCurve(gear_address))
-                linear_dimming = (
-                    curve is not None
-                    and curve.raw_value is not None
-                    and curve.raw_value.as_integer == 1
-                )
+                if curve is None or curve.raw_value is None:
+                    # A dropped dimming-curve reply would otherwise default to
+                    # the logarithmic curve and flip a linear gear's brightness;
+                    # treat it as a miss so the known-gear retry re-reads it.
+                    return None
+                linear_dimming = curve.raw_value.as_integer == 1
         except (OSError, TimeoutError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
