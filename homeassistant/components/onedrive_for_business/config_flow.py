@@ -38,6 +38,11 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     client: OneDriveClient
     drive: Drive
 
+    def __init__(self) -> None:
+        """Initialize the OneDrive config flow."""
+        super().__init__()
+        self._data: dict[str, Any] = {}
+
     @property
     @override
     def logger(self) -> logging.Logger:
@@ -49,11 +54,6 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         return {"scope": " ".join(OAUTH_SCOPES)}
-
-    def __init__(self) -> None:
-        """Initialize the OneDrive config flow."""
-        super().__init__()
-        self._data: dict[str, Any] = {}
 
     @override
     async def async_step_user(
