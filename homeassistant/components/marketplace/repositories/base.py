@@ -131,7 +131,6 @@ TOPIC_FILTER = (
 
 # What a catalog entry leaves out is reset to these
 REPOSITORY_KEYS_TO_EXPORT: tuple[tuple[str, Any], ...] = (
-    ("categories", []),
     ("description", ""),
     ("downloads", 0),
     ("domain", None),
@@ -360,12 +359,6 @@ class RepositoryData:
     def update_data(self, data: dict[str, Any]) -> None:
         """Update data of the repository."""
         for key, value in data.items():
-            # The catalog calls them categories, here that word means the
-            # kind of repository
-            if key == "categories":
-                self.integration_categories = valid_integration_categories(value)
-                continue
-
             if key not in self.__dict__:
                 continue
 

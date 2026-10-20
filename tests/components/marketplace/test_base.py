@@ -202,12 +202,17 @@ async def test_catalog_keeps_the_domain_of_an_installed_integration(
         pytest.param([1], [], id="not-strings"),
     ],
 )
+@pytest.mark.parametrize("newer", [True, False], ids=["newer", "same-entry"])
 async def test_catalog_integration_categories(
-    marketplace: MarketplaceManager, categories: Any, expected: list[str]
+    marketplace: MarketplaceManager,
+    categories: Any,
+    expected: list[str],
+    newer: bool,
 ) -> None:
     """Test the catalog sets the categories of an integration.
 
-    The catalog calls them categories, a broken value only loses them.
+    The catalog calls them categories, a broken value only loses them. They
+    don't wait for a newer entry: storage from before they existed has none.
     """
     repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
     repository.data.integration_categories = ["lighting"]
@@ -215,7 +220,7 @@ async def test_catalog_integration_categories(
     entry = {
         "domain": repository.data.domain,
         "full_name": repository.data.full_name,
-        "last_fetched": repository.data.last_fetched.timestamp() + 1,
+        "last_fetched": repository.data.last_fetched.timestamp() + int(newer),
         "manifest": {},
         "manifest_name": "Example",
     }
