@@ -100,8 +100,6 @@ class GreeConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         if entry is not None:
             if entry.source == SOURCE_IGNORE:
-                if self.source == SOURCE_USER:
-                    return None
                 return self.async_abort(reason="already_configured")
             endpoint_changed = any(
                 entry.data.get(key) != data[key] for key in (CONF_HOST, CONF_PORT)

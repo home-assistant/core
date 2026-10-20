@@ -201,6 +201,33 @@ async def test_shutdown_during_bind_does_not_retry(
     assert hass.states.async_all(CLIMATE_DOMAIN) == []
 
 
+async def test_shutdown_rejects_late_bind_completion(
+    hass: HomeAssistant, device: Mock
+) -> None:
+    """A bind suppressing cancellation cannot publish entities after shutdown."""
+    started = asyncio.Event()
+
+    async def bind() -> None:
+        started.set()
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            return
+
+    device().bind.side_effect = bind
+    setup = asyncio.create_task(async_setup_gree(hass))
+    await started.wait()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    with pytest.raises(asyncio.CancelledError):
+        await setup
+
+    device().close.assert_called_once_with()
+    device().bind.assert_awaited_once_with()
+    device().update_state.assert_not_awaited()
+    assert device().closed
+    assert hass.states.async_all(CLIMATE_DOMAIN) == []
+
+
 async def test_homeassistant_stop_closes_device(
     hass: HomeAssistant, device: Mock
 ) -> None:

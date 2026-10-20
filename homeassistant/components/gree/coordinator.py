@@ -97,8 +97,6 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @override
     async def _async_setup(self) -> None:
         """Bind the fixed device before the first status request."""
-        if self._shutdown_requested:
-            raise asyncio.CancelledError
         self._device_task = asyncio.current_task()
         try:
             await async_bind_device(self.hass, self.device)
@@ -124,8 +122,6 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update the state of the device."""
-        if self._shutdown_requested:
-            raise asyncio.CancelledError
         _LOGGER.debug(
             "Updating device state: %s, error count: %d", self.name, self._error_count
         )

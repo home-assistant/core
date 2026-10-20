@@ -78,13 +78,6 @@ def _validate_group_identity(
     """Reject conflicting spellings, device links, and destination ownership."""
     if len(group.raw_identifiers) != 1:
         raise HomeAssistantError(f"Ambiguous raw Gree identity for {identifier}")
-    for entity in group.entities:
-        if entity.device_id is not None and (
-            not group.devices or entity.device_id != group.devices[0].id
-        ):
-            raise HomeAssistantError(
-                f"Conflicting Gree entity device: {entity.entity_id}"
-            )
     for candidate in entries:
         if candidate.entry_id == source_id or candidate.version == 1:
             continue

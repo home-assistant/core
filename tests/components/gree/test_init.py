@@ -117,6 +117,24 @@ async def test_background_discovery_requires_confirmation(
     device().bind.assert_not_awaited()
 
 
+async def test_empty_legacy_entry_removed_without_connection(
+    hass: HomeAssistant, device: MagicMock, discovery: MagicMock
+) -> None:
+    """An empty shared entry completes migration without attempting device setup."""
+    discovery.mock_devices.clear()
+    entry = MockConfigEntry(domain=DOMAIN, version=1, unique_id="gree")
+    entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.config_entries.async_get_entry(entry.entry_id) is None
+    assert not hass.config_entries.async_entries(DOMAIN)
+    assert not hass.states.async_all("climate")
+    device().bind.assert_not_awaited()
+    device().update_state.assert_not_awaited()
+
+
 async def test_hostless_entry_retries_without_connection(
     hass: HomeAssistant, device: MagicMock, discovery: MagicMock
 ) -> None:

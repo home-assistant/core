@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from types import MappingProxyType
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -30,6 +31,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigEntryDisabler,
     ConfigEntryState,
+    ConfigSubentry,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -631,12 +633,14 @@ async def _assert_rejected(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     source: ConfigEntry,
+    *,
+    match: str | None = None,
 ) -> None:
     """Assert preflight failures do not partially migrate any earlier group."""
     before_entries = hass.config_entries.async_entries(DOMAIN)
     before_devices = {device.id: device for device in device_registry.devices}
     before_entities = dict(entity_registry.entities)
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match=match):
         await async_migrate_legacy_entry(hass, source)
     assert source.version == 1
     assert source.data == {}
@@ -646,14 +650,17 @@ async def _assert_rejected(
 
 
 @pytest.mark.parametrize(
-    ("domain", "unique_id"),
+    ("domain", "platform", "unique_id"),
     [
-        pytest.param("sensor", _IDENTIFIERS[-1], id="unsupported-platform"),
+        pytest.param("sensor", DOMAIN, _IDENTIFIERS[-1], id="unsupported-domain"),
+        pytest.param("climate", "other", _IDENTIFIERS[-1], id="foreign-platform"),
         pytest.param(
-            "switch", f"{_IDENTIFIERS[-1]}_Unknown", id="unknown-switch-suffix"
+            "switch", DOMAIN, f"{_IDENTIFIERS[-1]}_Unknown", id="unknown-switch-suffix"
         ),
-        pytest.param("switch", f"{_CANONICAL[-1]}_Quiet", id="ambiguous-raw-spelling"),
-        pytest.param("climate", "", id="empty-identifier"),
+        pytest.param(
+            "switch", DOMAIN, f"{_CANONICAL[-1]}_Quiet", id="ambiguous-raw-spelling"
+        ),
+        pytest.param("climate", DOMAIN, "", id="empty-identifier"),
     ],
 )
 async def test_invalid_entity_preflight(
@@ -661,13 +668,16 @@ async def test_invalid_entity_preflight(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     domain: str,
+    platform: str,
     unique_id: str,
 ) -> None:
     """Invalid entity records prevent all transfers."""
     source = _legacy(hass)
     for identifier in _IDENTIFIERS:
         _records(device_registry, entity_registry, source, identifier)
-    entity_registry.async_get_or_create(domain, DOMAIN, unique_id, config_entry=source)
+    entity_registry.async_get_or_create(
+        domain, platform, unique_id, config_entry=source
+    )
     await _assert_rejected(hass, device_registry, entity_registry, source)
 
 
@@ -688,6 +698,59 @@ async def test_conflicting_entity_device_preflight(
     await _assert_rejected(hass, device_registry, entity_registry, source)
 
 
+async def test_foreign_device_ownership_preflight(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """A legacy entity cannot transfer a device owned by an unrelated entry."""
+    source = _legacy(hass)
+    records = [
+        _records(device_registry, entity_registry, source, identifier)
+        for identifier in _IDENTIFIERS
+    ]
+    other = MockConfigEntry(domain="other")
+    other.add_to_hass(hass)
+    foreign_device = device_registry.async_get_or_create(
+        config_entry_id=other.entry_id, identifiers={("other", "unit")}
+    )
+    entity_registry.async_update_entity(
+        records[-1][1][0].entity_id, device_id=foreign_device.id
+    )
+    await _assert_rejected(
+        hass,
+        device_registry,
+        entity_registry,
+        source,
+        match="Unexpected Gree device ownership",
+    )
+
+
+async def test_foreign_entity_ownership_preflight(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """A device shared with an unrelated entry cannot be transferred."""
+    source = _legacy(hass)
+    records = [
+        _records(device_registry, entity_registry, source, identifier)
+        for identifier in _IDENTIFIERS
+    ]
+    other = MockConfigEntry(domain="other")
+    other.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "sensor", "other", "unit", config_entry=other, device_id=records[-1][0].id
+    )
+    await _assert_rejected(
+        hass,
+        device_registry,
+        entity_registry,
+        source,
+        match="Conflicting Gree device identity",
+    )
+
+
 async def test_destination_collision_preflight(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -701,6 +764,75 @@ async def test_destination_collision_preflight(
         hass
     )
     await _assert_rejected(hass, device_registry, entity_registry, source)
+
+
+@pytest.mark.parametrize(
+    ("version", "unique_id", "identifier", "error"),
+    [
+        pytest.param(
+            1,
+            _CANONICAL[-1],
+            _IDENTIFIERS[-1],
+            "Invalid Gree migration destination",
+            id="legacy-version",
+        ),
+        pytest.param(
+            2,
+            None,
+            _IDENTIFIERS[-1],
+            "Invalid Gree migration destination",
+            id="missing-unique-id",
+        ),
+        pytest.param(
+            2,
+            _CANONICAL[-1],
+            None,
+            "Invalid legacy Gree identifier",
+            id="missing-identifier",
+        ),
+    ],
+)
+async def test_invalid_destination_preflight(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    version: int,
+    unique_id: str | None,
+    identifier: str | None,
+    error: str,
+) -> None:
+    """An invalid interrupted destination blocks every ownership change."""
+    source = _legacy(hass)
+    for raw_identifier in _IDENTIFIERS:
+        _records(device_registry, entity_registry, source, raw_identifier)
+    child = _child(hass, source, _CANONICAL[-1], _IDENTIFIERS[-1])
+    hass.config_entries.async_update_entry(
+        child,
+        version=version,
+        unique_id=unique_id,
+        data={**child.data, CONF_IDENTIFIER: identifier},
+    )
+    await _assert_rejected(hass, device_registry, entity_registry, source, match=error)
+
+
+async def test_duplicate_destination_preflight(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Duplicate interrupted destinations cannot steal each other's records."""
+    source = _legacy(hass)
+    for identifier in _IDENTIFIERS:
+        _records(device_registry, entity_registry, source, identifier)
+    _child(hass, source, _CANONICAL[-1], _IDENTIFIERS[-1])
+    _child(hass, source, _CANONICAL[-1], _IDENTIFIERS[-1])
+    await _assert_rejected(
+        hass,
+        device_registry,
+        entity_registry,
+        source,
+        match="Duplicate Gree migration destination",
+    )
 
 
 async def test_duplicate_physical_device_preflight(
@@ -737,6 +869,36 @@ async def test_child_device_preflight(
     await _assert_rejected(hass, device_registry, entity_registry, source)
 
 
+async def test_device_subentry_preflight(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Unexpected subentry ownership is not discarded during device migration."""
+    source = _legacy(hass)
+    for identifier in _IDENTIFIERS[:2]:
+        _records(device_registry, entity_registry, source, identifier)
+    subentry = ConfigSubentry(
+        data=MappingProxyType({}),
+        subentry_type="device",
+        title="Legacy subentry",
+        unique_id=None,
+    )
+    hass.config_entries.async_add_subentry(source, subentry)
+    device_registry.async_get_or_create(
+        config_entry_id=source.entry_id,
+        config_subentry_id=subentry.subentry_id,
+        identifiers={(DOMAIN, _IDENTIFIERS[-1])},
+    )
+    await _assert_rejected(
+        hass,
+        device_registry,
+        entity_registry,
+        source,
+        match="Legacy Gree child-device ownership is unsupported",
+    )
+
+
 async def test_disabled_legacy_reserved_until_enabled(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -763,6 +925,38 @@ async def test_disabled_legacy_reserved_until_enabled(
         _assert_records(
             device_registry, entity_registry, old_device, entities, entry.entry_id
         )
+
+
+async def test_legacy_inventory_skips_invalid_records(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Malformed rows do not prevent discovery from reserving valid identities."""
+    source = _legacy(hass, disabled_by=ConfigEntryDisabler.USER)
+    invalid_device = device_registry.async_get_or_create(
+        config_entry_id=source.entry_id, identifiers={(DOMAIN, ":-.")}
+    )
+    invalid_entity = entity_registry.async_get_or_create(
+        "sensor", DOMAIN, "unsupported", config_entry=source
+    )
+    device, entities = _records(
+        device_registry, entity_registry, source, _IDENTIFIERS[0]
+    )
+    entity = entity_registry.async_get_or_create(
+        "climate", DOMAIN, _IDENTIFIERS[1], config_entry=source
+    )
+
+    assert async_get_legacy_identifiers(hass) == set(_CANONICAL[:2])
+    await _assert_rejected(hass, device_registry, entity_registry, source)
+    _assert_records(device_registry, entity_registry, device, entities, source.entry_id)
+    assert entity_registry.async_get(entity.entity_id) == entity
+
+    device_registry.async_remove_device(invalid_device.id)
+    entity_registry.async_remove(invalid_entity.entity_id)
+    assert async_get_legacy_identifiers(hass) == set(_CANONICAL[:2])
+    assert source.version == 1
+    assert source.disabled_by is ConfigEntryDisabler.USER
 
 
 async def test_existing_child_with_no_legacy_rows_is_not_empty(
@@ -890,17 +1084,27 @@ async def test_entity_identity_precedes_device_spelling(
         assert entity_registry.async_get(entity.entity_id) == entity
 
 
+@pytest.mark.parametrize(
+    "entity_count",
+    [
+        pytest.param(len(GREE_SWITCHES) + 1, id="device-with-entities"),
+        pytest.param(0, id="device-only"),
+    ],
+)
 async def test_child_cannot_own_another_identity(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    entity_count: int,
 ) -> None:
     """Matching provenance does not authorize merging a child's unrelated rows."""
     source = _legacy(hass)
     for identifier in _IDENTIFIERS[:2]:
         _records(device_registry, entity_registry, source, identifier)
     child = _child(hass, source, _CANONICAL[1], _IDENTIFIERS[1])
-    _records(device_registry, entity_registry, child, _IDENTIFIERS[2])
+    _, entities = _records(device_registry, entity_registry, child, _IDENTIFIERS[2])
+    for entity in entities[entity_count:]:
+        entity_registry.async_remove(entity.entity_id)
     await _assert_rejected(hass, device_registry, entity_registry, source)
 
 

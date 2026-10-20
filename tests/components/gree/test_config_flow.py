@@ -701,15 +701,20 @@ async def test_pick_device_rejects_unoffered_identity(
     assert not hass.config_entries.async_entries(DOMAIN)
 
 
-async def test_selection_configured_before_submission(
-    hass: HomeAssistant, device: MagicMock
+@pytest.mark.parametrize("step", ["pick_device", "discovery_confirm"])
+async def test_candidate_configured_before_submission(
+    hass: HomeAssistant, device: MagicMock, step: str
 ) -> None:
-    """A candidate enrolled after the scan is not bound or replaced."""
+    """A candidate enrolled after the form appears is not bound or replaced."""
     data = device_info_to_data(device().device_info)
-    result = await start_selected_step(hass, "pick_device", data)
+    result = await start_selected_step(hass, step, data)
     entry = add_entry(hass, data)
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_DEVICE: normalize_identifier(data[CONF_IDENTIFIER])}
+        result["flow_id"],
+        {
+            "pick_device": {CONF_DEVICE: normalize_identifier(data[CONF_IDENTIFIER])},
+            "discovery_confirm": {},
+        }[step],
     )
     assert result["reason"] == "already_configured"
     assert hass.config_entries.async_entries(DOMAIN) == [entry]
@@ -732,6 +737,46 @@ async def test_known_entry_precedes_pending_flow_check(
         hass.config_entries.flow.async_progress_by_handler(DOMAIN)[0]["flow_id"]
         == pending["flow_id"]
     )
+    device().bind.assert_not_awaited()
+
+
+@pytest.mark.parametrize("step", ["pick_device", "discovery_confirm"])
+async def test_legacy_reservation_appears_before_submission(
+    hass: HomeAssistant,
+    device: MagicMock,
+    step: str,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Ownership acquired after offering a device blocks binding on submission."""
+    data = device_info_to_data(device().device_info)
+    result = await start_selected_step(hass, step, data)
+    legacy = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        unique_id="gree",
+        disabled_by=ConfigEntryDisabler.USER,
+    )
+    legacy.add_to_hass(hass)
+    entity = entity_registry.async_get_or_create(
+        "climate", DOMAIN, data[CONF_IDENTIFIER], config_entry=legacy
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "pick_device": {CONF_DEVICE: normalize_identifier(data[CONF_IDENTIFIER])},
+            "discovery_confirm": {},
+        }[step],
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert hass.config_entries.async_entries(DOMAIN) == [legacy]
+    assert (
+        entity_registry.async_get(entity.entity_id).config_entry_id == legacy.entry_id
+    )
+    assert legacy.version == 1
+    assert legacy.disabled_by is ConfigEntryDisabler.USER
     device().bind.assert_not_awaited()
 
 
