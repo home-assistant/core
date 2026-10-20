@@ -710,9 +710,11 @@ class EnergyCostSensor(RestoreSensor):
     @override
     def extra_restore_state_data(self) -> SensorExtraStoredData:
         """Return the data needed to price the energy used while stopped."""
-        # Only the save made while stopping holds the last priced reading.
-        # Periodic saves can be 15 minutes old after a crash, and a sensor
-        # removed by a config change must not price the time it was gone.
+        # Only the save made while stopping stores the last priced reading.
+        # Restore state is also saved every 15 minutes while running. After a
+        # crash, the last of those saves holds an older reading, and restoring
+        # it would price the energy used since then a second time. A sensor
+        # removed by a config change must not price the time it was gone either.
         if self._last_energy_sensor_state is None or not self.hass.is_stopping:
             return super().extra_restore_state_data
         return EnergyCostSensorExtraStoredData(
