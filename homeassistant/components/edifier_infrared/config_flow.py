@@ -19,8 +19,12 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_COMMAND_SET, CONF_INFRARED_ENTITY_ID, DOMAIN
-from .media_player import COMMAND_SET_COMMANDS
+from .const import (
+    CONF_COMMAND_SET,
+    CONF_INFRARED_ENTITY_ID,
+    DOMAIN,
+    SUPPORTED_COMMAND_SETS,
+)
 
 
 class EdifierIrConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -73,7 +77,7 @@ class EdifierIrConfigFlow(ConfigFlow, domain=DOMAIN):
                             options=[
                                 model.value
                                 for model in EdifierModel
-                                if MODEL_TO_COMMAND_SET[model] in COMMAND_SET_COMMANDS
+                                if MODEL_TO_COMMAND_SET[model] in SUPPORTED_COMMAND_SETS
                             ],
                             mode=SelectSelectorMode.DROPDOWN,
                         )
