@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, call, patch
 from daikin_onecta import ClimateControlClient
 from daikin_onecta.models import ManagementPoint
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
@@ -56,8 +57,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import DOMAIN
 from .test_climate_snapshots import _async_setup_fixture
-
-from tests.common import MockConfigEntry
 
 _ACTUAL_ASYNC_EXECUTE_CLIMATE_COMMAND = DaikinClimate._async_execute_climate_command
 

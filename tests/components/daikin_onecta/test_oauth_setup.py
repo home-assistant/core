@@ -6,6 +6,7 @@ from aiohttp import RequestInfo
 from daikin_onecta import OnectaAuthenticationError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from yarl import URL
 
 from homeassistant.components.daikin_onecta.const import DOMAIN
@@ -21,8 +22,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from .test_climate_snapshots import _async_setup_fixture
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize("status", [401, 403])

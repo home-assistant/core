@@ -11,14 +11,13 @@ from daikin_onecta import (
 )
 from daikin_onecta.rate_limit import RateLimit
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.daikin_onecta.coordinator import (
     OnectaDataUpdateCoordinator,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
 
 
 async def test_get_device_details_propagates_connection_error(

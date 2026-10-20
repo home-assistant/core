@@ -6,6 +6,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from daikin_onecta.models import GatewayDevice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.syrupy import HomeAssistantSnapshotExtension
 from syrupy.assertion import SnapshotAssertion
 from syrupy.extensions.single_file import SingleFileAmberSnapshotExtension
 from syrupy.location import PyTestLocation
@@ -20,9 +22,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import FAKE_ACCESS_TOKEN
-
-from tests.common import MockConfigEntry
-from tests.syrupy import HomeAssistantSnapshotExtension
 
 FIXTURE_PATH = Path(__file__).parent / "fixtures"
 CLIMATE_ENTITY_ID = "climate.test_office_room_temperature"

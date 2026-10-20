@@ -18,6 +18,7 @@ from daikin_onecta.models import Characteristic
 from daikin_onecta.rate_limit import RateLimit
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.daikin_onecta import coordinator as coordinator_module
 from homeassistant.components.daikin_onecta.const import DOMAIN
@@ -35,8 +36,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 EXPECTED_RATE_LIMIT_RETRY_AFTER = 3060
 EXPECTED_CONNECTION_ERROR = "network unavailable"
