@@ -29,9 +29,7 @@ from . import (
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_form(
-    hass: HomeAssistant, mock_farmad_client_config_flow: MagicMock
-) -> None:
+async def test_form(hass: HomeAssistant, mock_farmad_client: MagicMock) -> None:
     """Test a successful flow creates an entry that holds the token pair."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -52,7 +50,7 @@ async def test_form(
         CONF_REFRESH_TOKEN: API_REFRESH_TOKEN,
     }
     assert result["result"].unique_id == API_ACCOUNT_ID
-    client = mock_farmad_client_config_flow.return_value
+    client = mock_farmad_client.return_value
     client.async_login.assert_awaited_once()
     client.async_close.assert_awaited_once()
 
@@ -73,12 +71,12 @@ async def test_form(
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_errors(
     hass: HomeAssistant,
-    mock_farmad_client_config_flow: MagicMock,
+    mock_farmad_client: MagicMock,
     side_effect: Exception,
     error: str,
 ) -> None:
     """Test the form shows the login error and recovers on the next attempt."""
-    client = mock_farmad_client_config_flow.return_value
+    client = mock_farmad_client.return_value
     client.async_login.side_effect = side_effect
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -98,10 +96,10 @@ async def test_form_errors(
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_no_access_token(
-    hass: HomeAssistant, mock_farmad_client_config_flow: MagicMock
+    hass: HomeAssistant, mock_farmad_client: MagicMock
 ) -> None:
     """Test the form shows invalid_auth without an access token and then recovers."""
-    client = mock_farmad_client_config_flow.return_value
+    client = mock_farmad_client.return_value
     client.access_token = None
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -119,7 +117,7 @@ async def test_form_no_access_token(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.usefixtures("mock_setup_entry", "mock_farmad_client_config_flow")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_farmad_client")
 async def test_already_configured(hass: HomeAssistant) -> None:
     """Test the flow aborts when an entry is already configured."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id=API_ACCOUNT_ID)

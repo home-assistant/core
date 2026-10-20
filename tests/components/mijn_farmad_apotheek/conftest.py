@@ -10,21 +10,18 @@ from . import get_mock_client
 
 @pytest.fixture
 def mock_farmad_client() -> Generator[MagicMock]:
-    """Patch FarmadClient in the integration."""
-    with patch(
-        "homeassistant.components.mijn_farmad_apotheek.FarmadClient",
-        return_value=get_mock_client(),
-    ) as mock_client:
-        yield mock_client
-
-
-@pytest.fixture
-def mock_farmad_client_config_flow() -> Generator[MagicMock]:
-    """Patch FarmadClient in the config flow."""
-    with patch(
-        "homeassistant.components.mijn_farmad_apotheek.config_flow.FarmadClient",
-        return_value=get_mock_client(),
-    ) as mock_client:
+    """Patch FarmadClient in the integration and the config flow."""
+    client = get_mock_client()
+    with (
+        patch(
+            "homeassistant.components.mijn_farmad_apotheek.FarmadClient",
+            return_value=client,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.mijn_farmad_apotheek.config_flow.FarmadClient",
+            return_value=client,
+        ),
+    ):
         yield mock_client
 
 
