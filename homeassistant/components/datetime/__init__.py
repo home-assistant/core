@@ -9,7 +9,14 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import ATTR_DATETIME, DATA_COMPONENT, DOMAIN, SERVICE_SET_VALUE
+from .const import (
+    ATTR_DATETIME,
+    DATA_COMPONENT,
+    DOMAIN,
+    SERVICE_SET_VALUE,
+    DateTimeService,
+    DateTimeServiceArgument,
+)
 from .entity import DateTimeEntity, DateTimeEntityDescription
 from .services import async_setup_services
 
@@ -27,6 +34,8 @@ __all__ = [
     "SERVICE_SET_VALUE",
     "DateTimeEntity",
     "DateTimeEntityDescription",
+    "DateTimeService",
+    "DateTimeServiceArgument",
 ]
 
 
