@@ -7,6 +7,7 @@ from enum import StrEnum
 import logging
 import random
 from typing import Any, Self, TypedDict, override
+from uuid import UUID
 
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import ContextType, IssueType, Job, UpdateChannel
@@ -178,8 +179,6 @@ class PendingUpdate(TypedDict):
     from_version: str
     to_version: str
     started: str
-    # Supervisor's Core rollback issues from before; they are not about this one
-    known_rollbacks: list[str]
 
 
 class AutoUpdateHistoryEntry(TypedDict):
@@ -385,35 +384,39 @@ class AutoUpdateManager:
             self._unsub_settling()
             self._unsub_settling = None
 
-    async def _async_core_rollbacks(self) -> set[str]:
+    async def _async_core_rollbacks(self) -> list[UUID]:
         """Return Supervisor's issues about rolling Core back.
 
         Asked directly; hassio's own issue list can be empty after a failed
         refresh, or miss an issue whose suggestions could not be loaded.
         """
         info = await get_supervisor_client(self._hass).resolution.info()
-        return {
-            issue.uuid.hex
+        return [
+            issue.uuid
             for issue in info.issues
             if issue.type == IssueType.UPDATE_ROLLBACK
             and issue.context == ContextType.CORE
-        }
+        ]
 
-    async def _async_supervisor_rolled_back(
-        self, pending: PendingUpdate
-    ) -> bool | None:
-        """Return if Supervisor rolled this update back, or None if unknown.
+    async def _async_dismiss_core_rollbacks(self) -> None:
+        """Dismiss Supervisor's issues about earlier Core rollbacks.
 
-        The issue carries no version and stays until dismissed, so only one
-        that was not there before the update counts.
+        Supervisor keeps a single rollback issue for Core, without a version,
+        and does not raise it again while it is open. Dismissed before an
+        update, any rollback issue afterwards is about that update. Core does
+        not show this issue; our own repair takes its place.
         """
+        client = get_supervisor_client(self._hass)
+        for issue in await self._async_core_rollbacks():
+            await client.resolution.dismiss_issue(issue)
+
+    async def _async_supervisor_rolled_back(self) -> bool | None:
+        """Return if Supervisor rolled the update back, or None if unknown."""
         try:
-            rollbacks = await self._async_core_rollbacks()
+            return bool(await self._async_core_rollbacks())
         except SupervisorError as err:
             _LOGGER.debug("Could not ask Supervisor about a rollback: %s", err)
             return None
-
-        return bool(rollbacks - set(pending["known_rollbacks"]))
 
     async def _async_settle(self) -> None:
         """Find out how the update restored from the record went.
@@ -444,7 +447,7 @@ class AutoUpdateManager:
                 },
             )
         elif pending["from_version"] == HA_VERSION:
-            rolled_back = await self._async_supervisor_rolled_back(pending)
+            rolled_back = await self._async_supervisor_rolled_back()
             # Settled meanwhile, or Supervisor cannot tell yet
             if self._pending is not pending or rolled_back is None:
                 return
@@ -697,13 +700,14 @@ class AutoUpdateManager:
 
                 await backup_core_before_update(self._hass)
 
+            await self._async_dismiss_core_rollbacks()
+
             # Stored before asking Supervisor; Home Assistant restarts during
             # the update and finds out afterwards how it went
             self._pending = PendingUpdate(
                 from_version=HA_VERSION,
                 to_version=version,
                 started=dt_util.utcnow().isoformat(),
-                known_rollbacks=sorted(await self._async_core_rollbacks()),
             )
             await self._store.async_save(self._data_to_save())
 
@@ -748,7 +752,6 @@ class AutoUpdateManager:
                 from_version=HA_VERSION,
                 to_version=version,
                 started=dt_util.utcnow().isoformat(),
-                known_rollbacks=[],
             ),
             AutoUpdateResult.FAILED,
         )

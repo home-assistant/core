@@ -7,7 +7,7 @@ from datetime import UTC, datetime, time, timedelta
 import os
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import (
@@ -1052,7 +1052,7 @@ async def test_skipped_during_backup(
     supervisor_client.homeassistant.update.assert_not_called()
 
 
-def supervisor_rolled_back(resolution_info: AsyncMock) -> str:
+def supervisor_rolled_back(resolution_info: AsyncMock) -> UUID:
     """Let Supervisor report that it rolled back a Core update.
 
     Returns the ID of the issue Supervisor raises for it.
@@ -1068,14 +1068,13 @@ def supervisor_rolled_back(resolution_info: AsyncMock) -> str:
         resolution_info.return_value,
         issues=[*resolution_info.return_value.issues, issue],
     )
-    return issue.uuid.hex
+    return issue.uuid
 
 
 PENDING = {
     "from_version": "2026.10.1",
     "to_version": "2026.10.2",
     "started": "2026-10-22T10:30:00+00:00",
-    "known_rollbacks": [],
 }
 
 
@@ -1237,7 +1236,6 @@ async def test_pending_stored_before_update(
             "from_version": "2026.10.1",
             "to_version": "2026.10.2",
             "started": dt_util.utcnow().isoformat(),
-            "known_rollbacks": [],
         }
     ]
 
@@ -1687,66 +1685,6 @@ async def test_later_job_events_ignored_once_settled(
     assert hass_storage[STORAGE_KEY]["data"]["pending"]["to_version"] == "2026.10.3"
 
 
-async def test_earlier_rollback_does_not_count(
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-    resolution_info: AsyncMock,
-) -> None:
-    """Test a rollback issue from before the update does not count for it.
-
-    Supervisor's issue carries no version and stays until dismissed.
-    """
-    earlier = supervisor_rolled_back(resolution_info)
-
-    await _setup_after_update(
-        hass, hass_storage, "2026.10.1", {**PENDING, "known_rollbacks": [earlier]}
-    )
-    manager = hass.data[DATA_AUTO_UPDATE]
-
-    assert [entry["result"] for entry in manager.async_get_history()] == ["failed"]
-    assert not manager.async_is_skipped("2026.10.2")
-
-
-async def test_new_rollback_next_to_earlier_one(
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-    resolution_info: AsyncMock,
-) -> None:
-    """Test a new rollback issue counts, even with an earlier one still open."""
-    earlier = supervisor_rolled_back(resolution_info)
-    supervisor_rolled_back(resolution_info)
-
-    await _setup_after_update(
-        hass, hass_storage, "2026.10.1", {**PENDING, "known_rollbacks": [earlier]}
-    )
-    manager = hass.data[DATA_AUTO_UPDATE]
-
-    assert [entry["result"] for entry in manager.async_get_history()] == ["rolled_back"]
-    assert manager.async_is_skipped("2026.10.2")
-
-
-async def test_pending_remembers_earlier_rollbacks(
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-    freezer: FrozenDateTimeFactory,
-    supervisor_client: AsyncMock,
-    resolution_info: AsyncMock,
-) -> None:
-    """Test the rollback issues from before are stored with the update."""
-    earlier = supervisor_rolled_back(resolution_info)
-
-    await _setup_scheduled(
-        hass,
-        hass_storage,
-        freezer,
-        _local(22, 3, 30),
-        first_seen={"2026.10.2": _local(19, 2)},
-    )
-
-    assert _installed(supervisor_client) == ["2026.10.2"]
-    assert hass_storage[STORAGE_KEY]["data"]["pending"]["known_rollbacks"] == [earlier]
-
-
 async def test_settle_during_job_event(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -1807,3 +1745,60 @@ async def test_withdrawn_then_replacement_skipped(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     supervisor_client.homeassistant.update.assert_not_called()
+
+
+async def test_earlier_rollback_dismissed_before_update(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+    resolution_info: AsyncMock,
+) -> None:
+    """Test an earlier rollback issue is dismissed before the update is asked.
+
+    Supervisor keeps one rollback issue for Core and does not raise it again
+    while it is open, so it has to be gone to tell this update's outcome.
+    """
+    earlier = supervisor_rolled_back(resolution_info)
+    calls: list[str] = []
+    supervisor_client.resolution.dismiss_issue.side_effect = lambda issue: calls.append(
+        f"dismiss {issue}"
+    )
+    supervisor_client.homeassistant.update.side_effect = lambda options: calls.append(
+        f"update {options.version}"
+    )
+
+    await _setup_scheduled(
+        hass,
+        hass_storage,
+        freezer,
+        _local(22, 3, 30),
+        first_seen={"2026.10.2": _local(19, 2)},
+    )
+
+    assert calls == [f"dismiss {earlier}", "update 2026.10.2"]
+
+
+async def test_dismiss_fails(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    supervisor_client: AsyncMock,
+    resolution_info: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test nothing is asked when an earlier rollback issue cannot be dismissed."""
+    supervisor_rolled_back(resolution_info)
+    supervisor_client.resolution.dismiss_issue.side_effect = SupervisorError("Boom")
+
+    await _setup_scheduled(
+        hass,
+        hass_storage,
+        freezer,
+        _local(22, 3, 30),
+        first_seen={"2026.10.2": _local(19, 2)},
+    )
+
+    supervisor_client.homeassistant.update.assert_not_called()
+    assert issue_registry.async_get_issue(DOMAIN, "core_auto_update_failed")
+    assert hass_storage[STORAGE_KEY]["data"]["pending"] is None
