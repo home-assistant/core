@@ -29,7 +29,6 @@ from .const import (
     SUPPORTED_GEAR_DEVICE_TYPES,
     registry_identifier,
 )
-from .helpers import MASK_LEVEL
 
 if TYPE_CHECKING:
     from . import DaliConfigEntry
@@ -375,17 +374,4 @@ def _brightness_to_dali_level(
 def _response_value(response: object) -> int | None:
     """Return a numeric response value."""
     value = getattr(response, "value", None)
-    return value if isinstance(value, int) else None
-
-
-def _level_or_mask(response: object) -> int | None:
-    """Return a level response, keeping the gear's MASK answer as a level.
-
-    ``NumericResponseMask`` reports 255 as the string ``"MASK"``, which is a
-    real stored value meaning "keep the current level", not an unreadable one,
-    so it must not be discarded the way ``_response_value`` discards it.
-    """
-    value = getattr(response, "value", None)
-    if value == "MASK":
-        return MASK_LEVEL
     return value if isinstance(value, int) else None
