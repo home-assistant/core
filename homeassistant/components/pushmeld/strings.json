@@ -1,0 +1,38 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to PushMeld.",
+      "invalid_maxcode": "Enter a MaxCode.",
+      "invalid_name": "Enter a local service name.",
+      "name_exists": "This local service name is already in use."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "maxcode": "MaxCode",
+          "name": "Project name (Latin letters)"
+        },
+        "data_description": {
+          "maxcode": "The MaxCode from the PushMeld project that should receive notifications.",
+          "name": "The project name used for the Home Assistant notification service. Use a different name for each configured service."
+        },
+        "description": "Enter a MaxCode. No PushMeld account login or password is required.",
+        "title": "Add PushMeld"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to connect to PushMeld."
+    },
+    "request_failed": {
+      "message": "PushMeld returned HTTP status {status_code}."
+    },
+    "timeout": {
+      "message": "The request to PushMeld timed out."
+    }
+  }
+}

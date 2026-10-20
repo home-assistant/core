@@ -1,0 +1,119 @@
+# homeassistant/components/pushmeld/quality_scale.yaml
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: The integration does not register custom service actions.
+  appropriate-polling:
+    status: exempt
+    comment: The integration does not poll; it sends only when Home Assistant calls the notification service.
+  brands: done
+  common-modules:
+    status: exempt
+    comment: The integration has one small notification platform and no shared entity modules.
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: The integration does not register custom service actions.
+  docs-conditions:
+    status: exempt
+    comment: The integration does not provide conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: The integration does not provide triggers.
+  entity-event-setup:
+    status: exempt
+    comment: The integration does not create entities.
+  entity-unique-id:
+    status: exempt
+    comment: The integration does not create entities.
+  has-entity-name:
+    status: exempt
+    comment: The integration does not create entities.
+  runtime-data: done
+  test-before-configure:
+    status: exempt
+    comment: Configuring a MaxCode does not perform a separate setup-time API operation.
+  test-before-setup:
+    status: exempt
+    comment: Setup only registers the notification service; the API is called when a notification is sent.
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: The integration does not register custom service actions.
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: exempt
+    comment: The legacy notification service has no persistent entity availability state.
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: The integration reports request failures to the notification caller instead of polling for availability.
+  parallel-updates:
+    status: exempt
+    comment: The integration does not create entities or perform periodic updates.
+  reauthentication-flow: todo
+  test-coverage: done
+
+  # Gold
+  devices:
+    status: exempt
+    comment: PushMeld is a cloud notification service and does not expose devices.
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: The service cannot be discovered.
+  discovery:
+    status: exempt
+    comment: The service cannot be discovered.
+  docs-data-update:
+    status: exempt
+    comment: The integration does not perform background data updates.
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices:
+    status: exempt
+    comment: The integration is a notification service, not a device integration.
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: The integration does not create devices.
+  entity-category:
+    status: exempt
+    comment: The integration does not create entities.
+  entity-device-class:
+    status: exempt
+    comment: The integration does not create entities.
+  entity-disabled-by-default:
+    status: exempt
+    comment: The integration does not create entities.
+  entity-translations:
+    status: exempt
+    comment: The integration does not create entities.
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: The integration does not create entities.
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: The integration does not raise repairable issues.
+  stale-devices:
+    status: exempt
+    comment: The integration does not create devices.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo
