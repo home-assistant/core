@@ -46,6 +46,7 @@ def _handle_device_errors(
                 translation_domain=DOMAIN, translation_key="rate_limiting"
             ) from exc
         except MyPVAuthenticationError as exc:
+            self.config_entry.async_start_reauth(self.hass)
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="auth_error",
