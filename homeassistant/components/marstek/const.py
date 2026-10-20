@@ -24,6 +24,11 @@ SUPPORTED_DEVICE_TYPES: Final[frozenset[str]] = frozenset(
     }
 )
 
+# Only Venus A and Venus D have DC PV inputs; other models never report PV data.
+PV_DEVICE_TYPES: Final[frozenset[str]] = frozenset(
+    {"VNSA-0", "VNSD-0", "VenusA", "VenusD", "Venus A", "Venus D"}
+)
+
 PV_STATE_OPTIONS: Final = ("standby", "working")
 DEVICE_MODE_OPTIONS: Final = ("auto", "ai", "manual", "passive", "ups")
 BATTERY_STATUS_OPTIONS: Final = ("selling", "charging", "idle")

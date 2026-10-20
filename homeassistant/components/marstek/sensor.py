@@ -21,7 +21,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import BATTERY_STATUS_OPTIONS, DEVICE_MODE_OPTIONS, PV_STATE_OPTIONS
+from .const import (
+    BATTERY_STATUS_OPTIONS,
+    DEVICE_MODE_OPTIONS,
+    PV_DEVICE_TYPES,
+    PV_STATE_OPTIONS,
+)
 from .coordinator import MarstekConfigEntry
 from .entity import MarstekEntity
 
@@ -31,6 +36,8 @@ _LOGGER = logging.getLogger(__name__)
 @dataclass(frozen=True, kw_only=True)
 class MarstekSensorEntityDescription(SensorEntityDescription):
     """Describe a Marstek sensor entity."""
+
+    requires_pv: bool = False
 
 
 def _pv_input_sensor_descriptions() -> tuple[MarstekSensorEntityDescription, ...]:
@@ -71,6 +78,7 @@ def _pv_input_sensor_descriptions() -> tuple[MarstekSensorEntityDescription, ...
                         SensorStateClass.MEASUREMENT if metric != "state" else None
                     ),
                     options=list(PV_STATE_OPTIONS) if metric == "state" else None,
+                    requires_pv=True,
                 )
             )
     return tuple(descriptions)
@@ -97,6 +105,7 @@ SENSOR_DESCRIPTIONS: tuple[MarstekSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        requires_pv=True,
     ),
     MarstekSensorEntityDescription(
         key="device_mode",
@@ -124,8 +133,11 @@ async def async_setup_entry(
     device_ip = coordinator.device_ip
     _LOGGER.debug("Setting up Marstek sensors: %s", device_ip)
 
-    sensors = [
-        MarstekSensor(coordinator, description) for description in SENSOR_DESCRIPTIONS
+    has_pv = coordinator.device_info.device_type in PV_DEVICE_TYPES
+    sensors: list[SensorEntity] = [
+        MarstekSensor(coordinator, description)
+        for description in SENSOR_DESCRIPTIONS
+        if has_pv or not description.requires_pv
     ]
 
     _LOGGER.debug("Device %s sensors set up, total %d", device_ip, len(sensors))

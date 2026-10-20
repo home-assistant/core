@@ -13,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN, SUPPORTED_DEVICE_TYPES
+from .const import DOMAIN, PV_DEVICE_TYPES, SUPPORTED_DEVICE_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,6 +91,7 @@ class MarstekDataUpdateCoordinator(DataUpdateCoordinator[MarstekDeviceStatus]):
             current_data = await self.udp_client.get_device_status(
                 self.device_ip,
                 previous_data=current_data,
+                include_pv=self.device_info.device_type in PV_DEVICE_TYPES,
             )
         except (TimeoutError, OSError, TypeError) as err:
             raise UpdateFailed(
