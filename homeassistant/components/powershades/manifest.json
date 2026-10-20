@@ -1,6 +1,7 @@
 {
   "domain": "powershades",
   "name": "PowerShades Blinds",
+  "categories": ["blinds_curtains"],
   "codeowners": ["@vemboy200"],
   "config_flow": true,
   "dependencies": ["network"],
