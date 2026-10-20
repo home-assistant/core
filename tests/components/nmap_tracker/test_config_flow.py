@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.device_tracker import (
@@ -22,8 +23,6 @@ from homeassistant.components.nmap_tracker.const import (
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {
     CONF_HOSTS_LIST: ["3.3.3.3"],

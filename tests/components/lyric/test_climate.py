@@ -8,6 +8,11 @@ from unittest.mock import ANY, MagicMock, call, patch
 from aiolyric.exceptions import LyricException
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -34,8 +39,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 LCC_ENTITY_ID = "climate.hallway_thermostat"
 LCC_MAC_ID = "AABBCC000011"
@@ -132,7 +135,7 @@ async def test_set_temperature(
         pytest.param(
             TCC_ENTITY_ID,
             TCC_MAC_ID,
-            {"heat_setpoint": 68, "cool_setpoint": 77, "mode": HVACMode.HEAT},
+            {"heat_setpoint": 68, "cool_setpoint": 77, "mode": "Heat"},
             id="tcc",
         ),
     ],
@@ -268,8 +271,8 @@ async def test_set_hvac_mode_tcc_heat_cool_from_off(
 
     mock_sleep.assert_awaited_once_with(3)
     assert mock_lyric.update_thermostat.await_args_list == [
-        call(ANY, ANY, mode=HVACMode.HEAT, auto_changeover_active=False),
-        call(ANY, ANY, mode=HVACMode.HEAT, auto_changeover_active=True),
+        call(ANY, ANY, mode="Heat", auto_changeover_active=False),
+        call(ANY, ANY, mode="Heat", auto_changeover_active=True),
     ]
 
 

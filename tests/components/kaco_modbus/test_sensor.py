@@ -7,6 +7,11 @@ from kaco_modbus.testing import BLUEPLANET_86TL3, BLUEPLANET_86TL3_ASLEEP
 from modbus_connection import ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.kaco_modbus.const import DOMAIN
@@ -19,8 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import MOCK_SERIAL, model_registers
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 def _entity_id(entity_registry: er.EntityRegistry, key: str) -> str:

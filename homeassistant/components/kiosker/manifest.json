@@ -1,6 +1,7 @@
 {
   "domain": "kiosker",
   "name": "Kiosker",
+  "categories": ["presence_location.phones_companion_apps"],
   "codeowners": ["@Claeysson"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/kiosker",

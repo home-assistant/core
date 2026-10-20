@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pizone
 from pizone import ControllerEndpoint
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.izone import config_flow, discovery as izone_discovery
@@ -27,8 +28,6 @@ from .conftest import (
     endpoint_from_controller,
     patch_discovered_controllers,
 )
-
-from tests.common import MockConfigEntry
 
 
 def _make_homekit_info(md: str, host: str | None = None) -> SimpleNamespace:
