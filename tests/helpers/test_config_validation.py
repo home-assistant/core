@@ -355,7 +355,7 @@ def test_icon() -> None:
     """Test icon validation."""
     schema = probatio.Schema(cv.icon)
 
-    for value in (False, "work"):
+    for value in (False, "work", "mdi:work\n", " mdi:work", "mdi:wo rk", "mdi:\twork"):
         with pytest.raises(probatio.MultipleInvalid):
             schema(value)
 
@@ -660,6 +660,8 @@ def test_x10_address() -> None:
         schema("q55")
     with pytest.raises(probatio.Invalid):
         schema("garbage_addr")
+    with pytest.raises(probatio.Invalid):
+        schema("a1\n")
 
     schema("a1")
     schema("C11")
