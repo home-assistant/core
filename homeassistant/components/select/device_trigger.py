@@ -7,7 +7,6 @@ from homeassistant.components.device_automation import (
     async_get_entity_registry_entry_or_raise,
 )
 from homeassistant.components.homeassistant.triggers.state import (
-    CONF_FOR,
     CONF_FROM,
     CONF_TO,
     async_attach_trigger as async_attach_state_trigger,
@@ -17,6 +16,7 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
+    CONF_FOR,
     CONF_PLATFORM,
     CONF_TYPE,
 )

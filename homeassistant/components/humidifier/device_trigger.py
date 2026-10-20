@@ -9,6 +9,9 @@ from homeassistant.components.device_automation import (
 from homeassistant.components.homeassistant.triggers import (
     numeric_state as numeric_state_trigger,
 )
+from homeassistant.components.homeassistant.triggers.numeric_state import (
+    NumericStateTriggerArgument,
+)
 from homeassistant.const import (
     CONF_ABOVE,
     CONF_BELOW,
@@ -124,19 +127,19 @@ async def async_attach_trigger(
         "current_humidity_changed",
         "target_humidity_changed",
     }:
-        numeric_state_config = {
-            numeric_state_trigger.CONF_PLATFORM: "numeric_state",
-            numeric_state_trigger.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-            numeric_state_trigger.CONF_VALUE_TEMPLATE: (
+        numeric_state_config: ConfigType = {
+            NumericStateTriggerArgument.PLATFORM: "numeric_state",
+            NumericStateTriggerArgument.ENTITY_ID: config[CONF_ENTITY_ID],
+            NumericStateTriggerArgument.VALUE_TEMPLATE: (
                 "{{ state.attributes.humidity }}"
             ),
         }
         if trigger_type == "target_humidity_changed":
-            numeric_state_config[numeric_state_trigger.CONF_VALUE_TEMPLATE] = (
+            numeric_state_config[NumericStateTriggerArgument.VALUE_TEMPLATE] = (
                 "{{ state.attributes.humidity }}"
             )
         else:  # trigger_type == "current_humidity_changed"
-            numeric_state_config[numeric_state_trigger.CONF_VALUE_TEMPLATE] = (
+            numeric_state_config[NumericStateTriggerArgument.VALUE_TEMPLATE] = (
                 "{{ state.attributes.current_humidity }}"
             )
 

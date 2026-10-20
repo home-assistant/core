@@ -1,12 +1,14 @@
 """Offer event listening automation rules."""
 
 from collections.abc import ItemsView, Mapping
+from enum import StrEnum
 import logging
 from typing import Any
 
 import probatio
 
-from homeassistant.const import (
+# Kept for custom integrations, to be deprecated in favour of EventTriggerArgument
+from homeassistant.const import (  # noqa: F401
     CONF_DEVICE_ID,
     CONF_EVENT_DATA,
     CONF_PLATFORM,
@@ -29,6 +31,15 @@ CONF_EVENT_TYPE = "event_type"
 CONF_EVENT_CONTEXT = "context"
 
 
+class EventTriggerArgument(StrEnum):
+    """Store keys for event trigger arguments."""
+
+    CONTEXT = "context"
+    EVENT_DATA = "event_data"
+    EVENT_TYPE = "event_type"
+    PLATFORM = "platform"
+
+
 def _validate_event_types(value: Any) -> Any:
     """Validate the event types.
 
@@ -44,12 +55,16 @@ def _validate_event_types(value: Any) -> Any:
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
-        probatio.Required(CONF_PLATFORM): "event",
-        probatio.Required(CONF_EVENT_TYPE): probatio.All(
+        probatio.Required(EventTriggerArgument.PLATFORM): "event",
+        probatio.Required(EventTriggerArgument.EVENT_TYPE): probatio.All(
             probatio.EnsureList(), [cv.template], _validate_event_types
         ),
-        probatio.Optional(CONF_EVENT_DATA): probatio.All(dict, cv.template_complex),
-        probatio.Optional(CONF_EVENT_CONTEXT): probatio.All(dict, cv.template_complex),
+        probatio.Optional(EventTriggerArgument.EVENT_DATA): probatio.All(
+            dict, cv.template_complex
+        ),
+        probatio.Optional(EventTriggerArgument.CONTEXT): probatio.All(
+            dict, cv.template_complex
+        ),
     }
 )
 
@@ -65,9 +80,12 @@ async def async_validate_trigger_config(
     """
     validated_config: ConfigType = TRIGGER_SCHEMA(config)
     if (
-        CONF_EVENT_DATA in validated_config
+        EventTriggerArgument.EVENT_DATA in validated_config
         and isinstance(
-            device_id := validated_config[CONF_EVENT_DATA].get(CONF_DEVICE_ID), str
+            device_id := validated_config[EventTriggerArgument.EVENT_DATA].get(
+                CONF_DEVICE_ID
+            ),
+            str,
         )
         and (
             split_devices := dr.async_get(
@@ -126,7 +144,7 @@ async def async_attach_trigger(
     variables = trigger_info["variables"]
 
     event_types = template.render_complex(
-        config[CONF_EVENT_TYPE], variables, limited=True
+        config[EventTriggerArgument.EVENT_TYPE], variables, limited=True
     )
     if EVENT_STATE_REPORTED in event_types:
         raise HomeAssistantError(
@@ -134,11 +152,13 @@ async def async_attach_trigger(
         )
     event_data_schema: probatio.Schema | None = None
     event_data_items: ItemsView | None = None
-    if CONF_EVENT_DATA in config:
+    if EventTriggerArgument.EVENT_DATA in config:
         # Render the schema input
         event_data = {}
         event_data.update(
-            template.render_complex(config[CONF_EVENT_DATA], variables, limited=True)
+            template.render_complex(
+                config[EventTriggerArgument.EVENT_DATA], variables, limited=True
+            )
         )
 
         # For performance reasons, we want to avoid using a probatio schema here
@@ -159,11 +179,13 @@ async def async_attach_trigger(
 
     event_context_schema: probatio.Schema | None = None
     event_context_items: ItemsView | None = None
-    if CONF_EVENT_CONTEXT in config:
+    if EventTriggerArgument.CONTEXT in config:
         # Render the schema input
         event_context = {}
         event_context.update(
-            template.render_complex(config[CONF_EVENT_CONTEXT], variables, limited=True)
+            template.render_complex(
+                config[EventTriggerArgument.CONTEXT], variables, limited=True
+            )
         )
         # Build the schema or a an items view if the schema is simple
         # and does not contain lists. Lists are a special case to support

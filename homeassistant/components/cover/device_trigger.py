@@ -7,6 +7,7 @@ from homeassistant.components.homeassistant.triggers import (
     numeric_state as numeric_state_trigger,
     state as state_trigger,
 )
+from homeassistant.components.homeassistant.triggers.state import StateTriggerArgument
 from homeassistant.const import (
     CONF_ABOVE,
     CONF_BELOW,
@@ -163,7 +164,7 @@ async def async_attach_trigger(
         state_config = {
             CONF_PLATFORM: "state",
             CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-            state_trigger.CONF_TO: to_state,
+            StateTriggerArgument.TO: to_state,
         }
         if CONF_FOR in config:
             state_config[CONF_FOR] = config[CONF_FOR]
