@@ -34,6 +34,7 @@ from homeassistant.components.matter.cover import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .common import (
@@ -1973,3 +1974,41 @@ async def test_closure_cover_unload_does_not_double_unsubscribe(
     # exception raised while removing an entity, so the double-unsubscribe
     # surfaces only as this error, not as a propagated exception.
     assert "Error while removing entity" not in caplog.text
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_closure_venetian_blinds"])
+async def test_closure_cover_set_position_without_panel_raises(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test setting position raises when its panel can no longer be resolved.
+
+    `_refresh_closure_panel_subscriptions` only subscribes to FeatureMap,
+    CurrentState and TargetState, never a panel's TagList. If a panel's role
+    tag changes, `supported_features` (last computed from the panels seen at
+    that time) stays stale and still advertises SET_POSITION, while
+    `_closure_panels` - resolved fresh from the current TagList on every
+    call - no longer finds a POSITION role. The service call must surface
+    this as an error, not silently no-op.
+    """
+    entity_id = hass.states.async_all(Platform.COVER)[0].entity_id
+
+    # Retag the Lift panel (endpoint 2) away from the Closure Panel "Lift"
+    # role, without notifying any subscription (TagList isn't watched), so
+    # supported_features stays stale while live panel resolution changes.
+    set_node_attribute(
+        matter_node,
+        2,
+        clusters.Descriptor.id,
+        clusters.Descriptor.Attributes.TagList.attribute_id,
+        [{"0": None, "1": NAMESPACE_CLOSURE_PANEL, "2": 99, "3": "Unknown"}],
+    )
+
+    with pytest.raises(HomeAssistantError, match="No position panel found"):
+        await hass.services.async_call(
+            "cover",
+            "set_cover_position",
+            {"entity_id": entity_id, "position": 30},
+            blocking=True,
+        )

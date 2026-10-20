@@ -21,6 +21,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import LOGGER
@@ -647,8 +648,7 @@ class MatterClosure(MatterEntity, CoverEntity):
         """Set the cover's position, via its primary ClosurePanel child endpoint."""
         panel = self._closure_panels.get(ClosurePanelRole.POSITION)
         if not panel:
-            LOGGER.error("Position panel not found in closure panels")
-            return
+            raise HomeAssistantError(f"No position panel found for {self.entity_id}")
         await self._set_panel_target(panel, kwargs[ATTR_POSITION])
 
     @override
@@ -656,8 +656,7 @@ class MatterClosure(MatterEntity, CoverEntity):
         """Set the cover's Tilt position, via its ClosurePanel child endpoint."""
         panel = self._closure_panels.get(ClosurePanelRole.TILT)
         if not panel:
-            LOGGER.error("Tilt panel not found in closure panels")
-            return
+            raise HomeAssistantError(f"No tilt panel found for {self.entity_id}")
         await self._set_panel_target(panel, kwargs[ATTR_TILT_POSITION])
 
     async def _set_panel_target(self, panel: MatterEndpoint, position: int) -> None:
@@ -705,32 +704,16 @@ class MatterClosure(MatterEntity, CoverEntity):
         position = _extract_struct_field(overall_current_state, 0, "position")
         target_position = _extract_struct_field(overall_target_state, 0, "position")
 
+        # chip's MatterIntEnum maps an unrecognized value to kUnknownEnumValue
+        # via _missing_ instead of raising, so these constructions never fail.
         if isinstance(position, int):
-            try:
-                position = clusters.ClosureControl.Enums.CurrentPositionEnum(position)
-            except ValueError:
-                LOGGER.warning("Invalid CurrentPositionEnum value: %s", position)
-                position = (
-                    clusters.ClosureControl.Enums.CurrentPositionEnum.kUnknownEnumValue
-                )
+            position = clusters.ClosureControl.Enums.CurrentPositionEnum(position)
         if isinstance(target_position, int):
-            try:
-                target_position = clusters.ClosureControl.Enums.TargetPositionEnum(
-                    target_position
-                )
-            except ValueError:
-                LOGGER.warning("Invalid TargetPositionEnum value: %s", target_position)
-                target_position = (
-                    clusters.ClosureControl.Enums.TargetPositionEnum.kUnknownEnumValue
-                )
+            target_position = clusters.ClosureControl.Enums.TargetPositionEnum(
+                target_position
+            )
         if isinstance(main_state, int):
-            try:
-                main_state = clusters.ClosureControl.Enums.MainStateEnum(main_state)
-            except ValueError:
-                LOGGER.warning("Invalid MainStateEnum value: %s", main_state)
-                main_state = (
-                    clusters.ClosureControl.Enums.MainStateEnum.kUnknownEnumValue
-                )
+            main_state = clusters.ClosureControl.Enums.MainStateEnum(main_state)
 
         if (
             position is None
