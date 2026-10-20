@@ -111,7 +111,11 @@ class DaliCoordinator(DataUpdateCoordinator[dict[int, DaliGearData]]):
                 data[address] = replace(gear, level=optimistic_level)
             else:
                 data[address] = gear
-            self.async_set_updated_data(data)
+            # Publish without async_set_updated_data so frequent commands to one
+            # gear cannot keep rescheduling the periodic scan and starve the
+            # discovery of other gear.
+            self.data = data
+            self.async_update_listeners()
 
     async def _query_gear(self, address: int) -> DaliGearData | None:
         """Return a gear's state and metadata, or None when absent.
