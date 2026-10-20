@@ -51,6 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 "config_variable": "allowlist_external_dirs",
             },
             learn_more_url="https://www.home-assistant.io/docs/configuration/basic/#allowlist_external_dirs",
+            config_entry_id=entry.entry_id,
         )
         raise ConfigEntryError(
             translation_domain=DOMAIN,

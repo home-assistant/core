@@ -11,6 +11,7 @@
       "local_name": "MyCO2*"
     }
   ],
+  "categories": ["sensors.air_quality", "sensors.temperature_humidity"],
   "codeowners": ["@akx"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],

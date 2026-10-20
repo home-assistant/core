@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import ANY, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant import config_entries
 from homeassistant.components import cast
@@ -11,8 +12,6 @@ from homeassistant.components.cast import DOMAIN
 from homeassistant.components.cast.home_assistant_cast import CAST_USER_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 def _get_schema_suggested_values(data_schema, keys: list[str]) -> dict[str, Any]:

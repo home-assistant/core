@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from soco.exceptions import NotSupportedException
 
 from homeassistant.components.sensor import SCAN_INTERVAL
@@ -30,8 +31,6 @@ from homeassistant.helpers import entity_registry as er, translation
 from homeassistant.util import dt as dt_util
 
 from .conftest import MockSoCo, SonosMockEvent
-
-from tests.common import async_fire_time_changed
 
 
 async def test_entity_registry_unsupported(

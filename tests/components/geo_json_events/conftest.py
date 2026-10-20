@@ -4,11 +4,10 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.geo_json_events.const import DOMAIN
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS, CONF_URL
-
-from tests.common import MockConfigEntry
 
 URL = "http://geo.json.local/geo_json_events.json"
 

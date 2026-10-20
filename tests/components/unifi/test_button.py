@@ -8,6 +8,12 @@ from unittest.mock import patch
 import aiounifi
 from aiounifi.models.message import MessageKey
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
@@ -30,9 +36,6 @@ from .conftest import (
     WebsocketMessageMock,
     WebsocketStateManager,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 RANDOM_TOKEN = "random_token"
 

@@ -94,12 +94,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> Non
     )
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.entry_id)},
-        manufacturer="Satel",
-        model=panel_info.model.name if panel_info and panel_info.model else None,
-        sw_version=str(panel_info.firmware) if panel_info else None,
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+            manufacturer="Satel",
+            model=panel_info.model.name if panel_info and panel_info.model else None,
+            sw_version=str(panel_info.firmware) if panel_info else None,
+        ),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

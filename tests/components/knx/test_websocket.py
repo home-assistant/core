@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from knx_telegram_store import KnxTelegramStoreException
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.knx.const import (
@@ -23,8 +24,6 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from .conftest import KNXTestKit
-
-from tests.typing import WebSocketGenerator
 
 
 async def test_knx_get_base_data_command(

@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import override
 
-from airgradient import AirGradientClient, Config, GpsMode
+from airgradient import AirGradientClient, AltitudeUnit, Config, GpsMode
 from airgradient.models import ConfigurationControl, LedBarMode, TemperatureUnit
 
 from homeassistant.components.select import (
@@ -18,7 +18,13 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AirGradientConfigEntry
-from .const import DOMAIN, PM_STANDARD, PM_STANDARD_REVERSE, supports_config
+from .const import (
+    ALTITUDE_UNIT,
+    DOMAIN,
+    PM_STANDARD,
+    PM_STANDARD_REVERSE,
+    supports_config,
+)
 from .coordinator import AirGradientCoordinator
 from .entity import AirGradientEntity, exception_handler
 
@@ -161,6 +167,17 @@ CONTROL_ENTITIES: tuple[AirGradientSelectEntityDescription, ...] = (
 )
 
 GO_SELECT_ENTITIES: tuple[AirGradientSelectEntityDescription, ...] = (
+    AirGradientSelectEntityDescription(
+        key=ALTITUDE_UNIT,
+        translation_key="altitude_unit",
+        options=[unit.value for unit in AltitudeUnit],
+        entity_category=EntityCategory.CONFIG,
+        config_key=ALTITUDE_UNIT,
+        value_fn=lambda config: config.altitude_unit,
+        set_value_fn=lambda client, value: client.set_altitude_unit(
+            AltitudeUnit(value)
+        ),
+    ),
     AirGradientSelectEntityDescription(
         key="gps_mode",
         translation_key="gps_mode",

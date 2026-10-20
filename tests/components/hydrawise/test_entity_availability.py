@@ -9,14 +9,13 @@ from freezegun.api import FrozenDateTimeFactory
 from pydrawise import APIError
 from pydrawise.schema import Controller
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.hydrawise.const import WATER_USE_SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 _SPECIAL_ENTITIES = {"binary_sensor.home_controller_connectivity": STATE_OFF}
 

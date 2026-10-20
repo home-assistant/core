@@ -7,11 +7,10 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockModule
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import importlib
-
-from tests.common import MockModule
 
 
 async def test_async_import_module(hass: HomeAssistant) -> None:

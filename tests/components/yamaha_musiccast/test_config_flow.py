@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from aiomusiccast import MusicCastConnectionException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.yamaha_musiccast.const import DOMAIN
@@ -18,8 +19,6 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_SERIAL,
     SsdpServiceInfo,
 )
-
-from tests.common import MockConfigEntry
 
 
 @contextmanager

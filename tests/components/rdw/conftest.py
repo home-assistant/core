@@ -4,12 +4,11 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 from vehicle import Vehicle
 
 from homeassistant.components.rdw.const import CONF_LICENSE_PLATE, DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture

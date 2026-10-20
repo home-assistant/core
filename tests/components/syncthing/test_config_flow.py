@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from aiosyncthing.exceptions import UnauthorizedError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.syncthing.const import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_ENTRY, SERVER_ID, TOKEN, URL, VERIFY_SSL
-
-from tests.common import MockConfigEntry
 
 
 async def test_show_setup_form(hass: HomeAssistant) -> None:

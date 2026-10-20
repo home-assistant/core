@@ -44,21 +44,23 @@ async def async_setup_devices(bridge: HueBridge):
         """Register a Hue device in device registry."""
         if isinstance(hue_resource, (Room, Zone, ServiceGroup)):
             # Register a Hue Room/Zone as service in HA device registry.
-            return dev_reg.async_get_or_create(
+            return dev_reg.async_get_or_create_device(
                 config_entry_id=entry.entry_id,
-                entry_type=dr.DeviceEntryType.SERVICE,
-                identifiers={(DOMAIN, hue_resource.id)},
-                name=hue_resource.metadata.name,
-                model=hue_resource.type.value.replace("_", " ").title(),
-                manufacturer=api.config.bridge_device.product_data.manufacturer_name,
-                via_device_id=dr.async_get_device_id_by_identifier(
-                    hass,
-                    (DOMAIN, api.config.bridge_device.id),
-                    config_entry_id=entry.entry_id,
+                device_info=dr.DeviceInfo(
+                    entry_type=dr.DeviceEntryType.SERVICE,
+                    identifiers={(DOMAIN, hue_resource.id)},
+                    name=hue_resource.metadata.name,
+                    model=hue_resource.type.value.replace("_", " ").title(),
+                    manufacturer=api.config.bridge_device.product_data.manufacturer_name,
+                    via_device_id=dr.async_get_device_id_by_identifier(
+                        hass,
+                        (DOMAIN, api.config.bridge_device.id),
+                        config_entry_id=entry.entry_id,
+                    ),
+                    suggested_area=hue_resource.metadata.name
+                    if hue_resource.type == ResourceTypes.ROOM
+                    else None,
                 ),
-                suggested_area=hue_resource.metadata.name
-                if hue_resource.type == ResourceTypes.ROOM
-                else None,
             )
         # Register a Hue device resource as device in HA device registry.
         params = {

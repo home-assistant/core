@@ -4,6 +4,8 @@ from unittest.mock import Mock, call, patch
 
 from pyfritzhome import LoginError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from requests.exceptions import ConnectionError as RequestConnectionError
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -27,9 +29,6 @@ from homeassistant.setup import async_setup_component
 
 from . import FritzDeviceSwitchMock, setup_config_entry
 from .const import CONF_FAKE_AIN, CONF_FAKE_NAME, MOCK_CONFIG
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
