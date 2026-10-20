@@ -352,24 +352,27 @@ async def test_info_coordinator_removes_stale_line_and_reload_survives_orphaned_
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a removed line is cleaned up and orphaned lights do not break reload."""
+    line_id = 1
+    device_id = 6
+
     await setup_integration(hass, mock_config_entry)
 
     unique_id = mock_config_entry.unique_id
     assert unique_id is not None
 
-    mock_lunatone_info.data.lines.pop("1")
+    mock_lunatone_info.data.lines.pop(str(line_id))
 
     freezer.tick(DEFAULT_INFO_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     device_entry = device_registry.async_get_device_by_identifier(
-        (DOMAIN, f"{unique_id}-line1"), mock_config_entry.entry_id
+        (DOMAIN, f"{unique_id}-line{line_id}"), mock_config_entry.entry_id
     )
     assert device_entry is None
 
     orphaned_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, f"{unique_id}-device6"), mock_config_entry.entry_id
+        (DOMAIN, f"{unique_id}-device{device_id}"), mock_config_entry.entry_id
     )
     assert orphaned_device is not None
     assert orphaned_device.via_device_id is None
@@ -380,7 +383,7 @@ async def test_info_coordinator_removes_stale_line_and_reload_survives_orphaned_
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     orphaned_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, f"{unique_id}-device6"), mock_config_entry.entry_id
+        (DOMAIN, f"{unique_id}-device{device_id}"), mock_config_entry.entry_id
     )
     assert orphaned_device is not None
     assert orphaned_device.via_device_id is None
@@ -402,9 +405,7 @@ async def test_devices_coordinator_removes_stale_device(
     unique_id = mock_config_entry.unique_id
     assert unique_id is not None
 
-    mock_lunatone_devices.data.devices = [
-        device for device in mock_lunatone_devices.data.devices if device.id != 6
-    ]
+    mock_lunatone_devices.data.devices.pop()
 
     freezer.tick(DEFAULT_DEVICES_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
@@ -427,21 +428,22 @@ async def test_sensors_coordinator_removes_stale_device(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the sensors coordinator removes stale devices."""
+    line_id = 0
+    dali_address = 0
+
     await setup_integration(hass, mock_config_entry)
 
     unique_id = mock_config_entry.unique_id
     assert unique_id is not None
 
-    mock_lunatone_sensors.data.sensors = [
-        sensor for sensor in mock_lunatone_sensors.data.sensors if sensor.id != 3
-    ]
+    mock_lunatone_sensors.data.sensors.pop()
 
     freezer.tick(DEFAULT_SENSORS_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     device_entry = device_registry.async_get_device_by_identifier(
-        (DOMAIN, f"{unique_id}-line0-d24-address0"),
+        (DOMAIN, f"{unique_id}-line{line_id}-d24-address{dali_address}"),
         mock_config_entry.entry_id,
     )
     assert device_entry is None
