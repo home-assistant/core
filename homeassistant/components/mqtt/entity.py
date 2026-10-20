@@ -863,9 +863,9 @@ async def async_remove_entity_discovery_payload(
         is not None
     ):
         # The device may have no entities left to clear the topic when it is removed
-        hass.data[DATA_MQTT].retained_device_discovery_topics.setdefault(
-            discovered_device_id, set()
-        ).add(discovery_data[ATTR_DISCOVERY_TOPIC])
+        hass.data[DATA_MQTT].retained_device_discovery_topics[
+            discovery_data[ATTR_DISCOVERY_TOPIC]
+        ] = discovered_device_id
         application: str = discovery_payload[CONF_ORIGIN][CONF_NAME]
         _LOGGER.warning(
             "Although entity %s was removed from Home Assistant, it will be added "
@@ -1195,6 +1195,7 @@ class MqttDiscoveryUpdateMixin(Entity):
         self.hass.data[DATA_MQTT].discovery_discovered_and_disabled.pop(
             discovery_hash, None
         )
+        self._async_forget_retained_discovery_topic()
         self._remove_discovery_updated = async_dispatcher_connect(
             self.hass,
             MQTT_DISCOVERY_UPDATED.format(*discovery_hash),
@@ -1228,8 +1229,22 @@ class MqttDiscoveryUpdateMixin(Entity):
         """Process discovery update."""
         try:
             await discovery_update(payload)
+            self._async_forget_retained_discovery_topic()
         finally:
             send_discovery_done(self.hass, discovery_data)
+
+    @callback
+    def _async_forget_retained_discovery_topic(self) -> None:
+        """Forget the device of a kept device discovery topic.
+
+        The entities of the topic clear it again when their device is removed,
+        while the kept device may no longer be the device of the topic.
+        """
+        if TYPE_CHECKING:
+            assert self._discovery_data
+        self.hass.data[DATA_MQTT].retained_device_discovery_topics.pop(
+            self._discovery_data[ATTR_DISCOVERY_TOPIC], None
+        )
 
     async def _async_process_discovery_update_and_remove(self) -> None:
         """Process discovery update and remove entity."""

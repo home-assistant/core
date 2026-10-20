@@ -509,9 +509,13 @@ async def async_remove_config_entry_device(
 
     await device_automation.async_removed_from_device(hass, device_entry.id)
     # Clear device discovery topics that no entity of the device clears anymore
-    for discovery_topic in hass.data[DATA_MQTT].retained_device_discovery_topics.pop(
-        device_entry.id, set()
-    ):
+    retained_topics = hass.data[DATA_MQTT].retained_device_discovery_topics
+    for discovery_topic in [
+        topic
+        for topic, device_id in retained_topics.items()
+        if device_id == device_entry.id
+    ]:
+        del retained_topics[discovery_topic]
         await async_publish(hass, discovery_topic, None, retain=True)
     return True
 
