@@ -208,17 +208,25 @@ class AuthManagerFlowManager(
             # Only a flood from many sources gets here. Evicting at most one
             # flow per interval, from the source with the most, lets new logins
             # in without pushing out the ones in progress.
-            evictable_by_source: dict[
+            flows_by_source: dict[
                 IPv4Address | IPv6Network | None, list[FlowHandler[Any, Any, Any]]
             ] = {}
-            for flow in filter(_async_login_flow_evictable, self._progress.values()):
-                evictable_by_source.setdefault(
+            for flow in self._progress.values():
+                flows_by_source.setdefault(
                     _async_login_flow_source(flow.context), []
                 ).append(flow)
-            largest = max(evictable_by_source.values(), key=len, default=None)
-            if largest is None or now < self._next_eviction:
+            # Flows waiting for MFA count toward their source but stay.
+            evictable = next(
+                (
+                    flow
+                    for flows in sorted(flows_by_source.values(), key=len, reverse=True)
+                    for flow in flows
+                    if _async_login_flow_evictable(flow)
+                ),
+                None,
+            )
+            if evictable is None or now < self._next_eviction:
                 raise TooManyRequestsError
-            evictable = largest[0]
             self._next_eviction = now + LOGIN_FLOW_EVICTION_INTERVAL.total_seconds()
             self.async_abort(evictable.flow_id)
         return await auth_provider.async_login_flow(context)

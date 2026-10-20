@@ -1093,6 +1093,70 @@ async def test_login_flow_limit_per_source(mock_hass: HomeAssistant) -> None:
     ]
 
 
+@patch("homeassistant.auth.MAX_LOGIN_FLOWS", 5)
+async def test_login_flow_limit_counts_mfa_flows_toward_their_source(
+    hass: HomeAssistant,
+) -> None:
+    """Test the source with the most flows loses one, counting flows at MFA."""
+    manager = await auth.auth_manager_from_config(
+        hass,
+        [
+            {
+                "type": "insecure_example",
+                "users": [{"username": "test-user", "password": "test-pass"}],
+            }
+        ],
+        [
+            {
+                "type": "insecure_example",
+                "data": [{"user_id": "mock-user", "pin": "test-pin"}],
+            }
+        ],
+    )
+    hass.auth = manager
+    ensure_auth_manager_loaded(manager)
+    user = MockUser(id="mock-user").add_to_auth_manager(manager)
+    user.credentials.append(
+        auth_models.Credentials(
+            id="mock-id",
+            auth_provider_type="insecure_example",
+            auth_provider_id=None,
+            data={"username": "test-user"},
+            is_new=False,
+        )
+    )
+
+    async def async_init_flow(address: str) -> str:
+        step = await manager.login_flow.async_init(
+            ("insecure_example", None),
+            context=AuthFlowContext(ip_address=ip_address(address)),
+        )
+        return step["flow_id"]
+
+    async def async_init_mfa_flow(address: str) -> str:
+        flow_id = await async_init_flow(address)
+        step = await manager.login_flow.async_configure(
+            flow_id, {"username": "test-user", "password": "test-pass"}
+        )
+        assert step["step_id"] == "mfa"
+        return flow_id
+
+    busiest = [
+        await async_init_mfa_flow("192.168.1.1"),
+        await async_init_mfa_flow("192.168.1.1"),
+        await async_init_flow("192.168.1.1"),
+    ]
+    other = [await async_init_flow("192.168.1.2") for _ in range(2)]
+
+    newcomer = await async_init_flow("192.168.1.3")
+
+    assert [flow["flow_id"] for flow in manager.login_flow.async_progress()] == [
+        *busiest[:2],
+        *other,
+        newcomer,
+    ]
+
+
 @pytest.mark.parametrize(
     ("context", "source"),
     [
