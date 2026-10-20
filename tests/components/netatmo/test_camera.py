@@ -1127,18 +1127,18 @@ async def test_webhook_person_event(
 
 
 @pytest.mark.parametrize(
-    ("camera_type", "camera_id", "camera_entity"),
+    ("camera_type", "camera_id", "camera_entity", "camera_events"),
     [
-        ("NACamera", "12:34:56:00:f1:62", "camera.hall"),
+        ("NACamera", "12:34:56:00:f1:62", "camera.hall", ["person", "person_home"]),
     ],
 )
 async def test_camera_event(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
     camera_type: str,
     camera_id: str,
     camera_entity: str,
+    camera_events: list[str],
 ) -> None:
     """Test camera event processing."""
     fake_post_hits = 0
@@ -1183,9 +1183,8 @@ async def test_camera_event(
     person_event_found = False
     for event_data in processed_events.values():
         event_type = event_data.get("event_type")
-        subevents = [s.get("event_type") for s in event_data.get("subevents", [])]
 
-        if event_type == "person" or "human" in subevents or "person" in subevents:
+        if event_type in camera_events:
             person_event_found = True
 
         assert "media_url" in event_data
