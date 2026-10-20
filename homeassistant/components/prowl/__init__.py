@@ -36,6 +36,14 @@ DATA_YAML_API_KEYS: HassKey[set[str]] = HassKey(f"{DOMAIN}_yaml_api_keys")
 DATA_YAML_SERVICE_NAMES: HassKey[set[str]] = HassKey(f"{DOMAIN}_yaml_service_names")
 
 
+def _yaml_name(p_config: ConfigType) -> str | None:
+    """Return the name of a YAML notify platform as the notify schema reads it."""
+    # The config is not validated yet when an entry sets up the component first
+    if (name := p_config.get(CONF_NAME)) is None:
+        return None
+    return str(name)
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Prowl component."""
     hass.data[DATA_HASS_CONFIG] = config
@@ -47,17 +55,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # YAML names per API key, in YAML order, to import one entry per API key
     names_by_api_key: dict[str, list[str | None]] = {}
     for p_config in yaml_configs:
-        names = names_by_api_key.setdefault(p_config[CONF_API_KEY], [])
-        if (name := p_config.get(CONF_NAME)) not in names:
+        names = names_by_api_key.setdefault(str(p_config[CONF_API_KEY]), [])
+        if (name := _yaml_name(p_config)) not in names:
             names.append(name)
     hass.data[DATA_YAML_API_KEYS] = set(names_by_api_key)
     # Matches the service names the legacy notify loader uses for YAML platforms;
     # YAML of any notify platform wins over an entry-backed legacy action. Other
-    # platforms are not validated here, so skip blocks that are not a mapping
+    # platforms are not validated here; the loader skips blocks without a platform
     hass.data[DATA_YAML_SERVICE_NAMES] = {
-        slugify(str(p_config.get(CONF_NAME) or SERVICE_NOTIFY))
-        for _, p_config in config_per_platform(config, NOTIFY_DOMAIN)
-        if isinstance(p_config, dict)
+        slugify(_yaml_name(p_config) or SERVICE_NOTIFY)
+        for platform, p_config in config_per_platform(config, NOTIFY_DOMAIN)
+        if platform is not None and isinstance(p_config, dict)
     }
     for api_key, names in names_by_api_key.items():
         hass.async_create_task(

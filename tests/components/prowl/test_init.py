@@ -353,6 +353,46 @@ async def test_setup_with_invalid_yaml_notify_block(
 
 
 @pytest.mark.usefixtures("mock_prowlpy")
+async def test_yaml_import_of_unvalidated_values(hass: HomeAssistant) -> None:
+    """Test YAML values are imported as the notify schema reads them."""
+    # Setting up the component directly passes the YAML before notify validates it
+    config = {
+        notify.DOMAIN: [{CONF_PLATFORM: DOMAIN, CONF_API_KEY: 1234, CONF_NAME: 0}]
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].title == "0"
+    assert entries[0].data == {CONF_API_KEY: "1234"}
+
+
+@pytest.mark.usefixtures("mock_prowlpy")
+async def test_yaml_notify_block_without_platform_does_not_reserve_name(
+    hass: HomeAssistant,
+) -> None:
+    """Test a YAML notify block without a platform leaves its name to the entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="phone",
+        data={CONF_API_KEY: TEST_API_KEY},
+        source=SOURCE_IMPORT,
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.prowl.discovery.async_load_platform"
+    ) as mock_load_platform:
+        assert await async_setup_component(
+            hass, DOMAIN, {notify.DOMAIN: [{CONF_NAME: "phone"}]}
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+    mock_load_platform.assert_called_once()
+
+
+@pytest.mark.usefixtures("mock_prowlpy")
 async def test_other_yaml_notify_platform_name_wins_over_imported_entry(
     hass: HomeAssistant,
 ) -> None:
