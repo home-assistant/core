@@ -30,7 +30,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: LibreSyncConfigEntry) ->
             translation_placeholders={"host": entry.data[CONF_HOST]},
         ) from err
 
-    # Also on a later setup failure, which does not unload the entry.
     entry.async_on_unload(client.async_disconnect)
     entry.runtime_data = client
 

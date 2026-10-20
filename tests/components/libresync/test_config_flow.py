@@ -1,7 +1,7 @@
 """Tests for the LibreSync config flow."""
 
 from dataclasses import replace
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from aiolibresync import DiscoveredDevice
 import pytest
@@ -187,28 +187,31 @@ async def test_ssdp_known_hub_moved(
 
 
 @pytest.mark.parametrize(
-    ("state", "reloaded"),
+    ("state", "setups"),
     [
-        (ConfigEntryState.SETUP_RETRY, True),
-        (ConfigEntryState.LOADED, False),
+        pytest.param(ConfigEntryState.SETUP_RETRY, 1, id="retrying"),
+        pytest.param(ConfigEntryState.LOADED, 0, id="loaded"),
     ],
 )
 async def test_ssdp_known_hub_reloads_when_retrying(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
     state: ConfigEntryState,
-    reloaded: bool,
+    setups: int,
 ) -> None:
     """Test a hub found again at the same address retries a waiting setup."""
-    mock_config_entry.add_to_hass(hass)
-    mock_config_entry.mock_state(hass, state)
-    with patch.object(hass.config_entries, "async_schedule_reload") as reload:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_SSDP}, data=SSDP_INFO
-        )
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=UDN, data={CONF_HOST: HOST}, state=state
+    )
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_SSDP}, data=SSDP_INFO
+    )
+    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert reload.called is reloaded
+    assert len(mock_setup_entry.mock_calls) == setups
+    assert entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize(

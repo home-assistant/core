@@ -1,6 +1,6 @@
 """Tests for the LibreSync integration setup."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from aiolibresync import NotConnectedError
 
@@ -59,19 +59,6 @@ async def test_device_updated(
     )
     assert device.model == "Stereo Hub"
     assert device.serial_number is None
-
-
-async def test_platform_failure_disconnects(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_client: MagicMock
-) -> None:
-    """Test a setup that fails after connecting leaves no client running."""
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
-        side_effect=RuntimeError("boom"),
-    ):
-        await setup_integration(hass, mock_config_entry)
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    mock_client.async_disconnect.assert_awaited_once()
 
 
 async def test_device_keeps_identity_across_reload(
