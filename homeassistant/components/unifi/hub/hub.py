@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 import aiounifi
 
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import (
@@ -14,7 +15,7 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from ..const import ATTR_MANUFACTURER, CONF_SITE_ID, DOMAIN, PLATFORMS
+from ..const import ATTR_MANUFACTURER, CONF_SITE_ID, DOMAIN, LOGGER, PLATFORMS
 from .config import UnifiConfig
 from .entity_helper import UnifiEntityHelper
 from .entity_loader import UnifiEntityLoader
@@ -87,10 +88,44 @@ class UnifiHub:
         self._entity_helper.initialize()
 
         assert self.config.entry.unique_id is not None
+        if self.config.entry.unique_id not in self.api.sites:
+            self._async_update_site_unique_id()
         self.is_admin = self.api.sites[self.config.entry.unique_id].role == "admin"
 
         self.config.entry.async_on_unload(
             self.config.entry.add_update_listener(self.async_config_entry_updated)
+        )
+
+    @callback
+    def _async_update_site_unique_id(self) -> None:
+        """Move the entry to the new ID UniFi Network 11 gives existing sites.
+
+        The site name is kept and is unique per controller.
+        """
+        old_id = self.config.entry.unique_id
+        assert old_id is not None
+        site = next(
+            (site for site in self.api.sites.values() if site.name == self.site),
+            None,
+        )
+        if site is None or self.hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, site.site_id
+        ):
+            return
+
+        LOGGER.info(
+            "UniFi site %s changed ID from %s to %s", self.site, old_id, site.site_id
+        )
+        device_registry = dr.async_get(self.hass)
+        for domain in (DOMAIN, SWITCH_DOMAIN):
+            if device := device_registry.async_get_device_by_identifier(
+                (domain, old_id), self.config.entry.entry_id
+            ):
+                device_registry.async_update_device(
+                    device.id, new_identifiers={(domain, site.site_id)}
+                )
+        self.hass.config_entries.async_update_entry(
+            self.config.entry, unique_id=site.site_id
         )
 
     @property

@@ -13,6 +13,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.unifi.const import CONF_BLOCK_CLIENT, DOMAIN
 from homeassistant.components.unifi.coordinator import IDLE_POLL_INTERVAL, POLL_INTERVAL
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
@@ -410,6 +411,81 @@ async def test_coordinator_update_only_refreshes_changed_entity(
 
     assert changed_entity_id in written_entity_ids
     assert other_entity_id not in written_entity_ids
+
+
+NEW_SITE_ID = "0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d"
+
+
+@pytest.mark.parametrize(
+    "site_payload",
+    [[{"desc": "Site name", "name": "site_id", "role": "admin", "_id": NEW_SITE_ID}]],
+)
+async def test_site_id_changed(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Follow a site that got a new ID, as UniFi Network 11 does."""
+    devices = {
+        domain: device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id, identifiers={(domain, "1")}
+        )
+        for domain in (DOMAIN, SWITCH_DOMAIN)
+    }
+
+    await config_entry_factory()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.unique_id == NEW_SITE_ID
+    for domain, device in devices.items():
+        assert device_registry.async_get_device_by_identifier(
+            (domain, NEW_SITE_ID), config_entry.entry_id
+        ) == device_registry.async_get(device.id)
+
+
+@pytest.mark.parametrize(
+    ("site_payload", "other_entry_unique_id"),
+    [
+        pytest.param(
+            [
+                {
+                    "desc": "Site name",
+                    "name": "other",
+                    "role": "admin",
+                    "_id": NEW_SITE_ID,
+                }
+            ],
+            "2",
+            id="no_site_with_configured_name",
+        ),
+        pytest.param(
+            [
+                {
+                    "desc": "Site name",
+                    "name": "site_id",
+                    "role": "admin",
+                    "_id": NEW_SITE_ID,
+                }
+            ],
+            NEW_SITE_ID,
+            id="new_id_already_configured",
+        ),
+    ],
+)
+async def test_site_id_changed_not_followed(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
+    other_entry_unique_id: str,
+) -> None:
+    """Keep the entry untouched when the new site can't be identified safely."""
+    MockConfigEntry(domain=DOMAIN, unique_id=other_entry_unique_id).add_to_hass(hass)
+
+    await config_entry_factory()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.unique_id == "1"
 
 
 async def test_reset_after_successful_setup(
