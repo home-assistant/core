@@ -10,6 +10,7 @@ import pytest
 from pytest_homeassistant.common import (
     MockUser,
     assert_setup_component,
+    async_capture_events,
     async_fire_time_changed,
     setup_test_component_platform,
 )
@@ -33,6 +34,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     CONF_ENTITIES,
     CONF_UNIQUE_ID,
+    EVENT_CALL_SERVICE,
     SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER,
@@ -1359,6 +1361,39 @@ async def test_speed_member_without_permission(
 
     assert exc_info.value.entity_id == NO_SPEED_COVER
     assert [entity.last_kwargs for entity in mock_speed_covers] == [None, None, None]
+
+
+async def test_speed_parallel_actions_keep_their_context(
+    hass: HomeAssistant, mock_speed_covers: list[MockCover]
+) -> None:
+    """Test each of two parallel actions reaches the members with its own context."""
+    service_call_events = async_capture_events(hass, EVENT_CALL_SERVICE)
+    open_context = Context()
+    close_context = Context()
+
+    # The second action starts before the first one has called the members
+    await asyncio.gather(
+        hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: COVER_GROUP, ATTR_SPEED: "fast"},
+            blocking=True,
+            context=open_context,
+        ),
+        hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: COVER_GROUP, ATTR_SPEED: "slow"},
+            blocking=True,
+            context=close_context,
+        ),
+    )
+
+    calls = [(event.data["service"], event.context) for event in service_call_events]
+    # Each action makes 3 calls: the group, the members with the speed, the rest
+    assert len(calls) == 6
+    assert calls.count((SERVICE_OPEN_COVER, open_context)) == 3
+    assert calls.count((SERVICE_CLOSE_COVER, close_context)) == 3
 
 
 async def test_speed_member_not_delayed(

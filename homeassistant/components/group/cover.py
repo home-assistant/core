@@ -36,7 +36,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     EntityStateAttribute,
 )
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import (
@@ -193,7 +193,11 @@ class CoverGroup(GroupEntity, CoverEntity):
         )
 
     async def _async_call_members(
-        self, service: str, entity_ids: set[str], data: dict[str, Any]
+        self,
+        service: str,
+        entity_ids: set[str],
+        data: dict[str, Any],
+        context: Context | None,
     ) -> None:
         """Call a cover service for the given members."""
         await self.hass.services.async_call(
@@ -201,23 +205,25 @@ class CoverGroup(GroupEntity, CoverEntity):
             service,
             {ATTR_ENTITY_ID: entity_ids, **data},
             blocking=True,
-            context=self._context,
+            context=context,
         )
 
-    async def _async_check_control(self, entity_ids: set[str]) -> None:
+    async def _async_check_control(
+        self, entity_ids: set[str], context: Context | None
+    ) -> None:
         """Raise if the user may not control all given members.
 
         Core checks this per call, so split calls check it before the first.
         """
-        if self._context is None or self._context.user_id is None:
+        if context is None or context.user_id is None:
             return
-        user = await self.hass.auth.async_get_user(self._context.user_id)
+        user = await self.hass.auth.async_get_user(context.user_id)
         for entity_id in entity_ids:
             if user is None or not user.permissions.check_entity(
                 entity_id, POLICY_CONTROL
             ):
                 raise Unauthorized(
-                    context=self._context,
+                    context=context,
                     entity_id=entity_id,
                     permission=POLICY_CONTROL,
                 )
@@ -234,6 +240,8 @@ class CoverGroup(GroupEntity, CoverEntity):
 
         Other members move at their default speed.
         """
+        # A parallel action can replace self._context before the calls run
+        context = self._context
         # One call lets core reject a member without the action before any
         # member moves
         if speed is None or any(
@@ -243,10 +251,10 @@ class CoverGroup(GroupEntity, CoverEntity):
             & feature
             for entity_id in entity_ids
         ):
-            await self._async_call_members(service, entity_ids, data)
+            await self._async_call_members(service, entity_ids, data, context)
             return
 
-        await self._async_check_control(entity_ids)
+        await self._async_check_control(entity_ids, context)
         with_speed = {
             entity_id
             for entity_id in entity_ids
@@ -255,7 +263,7 @@ class CoverGroup(GroupEntity, CoverEntity):
         # Call all members before raising the first error, as core does
         results = await asyncio.gather(
             *(
-                self._async_call_members(service, members, member_data)
+                self._async_call_members(service, members, member_data, context)
                 for members, member_data in (
                     (entity_ids - with_speed, data),
                     (with_speed, {**data, ATTR_SPEED: speed}),
