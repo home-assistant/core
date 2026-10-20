@@ -165,6 +165,9 @@ class LLMContext:
     device_id: str | None
     """Device that is making the request."""
 
+    agent_id: str | None = None
+    """Conversation agent or AI task entity that is handling the LLM request."""
+
 
 @dataclass(slots=True)
 class ToolInput:

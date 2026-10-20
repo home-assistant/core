@@ -125,21 +125,22 @@ class CountingAPI(llm.API):
 
 
 @pytest.mark.parametrize(
-    ("platform", "api_ids", "instances"),
+    ("agent_id", "user_id", "instances"),
     [
-        pytest.param("test", ["counting"], 1, id="same_provider"),
-        pytest.param("other", ["counting"], 2, id="other_platform"),
-        pytest.param("test", ["counting", "assist"], 2, id="other_api"),
+        pytest.param("mock-agent-id", None, 1, id="same_agent"),
+        pytest.param("other-agent-id", None, 2, id="other_agent"),
+        pytest.param("mock-agent-id", "other-user-id", 2, id="other_user"),
+        pytest.param(None, None, 2, id="no_agent"),
     ],
 )
 async def test_llm_api_reuse(
     hass: HomeAssistant,
     mock_conversation_input: ConversationInput,
-    platform: str,
-    api_ids: list[str],
+    agent_id: str | None,
+    user_id: str | None,
     instances: int,
 ) -> None:
-    """Test the LLM API instance is reused only for the same provider."""
+    """Test the LLM API instance is reused only for the same agent and user."""
     api = CountingAPI(hass=hass, id="counting", name="Counting")
     llm.async_register_api(hass, api)
 
@@ -153,16 +154,53 @@ async def test_llm_api_reuse(
                 AssistantContent(agent_id="mock-agent-id", content="Hi")
             )
 
-        llm_context = mock_conversation_input.as_llm_context(platform)
-        llm_context.context = Context(user_id=None)
+        llm_context = mock_conversation_input.as_llm_context("test")
+        llm_context.agent_id = agent_id
+        llm_context.context = Context(user_id=user_id)
         with async_get_chat_log(hass, session, mock_conversation_input) as chat_log:
             await chat_log.async_provide_llm_data(
-                llm_context, user_llm_hass_api=api_ids
+                llm_context, user_llm_hass_api=["counting"]
             )
 
     assert api.instances == instances
     assert chat_log.llm_api is not None
     assert chat_log.llm_api.llm_context is llm_context
+
+
+@pytest.mark.parametrize(
+    "user_id",
+    [
+        pytest.param("other-user-id", id="other_user"),
+        pytest.param(None, id="no_user"),
+    ],
+)
+async def test_chat_log_other_user(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    mock_conversation_input: ConversationInput,
+    user_id: str | None,
+) -> None:
+    """Test a user cannot continue the chat log of another user."""
+    mock_conversation_input.context = Context(user_id=hass_admin_user.id)
+    with chat_session.async_get_chat_session(hass) as session:
+        with async_get_chat_log(hass, session, mock_conversation_input) as chat_log:
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent(agent_id="mock-agent-id", content="Hi")
+            )
+
+        mock_conversation_input.context = Context(user_id=user_id)
+        with (
+            pytest.raises(Unauthorized),
+            async_get_chat_log(hass, session, mock_conversation_input),
+        ):
+            pass
+
+        mock_conversation_input.context = Context(user_id=hass_admin_user.id)
+        with async_get_chat_log(hass, session, mock_conversation_input) as chat_log:
+            assert len(chat_log.content) == 4
+
+        with async_get_chat_log(hass, session) as chat_log:
+            assert len(chat_log.content) == 3
 
 
 async def test_llm_api_cleared(
