@@ -181,8 +181,13 @@ class DaliCoordinator(DataUpdateCoordinator[dict[int, DaliGearData]]):
             max_level = _response_value(
                 await self.driver.send(QueryMaxLevel(gear_address))
             )
-            if max_level is not None and not 1 <= max_level <= 254:
-                max_level = None
+            if max_level is None or not 1 <= max_level <= 254:
+                # A dropped or out-of-range maximum-level reply would otherwise
+                # clear a known maximum and lift the command clamp to full power;
+                # keep the cached maximum for gear already seen, defaulting to no
+                # cap only for newly found gear.
+                cached = self.data.get(address) if self.data else None
+                max_level = cached.max_level if cached is not None else None
             linear_dimming = False
             if DEVICE_TYPE_LED in device_types:
                 curve = await self.driver.send(QueryDimmingCurve(gear_address))
