@@ -420,9 +420,13 @@ class MathExtension(BaseTemplateExtension):
             ) from err
         try:
             range_size = max_value_num - min_value_num
-            return ((value_num - min_value_num) % range_size) + min_value_num
+            result = ((value_num - min_value_num) % range_size) + min_value_num
         except ZeroDivisionError:  # be lenient: if the range is empty, just clamp
             return min_value_num
+        # Values just below min can round up to max; max wraps to min.
+        if range_size > 0 and result >= max_value_num:
+            return min_value_num
+        return result
 
     @staticmethod
     def remap(
