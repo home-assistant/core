@@ -5,6 +5,12 @@ from datetime import datetime, timedelta
 from unittest.mock import patch
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+)
 
 from homeassistant.components.starlink.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -19,12 +25,6 @@ from .patchers import (
     STATUS_DATA_FIXTURE,
     STATUS_DATA_SUCCESS_PATCHER,
     STATUS_DATA_TARGET,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    mock_restore_cache_with_extra_data,
 )
 
 
@@ -75,7 +75,9 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_restore_cache_with_accumulation(hass: HomeAssistant) -> None:
+async def test_restore_cache_with_accumulation(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test Starlink accumulation."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -115,12 +117,16 @@ async def test_restore_cache_with_accumulation(hass: HomeAssistant) -> None:
 
         assert hass.states.get(entity_id).state == str(1 + 0.00786231368489)
 
-        await entry.runtime_data.async_refresh()
+        freezer.tick(timedelta(seconds=5))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert hass.states.get(entity_id).state == str(1 + 0.00786231368489)
 
         with patch.object(entry.runtime_data, "always_update", return_value=True):
-            await entry.runtime_data.async_refresh()
+            freezer.tick(timedelta(seconds=5))
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done(wait_background_tasks=True)
 
         assert hass.states.get(entity_id).state == str(1 + 0.01572462736977)
 

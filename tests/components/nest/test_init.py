@@ -9,7 +9,7 @@ relevant modes.
 """
 
 from collections.abc import Generator
-import datetime
+import datetime as dt
 from http import HTTPStatus
 import logging
 from unittest.mock import AsyncMock, patch
@@ -23,6 +23,8 @@ from google_nest_sdm.exceptions import (
     SubscriberTimeoutException,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.nest import DOMAIN
 from homeassistant.components.nest.const import OAUTH2_TOKEN
@@ -40,11 +42,9 @@ from .common import (
     create_nest_event,
 )
 
-from tests.test_util.aiohttp import AiohttpClientMocker
-
 PLATFORM = "sensor"
 
-EXPIRED_TOKEN_TIMESTAMP = datetime.datetime(2022, 4, 8).timestamp()
+EXPIRED_TOKEN_TIMESTAMP = dt.datetime(2022, 4, 8).timestamp()
 
 
 @pytest.fixture
@@ -227,16 +227,45 @@ async def test_subscriber_auth_failure(
 @pytest.mark.parametrize("subscriber_side_effect", [ConfigurationException()])
 async def test_subscriber_configuration_failure(
     hass: HomeAssistant,
-    error_caplog: pytest.LogCaptureFixture,
     setup_base_platform,
 ) -> None:
     """Test configuration error."""
     await setup_base_platform()
-    assert "Configuration error: " in error_caplog.text
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.SETUP_ERROR
+    assert entries[0].reason == "Configuration error in the Nest subscriber"
+
+
+async def test_subscriber_create_failure(
+    hass: HomeAssistant,
+    setup_base_platform,
+) -> None:
+    """Test setup fails when the subscriber can't be created."""
+    with patch("homeassistant.components.nest.api.new_subscriber", return_value=None):
+        await setup_base_platform()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.SETUP_ERROR
+    assert entries[0].reason == "Failed to create the Nest subscriber"
+
+
+async def test_legacy_entry_setup_error(hass: HomeAssistant) -> None:
+    """Test setup of a legacy config entry fails and the entry is removed."""
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    entry.add_to_hass(hass)
+
+    with patch.object(hass.config_entries, "async_remove", AsyncMock()) as mock_remove:
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert (
+        entry.reason == "This config entry uses the legacy Nest API and will be removed"
+    )
+    mock_remove.assert_awaited_once_with(entry.entry_id)
 
 
 async def test_unload_entry(hass: HomeAssistant, setup_platform) -> None:

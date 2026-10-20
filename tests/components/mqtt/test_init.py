@@ -14,6 +14,23 @@ from freezegun.api import FrozenDateTimeFactory
 from paho.mqtt.client import MQTTMessage, Properties
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockEntityPlatform,
+    MockMqttReasonCode,
+    MockUser,
+    async_capture_events,
+    async_fire_mqtt_message,
+    async_fire_time_changed,
+    mock_restore_cache,
+    setup_test_component_platform,
+)
+from pytest_homeassistant.typing import (
+    MqttMockHAClientGenerator,
+    MqttMockPahoClient,
+    WebSocketGenerator,
+)
 
 from homeassistant import core as ha
 from homeassistant.components import mqtt
@@ -61,24 +78,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.dt import utcnow
 
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockEntityPlatform,
-    MockMqttReasonCode,
-    MockUser,
-    async_capture_events,
-    async_fire_mqtt_message,
-    async_fire_time_changed,
-    mock_restore_cache,
-    setup_test_component_platform,
-)
 from tests.components.sensor.common import MockSensor
-from tests.typing import (
-    MqttMockHAClientGenerator,
-    MqttMockPahoClient,
-    WebSocketGenerator,
-)
 
 
 class _DebugDeviceInfo(TypedDict, total=False):
@@ -243,11 +243,18 @@ async def test_value_template_value(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.helpers.template.TemplateStateFromEntityId", MagicMock()
     ) as template_state_calls:
+        template_state_calls.return_value.entity_id = "select.test"
         tpl3 = template.Template("{{ this.entity_id }}", hass=hass)
         val_tpl3 = mqtt.MqttValueTemplate(tpl3, entity=entity)
         val_tpl3.async_render_with_possible_json_value("call1")
         val_tpl3.async_render_with_possible_json_value("call2")
         assert template_state_calls.call_count == 1
+
+        # The cached this follows an entity_id change
+        entity.entity_id = "select.renamed"
+        val_tpl3.async_render_with_possible_json_value("call3")
+        assert template_state_calls.call_count == 2
+        template_state_calls.assert_called_with(hass, "select.renamed")
 
 
 async def test_value_template_fails(hass: HomeAssistant) -> None:

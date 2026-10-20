@@ -7,6 +7,7 @@
       "local_name": "MOTION_*"
     }
   ],
+  "categories": ["blinds_curtains"],
   "codeowners": ["@LennP", "@jerrybboy"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],

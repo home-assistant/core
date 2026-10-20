@@ -5,14 +5,13 @@ from unittest.mock import AsyncMock, patch
 
 from flexit_bacnet import FlexitBACnet
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.flexit_bacnet.const import DOMAIN
 from homeassistant.const import CONF_DEVICE_ID, CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

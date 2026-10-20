@@ -21,7 +21,7 @@ from .const import (
 )
 
 if TYPE_CHECKING:
-    from . import WaterHeaterEntity
+    from .entity import WaterHeaterEntity
 
 CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE]
 
@@ -62,7 +62,9 @@ async def _async_service_temperature_set(
     for value, temp in service.data.items():
         if value in CONVERTIBLE_ATTRIBUTE:
             kwargs[value] = TemperatureConverter.convert(
-                temp, hass.config.units.temperature_unit, entity.temperature_unit
+                temp,
+                hass.config.units.temperature_unit,
+                entity.native_temperature_unit,
             )
         else:
             kwargs[value] = temp

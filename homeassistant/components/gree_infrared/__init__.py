@@ -25,8 +25,8 @@ PLATFORMS = [Platform.CLIMATE, Platform.SWITCH]
 class GreeAcState:
     """The state a Gree frame carries.
 
-    Every frame carries the whole state, so an entity changing one field has to
-    resend the fields the other entities own.
+    Every frame carries the whole state, so a frame changing one field has to
+    resend every other field as the unit last had it.
     """
 
     power: bool = False
@@ -73,14 +73,14 @@ class GreeAcState:
 class GreeIrRuntimeData:
     """Runtime data for a Gree IR config entry.
 
-    Holds the latest known state of the unit — the last frame sent to it, or the
-    last one a configured receiver saw the remote send — shared by every entity of
-    the entry so each one can build a full frame from it.
+    Holds the latest known state of the unit — the last frame sent to it, the last
+    one a configured receiver saw the remote send, and any changes made while it is
+    off that the next frame will carry — shared by every entity of the entry so
+    each one can build a full frame from it.
     """
 
     configured_modes: tuple[GreeAcMode, ...]
-    last_active_mode: GreeAcMode
-    ac_state: GreeAcState = field(default_factory=GreeAcState)
+    ac_state: GreeAcState
     send_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
 
     @callback
@@ -88,28 +88,27 @@ class GreeIrRuntimeData:
         """Record a frame the remote sent, reporting whether it addresses this unit.
 
         Kept here rather than on the climate entity because a frame the receiver
-        picks up describes the whole unit, and the entities owning the rest of it
-        stay usable when the climate entity is disabled.
+        picks up describes the whole unit, not only the part the climate entity
+        shows.
         """
-        # Off frames carry a mode field too, so the mode is recorded either way.
-        if command.mode in self.configured_modes:
-            self.last_active_mode = command.mode
-        elif command.power:
-            return False
+        state = GreeAcState.from_command(command)
+        if command.mode not in self.configured_modes:
+            if command.power:
+                return False
+            # Off frames carry a mode field too; one this entry may not send keeps
+            # the mode the next power-off frame goes out with.
+            state = replace(state, mode=self.ac_state.mode)
 
         # The remote's frame is now what the unit last saw, so a later frame has to
-        # carry every field of it rather than the ones sent before it. Only the mode
-        # is kept, having already dropped an unconfigured one.
-        self.ac_state = replace(
-            GreeAcState.from_command(command), mode=self.last_active_mode
-        )
+        # carry every field of it rather than the ones sent before it.
+        self.ac_state = state
         return True
 
 
 type GreeIrConfigEntry = ConfigEntry[GreeIrRuntimeData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GreeIrConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GreeIrConfigEntry) -> None:
     """Set up Gree IR from a config entry."""
     configured_modes = tuple(
         HA_MODE_TO_LIB[HVACMode(mode)]
@@ -117,12 +116,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreeIrConfigEntry) -> bo
     )
     entry.runtime_data = GreeIrRuntimeData(
         configured_modes=configured_modes,
-        last_active_mode=configured_modes[0],
+        ac_state=GreeAcState(mode=configured_modes[0]),
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: GreeIrConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GreeIrConfigEntry) -> None:
     """Unload a Gree IR config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

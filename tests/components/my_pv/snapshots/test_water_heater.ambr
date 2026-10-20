@@ -61,6 +61,7 @@
       <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <WaterHeaterCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.1,
       <WaterHeaterStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 62.1,
+      <WaterHeaterStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'water_heater.my_pv_ac_elwa_2',

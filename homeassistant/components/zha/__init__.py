@@ -139,7 +139,7 @@ def _raise_if_port_in_use(hass: HomeAssistant, device_path: str) -> None:
         )
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Set up ZHA.
 
     Will automatically load components to support devices found on the network.
@@ -217,7 +217,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         ):
             try:
                 # Ignore all exceptions during probing, they shouldn't halt setup
-                if await warn_on_wrong_silabs_firmware(hass, device_path):
+                if await warn_on_wrong_silabs_firmware(
+                    hass, device_path, config_entry.entry_id
+                ):
                     raise ConfigEntryError("Incorrect firmware installed") from exc
             except AlreadyRunningEZSP as ezsp_exc:
                 raise ConfigEntryNotReady from ezsp_exc
@@ -284,13 +286,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     await ha_zha_data.gateway_proxy.async_initialize_devices_and_entities()
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     async_dispatcher_send(hass, SIGNAL_ADD_ENTITIES)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Unload ZHA config entry."""
-    if not await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS):
-        return False
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
     ha_zha_data = get_zha_data(hass)
     ha_zha_data.config_entry = None
@@ -305,10 +305,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         for platform in PLATFORMS:
             del ha_zha_data.platforms[platform]
 
-    return True
 
-
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating from version %s.%s",
@@ -394,4 +392,3 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         config_entry.version,
         config_entry.minor_version,
     )
-    return True

@@ -1,6 +1,7 @@
 {
   "domain": "palazzetti",
   "name": "Palazzetti",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@dotvav"],
   "config_flow": true,
   "dhcp": [

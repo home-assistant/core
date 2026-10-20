@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock
 from aiohttp import ClientConnectionError, ClientResponseError
 from hass_splunk import SplunkPayloadError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.splunk.const import CONF_FILTER, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -14,8 +15,6 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 YAML_FILTER = {"include_domains": ["sensor"]}
 
