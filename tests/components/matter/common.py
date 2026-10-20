@@ -125,6 +125,7 @@ FIXTURES = [
     "tado_smart_radiator_thermostat_x",
     "tapo_smart_outdoor_plug_in_dimmer",
     "tapo_smart_wi_fi_outlet",
+    "tapo_smart_wi_fi_plug_265",
     "wago_home_blind_control",
     "wago_home_relay_16a",
     "yandex_smart_socket",
