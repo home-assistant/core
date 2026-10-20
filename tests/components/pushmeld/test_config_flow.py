@@ -56,8 +56,14 @@ async def test_user_flow_rejects_empty_maxcode(hass: HomeAssistant) -> None:
 
 
 async def test_user_flow_generates_an_available_title(hass: HomeAssistant) -> None:
-    """Generate the next title when the default title is already in use."""
+    """Generate the next title when existing actions and entries use names."""
     hass.services.async_register(NOTIFY_DOMAIN, "pushmeld", AsyncMock())
+    unloaded_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=f"{DEFAULT_NAME} 2",
+        data={CONF_MAXCODE: "unloaded-maxcode"},
+    )
+    unloaded_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -69,7 +75,7 @@ async def test_user_flow_generates_an_available_title(hass: HomeAssistant) -> No
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"{DEFAULT_NAME} 2"
+    assert result["title"] == f"{DEFAULT_NAME} 3"
 
 
 async def test_user_flow_rejects_duplicate_maxcode(
