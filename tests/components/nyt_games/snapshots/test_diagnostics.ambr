@@ -3,10 +3,7 @@
   dict({
     'connections': dict({
       'current_streak': 0,
-      'last_completed': dict({
-        '__type': "<class 'datetime.date'>",
-        'isoformat': '2024-09-23',
-      }),
+      'last_completed': '2024-09-23',
       'max_streak': 2,
       'mistakes': dict({
         '0': 2,
@@ -44,14 +41,8 @@
         '6': 166,
         'fail': 42,
       }),
-      'last_completed': dict({
-        '__type': "<class 'datetime.date'>",
-        'isoformat': '2025-07-08',
-      }),
-      'last_won': dict({
-        '__type': "<class 'datetime.date'>",
-        'isoformat': '2025-07-08',
-      }),
+      'last_completed': '2025-07-08',
+      'last_won': '2025-07-08',
       'max_streak': 241,
     }),
   })
