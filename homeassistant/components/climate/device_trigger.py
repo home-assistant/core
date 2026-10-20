@@ -144,7 +144,7 @@ async def async_attach_trigger(
             ],
         }
         if CONF_FOR in config:
-            state_config[CONF_FOR] = config[CONF_FOR]
+            state_config[StateTriggerArgument.FOR] = config[CONF_FOR]
         state_config = await state_trigger.async_validate_trigger_config(
             hass, state_config
         )
@@ -167,11 +167,11 @@ async def async_attach_trigger(
         )
 
     if CONF_ABOVE in config:
-        numeric_state_config[CONF_ABOVE] = config[CONF_ABOVE]
+        numeric_state_config[NumericStateTriggerArgument.ABOVE] = config[CONF_ABOVE]
     if CONF_BELOW in config:
-        numeric_state_config[CONF_BELOW] = config[CONF_BELOW]
+        numeric_state_config[NumericStateTriggerArgument.BELOW] = config[CONF_BELOW]
     if CONF_FOR in config:
-        numeric_state_config[CONF_FOR] = config[CONF_FOR]
+        numeric_state_config[NumericStateTriggerArgument.FOR] = config[CONF_FOR]
 
     numeric_state_config = await numeric_state_trigger.async_validate_trigger_config(
         hass, numeric_state_config

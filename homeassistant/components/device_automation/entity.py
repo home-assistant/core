@@ -38,13 +38,13 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     to_state = None
-    state_config = {
-        CONF_PLATFORM: "state",
+    state_config: ConfigType = {
+        StateTriggerArgument.PLATFORM: "state",
         StateTriggerArgument.ENTITY_ID: config[CONF_ENTITY_ID],
         StateTriggerArgument.TO: to_state,
     }
     if CONF_FOR in config:
-        state_config[CONF_FOR] = config[CONF_FOR]
+        state_config[StateTriggerArgument.FOR] = config[CONF_FOR]
 
     state_config = await state_trigger.async_validate_trigger_config(hass, state_config)
     return await state_trigger.async_attach_trigger(

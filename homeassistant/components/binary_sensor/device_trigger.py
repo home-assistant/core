@@ -229,7 +229,7 @@ async def async_attach_trigger(
         StateTriggerArgument.TO: to_state,
     }
     if CONF_FOR in config:
-        state_config[CONF_FOR] = config[CONF_FOR]
+        state_config[StateTriggerArgument.FOR] = config[CONF_FOR]
 
     state_config = await state_trigger.async_validate_trigger_config(hass, state_config)
     return await state_trigger.async_attach_trigger(

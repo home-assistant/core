@@ -9,6 +9,7 @@ from homeassistant.components.device_automation import (
 from homeassistant.components.homeassistant.triggers.state import (
     CONF_FROM,
     CONF_TO,
+    StateTriggerArgument,
     async_attach_trigger as async_attach_state_trigger,
     async_validate_trigger_config as async_validate_state_trigger_config,
 )
@@ -67,19 +68,19 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    state_config = {
-        CONF_PLATFORM: "state",
-        CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+    state_config: ConfigType = {
+        StateTriggerArgument.PLATFORM: "state",
+        StateTriggerArgument.ENTITY_ID: config[CONF_ENTITY_ID],
     }
 
     if CONF_TO in config:
-        state_config[CONF_TO] = config[CONF_TO]
+        state_config[StateTriggerArgument.TO] = config[CONF_TO]
 
     if CONF_FROM in config:
-        state_config[CONF_FROM] = config[CONF_FROM]
+        state_config[StateTriggerArgument.FROM] = config[CONF_FROM]
 
     if CONF_FOR in config:
-        state_config[CONF_FOR] = config[CONF_FOR]
+        state_config[StateTriggerArgument.FOR] = config[CONF_FOR]
 
     state_config = await async_validate_state_trigger_config(hass, state_config)
     return await async_attach_state_trigger(
