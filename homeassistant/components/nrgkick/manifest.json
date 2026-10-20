@@ -1,6 +1,7 @@
 {
   "domain": "nrgkick",
   "name": "NRGkick",
+  "categories": ["energy.ev_charging"],
   "codeowners": ["@andijakl"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nrgkick",

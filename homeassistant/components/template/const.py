@@ -14,6 +14,7 @@ CONF_MIN = "min"
 CONF_PICTURE = "picture"
 CONF_PRESS = "press"
 CONF_STEP = "step"
+CONF_TRIGGER_VARIABLES = "trigger_variables"
 CONF_TURN_OFF = "turn_off"
 CONF_TURN_ON = "turn_on"
 

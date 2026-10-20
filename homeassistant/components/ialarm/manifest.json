@@ -1,6 +1,7 @@
 {
   "domain": "ialarm",
   "name": "Antifurto365 iAlarm",
+  "categories": ["security_safety.alarm_systems"],
   "codeowners": ["@RyuzakiKK"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ialarm",

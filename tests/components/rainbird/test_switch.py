@@ -3,6 +3,11 @@
 from http import HTTPStatus
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
 
 from homeassistant.components.rainbird import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -28,9 +33,7 @@ from .conftest import (
     mock_response_error,
 )
 
-from tests.common import MockConfigEntry
 from tests.components.switch import common as switch_common
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 
 @pytest.fixture
