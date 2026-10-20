@@ -7,12 +7,11 @@ import shutil
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import get_fixture_path
 
 from homeassistant.components.backup import DOMAIN
 from homeassistant.components.backup.manager import NewBackup, WrittenBackup
 from homeassistant.core import HomeAssistant
-
-from tests.common import get_fixture_path
 
 
 @pytest.fixture
@@ -64,6 +63,7 @@ def mock_create_backup() -> Generator[AsyncMock]:
     mock_written_backup.addon_errors = {}
     mock_written_backup.backup.backup_id = "abc123"
     mock_written_backup.backup.protected = False
+    mock_written_backup.backup.size = 4194304
     mock_written_backup.folder_errors = {}
     mock_written_backup.open_stream = AsyncMock()
     mock_written_backup.release_stream = AsyncMock()

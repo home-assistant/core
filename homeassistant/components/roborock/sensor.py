@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 import logging
 from typing import override
 
@@ -72,7 +72,7 @@ PARALLEL_UPDATES = 0
 class RoborockSensorDescription(SensorEntityDescription):
     """A class that describes Roborock sensors."""
 
-    value_fn: Callable[[DeviceState], StateType | datetime.datetime]
+    value_fn: Callable[[DeviceState], StateType | dt.datetime]
 
     # If it is a dock entity
     is_dock_entity: bool = False
@@ -630,7 +630,7 @@ class RoborockSensorEntity(RoborockCoordinatedEntityV1, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> StateType | datetime.datetime:
+    def native_value(self) -> StateType | dt.datetime:
         """Return the value reported by the sensor."""
         if self.coordinator.data is None:
             return None

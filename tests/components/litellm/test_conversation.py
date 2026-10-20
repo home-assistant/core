@@ -1,6 +1,6 @@
 """Tests for the LiteLLM conversation entity."""
 
-import datetime
+import datetime as dt
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
@@ -16,6 +16,11 @@ from openai.types.chat import (
 from openai.types.chat.chat_completion import Choice
 from openai.types.chat.chat_completion_message_function_tool_call_param import Function
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
@@ -27,7 +32,6 @@ from homeassistant.helpers.llm import ToolInput, ToolResult
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 from tests.components.conversation import MockChatLog, mock_chat_log  # noqa: F401
 
 AGENT_ID = "conversation.gpt_3_5_turbo"
@@ -209,7 +213,7 @@ async def test_function_call(
                 data={
                     "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
                     "response_type": "action_done",
-                    "speech_slots": {"time": datetime.time(12, 0)},
+                    "speech_slots": {"time": dt.time(12, 0)},
                     "data": {"success": [], "failed": []},
                 }
             ),

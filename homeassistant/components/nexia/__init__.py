@@ -33,7 +33,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NexiaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NexiaConfigEntry) -> None:
     """Configure the base Nexia device for Home Assistant."""
 
     conf = entry.data
@@ -81,8 +81,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NexiaConfigEntry) -> boo
         # To avoid initially presenting stale data, manually refresh
         await coordinator.async_config_entry_first_refresh()
 
-    return True
-
 
 def _preregister_devices(
     hass: HomeAssistant, entry: NexiaConfigEntry, nexia_home: NexiaHome
@@ -91,22 +89,24 @@ def _preregister_devices(
     device_registry = dr.async_get(hass)
     for thermostat_id in nexia_home.get_thermostat_ids():
         thermostat = nexia_home.get_thermostat_by_id(thermostat_id)
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, thermostat_id)},  # type: ignore[arg-type] # until fix issue #139773
+            device_info=dr.DeviceInfo(identifiers={(DOMAIN, thermostat_id)}),  # type: ignore[arg-type] # until fix issue #139773
         )
         for zone_id in thermostat.get_zone_ids():
             zone = thermostat.get_zone_by_id(zone_id)
-            device_registry.async_get_or_create(
+            device_registry.async_get_or_create_device(
                 config_entry_id=entry.entry_id,
-                identifiers={(DOMAIN, zone_id)},  # type: ignore[arg-type] # until fix issue #139773
-                suggested_area=zone.get_name(),
+                device_info=dr.DeviceInfo(
+                    identifiers={(DOMAIN, zone_id)},  # type: ignore[arg-type] # until fix issue #139773
+                    suggested_area=zone.get_name(),
+                ),
             )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: NexiaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NexiaConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(
@@ -130,7 +130,7 @@ async def async_remove_config_entry_device(
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: NexiaConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: NexiaConfigEntry) -> None:
     """Migrate entry."""
 
     _LOGGER.debug("Migrating from version %s", entry.version)
@@ -144,5 +144,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: NexiaConfigEntry) -> b
             )
 
     _LOGGER.debug("Migration successful")
-
-    return True

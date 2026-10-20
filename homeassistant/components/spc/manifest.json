@@ -1,6 +1,7 @@
 {
   "domain": "spc",
   "name": "Vanderbilt SPC",
+  "categories": ["security_safety.alarm_systems"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/spc",
   "iot_class": "local_push",

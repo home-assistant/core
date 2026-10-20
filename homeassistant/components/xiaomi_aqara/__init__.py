@@ -59,7 +59,7 @@ class XiaomiAqaraData:
 XIAOMI_AQARA_DATA: HassKey[XiaomiAqaraData] = HassKey(DOMAIN)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: XiaomiAqaraConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: XiaomiAqaraConfigEntry) -> None:
     """Set up the xiaomi aqara components from a config entry."""
     if (data := hass.data.get(XIAOMI_AQARA_DATA)) is None:
         data = hass.data[XIAOMI_AQARA_DATA] = XiaomiAqaraData()
@@ -106,12 +106,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: XiaomiAqaraConfigEntry) 
 
     assert entry.unique_id
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.unique_id)},
-        manufacturer="Xiaomi Aqara",
-        name=entry.title,
-        sw_version=entry.data[CONF_PROTOCOL],
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, entry.unique_id)},
+            manufacturer="Xiaomi Aqara",
+            name=entry.title,
+            sw_version=entry.data[CONF_PROTOCOL],
+        ),
     )
 
     if entry.data[CONF_KEY] is not None:
@@ -121,31 +123,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: XiaomiAqaraConfigEntry) 
 
     await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: XiaomiAqaraConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     if config_entry.data[CONF_KEY] is not None:
         platforms = GATEWAY_PLATFORMS
     else:
         platforms = GATEWAY_PLATFORMS_NO_KEY
 
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, platforms
-    )
-
-    if not hass.config_entries.async_loaded_entries(DOMAIN):
-        # No gateways left, stop Xiaomi socket
-        data = hass.data[XIAOMI_AQARA_DATA]
-        if data.unsub_stop is not None:
-            data.unsub_stop()
-            data.unsub_stop = None
-        _LOGGER.debug("Shutting down Xiaomi Gateway Listener")
-        if data.multicast is not None:
-            data.multicast.stop_listen()
-            data.multicast = None
-
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(
+            config_entry, platforms
+        )
+    finally:
+        if not hass.config_entries.async_loaded_entries(DOMAIN):
+            # No gateways left, stop Xiaomi socket
+            data = hass.data[XIAOMI_AQARA_DATA]
+            if data.unsub_stop is not None:
+                data.unsub_stop()
+                data.unsub_stop = None
+            _LOGGER.debug("Shutting down Xiaomi Gateway Listener")
+            if data.multicast is not None:
+                data.multicast.stop_listen()
+                data.multicast = None

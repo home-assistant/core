@@ -72,7 +72,7 @@ async def _update_unique_id(
     _LOGGER.debug("Update of unique ID successful")
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> None:
     """Set up Lunatone from a config entry."""
     auth_api = Auth(async_get_clientsession(hass), entry.data[CONF_URL])
 
@@ -94,18 +94,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
 
     device_registry = dr.async_get(hass)
 
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.unique_id)},
-        name=info_api.data.name,
-        manufacturer=MANUFACTURER,
-        sw_version=info_api.data.version,
-        hw_version=coordinator_info.data.device.pcb,
-        configuration_url=entry.data[CONF_URL],
-        serial_number=str(info_api.data.device.serial),
-        model=info_api.data.product_name,
-        model_id=(
-            f"{coordinator_info.data.device.article_number}{coordinator_info.data.article_suffix}"
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, entry.unique_id)},
+            name=info_api.data.name,
+            manufacturer=MANUFACTURER,
+            sw_version=info_api.data.version,
+            hw_version=coordinator_info.data.device.pcb,
+            configuration_url=entry.data[CONF_URL],
+            serial_number=str(info_api.data.device.serial),
+            model=info_api.data.product_name,
+            model_id=(
+                f"{coordinator_info.data.device.article_number}{coordinator_info.data.article_suffix}"
+            ),
         ),
     )
 
@@ -157,9 +159,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

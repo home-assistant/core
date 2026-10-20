@@ -5,20 +5,8 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-
-from homeassistant.components.schedule.const import (
-    ATTR_NEXT_EVENT,
-    CONF_FROM,
-    CONF_SUNDAY,
-    CONF_TO,
-    DOMAIN,
-)
-from homeassistant.components.schedule.trigger import TRIGGERS
-from homeassistant.const import CONF_ICON, CONF_NAME, STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
-
-from tests.common import async_fire_time_changed
-from tests.components.common import (
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.components.common import (
     TargetSupport,
     TriggerStateDescription,
     arm_trigger,
@@ -31,6 +19,17 @@ from tests.components.common import (
     parametrize_trigger_states,
     target_entities,
 )
+
+from homeassistant.components.schedule.const import (
+    ATTR_NEXT_EVENT,
+    CONF_FROM,
+    CONF_SUNDAY,
+    CONF_TO,
+    DOMAIN,
+)
+from homeassistant.components.schedule.trigger import TRIGGERS
+from homeassistant.const import CONF_ICON, CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
