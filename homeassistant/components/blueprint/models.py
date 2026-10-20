@@ -114,10 +114,10 @@ class Blueprint:
                 for name, blueprint_input in value[CONF_INPUT].items():
                     visibility[name] = _combine_visible(
                         value.get(CONF_VISIBLE),
-                        blueprint_input and blueprint_input.get(CONF_VISIBLE),
+                        (blueprint_input or {}).get(CONF_VISIBLE),
                     )
             else:
-                visibility[key] = _combine_visible(value and value.get(CONF_VISIBLE))
+                visibility[key] = _combine_visible((value or {}).get(CONF_VISIBLE))
         return visibility
 
     @property

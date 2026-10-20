@@ -504,6 +504,25 @@ def test_blueprint_inputs_visible(
     assert _resolve(blueprint, values) == expected
 
 
+@pytest.mark.parametrize(
+    "inputs",
+    [
+        pytest.param({"dim_mode": {}, "brightness": {}}, id="top_level"),
+        pytest.param(
+            {"dim_mode": {}, "dimming": {"input": {"brightness": {}}}},
+            id="in_section",
+        ),
+    ],
+)
+def test_blueprint_inputs_empty_definition(inputs: dict[str, Any]) -> None:
+    """Test empty input definitions have no visible condition."""
+    blueprint = _visible_blueprint(inputs)
+    assert _resolve(blueprint, {"dim_mode": "none", "brightness": 80}) == {
+        "dim_mode": "none",
+        "brightness": 80,
+    }
+
+
 def test_blueprint_inputs_visible_missing() -> None:
     """Test a visible input without a value or default is still required."""
     blueprint = _visible_blueprint(
