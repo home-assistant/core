@@ -547,6 +547,55 @@ async def test_subentry_flow_already_configured(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+async def test_subentry_flow_concurrent_duplicate_cache(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_geocaching_config_flow: MagicMock,
+) -> None:
+    """Test concurrent flows for the same cache create only one subentry."""
+    _mock_loaded(hass, mock_config_entry)
+
+    verification_started = asyncio.Event()
+    verification_calls = 0
+
+    async def wait_for_both_verifications() -> None:
+        nonlocal verification_calls
+        verification_calls += 1
+        if verification_calls == 2:
+            verification_started.set()
+        await verification_started.wait()
+
+    mock_geocaching_config_flow.verify_settings.side_effect = (
+        wait_for_both_verifications
+    )
+
+    flow_results = [
+        await hass.config_entries.subentries.async_init(
+            (mock_config_entry.entry_id, SUBENTRY_TYPE_TRACKED_CACHE),
+            context={"source": SOURCE_USER},
+        )
+        for _ in range(2)
+    ]
+    results = await asyncio.gather(
+        *(
+            hass.config_entries.subentries.async_configure(
+                flow_result["flow_id"], {CONF_CODE: "GC12345"}
+            )
+            for flow_result in flow_results
+        )
+    )
+
+    subentries = mock_config_entry.get_subentries_of_type(SUBENTRY_TYPE_TRACKED_CACHE)
+    assert len(subentries) == 1
+    assert [result["type"] for result in results].count(
+        FlowResultType.CREATE_ENTRY
+    ) == 1
+    abort_result = next(
+        result for result in results if result["type"] is FlowResultType.ABORT
+    )
+    assert abort_result["reason"] == "already_configured"
+
+
 async def test_subentry_flow_maximum(
     hass: HomeAssistant,
 ) -> None:

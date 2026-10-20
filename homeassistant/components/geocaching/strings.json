@@ -27,6 +27,7 @@
   "config_subentries": {
     "tracked_cache": {
       "abort": {
+        "already_configured": "This cache is already configured.",
         "entry_not_loaded": "Cannot add a tracked cache while the configuration is not loaded.",
         "too_many_caches": "A maximum of 50 caches can be tracked."
       },
