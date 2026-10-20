@@ -74,7 +74,7 @@
   },
   "issues": {
     "connectivity_not_configured": {
-      "description": "{device_name} ({serial_number}) has no connectivity set up. Until it is set up, the device only turns on Bluetooth for a short time after its button is pressed, so the Airthings BLE integration cannot read its measurements regularly.\n\nTo fix this, in the Airthings app:\n- If the device is not in the app, add it. If the app asks how to connect, select **I prefer to connect with Bluetooth**.\n- If the device is already in the app, open its settings and select **Reset connectivity**.\n\nThis issue is resolved automatically when Home Assistant reads the device and it reports Bluetooth connectivity. Home Assistant tries every {update_interval} minutes.",
+      "description": "{device_name} ({serial_number}) has no connectivity set up. Until it is set up, the device only turns on Bluetooth for a short time after its button is pressed, so the Airthings BLE integration cannot read its measurements regularly.\n\nIf the device is not in the Airthings app:\n1. Add the device.\n2. If the app asks how to connect, select **I prefer to connect with Bluetooth**.\n\nIf the device is already in the app:\n1. Open its settings and select **Reset connectivity**.\n\nThis issue is resolved automatically when Home Assistant reads the device and it reports Bluetooth connectivity. Home Assistant tries every {update_interval} minutes.",
       "title": "{device_name} ({serial_number}) connectivity is not set up"
     },
     "connectivity_smartlink": {
