@@ -8,6 +8,11 @@ from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 from habiticalib import HabiticaUserResponse
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_fixture,
+)
 
 from homeassistant.components.habitica.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -20,8 +25,6 @@ from .conftest import (
     ERROR_NOT_FOUND,
     ERROR_TOO_MANY_REQUESTS,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, async_load_fixture
 
 
 @pytest.mark.usefixtures("habitica")

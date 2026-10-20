@@ -8,6 +8,7 @@ from bosch_alarm_mode2.const import PANEL_FAMILY, PanelModel
 from bosch_alarm_mode2.panel import Area, Door, Output, Point
 from bosch_alarm_mode2.utils import Observable
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bosch_alarm.const import (
     CONF_INSTALLER_CODE,
@@ -22,8 +23,6 @@ from homeassistant.const import (
     CONF_PORT,
 )
 from homeassistant.helpers.device_registry import format_mac
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(

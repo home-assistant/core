@@ -5,12 +5,15 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 from renault_api.exceptions import NotAuthenticatedException
 from renault_api.gigya.exceptions import (
     GigyaException,
     InvalidCredentialsException,
     PendingTwoFactorAuthenticationException,
 )
+from renault_api.kamereon import models
 from renault_api.renault_session import RenaultSession
 from syrupy.assertion import SnapshotAssertion
 
@@ -32,9 +35,6 @@ from .const import (
     MOCK_LOGIN_TOKEN,
     OTHER_ACCOUNT_ID,
 )
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 # Config data of an entry created before the login token was stored.
 MOCK_CONFIG_NO_TOKEN = {
@@ -372,6 +372,94 @@ async def test_device_registry(
 
 @pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
 @pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+async def test_stale_device_removed_on_setup(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: ConfigEntry,
+) -> None:
+    """Test a device no longer in the vehicle list is removed on setup."""
+    entry_id = config_entry.entry_id
+    device_registry.async_get_or_create(
+        config_entry_id=entry_id,
+        identifiers={(DOMAIN, "VF1AAAAA555777888")},
+        manufacturer="Renault",
+        model="Zoe",
+        name="REGISTRATION-NUMBER",
+    )
+
+    await hass.config_entries.async_setup(entry_id)
+    await hass.async_block_till_done()
+
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry_id)
+    assert [device.identifiers for device in device_entries] == [
+        {(DOMAIN, "VF1ZOE40VIN")}
+    ]
+
+
+@pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
+@pytest.mark.parametrize("vehicle_type", ["missing_details"], indirect=True)
+async def test_stale_device_removed_on_setup_retry(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: ConfigEntry,
+) -> None:
+    """Test stale devices are removed when no vehicle details are available."""
+    entry_id = config_entry.entry_id
+    for vin in ("VF1ZOE40VIN", "VF1AAAAA555777888"):
+        device_registry.async_get_or_create(
+            config_entry_id=entry_id,
+            identifiers={(DOMAIN, vin)},
+            manufacturer="Renault",
+            model="Zoe",
+            name="REGISTRATION-NUMBER",
+        )
+
+    await hass.config_entries.async_setup(entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry_id)
+    assert [device.identifiers for device in device_entries] == [
+        {(DOMAIN, "VF1ZOE40VIN")}
+    ]
+
+
+@pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+async def test_stale_devices_kept_on_empty_vehicle_list(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: ConfigEntry,
+) -> None:
+    """Test devices are kept when the vehicle list is empty."""
+    entry_id = config_entry.entry_id
+    device_registry.async_get_or_create(
+        config_entry_id=entry_id,
+        identifiers={(DOMAIN, "VF1ZOE40VIN")},
+        manufacturer="Renault",
+        model="Zoe",
+        name="REGISTRATION-NUMBER",
+    )
+
+    with patch(
+        "renault_api.renault_account.RenaultAccount.get_vehicles",
+        return_value=models.KamereonVehiclesResponse(
+            raw_data={},
+            errors=None,
+            accountId=MOCK_ACCOUNT_ID,
+            country="FR",
+            vehicleLinks=[],
+        ),
+    ):
+        await hass.config_entries.async_setup(entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 1
+
+
+@pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
 async def test_registry_cleanup(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -384,19 +472,15 @@ async def test_registry_cleanup(
     live_id = "VF1ZOE40VIN"
     dead_id = "VF1AAAAA555777888"
 
-    assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 0
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
     device_registry.async_get_or_create(
         config_entry_id=entry_id,
         identifiers={(DOMAIN, dead_id)},
         manufacturer="Renault",
         model="Zoe",
         name="REGISTRATION-NUMBER",
-        sw_version="X101VE",
     )
-    assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 1
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
     assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 2
 
     # Try to remove "VF1ZOE40VIN" - fails as it is live

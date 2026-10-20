@@ -8,6 +8,11 @@ from unittest.mock import ANY, MagicMock, call, patch
 from aiolyric.exceptions import LyricException
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -34,8 +39,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 LCC_ENTITY_ID = "climate.hallway_thermostat"
 LCC_MAC_ID = "AABBCC000011"

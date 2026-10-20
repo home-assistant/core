@@ -325,6 +325,10 @@
           "description": "An image to set as your profile picture. WEBP, PNG, or JPG. At most 8 MB. Will be downscaled to 400x400px.",
           "name": "Profile picture"
         },
+        "avatar_description": {
+          "description": "Alternative text describing your avatar for people who are blind or visually impaired.\n\nTip: If using a profile photo, describe the person pictured in a few words using third person and avoid redundant phrases like *Photo of*. For example: *Alex wearing a green shirt and glasses.*",
+          "name": "Profile picture alt text"
+        },
         "bot": {
           "description": "Signal to others that the account mainly performs automated actions.",
           "name": "Automated account"
@@ -356,6 +360,10 @@
         "header": {
           "description": "An image to set as your profile header. WEBP, PNG, or JPG. At most 8 MB. Will be downscaled to 1500x500px.",
           "name": "Header picture"
+        },
+        "header_description": {
+          "description": "Alternative text describing your profile header for people who are blind or visually impaired.",
+          "name": "Header alt text"
         },
         "locked": {
           "description": "Whether to lock your profile. A locked profile requires you to approve followers and hides your posts from non-followers.",

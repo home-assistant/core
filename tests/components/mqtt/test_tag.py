@@ -6,6 +6,13 @@ from typing import Any
 from unittest.mock import ANY, AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_mqtt_message,
+    async_get_device_automations,
+)
+from pytest_homeassistant.components.mqtt.common import help_test_unload_config_entry
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, WebSocketGenerator
 
 from homeassistant.components import mqtt
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -15,15 +22,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
-
-from .common import help_test_unload_config_entry
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_mqtt_message,
-    async_get_device_automations,
-)
-from tests.typing import MqttMockHAClientGenerator, WebSocketGenerator
 
 DEFAULT_CONFIG_DEVICE = {
     "device": {"identifiers": ["0AFFD2"]},

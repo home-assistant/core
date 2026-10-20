@@ -6,6 +6,8 @@ from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 import switchbot
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
@@ -41,9 +43,6 @@ from . import (
     patch_async_ble_device_from_address,
     patch_async_setup_entry,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 @pytest.mark.parametrize(
@@ -91,7 +90,7 @@ async def test_setup_entry_without_ble_device(
 
     with patch_async_ble_device_from_address(None):
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
         "Could not find Switchbot meter_pro_co2 with address aa:bb:cc:dd:ee:ff"
@@ -119,7 +118,7 @@ async def test_setup_entry_meter_pro_co2_uses_non_connectable(
     ) as mock_ble:
         mock_ble.return_value = WOMETERTHPC_SERVICE_INFO.device
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         # Meter Pro CO2 supports both active and passive Bluetooth sources
         assert mock_ble.call_args_list[0][0][2] is False
@@ -146,7 +145,7 @@ async def test_coordinator_wait_ready_timeout(
         return_value=timeout_mock,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "aa:bb:cc:dd:ee:ff is not advertising state" in caplog.text
 
@@ -213,7 +212,7 @@ async def test_migrate_entry_from_v1_to_v2(
         patch_async_setup_entry(),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.version == 2
     assert entry.minor_version == 1
@@ -285,10 +284,10 @@ async def test_migrate_deprecated_model_sensor_type(
         ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert await hass.config_entries.async_unload(entry.entry_id)
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.version == 2
     assert entry.minor_version == 1
@@ -345,7 +344,7 @@ async def test_migrate_passive_advertisement(
         patch_async_setup_entry(),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.version == 2
     assert entry.minor_version == 1
@@ -390,7 +389,7 @@ async def test_migration_preserves_registry_identifiers(
         device_id=device.id,
     )
     assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.version == 2
     assert entry.minor_version == 1
@@ -433,7 +432,7 @@ async def test_migrate_meter_pro_co2_without_advertisement(
         patch_async_setup_entry(),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.version == 2
     assert entry.minor_version == 1
@@ -466,7 +465,7 @@ async def test_migrate_deprecated_model_device_not_in_range(
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
     assert entry.version == 1
@@ -492,7 +491,7 @@ async def test_migration_retries_when_device_returns(
     entry.add_to_hass(hass)
 
     assert not await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert entry.state is ConfigEntryState.SETUP_RETRY
     assert entry.version == 1
 
@@ -543,7 +542,7 @@ async def test_migrate_entry_preserves_existing_options(
         patch_async_setup_entry(),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.version == 2
     assert entry.minor_version == 1
@@ -588,7 +587,7 @@ async def test_migrate_entry_fails_for_future_version(
         patch_async_setup_entry() as mock_setup_entry,
     ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.MIGRATION_ERROR
     assert entry.version == entry_version
@@ -646,7 +645,7 @@ async def test_migrate_deprecated_air_purifier_sensor_type(
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.data[CONF_SENSOR_TYPE] == expected_sensor_type
 
@@ -670,7 +669,7 @@ async def test_migrate_deprecated_air_purifier_sensor_type_device_not_in_range(
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # sensor_type unchanged and entry not loaded; will retry when device advertises
     assert entry.data[CONF_SENSOR_TYPE] == DEPRECATED_SENSOR_TYPE_AIR_PURIFIER
@@ -692,7 +691,7 @@ async def test_standing_fan_setup(
         new=AsyncMock(return_value=None),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.LOADED
     assert isinstance(entry.runtime_data.device, switchbot.SwitchbotStandingFan)

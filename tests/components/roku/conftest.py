@@ -4,13 +4,12 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 from rokuecp import Device as RokuDevice
 
 from homeassistant.components.roku.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 def app_icon_url(*args, **kwargs):

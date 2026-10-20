@@ -7,6 +7,7 @@ from lojack_api import LoJackClient
 from lojack_api.device import Vehicle
 from lojack_api.models import Location
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lojack.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -14,6 +15,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from .const import (
     TEST_ACCURACY,
     TEST_ADDRESS,
+    TEST_BATTERY_VOLTAGE,
     TEST_DEVICE_ID,
     TEST_DEVICE_NAME,
     TEST_HEADING,
@@ -21,15 +23,15 @@ from .const import (
     TEST_LONGITUDE,
     TEST_MAKE,
     TEST_MODEL,
+    TEST_ODOMETER,
     TEST_PASSWORD,
+    TEST_SPEED,
     TEST_TIMESTAMP,
     TEST_USER_ID,
     TEST_USERNAME,
     TEST_VIN,
     TEST_YEAR,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -56,6 +58,9 @@ def mock_location() -> Location:
         heading=TEST_HEADING,
         address=TEST_ADDRESS,
         timestamp=TEST_TIMESTAMP,
+        odometer=TEST_ODOMETER,
+        speed=TEST_SPEED,
+        battery_voltage=TEST_BATTERY_VOLTAGE,
     )
 
 

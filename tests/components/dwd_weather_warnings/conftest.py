@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.dwd_weather_warnings.const import (
     ADVANCE_WARNING_SENSOR,
@@ -13,8 +14,6 @@ from homeassistant.components.dwd_weather_warnings.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME
-
-from tests.common import MockConfigEntry
 
 MOCK_NAME = "Unit Test"
 MOCK_REGION_IDENTIFIER = "807111000"

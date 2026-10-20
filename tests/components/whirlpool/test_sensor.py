@@ -4,6 +4,10 @@ from datetime import UTC, datetime, timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+)
 from syrupy.assertion import SnapshotAssertion
 from whirlpool.dryer import MachineState as DryerMachineState
 from whirlpool.oven import CavityState as OvenCavityState
@@ -25,8 +29,6 @@ from . import (
     snapshot_whirlpool_entities,
     trigger_attr_callback,
 )
-
-from tests.common import async_fire_time_changed, mock_restore_cache_with_extra_data
 
 WASHER_ENTITY_ID_BASE = "sensor.washer"
 DRYER_ENTITY_ID_BASE = "sensor.dryer"

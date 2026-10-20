@@ -8,6 +8,8 @@ from unittest.mock import AsyncMock, Mock, call, patch
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockModule, mock_integration
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 import python_otbr_api
 from python_otbr_api import KeyFormat
 
@@ -30,9 +32,6 @@ from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.setup import async_setup_component
 
 from . import DATASET_CH15, DATASET_CH16, TEST_BORDER_AGENT_ID, TEST_BORDER_AGENT_ID_2
-
-from tests.common import MockConfigEntry, MockModule, mock_integration
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 HASSIO_DATA = HassioServiceInfo(
     config={"host": "core-silabs-multiprotocol", "port": 8081},

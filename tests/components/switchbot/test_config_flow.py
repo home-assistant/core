@@ -4,6 +4,9 @@ from collections.abc import Generator
 from unittest.mock import ANY, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from switchbot import (
     OAUTH_AUTHORIZE_URL,
     OAUTH_SCOPE,
@@ -65,10 +68,6 @@ from . import (
     init_integration,
     patch_async_setup_entry,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 DOMAIN = "switchbot"
 OAUTH_ACCESS_TOKEN = "oauth-access-token"
@@ -1743,7 +1742,7 @@ async def test_options_flow_lock_pro(hass: HomeAssistant) -> None:
     # Test Force night_latch should be disabled by default.
     with patch_async_setup_entry() as mock_setup_entry:
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
         assert result["type"] is FlowResultType.FORM
@@ -1808,7 +1807,7 @@ async def test_options_flow_curtain_speed(
 
     with patch_async_setup_entry() as mock_setup_entry:
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
         assert result["type"] is FlowResultType.FORM
@@ -2665,7 +2664,7 @@ async def test_options_flow_lock_with_night_latch(
     # Test night_latch should be disabled by default.
     with patch_async_setup_entry() as mock_setup_entry:
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
         assert result["type"] is FlowResultType.FORM

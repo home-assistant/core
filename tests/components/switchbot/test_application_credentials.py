@@ -1,5 +1,6 @@
 """Test the SwitchBot application credentials platform."""
 
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from switchbot import OAUTH_AUTHORIZE_URL, OAUTH_SCOPE, OAUTH_TOKEN_URL
 from yarl import URL
 
@@ -14,8 +15,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_implementations,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_application_credentials(
