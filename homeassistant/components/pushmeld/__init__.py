@@ -74,6 +74,8 @@ async def async_unload_entry(_hass: HomeAssistant, _entry: PushMeldConfigEntry) 
     return True
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: PushMeldConfigEntry) -> None:
+async def _async_update_listener(
+    hass: HomeAssistant, entry: PushMeldConfigEntry
+) -> None:
     """Reload the notification action when the entry title changes."""
     hass.config_entries.async_schedule_reload(entry.entry_id)

@@ -94,5 +94,3 @@ async def test_user_flow_rejects_duplicate_maxcode(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-

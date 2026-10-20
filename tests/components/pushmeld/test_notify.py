@@ -377,5 +377,7 @@ async def test_setup_does_not_remove_existing_notification_service(
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
     assert entry.error_reason_translation_key == "config_entry_error_name_exists"
-    assert entry.error_reason_translation_placeholders == {"service_name": "test_channel"}
+    assert entry.error_reason_translation_placeholders == {
+        "service_name": "test_channel"
+    }
     assert hass.services.has_service(NOTIFY_DOMAIN, "test_channel")

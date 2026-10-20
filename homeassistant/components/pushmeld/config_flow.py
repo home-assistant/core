@@ -29,7 +29,9 @@ class PushMeldConfigFlow(ConfigFlow, domain=DOMAIN):
         while True:
             title = DEFAULT_NAME if index == 1 else f"{DEFAULT_NAME} {index}"
             service_name = slugify(title)
-            if not self.hass.services.has_service(NOTIFY_DOMAIN, service_name) and not any(
+            if not self.hass.services.has_service(
+                NOTIFY_DOMAIN, service_name
+            ) and not any(
                 slugify(entry.title) == service_name
                 for entry in self.hass.config_entries.async_entries(DOMAIN)
             ):
