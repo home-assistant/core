@@ -121,6 +121,9 @@ class SerializationExtension(BaseTemplateExtension):
         if ensure_ascii:
             # For those who need ascii, we can't use orjson,
             # so we fall back to the json library.
+            if sort_keys:
+                # json cannot sort mixed key types, so stringify keys like orjson
+                value = json.loads(json.dumps(value))
             return json.dumps(
                 value,
                 ensure_ascii=ensure_ascii,
