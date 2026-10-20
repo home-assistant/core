@@ -1,7 +1,9 @@
 """Test UniFi Protect diagnostics."""
 
+from collections.abc import Callable, Coroutine
 import re
 from typing import Any
+from unittest.mock import Mock
 
 from syrupy.assertion import SnapshotAssertion
 from uiprotect.data import Light
@@ -104,3 +106,36 @@ async def test_diagnostics(
     diag_normalized = _normalize_diagnostics(diag)
 
     assert diag_normalized == snapshot
+
+
+async def test_public_only_diagnostics(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """Diagnostics for a public-only entry dump the public cache."""
+    await setup_public_only()
+    ufp_public_only.api.public_bootstrap.nvr.unifi_dict = Mock(
+        return_value={"name": "Test NVR"}
+    )
+    camera = Mock()
+    camera.unifi_dict = Mock(
+        return_value={
+            "name": "Cam",
+            "rtspsStreams": {"high": "rtsps://10.0.0.2:7441/secret?enableSrtp"},
+        }
+    )
+    ufp_public_only.api.public_bootstrap.cameras = {"cam-id": camera}
+
+    diag = await get_diagnostics_for_config_entry(
+        hass, hass_client, ufp_public_only.entry
+    )
+
+    assert "bootstrap" not in diag
+    # anonymize_data scrambles values; assert the structure, not the content
+    assert "name" in diag["public_bootstrap"]["nvr"]
+    assert diag["public_bootstrap"]["arm_mode"] is True
+    # the stream URLs carry the console host and a secret alias — never leak
+    dumped_camera = diag["public_bootstrap"]["cameras"][0]
+    assert dumped_camera["rtspsStreams"] == "**REDACTED**"

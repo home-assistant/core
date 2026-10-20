@@ -3,8 +3,6 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "kamereon_no_account": "Unable to find Kamereon account",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The selected Kamereon account ID does not match the previous account ID"
     },
     "error": {
@@ -212,17 +210,41 @@
     }
   },
   "exceptions": {
+    "account_forbidden": {
+      "message": "Access to Kamereon account {account_id} was denied by the Renault servers"
+    },
     "battery_soc_unavailable": {
       "message": "Battery state of charge data is currently unavailable"
-    },
-    "invalid_device_id": {
-      "message": "No device with ID {device_id} was found"
     },
     "no_config_entry_for_device": {
       "message": "No loaded config entry was found for device with ID {device_id}"
     },
     "unknown_error": {
       "message": "An unknown error occurred while communicating with the Renault servers: {error}"
+    }
+  },
+  "issues": {
+    "account_not_found": {
+      "fix_flow": {
+        "abort": {
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+          "no_new_account": "No other Kamereon account linked to your vehicles was found. If you already added your vehicles again under a new Renault entry, delete the entry for account {account_id}.",
+          "reauth_required": "Your Renault login is no longer valid. Re-authenticate the Renault integration, then open this repair again."
+        },
+        "step": {
+          "account": {
+            "data": {
+              "kamereon_account_id": "[%key:component::renault::config::step::kamereon::data::kamereon_account_id%]"
+            },
+            "data_description": {
+              "kamereon_account_id": "The new Kamereon account ID linked to your vehicles"
+            },
+            "description": "Renault no longer lists the Kamereon account {account_id}, so Home Assistant can't load your vehicles. Renault may have moved your vehicles to a new account.\n\nSelect the new account to keep using your existing devices and entities. The integration is reloaded once you submit.",
+            "title": "Select the new Kamereon account"
+          }
+        }
+      },
+      "title": "Renault account {account_id} no longer exists"
     }
   },
   "services": {

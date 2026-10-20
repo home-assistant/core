@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_PAYLOAD_LENGTH, CONF_VALUE, DOMAIN, KNX_ADDRESS, KNX_MODULE_KEY
+from .const import CONF_PAYLOAD_LENGTH, KNX_ADDRESS, KNX_MODULE_KEY
 from .entity import (
     KnxUiEntity,
     KnxUiEntityPlatformController,
@@ -22,8 +22,8 @@ from .entity import (
     build_yaml_unique_id,
 )
 from .knx_module import KNXModule
-from .storage.const import CONF_DATA, CONF_ENTITY, CONF_GA_SEND
-from .storage.util import ConfigExtractor
+from .storage.entity_store_schema import ButtonKnxConfig, KnxEntityData
+from .storage.knx_selector import PayloadValue, RawPayload
 
 
 async def async_setup_entry(
@@ -49,7 +49,9 @@ async def async_setup_entry(
             KnxYamlButton(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.data["entities"].get(Platform.BUTTON):
+    if ui_config := knx_module.config_store.get_entity_configs(
+        Platform.BUTTON, ButtonKnxConfig
+    ):
         entities.extend(
             KnxUiButton(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -100,32 +102,34 @@ class KnxUiButton(_KnxButton, KnxUiEntity):
     _device: XknxRawValue | XknxExposeSensor
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: dict[str, Any]
+        self,
+        knx_module: KNXModule,
+        unique_id: str,
+        config: KnxEntityData[ButtonKnxConfig],
     ) -> None:
         """Initialize a KNX button."""
-        knx_conf = ConfigExtractor(config[DOMAIN])
-        button_data = knx_conf.get(CONF_DATA)
-        if CONF_PAYLOAD in button_data and CONF_PAYLOAD_LENGTH in button_data:
-            self._payload = int(button_data[CONF_PAYLOAD], 16)
-            self._device = XknxRawValue(
-                xknx=knx_module.xknx,
-                name=config[CONF_ENTITY][CONF_NAME],
-                payload_length=button_data[CONF_PAYLOAD_LENGTH],
-                group_address=knx_conf.get_write(CONF_GA_SEND),
-            )
-        else:
-            dpt_string = knx_conf.get_dpt(CONF_GA_SEND)
-            self._payload = button_data[CONF_VALUE]
-            self._device = XknxExposeSensor(
-                xknx=knx_module.xknx,
-                name=config[CONF_ENTITY][CONF_NAME],
-                value_type=dpt_string,
-                group_address=knx_conf.get_write(CONF_GA_SEND),
-                respond_to_read=False,
-            )
+        ga_send = config.knx.ga_send
+        match config.knx.data:
+            case RawPayload(payload=payload, payload_length=payload_length):
+                self._payload = payload
+                self._device = XknxRawValue(
+                    xknx=knx_module.xknx,
+                    name=config.entity.xknx_name,
+                    payload_length=payload_length,
+                    group_address=ga_send.write,
+                )
+            case PayloadValue(value=value):
+                self._payload = value
+                self._device = XknxExposeSensor(
+                    xknx=knx_module.xknx,
+                    name=config.entity.xknx_name,
+                    value_type=ga_send.dpt,
+                    group_address=ga_send.write,
+                    respond_to_read=False,
+                )
 
         super().__init__(
             knx_module=knx_module,
             unique_id=unique_id,
-            entity_config=config[CONF_ENTITY],
+            entity_config=config.entity,
         )

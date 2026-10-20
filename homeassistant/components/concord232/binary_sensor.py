@@ -1,8 +1,11 @@
-"""Support for exposing Concord232 zones as binary sensors."""
+"""Support for exposing Concord232 elements as sensors."""
 
+import datetime
+import logging
 from typing import Any, override
 
-import voluptuous as vol
+from concord232 import client as concord232_client
+import probatio
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
@@ -11,38 +14,36 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
-from .alarm_control_panel import _async_import_yaml
-from .const import DOMAIN
-from .coordinator import Concord232ConfigEntry, Concord232Coordinator
+from . import Concord232ConfigEntry, async_import_yaml
+from .const import CONF_EXCLUDE_ZONES, CONF_ZONE_TYPES, DEFAULT_PORT
 
-PARALLEL_UPDATES = 0
-
-CONF_EXCLUDE_ZONES = "exclude_zones"
-CONF_ZONE_TYPES = "zone_types"
+_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_HOST = "localhost"
-DEFAULT_PORT = 5007
 
-ZONE_TYPES_SCHEMA = vol.Schema({cv.positive_int: BINARY_SENSOR_DEVICE_CLASSES_SCHEMA})
+SCAN_INTERVAL = datetime.timedelta(seconds=10)
+
+ZONE_TYPES_SCHEMA = probatio.Schema(
+    {cv.positive_int: BINARY_SENSOR_DEVICE_CLASSES_SCHEMA}
+)
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_EXCLUDE_ZONES, default=[]): vol.All(
-            cv.ensure_list, [cv.positive_int]
+        probatio.Optional(CONF_EXCLUDE_ZONES, default=[]): probatio.All(
+            probatio.EnsureList(), [cv.positive_int]
         ),
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_ZONE_TYPES, default={}): ZONE_TYPES_SCHEMA,
+        probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
+        probatio.Optional(CONF_ZONE_TYPES, default={}): ZONE_TYPES_SCHEMA,
     }
 )
 
@@ -54,20 +55,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import the YAML platform configuration and create a config entry."""
-    await _async_import_yaml(hass, config)
-
-
-def get_opening_type(zone: dict[str, Any]) -> BinarySensorDeviceClass:
-    """Return the device class guessed from the zone name."""
-    if "MOTION" in zone["name"]:
-        return BinarySensorDeviceClass.MOTION
-    if "KEY" in zone["name"]:
-        return BinarySensorDeviceClass.SAFETY
-    if "SMOKE" in zone["name"]:
-        return BinarySensorDeviceClass.SMOKE
-    if "WATER" in zone["name"]:
-        return BinarySensorDeviceClass.MOISTURE
-    return BinarySensorDeviceClass.OPENING
+    await async_import_yaml(hass, config)
 
 
 async def async_setup_entry(
@@ -76,63 +64,76 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Concord232 zone binary sensors from a config entry."""
-    coordinator = entry.runtime_data
+    client = entry.runtime_data
+    # Options imported from YAML; JSON storage turns zone numbers into strings
+    exclude = {int(number) for number in entry.options.get(CONF_EXCLUDE_ZONES, [])}
+    zone_types = {
+        int(number): BinarySensorDeviceClass(zone_type)
+        for number, zone_type in entry.options.get(CONF_ZONE_TYPES, {}).items()
+    }
     async_add_entities(
-        Concord232ZoneSensor(entry, zone) for zone in coordinator.data.zones
+        [
+            Concord232ZoneSensor(
+                client, zone, zone_types.get(zone["number"], get_opening_type(zone))
+            )
+            for zone in client.zones
+            if zone["number"] not in exclude
+        ],
+        True,
     )
 
 
-class Concord232ZoneSensor(
-    CoordinatorEntity[Concord232Coordinator], BinarySensorEntity
-):
-    """Representation of a Concord232 zone as a binary sensor."""
+def get_opening_type(zone):
+    """Return the result of the type guessing from name."""
+    if "MOTION" in zone["name"]:
+        return BinarySensorDeviceClass.MOTION
+    if "KEY" in zone["name"]:
+        return BinarySensorDeviceClass.SAFETY
+    if "SMOKE" in zone["name"]:
+        return BinarySensorDeviceClass.SMOKE
+    if "WATER" in zone["name"]:
+        return "water"
+    return BinarySensorDeviceClass.OPENING
 
-    _attr_has_entity_name = True
 
-    def __init__(self, entry: Concord232ConfigEntry, zone: dict[str, Any]) -> None:
-        """Initialize the Concord232 zone binary sensor."""
-        super().__init__(entry.runtime_data)
-        self._number: int = zone["number"]
-        self._zone_data = zone
-        self._attr_unique_id = f"{entry.entry_id}_zone_{self._number}"
-        self._attr_name = zone["name"]
-        self._attr_device_class = get_opening_type(zone)
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name=entry.title,
-        )
+class Concord232ZoneSensor(BinarySensorEntity):
+    """Representation of a Concord232 zone as a sensor."""
 
-    def _zone(self) -> dict[str, Any] | None:
-        """Return this zone's current data."""
-        return next(
-            (
-                zone
-                for zone in self.coordinator.data.zones
-                if zone["number"] == self._number
-            ),
-            None,
-        )
-
-    @callback
-    @override
-    def _handle_coordinator_update(self) -> None:
-        """Cache the zone's data so a missing zone keeps its last state."""
-        if (zone := self._zone()) is not None:
-            self._zone_data = zone
-        super()._handle_coordinator_update()
+    def __init__(
+        self,
+        client: concord232_client.Client,
+        zone: dict[str, Any],
+        zone_type: BinarySensorDeviceClass,
+    ) -> None:
+        """Initialize the Concord232 binary sensor."""
+        self._client = client
+        self._zone = zone
+        self._number = zone["number"]
+        self._attr_device_class = zone_type
 
     @property
     @override
-    def available(self) -> bool:
-        """Return True when the coordinator and the zone are available."""
-        return super().available and self._zone() is not None
+    def name(self) -> str:
+        """Return the name of the binary sensor."""
+        return self._zone["name"]
 
     @property
     @override
     def is_on(self) -> bool:
-        """Return true if the zone is faulted (open, tripped or abnormal)."""
-        # The original concord232 server reports zone state as a string; the
-        # actively maintained fork reports a list of states. Accept both.
-        state = self._zone_data["state"]
-        states = state if isinstance(state, list) else [state]
-        return states != ["Normal"]
+        """Return true if the binary sensor is on."""
+        # True means "faulted" or "open" or "abnormal state"
+        return bool(self._zone["state"] != "Normal")
+
+    def update(self) -> None:
+        """Get updated stats from API."""
+        last_update = dt_util.utcnow() - self._client.last_zone_update
+        _LOGGER.debug("Zone: %s ", self._zone)
+        if last_update > datetime.timedelta(seconds=1):
+            self._client.zones = self._client.list_zones()
+            self._client.last_zone_update = dt_util.utcnow()
+            _LOGGER.debug("Updated from zone: %s", self._zone["name"])
+
+        if hasattr(self._client, "zones"):
+            self._zone = next(
+                x for x in self._client.zones if x["number"] == self._number
+            )

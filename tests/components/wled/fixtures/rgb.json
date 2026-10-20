@@ -1,5 +1,8 @@
 {
   "state": {
+    "AudioReactive": {
+      "on": false
+    },
     "on": true,
     "bri": 128,
     "transition": 7,

@@ -4,8 +4,8 @@ from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any, override
 
+import probatio
 from pyecotrend_ista import KeycloakError, LoginError, PyEcotrendIsta, ServerError
-import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_NAME, CONF_PASSWORD
@@ -19,15 +19,15 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_EMAIL): TextSelector(
+        probatio.Required(CONF_EMAIL): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.EMAIL,
                 autocomplete="email",
             )
         ),
-        vol.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -126,6 +126,7 @@ class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_abort(reason="unique_id_mismatch")
                 return self.async_update_reload_and_abort(reauth_entry, data=user_input)
 
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="reauth_confirm" if self.source == SOURCE_REAUTH else "reconfigure",
             data_schema=self.add_suggested_values_to_schema(

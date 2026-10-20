@@ -15,9 +15,9 @@ from aiohomeconnect.model import (
 )
 from aiohomeconnect.model.error import HomeConnectError, NoProgramActiveError
 from aiohomeconnect.model.program import ProgramDefinitionOption
+from probatio.error import MultipleInvalid
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from voluptuous.error import MultipleInvalid
 
 from homeassistant.components import home_connect
 from homeassistant.components.home_connect.const import (
@@ -650,7 +650,7 @@ async def test_services_appliance_not_found(
 
     service_call["service_data"]["device_id"] = "DOES_NOT_EXISTS"
 
-    with pytest.raises(ServiceValidationError, match=r"Device entry.*not found"):
+    with pytest.raises(ServiceValidationError, match=r"Device with ID.*not found"):
         await hass.services.async_call(**service_call)
 
     unrelated_config_entry = MockConfigEntry(
@@ -663,7 +663,9 @@ async def test_services_appliance_not_found(
     )
     service_call["service_data"]["device_id"] = device_entry.id
 
-    with pytest.raises(ServiceValidationError, match=r"Config entry.*not found"):
+    with pytest.raises(
+        ServiceValidationError, match=rf"does not belong to integration {DOMAIN}"
+    ):
         await hass.services.async_call(**service_call)
 
     device_entry = device_registry.async_get_or_create(

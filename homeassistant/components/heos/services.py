@@ -4,18 +4,18 @@ from dataclasses import dataclass
 import logging
 from typing import Final
 
+import probatio
 from pyheos import CommandAuthenticationError, Heos, HeosError
-import voluptuous as vol
 
-from homeassistant.components.media_player import ATTR_MEDIA_VOLUME_LEVEL
+from homeassistant.components.media_player import (
+    ATTR_MEDIA_VOLUME_LEVEL,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    entity_platform,
-    issue_registry as ir,
-)
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.service import async_register_platform_entity_service
 from homeassistant.helpers.typing import VolDictType, VolSchemaType
 
 from .const import (
@@ -37,11 +37,14 @@ from .coordinator import HeosConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-HEOS_SIGN_IN_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_USERNAME): cv.string, vol.Required(ATTR_PASSWORD): cv.string}
+HEOS_SIGN_IN_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(ATTR_USERNAME): cv.string,
+        probatio.Required(ATTR_PASSWORD): cv.string,
+    }
 )
 
-HEOS_SIGN_OUT_SCHEMA = vol.Schema({})
+HEOS_SIGN_OUT_SCHEMA = probatio.Schema({})
 
 
 @callback
@@ -59,6 +62,16 @@ def async_setup_services(hass: HomeAssistant) -> None:
         _sign_out_handler,
         schema=HEOS_SIGN_OUT_SCHEMA,
     )
+    for description in MEDIA_PLAYER_ENTITY_SERVICES:
+        async_register_platform_entity_service(
+            hass,
+            DOMAIN,
+            description.name,
+            entity_domain=MEDIA_PLAYER_DOMAIN,
+            schema=description.schema,
+            func=description.method_name,
+            supports_response=description.supports_response,
+        )
 
 
 @dataclass(frozen=True)
@@ -70,34 +83,25 @@ class EntityServiceDescription:
     schema: VolDictType | VolSchemaType | None = None
     supports_response: SupportsResponse = SupportsResponse.NONE
 
-    def async_register(self, platform: entity_platform.EntityPlatform) -> None:
-        """Register the service with the platform."""
-        platform.async_register_entity_service(
-            self.name,
-            self.schema,
-            self.method_name,
-            supports_response=self.supports_response,
-        )
-
 
 REMOVE_FROM_QUEUE_SCHEMA: Final[VolDictType] = {
-    vol.Required(ATTR_QUEUE_IDS): vol.All(
-        cv.ensure_list,
-        [vol.All(cv.positive_int, vol.Range(min=1))],
-        vol.Unique(),
+    probatio.Required(ATTR_QUEUE_IDS): probatio.All(
+        probatio.EnsureList(),
+        [probatio.All(cv.positive_int, probatio.Range(min=1))],
+        probatio.Unique(),
     )
 }
 GROUP_VOLUME_SET_SCHEMA: Final[VolDictType] = {
-    vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float
+    probatio.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float
 }
 MOVE_QEUEUE_ITEM_SCHEMA: Final[VolDictType] = {
-    vol.Required(ATTR_QUEUE_IDS): vol.All(
-        cv.ensure_list,
-        [vol.All(vol.Coerce(int), vol.Range(min=1, max=1000))],
-        vol.Unique(),
+    probatio.Required(ATTR_QUEUE_IDS): probatio.All(
+        probatio.EnsureList(),
+        [probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=1000))],
+        probatio.Unique(),
     ),
-    vol.Required(ATTR_DESTINATION_POSITION): vol.All(
-        vol.Coerce(int), vol.Range(min=1, max=1000)
+    probatio.Required(ATTR_DESTINATION_POSITION): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=1, max=1000)
     ),
 }
 
@@ -121,13 +125,6 @@ MEDIA_PLAYER_ENTITY_SERVICES: Final = (
     EntityServiceDescription(SERVICE_GROUP_VOLUME_DOWN, "async_group_volume_down"),
     EntityServiceDescription(SERVICE_GROUP_VOLUME_UP, "async_group_volume_up"),
 )
-
-
-def register_media_player_services() -> None:
-    """Register media_player entity services."""
-    platform = entity_platform.async_get_current_platform()
-    for service in MEDIA_PLAYER_ENTITY_SERVICES:
-        service.async_register(platform)
 
 
 def _get_controller(hass: HomeAssistant) -> Heos:

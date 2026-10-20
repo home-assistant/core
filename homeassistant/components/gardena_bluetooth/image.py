@@ -97,8 +97,16 @@ class GardenaBluetoothImage(GardenaBluetoothEntity, ImageEntity):
     def _handle_coordinator_update(self) -> None:
         if (image := self._render()) != self._image:
             self._image = image
-            self._attr_image_last_updated = dt_util.utcnow()
+            self._attr_image_last_updated = dt_util.utcnow() if image else None
         super()._handle_coordinator_update()
+
+    @property
+    @override
+    def entity_picture(self) -> str | None:
+        """Return a link to the image, or none while there is nothing to show."""
+        if self._image is None:
+            return None
+        return super().entity_picture
 
     @override
     async def async_image(self) -> bytes | None:

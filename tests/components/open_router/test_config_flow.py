@@ -6,6 +6,7 @@ import pytest
 from python_open_router import OpenRouterError
 
 from homeassistant.components.open_router.const import (
+    CONF_OUTPUT_MODALITIES,
     CONF_PROMPT,
     CONF_WEB_SEARCH,
     DOMAIN,
@@ -150,6 +151,10 @@ async def test_create_conversation_agent(
     assert result["data_schema"].schema["model"].config["options"] == [
         {"value": "openai/gpt-3.5-turbo", "label": "OpenAI: GPT-3.5 Turbo"},
         {"value": "openai/gpt-4", "label": "OpenAI: GPT-4"},
+        {
+            "value": "google/gemini-2.5-flash-image",
+            "label": "Google: Gemini 2.5 Flash Image",
+        },
     ]
 
     result = await hass.config_entries.subentries.async_configure(
@@ -191,6 +196,10 @@ async def test_create_conversation_agent_no_control(
     assert result["data_schema"].schema["model"].config["options"] == [
         {"value": "openai/gpt-3.5-turbo", "label": "OpenAI: GPT-3.5 Turbo"},
         {"value": "openai/gpt-4", "label": "OpenAI: GPT-4"},
+        {
+            "value": "google/gemini-2.5-flash-image",
+            "label": "Google: Gemini 2.5 Flash Image",
+        },
     ]
 
     result = await hass.config_entries.subentries.async_configure(
@@ -207,17 +216,27 @@ async def test_create_conversation_agent_no_control(
     assert result["data"] == {
         CONF_MODEL: "openai/gpt-3.5-turbo",
         CONF_PROMPT: "you are an assistant",
+        CONF_LLM_HASS_API: [],
         CONF_WEB_SEARCH: "off",
     }
 
 
+@pytest.mark.parametrize(
+    ("model", "expected_modalities"),
+    [
+        ("openai/gpt-4", ["text"]),
+        ("google/gemini-2.5-flash-image", ["text", "image"]),
+    ],
+)
 async def test_create_ai_task(
     hass: HomeAssistant,
     mock_open_router_client: AsyncMock,
     mock_openai_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    model: str,
+    expected_modalities: list[str],
 ) -> None:
-    """Test creating an AI Task."""
+    """Test creating an AI Task stores the model output modalities."""
     await setup_integration(hass, mock_config_entry)
 
     result = await hass.config_entries.subentries.async_init(
@@ -230,15 +249,22 @@ async def test_create_ai_task(
 
     assert result["data_schema"].schema["model"].config["options"] == [
         {"value": "openai/gpt-4", "label": "OpenAI: GPT-4"},
+        {
+            "value": "google/gemini-2.5-flash-image",
+            "label": "Google: Gemini 2.5 Flash Image",
+        },
     ]
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {CONF_MODEL: "openai/gpt-4"},
+        {CONF_MODEL: model},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {CONF_MODEL: "openai/gpt-4"}
+    assert result["data"] == {
+        CONF_MODEL: model,
+        CONF_OUTPUT_MODALITIES: expected_modalities,
+    }
 
 
 @pytest.mark.parametrize(
@@ -331,6 +357,10 @@ async def test_reconfigure_ai_task(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+    subentry = mock_config_entry.subentries[subentry_id]
+    assert subentry.data[CONF_MODEL] == "openai/gpt-4"
+    assert subentry.data[CONF_OUTPUT_MODALITIES] == ["text"]
 
 
 @pytest.mark.parametrize(
@@ -485,9 +515,15 @@ async def test_reconfigure_conversation_subentry_web_search_default(
 @pytest.mark.parametrize(
     ("current_llm_apis", "suggested_llm_apis", "expected_options"),
     [
-        (["assist"], ["assist"], ["assist"]),
-        (["non-existent"], [], ["assist"]),
-        (["assist", "non-existent"], ["assist"], ["assist"]),
+        (["assist"], ["assist"], ["assist", "homeassistant"]),
+        (["non-existent"], [], ["assist", "homeassistant"]),
+        (["assist", "non-existent"], ["assist"], ["assist", "homeassistant"]),
+        pytest.param(
+            ["homeassistant"],
+            ["homeassistant"],
+            ["assist", "homeassistant"],
+            id="homeassistant_list",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -528,3 +564,34 @@ async def test_reconfigure_conversation_subentry_llm_api_schema(
     assert [
         opt["value"] for opt in field_schema.config.get("options")
     ] == expected_options
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_conversation_subentry_empty_llm_api(
+    hass: HomeAssistant,
+    mock_open_router_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an empty LLM API selection is stored and kept when reopening the form."""
+    await setup_integration(hass, mock_config_entry)
+
+    subentry_id = get_subentry_id(mock_config_entry, "conversation")
+
+    result = await mock_config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
+    await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_MODEL: "openai/gpt-4",
+            CONF_PROMPT: "updated prompt",
+            CONF_LLM_HASS_API: [],
+            CONF_WEB_SEARCH: "off",
+        },
+    )
+
+    assert mock_config_entry.subentries[subentry_id].data[CONF_LLM_HASS_API] == []
+
+    result = await mock_config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
+
+    schema = result["data_schema"].schema
+    key = next(k for k in schema if k == CONF_LLM_HASS_API)
+    assert key.default() == []

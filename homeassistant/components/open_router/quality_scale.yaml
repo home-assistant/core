@@ -82,7 +82,7 @@ rules:
     status: exempt
     comment: only one conversation entity
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: todo
   reconfiguration-flow: todo
   repair-issues:

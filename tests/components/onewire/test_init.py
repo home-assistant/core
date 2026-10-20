@@ -2,7 +2,11 @@
 
 from unittest.mock import MagicMock, patch
 
-from aio_ownet.exceptions import OWServerReturnError
+from aio_ownet.exceptions import (
+    OWServerConnectionError,
+    OWServerProtocolError,
+    OWServerReturnError,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -34,12 +38,22 @@ async def test_connect_failure(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(OWServerReturnError(-1), id="return_error"),
+        pytest.param(OWServerProtocolError("Malformed header"), id="protocol_error"),
+    ],
+)
 async def test_listing_failure(
-    hass: HomeAssistant, config_entry: MockConfigEntry, owproxy: MagicMock
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    owproxy: MagicMock,
+    exception: Exception,
 ) -> None:
     """Test listing failure raises ConfigEntryNotReady."""
-    owproxy.return_value.read.side_effect = OWServerReturnError(-1)
-    owproxy.return_value.dir.side_effect = OWServerReturnError(-1)
+    setup_owproxy_mock_devices(owproxy, [])
+    owproxy.return_value.dir.side_effect = exception
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -104,6 +118,39 @@ async def test_registry_delayed(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
+    assert (
+        len(dr.async_entries_for_config_entry(device_registry, config_entry.entry_id))
+        == 2
+    )
+
+
+async def test_scan_for_new_devices_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    owproxy: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the periodic device scan survives server errors."""
+    setup_owproxy_mock_devices(owproxy, [])
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    owproxy.return_value.dir.side_effect = OWServerConnectionError("Unreachable")
+    for _ in range(2):
+        freezer.tick(_DEVICE_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert caplog.text.count("Error scanning for new devices: Unreachable") == 1
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    setup_owproxy_mock_devices(owproxy, ["1F.111111111111"])
+    freezer.tick(_DEVICE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Scanning for new devices recovered" in caplog.text
     assert (
         len(dr.async_entries_for_config_entry(device_registry, config_entry.entry_id))
         == 2

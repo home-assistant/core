@@ -4,10 +4,16 @@ import logging
 from typing import Any, override
 
 from concord232 import client as concord232_client
+import probatio
 import requests
-import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    SOURCE_IMPORT,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_CODE,
     CONF_HOST,
@@ -16,7 +22,9 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
 )
-from homeassistant.core import callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
@@ -24,23 +32,30 @@ from homeassistant.helpers.selector import (
 )
 
 from . import build_url
-from .const import DEFAULT_MODE, DEFAULT_PORT, DOMAIN, MODE_AUDIBLE, MODE_SILENT
-from .coordinator import Concord232ConfigEntry
+from .const import (
+    CONF_EXCLUDE_ZONES,
+    CONF_ZONE_TYPES,
+    DEFAULT_MODE,
+    DEFAULT_PORT,
+    DOMAIN,
+    MODE_AUDIBLE,
+    MODE_SILENT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-USER_SCHEMA = vol.Schema(
+USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Required(CONF_SSL, default=False): bool,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
+        probatio.Required(CONF_SSL, default=False): bool,
     }
 )
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_CODE): str,
-        vol.Required(CONF_MODE, default=DEFAULT_MODE): SelectSelector(
+        probatio.Optional(CONF_CODE): str,
+        probatio.Required(CONF_MODE, default=DEFAULT_MODE): SelectSelector(
             SelectSelectorConfig(
                 options=[MODE_AUDIBLE, MODE_SILENT],
                 mode=SelectSelectorMode.DROPDOWN,
@@ -69,7 +84,7 @@ class Concord232ConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: Concord232ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> Concord232OptionsFlow:
         """Create the options flow."""
         return Concord232OptionsFlow()
@@ -100,8 +115,61 @@ class Concord232ConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import a config entry from YAML platform configuration."""
-        data = {
+        """Import a config entry from YAML platform configuration.
+
+        Concurrent imports are serialized by async_import_yaml, whose lock
+        spans the whole flow including entry registration.
+        """
+        result = await self._async_handle_import(import_data)
+
+        # Scoped per server: several YAML endpoints can import independently
+        issue_id = (
+            "deprecated_yaml_import_issue_cannot_connect"
+            f"_{import_data[CONF_HOST]}_{import_data[CONF_PORT]}"
+        )
+        if (
+            result["type"] is FlowResultType.ABORT
+            and result["reason"] == "cannot_connect"
+        ):
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                issue_id,
+                breaks_in_ha_version="2027.3.0",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="deprecated_yaml_import_issue_cannot_connect",
+                translation_placeholders={
+                    "host": str(import_data[CONF_HOST]),
+                    "port": str(import_data[CONF_PORT]),
+                },
+            )
+            return result
+
+        # This server imports now; drop the failure issue a previous attempt left
+        ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+        ir.async_create_issue(
+            self.hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2027.3.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Concord232",
+            },
+        )
+        return result
+
+    async def _async_handle_import(
+        self, import_data: dict[str, Any]
+    ) -> ConfigFlowResult:
+        """Create or enrich the config entry for imported YAML configuration."""
+        data: dict[str, Any] = {
             CONF_HOST: import_data[CONF_HOST],
             CONF_PORT: import_data[CONF_PORT],
             CONF_SSL: import_data.get(CONF_SSL, False),
@@ -111,20 +179,34 @@ class Concord232ConfigFlow(ConfigFlow, domain=DOMAIN):
             options[CONF_CODE] = import_data[CONF_CODE]
         if CONF_MODE in import_data:
             options[CONF_MODE] = import_data[CONF_MODE]
+        if import_data.get(CONF_EXCLUDE_ZONES):
+            options[CONF_EXCLUDE_ZONES] = import_data[CONF_EXCLUDE_ZONES]
+        if import_data.get(CONF_ZONE_TYPES):
+            # JSON storage requires string keys
+            options[CONF_ZONE_TYPES] = {
+                str(number): zone_type
+                for number, zone_type in import_data[CONF_ZONE_TYPES].items()
+            }
 
-        # Both platforms import the same YAML server (their setups hold a shared
-        # lock, so the imports run one at a time). When the other platform's
-        # import created the entry first, merge the alarm-only fields (code,
-        # mode) into it instead of dropping them.
+        # Both platforms import the same YAML server. When the other platform's
+        # import created the entry first, merge in the fields it does not carry
+        # (code, mode and name from the alarm platform; exclude_zones and
+        # zone_types from the binary sensor platform). YAML only fills gaps: it
+        # must never overwrite a user-created entry, options changed later in
+        # the UI, or a customized title.
         for entry in self._async_current_entries(include_ignore=False):
             if (
                 entry.data.get(CONF_HOST) != data[CONF_HOST]
                 or entry.data.get(CONF_PORT) != data[CONF_PORT]
             ):
                 continue
-            if options:
+            if entry.source == SOURCE_IMPORT:
+                merged_options = {**options, **entry.options}
+                title = entry.title
+                if CONF_NAME in import_data and title == entry.data[CONF_HOST]:
+                    title = import_data[CONF_NAME]
                 self.hass.config_entries.async_update_entry(
-                    entry, options={**entry.options, **options}
+                    entry, options=merged_options, title=title
                 )
             return self.async_abort(reason="already_configured")
 
@@ -147,7 +229,15 @@ class Concord232OptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
-            return self.async_create_entry(data=user_input)
+            # Keep the YAML-imported zone settings, which this form does not
+            # expose. A cleared code is stored as an explicit empty string so
+            # a later YAML import does not treat it as a gap to fill.
+            options = {**user_input}
+            options.setdefault(CONF_CODE, "")
+            for key in (CONF_EXCLUDE_ZONES, CONF_ZONE_TYPES):
+                if key in self.config_entry.options:
+                    options[key] = self.config_entry.options[key]
+            return self.async_create_entry(data=options)
 
         return self.async_show_form(
             step_id="init",

@@ -166,7 +166,6 @@ def mock_yoto_client() -> Generator[MagicMock]:
         client.players = {PLAYER_ID: _build_player()}
         client.library = {CARD_ID: _build_card()}
         client.groups = {GROUP_ID: _build_group()}
-        client.token = MagicMock(refresh_token="mock-refresh-token")
         yield client
 
 

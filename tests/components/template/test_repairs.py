@@ -50,13 +50,13 @@ def split_devices(
         identifiers={("itg2", "1")},
         name="Split device 2",
     )
-    device_registry.devices[device_1.id] = attr.evolve(
+    device_registry._devices[device_1.id] = attr.evolve(
         device_1, composite_device_id=COMPOSITE_ID
     )
-    device_registry.devices[device_2.id] = attr.evolve(
+    device_registry._devices[device_2.id] = attr.evolve(
         device_2, composite_device_id=COMPOSITE_ID
     )
-    return device_registry.devices[device_1.id], device_registry.devices[device_2.id]
+    return device_registry._devices[device_1.id], device_registry._devices[device_2.id]
 
 
 async def _setup_template_entry(
@@ -91,16 +91,20 @@ async def test_composite_device_id_creates_issue(
     """Test a composite device id in the config entry options creates an issue."""
     entry = await _setup_template_entry(hass, COMPOSITE_ID)
 
-    issue = issue_registry.async_get_issue(
-        DOMAIN, f"composite_device_id_{entry.entry_id}"
-    )
+    issue_id = f"composite_device_id_{entry.entry_id}"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
+    assert issue.config_entry_id == entry.entry_id
     assert issue.translation_placeholders == {"name": "My template"}
 
     # The template entity is not linked to the composite device
     entity_entry = entity_registry.async_get(TEMPLATE_ENTITY_ID)
     assert entity_entry is not None
     assert entity_entry.device_id is None
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 async def test_live_device_id_no_issue(
@@ -176,6 +180,53 @@ async def test_composite_device_id_repair_flow(
     assert entity_entry.device_id == picked_device_id
 
 
+@pytest.mark.usefixtures("split_devices")
+async def test_composite_device_id_repair_flow_links_child_device(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the repair flow accepts a child device and links the entity to it."""
+    source_entry = MockConfigEntry(domain="itg3")
+    source_entry.add_to_hass(hass)
+    parent_device = device_registry.async_get_or_create(
+        config_entry_id=source_entry.entry_id,
+        identifiers={("itg3", "parent")},
+    )
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=source_entry.entry_id,
+        identifiers={("itg3", "child")},
+        parent_device_id=parent_device.id,
+    )
+
+    entry = await _setup_template_entry(hass, COMPOSITE_ID)
+    issue_id = f"composite_device_id_{entry.entry_id}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    assert await async_setup_component(hass, "repairs", {})
+    await hass.async_block_till_done()
+    client = await hass_client()
+
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "select_device"
+
+    result = await process_repair_fix_flow(
+        client, result["flow_id"], json={CONF_DEVICE_ID: child_device.id}
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    assert entry.options[CONF_DEVICE_ID] == child_device.id
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    entity_entry = entity_registry.async_get(TEMPLATE_ENTITY_ID)
+    assert entity_entry is not None
+    assert entity_entry.device_id == child_device.id
+
+
 async def test_composite_device_id_repair_flow_ambiguity_not_resolved(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -238,22 +289,6 @@ async def test_composite_device_id_repair_flow_entry_removed(
     result = await process_repair_fix_flow(client, result["flow_id"], json={})
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "entry_removed"
-
-
-@pytest.mark.usefixtures("split_devices")
-async def test_issue_deleted_on_entry_removal(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test the issue is deleted when the config entry is removed."""
-    entry = await _setup_template_entry(hass, COMPOSITE_ID)
-    issue_id = f"composite_device_id_{entry.entry_id}"
-    assert issue_registry.async_get_issue(DOMAIN, issue_id)
-
-    await hass.config_entries.async_remove(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
 @pytest.mark.usefixtures("split_devices")

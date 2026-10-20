@@ -3,6 +3,7 @@
 from enum import StrEnum
 from typing import Any, override
 
+from pyvlx.const import Velocity
 from pyvlx.opening_device import (
     Awning,
     Blind,
@@ -17,6 +18,7 @@ from pyvlx.opening_device import (
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    ATTR_SPEED,
     ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
@@ -70,6 +72,7 @@ class VeluxCover(VeluxEntity, CoverEntity):
     """Representation of a Velux cover."""
 
     node: OpeningDevice
+    _attr_translation_key = "cover"
 
     # Features common to all covers
     _attr_supported_features = (
@@ -77,7 +80,19 @@ class VeluxCover(VeluxEntity, CoverEntity):
         | CoverEntityFeature.CLOSE
         | CoverEntityFeature.SET_POSITION
         | CoverEntityFeature.STOP
+        | CoverEntityFeature.SPEED
     )
+    _attr_supported_speeds = [
+        Velocity.SILENT.name.lower(),
+        Velocity.FAST.name.lower(),
+        Velocity.DEFAULT.name.lower(),
+    ]
+
+    def _velocity_from_speed(self, speed: str | None) -> Velocity | None:
+        """Return pyvlx Velocity for the given speed string, or None for default."""
+        if speed in self._attr_supported_speeds:
+            return Velocity[speed.upper()]
+        return None
 
     def __init__(
         self, hass: HomeAssistant, node: OpeningDevice, config_entry_id: str
@@ -128,22 +143,27 @@ class VeluxCover(VeluxEntity, CoverEntity):
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        await self.node.close(wait_for_completion=False)
+        velocity = self._velocity_from_speed(kwargs.get(ATTR_SPEED))
+        await self.node.close(velocity=velocity, wait_for_completion=False)
 
     @wrap_pyvlx_call_exceptions
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self.node.open(wait_for_completion=False)
+        velocity = self._velocity_from_speed(kwargs.get(ATTR_SPEED))
+        await self.node.open(velocity=velocity, wait_for_completion=False)
 
     @wrap_pyvlx_call_exceptions
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position_percent = 100 - kwargs[ATTR_POSITION]
+        velocity = self._velocity_from_speed(kwargs.get(ATTR_SPEED))
 
         await self.node.set_position(
-            Position(position_percent=position_percent), wait_for_completion=False
+            Position(position_percent=position_percent),
+            velocity=velocity,
+            wait_for_completion=False,
         )
 
     @wrap_pyvlx_call_exceptions
@@ -214,23 +234,31 @@ class VeluxDualRollerShutter(VeluxCover):
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        await self.node.close(curtain=self.part, wait_for_completion=False)
+        velocity = self._velocity_from_speed(kwargs.get(ATTR_SPEED))
+        await self.node.close(
+            curtain=self.part, velocity=velocity, wait_for_completion=False
+        )
 
     @wrap_pyvlx_call_exceptions
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self.node.open(curtain=self.part, wait_for_completion=False)
+        velocity = self._velocity_from_speed(kwargs.get(ATTR_SPEED))
+        await self.node.open(
+            curtain=self.part, velocity=velocity, wait_for_completion=False
+        )
 
     @wrap_pyvlx_call_exceptions
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position_percent = 100 - kwargs[ATTR_POSITION]
+        velocity = self._velocity_from_speed(kwargs.get(ATTR_SPEED))
 
         await self.node.set_position(
             Position(position_percent=position_percent),
             curtain=self.part,
+            velocity=velocity,
             wait_for_completion=False,
         )
 

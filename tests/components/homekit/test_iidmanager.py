@@ -9,10 +9,9 @@ from homeassistant.components.homekit.iidmanager import (
     get_iid_storage_filename_for_entry_id,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.util.json import json_loads
 from homeassistant.util.uuid import random_uuid_hex
 
-from tests.common import MockConfigEntry, async_load_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 async def test_iid_generation_and_restore(
@@ -108,8 +107,8 @@ async def test_iid_migration_to_v2(
     hass: HomeAssistant, iid_storage, hass_storage: dict[str, Any]
 ) -> None:
     """Test iid storage migration."""
-    v1_iids = json_loads(await async_load_fixture(hass, "iids_v1", DOMAIN))
-    v2_iids = json_loads(await async_load_fixture(hass, "iids_v2", DOMAIN))
+    v1_iids = await async_load_json_object_fixture(hass, "iids_v1", DOMAIN)
+    v2_iids = await async_load_json_object_fixture(hass, "iids_v2", DOMAIN)
     hass_storage["homekit.v1.iids"] = v1_iids
     hass_storage["homekit.v2.iids"] = v2_iids
 
@@ -132,11 +131,11 @@ async def test_iid_migration_to_v2_with_underscore(
     hass: HomeAssistant, iid_storage, hass_storage: dict[str, Any]
 ) -> None:
     """Test iid storage migration with underscore."""
-    v1_iids = json_loads(
-        await async_load_fixture(hass, "iids_v1_with_underscore", DOMAIN)
+    v1_iids = await async_load_json_object_fixture(
+        hass, "iids_v1_with_underscore", DOMAIN
     )
-    v2_iids = json_loads(
-        await async_load_fixture(hass, "iids_v2_with_underscore", DOMAIN)
+    v2_iids = await async_load_json_object_fixture(
+        hass, "iids_v2_with_underscore", DOMAIN
     )
     hass_storage["homekit.v1_with_underscore.iids"] = v1_iids
     hass_storage["homekit.v2_with_underscore.iids"] = v2_iids

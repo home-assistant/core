@@ -32,6 +32,24 @@ async def async_setup_entry(
         hass, (DOMAIN, "2_ch_power_strip"), config_entry_id=config_entry.entry_id
     )
 
+    # A hub with a switch device linked to it via its via device.
+    hub = async_create_device(hass, config_entry.entry_id, "Hub", None, None, "hub")
+
+    # A second hub with a power strip linked to it via its via device; the power
+    # strip in turn has its own child devices (outlets).
+    power_strip_hub = async_create_device(
+        hass, config_entry.entry_id, "Power strip hub", None, None, "power_strip_hub"
+    )
+    power_strip_via_hub = async_create_device(
+        hass,
+        config_entry.entry_id,
+        None,
+        "n_ch_power_strip",
+        {"number_of_sockets": "2"},
+        "2_ch_power_strip_via_hub",
+        via_device_id=power_strip_hub.id,
+    )
+
     async_add_entities(
         [
             DemoSwitch(
@@ -49,6 +67,30 @@ async def async_setup_entry(
                 state=True,
                 assumed=False,
                 parent_device_id=parent_device_id,
+            ),
+            DemoSwitch(
+                unique_id="hub_switch",
+                device_name="Hub switch",
+                entity_name=None,
+                state=False,
+                assumed=False,
+                via_device_id=hub.id,
+            ),
+            DemoSwitch(
+                unique_id="outlet_3",
+                device_name="Outlet 3",
+                entity_name=None,
+                state=False,
+                assumed=False,
+                parent_device_id=power_strip_via_hub.id,
+            ),
+            DemoSwitch(
+                unique_id="outlet_4",
+                device_name="Outlet 4",
+                entity_name=None,
+                state=True,
+                assumed=False,
+                parent_device_id=power_strip_via_hub.id,
             ),
         ]
     )
@@ -72,6 +114,7 @@ class DemoSwitch(SwitchEntity):
         translation_key: str | None = None,
         device_class: SwitchDeviceClass | None = None,
         parent_device_id: str | None = None,
+        via_device_id: str | None = None,
     ) -> None:
         """Initialize the Demo switch."""
         self._attr_assumed_state = assumed
@@ -90,6 +133,8 @@ class DemoSwitch(SwitchEntity):
                 identifiers={(DOMAIN, unique_id)},
                 name=device_name,
             )
+            if via_device_id is not None:
+                self._attr_device_info["via_device_id"] = via_device_id
         self._attr_name = entity_name
 
     @override
