@@ -12,6 +12,7 @@ from lorawan_connection import (
 )
 from lorawan_connection.mock import MockConnection
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 from sensecap_lorawan import S2100, S2101, S2102, S2103, SenseCapDevice
 from syrupy.assertion import SnapshotAssertion
 
@@ -21,8 +22,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .const import CATALOG_MODELS
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.mark.parametrize(("stack", "model"), CATALOG_MODELS)

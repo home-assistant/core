@@ -6,12 +6,11 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 from lorawan_connection import ConnectionUnavailable
 from lorawan_connection.mock import MockConnection
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup_retries_after_connection_recovers(

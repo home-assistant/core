@@ -12,6 +12,7 @@ from lorawan_connection import (
 )
 from lorawan_connection.mock import MockConnection
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from sensecap_lorawan import S2100, S2101, SenseCapDevice
 
 from homeassistant.components.lorawan import (
@@ -24,8 +25,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.util import dt as dt_util
 
 from .const import CATALOG_MODELS
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

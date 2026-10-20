@@ -6,19 +6,18 @@ from unittest.mock import Mock
 from lorawan_connection import DeviceDescriptor
 from lorawan_connection.mock import MockConnection
 import pytest
-from sensecap_lorawan import S2101
-
-from homeassistant.components.lorawan import async_register_connection
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.core import HomeAssistant
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     MockModule,
     mock_config_flow,
     mock_integration,
     mock_platform,
 )
+from sensecap_lorawan import S2101
+
+from homeassistant.components.lorawan import async_register_connection
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
