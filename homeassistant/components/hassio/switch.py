@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .auto_update import AutoUpdateUnavailableReason
 from .const import ADDONS_COORDINATOR, DATA_AUTO_UPDATE, MAIN_COORDINATOR
 from .entity import HassioAddonEntity, HassioCoreEntity
 from .handler import get_supervisor_client
@@ -47,7 +48,12 @@ async def async_setup_entry(
         for addon in coordinator.data.addons.values()
     )
 
-    if hass.data[DATA_AUTO_UPDATE].unavailable_reason is None:
+    # Being Home Assistant OS does not change while running, but the channel
+    # can; off the stable channel the switch is unavailable instead of missing
+    if (
+        hass.data[DATA_AUTO_UPDATE].unavailable_reason
+        is not AutoUpdateUnavailableReason.NOT_HOME_ASSISTANT_OS
+    ):
         async_add_entities(
             [
                 HassioCoreAutoUpdateSwitch(

@@ -1912,3 +1912,24 @@ async def test_switch_unavailable_on_beta_channel(
     await _refresh_main_coordinator(hass, freezer)
 
     assert hass.states.get(AUTO_UPDATE_SWITCH).state == "unavailable"
+
+
+async def test_switch_available_once_on_stable_channel(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    supervisor_info: AsyncMock,
+) -> None:
+    """Test the switch exists on the beta channel and works once on stable."""
+    supervisor_info.return_value = replace(
+        supervisor_info.return_value, channel=UpdateChannel.BETA
+    )
+    await _setup_hassio(hass, {"core_auto_update": True})
+
+    assert hass.states.get(AUTO_UPDATE_SWITCH).state == "unavailable"
+
+    supervisor_info.return_value = replace(
+        supervisor_info.return_value, channel=UpdateChannel.STABLE
+    )
+    await _refresh_main_coordinator(hass, freezer)
+
+    assert hass.states.get(AUTO_UPDATE_SWITCH).state == "on"
