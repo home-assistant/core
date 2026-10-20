@@ -1,7 +1,12 @@
-"""Departures between two stops in an imported GTFS schedule."""
+"""Departures between two stops in an imported GTFS schedule.
+
+Call these functions in the executor while holding the feed's lock: the
+SQLAlchemy session isn't thread-safe and time zone lookups may hit the disk.
+"""
 
 from dataclasses import dataclass
 import datetime as dt
+from typing import Any
 
 import pygtfs
 from pygtfs.gtfs_entities import (
@@ -12,7 +17,7 @@ from pygtfs.gtfs_entities import (
     StopTime,
     Trip,
 )
-from sqlalchemy import or_
+from sqlalchemy import Row, or_
 from sqlalchemy.orm import aliased
 
 from homeassistant.util import dt as dt_util
@@ -66,10 +71,11 @@ def departures(
 ) -> list[Departure]:
     """Return trips from origin to destination overlapping [start, end)."""
     first = start.astimezone(time_zone).date() - dt.timedelta(days=LOOKBACK_DAYS)
-    last = end.astimezone(time_zone).date()
+    # On a day clocks go forward, the next service day starts before midnight.
+    last = end.astimezone(time_zone).date() + dt.timedelta(days=1)
     active = _active_services(schedule, first, last)
     trips = _trips(schedule, origin, destination)
-    found: list[Departure] = []
+    rides: dict[tuple[str, dt.date], Departure] = {}
     for day, services in active.items():
         # GTFS times count from noon minus 12 hours, which stays correct on
         # daylight saving days; the arithmetic must be absolute, so do it in UTC.
@@ -79,23 +85,31 @@ def departures(
         for trip in trips:
             if trip.service_id not in services:
                 continue
-            departure = base + trip.departure_time
-            arrival = base + trip.arrival_time
-            if departure < end and arrival > start:
-                found.append(
-                    Departure(
-                        departure=departure,
-                        arrival=arrival,
-                        service_date=day,
-                        trip_id=trip.trip_id,
-                        headsign=trip.stop_headsign or trip.trip_headsign,
-                        route_short_name=trip.route_short_name,
-                        route_long_name=trip.route_long_name,
-                        agency_name=trip.agency_name,
-                    )
-                )
+            ride = Departure(
+                departure=base + trip.departure_time,
+                arrival=base + trip.arrival_time,
+                service_date=day,
+                trip_id=trip.trip_id,
+                headsign=trip.stop_headsign or trip.trip_headsign,
+                route_short_name=trip.route_short_name,
+                route_long_name=trip.route_long_name,
+                agency_name=trip.agency_name,
+            )
+            # A trip visiting the origin more than once departs on its shortest ride.
+            best = rides.get((trip.trip_id, day))
+            if best is None or _is_shorter(ride, best):
+                rides[trip.trip_id, day] = ride
+    found = [
+        ride for ride in rides.values() if ride.departure < end and ride.arrival > start
+    ]
     found.sort(key=lambda item: (item.departure, item.trip_id))
     return found
+
+
+def _is_shorter(ride: Departure, other: Departure) -> bool:
+    return ride.departure > other.departure or (
+        ride.departure == other.departure and ride.arrival < other.arrival
+    )
 
 
 def _active_services(
@@ -125,7 +139,7 @@ def _active_services(
     return active
 
 
-def _trips(schedule: pygtfs.Schedule, origin: str, destination: str) -> list:
+def _trips(schedule: pygtfs.Schedule, origin: str, destination: str) -> list[Row[Any]]:
     origin_time = aliased(StopTime)
     destination_time = aliased(StopTime)
     return (

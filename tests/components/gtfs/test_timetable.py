@@ -11,11 +11,18 @@ import pytest
 
 from homeassistant.components.gtfs.feed import close_feed, import_feed, open_feed
 from homeassistant.components.gtfs.timetable import departures, feed_time_zone
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import FIXTURE_DIR, build_feed_zip
 
 NEW_YORK = dt_util.get_time_zone("America/New_York")
+
+
+@pytest.fixture(autouse=True)
+async def time_zone(hass: HomeAssistant) -> None:
+    """Run in a time zone other than the feed's."""
+    await hass.config.async_set_time_zone("US/Pacific")
 
 
 @contextmanager
@@ -84,6 +91,17 @@ def _summary(
             [("2026-10-20T04:30:00+00:00", "2026-10-20T04:50:00+00:00", "NT1")],
             id="past_midnight_on_previous_service_day",
         ),
+        pytest.param(
+            "S1",
+            "S3",
+            dt.datetime(2026, 10, 19, 4, tzinfo=dt.UTC),
+            dt.datetime(2026, 10, 20, 4, tzinfo=dt.UTC),
+            [
+                ("2026-10-19T12:00:00+00:00", "2026-10-19T12:20:00+00:00", "T1"),
+                ("2026-10-19T21:00:00+00:00", "2026-10-19T21:20:00+00:00", "T2"),
+            ],
+            id="utc_window",
+        ),
         pytest.param("S1", "S3", _ny(21, 0), _ny(22, 0), [], id="service_removed"),
         pytest.param("S3", "S1", _ny(19, 0), _ny(20, 0), [], id="wrong_direction"),
         pytest.param(
@@ -120,6 +138,50 @@ def test_departures_service_added(tmp_path: Path) -> None:
     with _schedule(tmp_path, replace) as schedule:
         assert _summary(schedule, "S1", "S3", _ny(21, 0), _ny(22, 0)) == [
             ("2026-10-21T16:00:00+00:00", "2026-10-21T16:20:00+00:00", "T3")
+        ]
+
+
+def test_departures_dst_start_service_day(tmp_path: Path) -> None:
+    """Test a trip whose service day starts before the window ends.
+
+    When clocks go forward, the service day starts at 23:00 the day before.
+    """
+    replace = {
+        "trips.txt": _fixture("trips.txt") + "R1,DAILY,T9\n",
+        "stop_times.txt": _fixture("stop_times.txt")
+        + "T9,00:30:00,00:30:00,S1,1\nT9,00:50:00,00:50:00,S3,2\n",
+    }
+    with _schedule(tmp_path, replace) as schedule:
+        assert _summary(
+            schedule, "S1", "S3", _ny(7, 23, month=3), _ny(7, 23, 59, month=3)
+        ) == [("2026-03-08T04:30:00+00:00", "2026-03-08T04:50:00+00:00", "T9")]
+
+
+def test_departures_service_ends_in_window(tmp_path: Path) -> None:
+    """Test a service whose end date falls inside the window."""
+    calendar = (
+        "service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,"
+        "start_date,end_date\n"
+        "DAILY,1,1,1,1,1,1,1,20260101,20261019\n"
+    )
+    with _schedule(tmp_path, {"calendar.txt": calendar}) as schedule:
+        assert _summary(schedule, "S1", "S3", _ny(19, 0), _ny(21, 0)) == [
+            ("2026-10-19T12:00:00+00:00", "2026-10-19T12:20:00+00:00", "T1"),
+            ("2026-10-19T21:00:00+00:00", "2026-10-19T21:20:00+00:00", "T2"),
+        ]
+
+
+def test_departures_trip_visiting_origin_twice(tmp_path: Path) -> None:
+    """Test that a trip visiting the origin twice departs from the last visit."""
+    replace = {
+        "trips.txt": _fixture("trips.txt") + "R1,DAILY,T9\n",
+        "stop_times.txt": _fixture("stop_times.txt")
+        + "T9,10:00:00,10:00:00,S1,1\nT9,10:10:00,10:10:00,S2,2\n"
+        + "T9,10:20:00,10:20:00,S1,3\nT9,10:30:00,10:30:00,S3,4\n",
+    }
+    with _schedule(tmp_path, replace) as schedule:
+        assert _summary(schedule, "S1", "S3", _ny(19, 9), _ny(19, 12)) == [
+            ("2026-10-19T14:20:00+00:00", "2026-10-19T14:30:00+00:00", "T9")
         ]
 
 
@@ -161,7 +223,6 @@ def test_departure_details(tmp_path: Path) -> None:
 )
 def test_feed_time_zone(tmp_path: Path, agency_timezone: str, expected: str) -> None:
     """Test the feed time zone and the fallback to Home Assistant's."""
-    dt_util.set_default_time_zone(dt_util.get_time_zone("US/Pacific"))
     agency = (
         "agency_id,agency_name,agency_url,agency_timezone\n"
         f"TA,Test Agency,https://example.com,{agency_timezone}\n"
