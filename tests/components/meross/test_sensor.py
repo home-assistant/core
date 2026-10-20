@@ -14,7 +14,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import MEROSS_MS120_ADDRESS, MEROSS_MS120_SERVICE_INFO, MEROSS_MS220_SERVICE_INFO
+from . import (
+    MEROSS_MS120_ADDRESS,
+    MEROSS_MS120_SERVICE_INFO,
+    MEROSS_MS220_SERVICE_INFO,
+    MEROSS_MS420_SERVICE_INFO,
+    MEROSS_MS700_ADDRESS,
+    MEROSS_MS700_SERVICE_INFO,
+)
 
 
 @pytest.mark.usefixtures("mock_bluetooth", "entity_registry_enabled_by_default")
@@ -53,6 +60,21 @@ async def test_ms120_sensors(hass: HomeAssistant) -> None:
     assert battery_sensor is not None
     assert battery_sensor.state == "80"
 
+    dew_point_sensor = hass.states.get("sensor.meross_ms120_dew_point")
+    assert dew_point_sensor is not None
+    assert dew_point_sensor.state == "13.9"
+    assert dew_point_sensor.attributes[ATTR_UNIT_OF_MEASUREMENT] == "°C"
+
+    absolute_humidity_sensor = hass.states.get("sensor.meross_ms120_absolute_humidity")
+    assert absolute_humidity_sensor is not None
+    assert absolute_humidity_sensor.state == "11.5"
+    assert absolute_humidity_sensor.attributes[ATTR_UNIT_OF_MEASUREMENT] == "g/m³"
+
+    vpd_sensor = hass.states.get("sensor.meross_ms120_vpd")
+    assert vpd_sensor is not None
+    assert vpd_sensor.state == "1.6"
+    assert vpd_sensor.attributes[ATTR_UNIT_OF_MEASUREMENT] == "kPa"
+
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -83,3 +105,52 @@ async def test_ms220_battery_sensor(hass: HomeAssistant) -> None:
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("mock_bluetooth", "entity_registry_enabled_by_default")
+async def test_ms420_battery_sensor(hass: HomeAssistant) -> None:
+    """Test MS420 exposes a battery sensor."""
+    inject_bluetooth_service_info(hass, MEROSS_MS420_SERVICE_INFO)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="aabbccddee02",
+        title="Meross MS420",
+        data={
+            CONF_ADDRESS: MEROSS_MS420_SERVICE_INFO.address,
+            CONF_MODEL: "ms420",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    battery_sensor = hass.states.get("sensor.meross_ms420_battery")
+    assert battery_sensor is not None
+    assert battery_sensor.state == "85"
+
+
+@pytest.mark.usefixtures("mock_bluetooth", "entity_registry_enabled_by_default")
+async def test_ms700_sensors(hass: HomeAssistant) -> None:
+    """Test MS700 advertisement creates temperature sensors."""
+    inject_bluetooth_service_info(hass, MEROSS_MS700_SERVICE_INFO)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="aabbccddee03",
+        title="Meross MS700",
+        data={
+            CONF_ADDRESS: MEROSS_MS700_ADDRESS,
+            CONF_MODEL: "ms700",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all("sensor")) == 6
+    assert hass.states.get("sensor.meross_ms700_temperature").state == "25.0"
+    assert hass.states.get("sensor.meross_ms700_humidity").state == "50.0"
+    assert hass.states.get("sensor.meross_ms700_battery").state == "75"

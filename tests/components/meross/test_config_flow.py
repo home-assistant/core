@@ -411,3 +411,27 @@ async def test_user_already_configured(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
+
+
+async def test_user_ignores_unsupported_advertisements(hass: HomeAssistant) -> None:
+    """Test manual setup skips advertisements that cannot be parsed as Meross."""
+    with (
+        patch(
+            "homeassistant.components.meross.config_flow.bluetooth.async_request_active_scan"
+        ),
+        patch(
+            "homeassistant.components.meross.config_flow.bluetooth.async_scanner_count",
+            return_value=1,
+        ),
+        patch(
+            "homeassistant.components.meross.config_flow.async_discovered_service_info",
+            return_value=[NOT_MEROSS_SERVICE_INFO],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
