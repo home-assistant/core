@@ -186,6 +186,9 @@ ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_UNIT_OF_MEASUREMENT): probatio.All(
             probatio.EnsureList(), [str]
         ),
+        probatio.Optional("translation_key"): probatio.All(
+            probatio.EnsureList(), [str]
+        ),
     }
 )
 
@@ -223,6 +226,7 @@ class EntityFilterSelectorConfig(TypedDict, total=False):
     device_class: str | list[str]
     supported_features: list[str]
     unit_of_measurement: str | list[str]
+    translation_key: str | list[str]
 
 
 DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA = probatio.Schema(

@@ -383,6 +383,24 @@ def test_device_selector_schema_error(schema) -> None:
             ("light.abc123", "blah.blah", FAKE_UUID),
             (None,),
         ),
+        (
+            {
+                "filter": [
+                    {"translation_key": "epex_current_hour"},
+                ]
+            },
+            ("sensor.abc123", FAKE_UUID),
+            (None,),
+        ),
+        (
+            {
+                "filter": [
+                    {"translation_key": ["epex_current_hour", "epex_next_hour"]},
+                ]
+            },
+            ("sensor.abc123", FAKE_UUID),
+            (None,),
+        ),
     ],
 )
 def test_entity_selector_schema(schema, valid_selections, invalid_selections) -> None:
@@ -409,6 +427,8 @@ def test_entity_selector_schema(schema, valid_selections, invalid_selections) ->
         {"unit_of_measurement": ["currywurst", "bratwurst"]},
         # Invalid unit_of_measurement
         {"filter": [{"unit_of_measurement": 42}]},
+        {"translation_key": "epex_current_hour"},
+        {"filter": [{"translation_key": 42}]},
         # Device properties must be grouped under the device key
         {"filter": [{"manufacturer": "mock-manuf"}]},
         {"filter": [{"model": "mock-model"}]},
@@ -1275,6 +1295,16 @@ def test_serial_port_selector_schema(
             {
                 "entity": {"domain": "light"},
                 "primary_entities_only": True,
+            },
+            (),
+            (),
+        ),
+        (
+            {
+                "entity": {
+                    "domain": "sensor",
+                    "translation_key": "epex_current_hour",
+                }
             },
             (),
             (),

@@ -56,6 +56,7 @@ class _EntityFilter:
     domains: set[str]
     device_classes: set[str]
     supported_features: set[int]
+    translation_keys: set[str]
 
     def matches(
         self, hass: HomeAssistant, entity_id: str, domain: str, integration: str
@@ -79,6 +80,11 @@ class _EntityFilter:
                 feature & entity_supported_features == feature
                 for feature in self.supported_features
             ):
+                return False
+
+        if self.translation_keys:
+            entry = er.async_get(hass).async_get(entity_id)
+            if entry is None or entry.translation_key not in self.translation_keys:
                 return False
 
         return True
@@ -107,6 +113,7 @@ class _AutomationComponentLookupData:
                 supported_features=set(
                     entity_filter_config.get("supported_features", [])
                 ),
+                translation_keys=set(entity_filter_config.get("translation_key", [])),
             )
             filters.append(entity_filter)
 
