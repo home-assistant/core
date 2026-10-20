@@ -32,6 +32,7 @@ SERVICE_PLAY_STREAM: Final = "play_stream"
 
 ATTR_FILENAME: Final = "filename"
 ATTR_MEDIA_PLAYER: Final = "media_player"
+ATTR_TIMESTAMP: Final = "timestamp"
 ATTR_FORMAT: Final = "format"
 
 CONF_LOOKBACK: Final = "lookback"
@@ -39,6 +40,8 @@ CONF_DURATION: Final = "duration"
 
 CAMERA_STREAM_SOURCE_TIMEOUT: Final = 10
 CAMERA_IMAGE_TIMEOUT: Final = 10
+# Recorded history can take longer, e.g. a frame grab from a recording.
+CAMERA_PAST_IMAGE_TIMEOUT: Final = 30
 
 
 class CameraEntityStateAttribute(StrEnum):
@@ -78,3 +81,4 @@ class CameraEntityFeature(IntFlag):
 
     ON_OFF = 1
     STREAM = 2
+    PAST_IMAGE = 4
