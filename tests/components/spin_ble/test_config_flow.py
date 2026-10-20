@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from spinev_ble import SpinEvError
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
@@ -27,8 +28,6 @@ from .const import (
     SERIAL,
     SERVICE_UUID,
 )
-
-from tests.common import MockConfigEntry
 
 
 @contextmanager
@@ -152,6 +151,7 @@ async def test_user_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == SERIAL
     assert result["data"] == ENTRY_DATA
+    assert result["result"].unique_id == ADDRESS
 
 
 @pytest.mark.usefixtures("mock_charger")

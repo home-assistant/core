@@ -4,6 +4,7 @@ from dataclasses import replace
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from spinev_ble import ChargerState
 from syrupy.assertion import SnapshotAssertion
 
@@ -12,8 +13,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .const import IDLE_STATUS, STATE_SENSOR
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("mock_charger")

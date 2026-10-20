@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from spinev_ble import ChargerStatus, SpinEvError
 
 from homeassistant.components.spin_ble.const import (
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 from .const import IDLE_STATUS, STATE_SENSOR, STATUS
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def setup_persistent(hass: HomeAssistant, entry: MockConfigEntry) -> None:
