@@ -13486,3 +13486,35 @@ async def test_get_or_create_child_device(
     )
     assert same_child_device.id == child_device.id
     assert same_child_device.name == "Outlet 1"
+
+
+async def test_get_or_create_device(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry_with_subentries: MockConfigEntry,
+) -> None:
+    """Test getting or creating a device from a device info."""
+    config_entry_id = mock_config_entry_with_subentries.entry_id
+    device = device_registry.async_get_or_create_device(
+        config_entry_id=config_entry_id,
+        config_subentry_id="mock-subentry-id-1-1",
+        disabled_by=dr.DeviceEntryDisabler.INTEGRATION,
+        device_info=dr.DeviceInfo(
+            identifiers={("test", "strip")}, manufacturer="Acme", name="Power strip"
+        ),
+    )
+    assert isinstance(device, dr.DeviceEntry)
+    assert device.config_subentry_id == "mock-subentry-id-1-1"
+    assert device.disabled_by is dr.DeviceEntryDisabler.INTEGRATION
+    assert device.identifiers == {("test", "strip")}
+    assert device.manufacturer == "Acme"
+    assert device.name == "Power strip"
+
+    # Fields left unset in the device info keep their value
+    same_device = device_registry.async_get_or_create_device(
+        config_entry_id=config_entry_id,
+        config_subentry_id="mock-subentry-id-1-1",
+        device_info=dr.DeviceInfo(identifiers={("test", "strip")}),
+    )
+    assert same_device.id == device.id
+    assert same_device.manufacturer == "Acme"
+    assert same_device.name == "Power strip"
