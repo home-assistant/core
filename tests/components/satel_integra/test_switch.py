@@ -208,7 +208,10 @@ async def test_switch_command_rejected(
 
     assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == translation_key
-    assert err.value.translation_placeholders is None
+    if translation_key == "output_command_rejected":
+        assert err.value.translation_placeholders == {"result_code": "0x8A"}
+    else:
+        assert err.value.translation_placeholders is None
     state = hass.states.get("switch.switchable_output")
     assert state is not None
     assert state.state == STATE_OFF

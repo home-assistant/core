@@ -221,7 +221,7 @@
       "message": "The alarm panel did not confirm the output command. The output may have changed; check its state before trying again."
     },
     "output_command_rejected": {
-      "message": "The alarm panel rejected the output command. Check the panel configuration and event log for more information."
+      "message": "The alarm panel rejected the output command with result code {result_code}. Check the panel configuration and event log for more information."
     },
     "panel_busy": {
       "message": "[%key:component::satel_integra::config::error::panel_busy%]"

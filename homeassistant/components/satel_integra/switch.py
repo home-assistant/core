@@ -117,6 +117,9 @@ class SatelIntegraSwitch(
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="output_command_rejected",
+                translation_placeholders={
+                    "result_code": f"0x{int(err.result.code):02X}"
+                },
             ) from err
         except SatelNoResponseError as err:
             raise HomeAssistantError(
