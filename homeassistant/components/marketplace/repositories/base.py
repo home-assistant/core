@@ -131,6 +131,7 @@ TOPIC_FILTER = (
 
 # What a catalog entry leaves out is reset to these
 REPOSITORY_KEYS_TO_EXPORT: tuple[tuple[str, Any], ...] = (
+    ("categories", []),
     ("description", ""),
     ("downloads", 0),
     ("domain", None),
@@ -280,6 +281,17 @@ class RepositoryArchive:
             archive.extractall(local, extractable)
 
 
+def valid_integration_categories(value: Any) -> list[str]:
+    """Return the integration categories, or none when they are not valid.
+
+    The catalog only lists known categories. A broken value loses just the
+    categories, not the whole repository.
+    """
+    if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+        return []
+    return list(value)
+
+
 @attr.s(auto_attribs=True)
 class RepositoryData:
     """RepositoryData class."""
@@ -302,6 +314,8 @@ class RepositoryData:
     has_issues: bool = True
     # "0" until the repository is known on GitHub
     id: str = "0"
+    # The categories in the manifest of an integration, like `energy.ev_charging`
+    integration_categories: list[str] = attr.field(factory=list)
     installed_commit: str | None = None
     installed_version: str | None = None
     installed: bool = False
@@ -346,6 +360,12 @@ class RepositoryData:
     def update_data(self, data: dict[str, Any]) -> None:
         """Update data of the repository."""
         for key, value in data.items():
+            # The catalog calls them categories, here that word means the
+            # kind of repository
+            if key == "categories":
+                self.integration_categories = valid_integration_categories(value)
+                continue
+
             if key not in self.__dict__:
                 continue
 
