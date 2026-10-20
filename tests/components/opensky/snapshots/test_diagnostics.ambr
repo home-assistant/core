@@ -1,10 +1,6 @@
 # serializer version: 1
 # name: test_diagnostics
   dict({
-    'data': dict({
-      'latitude': '**REDACTED**',
-      'longitude': '**REDACTED**',
-    }),
     'flights_in_area': 1,
     'options': dict({
       'altitude': 12500.0,
