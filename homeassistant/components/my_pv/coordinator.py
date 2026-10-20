@@ -4,7 +4,7 @@ from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import functools
 import logging
-from typing import Any, Final, override
+from typing import Any, Concatenate, Final, override
 
 from my_pv import MyPVDevice
 from my_pv.exceptions import (
@@ -26,13 +26,13 @@ _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL = timedelta(seconds=5)
 
 
-def _handle_device_errors(
-    func: Callable[..., Coroutine[Any, Any, bool]],
-) -> Callable[..., Coroutine[Any, Any, bool]]:
+def _handle_device_errors[**P](
+    func: Callable[Concatenate[MyPVCoordinator, P], Coroutine[Any, Any, bool]],
+) -> Callable[Concatenate[MyPVCoordinator, P], Coroutine[Any, Any, bool]]:
     """Connect if needed and handle device errors."""
 
     @functools.wraps(func)
-    async def wrapper(self, *args: Any, **kwargs: Any) -> bool:
+    async def wrapper(self: MyPVCoordinator, *args: P.args, **kwargs: P.kwargs) -> bool:
         try:
             if not self.device.connected and not await self.device.connect():
                 raise HomeAssistantError(
@@ -55,7 +55,7 @@ def _handle_device_errors(
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_unavailable",
-                translation_placeholders={"uri": self.device.uri},
+                translation_placeholders={"uri": str(self.device.uri)},
             ) from exc
 
     return wrapper
