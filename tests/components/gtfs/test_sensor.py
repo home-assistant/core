@@ -1,7 +1,9 @@
 """Tests for the GTFS sensor."""
 
+import gc
 from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pygtfs
@@ -9,6 +11,7 @@ import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.gtfs import sensor as gtfs_sensor
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -191,12 +194,44 @@ async def test_update(
     freezer.move_to("2026-10-19 18:00:00-04:00")
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
-    assert hass.states.get(DAY_ENTITY_ID) == snapshot(name="no_departures")
+    assert (state := hass.states.get(DAY_ENTITY_ID)) == snapshot(name="no_departures")
+    assert not [key for key in state.attributes if key.startswith("trip_")]
 
     freezer.move_to("2026-10-20 00:15:00-04:00")
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(DAY_ENTITY_ID) == snapshot(name="next_day")
+
+
+@pytest.mark.freeze_time("2026-10-19 07:30:00-04:00")
+@pytest.mark.usefixtures("feed_file")
+async def test_update_releases_connections(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test polling does not accumulate checked-out database connections."""
+    # Without a collection pass, an unclosed connection stays checked out.
+    gc.disable()
+    try:
+        with patch.object(
+            gtfs_sensor, "get_next_departure", wraps=gtfs_sensor.get_next_departure
+        ) as get_next_departure:
+            await setup_yaml_sensor(hass, **DAY_ROUTE)
+            # The YAML sensor's schedule is only reachable through the query call.
+            pool = get_next_departure.call_args.args[0].engine.pool
+            checked_out = pool.checkedout()
+            for now in (
+                "2026-10-19 09:00:00-04:00",
+                "2026-10-19 18:00:00-04:00",
+                "2026-10-20 00:15:00-04:00",
+            ):
+                freezer.move_to(now)
+                async_fire_time_changed(hass)
+                await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert get_next_departure.call_count == 4
+        assert pool.checkedout() == checked_out
+    finally:
+        gc.enable()
 
 
 async def test_missing_data_file(
@@ -256,8 +291,7 @@ async def test_existing_database_is_reused(
 async def test_sensors_sharing_a_feed(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, feed_file: Path
 ) -> None:
-    """Test two sensors reading one feed update independently."""
-    # Importing first avoids the legacy table-creation race between sensors.
+    """Test two sensors reading one already imported feed update independently."""
     await hass.async_add_executor_job(_import_feed, feed_file)
     assert await async_setup_component(
         hass,
@@ -287,3 +321,30 @@ async def test_sensors_sharing_a_feed(
     assert state.state == "2026-10-19T21:00:00+00:00"
     assert (state := hass.states.get(SECOND_ENTITY_ID)) is not None
     assert state.state == "2026-10-19T21:10:00+00:00"
+
+
+@pytest.mark.freeze_time("2026-10-19 07:30:00-04:00")
+async def test_sensors_sharing_a_new_feed(hass: HomeAssistant, feed_file: Path) -> None:
+    """Test two sensors set up concurrently import a new feed only once."""
+    assert await async_setup_component(
+        hass,
+        SENSOR_DOMAIN,
+        {
+            SENSOR_DOMAIN: [
+                {"platform": "gtfs", "data": "feed.zip", **DAY_ROUTE},
+                {
+                    "platform": "gtfs",
+                    "data": "feed.zip",
+                    "origin": "S2",
+                    "destination": "S3",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(DAY_ENTITY_ID)) is not None
+    assert state.state == "2026-10-19T12:00:00+00:00"
+    assert (state := hass.states.get(SECOND_ENTITY_ID)) is not None
+    assert state.state == "2026-10-19T12:10:00+00:00"
+    assert await hass.async_add_executor_job(_feed_count, feed_file) == 1

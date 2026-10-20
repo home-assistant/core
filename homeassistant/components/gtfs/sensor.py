@@ -24,6 +24,8 @@ from homeassistant.util import dt as dt_util, slugify
 
 _LOGGER = logging.getLogger(__name__)
 
+_SCHEDULE_SETUP_LOCK = threading.Lock()
+
 ATTR_ARRIVAL = "arrival"
 ATTR_BICYCLE = "trip_bikes_allowed_state"
 ATTR_DAY = "day"
@@ -344,15 +346,16 @@ def get_next_departure(
                  origin_stop_time.departure_time
         LIMIT :limit
         """  # noqa: S608
-    result = schedule.engine.connect().execute(
-        text(sql_query),
-        {
-            "origin_station_id": start_station_id,
-            "end_station_id": end_station_id,
-            "today": now_date,
-            "limit": limit,
-        },
-    )
+    with schedule.engine.connect() as connection:
+        rows = connection.execute(
+            text(sql_query),
+            {
+                "origin_station_id": start_station_id,
+                "end_station_id": end_station_id,
+                "today": now_date,
+                "limit": limit,
+            },
+        ).all()
 
     # Create lookup timetable for today and possibly tomorrow, taking into
     # account any departures from yesterday scheduled after midnight,
@@ -361,7 +364,7 @@ def get_next_departure(
     today_start = tomorrow_start = None
     yesterday_last = today_last = ""
 
-    for row_cursor in result:
+    for row_cursor in rows:
         row = row_cursor._asdict()
         if row["yesterday"] == 1 and yesterday_date >= row["start_date"]:
             extras = {"day": "yesterday", "first": None, "last": False}
@@ -506,10 +509,12 @@ def setup_platform(
 
     sqlite_file = f"{gtfs_root}.sqlite?check_same_thread=False"
     joined_path = os.path.join(gtfs_dir, sqlite_file)
-    gtfs = pygtfs.Schedule(joined_path)
+    # Platforms sharing a data file set up in parallel executor jobs.
+    with _SCHEDULE_SETUP_LOCK:
+        gtfs = pygtfs.Schedule(joined_path)
 
-    if not gtfs.feeds:
-        pygtfs.append_feed(gtfs, os.path.join(gtfs_dir, data))
+        if not gtfs.feeds:
+            pygtfs.append_feed(gtfs, os.path.join(gtfs_dir, data))
 
     add_entities(
         [GTFSDepartureSensor(gtfs, name, origin, destination, offset, include_tomorrow)]
@@ -763,7 +768,7 @@ class GTFSDepartureSensor(SensorEntity):
             ]
 
         # Manage Trip metadata
-        key = "trip_id"
+        key = "trip_trip_id"
         if not self._trip and key in self._attributes:
             self.remove_keys("Trip")
         elif self._trip and (
@@ -832,6 +837,7 @@ class GTFSDepartureSensor(SensorEntity):
 
     def remove_keys(self, prefix: str) -> None:
         """Remove attributes whose key starts with prefix."""
+        prefix = slugify(prefix)
         self._attributes = {
             k: v for k, v in self._attributes.items() if not k.startswith(prefix)
         }
