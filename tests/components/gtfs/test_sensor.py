@@ -1,37 +1,23 @@
 """Tests for the GTFS sensor."""
 
 import gc
-import json
 from pathlib import Path
-from types import MappingProxyType
 from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pygtfs
 import pytest
-from pytest_homeassistant.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    snapshot_platform,
-)
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.gtfs import sensor as gtfs_sensor
-from homeassistant.components.gtfs.const import (
-    CONF_DESTINATION,
-    CONF_ORIGIN,
-    DOMAIN,
-    SUBENTRY_TYPE_ROUTE,
-)
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import ROUTE_ENTITY_ID, ROUTE_SUBENTRY_ID, setup_integration, setup_yaml_sensor
+from . import setup_yaml_sensor
 
 DAY_ROUTE = {"origin": "S1", "destination": "S3"}
 NIGHT_ROUTE = {"origin": "N1", "destination": "N2"}
@@ -39,7 +25,6 @@ DAY_ENTITY_ID = "sensor.test_agency_s1_to_s3_next_departure"
 NIGHT_ENTITY_ID = "sensor.test_agency_n1_to_n2_next_departure"
 SECOND_ENTITY_ID = "sensor.test_agency_s2_to_s3_next_departure"
 NO_DEPARTURE_ENTITY_ID = "sensor.gtfs_sensor"
-SECOND_ROUTE_ENTITY_ID = "sensor.second_street_to_third_street"
 
 
 def _import_feed(feed_file: Path) -> None:
@@ -363,81 +348,3 @@ async def test_sensors_sharing_a_new_feed(hass: HomeAssistant, feed_file: Path) 
     assert (state := hass.states.get(SECOND_ENTITY_ID)) is not None
     assert state.state == "2026-10-19T12:10:00+00:00"
     assert await hass.async_add_executor_job(_feed_count, feed_file) == 1
-
-
-@pytest.mark.freeze_time("2026-10-19 07:30:00-04:00")
-@pytest.mark.usefixtures("mock_feed_download")
-async def test_config_entry_sensor(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test the route subentry's departure sensor and device."""
-    await setup_integration(hass, mock_config_entry)
-
-    assert (state := hass.states.get(ROUTE_ENTITY_ID)) is not None
-    assert state.state == "2026-10-19T12:00:00+00:00"
-    assert state.name == "First Street to Third Street"
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-    assert (
-        device := device_registry.async_get_device_by_identifier(
-            (DOMAIN, ROUTE_SUBENTRY_ID), mock_config_entry.entry_id
-        )
-    ) is not None
-    assert device.name == "First Street to Third Street"
-    assert device.manufacturer is None
-    assert device.entry_type is dr.DeviceEntryType.SERVICE
-    assert device.config_entry_id == mock_config_entry.entry_id
-    assert device.config_subentry_id == ROUTE_SUBENTRY_ID
-
-
-@pytest.mark.freeze_time("2026-10-19 18:00:00-04:00")
-@pytest.mark.usefixtures("mock_feed_download")
-async def test_config_entry_sensor_looks_ahead_to_tomorrow(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test a route shows tomorrow's first departure once today's have ended."""
-    await setup_integration(hass, mock_config_entry)
-
-    assert (state := hass.states.get(ROUTE_ENTITY_ID)) is not None
-    assert state.state == "2026-10-20T12:00:00+00:00"
-    assert state.attributes["day"] == "tomorrow"
-
-
-@pytest.mark.freeze_time("2026-10-19 07:30:00-04:00")
-@pytest.mark.usefixtures("mock_feed_download")
-async def test_config_entry_multiple_routes(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test routes of one feed share its schedule and poll together."""
-    mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_add_subentry(
-        mock_config_entry,
-        ConfigSubentry(
-            data=MappingProxyType({CONF_ORIGIN: "S2", CONF_DESTINATION: "S3"}),
-            subentry_type=SUBENTRY_TYPE_ROUTE,
-            title="Second Street to Third Street",
-            unique_id=json.dumps(["S2", "S3"]),
-        ),
-    )
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert (state := hass.states.get(ROUTE_ENTITY_ID)) is not None
-    assert state.state == "2026-10-19T12:00:00+00:00"
-    assert (state := hass.states.get(SECOND_ROUTE_ENTITY_ID)) is not None
-    assert state.state == "2026-10-19T12:10:00+00:00"
-
-    freezer.move_to("2026-10-19 09:00:00-04:00")
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert (state := hass.states.get(ROUTE_ENTITY_ID)) is not None
-    assert state.state == "2026-10-19T21:00:00+00:00"
-    assert (state := hass.states.get(SECOND_ROUTE_ENTITY_ID)) is not None
-    assert state.state == "2026-10-19T21:10:00+00:00"

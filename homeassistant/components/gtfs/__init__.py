@@ -18,7 +18,7 @@ from .feed import (
     open_feed,
 )
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.CALENDAR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: GtfsConfigEntry) -> None:

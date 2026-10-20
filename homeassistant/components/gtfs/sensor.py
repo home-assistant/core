@@ -18,23 +18,11 @@ from homeassistant.components.sensor import (
 from homeassistant.const import CONF_NAME, CONF_OFFSET, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, slugify
 
-from .const import (
-    CONF_DATA,
-    CONF_DESTINATION,
-    CONF_ORIGIN,
-    CONF_TOMORROW,
-    DEFAULT_PATH,
-    DOMAIN,
-)
-from .feed import GtfsConfigEntry
+from .const import CONF_DATA, CONF_DESTINATION, CONF_ORIGIN, CONF_TOMORROW, DEFAULT_PATH
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -492,37 +480,6 @@ def get_next_departure(
     }
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: GtfsConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up departure sensors for each route subentry."""
-    feed = entry.runtime_data
-    for subentry_id, subentry in entry.subentries.items():
-        async_add_entities(
-            [
-                GTFSDepartureSensor(
-                    gtfs=feed.schedule,
-                    name=None,
-                    origin=subentry.data[CONF_ORIGIN],
-                    destination=subentry.data[CONF_DESTINATION],
-                    offset=dt.timedelta(),
-                    include_tomorrow=True,
-                    lock=feed.lock,
-                    unique_id=subentry_id,
-                    device_info=DeviceInfo(
-                        identifiers={(DOMAIN, subentry_id)},
-                        name=subentry.title,
-                        entry_type=DeviceEntryType.SERVICE,
-                    ),
-                )
-            ],
-            update_before_add=True,
-            config_subentry_id=subentry_id,
-        )
-
-
 def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -555,11 +512,9 @@ def setup_platform(
         if not gtfs.feeds:
             pygtfs.append_feed(gtfs, os.path.join(gtfs_dir, data))
 
-    sensor = GTFSDepartureSensor(
-        gtfs, name, origin, destination, offset, include_tomorrow, threading.Lock()
+    add_entities(
+        [GTFSDepartureSensor(gtfs, name, origin, destination, offset, include_tomorrow)]
     )
-    sensor.update()
-    add_entities([sensor])
 
 
 class GTFSDepartureSensor(SensorEntity):
@@ -575,16 +530,8 @@ class GTFSDepartureSensor(SensorEntity):
         destination: Any,
         offset: dt.timedelta,
         include_tomorrow: bool,
-        lock: threading.Lock,
-        *,
-        unique_id: str | None = None,
-        device_info: DeviceInfo | None = None,
     ) -> None:
         """Initialize the sensor."""
-        self._attr_unique_id = unique_id
-        if device_info:
-            self._attr_device_info = device_info
-            self._attr_has_entity_name = True
         self._pygtfs = gtfs
         self.origin = origin
         self.destination = destination
@@ -605,14 +552,13 @@ class GTFSDepartureSensor(SensorEntity):
         self._route = None
         self._trip = None
 
-        self.lock = lock
+        self.lock = threading.Lock()
+        self.update()
 
     @property
     @override
-    def name(self) -> str | None:
+    def name(self) -> str:
         """Return the name of the sensor."""
-        if self.has_entity_name:
-            return None
         return self._name
 
     @property

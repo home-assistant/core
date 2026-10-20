@@ -458,7 +458,7 @@ async def test_add_route(
 
     await hass.async_block_till_done()
     assert len(mock_config_entry.subentries) == 2
-    assert hass.states.get("sensor.second_street_to_third_street") is not None
+    assert hass.states.get("calendar.second_street_to_third_street") is not None
 
 
 @pytest.mark.usefixtures("mock_feed_download")
