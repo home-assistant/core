@@ -400,6 +400,10 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Manage additional options."""
+        coordinator = self._get_entry().runtime_data
+        if user_input is None:
+            await coordinator.async_refresh()
+
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
 
@@ -425,7 +429,6 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         if user_input is not None:
             self.options.update(user_input)
 
-            coordinator = self._get_entry().runtime_data
             self.model_info, status = coordinator.get_model_info(
                 self.options[CONF_CHAT_MODEL]
             )

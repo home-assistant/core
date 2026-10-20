@@ -126,6 +126,81 @@ async def test_login_new_user_and_trying_refresh_token(
     assert resp.status == HTTPStatus.OK
 
 
+async def test_auth_code_of_removed_credentials(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test a code issued before its credentials were removed buys no tokens."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    credentials = await hass.auth.auth_providers[0].async_get_or_create_credentials(
+        {"username": "test-user"}
+    )
+    user = await hass.auth.async_get_or_create_user(credentials)
+    code = auth.create_auth_code(hass, CLIENT_ID, credentials)
+
+    await hass.auth.async_remove_credentials(credentials)
+    resp = await client.post(
+        "/auth/token",
+        data={"client_id": CLIENT_ID, "grant_type": "authorization_code", "code": code},
+    )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    assert (await resp.json())["error_description"] == "Invalid code"
+    assert user.refresh_tokens == {}
+
+
+async def test_auth_code_of_first_sign_in_redeemed_twice(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test the codes of two first sign ins of one account create one user."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    codes = []
+    for _ in range(2):
+        resp = await client.post(
+            "/auth/login_flow",
+            json={
+                "client_id": CLIENT_ID,
+                "handler": ["insecure_example", None],
+                "redirect_uri": CLIENT_REDIRECT_URI,
+            },
+        )
+        step = await resp.json()
+        resp = await client.post(
+            f"/auth/login_flow/{step['flow_id']}",
+            json={
+                "client_id": CLIENT_ID,
+                "username": "test-user",
+                "password": "test-pass",
+            },
+        )
+        codes.append((await resp.json())["result"])
+    users = await hass.auth.async_get_users()
+
+    resp = await client.post(
+        "/auth/token",
+        data={
+            "client_id": CLIENT_ID,
+            "grant_type": "authorization_code",
+            "code": codes[0],
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    resp = await client.post(
+        "/auth/token",
+        data={
+            "client_id": CLIENT_ID,
+            "grant_type": "authorization_code",
+            "code": codes[1],
+        },
+    )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    assert await resp.json() == {
+        "error": "invalid_grant",
+        "error_description": "Sign in again",
+    }
+    assert len(await hass.auth.async_get_users()) == len(users) + 1
+
+
 async def test_auth_code_checks_local_only_user(
     hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
 ) -> None:
@@ -553,7 +628,9 @@ async def test_ws_delete_all_refresh_tokens_error(
 
     tokens = result["result"]
 
-    with patch("homeassistant.components.auth.DELETE_CURRENT_TOKEN_DELAY", 0.001):
+    with patch(
+        "homeassistant.components.websocket_api.connection.AUTH_CLOSE_DELAY", 0.001
+    ):
         await ws_client.send_json(
             {
                 "id": 6,
@@ -638,7 +715,9 @@ async def test_ws_delete_all_refresh_tokens(
     result = await ws_client.receive_json()
     assert result["success"], result
 
-    with patch("homeassistant.components.auth.DELETE_CURRENT_TOKEN_DELAY", 0.001):
+    with patch(
+        "homeassistant.components.websocket_api.connection.AUTH_CLOSE_DELAY", 0.001
+    ):
         await ws_client.send_json(
             {
                 "id": 6,
@@ -669,6 +748,27 @@ async def test_ws_delete_all_refresh_tokens(
     assert (
         remaining_tokens_by_type[TOKEN_TYPE_NORMAL] == expected_remaining_normal_tokens
     )
+
+
+async def test_ws_delete_current_token_before_closing(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_access_token: str
+) -> None:
+    """Test the current token is gone once the result arrives, before the close."""
+    assert await async_setup_component(hass, DOMAIN, {"http": {}})
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
+    assert refresh_token is not None
+    ws_client = await hass_ws_client(hass, hass_access_token)
+
+    with patch(
+        "homeassistant.components.websocket_api.connection.AUTH_CLOSE_DELAY", 3600
+    ):
+        await ws_client.send_json({"id": 5, "type": "auth/delete_all_refresh_tokens"})
+        result = await ws_client.receive_json()
+
+        assert result["success"], result
+        assert not ws_client.closed
+        assert hass.auth.async_get_refresh_token(refresh_token.id) is None
+        assert hass.auth.async_validate_access_token(hass_access_token) is None
 
 
 async def test_ws_sign_path(

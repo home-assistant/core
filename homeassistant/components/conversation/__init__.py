@@ -14,7 +14,7 @@ from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .agent_manager import AgentInfo, async_converse, async_get_agent, get_agent_manager
+from .agent_manager import async_converse, async_get_agent, get_agent_manager
 from .chat_log import (
     AssistantContent,
     AssistantContentDeltaDict,
@@ -37,7 +37,12 @@ from .const import (
 from .default_agent import async_setup_default_agent
 from .entity import ConversationEntity
 from .http import async_setup as async_setup_conversation_http
-from .models import AbstractConversationAgent, ConversationInput, ConversationResult
+from .models import (
+    AbstractConversationAgent,
+    AgentInfo,
+    ConversationInput,
+    ConversationResult,
+)
 from .services import async_setup_services
 from .trace import ConversationTraceEventType, async_conversation_trace_append
 from .util import async_get_result_from_chat_log, get_config_intents
