@@ -384,3 +384,76 @@ async def test_trigger_ignores_foreign_entity(
     hass.states.async_set("sensor.foreign_price", "on")
     await hass.async_block_till_done()
     assert len(automation_calls(service_calls)) == 0
+
+
+@pytest.mark.parametrize(
+    (
+        "trigger_key",
+        "domain",
+        "unique_id",
+        "own_unique_id",
+        "hold_state",
+        "fire_state",
+        "options",
+    ),
+    [
+        pytest.param(
+            "epex_current_hour_crossed_threshold",
+            "sensor",
+            f"{BAN}_epex_next_hour",
+            f"{BAN}_epex_current_hour",
+            "0.15",
+            "0.25",
+            _CROSSED_THRESHOLD_OPTIONS,
+            id="hour_threshold_targeting_next_hour",
+        ),
+        pytest.param(
+            "epex_hour_became_negative",
+            "binary_sensor",
+            f"{BAN}_epex_negative_quarter_hour",
+            f"{BAN}_epex_negative",
+            STATE_OFF,
+            STATE_ON,
+            {},
+            id="hour_negative_targeting_quarter_hour",
+        ),
+    ],
+)
+async def test_trigger_ignores_mismatched_target(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    service_calls: list[ServiceCall],
+    trigger_key: str,
+    domain: str,
+    unique_id: str,
+    own_unique_id: str,
+    hold_state: str,
+    fire_state: str,
+    options: dict[str, Any],
+) -> None:
+    """Test that a trigger targeting an entity of another kind never fires."""
+    await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
+    entity_id = engie_entity_id(entity_registry, domain, unique_id)
+    own_entity_id = engie_entity_id(entity_registry, domain, own_unique_id)
+    await _async_setup_trigger_automation(
+        hass,
+        {
+            "trigger": f"{DOMAIN}.{trigger_key}",
+            "target": {"entity_id": entity_id},
+            "options": options,
+        },
+    )
+
+    hass.states.async_set(entity_id, hold_state)
+    await hass.async_block_till_done()
+    hass.states.async_set(entity_id, fire_state)
+    await hass.async_block_till_done()
+    assert len(automation_calls(service_calls)) == 0
+
+    hass.states.async_set(own_entity_id, hold_state)
+    await hass.async_block_till_done()
+    hass.states.async_set(own_entity_id, fire_state)
+    await hass.async_block_till_done()
+    assert len(automation_calls(service_calls)) == 0

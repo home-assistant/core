@@ -14,6 +14,7 @@ from pytest_homeassistant.components.common import (
 from homeassistant.components import automation
 from homeassistant.components.engie_be.condition import CONDITIONS
 from homeassistant.components.engie_be.const import DOMAIN
+from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -227,3 +228,68 @@ async def test_threshold_condition(
     hass.states.async_set("input_boolean.test", "on")
     await hass.async_block_till_done()
     assert len(automation_calls(service_calls)) == 1
+
+
+@pytest.mark.parametrize(
+    (
+        "condition_key",
+        "domain",
+        "unique_id",
+        "own_unique_id",
+        "options",
+        "passing_state",
+    ),
+    [
+        pytest.param(
+            "epex_hour_price_meets_threshold",
+            "sensor",
+            f"{BAN}_epex_next_hour",
+            f"{BAN}_epex_current_hour",
+            _BELOW_THRESHOLD_OPTIONS,
+            "0.05",
+            id="hour_threshold_targeting_next_hour",
+        ),
+        pytest.param(
+            "epex_hour_price_is_negative",
+            "binary_sensor",
+            f"{BAN}_epex_negative_quarter_hour",
+            f"{BAN}_epex_negative",
+            {},
+            STATE_ON,
+            id="hour_negative_targeting_quarter_hour",
+        ),
+    ],
+)
+async def test_condition_ignores_mismatched_target(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    service_calls: list[ServiceCall],
+    condition_key: str,
+    domain: str,
+    unique_id: str,
+    own_unique_id: str,
+    options: dict[str, Any],
+    passing_state: str,
+) -> None:
+    """Test that a condition targeting an entity of another kind never passes."""
+    await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
+    entity_id = engie_entity_id(entity_registry, domain, unique_id)
+    own_entity_id = engie_entity_id(entity_registry, domain, own_unique_id)
+    hass.states.async_set("input_boolean.test", "off")
+    await _async_setup_condition_automation(
+        hass,
+        {
+            "condition": f"{DOMAIN}.{condition_key}",
+            "target": {"entity_id": entity_id},
+            "options": options,
+        },
+    )
+
+    hass.states.async_set(entity_id, passing_state)
+    hass.states.async_set(own_entity_id, passing_state)
+    await hass.async_block_till_done()
+    hass.states.async_set("input_boolean.test", "on")
+    await hass.async_block_till_done()
+    assert len(automation_calls(service_calls)) == 0
