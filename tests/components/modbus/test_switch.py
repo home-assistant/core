@@ -5,6 +5,7 @@ from unittest import mock
 
 from pymodbus.exceptions import ModbusException
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.modbus.const import (
@@ -45,8 +46,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .conftest import TEST_ENTITY_NAME, ReadResult
-
-from tests.common import async_fire_time_changed
 
 ENTITY_ID = f"{SWITCH_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
 ENTITY_ID2 = f"{ENTITY_ID}_2"
@@ -552,7 +551,7 @@ async def test_delay_switch(hass: HomeAssistant, mock_modbus) -> None:
     now = now + timedelta(seconds=2)
     with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
         async_fire_time_changed(hass, now)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
 

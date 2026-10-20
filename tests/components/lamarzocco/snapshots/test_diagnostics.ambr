@@ -295,6 +295,7 @@
         'offline_mode': False,
         'require_firmware_update': False,
         'serial_number': '**REDACTED**',
+        'shot_counter_supported': False,
         'type': 'CoffeeMachine',
         'widgets': list([
           dict({
@@ -619,6 +620,7 @@
         'offline_mode': False,
         'require_firmware_update': False,
         'serial_number': '**REDACTED**',
+        'shot_counter_supported': False,
         'smart_stand_by': None,
         'smart_stand_by_supported': False,
         'smart_wake_up_sleep': dict({
@@ -788,6 +790,7 @@
         'plumb_in_supported': True,
         'require_firmware_update': False,
         'serial_number': '**REDACTED**',
+        'shot_counter_supported': False,
         'type': 'CoffeeMachine',
         'wifi_rssi': -51,
         'wifi_ssid': 'MyWifi',

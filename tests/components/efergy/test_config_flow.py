@@ -48,6 +48,13 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
         assert result["step_id"] == "user"
         assert result["errors"]["base"] == "cannot_connect"
 
+    with _patch_efergy(), _patch_setup():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DATA,
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_flow_user_invalid_auth(hass: HomeAssistant) -> None:
     """Test user initialized flow with invalid authentication."""
@@ -60,6 +67,13 @@ async def test_flow_user_invalid_auth(hass: HomeAssistant) -> None:
         assert result["step_id"] == "user"
         assert result["errors"]["base"] == "invalid_auth"
 
+    with _patch_efergy(), _patch_setup():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DATA,
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_flow_user_unknown(hass: HomeAssistant) -> None:
     """Test user initialized flow with unknown error."""
@@ -71,6 +85,13 @@ async def test_flow_user_unknown(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"]["base"] == "unknown"
+
+    with _patch_efergy(), _patch_setup():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DATA,
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_reauth(hass: HomeAssistant) -> None:

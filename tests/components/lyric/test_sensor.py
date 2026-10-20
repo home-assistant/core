@@ -7,6 +7,7 @@ from aiolyric import Lyric
 from aiolyric.objects.location import LyricLocation
 from aiolyric.objects.priority import LyricRoom
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lyric.api import LyricLocalOAuth2Implementation
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 _MAC = "AABBCCDDEEFF"
 

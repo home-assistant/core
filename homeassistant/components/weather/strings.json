@@ -77,6 +77,11 @@
       }
     }
   },
+  "exceptions": {
+    "unsupported_forecast_type": {
+      "message": "Weather entity {entity_id} does not support the {forecast_type} forecast type."
+    }
+  },
   "issues": {
     "deprecated_service_weather_get_forecast": {
       "fix_flow": {

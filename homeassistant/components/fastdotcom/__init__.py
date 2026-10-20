@@ -1,7 +1,5 @@
 """Support for testing internet speed via Fast.com."""
 
-import logging
-
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.start import async_at_started
@@ -9,10 +7,8 @@ from homeassistant.helpers.start import async_at_started
 from .const import PLATFORMS
 from .coordinator import FastdotcomConfigEntry, FastdotcomDataUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: FastdotcomConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FastdotcomConfigEntry) -> None:
     """Set up Fast.com from a config entry."""
     coordinator = FastdotcomDataUpdateCoordinator(hass, entry)
     entry.runtime_data = coordinator
@@ -32,9 +28,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: FastdotcomConfigEntry) -
     # Don't start a speedtest during startup, this will slow
     # down the overall startup dramatically
     async_at_started(hass, _async_finish_startup)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: FastdotcomConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FastdotcomConfigEntry) -> None:
     """Unload Fast.com config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

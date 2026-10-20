@@ -2,17 +2,17 @@
 
 from typing import Any, cast
 from unittest.mock import MagicMock
+from urllib.error import URLError
 
 from pylutron import LutronException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lutron.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(
@@ -51,17 +51,37 @@ async def test_unload_entry(
     await hass.async_block_till_done()
 
 
-@pytest.mark.parametrize("method", ["load_xml_db", "connect"])
+@pytest.mark.parametrize(
+    ("method", "error"),
+    [
+        pytest.param(
+            "load_xml_db",
+            LutronException("load_xml_db failed"),
+            id="load_xml_db_lutron",
+        ),
+        pytest.param(
+            "load_xml_db",
+            URLError(OSError(111, "Connection refused")),
+            id="load_xml_db_urlerror",
+        ),
+        pytest.param(
+            "load_xml_db", TimeoutError("timed out"), id="load_xml_db_timeout"
+        ),
+        pytest.param("connect", LutronException("connect failed"), id="connect_lutron"),
+        pytest.param("connect", OSError(113, "No route to host"), id="connect_oserror"),
+    ],
+)
 async def test_setup_entry_not_ready(
     hass: HomeAssistant,
     mock_lutron: MagicMock,
     mock_config_entry: MockConfigEntry,
     method: str,
+    error: Exception,
 ) -> None:
-    """Test setting up the integration when Lutron repeater is not ready."""
+    """Test that transient connection failures retry setup."""
     mock_config_entry.add_to_hass(hass)
 
-    getattr(mock_lutron, method).side_effect = LutronException(f"{method} failed")
+    getattr(mock_lutron, method).side_effect = error
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

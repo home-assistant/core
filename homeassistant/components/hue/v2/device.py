@@ -35,27 +35,32 @@ async def async_setup_devices(bridge: HueBridge):
     api: HueBridgeV2 = bridge.api  # to satisfy typing
     dev_reg = dr.async_get(hass)
     dev_controller = api.devices
+    # Multi-channel Zigbee devices show up as several Hue devices sharing one MAC,
+    # while a connection must be unique within the config entry.
+    mac_owners: dict[str, str] = {}
 
     @callback
     def add_device(hue_resource: Device | Room | Zone | ServiceGroup) -> dr.DeviceEntry:
         """Register a Hue device in device registry."""
         if isinstance(hue_resource, (Room, Zone, ServiceGroup)):
             # Register a Hue Room/Zone as service in HA device registry.
-            return dev_reg.async_get_or_create(
+            return dev_reg.async_get_or_create_device(
                 config_entry_id=entry.entry_id,
-                entry_type=dr.DeviceEntryType.SERVICE,
-                identifiers={(DOMAIN, hue_resource.id)},
-                name=hue_resource.metadata.name,
-                model=hue_resource.type.value.replace("_", " ").title(),
-                manufacturer=api.config.bridge_device.product_data.manufacturer_name,
-                via_device_id=dr.async_get_device_id_by_identifier(
-                    hass,
-                    (DOMAIN, api.config.bridge_device.id),
-                    config_entry_id=entry.entry_id,
+                device_info=dr.DeviceInfo(
+                    entry_type=dr.DeviceEntryType.SERVICE,
+                    identifiers={(DOMAIN, hue_resource.id)},
+                    name=hue_resource.metadata.name,
+                    model=hue_resource.type.value.replace("_", " ").title(),
+                    manufacturer=api.config.bridge_device.product_data.manufacturer_name,
+                    via_device_id=dr.async_get_device_id_by_identifier(
+                        hass,
+                        (DOMAIN, api.config.bridge_device.id),
+                        config_entry_id=entry.entry_id,
+                    ),
+                    suggested_area=hue_resource.metadata.name
+                    if hue_resource.type == ResourceTypes.ROOM
+                    else None,
                 ),
-                suggested_area=hue_resource.metadata.name
-                if hue_resource.type == ResourceTypes.ROOM
-                else None,
             )
         # Register a Hue device resource as device in HA device registry.
         params = {
@@ -80,13 +85,18 @@ async def async_setup_devices(bridge: HueBridge):
             )
         zigbee = dev_controller.get_zigbee_connectivity(hue_resource.id)
         if zigbee and zigbee.mac_address:
-            params[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, zigbee.mac_address)}
+            mac_owner = mac_owners.setdefault(zigbee.mac_address, hue_resource.id)
+            if mac_owner == hue_resource.id:
+                params[ATTR_CONNECTIONS] = {(dr.CONNECTION_ZIGBEE, zigbee.mac_address)}
 
         return dev_reg.async_get_or_create(config_entry_id=entry.entry_id, **params)
 
     @callback
     def remove_device(hue_device_id: str) -> None:
         """Remove device from registry."""
+        for mac, owner in list(mac_owners.items()):
+            if owner == hue_device_id:
+                del mac_owners[mac]
         if device := dev_reg.async_get_device_by_identifier(
             (DOMAIN, hue_device_id), entry.entry_id
         ):
@@ -104,10 +114,23 @@ async def async_setup_devices(bridge: HueBridge):
             # updates to existing device will also be handled by this call
             add_device(hue_resource)
 
+    def registration_order(hue_device: Device) -> tuple[bool, bool]:
+        """Sort the bridge first, then devices already in the registry.
+
+        A new device claiming a MAC that a known device holds would be merged
+        into that device by the registry.
+        """
+        is_bridge = hue_device.id == api.config.bridge_device.id
+        is_known = (
+            dev_reg.async_get_device_by_identifier(
+                (DOMAIN, hue_device.id), entry.entry_id
+            )
+            is not None
+        )
+        return (not is_bridge, not is_known)
+
     # create/update all current devices found in controllers
-    # sort the devices to ensure bridges are added first
-    hue_devices = list(dev_controller)
-    hue_devices.sort(key=lambda dev: dev.id != api.config.bridge_device.id)
+    hue_devices = sorted(dev_controller, key=registration_order)
     known_devices = [add_device(hue_device) for hue_device in hue_devices]
     known_devices += [add_device(hue_room) for hue_room in api.groups.room]
     known_devices += [add_device(hue_zone) for hue_zone in api.groups.zone]

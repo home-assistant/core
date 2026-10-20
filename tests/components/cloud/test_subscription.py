@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from hass_nabucasa import Cloud, payments_api
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.cloud.subscription import (
     async_migrate_paypal_agreement,
@@ -12,8 +13,6 @@ from homeassistant.components.cloud.subscription import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(name="mocked_cloud")
