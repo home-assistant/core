@@ -516,14 +516,32 @@ async def test_item_due_time_zone(
 
 
 @pytest.mark.parametrize(
-    "update_data",
+    ("update_data", "due"),
     [
-        pytest.param({ATTR_RENAME: "Oat milk"}, id="rename"),
-        pytest.param({ATTR_STATUS: "completed"}, id="status"),
-        pytest.param({ATTR_DESCRIPTION: "One bottle"}, id="description"),
+        pytest.param(
+            {ATTR_RENAME: "Oat milk"},
+            datetime(2026, 10, 9, 11, 50, tzinfo=UTC),
+            id="rename",
+        ),
+        pytest.param(
+            {ATTR_STATUS: "completed"},
+            datetime(2026, 10, 9, 11, 50, tzinfo=UTC),
+            id="status",
+        ),
+        pytest.param(
+            {ATTR_DESCRIPTION: "One bottle"},
+            datetime(2026, 10, 9, 11, 50, tzinfo=UTC),
+            id="description",
+        ),
         pytest.param(
             {ATTR_DUE_DATETIME: "2026-10-09T13:50:00+02:00"},
+            datetime(2026, 10, 9, 11, 50, tzinfo=UTC),
             id="same-instant-different-offset",
+        ),
+        pytest.param(
+            {ATTR_DUE_DATETIME: "2026-10-25T02:30:00+01:00"},
+            datetime(2026, 10, 25, 1, 30, tzinfo=UTC),
+            id="same-instant-dst-fallback",
         ),
     ],
 )
@@ -531,7 +549,7 @@ async def test_item_due_time_zone(
     ("time_zone", "expected_time_zone"),
     [
         pytest.param("America/New_York", "America/New_York", id="preserve-zone"),
-        pytest.param(None, "Europe/Paris", id="missing-zone"),
+        pytest.param(None, None, id="missing-zone"),
     ],
 )
 async def test_update_item_with_unchanged_due_time_zone(
@@ -539,12 +557,12 @@ async def test_update_item_with_unchanged_due_time_zone(
     config_entry: MockConfigEntry,
     reminders: MagicMock,
     update_data: dict[str, str],
+    due: datetime,
     time_zone: str | None,
-    expected_time_zone: str,
+    expected_time_zone: str | None,
 ) -> None:
-    """Test that an unchanged timed due value retains its zone or fills a missing one."""
+    """Test unchanged due values retain their original datetime and time zone."""
     await hass.config.async_set_time_zone("Europe/Paris")
-    due = datetime(2026, 10, 9, 11, 50, tzinfo=UTC)
     existing = _reminder("r1", "Milk", due=due)
     existing.time_zone = time_zone
     reminders.get.return_value = existing
@@ -560,6 +578,7 @@ async def test_update_item_with_unchanged_due_time_zone(
 
     reminders.update.assert_called_once_with(existing)
     assert existing.due_date == due
+    assert existing.due_date.tzinfo is UTC
     assert existing.all_day is False
     assert existing.time_zone == expected_time_zone
 
