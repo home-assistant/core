@@ -167,11 +167,22 @@ async def test_deferred_auth_close_blocks_further_commands(
     connection.handlers["test/command"] = (handler, False)
     binary_handler = Mock()
     handler_id, _ = connection.async_register_binary_handler(binary_handler)
+    unsubscribe = Mock()
+    connection.subscriptions[2] = unsubscribe
+    connection.subscriptions["auth"] = unsubscribe_auth = Mock()
     command = Mock(side_effect=command_error)
 
-    with expected, connection.async_defer_auth_close():
+    with (
+        patch("homeassistant.components.websocket_api.connection.AUTH_CLOSE_DELAY", 0),
+        expected,
+        connection.async_defer_auth_close(),
+    ):
         connection.async_auth_revoked()
         cancel_ws.assert_not_called()
+        # Subscriptions end at once, so no updates reach the client. The revoke
+        # callback being called stays until the connection closes.
+        unsubscribe.assert_called_once_with()
+        unsubscribe_auth.assert_not_called()
         connection.async_handle({"id": 1, "type": "test/command"})
         connection.async_handle_binary(handler_id, b"payload")
         handler.assert_not_called()

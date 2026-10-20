@@ -123,7 +123,11 @@ class ActiveConnection:
 
     @contextmanager
     def async_defer_auth_close(self) -> Generator[None]:
-        """Let a command reply before its own token revocation closes the socket."""
+        """Let a command reply before its own token revocation closes the socket.
+
+        Only a revocation from the task running the command is deferred, not one
+        from a task it starts.
+        """
         task = asyncio.current_task()
         assert task is not None
         self._deferred_auth_close[task] = False
@@ -143,6 +147,9 @@ class ActiveConnection:
         if (task := asyncio.current_task()) in self._deferred_auth_close:
             assert task is not None
             self._deferred_auth_close[task] = True
+            # Only the reply may still reach the client, no subscription updates.
+            # The auth one is being called right now and goes on close.
+            self._async_unsubscribe_all(keep="auth")
             return
         assert self._cancel_ws is not None
         self._cancel_ws()
@@ -306,7 +313,17 @@ class ActiveConnection:
     @callback
     def async_handle_close(self) -> None:
         """Handle closing down connection."""
-        for unsub in self.subscriptions.values():
+        self._async_unsubscribe_all()
+        self.send_message = self._connect_closed_error
+        current_request.set(None)
+        current_connection.set(None)
+
+    @callback
+    def _async_unsubscribe_all(self, *, keep: Hashable | None = None) -> None:
+        """Unsubscribe from all subscriptions of the connection but one to keep."""
+        for key, unsub in list(self.subscriptions.items()):
+            if key == keep:
+                continue
             try:
                 unsub()
             except Exception:
@@ -314,10 +331,7 @@ class ActiveConnection:
                 self.logger.exception(
                     "Error unsubscribing from subscription: %s", unsub
                 )
-        self.subscriptions.clear()
-        self.send_message = self._connect_closed_error
-        current_request.set(None)
-        current_connection.set(None)
+            del self.subscriptions[key]
 
     @callback
     def _connect_closed_error(
