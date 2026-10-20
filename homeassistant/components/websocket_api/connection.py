@@ -150,6 +150,15 @@ class ActiveConnection:
             # Only the reply may still reach the client, no subscription updates.
             # The auth one is being called right now and goes on close.
             self._async_unsubscribe_all(keep="auth")
+            send_message = self.send_message
+
+            @callback
+            def _async_send_reply(msg: bytes | str | dict[str, Any]) -> None:
+                # Work resuming elsewhere, like a late subscription, stays silent.
+                if asyncio.current_task() in self._deferred_auth_close:
+                    send_message(msg)
+
+            self.send_message = _async_send_reply
             return
         assert self._cancel_ws is not None
         self._cancel_ws()

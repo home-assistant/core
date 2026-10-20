@@ -14,6 +14,10 @@ from pytest_homeassistant.common import MockUser
 from homeassistant import exceptions
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.const import DOMAIN
+from homeassistant.components.websocket_api.messages import (
+    message_to_json_bytes,
+    result_message,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.redact import REDACTED
 
@@ -194,6 +198,30 @@ async def test_deferred_auth_close_blocks_further_commands(
     await hass.async_block_till_done()
 
     cancel_ws.assert_called_once_with()
+
+
+async def test_deferred_auth_close_sends_only_the_reply(
+    hass: HomeAssistant,
+    revocable_connection: tuple[websocket_api.ActiveConnection, Mock],
+) -> None:
+    """Test work resuming elsewhere sends nothing once the token is revoked."""
+    connection, _ = revocable_connection
+    send_message = connection.send_message
+
+    async def late_subscription_event() -> None:
+        connection.send_event(2, "late")
+
+    with (
+        patch("homeassistant.components.websocket_api.connection.AUTH_CLOSE_DELAY", 0),
+        connection.async_defer_auth_close(),
+    ):
+        connection.async_auth_revoked()
+        await asyncio.create_task(late_subscription_event())
+        connection.send_result(1)
+    connection.send_event(2, "after the reply")
+    await hass.async_block_till_done()
+
+    send_message.assert_called_once_with(message_to_json_bytes(result_message(1, None)))
 
 
 async def test_auth_close_from_another_task_is_not_deferred(
