@@ -14,8 +14,6 @@ import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_REFRESH_TOKEN, DOMAIN
 
@@ -29,12 +27,9 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 )
 
 
-async def _async_login(
-    hass: HomeAssistant, data: dict[str, Any]
-) -> tuple[FarmadAccount, str, str | None]:
+async def _async_login(data: dict[str, Any]) -> tuple[FarmadAccount, str, str | None]:
     """Log in with the given credentials and return the account and token pair."""
     client = FarmadClient(
-        session=async_get_clientsession(hass),
         email=data[CONF_EMAIL],
         password=data[CONF_PASSWORD],
     )
@@ -61,9 +56,7 @@ class FarmadConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                account, access_token, refresh_token = await _async_login(
-                    self.hass, user_input
-                )
+                account, access_token, refresh_token = await _async_login(user_input)
             except FarmadMfaRequiredError:
                 errors["base"] = "mfa_required"
             except FarmadAuthenticationError:
