@@ -164,16 +164,18 @@ async def async_setup_entry(
 
     # The API forgets clients after an hour; their trackers stay, as away.
     restored: list[MerakiClientTracker | MerakiBluetoothTracker] = []
+    org_id = coordinator.organization_id
     for registry_entry in er.async_entries_for_config_entry(
         er.async_get(hass), entry.entry_id
     ):
         unique_id = registry_entry.unique_id
         name = registry_entry.original_name
-        if unique_id.startswith(BLUETOOTH_UNIQUE_ID_PREFIX):
-            mac = unique_id.removeprefix(BLUETOOTH_UNIQUE_ID_PREFIX)
+        mac = unique_id.removeprefix(f"{org_id}_")
+        if mac.startswith(BLUETOOTH_UNIQUE_ID_PREFIX):
+            mac = mac.removeprefix(BLUETOOTH_UNIQUE_ID_PREFIX)
             restored.append(MerakiBluetoothTracker(coordinator, mac, name))
         else:
-            restored.append(MerakiClientTracker(coordinator, unique_id, name))
+            restored.append(MerakiClientTracker(coordinator, mac, name))
         tracked.add(unique_id)
     async_add_entities(restored)
 
@@ -181,12 +183,15 @@ async def async_setup_entry(
     def _async_add_new_clients() -> None:
         new: list[MerakiClientTracker | MerakiBluetoothTracker] = []
         for mac, client in coordinator.data.clients.items():
-            if mac not in tracked:
-                tracked.add(mac)
+            if (unique_id := _client_unique_id(org_id, mac)) not in tracked:
+                tracked.add(unique_id)
                 new.append(MerakiClientTracker(coordinator, mac, client.description))
         for mac, bluetooth_client in coordinator.data.bluetooth_clients.items():
-            unique_id = f"{BLUETOOTH_UNIQUE_ID_PREFIX}{mac}"
-            if unique_id not in tracked and not _is_rotating_address(mac):
+            # The API has no address type to tell rotating addresses, which would
+            # add a dead tracker every few minutes. Those of phones come unnamed.
+            if bluetooth_client.name is None:
+                continue
+            if (unique_id := _bluetooth_unique_id(org_id, mac)) not in tracked:
                 tracked.add(unique_id)
                 new.append(
                     MerakiBluetoothTracker(coordinator, mac, bluetooth_client.name)
@@ -197,12 +202,13 @@ async def async_setup_entry(
     entry.async_on_unload(coordinator.async_add_listener(_async_add_new_clients))
 
 
-def _is_rotating_address(mac: str) -> bool:
-    """Return True for a resolvable private Bluetooth address.
+# The same device can be a client in several organizations.
+def _client_unique_id(org_id: str, mac: str) -> str:
+    return f"{org_id}_{mac}"
 
-    Phones and the like change these every few minutes, so they cannot be tracked.
-    """
-    return int(mac[:2], 16) & 0xC0 == 0x40
+
+def _bluetooth_unique_id(org_id: str, mac: str) -> str:
+    return f"{org_id}_{BLUETOOTH_UNIQUE_ID_PREFIX}{mac}"
 
 
 class MerakiClientTracker(MerakiEntity, ScannerEntity):
@@ -217,6 +223,12 @@ class MerakiClientTracker(MerakiEntity, ScannerEntity):
         self._attr_mac_address = mac
         self._attr_name = name or mac
         self._async_update_attrs()
+
+    @property
+    @override
+    def unique_id(self) -> str:
+        """Return the MAC, scoped to the organization."""
+        return _client_unique_id(self.coordinator.organization_id, self.mac)
 
     @property
     @override
@@ -250,7 +262,7 @@ class MerakiBluetoothTracker(MerakiEntity, BaseScannerEntity):
         """Initialize the tracker."""
         super().__init__(coordinator)
         self.mac = mac
-        self._attr_unique_id = f"{BLUETOOTH_UNIQUE_ID_PREFIX}{mac}"
+        self._attr_unique_id = _bluetooth_unique_id(coordinator.organization_id, mac)
         self._attr_name = name or mac
 
     @property

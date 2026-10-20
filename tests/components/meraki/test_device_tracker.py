@@ -18,7 +18,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import device_tracker
 from homeassistant.components.device_tracker import legacy
-from homeassistant.components.meraki.const import DOMAIN
+from homeassistant.components.meraki.const import CONF_ORGANIZATION_ID, DOMAIN
 from homeassistant.components.meraki.coordinator import UPDATE_INTERVAL
 from homeassistant.components.meraki.device_tracker import (
     BLUETOOTH_CONSIDER_HOME,
@@ -37,6 +37,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import api_error, setup_integration
+from .conftest import ORGANIZATION_ID
 
 PHONE = "device_tracker.pixel_9"
 KEYS = "device_tracker.keys"
@@ -330,3 +331,34 @@ async def test_update_failed(
     mock_meraki_client.networks.getNetworkClients.side_effect = api_error(503)
     await _async_poll(hass, freezer)
     assert hass.states.get(PHONE).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.freeze_time("2026-10-20 21:00:00+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_meraki_client")
+async def test_client_in_several_organizations(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a device in two organizations is tracked in each."""
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Office",
+        unique_id="654321",
+        data={**mock_config_entry.data, CONF_ORGANIZATION_ID: "654321"},
+    )
+    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, other_entry)
+
+    for entry, org_id in (
+        (mock_config_entry, ORGANIZATION_ID),
+        (other_entry, "654321"),
+    ):
+        unique_ids = {
+            registry_entry.unique_id
+            for registry_entry in er.async_entries_for_config_entry(
+                entity_registry, entry.entry_id
+            )
+        }
+        assert f"{org_id}_aa:bb:cc:00:00:01" in unique_ids
+        assert f"{org_id}_bluetooth_c4:00:00:00:00:01" in unique_ids

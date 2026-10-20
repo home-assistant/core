@@ -37,5 +37,18 @@
     "inSightAlert": false,
     "outOfSightAlert": false,
     "tags": []
+  },
+  {
+    "id": "619244949335200004",
+    "mac": "58:2d:34:60:d5:cd",
+    "networkId": "L_111",
+    "name": null,
+    "deviceName": "Qingping Air Monitor",
+    "manufacturer": "Qingping",
+    "lastSeen": 1792529880,
+    "seenByDeviceMac": "98:18:88:00:00:01",
+    "inSightAlert": false,
+    "outOfSightAlert": false,
+    "tags": []
   }
 ]
