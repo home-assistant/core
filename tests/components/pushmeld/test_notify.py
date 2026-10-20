@@ -343,6 +343,78 @@ async def test_entry_setup_waits_for_notification_registration(
     assert not hass.services.has_service(NOTIFY_DOMAIN, "test_channel")
 
 
+async def test_stale_setup_error_does_not_fail_retry(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Do not let a timed-out loader fail a later setup attempt."""
+    monkeypatch.setattr(pushmeld, "NOTIFY_SERVICE_SETUP_TIMEOUT", 0.01)
+    old_setup_started = asyncio.Event()
+    old_setup_finished = asyncio.Event()
+    new_setup_started = asyncio.Event()
+    release_old_setup = asyncio.Event()
+    release_new_setup = asyncio.Event()
+    setup_count = 0
+    original_setup = notify.PushMeldNotificationService.async_setup
+
+    async def delayed_setup(
+        service: notify.PushMeldNotificationService,
+        setup_hass: HomeAssistant,
+        service_name: str,
+        target_service_name_prefix: str,
+    ) -> None:
+        nonlocal setup_count
+        setup_count += 1
+        if setup_count == 1:
+            old_setup_started.set()
+            await release_old_setup.wait()
+            await original_setup(
+                service, setup_hass, service_name, target_service_name_prefix
+            )
+            old_setup_finished.set()
+            return
+
+        new_setup_started.set()
+        await release_new_setup.wait()
+        await original_setup(
+            service, setup_hass, service_name, target_service_name_prefix
+        )
+
+    monkeypatch.setattr(
+        notify.PushMeldNotificationService,
+        "async_setup",
+        delayed_setup,
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Test channel",
+        data={CONF_MAXCODE: "test-maxcode"},
+    )
+    entry.add_to_hass(hass)
+
+    first_setup = asyncio.create_task(hass.config_entries.async_setup(entry.entry_id))
+    await old_setup_started.wait()
+    assert not await first_setup
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+    entry.async_cancel_retry_setup()
+    entry._async_setup_again(hass)
+    await new_setup_started.wait()
+
+    release_old_setup.set()
+    await old_setup_finished.wait()
+    release_new_setup.set()
+
+    await asyncio.wait_for(entry.runtime_data.notify_service_ready, timeout=1)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.services.has_service(NOTIFY_DOMAIN, "test_channel")
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
 async def test_reload_during_notification_setup_does_not_register_stale_service(
     hass: HomeAssistant,
     monkeypatch: pytest.MonkeyPatch,

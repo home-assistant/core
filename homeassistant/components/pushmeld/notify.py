@@ -157,7 +157,7 @@ class PushMeldNotificationService(BaseNotificationService):
 
     def _signal_setup_error(self, error: BaseException) -> None:
         """Make config-entry setup report an error from the legacy loader."""
-        if self._entry is None or not hasattr(self._entry, "runtime_data"):
+        if self._entry is None or not self._entry_owns_runtime_service():
             return
 
         _signal_setup_error(self._entry, error)
