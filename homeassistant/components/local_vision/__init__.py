@@ -17,7 +17,7 @@ from .taught_frames import TaughtFrames, async_remove_taught_frames
 PLATFORMS = [Platform.BINARY_SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LocalVisionConfigEntry) -> None:
+async def async_setup_entry(hass: HomeAssistant, entry: LocalVisionConfigEntry) -> bool:
     """Set up Local vision from a config entry."""
 
     def set_source_entity_id_or_uuid(source_entity_id: str) -> None:
@@ -60,6 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalVisionConfigEntry) 
         entry.async_on_unload(async_at_started(hass, refresh_when_started))
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    return True
 
 
 async def _async_load_taught_frames(
