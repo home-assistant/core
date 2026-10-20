@@ -7,11 +7,12 @@ from typing import Any
 
 import probatio
 
-# Kept for custom integrations, to be deprecated in favour of EventTriggerArgument
-from homeassistant.const import (  # noqa: F401
+# The names marked with noqa are kept for custom integrations,
+# and should be deprecated in favour of EventTriggerArgument
+from homeassistant.const import (
     CONF_DEVICE_ID,
-    CONF_EVENT_DATA,
-    CONF_PLATFORM,
+    CONF_EVENT_DATA,  # noqa: F401
+    CONF_PLATFORM,  # noqa: F401
     EVENT_STATE_REPORTED,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback

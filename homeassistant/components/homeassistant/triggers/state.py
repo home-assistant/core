@@ -9,12 +9,13 @@ import probatio
 
 from homeassistant import exceptions
 
-# Kept for custom integrations, to be deprecated in favour of StateTriggerArgument
-from homeassistant.const import (  # noqa: F401
-    CONF_ATTRIBUTE,
-    CONF_ENTITY_ID,
-    CONF_FOR,
-    CONF_PLATFORM,
+# The names marked with noqa are kept for custom integrations,
+# and should be deprecated in favour of StateTriggerArgument
+from homeassistant.const import (
+    CONF_ATTRIBUTE,  # noqa: F401
+    CONF_ENTITY_ID,  # noqa: F401
+    CONF_FOR,  # noqa: F401
+    CONF_PLATFORM,  # noqa: F401
     MATCH_ALL,
 )
 from homeassistant.core import (
