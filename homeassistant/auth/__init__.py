@@ -240,6 +240,8 @@ class AuthManagerFlowManager(
             _async_login_flow_expired(cast(LoginFlow, flow), time.monotonic())
         ):
             self.async_abort(flow_id)
+            # Answered like an expired MFA step, so it's no failed login.
+            return flow.async_abort(reason="login_expired")
         return await super().async_configure(flow_id, user_input)
 
     @override

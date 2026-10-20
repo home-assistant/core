@@ -1065,13 +1065,25 @@ async def test_login_flow_expired(
     step = await resp.json()
 
     freezer.tick(LOGIN_FLOW_EXPIRATION + timedelta(seconds=1))
-    resp = await client.post(
-        f"/auth/login_flow/{step['flow_id']}",
-        json={
-            "client_id": CLIENT_ID,
-            "username": "test-user",
-            "password": "test-pass",
-        },
-    )
-    assert resp.status == HTTPStatus.NOT_FOUND
+    with patch(
+        "homeassistant.components.http.ban.process_wrong_login"
+    ) as mock_process_wrong_login:
+        resp = await client.post(
+            f"/auth/login_flow/{step['flow_id']}",
+            json={
+                "client_id": CLIENT_ID,
+                "username": "test-user",
+                "password": "test-pass",
+            },
+        )
+    assert resp.status == HTTPStatus.OK
+    assert await resp.json() == {
+        "description_placeholders": None,
+        "flow_id": step["flow_id"],
+        "handler": ["insecure_example", None],
+        "reason": "login_expired",
+        "type": "abort",
+    }
+    # Correct credentials from a tab left open are no failed login.
+    mock_process_wrong_login.assert_not_called()
     assert hass.auth.login_flow.async_progress() == []
