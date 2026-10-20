@@ -69,11 +69,15 @@ async def async_get_service(
 
     service_name = slugify(name)
     if hass.services.has_service(NOTIFY_DOMAIN, service_name):
-        raise ConfigEntryError(
+        error = ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="config_entry_error_name_exists",
             translation_placeholders={"service_name": service_name},
         )
+        setup_future = entry.runtime_data.notify_service_ready
+        if not setup_future.done():
+            setup_future.set_exception(error)
+        raise error
 
     service = PushMeldNotificationService(
         async_get_clientsession(hass),
@@ -82,6 +86,9 @@ async def async_get_service(
     )
     entry.runtime_data.notify_service = service
     entry.async_on_unload(service.async_unregister_services)
+    setup_future = entry.runtime_data.notify_service_ready
+    if not setup_future.done():
+        setup_future.set_result(None)
     return service
 
 

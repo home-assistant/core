@@ -1,6 +1,7 @@
 # homeassistant/components/pushmeld/__init__.py
 """The PushMeld integration."""
 
+from asyncio import Future
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -26,6 +27,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 class PushMeldRuntimeData:
     """Runtime data for a PushMeld config entry."""
 
+    notify_service_ready: Future[None]
     notify_service: PushMeldNotificationService | None = None
 
 
@@ -40,7 +42,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: PushMeldConfigEntry) -> bool:
     """Set up a PushMeld notification service from a config entry."""
-    entry.runtime_data = PushMeldRuntimeData()
+    entry.runtime_data = PushMeldRuntimeData(
+        notify_service_ready=hass.loop.create_future()
+    )
 
     service_name = slugify(entry.title)
     if hass.services.has_service(NOTIFY_DOMAIN, service_name):
@@ -50,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PushMeldConfigEntry) -> 
             translation_placeholders={"service_name": service_name},
         )
 
-    entry.async_create_task(
+    discovery_task = entry.async_create_task(
         hass,
         discovery.async_load_platform(
             hass,
@@ -66,6 +70,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: PushMeldConfigEntry) -> 
         name="pushmeld notification service",
     )
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
+    try:
+        await entry.runtime_data.notify_service_ready
+    except BaseException:
+        if not discovery_task.done():
+            discovery_task.cancel()
+        raise
+
     return True
 
 

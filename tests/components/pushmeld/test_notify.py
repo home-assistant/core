@@ -381,3 +381,33 @@ async def test_setup_does_not_remove_existing_notification_service(
         "service_name": "test_channel"
     }
     assert hass.services.has_service(NOTIFY_DOMAIN, "test_channel")
+
+
+async def test_setup_fails_when_name_is_taken_during_discovery(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Fail setup if another integration claims the name during discovery."""
+    original_get_service = notify.async_get_service
+
+    async def register_conflicting_service(
+        setup_hass: HomeAssistant,
+        config: Any,
+        discovery_info: Any = None,
+    ) -> notify.PushMeldNotificationService | None:
+        setup_hass.services.async_register(NOTIFY_DOMAIN, "test_channel", AsyncMock())
+        return await original_get_service(setup_hass, config, discovery_info)
+
+    monkeypatch.setattr(notify, "async_get_service", register_conflicting_service)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Test channel",
+        data={CONF_MAXCODE: "test-maxcode"},
+    )
+    entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.error_reason_translation_key == "config_entry_error_name_exists"
+    assert hass.services.has_service(NOTIFY_DOMAIN, "test_channel")
