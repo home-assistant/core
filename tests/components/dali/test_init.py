@@ -1,5 +1,6 @@
 """Test the Tridonic DALI integration setup."""
 
+import logging
 from types import GeneratorType, SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
@@ -10,7 +11,7 @@ from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.dali import async_remove_config_entry_device
 from homeassistant.components.dali.const import DOMAIN
-from homeassistant.components.dali.coordinator import SCAN_INTERVAL
+from homeassistant.components.dali.coordinator import FULL_SCAN_INTERVAL, SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
@@ -151,6 +152,50 @@ async def test_single_gear_update_keeps_the_scan_schedule(
             async_fire_time_changed(hass)
             await hass.async_block_till_done()
             assert scan.call_count == 1
+
+
+async def test_logs_gear_unavailable_and_recovery_once(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    fake_dali_driver: FakeDaliDriver,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a gear going unavailable and recovering is logged once each."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_DEVICE: "/dev/ttyACM0"}, title="USB-DALI2"
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.dali.DriverLubaRs232",
+            return_value=fake_dali_driver,
+        ),
+        caplog.at_level(logging.INFO, "homeassistant.components.dali.coordinator"),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert entry.runtime_data.data.keys() == {0, 2}
+        # A first discovery is not a recovery.
+        assert "responding again" not in caplog.text
+
+        # A gear stops responding; the next scan reports it exactly once.
+        fake_dali_driver.gears.pop(2)
+        caplog.clear()
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert entry.runtime_data.data.keys() == {0}
+        assert caplog.text.count("DALI control gear 2 stopped responding") == 1
+
+        # It comes back; the next full scan reports the recovery exactly once.
+        fake_dali_driver.gears[2] = (6,)
+        caplog.clear()
+        freezer.tick(FULL_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert entry.runtime_data.data.keys() == {0, 2}
+        assert caplog.text.count("DALI control gear 2 is responding again") == 1
 
 
 async def test_lost_interface_is_reconnected(

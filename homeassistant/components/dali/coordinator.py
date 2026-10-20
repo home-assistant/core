@@ -90,6 +90,8 @@ class DaliCoordinator(DataUpdateCoordinator[dict[int, DaliGearData]]):
         # Serialises the periodic bus scan with single-gear command updates so a
         # mid-scan read cannot publish a stale level over a just-sent command.
         self._refresh_lock = asyncio.Lock()
+        # Control gear ever seen, to tell a first discovery from a recovery.
+        self._seen_gear: set[int] = set()
 
     async def async_update_gear(
         self, address: int, optimistic_level: int | None = None
@@ -111,11 +113,29 @@ class DaliCoordinator(DataUpdateCoordinator[dict[int, DaliGearData]]):
                 data[address] = replace(gear, level=optimistic_level)
             else:
                 data[address] = gear
+            self._log_availability_transitions(data)
             # Publish without async_set_updated_data so frequent commands to one
             # gear cannot keep rescheduling the periodic scan and starve the
             # discovery of other gear.
             self.data = data
             self.async_update_listeners()
+
+    def _log_availability_transitions(self, new_data: dict[int, DaliGearData]) -> None:
+        """Log control gear becoming unavailable or recovering, once each.
+
+        The coordinator update succeeds even when a gear stops responding, so
+        its built-in failure logging never reports these outages. A gear is only
+        "recovered" once it has been seen before; its first appearance is a plain
+        discovery.
+        """
+        previous = set(self.data or {})
+        current = set(new_data)
+        for address in previous - current:
+            LOGGER.warning("DALI control gear %d stopped responding", address)
+        for address in current - previous:
+            if address in self._seen_gear:
+                LOGGER.info("DALI control gear %d is responding again", address)
+        self._seen_gear |= current
 
     async def _query_gear(self, address: int) -> DaliGearData | None:
         """Return a gear's state and metadata, or None when absent.
@@ -231,6 +251,7 @@ class DaliCoordinator(DataUpdateCoordinator[dict[int, DaliGearData]]):
             ) from err
         if full_scan:
             self._last_full_scan = now
+        self._log_availability_transitions(data)
         return data
 
     def close(self) -> None:
