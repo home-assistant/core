@@ -38,13 +38,6 @@ class PushMeldConfigFlow(ConfigFlow, domain=DOMAIN):
                 return title
             index += 1
 
-    def _maxcode_is_configured(self, maxcode: str) -> bool:
-        """Return whether the MaxCode is already configured."""
-        return any(
-            entry.data.get(CONF_MAXCODE) == maxcode
-            for entry in self.hass.config_entries.async_entries(DOMAIN)
-        )
-
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -57,9 +50,8 @@ class PushMeldConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not maxcode:
                 errors[CONF_MAXCODE] = "invalid_maxcode"
-            elif self._maxcode_is_configured(maxcode):
-                return self.async_abort(reason="already_configured")
             else:
+                self._async_abort_entries_match({CONF_MAXCODE: maxcode})
                 return self.async_create_entry(
                     title=self._get_entry_title(),
                     data={CONF_MAXCODE: maxcode},
