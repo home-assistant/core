@@ -24,6 +24,8 @@ from homeassistant.util import dt as dt_util, slugify
 
 _LOGGER = logging.getLogger(__name__)
 
+_SCHEDULE_SETUP_LOCK = threading.Lock()
+
 ATTR_ARRIVAL = "arrival"
 ATTR_BICYCLE = "trip_bikes_allowed_state"
 ATTR_DAY = "day"
@@ -501,10 +503,12 @@ def setup_platform(
 
     sqlite_file = f"{gtfs_root}.sqlite?check_same_thread=False"
     joined_path = os.path.join(gtfs_dir, sqlite_file)
-    gtfs = pygtfs.Schedule(joined_path)
+    # Platforms sharing a data file set up in parallel executor jobs.
+    with _SCHEDULE_SETUP_LOCK:
+        gtfs = pygtfs.Schedule(joined_path)
 
-    if not gtfs.feeds:
-        pygtfs.append_feed(gtfs, os.path.join(gtfs_dir, data))
+        if not gtfs.feeds:
+            pygtfs.append_feed(gtfs, os.path.join(gtfs_dir, data))
 
     add_entities(
         [GTFSDepartureSensor(gtfs, name, origin, destination, offset, include_tomorrow)]

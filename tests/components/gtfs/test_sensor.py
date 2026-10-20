@@ -227,8 +227,7 @@ async def test_existing_database_is_reused(
 async def test_sensors_sharing_a_feed(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, feed_file: Path
 ) -> None:
-    """Test two sensors reading one feed update independently."""
-    # Importing first avoids the legacy table-creation race between sensors.
+    """Test two sensors reading one already imported feed update independently."""
     await hass.async_add_executor_job(_import_feed, feed_file)
     assert await async_setup_component(
         hass,
@@ -258,3 +257,30 @@ async def test_sensors_sharing_a_feed(
     assert state.state == "2026-10-19T21:00:00+00:00"
     assert (state := hass.states.get(SECOND_ENTITY_ID)) is not None
     assert state.state == "2026-10-19T21:10:00+00:00"
+
+
+@pytest.mark.freeze_time("2026-10-19 07:30:00-04:00")
+async def test_sensors_sharing_a_new_feed(hass: HomeAssistant, feed_file: Path) -> None:
+    """Test two sensors set up concurrently import a new feed only once."""
+    assert await async_setup_component(
+        hass,
+        SENSOR_DOMAIN,
+        {
+            SENSOR_DOMAIN: [
+                {"platform": "gtfs", "data": "feed.zip", **DAY_ROUTE},
+                {
+                    "platform": "gtfs",
+                    "data": "feed.zip",
+                    "origin": "S2",
+                    "destination": "S3",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(DAY_ENTITY_ID)) is not None
+    assert state.state == "2026-10-19T12:00:00+00:00"
+    assert (state := hass.states.get(SECOND_ENTITY_ID)) is not None
+    assert state.state == "2026-10-19T12:10:00+00:00"
+    assert await hass.async_add_executor_job(_feed_count, feed_file) == 1
