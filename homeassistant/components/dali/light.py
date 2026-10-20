@@ -37,7 +37,9 @@ async def async_setup_entry(
         new_addresses = set(coordinator.data) - known_addresses
         known_addresses.update(new_addresses)
         async_add_entities(
-            DaliLight(coordinator, entry.entry_id, entry.title, address)
+            DaliLight(
+                coordinator, entry.entry_id, entry.title, address, known_addresses
+            )
             for address in new_addresses
             if _is_light(coordinator.data[address])
         )
@@ -60,13 +62,24 @@ class DaliLight(CoordinatorEntity[DaliCoordinator], LightEntity):
     _attr_color_mode = ColorMode.BRIGHTNESS
 
     def __init__(
-        self, coordinator: DaliCoordinator, entry_id: str, title: str, address: int
+        self,
+        coordinator: DaliCoordinator,
+        entry_id: str,
+        title: str,
+        address: int,
+        known_addresses: set[int],
     ) -> None:
         """Initialize the light."""
         super().__init__(coordinator)
         self._address = address
+        self._known_addresses = known_addresses
         self._attr_unique_id = f"{entry_id}_{address}"
         self._attr_device_info = coordinator.device_info(entry_id, title, address)
+
+    @override
+    async def async_removed_from_registry(self) -> None:
+        """Stop tracking the address so the gear can be rediscovered."""
+        self._known_addresses.discard(self._address)
 
     @property
     @override

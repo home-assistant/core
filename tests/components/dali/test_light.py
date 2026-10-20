@@ -37,7 +37,7 @@ async def test_light_commands_clamp_dali_mask(
     coordinator.data = {
         0: DaliGearData(level=128, min_level=86, linear_dimming=True, device_types=(6,))
     }
-    light = DaliLight(coordinator, entry.entry_id, entry.title, 0)
+    light = DaliLight(coordinator, entry.entry_id, entry.title, 0, set())
 
     with patch.object(coordinator, "async_update_gear", new_callable=AsyncMock):
         await light.async_turn_on(brightness=255)
@@ -63,7 +63,7 @@ async def test_light_command_failure_raises_home_assistant_error(
     coordinator.data = {
         0: DaliGearData(level=128, min_level=86, linear_dimming=True, device_types=(6,))
     }
-    light = DaliLight(coordinator, entry.entry_id, entry.title, 0)
+    light = DaliLight(coordinator, entry.entry_id, entry.title, 0, set())
 
     with (
         patch.object(fake_dali_driver, "send", side_effect=OSError("serial failure")),
@@ -79,7 +79,7 @@ async def test_light_properties(
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_DEVICE: "/dev/ttyACM0"})
     coordinator = DaliCoordinator(hass, fake_dali_driver, entry)
     coordinator.data = {0: DaliGearData(level=128, min_level=86, device_types=(6,))}
-    light = DaliLight(coordinator, entry.entry_id, entry.title, 0)
+    light = DaliLight(coordinator, entry.entry_id, entry.title, 0, set())
 
     assert light.available
     assert light.is_on
@@ -95,7 +95,7 @@ async def test_light_unknown_state(
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_DEVICE: "/dev/ttyACM0"})
     coordinator = DaliCoordinator(hass, fake_dali_driver, entry)
     coordinator.data = {0: DaliGearData(level=None, device_types=(6,))}
-    light = DaliLight(coordinator, entry.entry_id, entry.title, 0)
+    light = DaliLight(coordinator, entry.entry_id, entry.title, 0, set())
 
     assert light.is_on is None
     assert light.brightness is None
@@ -110,7 +110,7 @@ async def test_light_turn_on_clamps_to_max_level(
     coordinator.data = {
         0: DaliGearData(level=0, min_level=1, max_level=200, device_types=(6,))
     }
-    light = DaliLight(coordinator, entry.entry_id, entry.title, 0)
+    light = DaliLight(coordinator, entry.entry_id, entry.title, 0, set())
 
     with patch.object(coordinator, "async_update_gear", new_callable=AsyncMock):
         await light.async_turn_on(brightness=255)
@@ -125,7 +125,7 @@ async def test_light_turn_on_transmission_error_raises_home_assistant_error(
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_DEVICE: "/dev/ttyACM0"})
     coordinator = DaliCoordinator(hass, fake_dali_driver, entry)
     coordinator.data = {0: DaliGearData(level=0, min_level=1, device_types=(6,))}
-    light = DaliLight(coordinator, entry.entry_id, entry.title, 0)
+    light = DaliLight(coordinator, entry.entry_id, entry.title, 0, set())
 
     with (
         patch.object(fake_dali_driver, "send", side_effect=TransmissionError(1)),
@@ -226,7 +226,7 @@ async def test_light_turn_on_failure_raises_home_assistant_error(
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_DEVICE: "/dev/ttyACM0"})
     coordinator = DaliCoordinator(hass, fake_dali_driver, entry)
     coordinator.data = {0: DaliGearData(level=128, device_types=(6,))}
-    light = DaliLight(coordinator, entry.entry_id, entry.title, 0)
+    light = DaliLight(coordinator, entry.entry_id, entry.title, 0, set())
 
     with (
         patch.object(fake_dali_driver, "send", side_effect=OSError("offline")),

@@ -16,6 +16,7 @@ from homeassistant.components.dali.coordinator import FULL_SCAN_INTERVAL, SCAN_I
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import FakeDaliDriver
 
@@ -215,6 +216,45 @@ async def test_logs_gear_unavailable_and_recovery_once(
         await hass.async_block_till_done()
         assert entry.runtime_data.data.keys() == {0, 2}
         assert caplog.text.count("DALI control gear 2 is responding again") == 1
+
+
+async def test_deleted_light_is_rediscovered(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    fake_dali_driver: FakeDaliDriver,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a light deleted from the registry is recreated when the gear reappears."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_DEVICE: "/dev/ttyACM0"}, title="USB-DALI2"
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.dali.DriverLubaRs232",
+        return_value=fake_dali_driver,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        unique_id = f"{entry.entry_id}_0"
+        entity_id = entity_registry.async_get_entity_id("light", DOMAIN, unique_id)
+        assert entity_id is not None
+
+        # Deleting the device deletes its light; the address must stop being
+        # tracked so the gear can be rediscovered.
+        entity_registry.async_remove(entity_id)
+        await hass.async_block_till_done()
+        assert entity_registry.async_get_entity_id("light", DOMAIN, unique_id) is None
+
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        assert (
+            entity_registry.async_get_entity_id("light", DOMAIN, unique_id) is not None
+        )
+
+    entry.runtime_data.close()
 
 
 async def test_lost_interface_is_reconnected(
