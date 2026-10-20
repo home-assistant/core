@@ -14,10 +14,12 @@ order_medication:
           step: 1
           mode: box
     apb:
+      required: true
       example: "343602"
       selector:
         text:
     comment:
+      required: false
       selector:
         text:
 search_medication:
@@ -28,6 +30,7 @@ search_medication:
       selector:
         text:
     apb:
+      required: true
       example: "343602"
       selector:
         text:
