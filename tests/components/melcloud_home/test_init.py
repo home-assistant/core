@@ -31,7 +31,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
@@ -624,6 +624,23 @@ async def test_live_updates_slow_down_polling(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_melcloud_client.get_context.call_count == 4
+
+
+async def test_live_updates_disconnect_while_stopping(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket: AsyncMock,
+) -> None:
+    """Test a disconnect during shutdown does not start a catch-up refresh."""
+    await setup_integration(hass, mock_config_entry)
+    on_connection = mock_websocket.register_connection_callback.call_args.args[0]
+
+    hass.set_state(CoreState.stopping)
+    on_connection(False)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_melcloud_client.get_context.call_count == 1
 
 
 @pytest.mark.usefixtures("mock_melcloud_client")

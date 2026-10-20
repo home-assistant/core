@@ -225,6 +225,9 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
             self.update_interval = LIVE_UPDATE_INTERVAL
             return
         self.update_interval = UPDATE_INTERVAL
+        # Shutdown would wait for this request
+        if self.hass.is_stopping:
+            return
         # Catches up on missed changes and reschedules polling at the shorter interval
         self.config_entry.async_create_task(self.hass, self.async_request_refresh())
 
