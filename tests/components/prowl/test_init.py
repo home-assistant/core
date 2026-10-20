@@ -329,6 +329,29 @@ async def test_legacy_service_setup_cancelled_on_unload(hass: HomeAssistant) -> 
     assert not hass.services.has_service(notify.DOMAIN, "prowl")
 
 
+@pytest.mark.parametrize(
+    "notify_block",
+    [
+        pytest.param(None, id="empty"),
+        pytest.param("not a mapping", id="string"),
+        pytest.param({CONF_PLATFORM: "group", CONF_NAME: 123}, id="name_not_a_string"),
+    ],
+)
+@pytest.mark.usefixtures("mock_prowlpy")
+async def test_setup_with_invalid_yaml_notify_block(
+    hass: HomeAssistant,
+    mock_prowlpy_config_entry: MockConfigEntry,
+    notify_block: Any,
+) -> None:
+    """Test an unvalidated YAML notify block of another platform keeps setup working."""
+    mock_prowlpy_config_entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {notify.DOMAIN: [notify_block]})
+    await hass.async_block_till_done()
+
+    assert mock_prowlpy_config_entry.state is ConfigEntryState.LOADED
+
+
 @pytest.mark.usefixtures("mock_prowlpy")
 async def test_other_yaml_notify_platform_name_wins_over_imported_entry(
     hass: HomeAssistant,

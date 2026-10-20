@@ -52,10 +52,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             names.append(name)
     hass.data[DATA_YAML_API_KEYS] = set(names_by_api_key)
     # Matches the service names the legacy notify loader uses for YAML platforms;
-    # YAML of any notify platform wins over an entry-backed legacy action
+    # YAML of any notify platform wins over an entry-backed legacy action. Other
+    # platforms are not validated here, so skip blocks that are not a mapping
     hass.data[DATA_YAML_SERVICE_NAMES] = {
-        slugify(p_config.get(CONF_NAME) or SERVICE_NOTIFY)
+        slugify(str(p_config.get(CONF_NAME) or SERVICE_NOTIFY))
         for _, p_config in config_per_platform(config, NOTIFY_DOMAIN)
+        if isinstance(p_config, dict)
     }
     for api_key, names in names_by_api_key.items():
         hass.async_create_task(
