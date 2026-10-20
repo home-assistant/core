@@ -126,6 +126,59 @@ async def test_login_new_user_and_trying_refresh_token(
     assert resp.status == HTTPStatus.OK
 
 
+async def test_auth_code_of_first_sign_in_redeemed_twice(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test the codes of two first sign ins of one account create one user."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    codes = []
+    for _ in range(2):
+        resp = await client.post(
+            "/auth/login_flow",
+            json={
+                "client_id": CLIENT_ID,
+                "handler": ["insecure_example", None],
+                "redirect_uri": CLIENT_REDIRECT_URI,
+            },
+        )
+        step = await resp.json()
+        resp = await client.post(
+            f"/auth/login_flow/{step['flow_id']}",
+            json={
+                "client_id": CLIENT_ID,
+                "username": "test-user",
+                "password": "test-pass",
+            },
+        )
+        codes.append((await resp.json())["result"])
+    users = await hass.auth.async_get_users()
+
+    resp = await client.post(
+        "/auth/token",
+        data={
+            "client_id": CLIENT_ID,
+            "grant_type": "authorization_code",
+            "code": codes[0],
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    resp = await client.post(
+        "/auth/token",
+        data={
+            "client_id": CLIENT_ID,
+            "grant_type": "authorization_code",
+            "code": codes[1],
+        },
+    )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    assert await resp.json() == {
+        "error": "invalid_grant",
+        "error_description": "Sign in again",
+    }
+    assert len(await hass.auth.async_get_users()) == len(users) + 1
+
+
 async def test_auth_code_checks_local_only_user(
     hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
 ) -> None:
