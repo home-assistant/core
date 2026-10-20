@@ -34,6 +34,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
+    Context,
     Event,
     HomeAssistant,
     callback,
@@ -334,8 +335,6 @@ class RegistryEntry:
             display_dict["ec"] = ENTITY_CATEGORY_VALUE_TO_INDEX[category]
         if self.hidden_by is not None:
             display_dict["hb"] = True
-        if self.has_entity_name:
-            display_dict["hn"] = True
         if name := self.entity_name:
             display_dict["en"] = name
         if self.domain == "sensor" and (sensor_options := self.options.get("sensor")):
@@ -388,7 +387,6 @@ class RegistryEntry:
             "disabled_by": self.disabled_by,
             "entity_category": self.entity_category,
             "entity_id": self.entity_id,
-            "has_entity_name": self.has_entity_name,
             "hidden_by": self.hidden_by,
             "icon": self.icon,
             "id": self.id,
@@ -2009,6 +2007,17 @@ class EntityRegistry(BaseRegistry):
 
         device_id = self._ignore_composite_device_id(old.platform, device_id)
 
+        if disabled_by is UNDEFINED and config_entry_id is not UNDEFINED:
+            if config_entry_id is not None:
+                config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
+                if config_entry is not None and config_entry.disabled_by is not None:
+                    if old.disabled_by is None:
+                        disabled_by = RegistryEntryDisabler.CONFIG_ENTRY
+                elif old.disabled_by is RegistryEntryDisabler.CONFIG_ENTRY:
+                    disabled_by = None
+            elif old.disabled_by is RegistryEntryDisabler.CONFIG_ENTRY:
+                disabled_by = None
+
         new_values: dict[str, Any] = {}  # Dict with new key/value pairs
         old_values: dict[str, Any] = {}  # Dict with old key/value pairs
 
@@ -2060,20 +2069,6 @@ class EntityRegistry(BaseRegistry):
                 old_config_subentry_id=old.config_subentry_id,
                 unique_id=new_unique_id,
             )
-
-        if disabled_by is UNDEFINED and config_entry_id is not UNDEFINED:
-            if config_entry_id:
-                config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
-                if TYPE_CHECKING:
-                    # We've checked the config_entry exists in _validate_item
-                    assert config_entry is not None
-                if config_entry.disabled_by:
-                    if old.disabled_by is None:
-                        new_values["disabled_by"] = RegistryEntryDisabler.CONFIG_ENTRY
-                elif old.disabled_by == RegistryEntryDisabler.CONFIG_ENTRY:
-                    new_values["disabled_by"] = None
-            elif old.disabled_by == RegistryEntryDisabler.CONFIG_ENTRY:
-                new_values["disabled_by"] = None
 
         if new_entity_id is not UNDEFINED and new_entity_id != old.entity_id:
             if not self._entity_id_available(new_entity_id):
@@ -2830,40 +2825,56 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
     """Set up the entity restore mechanism."""
 
     @callback
-    def cleanup_restored_states_filter(event_data: Mapping[str, Any]) -> bool:
-        """Clean up restored states filter."""
-        return (event_data["action"] == "remove") or (
-            event_data["action"] == "update"
-            and "old_entity_id" in event_data
+    def sync_restored_state_filter(event_data: Mapping[str, Any]) -> bool:
+        """Filter registry events that may affect a restored state."""
+        if event_data["action"] == "remove":
+            return True
+        if event_data["action"] != "update":
+            return False
+        return (
+            "old_entity_id" in event_data
             and event_data["entity_id"] != event_data["old_entity_id"]
-        )
+        ) or "disabled_by" in event_data["changes"]
 
     @callback
-    def cleanup_restored_states(event: Event[EventEntityRegistryUpdatedData]) -> None:
-        """Clean up restored states."""
-        if event.data["action"] == "update":
-            old_entity_id = event.data["old_entity_id"]
-            old_state = hass.states.get(old_entity_id)
-            if old_state is None or not old_state.attributes.get(
-                EntityStateAttribute.RESTORED
-            ):
-                return
-            hass.states.async_remove(old_entity_id, context=event.context)
-            if entry := registry.async_get(event.data["entity_id"]):
-                entry.write_unavailable_state(hass)
-            return
-
-        state = hass.states.get(event.data["entity_id"])
-
+    def remove_restored_state(entity_id: str, context: Context) -> bool:
+        """Remove the restored state of an entity, if it has one."""
+        state = hass.states.get(entity_id)
         if state is None or not state.attributes.get(EntityStateAttribute.RESTORED):
+            return False
+        hass.states.async_remove(entity_id, context=context)
+        return True
+
+    @callback
+    def sync_restored_state(event: Event[EventEntityRegistryUpdatedData]) -> None:
+        """Keep the restored state of an entity in sync with its registry entry."""
+        data = event.data
+        entity_id = data["entity_id"]
+        if data["action"] == "remove":
+            remove_restored_state(entity_id, event.context)
             return
 
-        hass.states.async_remove(event.data["entity_id"], context=event.context)
+        if TYPE_CHECKING:
+            assert data["action"] == "update"
+
+        had_restored_state = (
+            old_entity_id := data.get("old_entity_id")
+        ) is not None and remove_restored_state(old_entity_id, event.context)
+
+        entry = registry.async_get(entity_id)
+        if entry is None or entry.disabled:
+            remove_restored_state(entity_id, event.context)
+            return
+
+        if not had_restored_state and "disabled_by" not in data["changes"]:
+            return
+        if hass.states.get(entity_id) is None:
+            entry.write_unavailable_state(hass)
 
     hass.bus.async_listen(
         EVENT_ENTITY_REGISTRY_UPDATED,
-        cleanup_restored_states,
-        event_filter=cleanup_restored_states_filter,
+        sync_restored_state,
+        event_filter=sync_restored_state_filter,
     )
 
     if hass.is_running:

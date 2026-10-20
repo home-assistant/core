@@ -1,6 +1,7 @@
 {
   "domain": "google",
   "name": "Google Calendar",
+  "categories": ["productivity_information.calendars_todos"],
   "codeowners": ["@allenporter"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

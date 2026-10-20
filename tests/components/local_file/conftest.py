@@ -5,13 +5,12 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.local_file.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_FILE_PATH
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

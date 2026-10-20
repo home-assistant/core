@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from pysomfymylink import Shade, SomfyMyLinkApiError, SomfyMyLinkConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.somfy_mylink.const import (
@@ -17,8 +18,6 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {
     CONF_HOST: "1.1.1.1",

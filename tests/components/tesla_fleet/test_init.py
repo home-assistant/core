@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.const import Scope, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
@@ -50,8 +51,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from . import setup_platform
 from .conftest import create_config_entry
 from .const import LIVE_STATUS, SITE_INFO, VEHICLE_ASLEEP, VEHICLE_DATA_ALT
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 SETUP_ERRORS = [
     (InvalidToken, ConfigEntryState.SETUP_ERROR),

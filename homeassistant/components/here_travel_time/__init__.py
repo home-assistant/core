@@ -23,7 +23,7 @@ PLATFORMS = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: HereConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: HereConfigEntry) -> None:
     """Set up HERE Travel Time from a config entry."""
     api_key = config_entry.data[CONF_API_KEY]
 
@@ -43,8 +43,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: HereConfigEntry) 
 
     config_entry.async_on_unload(async_at_started(hass, _async_update_at_start))
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
-    return True
 
 
 def alert_for_multiple_entries(hass: HomeAssistant) -> None:
@@ -72,14 +70,14 @@ def alert_for_multiple_entries(hass: HomeAssistant) -> None:
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: HereConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: HereConfigEntry
-) -> bool:
+) -> None:
     """Migrate an old config entry."""
 
     if config_entry.version == 1 and config_entry.minor_version == 1:
@@ -99,4 +97,3 @@ async def async_migrate_entry(
             config_entry.version,
             config_entry.minor_version,
         )
-    return True

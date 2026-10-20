@@ -1,6 +1,7 @@
 {
   "domain": "essent",
   "name": "Essent",
+  "categories": ["energy.energy_prices"],
   "codeowners": ["@jaapp"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/essent",
