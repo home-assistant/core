@@ -982,9 +982,9 @@ MOVED_RADIO_DISCOVERY = UsbServiceInfo(
 @pytest.mark.parametrize(
     ("state", "reloads"),
     [
-        (ConfigEntryState.LOADED, 1),
-        (ConfigEntryState.SETUP_RETRY, 1),
-        (ConfigEntryState.NOT_LOADED, 0),
+        pytest.param(ConfigEntryState.LOADED, 1, id="loaded"),
+        pytest.param(ConfigEntryState.SETUP_RETRY, 1, id="setup_retry"),
+        pytest.param(ConfigEntryState.NOT_LOADED, 0, id="not_loaded"),
     ],
 )
 async def test_discovery_via_usb_follows_moved_radio(
