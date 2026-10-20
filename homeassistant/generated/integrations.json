@@ -6720,6 +6720,11 @@
     "meross": {
       "name": "Meross",
       "integration_type": "device",
+      "categories": [
+        "sensors.temperature_humidity",
+        "sensors.door_window",
+        "water.meters_leak_detection"
+      ],
       "config_flow": true,
       "iot_class": "local_push"
     },
