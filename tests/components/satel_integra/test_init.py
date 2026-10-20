@@ -252,10 +252,12 @@ async def test_unload_unsubscribes_connection_status_callbacks(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test connection status callbacks are unsubscribed on unload."""
-    unsubscribe_callbacks = [MagicMock(return_value=None) for _ in range(4)]
+    # 4 coordinators + 1 client = 5 callbacks to unsubscribe
+    unsubscribe_callbacks = [MagicMock(return_value=None) for _ in range(5)]
     mock_satel.add_connection_status_callback.side_effect = unsubscribe_callbacks
 
     await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -263,6 +265,7 @@ async def test_unload_unsubscribes_connection_status_callbacks(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     for unsubscribe_callback in unsubscribe_callbacks:
         unsubscribe_callback.assert_called_once_with()
+    mock_satel.close.assert_awaited_once_with()
 
 
 @pytest.mark.parametrize(
@@ -328,23 +331,3 @@ async def test_connection_state_logging(
     connection_status_callback()
 
     assert "Satel Integra device is back online" in caplog.text
-
-
-async def test_unload_unsubscribes_connection_status(
-    hass: HomeAssistant,
-    mock_satel: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test unloading unsubscribes from connection status updates."""
-    await setup_integration(hass, mock_config_entry)
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-    unsubscribe = mock_satel.add_connection_status_callback.return_value
-    unsubscribe.assert_not_called()
-
-    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-    unsubscribe.assert_called_once_with()
-    mock_satel.close.assert_awaited_once_with()
