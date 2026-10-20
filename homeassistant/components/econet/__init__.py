@@ -39,7 +39,7 @@ type EconetConfigEntry = ConfigEntry[dict[EquipmentType, list[Equipment]]]
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: EconetConfigEntry
-) -> bool:
+) -> None:
     """Set up EcoNet as config entry."""
 
     email = config_entry.data[CONF_EMAIL]
@@ -89,9 +89,7 @@ async def async_setup_entry(
 
     config_entry.async_on_unload(async_track_time_interval(hass, resubscribe, INTERVAL))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: EconetConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EconetConfigEntry) -> None:
     """Unload a EcoNet config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

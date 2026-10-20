@@ -22,7 +22,7 @@ from homeassistant.util.unit_conversion import (
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import WeatherEntity
+    from .entity import WeatherEntity
 
 
 class WeatherEntityFeature(IntFlag):
@@ -32,6 +32,49 @@ class WeatherEntityFeature(IntFlag):
     FORECAST_HOURLY = 2
     FORECAST_TWICE_DAILY = 4
 
+
+ATTR_CONDITION_CLASS = "condition_class"
+ATTR_CONDITION_CLEAR_NIGHT = "clear-night"
+ATTR_CONDITION_CLOUDY = "cloudy"
+ATTR_CONDITION_EXCEPTIONAL = "exceptional"
+ATTR_CONDITION_FOG = "fog"
+ATTR_CONDITION_HAIL = "hail"
+ATTR_CONDITION_LIGHTNING = "lightning"
+ATTR_CONDITION_LIGHTNING_RAINY = "lightning-rainy"
+ATTR_CONDITION_PARTLYCLOUDY = "partlycloudy"
+ATTR_CONDITION_POURING = "pouring"
+ATTR_CONDITION_RAINY = "rainy"
+ATTR_CONDITION_SNOWY = "snowy"
+ATTR_CONDITION_SNOWY_RAINY = "snowy-rainy"
+ATTR_CONDITION_SUNNY = "sunny"
+ATTR_CONDITION_WINDY = "windy"
+ATTR_CONDITION_WINDY_VARIANT = "windy-variant"
+ATTR_FORECAST_IS_DAYTIME: Final = "is_daytime"
+ATTR_FORECAST_CONDITION: Final = "condition"
+ATTR_FORECAST_HUMIDITY: Final = "humidity"
+ATTR_FORECAST_NATIVE_PRECIPITATION: Final = "native_precipitation"
+ATTR_FORECAST_PRECIPITATION: Final = "precipitation"
+ATTR_FORECAST_PRECIPITATION_PROBABILITY: Final = "precipitation_probability"
+ATTR_FORECAST_NATIVE_PRESSURE: Final = "native_pressure"
+ATTR_FORECAST_PRESSURE: Final = "pressure"
+ATTR_FORECAST_NATIVE_APPARENT_TEMP: Final = "native_apparent_temperature"
+ATTR_FORECAST_APPARENT_TEMP: Final = "apparent_temperature"
+ATTR_FORECAST_NATIVE_TEMP: Final = "native_temperature"
+ATTR_FORECAST_TEMP: Final = "temperature"
+ATTR_FORECAST_NATIVE_TEMP_LOW: Final = "native_templow"
+ATTR_FORECAST_TEMP_LOW: Final = "templow"
+ATTR_FORECAST_TIME: Final = "datetime"
+ATTR_FORECAST_WIND_BEARING: Final = "wind_bearing"
+ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: Final = "native_wind_gust_speed"
+ATTR_FORECAST_WIND_GUST_SPEED: Final = "wind_gust_speed"
+ATTR_FORECAST_NATIVE_WIND_SPEED: Final = "native_wind_speed"
+ATTR_FORECAST_WIND_SPEED: Final = "wind_speed"
+ATTR_FORECAST_NATIVE_DEW_POINT: Final = "native_dew_point"
+ATTR_FORECAST_DEW_POINT: Final = "dew_point"
+ATTR_FORECAST_CLOUD_COVERAGE: Final = "cloud_coverage"
+ATTR_FORECAST_UV_INDEX: Final = "uv_index"
+
+ROUNDING_PRECISION = 2
 
 ATTR_WEATHER_HUMIDITY = "humidity"
 ATTR_WEATHER_OZONE = "ozone"

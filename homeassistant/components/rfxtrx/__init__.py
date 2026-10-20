@@ -91,22 +91,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: RfxtrxConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RfxtrxConfigEntry) -> None:
     """Set up the RFXtrx component."""
     await async_setup_internal(hass, entry)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: RfxtrxConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RfxtrxConfigEntry) -> None:
     """Unload RFXtrx component."""
-    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        return False
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
     await hass.async_add_executor_job(entry.runtime_data.close_connection)
-
-    return True
 
 
 def _create_rfx(
@@ -344,7 +339,7 @@ async def async_setup_platform_entry(
         )
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Migrate an old config entry."""
     version = entry.version
 
@@ -379,7 +374,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug(
         "Migration to version %s.%s successful", entry.version, entry.minor_version
     )
-    return True
 
 
 def get_rfx_object(packetid: str) -> rfxtrxmod.RFXtrxEvent | None:

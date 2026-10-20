@@ -5,6 +5,8 @@ import json
 from unittest.mock import ANY, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClient, WebSocketGenerator
 
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.components.tasmota.discovery import ALREADY_DISCOVERED
@@ -18,9 +20,6 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import setup_tasmota_helper
 from .test_common import DEFAULT_CONFIG, DEFAULT_CONFIG_9_0_0_3, remove_device
-
-from tests.common import MockConfigEntry, async_fire_mqtt_message
-from tests.typing import MqttMockHAClient, WebSocketGenerator
 
 
 def _get_device_for_config_entry(
@@ -783,6 +782,10 @@ async def test_same_topic(
     issue_id = "topic_duplicated_tasmota_49A3BC/cmnd/"
     issue = issue_registry.async_get_issue("tasmota", issue_id)
     assert issue.data["mac"] == " ".join(config["mac"] for config in configs[0:2])
+    assert (
+        issue.config_entry_id
+        == hass.config_entries.async_entries("tasmota")[0].entry_id
+    )
 
     # Discover a 3rd device with same topic
     async_fire_mqtt_message(
@@ -896,7 +899,12 @@ async def test_topic_no_prefix(
 
     # Verify a repairs issue was created
     issue_id = "topic_no_prefix_00000049A3BC"
-    assert ("tasmota", issue_id) in issue_registry.issues
+    issue = issue_registry.async_get_issue("tasmota", issue_id)
+    assert issue is not None
+    assert (
+        issue.config_entry_id
+        == hass.config_entries.async_entries("tasmota")[0].entry_id
+    )
 
     # Rediscover device with fixed config
     config["ft"] = "%topic%/%prefix%/"

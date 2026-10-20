@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from flow_it_api.exceptions import FlowItAuthError, FlowItCommandError, FlowItError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import (
@@ -15,8 +16,6 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 AIR_INTAKE_ENTITY_ID = "switch.001122334455_air_intake"
 AIR_EXHAUST_ENTITY_ID = "switch.001122334455_air_exhaust"

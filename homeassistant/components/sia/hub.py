@@ -56,10 +56,12 @@ class SIAHub:
         device_registry = dr.async_get(self._hass)
         for acc in self._accounts:
             account = acc[CONF_ACCOUNT]
-            device_registry.async_get_or_create(
+            device_registry.async_get_or_create_device(
                 config_entry_id=self._entry.entry_id,
-                identifiers={(DOMAIN, f"{self._port}_{account}")},
-                name=f"{self._port} - {account}",
+                device_info=dr.DeviceInfo(
+                    identifiers={(DOMAIN, f"{self._port}_{account}")},
+                    name=f"{self._port} - {account}",
+                ),
             )
         self._entry.async_on_unload(
             self._entry.add_update_listener(self.async_config_entry_updated)

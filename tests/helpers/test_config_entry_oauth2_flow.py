@@ -17,6 +17,17 @@ from aiohttp import (
 )
 from multidict import CIMultiDict, CIMultiDictProxy
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_integration,
+    mock_platform,
+)
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from yarl import URL
 
 from homeassistant import config_entries, data_entry_flow, setup
@@ -31,10 +42,6 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.network import NoURLAvailableError
-
-from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
-from tests.typing import ClientSessionGenerator
 
 TEST_DOMAIN = "oauth2_test"
 CLIENT_SECRET = "5678"
@@ -847,6 +854,36 @@ async def test_local_refresh_token(
         "grant_type": "refresh_token",
         "refresh_token": REFRESH_TOKEN,
     }
+
+
+async def test_local_refresh_token_client_secret_basic(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test overriding token_auth_method sends the credentials as basic auth."""
+
+    class BasicAuthImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
+        token_auth_method = "client_secret_basic"
+
+    local_impl = BasicAuthImplementation(
+        hass, TEST_DOMAIN, CLIENT_ID, CLIENT_SECRET, AUTHORIZE_URL, TOKEN_URL
+    )
+    aioclient_mock.post(
+        TOKEN_URL, json={"access_token": ACCESS_TOKEN_2, "expires_in": 100}
+    )
+
+    await local_impl.async_refresh_token(
+        {"refresh_token": REFRESH_TOKEN, "access_token": ACCESS_TOKEN_1}
+    )
+
+    assert len(aioclient_mock.mock_calls) == 1
+    assert aioclient_mock.mock_calls[0][2] == {
+        "client_id": CLIENT_ID,
+        "grant_type": "refresh_token",
+        "refresh_token": REFRESH_TOKEN,
+    }
+    # base64 of "1234:5678"
+    assert aioclient_mock.mock_calls[0][3] == {"Authorization": "Basic MTIzNDo1Njc4"}
 
 
 async def test_oauth_session(

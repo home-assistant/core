@@ -11,6 +11,30 @@ from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockEntity,
+    MockEntityPlatform,
+    async_fire_time_changed,
+    async_test_home_assistant,
+    mock_platform,
+)
+from pytest_homeassistant.components.recorder.common import (
+    async_block_recorder,
+    async_recorder_block_till_done,
+    async_wait_recorder,
+    async_wait_recording_done,
+    convert_pending_states_to_meta,
+    corrupt_db_file,
+    db_event_data_to_native,
+    db_event_to_native,
+    db_state_attributes_to_native,
+    db_state_to_native,
+    run_information_with_session,
+)
+from pytest_homeassistant.typing import (
+    RecorderInstanceContextManager,
+    RecorderInstanceGenerator,
+)
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 from sqlalchemy.pool import QueuePool
 
@@ -80,29 +104,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads
-
-from .common import (
-    async_block_recorder,
-    async_recorder_block_till_done,
-    async_wait_recorder,
-    async_wait_recording_done,
-    convert_pending_states_to_meta,
-    corrupt_db_file,
-    db_event_data_to_native,
-    db_event_to_native,
-    db_state_attributes_to_native,
-    db_state_to_native,
-    run_information_with_session,
-)
-
-from tests.common import (
-    MockEntity,
-    MockEntityPlatform,
-    async_fire_time_changed,
-    async_test_home_assistant,
-    mock_platform,
-)
-from tests.typing import RecorderInstanceContextManager, RecorderInstanceGenerator
 
 
 @pytest.fixture
@@ -260,6 +261,50 @@ async def test_state_gets_saved_when_set_before_start_event(
         db_states = list(session.query(States))
         assert len(db_states) == 1
         assert db_states[0].event_id is None
+
+
+async def test_commit_future_covers_startup_batch(
+    hass: HomeAssistant, async_setup_recorder_instance: RecorderInstanceGenerator
+) -> None:
+    """Test a commit future is returned while the startup batch is processed.
+
+    Once Home Assistant has started, the recorder drains its whole queue into a
+    startup batch before processing it. The queue is then empty although the
+    batch is not committed yet.
+    """
+    hass.set_state(CoreState.not_running)
+    recorder_helper.async_initialize_recorder(hass)
+    hass.async_create_task(async_setup_recorder_instance(hass))
+    await async_wait_recorder(hass)
+    instance = get_instance(hass)
+    hass.states.async_set("test.recorder", "on")
+
+    batch_drained = threading.Event()
+    release_batch = threading.Event()
+    real_pre_process = instance._pre_process_startup_events
+
+    def _pre_process_startup_events(
+        startup_task_or_events: list[recorder.tasks.RecorderTask | Event],
+    ) -> None:
+        batch_drained.set()
+        release_batch.wait()
+        real_pre_process(startup_task_or_events)
+
+    with patch.object(
+        instance, "_pre_process_startup_events", _pre_process_startup_events
+    ):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        try:
+            assert await hass.async_add_executor_job(batch_drained.wait, 10)
+            assert instance.backlog == 0
+            commit_future = instance.async_get_commit_future()
+        finally:
+            release_batch.set()
+
+    assert commit_future is not None
+    await commit_future
+    with session_scope(hass=hass, read_only=True) as session:
+        assert len(list(session.query(States))) == 1
 
 
 async def test_saving_state(hass: HomeAssistant, setup_recorder: None) -> None:
@@ -2727,10 +2772,7 @@ async def test_commit_before_commits_pending_writes(
         recorder.CONF_COMMIT_INTERVAL: 60,
     }
 
-    recorder_helper.async_initialize_recorder(hass)
-    hass.async_create_task(async_setup_recorder_instance(hass, config))
-    await async_wait_recorder(hass)
-    instance = get_instance(hass)
+    instance = await async_setup_recorder_instance(hass, config)
     assert instance.commit_interval == 60
     verify_states_in_queue_future = hass.loop.create_future()
     verify_session_commit_future = hass.loop.create_future()
