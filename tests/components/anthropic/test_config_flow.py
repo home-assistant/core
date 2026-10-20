@@ -890,6 +890,59 @@ async def test_model_list(
     assert options["data_schema"].schema["chat_model"].config["options"] == snapshot
 
 
+@pytest.mark.parametrize(
+    ("subentry_type", "expected_values"),
+    [
+        pytest.param(
+            "ai_task_data", ["supported-model"], id="ai_task_structured_outputs"
+        ),
+        pytest.param(
+            "conversation",
+            ["supported-model", "unsupported-model", "unknown-model"],
+            id="conversation_all_models",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_init_component")
+async def test_model_list_structured_outputs(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    subentry_type: str,
+    expected_values: list[str],
+) -> None:
+    """Only offer models with known structured output support for AI Tasks."""
+    supported_model = model_list[0].model_copy(update={"id": "supported-model"})
+    unsupported_model = model_list[0].model_copy(
+        update={"id": "unsupported-model"}, deep=True
+    )
+    assert unsupported_model.capabilities is not None
+    unsupported_model.capabilities.structured_outputs.supported = False
+    unknown_model = model_list[0].model_copy(
+        update={"id": "unknown-model", "capabilities": None}
+    )
+    mock_config_entry.runtime_data.async_set_updated_data(
+        [supported_model, unsupported_model, unknown_model]
+    )
+    subentry = next(
+        subentry
+        for subentry in mock_config_entry.subentries.values()
+        if subentry.subentry_type == subentry_type
+    )
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_RECOMMENDED: False}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "additional"
+    assert [
+        option["value"]
+        for option in result["data_schema"].schema[CONF_CHAT_MODEL].config["options"]
+    ] == expected_values
+
+
 @pytest.mark.usefixtures("mock_init_component")
 @pytest.mark.freeze_time("2026-10-16T12:00:00Z")
 @pytest.mark.parametrize(
