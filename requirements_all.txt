@@ -1596,7 +1596,7 @@ lorawan-connection==1.2.0
 luftdaten==0.7.4
 
 # homeassistant.components.lunatone
-lunatone-rest-api-client==0.11.1
+lunatone-rest-api-client==0.11.2
 
 # homeassistant.components.lupusec
 lupupy==0.3.2
