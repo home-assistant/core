@@ -23,6 +23,8 @@ from .const import (
     DOMAIN,
     LockEntityFeature,
     LockEntityStateAttribute,
+    LockService,
+    LockServiceArgument,
     LockState,
 )
 from .entity import LockEntity, LockEntityDescription
@@ -54,6 +56,8 @@ __all__ = [
     "LockEntityDescription",
     "LockEntityFeature",
     "LockEntityStateAttribute",
+    "LockService",
+    "LockServiceArgument",
     "LockState",
 ]
 
