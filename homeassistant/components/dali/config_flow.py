@@ -35,13 +35,6 @@ def _serial_port_label(port: SerialDevice) -> str:
     return port.device
 
 
-def _unique_id_from_port(port: usb.USBDevice | usb.SerialDevice) -> str:
-    """Build the unique ID that USB discovery would assign to this port."""
-    if isinstance(port, usb.USBDevice):
-        return usb_unique_id_from_service_info(usb_service_info_from_device(port))
-    return port.device
-
-
 class DaliConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Tridonic DALI."""
 

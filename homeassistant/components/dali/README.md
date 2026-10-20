@@ -14,11 +14,11 @@ The interface must be available as a serial device. Home Assistant uses the stab
 
 ## Devices and updates
 
-The integration scans the DALI short-address range when it starts and every 30 seconds afterward. Each responding control gear is added as a light. Gear that stops responding becomes unavailable, and newly responding gear is added automatically.
+The integration refreshes the state of known control gear every 30 seconds and rescans the full DALI short-address range for new or removed gear every five minutes. Each responding control gear is added as a light. Gear that stops responding becomes unavailable, and newly responding gear is added automatically.
 
 ## Control
 
-Lights support on, off, and brightness control. The integration currently exposes DALI control gear as brightness-only lights.
+Lights support on, off, and brightness control. The integration currently supports dimmable LED control gear (DALI device type 6, IEC 62386-207) and exposes it as brightness-only lights.
 
 ## Removal
 
