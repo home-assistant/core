@@ -532,7 +532,7 @@ async def ws_get_module(
         )
         return
     data = _escape_module_instance_data(await get_module_instance_data(module))
-    data["device_id"] = _device_id_for_module(hass, entry, msg[CONF_ADDRESS])
+    data["device_id"] = _device_id_for_module(hass, entry, module.get_addresses()[0])
     data["schema"] = _escape_module_type_schema(
         await hass.async_add_executor_job(get_module_type_schema, module.get_type())
     )

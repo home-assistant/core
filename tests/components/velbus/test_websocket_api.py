@@ -11,10 +11,12 @@ from homeassistant.components.velbus.const import (
     CONF_ADVANCED_MODE,
     CONF_CHANNEL,
     CONF_CONFIG_ENTRY,
+    DOMAIN,
 )
 from homeassistant.components.velbus.websocket_api import _get_entry
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from . import init_integration
 
@@ -256,6 +258,53 @@ async def test_get_module(
     assert response["result"]["schema"] == schema
     assert response["result"]["device_id"] is not None
     mock_module_subdevices.get_type.assert_called()
+
+
+async def test_get_module_device_id_uses_primary_address(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_module_subdevices: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test module/get resolves device_id via the module primary address."""
+    mock_module_subdevices.get_addresses.return_value = [88, 89]
+    await _setup_entry(hass, config_entry, advanced_mode=True)
+    primary_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "88"), config_entry.entry_id
+    )
+    assert primary_device is not None
+
+    client = await hass_ws_client(hass)
+    module_data = {
+        "address": 89,
+        "name": "Kitchen",
+        "type_id": 40,
+        "type_name": "VMB2BLE",
+        "serial": "a1b2c3d4e5f6",
+        "sw_version": "2.0.0",
+        "channels": {},
+        "properties": {},
+    }
+
+    with (
+        patch(
+            "homeassistant.components.velbus.websocket_api.get_module_instance_data",
+            new=AsyncMock(return_value=module_data),
+        ),
+        patch(
+            "homeassistant.components.velbus.websocket_api.get_module_type_schema",
+            return_value={"type_id": 40, "sections": []},
+        ),
+    ):
+        response = await _ws_call(
+            client,
+            "velbus/config_panel/module/get",
+            {CONF_CONFIG_ENTRY: config_entry.entry_id, CONF_ADDRESS: 89},
+        )
+
+    assert response["success"]
+    assert response["result"]["device_id"] == primary_device.id
 
 
 async def test_get_module_not_found(
