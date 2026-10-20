@@ -1,5 +1,7 @@
 """Test the group helper."""
 
+from pytest_homeassistant.common import MockEntity, MockEntityPlatform
+
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_GROUP_ENTITIES, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, group
@@ -8,8 +10,6 @@ from homeassistant.helpers.group import (
     IntegrationSpecificGroup,
     get_group_entities,
 )
-
-from tests.common import MockEntity, MockEntityPlatform
 
 
 async def test_expand_entity_ids(hass: HomeAssistant) -> None:

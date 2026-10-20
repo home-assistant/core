@@ -1,13 +1,13 @@
 """Test issue template functions."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryDisabler
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
 from tests.helpers.template.helpers import assert_result_info, render_to_info
 
 

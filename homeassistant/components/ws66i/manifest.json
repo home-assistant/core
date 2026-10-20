@@ -1,6 +1,7 @@
 {
   "domain": "ws66i",
   "name": "Soundavo WS66i 6-Zone Amplifier",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@ssaenger"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ws66i",

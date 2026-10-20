@@ -5,6 +5,8 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 from waterfurnace.waterfurnace import WaterFurnace, WFGateway, WFNoDataError, WFReading
 
 from homeassistant.components.recorder import Recorder
@@ -19,9 +21,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform, UnitOfEn
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import EnergyConverter
-
-from tests.common import MockConfigEntry, load_json_object_fixture
-from tests.components.recorder.common import async_wait_recording_done
 
 SEED_STATISTIC_METADATA = StatisticMetaData(
     has_sum=True,

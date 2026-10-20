@@ -1,6 +1,7 @@
 {
   "domain": "lyric",
   "name": "Honeywell Lyric",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@timmo001"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

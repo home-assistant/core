@@ -1,6 +1,7 @@
 {
   "domain": "nad",
   "name": "NAD",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/nad",
   "iot_class": "local_polling",

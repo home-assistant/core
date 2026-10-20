@@ -1,5 +1,6 @@
 """Config flow for Electra Air Conditioner integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -7,7 +8,7 @@ from electrasmart.api import STATUS_SUCCESS, Attributes, ElectraAPI, ElectraApiE
 from electrasmart.api.utils import generate_imei
 import probatio
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -29,6 +30,7 @@ class ElectraSmartConfigFlow(ConfigFlow, domain=DOMAIN):
         self._imei: str | None = None
         self._token: str | None = None
         self._api: ElectraAPI | None = None
+        self._reauth_entry: ConfigEntry | None = None
 
     @override
     async def async_step_user(
@@ -104,7 +106,7 @@ class ElectraSmartConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_one_time_password()
 
     async def _validate_one_time_password(
-        self, user_input: dict[str, str]
+        self, user_input: dict[str, str], step_id: str = CONF_OTP
     ) -> ConfigFlowResult:
         self._otp = user_input[CONF_OTP]
 
@@ -120,7 +122,7 @@ class ElectraSmartConfigFlow(ConfigFlow, domain=DOMAIN):
         except ElectraApiError as exp:
             _LOGGER.error("Failed to connect to API: %s", exp)
             return self._show_setup_form(
-                user_input, {"base": "cannot_connect"}, CONF_OTP
+                user_input, {"base": "cannot_connect"}, step_id
             )
 
         if resp[Attributes.DATA][Attributes.RES] == STATUS_SUCCESS:
@@ -131,8 +133,10 @@ class ElectraSmartConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_IMEI: self._imei,
                 CONF_PHONE_NUMBER: self._phone_number,
             }
+            if self._reauth_entry is not None:
+                return self.async_update_reload_and_abort(self._reauth_entry, data=data)
             return self.async_create_entry(title=self._phone_number, data=data)
-        return self._show_setup_form(user_input, {CONF_OTP: "invalid_auth"}, CONF_OTP)
+        return self._show_setup_form(user_input, {CONF_OTP: "invalid_auth"}, step_id)
 
     async def async_step_one_time_password(
         self,
@@ -159,3 +163,48 @@ class ElectraSmartConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema({probatio.Required(CONF_OTP): str}),
             errors=errors or {},
         )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle the reauthentication of a locked out account."""
+        self._reauth_entry = self._get_reauth_entry()
+        self._phone_number = self._reauth_entry.data[CONF_PHONE_NUMBER]
+        self._imei = generate_imei()
+
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask for a new one-time password to clear the lockout."""
+        if self._api is None:
+            self._api = ElectraAPI(async_get_clientsession(self.hass))
+
+        if user_input is None:
+            # Only a confirmation, so that opening the dialog does not send a code.
+            return self.async_show_form(step_id="reauth_confirm")
+
+        errors: dict[str, str] = {}
+        assert isinstance(self._api, ElectraAPI)
+        assert self._phone_number is not None
+        assert self._imei is not None
+
+        # A new one-time password has to be requested before it can be entered.
+        try:
+            resp = await self._api.generate_new_token(self._phone_number, self._imei)
+        except ElectraApiError as exp:
+            _LOGGER.error("Failed to connect to API: %s", exp)
+            errors = {"base": "cannot_connect"}
+        else:
+            if (
+                resp[Attributes.STATUS] == STATUS_SUCCESS
+                and resp[Attributes.DATA][Attributes.RES] != STATUS_SUCCESS
+            ):
+                errors = {"base": "invalid_phone_number"}
+
+        if errors:
+            # Keep the confirmation, so the request can be retried.
+            return self.async_show_form(step_id="reauth_confirm", errors=errors)
+
+        return await self.async_step_one_time_password()
