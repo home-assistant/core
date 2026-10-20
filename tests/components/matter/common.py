@@ -128,6 +128,7 @@ FIXTURES = [
     "tapo_smart_wi_fi_plug_265",
     "tapo_smart_wi_fi_power_strip",
     "tp_link_smart_outdoor_plug",
+    "uascent_smart_switch",
     "wago_home_blind_control",
     "wago_home_relay_16a",
     "yandex_smart_socket",
