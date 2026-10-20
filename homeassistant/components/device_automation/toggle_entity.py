@@ -148,7 +148,7 @@ def async_condition_from_config(
         CONF_STATE: stat,
     }
     if CONF_FOR in config:
-        state_config[StateTriggerArgument.FOR] = config[CONF_FOR]
+        state_config[CONF_FOR] = config[CONF_FOR]
 
     state_config = cv.STATE_CONDITION_SCHEMA(state_config)
     state_config = condition.state_validate_config(hass, state_config)
