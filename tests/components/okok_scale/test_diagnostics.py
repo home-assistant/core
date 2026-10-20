@@ -1,6 +1,5 @@
 """Tests for the diagnostics data provided by the OKOK Scale integration."""
 
-import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.bluetooth import (
     inject_bluetooth_service_info_bleak,
@@ -15,7 +14,6 @@ from homeassistant.core import HomeAssistant
 from . import OKOK_F0_SERVICE_INFO
 
 
-@pytest.mark.usefixtures("mock_bluetooth")
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

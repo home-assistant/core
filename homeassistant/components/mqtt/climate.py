@@ -57,7 +57,7 @@ from homeassistant.helpers.typing import (
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import subscription
-from .config import DEFAULT_RETAIN, MQTT_BASE_SCHEMA
+from .config import MQTT_BASE_SCHEMA
 from .const import (
     CONF_ACTION_TEMPLATE,
     CONF_ACTION_TOPIC,
@@ -118,6 +118,7 @@ from .const import (
     CONF_TEMP_STEP,
     DEFAULT_CLIMATE_INITIAL_TEMPERATURE,
     DEFAULT_OPTIMISTIC,
+    DEFAULT_RETAIN,
     PAYLOAD_NONE,
 )
 from .entity import MqttEntity, async_setup_entity_entry_helper

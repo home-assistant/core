@@ -25,6 +25,8 @@ from .const import (
     SERVICE_PERSISTENT_NOTIFICATION,
     SERVICE_SEND_MESSAGE,
     NotifyEntityFeature,
+    NotifyService,
+    NotifyServiceArgument,
 )
 from .entity import NotifyEntity, NotifyEntityDescription
 from .legacy import (
@@ -73,6 +75,8 @@ __all__ = [
     "NotifyEntity",
     "NotifyEntityDescription",
     "NotifyEntityFeature",
+    "NotifyService",
+    "NotifyServiceArgument",
     "async_reload",
     "async_reset_platform",
     "migrate_notify_issue",

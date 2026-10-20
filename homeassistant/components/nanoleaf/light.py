@@ -21,6 +21,8 @@ from .coordinator import NanoleafConfigEntry, NanoleafCoordinator
 from .entity import NanoleafEntity, async_handle_nanoleaf_errors
 
 RESERVED_EFFECTS = ("*Solid*", "*Static*", "*Dynamic*")
+# Reported as the active effect while a Screen Mirroring mode of a Nanoleaf 4D runs.
+EMERSION_EFFECT = "*Emersion*"
 DEFAULT_NAME = "Nanoleaf"
 
 
@@ -69,13 +71,25 @@ class NanoleafLight(NanoleafEntity, LightEntity):
         # These reserved effects are implicitly set and are not in the effect_list.
         # https://forum.nanoleaf.me/docs/openapi#_byoot0bams8f
         effect = self._nanoleaf.effect
+        if effect == EMERSION_EFFECT:
+            # Screen Mirroring modes (1D, 2D, 3D, 4D) are offered as effects.
+            return self._nanoleaf.selected_emersion
         return None if not effect or effect in RESERVED_EFFECTS else effect
 
     @property
     @override
     def effect_list(self) -> list[str]:
-        """Return the list of supported effects."""
-        return self._nanoleaf.effects_list
+        """Return the list of supported effects.
+
+        Devices with Screen Mirroring (Nanoleaf 4D) additionally offer their
+        modes (1D, 2D, 3D, 4D) as effects. A regular effect with the same name
+        takes precedence.
+        """
+        effects = self._nanoleaf.effects_list
+        return [
+            *effects,
+            *(mode for mode in self._nanoleaf.emersion_list if mode not in effects),
+        ]
 
     @property
     @override
@@ -117,7 +131,11 @@ class NanoleafLight(NanoleafEntity, LightEntity):
                     translation_key="invalid_effect",
                     translation_placeholders={"effect": str(effect)},
                 )
-            await self._nanoleaf.set_effect(effect)
+            if effect in self._nanoleaf.effects_list:
+                await self._nanoleaf.set_effect(effect)
+            else:
+                # Not a regular effect, so it is a Screen Mirroring mode.
+                await self._nanoleaf.set_emersion(effect)
         elif hs_color:
             hue, saturation = hs_color
             await self._nanoleaf.set_hue(int(hue))
