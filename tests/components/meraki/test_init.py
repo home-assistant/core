@@ -6,6 +6,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 
 from . import api_error, setup_integration
@@ -22,6 +23,19 @@ async def test_load_unload(
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    mock_meraki_client.__aexit__.assert_awaited_once()
+
+
+async def test_client_closed_on_stop(
+    hass: HomeAssistant,
+    mock_meraki_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the client is closed when Home Assistant stops."""
+    await setup_integration(hass, mock_config_entry)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
     mock_meraki_client.__aexit__.assert_awaited_once()
 
 

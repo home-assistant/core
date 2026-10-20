@@ -52,7 +52,4 @@ def mock_meraki_client() -> Generator[MagicMock]:
         networks.getNetworkClients = AsyncMock(
             return_value=load_json_array_fixture("clients.json", DOMAIN)
         )
-        networks.getNetworkBluetoothClients = AsyncMock(
-            return_value=load_json_array_fixture("bluetooth_clients.json", DOMAIN)
-        )
         yield client

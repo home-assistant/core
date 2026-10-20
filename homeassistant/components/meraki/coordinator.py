@@ -26,10 +26,8 @@ UPDATE_INTERVAL = timedelta(minutes=1)
 # Clients seen in this window are returned, connected or not.
 CLIENT_TIMESPAN = timedelta(hours=1)
 
-# Networks with these products have clients; Bluetooth clients are seen by access
-# points.
+# Networks with these products have clients.
 CLIENT_PRODUCT_TYPES = frozenset({"appliance", "cellularGateway", "switch", "wireless"})
-BLUETOOTH_PRODUCT_TYPE = "wireless"
 
 type MerakiConfigEntry = ConfigEntry[MerakiDataUpdateCoordinator]
 
@@ -47,21 +45,10 @@ class MerakiClient:
 
 
 @dataclass(frozen=True, kw_only=True)
-class MerakiBluetoothClient:
-    """A Bluetooth device seen by Meraki access points."""
-
-    mac: str
-    network_id: str
-    name: str | None
-    last_seen: datetime
-
-
-@dataclass(frozen=True, kw_only=True)
 class MerakiData:
     """The clients of a Meraki organization, by MAC address."""
 
     clients: dict[str, MerakiClient]
-    bluetooth_clients: dict[str, MerakiBluetoothClient]
 
 
 class MerakiDataUpdateCoordinator(DataUpdateCoordinator[MerakiData]):
@@ -99,11 +86,6 @@ class MerakiDataUpdateCoordinator(DataUpdateCoordinator[MerakiData]):
             for network in networks
             if CLIENT_PRODUCT_TYPES.intersection(network["productTypes"])
         ]
-        bluetooth_networks = [
-            network["id"]
-            for network in networks
-            if BLUETOOTH_PRODUCT_TYPE in network["productTypes"]
-        ]
         timespan = int(CLIENT_TIMESPAN.total_seconds())
         client_lists = await asyncio.gather(
             *(
@@ -115,17 +97,6 @@ class MerakiDataUpdateCoordinator(DataUpdateCoordinator[MerakiData]):
                 for network_id in client_networks
             )
         )
-        bluetooth_lists = await asyncio.gather(
-            *(
-                self._async_call(
-                    self.client.networks.getNetworkBluetoothClients(
-                        network_id, total_pages="all", perPage=1000, timespan=timespan
-                    )
-                )
-                for network_id in bluetooth_networks
-            )
-        )
-
         clients: dict[str, MerakiClient] = {}
         for network_id, items in zip(client_networks, client_lists, strict=True):
             for item in items:
@@ -136,15 +107,7 @@ class MerakiDataUpdateCoordinator(DataUpdateCoordinator[MerakiData]):
                 ):
                     clients[client.mac] = client
 
-        bluetooth_clients: dict[str, MerakiBluetoothClient] = {}
-        for network_id, items in zip(bluetooth_networks, bluetooth_lists, strict=True):
-            for item in items:
-                bluetooth_client = _parse_bluetooth_client(network_id, item)
-                known_bt = bluetooth_clients.get(bluetooth_client.mac)
-                if known_bt is None or bluetooth_client.last_seen > known_bt.last_seen:
-                    bluetooth_clients[bluetooth_client.mac] = bluetooth_client
-
-        return MerakiData(clients=clients, bluetooth_clients=bluetooth_clients)
+        return MerakiData(clients=clients)
 
     async def _async_call[_T](self, request: Awaitable[_T]) -> _T:
         """Await an API request and translate its errors."""
@@ -170,20 +133,6 @@ def _parse_client(network_id: str, item: dict[str, Any]) -> MerakiClient:
         ip=item["ip"],
         online=item["status"] == "Online",
         last_seen=dt_util.parse_datetime(item["lastSeen"], raise_on_error=True),
-    )
-
-
-def _parse_bluetooth_client(
-    network_id: str, item: dict[str, Any]
-) -> MerakiBluetoothClient:
-    # Devices that do not advertise a name are reported as "unknown".
-    name = item["name"] or item["deviceName"]
-    return MerakiBluetoothClient(
-        mac=item["mac"],
-        network_id=network_id,
-        name=name if name and name != "unknown" else None,
-        # Unlike the other endpoints, lastSeen is a Unix timestamp here.
-        last_seen=dt_util.utc_from_timestamp(item["lastSeen"]),
     )
 
 

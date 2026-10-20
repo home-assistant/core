@@ -21,7 +21,6 @@ from homeassistant.components.device_tracker import legacy
 from homeassistant.components.meraki.const import CONF_ORGANIZATION_ID, DOMAIN
 from homeassistant.components.meraki.coordinator import UPDATE_INTERVAL
 from homeassistant.components.meraki.device_tracker import (
-    BLUETOOTH_CONSIDER_HOME,
     CONF_SECRET,
     CONF_VALIDATOR,
     URL,
@@ -40,7 +39,6 @@ from . import api_error, setup_integration
 from .conftest import ORGANIZATION_ID
 
 PHONE = "device_tracker.pixel_9"
-KEYS = "device_tracker.keys"
 
 
 async def _async_poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
@@ -180,7 +178,7 @@ async def test_trackers(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the trackers of the clients and Bluetooth devices."""
+    """Test the trackers of the clients."""
     await setup_integration(hass, mock_config_entry)
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -203,9 +201,8 @@ async def test_trackers_disabled_by_default(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(PHONE).state == STATE_HOME
-    for entity_id in ("device_tracker.nas", KEYS):
-        entry = entity_registry.async_get(entity_id)
-        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    entry = entity_registry.async_get("device_tracker.nas")
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 @pytest.mark.freeze_time("2026-10-20 21:00:00+00:00")
@@ -230,24 +227,6 @@ async def test_client_leaves(
     mock_meraki_client.networks.getNetworkClients.return_value = clients[1:]
     await _async_poll(hass, freezer)
     assert hass.states.get(PHONE).state == STATE_NOT_HOME
-
-
-@pytest.mark.freeze_time("2026-10-20 21:00:00+00:00")
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_meraki_client")
-async def test_bluetooth_device_leaves(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test Bluetooth devices are away once access points stop hearing them."""
-    await setup_integration(hass, mock_config_entry)
-    assert hass.states.get(KEYS).state == STATE_HOME
-
-    # The fixture's keys were last heard at 20:58.
-    freezer.move_to("2026-10-20 20:58:00+00:00")
-    freezer.tick(BLUETOOTH_CONSIDER_HOME)
-    await _async_poll(hass, freezer)
-    assert hass.states.get(KEYS).state == STATE_NOT_HOME
 
 
 @pytest.mark.freeze_time("2026-10-20 21:00:00+00:00")
@@ -279,11 +258,9 @@ async def test_restore_unlisted_clients(
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
     mock_meraki_client.networks.getNetworkClients.return_value = []
-    mock_meraki_client.networks.getNetworkBluetoothClients.return_value = []
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert hass.states.get(PHONE).state == STATE_NOT_HOME
-    assert hass.states.get(KEYS).state == STATE_NOT_HOME
 
 
 @pytest.mark.freeze_time("2026-10-20 21:00:00+00:00")
@@ -350,15 +327,12 @@ async def test_client_in_several_organizations(
     await setup_integration(hass, mock_config_entry)
     await setup_integration(hass, other_entry)
 
-    for entry, org_id in (
-        (mock_config_entry, ORGANIZATION_ID),
-        (other_entry, "654321"),
-    ):
-        unique_ids = {
-            registry_entry.unique_id
-            for registry_entry in er.async_entries_for_config_entry(
-                entity_registry, entry.entry_id
-            )
-        }
-        assert f"{org_id}_aa:bb:cc:00:00:01" in unique_ids
-        assert f"{org_id}_bluetooth_c4:00:00:00:00:01" in unique_ids
+    first = entity_registry.async_get_entity_id(
+        "device_tracker", DOMAIN, f"{ORGANIZATION_ID}_aa:bb:cc:00:00:01"
+    )
+    second = entity_registry.async_get_entity_id(
+        "device_tracker", DOMAIN, "654321_aa:bb:cc:00:00:01"
+    )
+    assert first == PHONE
+    assert second == f"{PHONE}_2"
+    assert hass.states.get(second).state == STATE_HOME

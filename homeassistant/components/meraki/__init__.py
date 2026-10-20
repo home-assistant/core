@@ -2,8 +2,8 @@
 
 from contextlib import AsyncExitStack
 
-from homeassistant.const import CONF_API_KEY, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_API_KEY, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import Event, HomeAssistant
 
 from .api import async_create_client
 from .coordinator import MerakiConfigEntry, MerakiDataUpdateCoordinator
@@ -18,6 +18,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: MerakiConfigEntry) -> No
     entry.async_on_unload(stack.aclose)
     client = await stack.enter_async_context(
         await async_create_client(hass, entry.data[CONF_API_KEY])
+    )
+
+    # Config entries are not unloaded when Home Assistant stops.
+    async def _async_close(_: Event) -> None:
+        await stack.aclose()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close)
     )
 
     coordinator = MerakiDataUpdateCoordinator(hass, entry, client)
