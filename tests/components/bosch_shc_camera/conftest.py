@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from bosch_shc_camera_client.cameras import Camera, CameraModel
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
@@ -15,8 +16,6 @@ from homeassistant.components.bosch_shc_camera.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
 
 CAMERA_ID = "11111111-1111-1111-1111-111111111111"
 CAMERAS = [

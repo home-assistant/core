@@ -12,6 +12,7 @@ from bosch_shc_camera_client.cameras import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.bosch_shc_camera.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -21,8 +22,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .conftest import CAMERA_ID, CAMERAS
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 pytestmark = pytest.mark.usefixtures("setup_credentials")
 

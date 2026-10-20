@@ -1,6 +1,7 @@
 {
   "domain": "bosch_shc_camera",
   "name": "Bosch Smart Home Camera",
+  "categories": ["security_safety.cameras"],
   "codeowners": ["@mosandlt"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
