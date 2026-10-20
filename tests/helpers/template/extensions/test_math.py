@@ -495,6 +495,22 @@ def test_remap(hass: HomeAssistant) -> None:
             render(hass, case)
 
 
+@pytest.mark.parametrize(
+    ("value", "out_min", "out_max", "expected"),
+    [
+        pytest.param(5, 0.3, 0.9, 0.9, id="above_range"),
+        pytest.param(5, 0.7, 0.1, 0.1, id="above_range_inverted_output"),
+        pytest.param(5, 72.0, -75.8, -75.8, id="above_range_mixed_sign_output"),
+        pytest.param(-5, 0.3, 0.9, 0.3, id="below_range"),
+    ],
+)
+def test_remap_clamp_stays_within_output_range(
+    value: float, out_min: float, out_max: float, expected: float
+) -> None:
+    """Test clamp never returns a value outside the output range."""
+    assert MathExtension.remap(value, 0, 1, out_min, out_max, edges="clamp") == expected
+
+
 def test_remap_with_steps(hass: HomeAssistant) -> None:
     """Test remap function with steps parameter."""
     # Test basic stepping - quantize to 10 steps
