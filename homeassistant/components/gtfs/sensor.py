@@ -758,7 +758,7 @@ class GTFSDepartureSensor(SensorEntity):
             ]
 
         # Manage Trip metadata
-        key = "trip_id"
+        key = "trip_trip_id"
         if not self._trip and key in self._attributes:
             self.remove_keys("Trip")
         elif self._trip and (
@@ -827,6 +827,7 @@ class GTFSDepartureSensor(SensorEntity):
 
     def remove_keys(self, prefix: str) -> None:
         """Remove attributes whose key starts with prefix."""
+        prefix = slugify(prefix)
         self._attributes = {
             k: v for k, v in self._attributes.items() if not k.startswith(prefix)
         }
