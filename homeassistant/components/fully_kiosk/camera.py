@@ -34,6 +34,7 @@ class FullyCameraEntity(FullyKioskEntity, Camera):
         """Initialize the camera."""
         FullyKioskEntity.__init__(self, coordinator)
         Camera.__init__(self)
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{coordinator.data['deviceID']}-camera"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @override

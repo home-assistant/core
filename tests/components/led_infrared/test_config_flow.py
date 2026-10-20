@@ -3,6 +3,11 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.infrared import (
+    EMITTER_ENTITY_ID,
+    RECEIVER_ENTITY_ID,
+)
 
 from homeassistant.components.led_infrared.const import (
     CONF_DEVICE_TYPE,
@@ -14,9 +19,6 @@ from homeassistant.components.led_infrared.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
-from tests.components.infrared import EMITTER_ENTITY_ID, RECEIVER_ENTITY_ID
 
 
 @pytest.mark.parametrize(
@@ -105,7 +107,7 @@ async def test_form_already_configured(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_infrared_emitter_entity")
+@pytest.mark.usefixtures("mock_infrared_emitter_entity", "mock_setup_entry")
 async def test_user_flow_requires_emitter_or_receiver(
     hass: HomeAssistant,
 ) -> None:
@@ -121,6 +123,15 @@ async def test_user_flow_requires_emitter_or_receiver(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "missing_infrared_entity"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DEVICE_TYPE: LEDIrDeviceType.GENERIC_24_KEY,
+            CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("init_infrared")
@@ -183,6 +194,14 @@ async def test_reconfigure_flow_requires_emitter(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "missing_infrared_entity"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 @pytest.mark.parametrize(

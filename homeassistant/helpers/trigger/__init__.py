@@ -209,6 +209,29 @@ def async_subscribe_platform_events(
     return remove_subscription
 
 
+def _has_legacy_trigger(platform: TriggerProtocol) -> bool:
+    """Return if the platform provides a legacy trigger."""
+    return inspect.iscoroutinefunction(getattr(platform, "async_attach_trigger", None))
+
+
+async def _async_is_legacy_trigger(
+    hass: HomeAssistant, platform: TriggerProtocol, trigger_key: str
+) -> bool:
+    """Return if the trigger key refers to a legacy trigger.
+
+    A platform can provide new-style triggers next to its legacy trigger,
+    like the homeassistant platform does. The legacy trigger is the one
+    without a sub type, unless a new-style trigger claims that key.
+    """
+    if not hasattr(platform, "async_get_triggers"):
+        return True
+
+    if "." in trigger_key or not _has_legacy_trigger(platform):
+        return False
+
+    return "_" not in await platform.async_get_triggers(hass)
+
+
 async def _register_trigger_platform(
     hass: HomeAssistant, integration_domain: str, platform: TriggerProtocol
 ) -> None:
@@ -227,6 +250,13 @@ async def _register_trigger_platform(
             if trigger_key not in triggers:
                 triggers[trigger_key] = integration_domain
                 new_triggers.add(trigger_key)
+        if (
+            _has_legacy_trigger(platform)
+            and "_" not in all_triggers
+            and integration_domain not in triggers
+        ):
+            triggers[integration_domain] = integration_domain
+            new_triggers.add(integration_domain)
         if not new_triggers:
             if not all_triggers:
                 _LOGGER.debug(
@@ -483,7 +513,7 @@ async def async_validate_trigger_config(
     for conf in trigger_config:
         trigger_key: str = conf[CONF_PLATFORM]
         platform_domain, platform = await _async_get_trigger_platform(hass, trigger_key)
-        if hasattr(platform, "async_get_triggers"):
+        if not await _async_is_legacy_trigger(hass, platform, trigger_key):
             trigger_descriptors = await platform.async_get_triggers(hass)
             relative_trigger_key = get_relative_description_key(
                 platform_domain, trigger_key
@@ -695,7 +725,7 @@ async def async_initialize_triggers(
             trigger_data=trigger_data,
         )
 
-        if hasattr(platform, "async_get_triggers"):
+        if not await _async_is_legacy_trigger(hass, platform, trigger_key):
             trigger_descriptors = await platform.async_get_triggers(hass)
             relative_trigger_key = get_relative_description_key(
                 platform_domain, trigger_key

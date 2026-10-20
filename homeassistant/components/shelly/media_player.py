@@ -4,7 +4,7 @@ import base64
 import binascii
 import contextlib
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 import hashlib
 from typing import Any, Final, cast, override
 
@@ -110,7 +110,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     entity_description: RpcMediaPlayerDescription
 
     _last_media_position: int | None = None
-    _last_media_position_updated_at: datetime.datetime | None = None
+    _last_media_position_updated_at: dt.datetime | None = None
 
     _cached_thumb: str | None = None
     _cached_thumb_result: tuple[bytes, str] | None = None
@@ -206,7 +206,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
 
     @property
     @override
-    def media_position_updated_at(self) -> datetime.datetime | None:
+    def media_position_updated_at(self) -> dt.datetime | None:
         """Return when the position was last updated."""
         self._get_updated_media_position()
 

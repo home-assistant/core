@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock, patch
 
 from bleak_retry_connector import BleakConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    inject_bluetooth_service_info,
+    inject_bluetooth_service_info_bleak,
+)
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.number import (
@@ -26,12 +31,6 @@ from . import (
     STANDING_FAN_SERVICE_INFO,
     WOMETERTHPC_SERVICE_INFO,
     WOMETERTHPC_SERVICE_INFO_NOT_CONNECTABLE,
-)
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import (
-    inject_bluetooth_service_info,
-    inject_bluetooth_service_info_bleak,
 )
 
 TIME_OFFSET_ENTITY_ID = "number.test_name_display_time_offset"
@@ -58,7 +57,7 @@ async def test_meter_pro_co2_display_time_offset_initial_state(
     await async_setup_component(hass, DOMAIN, {})
     inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
 
-    entry = mock_entry_factory("hygrometer_co2")
+    entry = mock_entry_factory("meter_pro_co2")
     entry.add_to_hass(hass)
 
     with patch(
@@ -81,7 +80,7 @@ async def test_meter_pro_co2_display_time_offset_disabled_by_default(
     await async_setup_component(hass, DOMAIN, {})
     inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
 
-    entry = mock_entry_factory("hygrometer_co2")
+    entry = mock_entry_factory("meter_pro_co2")
     entry.add_to_hass(hass)
 
     mock_get_time_offset = AsyncMock(return_value=60)
@@ -103,7 +102,7 @@ async def test_meter_pro_co2_display_time_offset_waits_for_start(
     await async_setup_component(hass, DOMAIN, {})
     inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
 
-    entry = mock_entry_factory("hygrometer_co2")
+    entry = mock_entry_factory("meter_pro_co2")
     entry.add_to_hass(hass)
 
     mock_get_time_offset = AsyncMock(return_value=60)
@@ -153,7 +152,7 @@ async def test_meter_pro_co2_display_time_offset_unreachable(
     await async_setup_component(hass, DOMAIN, {})
     inject_bluetooth_service_info_bleak(hass, service_info)
 
-    entry = mock_entry_factory("hygrometer_co2")
+    entry = mock_entry_factory("meter_pro_co2")
     entry.add_to_hass(hass)
 
     mock_get_time_offset = AsyncMock(return_value=60, side_effect=side_effect)
@@ -187,7 +186,7 @@ async def test_meter_pro_co2_set_display_time_offset(
     await async_setup_component(hass, DOMAIN, {})
     inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
 
-    entry = mock_entry_factory("hygrometer_co2")
+    entry = mock_entry_factory("meter_pro_co2")
     entry.add_to_hass(hass)
 
     mock_get_time_offset = AsyncMock(return_value=60)
@@ -240,7 +239,7 @@ async def test_set_display_time_offset_out_of_range(
     await async_setup_component(hass, DOMAIN, {})
     inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
 
-    entry = mock_entry_factory("hygrometer_co2")
+    entry = mock_entry_factory("meter_pro_co2")
     entry.add_to_hass(hass)
 
     mock_get_time_offset = AsyncMock(return_value=0)
@@ -313,7 +312,7 @@ async def test_standing_fan_oscillation_angle_number(
         **{set_method: mocked_set},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             NUMBER_DOMAIN,

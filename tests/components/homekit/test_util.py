@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.homekit.const import (
     BRIDGE_NAME,
@@ -86,8 +87,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 
 from .util import async_init_integration
-
-from tests.common import MockConfigEntry
 
 
 def _mock_socket(failure_attempts: int = 0) -> MagicMock:

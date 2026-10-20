@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock, patch
 
 from bleak_retry_connector import BleakConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    inject_bluetooth_service_info,
+    inject_bluetooth_service_info_bleak,
+)
 from switchbot import NightLightState
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
@@ -26,12 +31,6 @@ from . import (
     STANDING_FAN_SERVICE_INFO,
     WOMETERTHPC_SERVICE_INFO,
     WOMETERTHPC_SERVICE_INFO_NOT_CONNECTABLE,
-)
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import (
-    inject_bluetooth_service_info,
-    inject_bluetooth_service_info_bleak,
 )
 
 TIME_FORMAT_ENTITY_ID = "select.test_name_time_format"
@@ -64,7 +63,7 @@ async def test_time_format_select_initial_state(
     await async_setup_component(hass, DOMAIN, {})
     inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
 
-    entry = mock_entry_factory("hygrometer_co2")
+    entry = mock_entry_factory("meter_pro_co2")
     entry.add_to_hass(hass)
 
     with patch(
@@ -95,7 +94,7 @@ async def test_time_format_select_disabled_by_default(
     await async_setup_component(hass, DOMAIN, {})
     inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
 
-    entry = mock_entry_factory("hygrometer_co2")
+    entry = mock_entry_factory("meter_pro_co2")
     entry.add_to_hass(hass)
 
     mock_get_datetime = AsyncMock(return_value=DEVICE_DATETIME_24H)
@@ -117,7 +116,7 @@ async def test_time_format_select_waits_for_start(
     await async_setup_component(hass, DOMAIN, {})
     inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
 
-    entry = mock_entry_factory("hygrometer_co2")
+    entry = mock_entry_factory("meter_pro_co2")
     entry.add_to_hass(hass)
 
     mock_get_datetime = AsyncMock(return_value=DEVICE_DATETIME_24H)
@@ -167,7 +166,7 @@ async def test_time_format_select_unreachable(
     await async_setup_component(hass, DOMAIN, {})
     inject_bluetooth_service_info_bleak(hass, service_info)
 
-    entry = mock_entry_factory("hygrometer_co2")
+    entry = mock_entry_factory("meter_pro_co2")
     entry.add_to_hass(hass)
 
     mock_get_datetime = AsyncMock(
@@ -200,7 +199,7 @@ async def test_set_time_format(
     await async_setup_component(hass, DOMAIN, {})
     inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
 
-    entry = mock_entry_factory("hygrometer_co2")
+    entry = mock_entry_factory("meter_pro_co2")
     entry.add_to_hass(hass)
 
     mock_get_datetime = AsyncMock(
@@ -276,7 +275,7 @@ async def test_standing_fan_night_light_select(
         set_night_light=mocked_set,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             SELECT_DOMAIN,
