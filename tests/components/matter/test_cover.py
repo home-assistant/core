@@ -1614,58 +1614,84 @@ async def test_closure_cover_feature_map_subscription_on_all_children(
     assert state.attributes["supported_features"] & CoverEntityFeature.SET_TILT_POSITION
 
 
-@pytest.mark.parametrize("node_fixture", ["mock_closure_garage_door"])
+@pytest.mark.parametrize("node_fixture", ["mock_closure_tilt_only"])
 async def test_closure_cover_movement_direction_from_child_targets(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test movement direction inference when parent target is null.
+    """Test movement direction inference when the parent target is null.
 
-    When the parent's OverallTargetState position is null (cleared during
-    SetTarget), movement direction must be inferred from child panel targets.
-    This requires TargetState subscriptions on active panels. The garage door
-    fixture has no children, so this tests movement state directly from the
-    parent's explicit target position.
+    OverallTargetState is cleared during SetTarget, so the direction can only
+    come from the ClosureDimension.TargetState of the active child panel.
     """
     cover_states = hass.states.async_all(Platform.COVER)
     assert len(cover_states) == 1
     entity_id = cover_states[0].entity_id
 
-    # Set up moving state with explicit closing target
+    ctrl = clusters.ClosureControl
+    dim = clusters.ClosureDimension
+    parent_ep = 1
+    child_ep = 2  # Check against the fixture
+
+    # The entity must subscribe to the child panel's TargetState attribute
+    target_path = create_attribute_path(
+        child_ep, dim.id, dim.Attributes.TargetState.attribute_id
+    )
+    assert any(
+        call.kwargs.get("attr_path_filter") == target_path
+        for call in matter_client.subscribe_events.call_args_list
+    )
+
+    # Parent is moving but has no target
     set_node_attribute(
         matter_node,
-        1,
-        clusters.ClosureControl.id,
-        clusters.ClosureControl.Attributes.MainState.attribute_id,
-        clusters.ClosureControl.Enums.MainStateEnum.kMoving.value,
+        parent_ep,
+        ctrl.id,
+        ctrl.Attributes.MainState.attribute_id,
+        ctrl.Enums.MainStateEnum.kMoving.value,
     )
     set_node_attribute(
         matter_node,
-        1,
-        clusters.ClosureControl.id,
-        clusters.ClosureControl.Attributes.OverallTargetState.attribute_id,
-        {0: clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyClosed.value},
+        parent_ep,
+        ctrl.id,
+        ctrl.Attributes.OverallTargetState.attribute_id,
+        None,
+    )
+    # Child panel is halfway
+    set_node_attribute(
+        matter_node,
+        child_ep,
+        dim.id,
+        dim.Attributes.CurrentState.attribute_id,
+        {0: 5000},
+    )
+
+    # Child target towards fully closed: movement must be inferred as closing
+    set_node_attribute(
+        matter_node,
+        child_ep,
+        dim.id,
+        dim.Attributes.TargetState.attribute_id,
+        {0: 10000},
     )
     await trigger_subscription_callback_debounced(hass, freezer, matter_client)
     state = hass.states.get(entity_id)
     assert state
-    # Should be closing
     assert state.state == CoverState.CLOSING
 
-    # Set up moving state with explicit opening target
+    # Child target towards fully open: movement must be inferred as opening
     set_node_attribute(
         matter_node,
-        1,
-        clusters.ClosureControl.id,
-        clusters.ClosureControl.Attributes.OverallTargetState.attribute_id,
-        {0: clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyOpen.value},
+        child_ep,
+        dim.id,
+        dim.Attributes.TargetState.attribute_id,
+        {0: 0},
     )
     await trigger_subscription_callback_debounced(hass, freezer, matter_client)
     state = hass.states.get(entity_id)
     assert state
-    # Should be opening
     assert state.state == CoverState.OPENING
 
 
