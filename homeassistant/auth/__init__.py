@@ -411,11 +411,21 @@ class AuthManager:
             self.async_remove_refresh_token(refresh_token)
 
     async def async_remove_credentials(self, credentials: models.Credentials) -> None:
-        """Remove credentials."""
+        """Remove credentials and end the sessions that signed in with them."""
         if (provider := self._async_get_auth_provider(credentials)) is not None:
             await provider.async_will_remove_credentials(credentials)
 
+        user = await self.async_get_user_by_credentials(credentials)
         await self._store.async_remove_credentials(credentials)
+
+        if user is None:
+            return
+        for refresh_token in list(user.refresh_tokens.values()):
+            if (
+                refresh_token.credential is not None
+                and refresh_token.credential.id == credentials.id
+            ):
+                self.async_remove_refresh_token(refresh_token)
 
     async def async_enable_user_mfa(
         self, user: models.User, mfa_module_id: str, data: Any
