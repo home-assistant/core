@@ -1462,6 +1462,9 @@ jaraco.abode==6.4.0
 # homeassistant.components.jellyfin
 jellyfin-apiclient-python==1.19.0
 
+# homeassistant.components.plex
+jellyfish==1.3.0
+
 # homeassistant.components.command_line
 # homeassistant.components.rest
 jsonpath-python==1.1.6
@@ -2970,9 +2973,6 @@ radios==2.0.1
 
 # homeassistant.components.radiotherm
 radiotherm==2.1.0
-
-# homeassistant.components.plex
-rapidfuzz==3.14.6
 
 # homeassistant.components.rapt_ble
 rapt-ble==2.0.0

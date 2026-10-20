@@ -406,3 +406,18 @@ def test_title_score_ignores_word_order() -> None:
     query = normalize_title("Reloaded Matrix")
     assert title_score(query, "Matrix Reloaded") > 0.9
     assert title_score(query, "Inception") < 0.6
+
+
+def test_title_score_finds_titles_that_sound_alike() -> None:
+    """Test misspelled titles that sound the same are found."""
+    assert title_score(normalize_title("cary"), "Carrie") > 0.9
+    assert title_score(normalize_title("fone booth"), "Phone Booth") > 0.9
+    assert title_score(normalize_title("avatar"), "Inception") < 0.6
+
+
+def test_normalize_title_folds_letters() -> None:
+    """Test letters without an accented form are turned into plain letters."""
+    assert normalize_title("Ørnen") == "ornen"
+    assert normalize_title("Straße") == "strasse"
+    assert title_score(normalize_title("ornen"), "Ørnen") == 1.0
+    assert title_score(normalize_title("gooise vrouwen"), "Gooische Vrouwen") > 0.8

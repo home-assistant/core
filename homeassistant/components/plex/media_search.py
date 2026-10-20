@@ -5,10 +5,10 @@ import re
 from typing import TYPE_CHECKING, Any
 import unicodedata
 
+import jellyfish
 from plexapi.base import PlexObject
 from plexapi.exceptions import BadRequest, NotFound
 from plexapi.library import LibrarySection
-from rapidfuzz import fuzz
 
 from .errors import MediaNotFound
 
@@ -115,33 +115,41 @@ SECTION_TYPE_FOR_MEDIATYPE = {
 }
 SEARCHABLE_SECTION_TYPES = {"movie", "show", "artist"}
 IGNORED_LEADING_WORDS = {"the", "a", "an"}
+# Letters that Unicode normalization does not split into a base letter
+FOLDED_LETTERS = str.maketrans(
+    {"ø": "o", "æ": "ae", "œ": "oe", "ł": "l", "đ": "d", "ð": "d", "þ": "th"}
+)
 
 
 def normalize_title(text: str) -> str:
     """Normalize a title for comparison, ignoring case, accents and punctuation."""
-    decomposed = unicodedata.normalize("NFKD", text)
+    decomposed = unicodedata.normalize(
+        "NFKD", text.casefold().translate(FOLDED_LETTERS)
+    )
     stripped = "".join(c for c in decomposed if not unicodedata.combining(c))
-    words = re.sub(r"[\W_]+", " ", stripped.casefold()).split()
+    words = re.sub(r"[\W_]+", " ", stripped).split()
     if len(words) > 1 and words[0] in IGNORED_LEADING_WORDS:
         words = words[1:]
     return " ".join(words)
 
 
-def phonetic_key(text: str) -> str:
-    """Reduce a normalized title to a rough sound-alike key."""
-    for pattern, replacement in (
-        (r"ph", "f"),
-        (r"ck|c(?=[aouhlrk]|$)|q", "k"),
-        (r"c", "s"),
-        (r"z", "s"),
-        (r"x", "ks"),
-        (r"y", "i"),
-        (r"(.)\1+", r"\1"),
-        (r"ie\b", "i"),
-        (r"e\b", ""),
-    ):
-        text = re.sub(pattern, replacement, text)
-    return text
+def _similarity(first: str, second: str) -> float:
+    """Return a 0..1 similarity based on the number of edits between two texts."""
+    if not first or not second:
+        return 0.0
+    return 1 - jellyfish.levenshtein_distance(first, second) / max(
+        len(first), len(second)
+    )
+
+
+def _sorted_words(text: str) -> str:
+    """Return the words of a text in alphabetical order."""
+    return " ".join(sorted(text.split()))
+
+
+def _sound_key(text: str) -> str:
+    """Return a key that is the same for words that sound alike in English."""
+    return " ".join(jellyfish.metaphone(word) for word in text.split())
 
 
 def title_score(query: str, title: str) -> float:
@@ -151,13 +159,10 @@ def title_score(query: str, title: str) -> float:
         return 0.0
     if normalized == query:
         return 1.0
-    score = (
-        max(
-            fuzz.ratio(query, normalized),
-            fuzz.token_sort_ratio(query, normalized),
-            0.95 * fuzz.ratio(phonetic_key(query), phonetic_key(normalized)),
-        )
-        / 100
+    score = max(
+        _similarity(query, normalized),
+        _similarity(_sorted_words(query), _sorted_words(normalized)),
+        0.95 * _similarity(_sound_key(query), _sound_key(normalized)),
     )
     if len(query) >= 4 and query in normalized:
         score = max(score, 0.85)
