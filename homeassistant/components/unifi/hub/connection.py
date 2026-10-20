@@ -20,12 +20,14 @@ CONNECTION_STABLE_PERIOD = 60
 REQUEST_TIMEOUT = 5
 RECOVERY_TIMEOUT = 60
 
-# The Network application is starting or the session expired, try again later
+# The Network application is starting or the session expired, try again later.
+# ValueError covers a half started application answering with invalid JSON.
 NOT_READY_ERRORS = (
     TimeoutError,
     ValueError,
     aiounifi.LoginRequired,
     aiounifi.RequestError,
+    aiounifi.TwoFaTokenRequired,
     aiounifi.Unauthorized,
 )
 # Credentials or account settings changed, only the user can resolve it
@@ -122,7 +124,7 @@ class UnifiConnectionManager:
             LOGGER.debug("Schedule reconnect to UniFi Network '%s'", err)
 
     @callback
-    def report_request_failure(self, err: Exception) -> None:
+    def verify_session(self, err: Exception) -> None:
         """Check the session after a single request failed in transport.
 
         One endpoint can fail on its own, so only a failing readiness probe
@@ -145,6 +147,9 @@ class UnifiConnectionManager:
             self.report_failure(probe_err)
         except aiounifi.AiounifiException as probe_err:
             LOGGER.debug("UniFi Network answered with '%s'", probe_err)
+        except Exception as probe_err:  # noqa: BLE001
+            LOGGER.exception("Unexpected error while checking UniFi Network")
+            self.report_failure(probe_err)
         else:
             LOGGER.debug("UniFi Network is reachable, request failed with '%s'", err)
 
@@ -184,8 +189,9 @@ class UnifiConnectionManager:
         """Log in, wait for the Network application and resync."""
         try:
             await self._async_try_reconnect()
-        except Exception:  # noqa: BLE001
+        except Exception as err:  # noqa: BLE001
             LOGGER.exception("Unexpected error while reconnecting to UniFi Network")
+            self.report_failure(err)
         finally:
             self._recovering = False
             self._reconnect_task = None
@@ -251,12 +257,7 @@ class UnifiConnectionManager:
         if self._retry_handle is not None:
             self._retry_handle.cancel()
             self._retry_handle = None
-        tasks = [
-            task
-            for task in (self._reconnect_task, self._verify_task)
-            if task is not None
-        ]
-        for task in tasks:
+        for task in self._pending_tasks:
             task.cancel()
         self._reconnect_task = None
         self._verify_task = None
@@ -264,11 +265,15 @@ class UnifiConnectionManager:
 
     async def stop_and_wait(self) -> None:
         """Cancel and await in-flight login and probe attempts."""
-        tasks = [
+        tasks = self._pending_tasks
+        self.stop()
+        await asyncio.gather(*tasks, return_exceptions=True)
+
+    @property
+    def _pending_tasks(self) -> list[asyncio.Task[None]]:
+        """Return the login and probe tasks that are still referenced."""
+        return [
             task
             for task in (self._reconnect_task, self._verify_task)
             if task is not None
         ]
-        self.stop()
-        if tasks:
-            await asyncio.gather(*tasks, return_exceptions=True)

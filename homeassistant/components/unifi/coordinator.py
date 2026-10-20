@@ -8,6 +8,7 @@ from aiounifi import EndpointNotFound
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER
@@ -49,6 +50,11 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
         self._endpoint_not_found_logged = False
 
         hub.config.entry.async_on_unload(handler.subscribe(self._async_handle_update))
+        hub.config.entry.async_on_unload(
+            async_dispatcher_connect(
+                hub.hass, hub.signal_reachable, self._async_reachable_changed
+            )
+        )
 
     @property
     def handler(self) -> HandlerT:
@@ -59,8 +65,7 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
     async def _async_update_data(self) -> None:
         """Update data from the API handler."""
         if not self._connection.available:
-            # Entities follow the hub while it is down; recovery refetches every handler
-            return
+            raise UpdateFailed("UniFi Network connection is unavailable")
 
         try:
             await self._handler.update()
@@ -77,7 +82,7 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
                 )
             raise UpdateFailed(str(err)) from err
         except (TimeoutError, aiounifi.RequestError) as err:
-            self._connection.report_request_failure(err)
+            self._connection.verify_session(err)
             raise UpdateFailed(str(err)) from err
         except aiounifi.AiounifiException as err:
             raise UpdateFailed(str(err)) from err
@@ -86,6 +91,12 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
             self.update_interval = (
                 POLL_INTERVAL if self._handler.items() else IDLE_POLL_INTERVAL
             )
+
+    @callback
+    def _async_reachable_changed(self) -> None:
+        """Pause polling while the session is down, recovery refetches."""
+        if not self._connection.available:
+            self._unschedule_refresh()
 
     async def async_resync(self) -> None:
         """Refetch handler data after the connection is restored."""
@@ -97,7 +108,7 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
         try:
             await self._handler.update()
         except (TimeoutError, aiounifi.RequestError) as err:
-            self._connection.report_request_failure(err)
+            self._connection.verify_session(err)
         except aiounifi.AiounifiException as err:
             LOGGER.debug(
                 "Could not refetch UniFi %s data: %s", type(self._handler).__name__, err

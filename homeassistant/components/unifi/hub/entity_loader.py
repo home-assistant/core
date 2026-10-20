@@ -10,7 +10,6 @@ from datetime import datetime, timedelta
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
-import aiounifi
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.models.api import ApiItem
 from aiounifi.models.client import Client
@@ -25,6 +24,7 @@ from homeassistant.util import dt as dt_util
 from ..const import CLIENT_RESTORE_MAX_AGE, LOGGER, UNIFI_WIRELESS_CLIENTS
 from ..coordinator import UnifiDataUpdateCoordinator
 from ..entity import UnifiEntity, UnifiEntityDescription
+from .connection import NOT_READY_ERRORS
 
 if TYPE_CHECKING:
     from .hub import UnifiHub
@@ -128,7 +128,7 @@ class UnifiEntityLoader:
         """Refresh required Network application data and report readiness failures."""
         try:
             await self.hub.api.system_information.update()
-        except (TimeoutError, aiounifi.RequestError) as err:
+        except NOT_READY_ERRORS as err:
             self.hub.connection.report_failure(err)
             raise
 

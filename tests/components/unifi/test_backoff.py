@@ -1,6 +1,9 @@
 """Test UniFi backoff policy."""
 
+from collections.abc import Callable
 from unittest.mock import patch
+
+import pytest
 
 from homeassistant.components.unifi.hub.connection import BackoffPolicy
 
@@ -16,14 +19,19 @@ def test_default_delay_sequence_grows_and_caps() -> None:
     assert policy.next_delay(10_000) == 60
 
 
-def test_jitter_stays_within_bounds() -> None:
+@pytest.mark.parametrize(
+    ("pick", "expected"),
+    [
+        pytest.param(min, 30 * 0.8, id="lowest"),
+        pytest.param(max, 30 * 1.2, id="highest"),
+    ],
+)
+def test_jitter_stays_within_bounds(
+    pick: Callable[[float, float], float], expected: float
+) -> None:
     """Verify the jittered delay spreads around the plain delay."""
-    policy = BackoffPolicy()
-
-    with patch("random.uniform", side_effect=lambda low, high: low):
-        assert policy.jittered_delay(1) == 30 * 0.8
-    with patch("random.uniform", side_effect=lambda low, high: high):
-        assert policy.jittered_delay(1) == 30 * 1.2
+    with patch("random.uniform", side_effect=pick):
+        assert BackoffPolicy().jittered_delay(1) == expected
 
 
 def test_custom_policy_parameters() -> None:
