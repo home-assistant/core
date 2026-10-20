@@ -20,18 +20,19 @@ from .entity import MyPVBaseEntity, MyPVSetupEntity
 
 PARALLEL_UPDATES = 0
 
-ENTITY_DESCRIPTIONS: Final[dict[str, SwitchEntityDescription]] = {
-    "bstmode": SwitchEntityDescription(
+ENTITY_DESCRIPTIONS: Final[tuple[SwitchEntityDescription, ...]] = (
+    SwitchEntityDescription(
         key="bstmode",
         entity_category=EntityCategory.CONFIG,
         device_class=SwitchDeviceClass.SWITCH,
         translation_key="bstmode",
     ),
-    "devmode": SwitchEntityDescription(
-        key="devmode",
-        device_class=SwitchDeviceClass.SWITCH,
-    ),
-}
+)
+
+DEVMODE_DESCRIPTION: Final = SwitchEntityDescription(
+    key="devmode",
+    device_class=SwitchDeviceClass.SWITCH,
+)
 
 
 async def async_setup_entry(
@@ -41,16 +42,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up the my-PV switch."""
     coordinator = config_entry.runtime_data
-    entities: list[SwitchEntity] = []
-
-    config = coordinator.device.get_setup_configuration("bstmode")
-    if config and config.get("type") == "boolean":
-        entities.append(
-            MyPVSwitch(
-                coordinator,
-                ENTITY_DESCRIPTIONS["bstmode"],
-            )
+    entities: list[SwitchEntity] = [
+        MyPVSwitch(coordinator, entity_description)
+        for entity_description in ENTITY_DESCRIPTIONS
+        if (
+            config := coordinator.device.get_setup_configuration(entity_description.key)
         )
+        and config.get("type") == "boolean"
+    ]
 
     if (
         coordinator.device.supports_main_mode(MyPVDeviceMainMode.HOT_WATER)
@@ -59,7 +58,7 @@ async def async_setup_entry(
         entities.append(
             MyPVWaterHeaterSwitch(
                 coordinator,
-                ENTITY_DESCRIPTIONS["devmode"],
+                DEVMODE_DESCRIPTION,
             )
         )
 

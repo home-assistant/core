@@ -1,6 +1,6 @@
 """Creates Button entities for the my-PV integration."""
 
-from typing import Any, override
+from typing import Any, Final, override
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -18,6 +18,12 @@ from .entity import MyPVBaseEntity
 
 PARALLEL_UPDATES = 0
 
+REBOOT_DEVICE_DESCRIPTION: Final = ButtonEntityDescription(
+    key="reboot_device",
+    device_class=ButtonDeviceClass.RESTART,
+    entity_category=EntityCategory.DIAGNOSTIC,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -26,23 +32,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the my-PV button."""
     coordinator = config_entry.runtime_data
-    entities = []
 
-    config = coordinator.device.get_command_configuration("reboot_device")
+    config = coordinator.device.get_command_configuration(REBOOT_DEVICE_DESCRIPTION.key)
     if config and config.get("type") in ["any", "fixed"]:
-        entity_description = ButtonEntityDescription(
-            key="reboot_device",
-            device_class=ButtonDeviceClass.RESTART,
-            entity_category=EntityCategory.DIAGNOSTIC,
-        )
-        entities.append(
-            MyPVCommandButton(
-                coordinator,
-                entity_description,
-            )
-        )
-
-    async_add_entities(entities)
+        async_add_entities([MyPVCommandButton(coordinator, REBOOT_DEVICE_DESCRIPTION)])
 
 
 class MyPVCommandButton(MyPVBaseEntity, ButtonEntity):
