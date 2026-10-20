@@ -493,7 +493,8 @@ class MatterClosure(MatterEntity, CoverEntity):
         node = self._endpoint.node
         children: list[MatterEndpoint] = []
         for child_id in node.get_compose_child_ids(self._endpoint.endpoint_id) or ():
-            child = node.endpoints[child_id]
+            if (child := node.endpoints.get(child_id)) is None:
+                continue
             if child.has_cluster(clusters.ClosureDimension):
                 children.append(child)
         return children
@@ -504,7 +505,8 @@ class MatterClosure(MatterEntity, CoverEntity):
         node = self._endpoint.node
         panels: dict[ClosurePanelRole, MatterEndpoint] = {}
         for child_id in node.get_compose_child_ids(self._endpoint.endpoint_id) or ():
-            child = node.endpoints[child_id]
+            if (child := node.endpoints.get(child_id)) is None:
+                continue
             if not child.has_cluster(clusters.ClosureDimension):
                 continue
             # ClosureDimension permits MotionLatching without Positioning
@@ -577,13 +579,20 @@ class MatterClosure(MatterEntity, CoverEntity):
                     attr_path_filter=path,
                 )
             )
-            self.async_on_remove(self._closure_panel_subscriptions[path])
 
     @override
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
         await super().async_added_to_hass()
+        self.async_on_remove(self._unsubscribe_closure_panels)
         self._refresh_closure_panel_subscriptions()
+
+    @callback
+    def _unsubscribe_closure_panels(self) -> None:
+        """Remove all child panel subscriptions."""
+        for unsubscribe in self._closure_panel_subscriptions.values():
+            unsubscribe()
+        self._closure_panel_subscriptions.clear()
 
     @callback
     @override

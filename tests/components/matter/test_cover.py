@@ -1,5 +1,6 @@
 """Test Matter covers."""
 
+from collections.abc import Callable
 from math import floor
 from types import SimpleNamespace
 from typing import Any
@@ -9,6 +10,7 @@ from chip.clusters import Objects as clusters
 from freezegun.api import FrozenDateTimeFactory
 from matter_server.client.models.node import MatterNode
 from matter_server.common.helpers.util import create_attribute_path
+from matter_server.common.models import EventType
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
@@ -18,6 +20,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
     CoverState,
 )
+from homeassistant.components.matter.const import DOMAIN
 from homeassistant.components.matter.cover import (
     NAMESPACE_CLOSURE_PANEL,
     STATE_WRITE_DEBOUNCE_COOLDOWN,
@@ -28,6 +31,7 @@ from homeassistant.components.matter.cover import (
     _ha_position_to_percent100ths,
     _percent100ths_to_ha_position,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -35,6 +39,7 @@ from homeassistant.helpers import entity_registry as er
 from .common import (
     set_node_attribute,
     set_node_attribute_and_notify,
+    setup_integration_with_node_fixture,
     snapshot_matter_entities,
     trigger_subscription_callback,
 )
@@ -1867,3 +1872,104 @@ async def test_cover_moving_status_with_unknown_tilt_position(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == CoverState.CLOSING
+
+
+async def test_closure_cover_panel_endpoint_removed(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a removed child panel endpoint doesn't raise KeyError.
+
+    ENDPOINT_REMOVED pops the endpoint from `node.endpoints` but keeps the
+    child id in the node's compose map, so `get_compose_child_ids()` still
+    returns it. The adapter deliberately keeps a composed device and its
+    entities when only a part endpoint is removed, so this cover entity's
+    next update must not crash on the now-missing endpoint.
+    """
+    matter_node = await setup_integration_with_node_fixture(
+        hass, "mock_closure_venetian_blinds", matter_client
+    )
+    cover_states = hass.states.async_all(Platform.COVER)
+    assert len(cover_states) == 1
+    entity_id = cover_states[0].entity_id
+
+    # Simulate ENDPOINT_REMOVED for the Tilt panel (endpoint 3): dropped from
+    # node.endpoints while the compose map still references it.
+    del matter_node.endpoints[3]
+
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    # The Lift panel (endpoint 2) is unaffected.
+    assert state.attributes["supported_features"] & CoverEntityFeature.SET_POSITION
+
+
+async def test_closure_cover_unload_does_not_double_unsubscribe(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test unloading the entry doesn't double-unsubscribe a dropped child path.
+
+    Each per-path child subscription used to be unsubscribed explicitly when
+    its path dropped out of `_closure_panel_subscriptions`, while also having
+    been registered with `async_on_remove`, so the base class called it again
+    on entity removal. The real client's unsubscribe does
+    `self._subscribers[key].remove(callback)`, which raises `ValueError` the
+    second time.
+    """
+    subscribers: dict[str, list[Callable[..., None]]] = {}
+
+    def fake_subscribe_events(
+        callback: Callable[..., None],
+        event_filter: EventType | None = None,
+        node_filter: int | None = None,
+        attr_path_filter: str | None = None,
+    ) -> Callable[[], None]:
+        """Mimic the real client's per-key subscriber list and unsubscribe."""
+        key = f"{event_filter}/{node_filter}/{attr_path_filter}"
+        subs = subscribers.setdefault(key, [])
+        subs.append(callback)
+
+        def unsubscribe() -> None:
+            subs.remove(callback)
+
+        return unsubscribe
+
+    matter_client.subscribe_events.side_effect = fake_subscribe_events
+
+    matter_node = await setup_integration_with_node_fixture(
+        hass, "mock_closure_venetian_blinds", matter_client
+    )
+
+    # Drop Positioning on the Tilt panel (endpoint 3): its CurrentState and
+    # TargetState subscriptions get unsubscribed and removed from the dict,
+    # while their `async_on_remove` registrations stay behind.
+    set_node_attribute(
+        matter_node,
+        3,
+        clusters.ClosureDimension.id,
+        clusters.ClosureDimension.Attributes.FeatureMap.attribute_id,
+        95 & ~clusters.ClosureDimension.Bitmaps.Feature.kPositioning,
+    )
+    await trigger_subscription_callback_debounced(
+        hass,
+        freezer,
+        matter_client,
+        node_id=matter_node.node_id,
+        attribute_path=f"3/{clusters.ClosureDimension.id}/"
+        f"{clusters.ClosureDimension.Attributes.FeatureMap.attribute_id}",
+    )
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.NOT_LOADED
+    # entity_platform.EntityPlatform.async_reset logs and swallows any
+    # exception raised while removing an entity, so the double-unsubscribe
+    # surfaces only as this error, not as a propagated exception.
+    assert "Error while removing entity" not in caplog.text
