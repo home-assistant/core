@@ -2,7 +2,7 @@
 """PushMeld notification service."""
 
 from collections.abc import Mapping
-from typing import Any, override
+from typing import Any, NoReturn, override
 
 from aiohttp import ClientError, ClientResponse, ClientSession, ClientTimeout
 import probatio
@@ -203,11 +203,11 @@ class PushMeldNotificationService(BaseNotificationService):
 
         try:
             if self.hass.services.has_service(NOTIFY_DOMAIN, self._service_name):
-                raise _name_exists_error(self._service_name)
+                _raise_name_exists_error(self._service_name)
 
             await super().async_register_services()
             if not self._service_is_owned():
-                raise _name_exists_error(self._service_name)
+                _raise_name_exists_error(self._service_name)
 
             self._service_registered = True
             self._signal_setup_ready()
@@ -277,6 +277,11 @@ def _name_exists_error(service_name: str) -> ConfigEntryError:
         translation_key="config_entry_error_name_exists",
         translation_placeholders={"service_name": service_name},
     )
+
+
+def _raise_name_exists_error(service_name: str) -> NoReturn:
+    """Raise the error for an occupied notification action name."""
+    raise _name_exists_error(service_name)
 
 
 def _signal_setup_error(entry: ConfigEntry[Any], error: BaseException) -> None:
