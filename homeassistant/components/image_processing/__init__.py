@@ -27,6 +27,7 @@ from .const import (
     SERVICE_SCAN,
     ImageProcessingDeviceClass,
     ImageProcessingEntityStateAttribute,
+    ImageProcessingService,
 )
 from .entity import (
     FaceInformation,
@@ -81,6 +82,7 @@ __all__ = [
     "ImageProcessingEntityDescription",
     "ImageProcessingEntityStateAttribute",
     "ImageProcessingFaceEntity",
+    "ImageProcessingService",
 ]
 
 

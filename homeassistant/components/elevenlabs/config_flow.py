@@ -87,10 +87,14 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
             return {}, errors
         except ApiError as exc:
-            errors["base"] = "unknown"
             details = getattr(exc, "body", {}).get("detail", {})
-            if details.get("status") == "invalid_api_key":
+            if details.get("status") == "api_key_id_used_as_api_key":
+                errors["base"] = "api_key_id_used"
+            elif "invalid_api_key" in (details.get("status"), details.get("code")):
                 errors["base"] = "invalid_api_key"
+            else:
+                _LOGGER.exception("Unexpected error validating ElevenLabs API key")
+                errors["base"] = "unknown"
             return {}, errors
         return voices, errors
 

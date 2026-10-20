@@ -5880,6 +5880,101 @@ async def test_state_condition_attr_duration_invalidation_during_load_discards_h
         assert test.async_check() is False
 
 
+def _read_attr_history(
+    hass: HomeAssistant, start_time: datetime, entity_id: str
+) -> dict[str, list[State | dict[str, Any]]]:
+    """Read history the way condition priming does."""
+    return history.get_significant_states(
+        hass,
+        start_time,
+        entity_ids=[entity_id],
+        include_start_time_state=True,
+        significant_changes_only=False,
+        minimal_response=False,
+    )
+
+
+async def test_state_condition_attr_duration_overlapping_loads_latest_wins(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """When loads for an entity overlap, only the most recent one applies.
+
+    The entity leaves the target and comes back while its history loads. Its run
+    breaks while it is not tracked, which the first load's history predates, so
+    only the second load's result is accurate.
+    """
+    label_reg = lr.async_get(hass)
+    label = label_reg.async_create("Overlapping Loads")
+    entity_reg = er.async_get(hass)
+    entry = entity_reg.async_get_or_create(
+        domain="test", platform="test", unique_id="overlapping_loads"
+    )
+    entity_id = entry.entity_id
+    instance = get_instance(hass)
+
+    start = dt_util.utcnow()
+    with freeze_time(start) as freezer:
+        # Valid since t=0.
+        hass.states.async_set(entity_id, STATE_ON, {"test_attr": True})
+        await hass.async_block_till_done()
+        await async_wait_recording_done(hass)
+        stale_history = await instance.async_add_executor_job(
+            _read_attr_history, hass, start - timedelta(minutes=1), entity_id
+        )
+
+        freezer.move_to(start + timedelta(seconds=10))
+        test = await _setup_attr_state_condition_with_target(
+            hass,
+            target={ATTR_LABEL_ID: label.label_id},
+            states={True},
+            condition_options={CONF_FOR: {"seconds": 5}},
+        )
+
+        real_query = history.get_significant_states
+        stale_reads = 1
+
+        def _read(*args: Any, **kwargs: Any) -> Any:
+            # The first load's read predates the dip.
+            nonlocal stale_reads
+            if not stale_reads:
+                return real_query(*args, **kwargs)
+            stale_reads -= 1
+            return stale_history
+
+        gate: asyncio.Future[None] = hass.loop.create_future()
+        with (
+            patch.object(instance, "async_get_commit_future", return_value=gate),
+            patch(
+                "homeassistant.components.recorder.history.get_significant_states",
+                side_effect=_read,
+            ),
+        ):
+            # The first load blocks on the held flush.
+            entity_reg.async_update_entity(entity_id, labels={label.label_id})
+            await hass.async_block_till_done()
+
+            # Untracked, the entity is invalid at t=11 and valid again at t=12.
+            entity_reg.async_update_entity(entity_id, labels=set())
+            await hass.async_block_till_done()
+            freezer.move_to(start + timedelta(seconds=11))
+            hass.states.async_set(entity_id, STATE_ON, {"test_attr": False})
+            freezer.move_to(start + timedelta(seconds=12))
+            hass.states.async_set(entity_id, STATE_ON, {"test_attr": True})
+            await hass.async_block_till_done()
+            await async_wait_recording_done(hass)
+
+            # Tracked again: a second load starts while the first is in flight.
+            entity_reg.async_update_entity(entity_id, labels={label.label_id})
+            await hass.async_block_till_done()
+
+            gate.set_result(None)
+            await hass.async_block_till_done(wait_background_tasks=True)
+
+        # Valid only since t=12, not since t=0 as the first load's history says.
+        freezer.move_to(start + timedelta(seconds=15))
+        assert test.async_check() is False
+
+
 async def test_state_condition_attr_duration_history_flushes_before_query(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:

@@ -9,6 +9,7 @@ from aioecosmart import (
     EcosmartRateLimitError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ecosmart.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -17,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_ACCOUNT_REF, TEST_API_KEY, load_identity
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

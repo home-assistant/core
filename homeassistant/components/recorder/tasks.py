@@ -9,14 +9,14 @@ import logging
 import threading
 from typing import TYPE_CHECKING, Any, override
 
-from homeassistant.helpers.recorder import DATA_RECORDER
+from homeassistant.helpers.recorder import DATA_RECORDER, session_scope
 from homeassistant.helpers.typing import UndefinedType
 from homeassistant.util.event_type import EventType
 
 from . import entity_registry, purge, statistics
 from .db_schema import Statistics, StatisticsShortTerm
 from .models import StatisticData, StatisticMetaData
-from .util import periodic_db_cleanups, session_scope
+from .util import periodic_db_cleanups
 
 _LOGGER = logging.getLogger(__name__)
 
