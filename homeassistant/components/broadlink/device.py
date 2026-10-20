@@ -1,5 +1,6 @@
 """Support for Broadlink devices."""
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from contextlib import suppress
 import logging
@@ -44,6 +45,8 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
         self.fw_version: int | None = None
         self.authorized: bool | None = None
         self.reset_jobs: list[CALLBACK_TYPE] = []
+        # Held across read-modify-write requests that resend device settings.
+        self.settings_lock = asyncio.Lock()
 
     @property
     def name(self) -> str:

@@ -1,5 +1,8 @@
 """Tests for Broadlink number entities."""
 
+import asyncio
+from typing import Any
+
 import pytest
 
 from homeassistant.components.number import (
@@ -11,6 +14,7 @@ from homeassistant.const import ATTR_ENTITY_ID, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import get_device
 
@@ -108,3 +112,60 @@ async def test_setpoint_limits_inverted(
 
     assert exc_info.value.translation_key == "setpoint_limits_inverted"
     mock_setup.api.set_advanced.assert_not_awaited()
+
+
+async def test_setpoint_limits_fahrenheit(hass: HomeAssistant) -> None:
+    """Test a limit set in Fahrenheit is rounded to the nearest degree Celsius."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    device = get_device("Guest room")
+    mock_api = device.get_mock_api()
+    mock_api.get_full_status.return_value = FULL_STATUS
+    mock_setup = await device.setup_entry(hass, mock_api=mock_api)
+
+    # 73 °F is 22.78 °C.
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: "number.guest_room_maximum_setpoint", ATTR_VALUE: 73},
+        blocking=True,
+    )
+
+    assert mock_setup.api.set_advanced.await_args.kwargs["svh"] == 23
+
+
+async def test_setpoint_limits_concurrent(hass: HomeAssistant) -> None:
+    """Test concurrent changes to both limits are both kept."""
+    device = get_device("Guest room")
+    mock_api = device.get_mock_api()
+    mock_api.get_full_status.return_value = FULL_STATUS
+    mock_setup = await device.setup_entry(hass, mock_api=mock_api)
+
+    status = dict(FULL_STATUS)
+
+    async def get_full_status() -> dict[str, Any]:
+        return dict(status)
+
+    async def set_advanced(**settings: Any) -> None:
+        # Let the other request run before the device applies this one.
+        await asyncio.sleep(0)
+        status.update(svh=settings["svh"], svl=settings["svl"])
+
+    mock_setup.api.get_full_status.side_effect = get_full_status
+    mock_setup.api.set_advanced.side_effect = set_advanced
+
+    await asyncio.gather(
+        *(
+            hass.services.async_call(
+                NUMBER_DOMAIN,
+                SERVICE_SET_VALUE,
+                {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: value},
+                blocking=True,
+            )
+            for entity_id, value in (
+                ("number.guest_room_minimum_setpoint", 10),
+                ("number.guest_room_maximum_setpoint", 30),
+            )
+        )
+    )
+
+    assert (status["svl"], status["svh"]) == (10, 30)

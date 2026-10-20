@@ -92,31 +92,32 @@ class BroadlinkThermostatNumber(BroadlinkEntity, NumberEntity):
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the value on the device."""
-        # The device only accepts the advanced settings as a whole block, so
-        # resend its current values with the one being changed replaced. Read
-        # them fresh, as the coordinator data may predate a mode change.
-        data = await self._device.async_request(self._device.api.get_full_status)
-        settings = {
-            # Register 2 holds both nibbles; get_full_status splits them.
-            "loop_mode": (data["loop_mode"] << 4) | data["auto_mode"],
-            "sensor": data["sensor"],
-            "osv": data["osv"],
-            "dif": data["dif"],
-            "svh": data["svh"],
-            "svl": data["svl"],
-            "adj": data["room_temp_adj"],
-            "fre": data["fre"],
-            "poweron": data["poweron"],
-        }
-        settings[self.entity_description.data_key] = int(value)
-        if settings["svl"] > settings["svh"]:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="setpoint_limits_inverted",
-                translation_placeholders={
-                    "min_temp": str(settings["svl"]),
-                    "max_temp": str(settings["svh"]),
-                },
-            )
-        await self._device.async_request(self._device.api.set_advanced, **settings)
+        async with self._device.settings_lock:
+            # The device only accepts the advanced settings as a whole block, so
+            # resend its current values with the one being changed replaced. Read
+            # them fresh, as the coordinator data may predate a mode change.
+            data = await self._device.async_request(self._device.api.get_full_status)
+            settings = {
+                # Register 2 holds both nibbles; get_full_status splits them.
+                "loop_mode": (data["loop_mode"] << 4) | data["auto_mode"],
+                "sensor": data["sensor"],
+                "osv": data["osv"],
+                "dif": data["dif"],
+                "svh": data["svh"],
+                "svl": data["svl"],
+                "adj": data["room_temp_adj"],
+                "fre": data["fre"],
+                "poweron": data["poweron"],
+            }
+            settings[self.entity_description.data_key] = round(value)
+            if settings["svl"] > settings["svh"]:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="setpoint_limits_inverted",
+                    translation_placeholders={
+                        "min_temp": str(settings["svl"]),
+                        "max_temp": str(settings["svh"]),
+                    },
+                )
+            await self._device.async_request(self._device.api.set_advanced, **settings)
         await self._coordinator.async_request_refresh()

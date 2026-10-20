@@ -105,9 +105,11 @@ class BroadlinkThermostat(BroadlinkEntity, ClimateEntity):
         else:
             await self._device.async_request(self._device.api.set_power, 1)
             mode = 0 if hvac_mode == HVACMode.HEAT else 1
-            await self._device.async_request(
-                self._device.api.set_mode, mode, 0, self.sensor_mode.value
-            )
+            # set_mode writes the register that the setpoint limits resend.
+            async with self._device.settings_lock:
+                await self._device.async_request(
+                    self._device.api.set_mode, mode, 0, self.sensor_mode.value
+                )
 
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
