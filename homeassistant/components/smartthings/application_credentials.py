@@ -8,7 +8,7 @@ from homeassistant.components.application_credentials import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2Implementation
 
-from .const import DOMAIN
+from .const import SMARTTHINGS_API_URL, SMARTTHINGS_AUTH_URL
 
 
 async def async_get_auth_implementation(
@@ -17,11 +17,11 @@ async def async_get_auth_implementation(
     """Return auth implementation."""
     return SmartThingsOAuth2Implementation(
         hass,
-        DOMAIN,
+        auth_domain,
         credential,
         authorization_server=AuthorizationServer(
-            authorize_url="https://api.smartthings.com/oauth/authorize",
-            token_url="https://auth-global.api.smartthings.com/oauth/token",
+            authorize_url=SMARTTHINGS_API_URL + "/oauth/authorize",
+            token_url=SMARTTHINGS_AUTH_URL + "/oauth/token",
         ),
     )
 
