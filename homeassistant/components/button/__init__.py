@@ -15,7 +15,6 @@ from .const import (
     DOMAIN,
     SERVICE_PRESS,
     ButtonDeviceClass,
-    ButtonService,
 )
 from .entity import ButtonEntity, ButtonEntityDescription
 from .services import async_setup_services
@@ -40,7 +39,6 @@ __all__ = [
     "ButtonDeviceClass",
     "ButtonEntity",
     "ButtonEntityDescription",
-    "ButtonService",
 ]
 
 # mypy: disallow-any-generics

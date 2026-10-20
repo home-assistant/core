@@ -2,14 +2,27 @@
 
 import probatio
 
+from homeassistant.const import (
+    SERVICE_CLOSE_COVER,
+    SERVICE_CLOSE_COVER_TILT,
+    SERVICE_OPEN_COVER,
+    SERVICE_OPEN_COVER_TILT,
+    SERVICE_SET_COVER_POSITION,
+    SERVICE_SET_COVER_TILT_POSITION,
+    SERVICE_STOP_COVER,
+    SERVICE_STOP_COVER_TILT,
+    SERVICE_TOGGLE,
+    SERVICE_TOGGLE_COVER_TILT,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
+    ATTR_POSITION,
+    ATTR_SPEED,
+    ATTR_TILT_POSITION,
     DATA_COMPONENT,
     CoverEntityFeature,
-    CoverService,
-    CoverServiceArgument,
 )
 
 
@@ -19,67 +32,67 @@ def async_setup_services(hass: HomeAssistant) -> None:
     component = hass.data[DATA_COMPONENT]
 
     component.async_register_entity_service(
-        CoverService.OPEN_COVER,
-        {probatio.Optional(CoverServiceArgument.SPEED): cv.string},
+        SERVICE_OPEN_COVER,
+        {probatio.Optional(ATTR_SPEED): cv.string},
         "async_handle_open_cover",
         [CoverEntityFeature.OPEN],
     )
 
     component.async_register_entity_service(
-        CoverService.CLOSE_COVER,
-        {probatio.Optional(CoverServiceArgument.SPEED): cv.string},
+        SERVICE_CLOSE_COVER,
+        {probatio.Optional(ATTR_SPEED): cv.string},
         "async_handle_close_cover",
         [CoverEntityFeature.CLOSE],
     )
 
     component.async_register_entity_service(
-        CoverService.SET_COVER_POSITION,
+        SERVICE_SET_COVER_POSITION,
         {
-            probatio.Required(CoverServiceArgument.POSITION): probatio.All(
+            probatio.Required(ATTR_POSITION): probatio.All(
                 probatio.Coerce(int), probatio.Percentage()
             ),
-            probatio.Optional(CoverServiceArgument.SPEED): cv.string,
+            probatio.Optional(ATTR_SPEED): cv.string,
         },
         "async_handle_set_cover_position",
         [CoverEntityFeature.SET_POSITION],
     )
 
     component.async_register_entity_service(
-        CoverService.STOP_COVER, None, "async_stop_cover", [CoverEntityFeature.STOP]
+        SERVICE_STOP_COVER, None, "async_stop_cover", [CoverEntityFeature.STOP]
     )
 
     component.async_register_entity_service(
-        CoverService.TOGGLE,
+        SERVICE_TOGGLE,
         None,
         "async_toggle",
         [CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE],
     )
 
     component.async_register_entity_service(
-        CoverService.OPEN_COVER_TILT,
+        SERVICE_OPEN_COVER_TILT,
         None,
         "async_open_cover_tilt",
         [CoverEntityFeature.OPEN_TILT],
     )
 
     component.async_register_entity_service(
-        CoverService.CLOSE_COVER_TILT,
+        SERVICE_CLOSE_COVER_TILT,
         None,
         "async_close_cover_tilt",
         [CoverEntityFeature.CLOSE_TILT],
     )
 
     component.async_register_entity_service(
-        CoverService.STOP_COVER_TILT,
+        SERVICE_STOP_COVER_TILT,
         None,
         "async_stop_cover_tilt",
         [CoverEntityFeature.STOP_TILT],
     )
 
     component.async_register_entity_service(
-        CoverService.SET_COVER_TILT_POSITION,
+        SERVICE_SET_COVER_TILT_POSITION,
         {
-            probatio.Required(CoverServiceArgument.TILT_POSITION): probatio.All(
+            probatio.Required(ATTR_TILT_POSITION): probatio.All(
                 probatio.Coerce(int), probatio.Percentage()
             )
         },
@@ -88,7 +101,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
 
     component.async_register_entity_service(
-        CoverService.TOGGLE_COVER_TILT,
+        SERVICE_TOGGLE_COVER_TILT,
         None,
         "async_toggle_tilt",
         [CoverEntityFeature.OPEN_TILT | CoverEntityFeature.CLOSE_TILT],

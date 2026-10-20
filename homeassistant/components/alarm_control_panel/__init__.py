@@ -29,8 +29,6 @@ from .const import (
     DOMAIN,
     AlarmControlPanelEntityFeature,
     AlarmControlPanelEntityStateAttribute,
-    AlarmControlPanelService,
-    AlarmControlPanelServiceArgument,
     AlarmControlPanelState,
     CodeFormat,
 )
@@ -65,8 +63,6 @@ __all__ = [
     "AlarmControlPanelEntityDescription",
     "AlarmControlPanelEntityFeature",
     "AlarmControlPanelEntityStateAttribute",
-    "AlarmControlPanelService",
-    "AlarmControlPanelServiceArgument",
     "AlarmControlPanelState",
     "CodeFormat",
 ]

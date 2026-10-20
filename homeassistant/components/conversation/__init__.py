@@ -33,8 +33,6 @@ from .const import (
     DOMAIN,
     HOME_ASSISTANT_AGENT,
     ConversationEntityFeature,
-    ConversationService,
-    ConversationServiceArgument,
 )
 from .default_agent import async_setup_default_agent
 from .entity import ConversationEntity
@@ -58,8 +56,6 @@ __all__ = [
     "ConversationEntityFeature",
     "ConversationInput",
     "ConversationResult",
-    "ConversationService",
-    "ConversationServiceArgument",
     "ConversationTraceEventType",
     "ConverseError",
     "SystemContent",
