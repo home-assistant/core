@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from volvocarsapi.api import VolvoCarsApi
 from volvocarsapi.auth import TOKEN_URL
 from volvocarsapi.models import (
@@ -42,9 +44,6 @@ from .const import (
     MOCK_ACCESS_TOKEN,
     SERVER_TOKEN_RESPONSE,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @dataclass

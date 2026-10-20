@@ -3,13 +3,12 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import CLIENT_ID, MockUser
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.auth.providers import homeassistant as prov_ha
 from homeassistant.components.config import auth_provider_homeassistant as auth_ha
 from homeassistant.core import HomeAssistant
-
-from tests.common import CLIENT_ID, MockUser
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -455,6 +454,28 @@ async def test_change_password(
             "id": 6,
             "type": "config/auth_provider/homeassistant/change_password",
             "current_password": "test-pass",
+            "new_password": "new-pass",
+        }
+    )
+
+    result = await client.receive_json()
+    assert result["success"], result
+    await auth_provider.async_validate_login("test-user", "new-pass")
+
+
+async def test_change_password_from_an_empty_password(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    auth_provider: prov_ha.HassAuthProvider,
+) -> None:
+    """Test a user with an empty password can change it to a real one."""
+    await auth_provider.async_change_password("test-user", "")
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "config/auth_provider/homeassistant/change_password",
+            "current_password": "",
             "new_password": "new-pass",
         }
     )

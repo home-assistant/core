@@ -59,12 +59,15 @@ __all__ = (
     "PipelineEvent",
     "PipelineEventType",
     "PipelineNotFound",
+    "PipelineStage",
     "VadSensitivity",
     "VadSensitivitySelect",
     "WakeWordSettings",
     "async_create_default_pipeline",
+    "async_get_pipeline",
     "async_get_pipelines",
     "async_pipeline_from_audio_stream",
+    "async_setup_pipeline_store",
     "async_update_pipeline",
 )
 

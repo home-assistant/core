@@ -4,6 +4,7 @@ from copy import deepcopy
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from satel_integra import (
     SatelConnectFailedError,
     SatelConnectionInitializationError,
@@ -46,8 +47,6 @@ from . import (
     MOCK_ZONE_SUBENTRY,
     setup_integration,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

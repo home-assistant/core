@@ -69,6 +69,7 @@ homeassistant.components.alarm_control_panel.*
 homeassistant.components.alert.*
 homeassistant.components.alexa.*
 homeassistant.components.alexa_devices.*
+homeassistant.components.alpha_bidet_infrared.*
 homeassistant.components.alpha_vantage.*
 homeassistant.components.altruist.*
 homeassistant.components.amazon_polly.*
@@ -192,6 +193,7 @@ homeassistant.components.duco.*
 homeassistant.components.dunehd.*
 homeassistant.components.duotecno.*
 homeassistant.components.easyenergy.*
+homeassistant.components.ecosmart.*
 homeassistant.components.ecovacs.*
 homeassistant.components.ecowitt.*
 homeassistant.components.efergy.*
@@ -211,6 +213,7 @@ homeassistant.components.enigma2.*
 homeassistant.components.enphase_envoy.*
 homeassistant.components.eq3btsmart.*
 homeassistant.components.esphome.*
+homeassistant.components.eurotronic_cometblue.*
 homeassistant.components.event.*
 homeassistant.components.evil_genius_labs.*
 homeassistant.components.evohome.*
@@ -271,7 +274,9 @@ homeassistant.components.hardkernel.*
 homeassistant.components.hardware.*
 homeassistant.components.harman_luxury.*
 homeassistant.components.hase_iq.*
+homeassistant.components.haven_iaq.*
 homeassistant.components.hdfury.*
+homeassistant.components.helty_cloud.*
 homeassistant.components.heos.*
 homeassistant.components.here_travel_time.*
 homeassistant.components.history.*
@@ -342,6 +347,7 @@ homeassistant.components.jellyfin.*
 homeassistant.components.jewish_calendar.*
 homeassistant.components.jvc_projector.*
 homeassistant.components.kaco_modbus.*
+homeassistant.components.kaco_rs485.*
 homeassistant.components.kaleidescape.*
 homeassistant.components.knocki.*
 homeassistant.components.knx.*
@@ -444,6 +450,7 @@ homeassistant.components.ntfy.*
 homeassistant.components.number.*
 homeassistant.components.nut.*
 homeassistant.components.ohme.*
+homeassistant.components.okok_scale.*
 homeassistant.components.onboarding.*
 homeassistant.components.oncue.*
 homeassistant.components.onedrive.*
@@ -543,6 +550,7 @@ homeassistant.components.script.*
 homeassistant.components.search.*
 homeassistant.components.season.*
 homeassistant.components.select.*
+homeassistant.components.sensecap_lorawan.*
 homeassistant.components.sensibo.*
 homeassistant.components.sensirion_ble.*
 homeassistant.components.sensor.*

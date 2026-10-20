@@ -141,7 +141,7 @@ multidict>=6.0.2
 Brotli>=1.2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.14.0
+pydantic==2.14.1
 
 # Required for Python 3.14.0 compatibility (#119223).
 mashumaro>=3.17.0
@@ -257,6 +257,12 @@ auth0-python<5.0
 # pin versions which are mostly compatible to each other
 backoff==2.2.1
 python-backoff<2.4.0
+
+# bitstring 5.0.0 removed ConstBitStream, which pysml (used by edl21) still imports
+# https://github.com/home-assistant/core/issues/185883
+# https://codeberg.org/obi/pysml/issues/33
+# Remove once pysml supports bitstring>=5
+bitstring<5
 
 # graphql-core 3.3 removed graphql_input_types, which apischema 0.19.0
 # (used by aioaseko) still imports
