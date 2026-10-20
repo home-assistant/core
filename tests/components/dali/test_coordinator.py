@@ -36,7 +36,7 @@ def coordinator(
     [
         (255, False, None),
         (0, False, 0),
-        (86, False, 1),
+        (86, False, 3),
         (170, True, 128),
         (254, False, 255),
         (254, True, 255),
@@ -47,6 +47,17 @@ def test_dali_level_to_brightness(
 ) -> None:
     """Test DALI readback conversion branches."""
     assert _dali_level_to_brightness(level, linear, 86) == expected
+
+
+@pytest.mark.parametrize(
+    ("level", "linear", "expected"),
+    [(200, False, 58), (200, True, 1), (201, False, 60)],
+)
+def test_dali_level_to_brightness_keeps_log_curve_at_raised_minimum(
+    level: int, linear: bool, expected: int
+) -> None:
+    """Test a raised minimum keeps the logarithmic readback but floors linear."""
+    assert _dali_level_to_brightness(level, linear, 200) == expected
 
 
 @pytest.mark.parametrize("linear", [False, True])
