@@ -124,7 +124,6 @@ SENSORS: tuple[KacoSensorDescription, ...] = (
         translation_key="daily_peak_power",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
-        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda s: s.totals.daily_peak_w if s.totals else None,
     ),
     KacoSensorDescription(
