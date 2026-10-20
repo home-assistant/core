@@ -872,17 +872,13 @@ async def test_if_fires_on_mqtt_message_after_update(
     assert len(service_calls) == 1
 
 
-async def test_invalid_trigger_update_keeps_current_payload(
+async def test_duplicate_trigger_update_does_not_register_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test an invalid trigger update does not replace the current payload.
-
-    The debug info keeps the current payload, and the invalid update is rejected
-    again when it is received again, instead of being ignored as unchanged.
-    """
+    """Test a rejected duplicate trigger update does not register its new device."""
     await mqtt_mock_entry()
     config: dict[str, Any] = {
         "automation_type": "trigger",
@@ -894,24 +890,27 @@ async def test_invalid_trigger_update_keeps_current_payload(
     async_fire_mqtt_message(
         hass, "homeassistant/device_automation/bla1/config", json.dumps(config)
     )
-    await hass.async_block_till_done()
-    device_entry = device_registry.async_get_device_by_identifier(
-        ("mqtt", "0AFFD2"), hass.config_entries.async_entries("mqtt")[0].entry_id
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/device_automation/bla2/config",
+        json.dumps({**config, "subtype": "button_2"}),
     )
-    assert device_entry is not None
-    update = json.dumps({**config, "qos": 3})
-    schema_error = "Error 'value must be one of [0, 1, 2] at 'qos'' when processing"
-
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", update)
     await hass.async_block_till_done()
-    assert schema_error in caplog.text
-    trigger_info = debug_info.info_for_device(hass, device_entry.id)["triggers"][0]
-    assert trigger_info["discovery_data"]["payload"] == config
 
-    caplog.clear()
-    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", update)
+    # Update the trigger to the type and subtype of the other trigger
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/device_automation/bla2/config",
+        json.dumps({**config, "device": {"identifiers": ["NEW"]}}),
+    )
     await hass.async_block_till_done()
-    assert schema_error in caplog.text
+    assert "Cannot update device trigger ('device_automation', 'bla2')" in caplog.text
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "NEW"), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+        )
+        is None
+    )
 
 
 async def test_no_resubscribe_same_topic(
