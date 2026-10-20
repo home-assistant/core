@@ -13446,7 +13446,7 @@ async def test_clear_config_subentry_removes_orphaned_child_device(
     assert device_registry.async_get(child_2.id, include_main_devices=False) is not None
 
 
-async def test_get_or_create_child_from_device_info(
+async def test_get_or_create_child_device(
     device_registry: dr.DeviceRegistry,
     mock_config_entry_with_subentries: MockConfigEntry,
 ) -> None:
@@ -13459,7 +13459,7 @@ async def test_get_or_create_child_from_device_info(
         name="Power strip",
     )
 
-    child_device = device_registry.async_get_or_create_child_from_device_info(
+    child_device = device_registry.async_get_or_create_child_device(
         config_entry_id=config_entry_id,
         config_subentry_id="mock-subentry-id-1-1",
         disabled_by=dr.DeviceEntryDisabler.INTEGRATION,
@@ -13477,7 +13477,7 @@ async def test_get_or_create_child_from_device_info(
     assert child_device.parent_device_id == parent.id
 
     # Fields left unset in the child device info keep their value
-    same_child_device = device_registry.async_get_or_create_child_from_device_info(
+    same_child_device = device_registry.async_get_or_create_child_device(
         config_entry_id=config_entry_id,
         config_subentry_id="mock-subentry-id-1-1",
         device_info=dr.ChildDeviceInfo(

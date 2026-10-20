@@ -848,7 +848,7 @@ class EntityPlatform:
         if (device_info := entity.device_info) is None:
             return entity.device_entry
         if isinstance(device_info, dr.ChildDeviceInfo):
-            return dr.async_get(self.hass).async_get_or_create_child_from_device_info(
+            return dr.async_get(self.hass).async_get_or_create_child_device(
                 config_entry_id=config_entry_id,
                 config_subentry_id=config_subentry_id,
                 device_info=device_info,

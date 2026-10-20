@@ -2883,7 +2883,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         If identifiers match those of an existing device, that device is converted to
         a child device, preserving its id.
         """
-        return self.async_get_or_create_child_from_device_info(
+        return self.async_get_or_create_child_device(
             config_entry_id=config_entry_id,
             config_subentry_id=config_subentry_id,
             disabled_by=disabled_by,
@@ -2898,7 +2898,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         )
 
     @callback
-    def async_get_or_create_child_from_device_info(
+    def async_get_or_create_child_device(
         self,
         *,
         config_entry_id: str,
