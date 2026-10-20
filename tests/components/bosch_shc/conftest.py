@@ -13,6 +13,7 @@ from boschshcpy import (
     CameraFrontLightService,
     CameraLightService,
     CameraNotificationService,
+    HeatingCircuitService,
     PowerSwitchService,
     PrivacyModeService,
     RoomClimateControlService,
@@ -22,6 +23,7 @@ from boschshcpy import (
     SHCCameraEyes,
     SHCCameraOutdoorGen2,
     SHCClimateControl,
+    SHCHeatingCircuit,
     SHCIntrusionSystem,
     SHCLightSwitchBSM,
     SHCMicromoduleBlinds,
@@ -97,6 +99,7 @@ _EMPTY_DEVICE_BUCKETS: dict[str, Any] = {
         "camera_eyes",
         "camera_outdoor_gen2",
         "climate_controls",
+        "heating_circuits",
         "light_switches_bsm",
         "micromodule_blinds",
         "micromodule_dimmers",
@@ -414,6 +417,30 @@ def climate_control_device(
     device.supports_eco = supports_eco
     device.low = low
     device.has_demand = has_demand
+    return device
+
+
+def heating_circuit_device(
+    device_id: str = "hdm:HomeMaticIP:hc1",
+    operation_mode: HeatingCircuitService.OperationMode = HeatingCircuitService.OperationMode.AUTOMATIC,
+    on: bool = False,
+    setpoint_temperature_range: tuple[float, float] | None = (5.0, 30.0),
+) -> SHCHeatingCircuit:
+    """Build a minimal device double for the heating_circuits bucket."""
+    device = create_autospec(SHCHeatingCircuit, instance=True, spec_set=True)
+    device.name = "Floor Heating"
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "HeatingCircuit"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.setpoint_temperature = 22.0
+    device.operation_mode = operation_mode
+    device.on = on
+    device.setpoint_temperature_range = setpoint_temperature_range
     return device
 
 
