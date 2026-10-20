@@ -1,10 +1,11 @@
 """The tests for the NSW Rural Fire Service Feeds platform."""
 
-import datetime
+import datetime as dt
 from unittest.mock import ANY, MagicMock, call, patch
 
 from aio_geojson_nsw_rfs_incidents import NswRuralFireServiceIncidentsFeed
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import assert_setup_component, async_fire_time_changed
 
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
@@ -38,8 +39,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import assert_setup_component, async_fire_time_changed
 
 CONFIG = {
     geo_location.DOMAIN: [{"platform": "nsw_rural_fire_service_feed", CONF_RADIUS: 200}]
@@ -103,7 +102,7 @@ async def test_setup(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
         category="Category 1",
         location="Location 1",
         attribution="Attribution 1",
-        publication_date=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.UTC),
+        publication_date=dt.datetime(2018, 9, 22, 8, 0, tzinfo=dt.UTC),
         council_area="Council Area 1",
         status="Status 1",
         entry_type="Type 1",
@@ -146,9 +145,7 @@ async def test_setup(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
                 ATTR_CATEGORY: "Category 1",
                 ATTR_LOCATION: "Location 1",
                 ATTR_ATTRIBUTION: "Attribution 1",
-                ATTR_PUBLICATION_DATE: datetime.datetime(
-                    2018, 9, 22, 8, 0, tzinfo=datetime.UTC
-                ),
+                ATTR_PUBLICATION_DATE: dt.datetime(2018, 9, 22, 8, 0, tzinfo=dt.UTC),
                 ATTR_FIRE: True,
                 ATTR_COUNCIL_AREA: "Council Area 1",
                 ATTR_STATUS: "Status 1",

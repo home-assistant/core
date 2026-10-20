@@ -3,6 +3,7 @@
 import logging
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from sentry_sdk.utils import BadDsn
 
 from homeassistant.components.sentry.const import (
@@ -19,8 +20,6 @@ from homeassistant.components.sentry.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_full_user_flow_implementation(hass: HomeAssistant) -> None:
@@ -83,6 +82,20 @@ async def test_user_flow_bad_dsn(hass: HomeAssistant) -> None:
     assert result2.get("type") is FlowResultType.FORM
     assert result2.get("errors") == {"base": "bad_dsn"}
 
+    with (
+        patch("homeassistant.components.sentry.config_flow.Dsn"),
+        patch(
+            "homeassistant.components.sentry.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"dsn": "http://public@sentry.local/1"},
+        )
+
+    assert result3.get("type") is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_flow_unknown_exception(hass: HomeAssistant) -> None:
     """Test we handle any unknown exception error."""
@@ -101,6 +114,20 @@ async def test_user_flow_unknown_exception(hass: HomeAssistant) -> None:
 
     assert result2.get("type") is FlowResultType.FORM
     assert result2.get("errors") == {"base": "unknown"}
+
+    with (
+        patch("homeassistant.components.sentry.config_flow.Dsn"),
+        patch(
+            "homeassistant.components.sentry.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"dsn": "http://public@sentry.local/1"},
+        )
+
+    assert result3.get("type") is FlowResultType.CREATE_ENTRY
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:

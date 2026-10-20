@@ -3,14 +3,13 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ipma.const import DOMAIN
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from . import MockLocation
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

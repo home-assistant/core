@@ -6,17 +6,18 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from earn_e_p1 import EarnEP1Device, PacketType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.earn_e_p1.const import CONF_SERIAL, DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from tests.common import MockConfigEntry
-
 MOCK_HOST = "192.168.1.100"
+MOCK_HOST_2 = "192.168.1.101"
 MOCK_NEW_HOST = "192.168.1.200"
 MOCK_SERIAL = "E0012345678901234"
+MOCK_SERIAL_2 = "E0012345678905678"
 MOCK_MAC = "aabbcc112233"
 # Devices announce themselves as "Energiemonitor-<4 hex>"; DHCP lowercases it.
 MOCK_HOSTNAME = "energiemonitor-d674"
@@ -93,6 +94,19 @@ def mock_config_entry(
         data={CONF_HOST: MOCK_HOST, CONF_SERIAL: MOCK_SERIAL}
         | getattr(request, "param", {}),
         unique_id=MOCK_SERIAL,
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+@pytest.fixture
+def mock_config_entry_2(hass: HomeAssistant) -> MockConfigEntry:
+    """Create a mock config entry for a second meter."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=f"EARN-E P1 ({MOCK_HOST_2})",
+        data={CONF_HOST: MOCK_HOST_2, CONF_SERIAL: MOCK_SERIAL_2},
+        unique_id=MOCK_SERIAL_2,
     )
     entry.add_to_hass(hass)
     return entry

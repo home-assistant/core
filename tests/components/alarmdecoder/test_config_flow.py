@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from alarmdecoder.util import NoDeviceError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.alarmdecoder import config_flow
@@ -32,8 +33,6 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -145,6 +144,21 @@ async def test_setup_connection_error(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "unknown"}
+
+    with (
+        patch("homeassistant.components.alarmdecoder.config_flow.AdExt.open"),
+        patch("homeassistant.components.alarmdecoder.config_flow.AdExt.close"),
+        patch(
+            "homeassistant.components.alarmdecoder.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], connection_settings
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_options_arm_flow(hass: HomeAssistant) -> None:

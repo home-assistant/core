@@ -2,13 +2,13 @@
 
 from dataclasses import asdict
 
+from pytest_homeassistant.common import MockConfigEntry, patch
+
 from homeassistant.components.wemo.const import DOMAIN
 from homeassistant.components.wemo.coordinator import Options
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry, patch
 
 
 async def test_not_discovered(hass: HomeAssistant) -> None:
@@ -61,3 +61,10 @@ async def test_invalid_options(hass: HomeAssistant) -> None:
     assert result["errors"] == {
         "enable_subscription": "long_press_requires_subscription"
     }
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"enable_subscription": False, "enable_long_press": False},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY

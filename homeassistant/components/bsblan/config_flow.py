@@ -118,9 +118,9 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             data_schema = probatio.Schema(
                 {
-                    probatio.Optional(CONF_PASSKEY): str,
+                    probatio.Optional(probatio.Secret(CONF_PASSKEY)): str,
                     probatio.Optional(CONF_USERNAME): str,
-                    probatio.Optional(CONF_PASSWORD): str,
+                    probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
                 }
             )
             if not self._auth_required:
@@ -156,9 +156,9 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                     step_id="discovery_confirm",
                     data_schema=probatio.Schema(
                         {
-                            probatio.Optional(CONF_PASSKEY): str,
+                            probatio.Optional(probatio.Secret(CONF_PASSKEY)): str,
                             probatio.Optional(CONF_USERNAME): str,
-                            probatio.Optional(CONF_PASSWORD): str,
+                            probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
                         }
                     ),
                     errors={"base": "invalid_auth"},
@@ -171,9 +171,9 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                     step_id="discovery_confirm",
                     data_schema=probatio.Schema(
                         {
-                            probatio.Optional(CONF_PASSKEY): str,
+                            probatio.Optional(probatio.Secret(CONF_PASSKEY)): str,
                             probatio.Optional(CONF_USERNAME): str,
-                            probatio.Optional(CONF_PASSWORD): str,
+                            probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
                         }
                     ),
                     errors={"base": "cannot_connect"},
@@ -275,7 +275,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         return probatio.Schema(
             {
                 probatio.Optional(
-                    CONF_PASSKEY,
+                    probatio.Secret(CONF_PASSKEY),
                     default=defaults.get(CONF_PASSKEY) or probatio.UNDEFINED,
                 ): str,
                 probatio.Optional(
@@ -283,7 +283,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                     default=defaults.get(CONF_USERNAME) or probatio.UNDEFINED,
                 ): str,
                 probatio.Optional(
-                    CONF_PASSWORD,
+                    probatio.Secret(CONF_PASSWORD),
                     default=probatio.UNDEFINED,
                 ): str,
             }
@@ -303,7 +303,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                     default=defaults.get(CONF_PORT, DEFAULT_PORT),
                 ): int,
                 probatio.Optional(
-                    CONF_PASSKEY,
+                    probatio.Secret(CONF_PASSKEY),
                     default=defaults.get(CONF_PASSKEY) or probatio.UNDEFINED,
                 ): str,
                 probatio.Optional(
@@ -311,7 +311,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                     default=defaults.get(CONF_USERNAME) or probatio.UNDEFINED,
                 ): str,
                 probatio.Optional(
-                    CONF_PASSWORD,
+                    probatio.Secret(CONF_PASSWORD),
                     default=probatio.UNDEFINED,
                 ): str,
             }

@@ -206,7 +206,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         data_schema = probatio.Schema(
             {
                 probatio.Required(CONF_USERNAME): str,
-                probatio.Required(CONF_PASSWORD): str,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 probatio.Required(CONF_URL, default=EU_URL): probatio.In(
                     [EU_URL, RUSSIA_URL, CONF_CUSTOMIZE]
                 ),
@@ -311,7 +311,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         discovered_camera_schema = probatio.Schema(
             {
                 probatio.Required(CONF_USERNAME, default=DEFAULT_CAMERA_USERNAME): str,
-                probatio.Required(CONF_PASSWORD): str,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
             }
         )
 
@@ -380,7 +380,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                 probatio.Required(CONF_USERNAME, default=entry.title): probatio.In(
                     [entry.title]
                 ),
-                probatio.Required(CONF_PASSWORD): str,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
             }
         )
 

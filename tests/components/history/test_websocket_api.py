@@ -8,7 +8,14 @@ from typing import Any
 from unittest.mock import ANY, patch
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockUser, async_fire_time_changed
+from pytest_homeassistant.components.recorder.common import (
+    async_recorder_block_till_done,
+    async_wait_recording_done,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import history
 from homeassistant.components.history import DOMAIN, websocket_api
@@ -22,13 +29,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockUser, async_fire_time_changed
-from tests.components.recorder.common import (
-    async_recorder_block_till_done,
-    async_wait_recording_done,
-)
-from tests.typing import WebSocketGenerator
 
 
 def listeners_without_writes(listeners: dict[str, int]) -> dict[str, int]:
@@ -2045,7 +2045,9 @@ async def test_history_stream_for_invalid_entity_ids(
 
 @pytest.mark.usefixtures("recorder_mock")
 async def test_history_stream_historical_only_with_start_time_state_past(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test history stream."""
     await async_setup_component(
@@ -2058,15 +2060,16 @@ async def test_history_stream_historical_only_with_start_time_state_past(
     hass.states.async_set("sensor.one", "first", attributes={"any": "attr"})
     await async_recorder_block_till_done(hass)
 
-    await asyncio.sleep(0.00002)
+    freezer.tick(timedelta(seconds=1))
     now = dt_util.utcnow()
     await async_recorder_block_till_done(hass)
+    freezer.tick(timedelta(seconds=1))
     hass.states.async_set("sensor.one", "second", attributes={"any": "attr"})
     sensor_one_last_updated_second_timestamp = hass.states.get(
         "sensor.one"
     ).last_updated_timestamp
 
-    await asyncio.sleep(0.00001)
+    freezer.tick(timedelta(seconds=1))
     hass.states.async_set("sensor.one", "third", attributes={"any": "attr"})
     sensor_one_last_updated_third_timestamp = hass.states.get(
         "sensor.one"
@@ -2091,6 +2094,7 @@ async def test_history_stream_historical_only_with_start_time_state_past(
     hass.states.async_set("switch.excluded", "off", attributes={"any": "again"})
     await async_wait_recording_done(hass)
 
+    freezer.tick(timedelta(seconds=1))
     end_time = dt_util.utcnow()
 
     client = await hass_ws_client()

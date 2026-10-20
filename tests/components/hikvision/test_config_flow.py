@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import requests
 
 from homeassistant.components.hikvision.const import DOMAIN
@@ -25,8 +26,6 @@ from .conftest import (
     TEST_PORT,
     TEST_USERNAME,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -394,6 +393,7 @@ async def test_form_with_ssl(hass: HomeAssistant, mock_hikcamera: MagicMock) -> 
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_SSL] is True
+    assert result["result"].unique_id == TEST_DEVICE_ID
 
     # Verify HikCamera was called with ssl=True
     mock_hikcamera.assert_called_once_with(

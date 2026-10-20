@@ -2,12 +2,10 @@
 
 from datetime import timedelta
 import logging
-from typing import Any, Final, final, override
-
-from propcache.api import cached_property
+from typing import Final
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (  # noqa: F401
+from homeassistant.const import (
     ATTR_CODE,
     ATTR_CODE_FORMAT,
     SERVICE_ALARM_ARM_AWAY,
@@ -18,16 +16,15 @@ from homeassistant.const import (  # noqa: F401
     SERVICE_ALARM_DISARM,
     SERVICE_ALARM_TRIGGER,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (  # noqa: F401
+from .const import (
     ATTR_CHANGED_BY,
     ATTR_CODE_ARM_REQUIRED,
+    CONF_DEFAULT_CODE,
     DATA_COMPONENT,
     DOMAIN,
     AlarmControlPanelEntityFeature,
@@ -35,6 +32,7 @@ from .const import (  # noqa: F401
     AlarmControlPanelState,
     CodeFormat,
 )
+from .entity import AlarmControlPanelEntity, AlarmControlPanelEntityDescription
 from .services import async_setup_services
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -44,7 +42,30 @@ PLATFORM_SCHEMA: Final = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE: Final = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL: Final = timedelta(seconds=30)
 
-CONF_DEFAULT_CODE = "default_code"
+__all__ = [
+    "ATTR_CHANGED_BY",
+    "ATTR_CODE",
+    "ATTR_CODE_ARM_REQUIRED",
+    "ATTR_CODE_FORMAT",
+    "CONF_DEFAULT_CODE",
+    "DOMAIN",
+    "ENTITY_ID_FORMAT",
+    "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
+    "SERVICE_ALARM_ARM_AWAY",
+    "SERVICE_ALARM_ARM_CUSTOM_BYPASS",
+    "SERVICE_ALARM_ARM_HOME",
+    "SERVICE_ALARM_ARM_NIGHT",
+    "SERVICE_ALARM_ARM_VACATION",
+    "SERVICE_ALARM_DISARM",
+    "SERVICE_ALARM_TRIGGER",
+    "AlarmControlPanelEntity",
+    "AlarmControlPanelEntityDescription",
+    "AlarmControlPanelEntityFeature",
+    "AlarmControlPanelEntityStateAttribute",
+    "AlarmControlPanelState",
+    "CodeFormat",
+]
 
 # mypy: disallow-any-generics
 
@@ -70,225 +91,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
-
-
-class AlarmControlPanelEntityDescription(EntityDescription, frozen_or_thawed=True):
-    """A class that describes alarm control panel entities."""
-
-
-CACHED_PROPERTIES_WITH_ATTR_ = {
-    "code_format",
-    "changed_by",
-    "code_arm_required",
-    "supported_features",
-    "alarm_state",
-}
-
-
-class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
-    """An abstract class for alarm control entities."""
-
-    entity_description: AlarmControlPanelEntityDescription
-    _attr_alarm_state: AlarmControlPanelState | None = None
-    _attr_changed_by: str | None = None
-    _attr_code_arm_required: bool = True
-    _attr_code_format: CodeFormat | None = None
-    _attr_supported_features: AlarmControlPanelEntityFeature = (
-        AlarmControlPanelEntityFeature(0)
-    )
-    _alarm_control_panel_option_default_code: str | None = None
-
-    @final
-    @property
-    @override
-    def state(self) -> str | None:
-        """Return the current state."""
-        return self.alarm_state
-
-    @cached_property
-    def alarm_state(self) -> AlarmControlPanelState | None:
-        """Return the current alarm control panel entity state.
-
-        Integrations should overwrite this or use the '_attr_alarm_state'
-        attribute to set the alarm status using the 'AlarmControlPanelState' enum.
-        """
-        return self._attr_alarm_state
-
-    @final
-    @callback
-    def code_or_default_code(self, code: str | None) -> str | None:
-        """Return code to use for a service call.
-
-        If the passed in code is not None, it will be returned. Otherwise return the
-        default code, if set, or None if not set, is returned.
-        """
-        if code:
-            # Return code provided by user
-            return code
-        # Fallback to default code or None if not set
-        return self._alarm_control_panel_option_default_code
-
-    @cached_property
-    def code_format(self) -> CodeFormat | None:
-        """Code format or None if no code is required."""
-        return self._attr_code_format
-
-    @cached_property
-    def changed_by(self) -> str | None:
-        """Last change triggered by."""
-        return self._attr_changed_by
-
-    @cached_property
-    def code_arm_required(self) -> bool:
-        """Whether the code is required for arm actions."""
-        return self._attr_code_arm_required
-
-    @final
-    @callback
-    def check_code_arm_required(self, code: str | None) -> str | None:
-        """Check if arm code is required, raise if no code is given."""
-        if not (_code := self.code_or_default_code(code)) and self.code_arm_required:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="code_arm_required",
-                translation_placeholders={
-                    "entity_id": self.entity_id,
-                },
-            )
-        return _code
-
-    @final
-    async def async_handle_alarm_disarm(self, code: str | None = None) -> None:
-        """Add default code and disarm."""
-        await self.async_alarm_disarm(self.code_or_default_code(code))
-
-    def alarm_disarm(self, code: str | None = None) -> None:
-        """Send disarm command."""
-        raise NotImplementedError
-
-    async def async_alarm_disarm(self, code: str | None = None) -> None:
-        """Send disarm command."""
-        await self.hass.async_add_executor_job(self.alarm_disarm, code)
-
-    @final
-    async def async_handle_alarm_arm_home(self, code: str | None = None) -> None:
-        """Add default code and arm home."""
-        await self.async_alarm_arm_home(self.check_code_arm_required(code))
-
-    def alarm_arm_home(self, code: str | None = None) -> None:
-        """Send arm home command."""
-        raise NotImplementedError
-
-    async def async_alarm_arm_home(self, code: str | None = None) -> None:
-        """Send arm home command."""
-        await self.hass.async_add_executor_job(self.alarm_arm_home, code)
-
-    @final
-    async def async_handle_alarm_arm_away(self, code: str | None = None) -> None:
-        """Add default code and arm away."""
-        await self.async_alarm_arm_away(self.check_code_arm_required(code))
-
-    def alarm_arm_away(self, code: str | None = None) -> None:
-        """Send arm away command."""
-        raise NotImplementedError
-
-    async def async_alarm_arm_away(self, code: str | None = None) -> None:
-        """Send arm away command."""
-        await self.hass.async_add_executor_job(self.alarm_arm_away, code)
-
-    @final
-    async def async_handle_alarm_arm_night(self, code: str | None = None) -> None:
-        """Add default code and arm night."""
-        await self.async_alarm_arm_night(self.check_code_arm_required(code))
-
-    def alarm_arm_night(self, code: str | None = None) -> None:
-        """Send arm night command."""
-        raise NotImplementedError
-
-    async def async_alarm_arm_night(self, code: str | None = None) -> None:
-        """Send arm night command."""
-        await self.hass.async_add_executor_job(self.alarm_arm_night, code)
-
-    @final
-    async def async_handle_alarm_arm_vacation(self, code: str | None = None) -> None:
-        """Add default code and arm vacation."""
-        await self.async_alarm_arm_vacation(self.check_code_arm_required(code))
-
-    def alarm_arm_vacation(self, code: str | None = None) -> None:
-        """Send arm vacation command."""
-        raise NotImplementedError
-
-    async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
-        """Send arm vacation command."""
-        await self.hass.async_add_executor_job(self.alarm_arm_vacation, code)
-
-    def alarm_trigger(self, code: str | None = None) -> None:
-        """Send alarm trigger command."""
-        raise NotImplementedError
-
-    async def async_alarm_trigger(self, code: str | None = None) -> None:
-        """Send alarm trigger command."""
-        await self.hass.async_add_executor_job(self.alarm_trigger, code)
-
-    @final
-    async def async_handle_alarm_arm_custom_bypass(
-        self, code: str | None = None
-    ) -> None:
-        """Add default code and arm custom bypass."""
-        await self.async_alarm_arm_custom_bypass(self.check_code_arm_required(code))
-
-    def alarm_arm_custom_bypass(self, code: str | None = None) -> None:
-        """Send arm custom bypass command."""
-        raise NotImplementedError
-
-    async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
-        """Send arm custom bypass command."""
-        await self.hass.async_add_executor_job(self.alarm_arm_custom_bypass, code)
-
-    @cached_property
-    @override
-    def supported_features(self) -> AlarmControlPanelEntityFeature:
-        """Return the list of supported features."""
-        return self._attr_supported_features
-
-    @final
-    @property
-    @override
-    def state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes."""
-        return {
-            AlarmControlPanelEntityStateAttribute.CODE_FORMAT: self.code_format,
-            AlarmControlPanelEntityStateAttribute.CHANGED_BY: self.changed_by,
-            AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: (
-                self.code_arm_required
-            ),
-        }
-
-    @override
-    async def async_internal_added_to_hass(self) -> None:
-        """Call when the alarm control panel entity is added to hass."""
-        await super().async_internal_added_to_hass()
-        if not self.registry_entry:
-            return
-        self._async_read_entity_options()
-
-    @callback
-    @override
-    def async_registry_entry_updated(self) -> None:
-        """Run when the entity registry entry has been updated."""
-        self._async_read_entity_options()
-
-    @callback
-    def _async_read_entity_options(self) -> None:
-        """Read entity options from entity registry.
-
-        Called when the entity registry entry has been updated and before the
-        alarm control panel is added to the state machine.
-        """
-        assert self.registry_entry
-        if (alarm_options := self.registry_entry.options.get(DOMAIN)) and (
-            default_code := alarm_options.get(CONF_DEFAULT_CODE)
-        ):
-            self._alarm_control_panel_option_default_code = default_code
-            return
-        self._alarm_control_panel_option_default_code = None

@@ -10,9 +10,9 @@ from yarl import URL
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN, PLEX_URI_SCHEME, SERVERS, SERVICE_REFRESH_LIBRARY
+from .const import DOMAIN, PLEX_URI_SCHEME, SERVICE_REFRESH_LIBRARY
 from .errors import MediaNotFound
-from .helpers import get_plex_data
+from .helpers import get_plex_servers
 from .models import PlexMediaSearchResult
 from .server import PlexServer
 
@@ -67,7 +67,7 @@ def get_plex_server(
     """Retrieve a configured Plex server by name."""
     if DOMAIN not in hass.data:
         raise HomeAssistantError("Plex integration not configured")
-    servers: dict[str, PlexServer] = get_plex_data(hass)[SERVERS]
+    servers = get_plex_servers(hass)
     if not servers:
         raise HomeAssistantError("No Plex servers available")
 

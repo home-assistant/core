@@ -15,11 +15,12 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
     COLOR_GROUP,
+    DOMAIN as LIGHT_DOMAIN,
     LIGHT_TURN_ON_SCHEMA,
     VALID_BRIGHTNESS,
     VALID_BRIGHTNESS_PCT,
 )
-from homeassistant.const import ATTR_MODE, Platform
+from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -52,6 +53,7 @@ from .const import (
     DATA_LIFX_MANAGER,
     DOMAIN,
     SERVICE_EFFECT_COLORLOOP,
+    SERVICE_EFFECT_COLORSWEEP,
     SERVICE_EFFECT_FLAME,
     SERVICE_EFFECT_MORPH,
     SERVICE_EFFECT_MOVE,
@@ -69,7 +71,7 @@ if TYPE_CHECKING:
 LIFX_SET_STATE_SCHEMA: VolDictType = {
     **LIGHT_TURN_ON_SCHEMA,
     ATTR_INFRARED: probatio.All(probatio.Coerce(int), probatio.Clamp(min=0, max=255)),
-    ATTR_ZONES: probatio.All(cv.ensure_list, [cv.positive_int]),
+    ATTR_ZONES: probatio.All(probatio.EnsureList(), [cv.positive_int]),
     ATTR_POWER: cv.boolean,
 }
 
@@ -115,8 +117,13 @@ LIFX_EFFECT_SCHEMA = {
 LIFX_EFFECT_PULSE_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
-        probatio.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
-        probatio.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
+        # A brightness of zero would pulse to black
+        probatio.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): probatio.All(
+            VALID_BRIGHTNESS, probatio.Clamp(min=1)
+        ),
+        probatio.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): probatio.All(
+            VALID_BRIGHTNESS_PCT, probatio.Clamp(min=1)
+        ),
         probatio.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
         probatio.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP): probatio.All(
             probatio.Coerce(tuple), probatio.ExactSequence((cv.byte, cv.byte, cv.byte))
@@ -132,9 +139,7 @@ LIFX_EFFECT_PULSE_SCHEMA = cv.make_entity_service_schema(
                     probatio.All(
                         probatio.Coerce(float), probatio.Range(min=0, max=360)
                     ),
-                    probatio.All(
-                        probatio.Coerce(float), probatio.Range(min=0, max=100)
-                    ),
+                    probatio.All(probatio.Coerce(float), probatio.Percentage()),
                 )
             ),
         ),
@@ -152,15 +157,17 @@ LIFX_EFFECT_COLORLOOP_SCHEMA = cv.make_entity_service_schema(
         **LIFX_EFFECT_SCHEMA,
         probatio.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
         probatio.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
+        # A saturation of zero switches the bulb to color temperature mode
         ATTR_SATURATION_MAX: probatio.All(
-            probatio.Coerce(int), probatio.Clamp(min=0, max=100)
+            probatio.Coerce(int), probatio.Clamp(min=1, max=100)
         ),
         ATTR_SATURATION_MIN: probatio.All(
-            probatio.Coerce(int), probatio.Clamp(min=0, max=100)
+            probatio.Coerce(int), probatio.Clamp(min=1, max=100)
         ),
         ATTR_PERIOD: probatio.All(probatio.Coerce(float), probatio.Clamp(min=0.05)),
+        # The library refuses a change of 0 or of 180 degrees and more
         ATTR_CHANGE: probatio.All(
-            probatio.Coerce(float), probatio.Clamp(min=0, max=360)
+            probatio.Coerce(float), probatio.Clamp(min=1, max=179)
         ),
         ATTR_SPREAD: probatio.All(
             probatio.Coerce(float), probatio.Clamp(min=0, max=360)
@@ -183,7 +190,7 @@ HSBK_SCHEMA = probatio.All(
     probatio.ExactSequence(
         (
             probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=360)),
-            probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=100)),
+            probatio.All(probatio.Coerce(float), probatio.Percentage()),
             probatio.All(probatio.Coerce(float), probatio.Clamp(min=0, max=100)),
             probatio.All(probatio.Coerce(int), probatio.Clamp(min=1500, max=9000)),
         )
@@ -198,7 +205,7 @@ LIFX_EFFECT_MORPH_SCHEMA = cv.make_entity_service_schema(
             ThemeLibrary.get_available_themes()
         ),
         probatio.Exclusive(ATTR_PALETTE, COLOR_GROUP): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [HSBK_SCHEMA],
             probatio.Length(min=EFFECT_PALETTE_MIN, max=EFFECT_PALETTE_MAX),
         ),
@@ -216,11 +223,29 @@ LIFX_EFFECT_MOVE_SCHEMA = cv.make_entity_service_schema(
     }
 )
 
+LIFX_EFFECT_COLORSWEEP_SCHEMA = cv.make_entity_service_schema(
+    {
+        **LIFX_EFFECT_SCHEMA,
+        ATTR_SPEED: probatio.All(probatio.Coerce(int), probatio.Clamp(min=0, max=25)),
+        ATTR_DURATION: probatio.All(
+            probatio.Coerce(int), probatio.Clamp(min=0, max=3600)
+        ),
+        ATTR_PALETTE: probatio.All(
+            probatio.EnsureList(),
+            [HSBK_SCHEMA],
+            probatio.Length(min=EFFECT_PALETTE_MIN, max=EFFECT_PALETTE_MAX),
+        ),
+    }
+)
+
 LIFX_EFFECT_SKY_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
         ATTR_SPEED: probatio.All(
-            probatio.Coerce(int), probatio.Clamp(min=1, max=86400)
+            probatio.Coerce(int), probatio.Clamp(min=0, max=86400)
+        ),
+        ATTR_DURATION: probatio.All(
+            probatio.Coerce(int), probatio.Clamp(min=0, max=86400)
         ),
         ATTR_SKY_TYPE: probatio.In(EFFECT_SKY_SKY_TYPES),
         ATTR_CLOUD_SATURATION_MIN: probatio.All(
@@ -230,7 +255,7 @@ LIFX_EFFECT_SKY_SCHEMA = cv.make_entity_service_schema(
             probatio.Coerce(int), probatio.Clamp(min=0, max=255)
         ),
         ATTR_PALETTE: probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [HSBK_SCHEMA],
             probatio.Length(min=1, max=EFFECT_SKY_PALETTE_MAX),
         ),
@@ -247,7 +272,7 @@ LIFX_PAINT_THEME_SCHEMA = cv.make_entity_service_schema(
             ThemeLibrary.get_available_themes()
         ),
         probatio.Exclusive(ATTR_PALETTE, COLOR_GROUP): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [HSBK_SCHEMA],
             probatio.Length(min=EFFECT_PALETTE_MIN, max=EFFECT_PALETTE_MAX),
         ),
@@ -255,6 +280,7 @@ LIFX_PAINT_THEME_SCHEMA = cv.make_entity_service_schema(
 )
 
 SERVICES_SCHEMA = {
+    SERVICE_EFFECT_COLORSWEEP: LIFX_EFFECT_COLORSWEEP_SCHEMA,
     SERVICE_EFFECT_COLORLOOP: LIFX_EFFECT_COLORLOOP_SCHEMA,
     SERVICE_EFFECT_FLAME: LIFX_EFFECT_FLAME_SCHEMA,
     SERVICE_EFFECT_MORPH: LIFX_EFFECT_MORPH_SCHEMA,
@@ -300,7 +326,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         hass,
         DOMAIN,
         SERVICE_SET_STATE,
-        entity_domain=Platform.LIGHT,
+        entity_domain=LIGHT_DOMAIN,
         schema=LIFX_SET_STATE_SCHEMA,
         func="set_state",
     )
@@ -308,7 +334,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         hass,
         DOMAIN,
         SERVICE_SET_HEV_CYCLE_STATE,
-        entity_domain=Platform.LIGHT,
+        entity_domain=LIGHT_DOMAIN,
         schema=LIFX_SET_HEV_CYCLE_STATE_SCHEMA,
         func="set_hev_cycle_state",
     )

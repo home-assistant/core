@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 type SyncthingConfigEntry = ConfigEntry[SyncthingClient]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SyncthingConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SyncthingConfigEntry) -> None:
     """Set up syncthing from a config entry."""
     data = entry.data
 
@@ -59,16 +59,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SyncthingConfigEntry) ->
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cancel_listen_task)
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SyncthingConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SyncthingConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        await entry.runtime_data.unsubscribe()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.unsubscribe()
 
 
 class SyncthingClient:

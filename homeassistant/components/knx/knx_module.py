@@ -101,6 +101,7 @@ class KNXModule:
         )
         self.telegrams = Telegrams(
             hass=hass,
+            config_entry_id=entry.entry_id,
             xknx=self.xknx,
             project=self.project,
             config=cast(KNXConfigEntryOptions, entry.options),
@@ -267,12 +268,10 @@ class KNXModule:
         # Not all telegrams have serializable data.
         data: int | tuple[int, ...] | None = None
         value = None
-        if (
-            isinstance(telegram.payload, (GroupValueWrite, GroupValueResponse))
-            and telegram.payload.value is not None
-            and isinstance(
-                telegram.destination_address, (GroupAddress, InternalGroupAddress)
-            )
+        if isinstance(
+            telegram.payload, (GroupValueWrite, GroupValueResponse)
+        ) and isinstance(
+            telegram.destination_address, (GroupAddress, InternalGroupAddress)
         ):
             data = telegram.payload.value.value
             if transcoder := (
