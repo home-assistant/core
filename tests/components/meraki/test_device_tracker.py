@@ -275,13 +275,10 @@ async def test_client_in_several_networks(
     networks[1]["productTypes"] = ["wireless"]
     mock_meraki_client.organizations.getOrganizationNetworks.return_value = networks
     clients = await async_load_json_array_fixture(hass, "clients.json", DOMAIN)
+    # Meraki documents lastSeen as a Unix timestamp; the fixture has the ISO
+    # strings the API actually returns. 1792528200 is 2026-10-20 20:30 UTC.
     elsewhere = [
-        {
-            **client,
-            "status": "Offline",
-            "ip": "10.0.0.1",
-            "lastSeen": "2026-10-20T20:00:00Z",
-        }
+        {**client, "status": "Offline", "ip": "10.0.0.1", "lastSeen": 1792528200}
         for client in clients
     ]
     mock_meraki_client.networks.getNetworkClients.side_effect = [clients, elsewhere]
@@ -290,9 +287,9 @@ async def test_client_in_several_networks(
     phone = hass.states.get(PHONE)
     assert phone.state == STATE_HOME
     assert phone.attributes["ip"] == "192.168.1.20"
-    # Offline in both, the more recent sighting wins.
+    # Offline in both, the more recent sighting (20:30 rather than 20:15) wins.
     laptop = hass.states.get("device_tracker.aa_bb_cc_00_00_03")
-    assert laptop.attributes["ip"] == "192.168.1.40"
+    assert laptop.attributes["ip"] == "10.0.0.1"
 
 
 @pytest.mark.freeze_time("2026-10-20 21:00:00+00:00")

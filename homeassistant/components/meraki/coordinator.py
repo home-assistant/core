@@ -133,13 +133,20 @@ class MerakiDataUpdateCoordinator(DataUpdateCoordinator[MerakiData]):
 
 
 def _parse_client(network_id: str, item: dict[str, Any]) -> MerakiClient:
+    last_seen = item["lastSeen"]
     return MerakiClient(
         mac=item["mac"],
         network_id=network_id,
         description=item["description"],
         ip=item["ip"],
         online=item["status"] == "Online",
-        last_seen=dt_util.parse_datetime(item["lastSeen"], raise_on_error=True),
+        # Meraki documents lastSeen as a Unix timestamp, but the API returned ISO
+        # strings for every client during testing; both are accepted.
+        last_seen=(
+            dt_util.utc_from_timestamp(last_seen)
+            if isinstance(last_seen, int | float)
+            else dt_util.parse_datetime(last_seen, raise_on_error=True)
+        ),
     )
 
 
