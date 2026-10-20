@@ -26,9 +26,11 @@ _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL = timedelta(seconds=5)
 
 
-def _my_pv_connection[T](
+def _handle_device_errors(
     func: Callable[..., Coroutine[Any, Any, bool]],
 ) -> Callable[..., Coroutine[Any, Any, bool]]:
+    """Connect if needed and handle device errors."""
+
     @functools.wraps(func)
     async def wrapper(self, *args: Any, **kwargs: Any) -> bool:
         try:
@@ -141,21 +143,21 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
                 translation_placeholders={"uri": self.device.uri},
             ) from exc
 
-    @_my_pv_connection
+    @_handle_device_errors
     async def set_setup_value(self, key: str, value: Any) -> bool:
         """Set a setup value."""
         result = await self.device.set_setup_value(key, value)
         self.async_update_listeners()
         return result
 
-    @_my_pv_connection
+    @_handle_device_errors
     async def set_target_temperature(self, temperature: float) -> bool:
         """Set target temperature."""
         result = await self.device.set_target_temperature(temperature)
         self.async_update_listeners()
         return result
 
-    @_my_pv_connection
+    @_handle_device_errors
     async def send_command(
         self, key: str, value: bool | float | str | None = None
     ) -> bool:
@@ -164,14 +166,14 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
         self.async_update_listeners()
         return result
 
-    @_my_pv_connection
+    @_handle_device_errors
     async def turn_on(self) -> bool:
         """Turn on the device."""
         result = await self.device.turn_on()
         self.async_update_listeners()
         return result
 
-    @_my_pv_connection
+    @_handle_device_errors
     async def turn_off(self) -> bool:
         """Turn off the device."""
         result = await self.device.turn_off()
