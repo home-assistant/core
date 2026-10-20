@@ -1,6 +1,7 @@
 """Tests for setup, unload, and migration of the Powersensor integration."""
 
 from datetime import timedelta
+import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from powersensor_local import VirtualHousehold
@@ -143,7 +144,10 @@ async def test_setup_constructs_vhh_with_solar_when_role_persisted(
     hass: HomeAssistant,
     mock_async_zeroconf: MagicMock,
 ) -> None:
-    """VirtualHousehold is constructed with with_solar=True when a solar role is persisted."""
+    """VirtualHousehold gets with_solar=True when a solar role is persisted.
+
+    It also gets the integration's logger, so errors in its callbacks are logged.
+    """
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={"roles": {"aabbccddeeff": ROLE_SOLAR}},
@@ -152,12 +156,14 @@ async def test_setup_constructs_vhh_with_solar_when_role_persisted(
     )
     entry.add_to_hass(hass)
 
-    constructed_args: list[bool] = []
+    constructed_args: list[tuple[bool, logging.Logger | None]] = []
 
     class CapturingVHH(VirtualHousehold):
-        def __init__(self, with_solar: bool) -> None:
-            constructed_args.append(with_solar)
-            super().__init__(with_solar)
+        def __init__(
+            self, with_solar: bool, logger: logging.Logger | None = None
+        ) -> None:
+            constructed_args.append((with_solar, logger))
+            super().__init__(with_solar, logger=logger)
 
     devices = MagicMock()
     devices.start = AsyncMock()
@@ -178,4 +184,6 @@ async def test_setup_constructs_vhh_with_solar_when_role_persisted(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert constructed_args == [True]
+    assert constructed_args == [
+        (True, logging.getLogger("homeassistant.components.powersensor_au"))
+    ]

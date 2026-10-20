@@ -22,7 +22,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: PowersensorConfigEntry) -> bool:
     """Set up integration from a config entry."""
     with_solar = ROLE_SOLAR in entry.data[CFG_ROLES].values()
-    vhh = VirtualHousehold(with_solar)
+    vhh = VirtualHousehold(with_solar, logger=_LOGGER)
     zc_instance = await zeroconf.async_get_instance(hass)
     devices = PowersensorZeroconfDevices(
         zeroconf_instance=zc_instance,
