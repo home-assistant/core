@@ -9,7 +9,14 @@ from homeassistant.helpers import config_validation as cv, storage
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
-from .classification import ClassifyImageTask, ImageLabel, Region, crop_image
+from .classification import (
+    REGION_SCHEMA,
+    ClassifyImageTask,
+    ImageLabel,
+    ImageUnusableError,
+    Region,
+    crop_image,
+)
 from .const import DATA_COMPONENT, DATA_PREFERENCES, DOMAIN, AITaskEntityFeature
 from .entity import AITaskEntity
 from .evaluation import (
@@ -40,6 +47,7 @@ from .task import (
 
 __all__ = [
     "DOMAIN",
+    "REGION_SCHEMA",
     "AITaskEntity",
     "AITaskEntityFeature",
     "ChoiceAnswer",
@@ -54,6 +62,7 @@ __all__ = [
     "GenImageTask",
     "GenImageTaskResult",
     "ImageLabel",
+    "ImageUnusableError",
     "NoulAnswer",
     "NoulQuestion",
     "Region",

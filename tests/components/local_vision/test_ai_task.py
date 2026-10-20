@@ -154,3 +154,13 @@ async def test_entity(hass: HomeAssistant, init_integration: MockConfigEntry) ->
     assert state.attributes["supported_features"] == (
         ai_task.AITaskEntityFeature.CLASSIFY_IMAGE
     )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_blank_image_is_unusable(
+    hass: HomeAssistant, media: dict[str, bytes], examples: dict[str, dict]
+) -> None:
+    """Tell callers that a blank frame has nothing to classify."""
+    media[IMAGE] = scene(car=True, seed=0, grey=True)
+    with pytest.raises(ai_task.ImageUnusableError):
+        await _classify(hass, examples)

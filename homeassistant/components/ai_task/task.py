@@ -438,11 +438,20 @@ async def async_classify_image(
     entity_id: str | None = None,
     context: Context | None = None,
 ) -> ChoiceAnswer:
-    """Classify an image by the example images of each label."""
+    """Classify an image by the example images of each label.
+
+    Examples are media sources, or image files as attachments for an
+    integration that keeps its own examples.
+    """
     image = IMAGE_SCHEMA(image)
     labels = LABELS_SCHEMA(labels)
-    examples = [example for label in labels.values() for example in label["examples"]]
-    await async_check_permissions(hass, entity_id, [image, *examples], context)
+    media = [
+        example
+        for label in labels.values()
+        for example in label["examples"]
+        if not isinstance(example, conversation.Attachment)
+    ]
+    await async_check_permissions(hass, entity_id, [image, *media], context)
     entity = _async_get_entity(
         hass,
         entity_id,
@@ -451,17 +460,22 @@ async def async_classify_image(
         None,
     )
     with async_get_chat_session(hass) as session:
-        resolved_image, *resolved_examples = await _resolve_attachments(
-            hass, session, [image, *examples]
+        resolved_image, *resolved_media = await _resolve_attachments(
+            hass, session, [image, *media]
         )
-        resolved_labels: dict[str, ImageLabel] = {}
-        for label_id, label in labels.items():
-            count = len(label["examples"])
-            resolved_labels[label_id] = ImageLabel(
-                examples=resolved_examples[:count],
+        resolved = iter(resolved_media)
+        resolved_labels = {
+            label_id: ImageLabel(
+                examples=[
+                    example
+                    if isinstance(example, conversation.Attachment)
+                    else next(resolved)
+                    for example in label["examples"]
+                ],
                 description=label.get("description"),
             )
-            resolved_examples = resolved_examples[count:]
+            for label_id, label in labels.items()
+        }
         return await entity.internal_async_classify_image(
             ClassifyImageTask(
                 name=task_name,

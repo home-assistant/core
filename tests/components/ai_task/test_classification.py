@@ -358,3 +358,63 @@ def test_crop_image(
         assert result.size == size
         pixel = result.getpixel((0, size[1] // 2))
         assert all(abs(a - b) < 16 for a, b in zip(pixel, color, strict=True))
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_attachment_examples(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    mock_media: AsyncMock,
+    mock_classify: AsyncMock,
+    tmp_path: Path,
+) -> None:
+    """Pass image files from Python without resolving or permission checks."""
+    hass_admin_user.mock_policy(
+        {
+            "entities": {
+                "entity_ids": {
+                    TEST_ENTITY_ID: {"control": True},
+                    "camera.garage": {"read": True},
+                }
+            }
+        }
+    )
+    stored = Attachment(
+        media_content_id="image_classification/frame",
+        mime_type="image/jpeg",
+        path=tmp_path / "frame.jpg",
+    )
+    labels = {**LABELS, "car": {"examples": [stored]}}
+
+    await ai_task.async_classify_image(
+        hass,
+        task_name="Bay",
+        entity_id=TEST_ENTITY_ID,
+        image=IMAGE,
+        labels=labels,
+        context=Context(user_id=hass_admin_user.id),
+    )
+
+    task = mock_classify.call_args.args[0]
+    assert task.labels["car"].examples == [stored]
+    assert len(task.labels["empty"].examples) == 2
+    assert mock_media.call_count == 3
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_attachment_examples_must_be_images(
+    hass: HomeAssistant, mock_classify: AsyncMock, tmp_path: Path
+) -> None:
+    """Reject an attached file that is not an image."""
+    clip = Attachment(
+        media_content_id="clip", mime_type="video/mp4", path=tmp_path / "clip.mp4"
+    )
+    with pytest.raises(probatio.Invalid):
+        await ai_task.async_classify_image(
+            hass,
+            task_name="Bay",
+            entity_id=TEST_ENTITY_ID,
+            image=IMAGE,
+            labels={**LABELS, "car": {"examples": [clip]}},
+        )
+    mock_classify.assert_not_called()

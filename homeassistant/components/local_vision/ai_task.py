@@ -78,7 +78,7 @@ class LocalVisionTaskEntity(ai_task.AITaskEntity):
         try:
             result = detector.classify(task.image.path.read_bytes())
         except BlankFrameError as err:
-            raise HomeAssistantError(
+            raise ai_task.ImageUnusableError(
                 translation_domain=DOMAIN, translation_key="blank_frame"
             ) from err
         except ImageError as err:

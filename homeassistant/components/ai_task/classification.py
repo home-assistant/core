@@ -9,6 +9,7 @@ from PIL import Image
 import probatio
 
 from homeassistant.components.conversation import Attachment
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
 from .evaluation import ChoiceAnswer
@@ -43,6 +44,10 @@ class ClassifyImageTask:
     instructions: str | None = None
 
 
+class ImageUnusableError(HomeAssistantError):
+    """The image shows nothing to classify, for example from an offline camera."""
+
+
 def _require_image(value: dict[str, Any]) -> dict[str, Any]:
     """Require an image media type."""
     if not value["media_content_type"].startswith("image/"):
@@ -62,6 +67,18 @@ _NONEMPTY_STRING = probatio.All(str, probatio.Length(min=1))
 IMAGE_SCHEMA = probatio.All(
     selector.MediaSelector({"accept": ["image/*"]}), _require_image
 )
+
+
+def _example(value: Any) -> dict[str, Any] | Attachment:
+    """Accept a media source of an image, or from Python an image file."""
+    if isinstance(value, Attachment):
+        if not value.mime_type.startswith("image/"):
+            raise probatio.Invalid("only images can be classified")
+        return value
+    media: dict[str, Any] = IMAGE_SCHEMA(value)
+    return media
+
+
 REGION_SCHEMA = probatio.Schema(
     probatio.All(
         {
@@ -78,9 +95,7 @@ LABELS_SCHEMA = probatio.Schema(
         {
             _NONEMPTY_STRING: {
                 probatio.Required("examples"): probatio.All(
-                    selector.MediaSelector({"accept": ["image/*"], "multiple": True}),
-                    probatio.Length(min=1),
-                    [_require_image],
+                    [_example], probatio.Length(min=1)
                 ),
                 probatio.Optional("description"): _NONEMPTY_STRING,
             }
