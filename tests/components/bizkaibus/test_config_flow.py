@@ -781,7 +781,7 @@ async def test_import_flow_adds_line_to_existing_stop(hass: HomeAssistant) -> No
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data={CONF_STOP_ID: "1234", CONF_LINE_IDS: "B"},
+            data={CONF_STOP_ID: "1234", CONF_LINE_IDS: ["B"]},
         )
 
     assert result["type"] is FlowResultType.ABORT
@@ -836,7 +836,7 @@ async def test_import_flow_aborts_for_existing_line(hass: HomeAssistant) -> None
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data={CONF_STOP_ID: "1234", CONF_LINE_IDS: "A"},
+            data={CONF_STOP_ID: "1234", CONF_LINE_IDS: ["A"]},
         )
 
     assert result["type"] is FlowResultType.ABORT
@@ -891,7 +891,7 @@ async def test_import_flow_title_connection_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data={CONF_STOP_ID: "1234", CONF_LINE_IDS: "A"},
+            data={CONF_STOP_ID: "1234", CONF_LINE_IDS: ["A"]},
         )
 
     assert result["type"] is FlowResultType.ABORT

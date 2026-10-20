@@ -192,15 +192,12 @@ async def test_sensor_ignores_unmatched_data(hass: HomeAssistant) -> None:
     assert entity.extra_state_attributes == {}
 
 
-async def test_sensor_without_config_entry_in_find_index_raises(
-    hass: HomeAssistant,
-) -> None:
-    """Test that finding a bus requires config entry data."""
+async def test_sensor_without_config_entry_in_find_index_returns_none() -> None:
+    """Test finding a bus without config entry data."""
     entity = object.__new__(sensor.BizkaibusSensor)
     entity.coordinator = Mock(config_entry=None)
 
-    with pytest.raises(ValueError, match="Config entry data is empty"):
-        entity._find_index_by_bus_id()
+    assert entity._find_index_by_bus_id() is None
 
 
 async def test_setup_entry_creates_sensors(
