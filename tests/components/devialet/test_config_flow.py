@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from aiohttp import ClientError as HTTPClientError
 from devialet.const import UrlSuffix
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.devialet.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -20,8 +21,6 @@ from . import (
     mock_playing,
     setup_integration,
 )
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_show_user_form(hass: HomeAssistant) -> None:

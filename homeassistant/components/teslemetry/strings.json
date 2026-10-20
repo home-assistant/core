@@ -158,6 +158,12 @@
       "blind_spot_collision_warning_chime": {
         "name": "Blind spot collision warning chime"
       },
+      "bluetooth": {
+        "name": "Bluetooth"
+      },
+      "bluetooth_session": {
+        "name": "Bluetooth session"
+      },
       "bms_full_charge_complete": {
         "name": "BMS full charge"
       },
@@ -349,6 +355,12 @@
       "boombox": {
         "name": "Play fart"
       },
+      "disable_keep_accessory_power_mode": {
+        "name": "Disable keep accessory power"
+      },
+      "enable_keep_accessory_power_mode": {
+        "name": "Enable keep accessory power"
+      },
       "enable_keyless_driving": {
         "name": "Keyless driving"
       },
@@ -389,7 +401,7 @@
           "preset_mode": {
             "state": {
               "camp": "Camp mode",
-              "dog": "Dog mode",
+              "dog": "Pet mode",
               "keep": "Keep mode",
               "off": "[%key:common::state::normal%]"
             }

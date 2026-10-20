@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.solaredge.const import CONF_SITE_ID, DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 from .conftest import API_KEY, PASSWORD, SITE_ID, USERNAME
-
-from tests.common import MockConfigEntry
 
 
 @patch(

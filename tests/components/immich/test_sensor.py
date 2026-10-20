@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 from aiohttp import ContentTypeError, RequestInfo
 from multidict import CIMultiDict, CIMultiDictProxy
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 from yarl import URL
 
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

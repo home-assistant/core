@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from pyseventeentrack.package import Package
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.seventeentrack.const import (
     CONF_SHOW_ARCHIVED,
@@ -13,8 +14,6 @@ from homeassistant.components.seventeentrack.const import (
     DEFAULT_SHOW_DELIVERED,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-
-from tests.common import MockConfigEntry
 
 DEFAULT_SUMMARY = {
     "Not Found": 0,

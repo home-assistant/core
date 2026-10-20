@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 from pysmartthings import Attribute, Capability, Command, SmartThingsQuotaExceededError
 from pysmartthings.models import HealthStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import automation, script
@@ -33,8 +34,6 @@ from . import (
     trigger_health_update,
     trigger_update,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_all_entities(
@@ -337,12 +336,14 @@ async def test_create_issue_with_items(
     entity_id = f"switch.{suggested_object_id}"
     issue_id = f"deprecated_switch_{issue_string}_{entity_id}"
 
+    mock_config_entry.add_to_hass(hass)
     entity_entry = entity_registry.async_get_or_create(
         SWITCH_DOMAIN,
         DOMAIN,
         f"{device_id}_{MAIN}_{Capability.SWITCH}_{Attribute.SWITCH}_{Attribute.SWITCH}",
         suggested_object_id=suggested_object_id,
         original_name=suggested_object_id,
+        config_entry=mock_config_entry,
     )
 
     assert await async_setup_component(
@@ -389,6 +390,7 @@ async def test_create_issue_with_items(
 
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
     assert issue.translation_key == f"deprecated_switch_{issue_string}_scripts"
     assert issue.translation_placeholders == {
         "entity_id": entity_id,
@@ -500,12 +502,14 @@ async def test_create_issue(
     entity_id = f"switch.{suggested_object_id}"
     issue_id = f"deprecated_switch_{issue_string}_{entity_id}"
 
+    mock_config_entry.add_to_hass(hass)
     entity_entry = entity_registry.async_get_or_create(
         SWITCH_DOMAIN,
         DOMAIN,
         f"{device_id}_{MAIN}_{Capability.SWITCH}_{Attribute.SWITCH}_{Attribute.SWITCH}",
         suggested_object_id=suggested_object_id,
         original_name=suggested_object_id,
+        config_entry=mock_config_entry,
     )
 
     await setup_integration(hass, mock_config_entry)
@@ -514,6 +518,7 @@ async def test_create_issue(
 
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
     assert issue.translation_key == f"deprecated_switch_{issue_string}"
     assert issue.translation_placeholders == {
         "entity_id": entity_id,
@@ -589,7 +594,7 @@ async def test_turn_on_without_remote_control(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Can only be updated when remote control is enabled",
+        match="Can only be changed when remote control is enabled",
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -623,7 +628,7 @@ async def test_turn_on_with_wrong_dishwasher_machine_state(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Can only be updated when dishwasher machine state is stop",
+        match="Can only be changed when the dishwasher machine state is stop",
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -657,7 +662,7 @@ async def test_turn_on_with_wrong_dishwasher_cycle(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Option is not supported by selected cycle",
+        match="Option is not supported by the selected cycle",
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,

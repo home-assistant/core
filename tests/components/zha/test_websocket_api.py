@@ -8,6 +8,8 @@ from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 from zha.application.const import (
     ATTR_CLUSTER_ID,
     ATTR_CLUSTER_TYPE,
@@ -72,9 +74,6 @@ from homeassistant.helpers import device_registry as dr
 
 from .conftest import FIXTURE_GRP_ID, FIXTURE_GRP_NAME
 from .data import BASE_CUSTOM_CONFIGURATION, CONFIG_WITH_ALARM_OPTIONS
-
-from tests.common import MockConfigEntry, MockUser
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 IEEE_SWITCH_DEVICE = "01:2d:6f:00:0a:90:69:e7"
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"

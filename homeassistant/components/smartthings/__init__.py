@@ -186,7 +186,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
     # The oauth smartthings entry will have a token, older ones are version 3
     # after migration but still require reauthentication
     if CONF_TOKEN not in entry.data:
-        raise ConfigEntryAuthFailed("Config entry missing token")
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="missing_token"
+        )
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
 
@@ -245,7 +247,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
     except SmartThingsQuotaExceededError as err:
         raise _quota_exceeded_not_ready() from err
     except (SmartThingsConnectionError, SmartThingsSinkError) as err:
-        raise ConfigEntryNotReady(f"Couldn't create a new subscription: {err}") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="create_subscription_error",
+            translation_placeholders={"error": str(err)},
+        ) from err
     subscription_id = subscription.subscription_id
     _handle_new_subscription_identifier(subscription_id)
 
@@ -349,21 +355,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             continue
         device_registry.async_remove_device(device_entry.id)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: SmartThingsConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     client = entry.runtime_data.client
     if (subscription_id := entry.data.get(CONF_SUBSCRIPTION_ID)) is not None:
         with contextlib.suppress(SmartThingsConnectionError):
             await client.delete_subscription(subscription_id)
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle config entry migration."""
 
     if entry.version < 3:
@@ -509,8 +513,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             minor_version=3,
         )
 
-    return True
-
 
 def determine_machine_type(
     hass: HomeAssistant,
@@ -585,6 +587,10 @@ def create_devices(
             kwargs[ATTR_CONNECTIONS] = {
                 (dr.CONNECTION_ZIGBEE, format_zigbee_address(zigbee.eui))
             }
+            if device.device.device_manufacturer_code:
+                kwargs.setdefault(
+                    ATTR_MANUFACTURER, device.device.device_manufacturer_code
+                )
         if (matter := device.device.matter) is not None:
             kwargs.update(
                 {

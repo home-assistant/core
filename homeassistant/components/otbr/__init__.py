@@ -44,7 +44,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> None:
     """Set up an Open Thread Border Router config entry."""
     api = python_otbr_api.OTBR(entry.data["url"], async_get_clientsession(hass), 10)
 
@@ -58,6 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool
             hass,
             DOMAIN,
             f"get_get_border_agent_id_unsupported_{otbrdata.entry_id}",
+            config_entry_id=otbrdata.entry_id,
             is_fixable=False,
             is_persistent=False,
             severity=ir.IssueSeverity.WARNING,
@@ -90,12 +91,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool
     if fw_info := await homeassistant_hardware.async_get_firmware_info(hass, entry):
         await async_notify_firmware_info(hass, DOMAIN, fw_info)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> None:
     """Unload a config entry."""
-    return True
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> None:

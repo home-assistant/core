@@ -41,7 +41,7 @@ class TelldusLiveData:
 type TelldusLiveConfigEntry = ConfigEntry[TelldusLiveData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TelldusLiveConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TelldusLiveConfigEntry) -> None:
     """Create a tellduslive session."""
     conf = entry.data[KEY_SESSION]
 
@@ -68,8 +68,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelldusLiveConfigEntry) 
         setup_task=hass.loop.create_task(async_new_client(hass, client, entry)),
     )
 
-    return True
-
 
 async def async_new_client(
     hass: HomeAssistant, client: TelldusLiveClient, entry: TelldusLiveConfigEntry
@@ -78,26 +76,28 @@ async def async_new_client(
     dev_reg = dr.async_get(hass)
     for hub in await client.async_get_hubs():
         _LOGGER.debug("Connected hub %s", hub["name"])
-        dev_reg.async_get_or_create(
+        dev_reg.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, hub["id"])},
-            manufacturer="Telldus",
-            name=hub["name"],
-            model=hub["type"],
-            sw_version=hub["version"],
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, hub["id"])},
+                manufacturer="Telldus",
+                name=hub["name"],
+                model=hub["type"],
+                sw_version=hub["version"],
+            ),
         )
     await client.update()
 
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: TelldusLiveConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     data = config_entry.runtime_data
     if not data.setup_task.done():
         data.setup_task.cancel()
     data.client.async_cancel_update()
-    return await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         config_entry, data.client.platforms
     )
 

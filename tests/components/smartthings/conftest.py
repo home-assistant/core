@@ -15,6 +15,7 @@ from pysmartthings import (
 )
 from pysmartthings.models import HealthStatus, InstalledApp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
@@ -34,8 +35,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import DEVICE_FIXTURES, get_device_response, get_device_status, get_fixture_name
-
-from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture

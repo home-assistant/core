@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from pizone import Controller, ControllerEndpoint, DiscoveryService, Zone
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.izone import discovery as izone_discovery
 from homeassistant.components.izone.const import DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.const import CONF_EXCLUDE, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

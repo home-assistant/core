@@ -14,6 +14,13 @@ from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockModule,
+    MockPlatform,
+    mock_integration,
+    mock_platform,
+)
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 from pytest_unordered import unordered
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -84,9 +91,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.util.yaml.loader import parse_yaml
-
-from tests.common import MockModule, MockPlatform, mock_integration, mock_platform
-from tests.components.recorder.common import async_wait_recording_done
 
 
 async def _create_primary_and_diagnostic_entities_in_area(
@@ -1420,6 +1424,43 @@ async def test_state_for(hass: HomeAssistant, req_state: str | list[str]) -> Non
         assert test.async_check()
 
 
+async def test_state_for_list_of_states(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test state with duration and a list of states.
+
+    The entity must stay in one of the listed states for the whole duration;
+    changing between listed states restarts the duration. This matches the
+    state trigger with a duration and a list of states.
+    """
+    config = {
+        "condition": "state",
+        "entity_id": "light.kitchen",
+        "state": ["off", "unavailable"],
+        "for": {"minutes": 5},
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    hass.states.async_set("light.kitchen", "on")
+    freezer.tick(timedelta(minutes=10))
+    assert not test.async_check()
+
+    hass.states.async_set("light.kitchen", "off")
+    freezer.tick(timedelta(minutes=4))
+    assert not test.async_check()
+    freezer.tick(timedelta(minutes=1, seconds=1))
+    assert test.async_check()
+
+    # Changing to another listed state restarts the duration
+    hass.states.async_set("light.kitchen", "unavailable")
+    freezer.tick(timedelta(minutes=4))
+    assert not test.async_check()
+    freezer.tick(timedelta(minutes=1, seconds=1))
+    assert test.async_check()
+
+
 async def test_state_for_template(hass: HomeAssistant) -> None:
     """Test state with templated duration."""
     config = {
@@ -1481,16 +1522,6 @@ async def test_state_for_invalid_template(
             id="attribute",
         ),
         pytest.param(
-            {"state": ["100", "200"]},
-            r"Cannot use 'for' with a list of states",
-            id="list_of_states",
-        ),
-        pytest.param(
-            {"state": []},
-            r"Cannot use 'for' with a list of states",
-            id="empty_list",
-        ),
-        pytest.param(
             {"state": "input_number.threshold"},
             r"Cannot use 'for' with a state referencing an entity",
             id="state_from_entity",
@@ -1500,16 +1531,19 @@ async def test_state_for_invalid_template(
             r"Cannot use 'for' with a state referencing an entity",
             id="single_item_list_from_entity",
         ),
+        pytest.param(
+            {"state": ["100", "input_number.threshold"]},
+            r"Cannot use 'for' with a state referencing an entity",
+            id="list_with_state_from_entity",
+        ),
     ],
 )
 def test_state_for_not_allowed(extra_config: dict[str, Any], error: str) -> None:
     """Test state condition rejects `for` with unsupported `state`/`attribute`.
 
-    `for` is anchored to the entity's last_changed, which reflects a single
-    current state. It therefore cannot be combined with an attribute, a list
-    that is not a single state, or a state resolved from another entity (even as
-    a single-element list). A single-element literal list behaves like the
-    scalar form (see `test_state_for`).
+    `for` is anchored to the entity's last_changed. It therefore cannot be
+    combined with an attribute or a state resolved from another entity, also
+    when that entity is one item of a list.
     """
     config = {
         "condition": "state",
@@ -5843,6 +5877,101 @@ async def test_state_condition_attr_duration_invalidation_during_load_discards_h
 
         # Stale history was discarded; the anchor is the post-dip time (now), so
         # the 5s `for:` is not yet met.
+        assert test.async_check() is False
+
+
+def _read_attr_history(
+    hass: HomeAssistant, start_time: datetime, entity_id: str
+) -> dict[str, list[State | dict[str, Any]]]:
+    """Read history the way condition priming does."""
+    return history.get_significant_states(
+        hass,
+        start_time,
+        entity_ids=[entity_id],
+        include_start_time_state=True,
+        significant_changes_only=False,
+        minimal_response=False,
+    )
+
+
+async def test_state_condition_attr_duration_overlapping_loads_latest_wins(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """When loads for an entity overlap, only the most recent one applies.
+
+    The entity leaves the target and comes back while its history loads. Its run
+    breaks while it is not tracked, which the first load's history predates, so
+    only the second load's result is accurate.
+    """
+    label_reg = lr.async_get(hass)
+    label = label_reg.async_create("Overlapping Loads")
+    entity_reg = er.async_get(hass)
+    entry = entity_reg.async_get_or_create(
+        domain="test", platform="test", unique_id="overlapping_loads"
+    )
+    entity_id = entry.entity_id
+    instance = get_instance(hass)
+
+    start = dt_util.utcnow()
+    with freeze_time(start) as freezer:
+        # Valid since t=0.
+        hass.states.async_set(entity_id, STATE_ON, {"test_attr": True})
+        await hass.async_block_till_done()
+        await async_wait_recording_done(hass)
+        stale_history = await instance.async_add_executor_job(
+            _read_attr_history, hass, start - timedelta(minutes=1), entity_id
+        )
+
+        freezer.move_to(start + timedelta(seconds=10))
+        test = await _setup_attr_state_condition_with_target(
+            hass,
+            target={ATTR_LABEL_ID: label.label_id},
+            states={True},
+            condition_options={CONF_FOR: {"seconds": 5}},
+        )
+
+        real_query = history.get_significant_states
+        stale_reads = 1
+
+        def _read(*args: Any, **kwargs: Any) -> Any:
+            # The first load's read predates the dip.
+            nonlocal stale_reads
+            if not stale_reads:
+                return real_query(*args, **kwargs)
+            stale_reads -= 1
+            return stale_history
+
+        gate: asyncio.Future[None] = hass.loop.create_future()
+        with (
+            patch.object(instance, "async_get_commit_future", return_value=gate),
+            patch(
+                "homeassistant.components.recorder.history.get_significant_states",
+                side_effect=_read,
+            ),
+        ):
+            # The first load blocks on the held flush.
+            entity_reg.async_update_entity(entity_id, labels={label.label_id})
+            await hass.async_block_till_done()
+
+            # Untracked, the entity is invalid at t=11 and valid again at t=12.
+            entity_reg.async_update_entity(entity_id, labels=set())
+            await hass.async_block_till_done()
+            freezer.move_to(start + timedelta(seconds=11))
+            hass.states.async_set(entity_id, STATE_ON, {"test_attr": False})
+            freezer.move_to(start + timedelta(seconds=12))
+            hass.states.async_set(entity_id, STATE_ON, {"test_attr": True})
+            await hass.async_block_till_done()
+            await async_wait_recording_done(hass)
+
+            # Tracked again: a second load starts while the first is in flight.
+            entity_reg.async_update_entity(entity_id, labels={label.label_id})
+            await hass.async_block_till_done()
+
+            gate.set_result(None)
+            await hass.async_block_till_done(wait_background_tasks=True)
+
+        # Valid only since t=12, not since t=0 as the first load's history says.
+        freezer.move_to(start + timedelta(seconds=15))
         assert test.async_check() is False
 
 

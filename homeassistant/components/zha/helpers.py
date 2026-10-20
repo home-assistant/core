@@ -931,15 +931,17 @@ class ZHAGatewayProxy(EventBase):
             self.device_proxies[zha_device_proxy.device.ieee] = zha_device_proxy
 
             device_registry = dr.async_get(self.hass)
-            device_registry_device = device_registry.async_get_or_create(
+            device_registry_device = device_registry.async_get_or_create_device(
                 config_entry_id=self.config_entry.entry_id,
-                connections={(dr.CONNECTION_ZIGBEE, str(zha_device.ieee))},
-                identifiers={(DOMAIN, str(zha_device.ieee))},
-                name=zha_device.name,
-                manufacturer=zha_device.manufacturer,
-                model=zha_device.model,
-                sw_version=zha_device.firmware_version,
-                via_device_id=via_device_id,
+                device_info=dr.DeviceInfo(
+                    connections={(dr.CONNECTION_ZIGBEE, str(zha_device.ieee))},
+                    identifiers={(DOMAIN, str(zha_device.ieee))},
+                    name=zha_device.name,
+                    manufacturer=zha_device.manufacturer,
+                    model=zha_device.model,
+                    sw_version=zha_device.firmware_version,
+                    via_device_id=via_device_id,
+                ),
             )
             zha_device_proxy.device_id = device_registry_device.id
             zha_device_proxy.attach_event_handlers()

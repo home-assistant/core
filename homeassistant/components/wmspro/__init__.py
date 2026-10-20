@@ -47,7 +47,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: WebControlProConfigEntry
-) -> bool:
+) -> None:
     """Set up wmspro from a config entry."""
     host = entry.data[CONF_HOST]
     session = async_get_clientsession(hass)
@@ -63,15 +63,17 @@ async def async_setup_entry(
     entry.runtime_data = hub
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
-        if entry.unique_id
-        else UNDEFINED,
-        identifiers={(DOMAIN, entry.entry_id)},
-        manufacturer=MANUFACTURER,
-        model="WMS WebControl pro",
-        configuration_url=f"http://{hub.host}/system",
+        device_info=dr.DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
+            if entry.unique_id
+            else UNDEFINED,
+            identifiers={(DOMAIN, entry.entry_id)},
+            manufacturer=MANUFACTURER,
+            model="WMS WebControl pro",
+            configuration_url=f"http://{hub.host}/system",
+        ),
     )
 
     try:
@@ -83,14 +85,12 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: WebControlProConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_entry(
