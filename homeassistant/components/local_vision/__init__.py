@@ -74,9 +74,9 @@ async def _async_load_taught_frames(
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: LocalVisionConfigEntry
-) -> None:
+) -> bool:
     """Unload a config entry."""
-    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_remove_entry(
