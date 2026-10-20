@@ -141,30 +141,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: SynologyDSMConfigEntry) 
     if TYPE_CHECKING:
         assert api.information is not None
         assert api.network is not None
-    central_device = dev_reg.async_get_or_create(
+    central_device = dev_reg.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, api.information.serial)},
-        connections={(dr.CONNECTION_NETWORK_MAC, mac) for mac in api.network.macs},
-        name=api.network.hostname,
-        manufacturer="Synology",
-        model=api.information.model,
-        sw_version=api.information.version_string,
-        configuration_url=api.config_url,
-    )
-    if api.surveillance_station is not None:
-        dev_reg.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            identifiers={
-                (
-                    DOMAIN,
-                    f"{api.information.serial}_{SynoSurveillanceStation.INFO_API_KEY}",
-                )
-            },
-            name=f"{api.network.hostname} Surveillance Station",
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, api.information.serial)},
+            connections={(dr.CONNECTION_NETWORK_MAC, mac) for mac in api.network.macs},
+            name=api.network.hostname,
             manufacturer="Synology",
             model=api.information.model,
-            sw_version=coordinator_switches.version if coordinator_switches else None,
-            via_device_id=central_device.id,
+            sw_version=api.information.version_string,
+            configuration_url=api.config_url,
+        ),
+    )
+    if api.surveillance_station is not None:
+        dev_reg.async_get_or_create_device(
+            config_entry_id=entry.entry_id,
+            device_info=dr.DeviceInfo(
+                identifiers={
+                    (
+                        DOMAIN,
+                        f"{api.information.serial}_{SynoSurveillanceStation.INFO_API_KEY}",
+                    )
+                },
+                name=f"{api.network.hostname} Surveillance Station",
+                manufacturer="Synology",
+                model=api.information.model,
+                sw_version=coordinator_switches.version
+                if coordinator_switches
+                else None,
+                via_device_id=central_device.id,
+            ),
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

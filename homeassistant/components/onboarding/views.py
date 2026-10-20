@@ -13,9 +13,12 @@ from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.providers.homeassistant import HassAuthProvider, InvalidUsername
 from homeassistant.components import person
 from homeassistant.components.auth import indieauth
-from homeassistant.components.http import KEY_HASS, KEY_HASS_REFRESH_TOKEN_ID
+from homeassistant.components.http import (
+    KEY_HASS,
+    KEY_HASS_REFRESH_TOKEN_ID,
+    HomeAssistantView,
+)
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import area_registry as ar, integration_platform
 from homeassistant.helpers.system_info import async_get_system_info
@@ -321,7 +324,11 @@ class IntegrationOnboardingView(_BaseOnboardingStepView):
 
             # Validate client ID and redirect uri
             if not await indieauth.verify_redirect_uri(
-                request.app[KEY_HASS], data["client_id"], data["redirect_uri"]
+                request.app[KEY_HASS],
+                data["client_id"],
+                data["redirect_uri"],
+                request_scheme=request.scheme,
+                request_netloc=request.host,
             ):
                 return self.json_message(
                     "invalid client id or redirect uri", HTTPStatus.BAD_REQUEST

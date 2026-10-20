@@ -1,6 +1,7 @@
 {
   "domain": "ridwell",
   "name": "Ridwell",
+  "categories": ["local_services"],
   "codeowners": ["@bachya"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ridwell",

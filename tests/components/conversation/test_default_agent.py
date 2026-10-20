@@ -10,6 +10,12 @@ from hassil.intents import Intents
 from hassil.recognize import Intent, IntentData, MatchEntity, RecognizeResult
 from home_assistant_intents import ErrorKey
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockUser,
+    async_mock_service,
+    setup_test_component_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 import yaml
 
@@ -19,6 +25,7 @@ from homeassistant.components.conversation import (
     DOMAIN,
     async_get_agent,
     default_agent,
+    gazetteer,
     get_agent_manager,
 )
 from homeassistant.components.conversation.chat_log import (
@@ -71,12 +78,6 @@ from homeassistant.setup import async_setup_component
 
 from . import expose_entity, expose_new
 
-from tests.common import (
-    MockConfigEntry,
-    MockUser,
-    async_mock_service,
-    setup_test_component_platform,
-)
 from tests.components.light.common import MockLight
 
 
@@ -3960,3 +3961,97 @@ async def test_intent_cache_is_per_device(
         assert [state.entity_id for state in result.response.matched_states] == [
             thermostats[area_name]
         ]
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_prepare_builds_what_recognition_needs(hass: HomeAssistant) -> None:
+    """Test recognition reuses everything prepare built."""
+    hass.states.async_set(
+        "light.kitchen", "off", attributes={ATTR_FRIENDLY_NAME: "Kitchen light"}
+    )
+    get_agent_manager(hass).register_trigger(
+        ["it is party time"], AsyncMock(return_value="Party")
+    )
+    agent = async_get_agent(hass)
+    assert isinstance(agent, default_agent.DefaultAgent)
+
+    with (
+        patch.object(
+            agent, "_load_intents", wraps=agent._load_intents
+        ) as mock_load_intents,
+        patch.object(
+            agent, "_get_entity_name_tuples", wraps=agent._get_entity_name_tuples
+        ) as mock_entity_names,
+        patch.object(
+            agent, "_rebuild_trigger_intents", wraps=agent._rebuild_trigger_intents
+        ) as mock_rebuild_triggers,
+        patch.object(
+            gazetteer, "async_build_home", wraps=gazetteer.async_build_home
+        ) as mock_build_home,
+        patch.object(
+            gazetteer.GazetteerFallback,
+            "async_interpret",
+            autospec=True,
+            side_effect=gazetteer.GazetteerFallback.async_interpret,
+        ) as mock_interpret,
+    ):
+        await agent.async_prepare("en")
+
+        mock_load_intents.assert_called_once_with("en")
+        # Once for the exposed names, once for the unexposed names
+        assert mock_entity_names.call_count == 2
+        mock_rebuild_triggers.assert_called_once()
+        mock_build_home.assert_called_once()
+
+        mock_load_intents.reset_mock()
+        mock_entity_names.reset_mock()
+        mock_rebuild_triggers.reset_mock()
+        mock_build_home.reset_mock()
+
+        await agent.async_prepare("en")
+        # Fails hassil, so it reaches the unexposed names and the gazetteer
+        result = await conversation.async_converse(
+            hass, "turn on the kichen light", None, Context(), "en"
+        )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    mock_interpret.assert_called_once()
+    mock_load_intents.assert_not_called()
+    mock_entity_names.assert_not_called()
+    mock_rebuild_triggers.assert_not_called()
+    mock_build_home.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_prepare_strict_intents_only(hass: HomeAssistant) -> None:
+    """Test a strict prepare skips what only the fallbacks use."""
+    hass.states.async_set(
+        "light.kitchen", "off", attributes={ATTR_FRIENDLY_NAME: "Kitchen light"}
+    )
+    get_agent_manager(hass).register_trigger(
+        ["it is party time"], AsyncMock(return_value="Party")
+    )
+    agent = async_get_agent(hass)
+    assert isinstance(agent, default_agent.DefaultAgent)
+
+    with (
+        patch.object(
+            agent, "_load_intents", wraps=agent._load_intents
+        ) as mock_load_intents,
+        patch.object(
+            agent, "_get_entity_name_tuples", wraps=agent._get_entity_name_tuples
+        ) as mock_entity_names,
+        patch.object(
+            agent, "_rebuild_trigger_intents", wraps=agent._rebuild_trigger_intents
+        ) as mock_rebuild_triggers,
+        patch.object(
+            gazetteer, "async_build_home", wraps=gazetteer.async_build_home
+        ) as mock_build_home,
+    ):
+        await conversation.async_prepare_intents(hass, "en")
+
+    mock_load_intents.assert_called_once_with("en")
+    # Only the exposed names, which strict recognition matches against
+    mock_entity_names.assert_called_once_with(exposed=True)
+    mock_rebuild_triggers.assert_called_once()
+    mock_build_home.assert_not_called()

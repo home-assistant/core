@@ -5,12 +5,11 @@ from unittest.mock import AsyncMock, patch
 
 from igloohome_api import GetDeviceInfoResponse, GetDevicesResponse, LinkedDevice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.igloohome.const import DOMAIN
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 GET_DEVICE_INFO_RESPONSE_LOCK = GetDeviceInfoResponse(
     id="123456",

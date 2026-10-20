@@ -3,13 +3,12 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components import automation
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_mock_service
 
 
 @pytest.mark.parametrize(

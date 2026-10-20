@@ -4,6 +4,11 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 from sunsynk.battery import Battery
 from sunsynk.grid import Grid
 from sunsynk.input import Input
@@ -13,12 +18,6 @@ from sunsynk.user import User
 
 from homeassistant.components.sunsynk.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-
-from tests.common import (
-    MockConfigEntry,
-    load_json_array_fixture,
-    load_json_object_fixture,
-)
 
 USERNAME = "test@example.com"
 PASSWORD = "test-password"

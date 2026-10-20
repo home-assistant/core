@@ -5,6 +5,8 @@ from datetime import UTC, datetime, timedelta, timezone
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 from switchbot import SwitchbotOperationError
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
@@ -40,9 +42,6 @@ from . import (
     WOMETERTHPC_SERVICE_INFO,
 )
 
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
-
 
 @pytest.mark.parametrize(
     ("service", "mock_method", "entity_id"),
@@ -74,7 +73,7 @@ async def test_art_frame_button_press(
         **{mock_method: mocked_instance},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         entity_ids = [
             entity.entity_id for entity in hass.states.async_all(BUTTON_DOMAIN)
@@ -128,7 +127,7 @@ async def test_meter_pro_sync_datetime_button(
         ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         entity_ids = [
             entity.entity_id for entity in hass.states.async_all(BUTTON_DOMAIN)
@@ -190,7 +189,7 @@ async def test_meter_pro_co2_sync_datetime_button_with_timezone(
         ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             BUTTON_DOMAIN,
@@ -237,7 +236,7 @@ async def test_air_purifier_buttons(
         open_light_sensitive_switch=mock_instance,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         await hass.services.async_call(
             BUTTON_DOMAIN,
@@ -366,7 +365,7 @@ async def test_lock_ultra_half_lock_button(
         half_lock=mock_instance,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         entity_ids = [
             entity.entity_id for entity in hass.states.async_all(BUTTON_DOMAIN)
@@ -398,7 +397,7 @@ async def test_lock_ultra_half_lock_button_not_registered_without_nightlatch(
         update=AsyncMock(return_value=None),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         entity_ids = [
             entity.entity_id for entity in hass.states.async_all(BUTTON_DOMAIN)

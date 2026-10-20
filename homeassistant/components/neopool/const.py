@@ -20,9 +20,14 @@ DEFAULT_SCAN_INTERVAL = 20  # in seconds
 FOLLOW_UP_REFRESH_DELAY = 2.0  # seconds  (delay before a 2nd refresh for IO entity)
 DEFAULT_PORT = 502
 DEFAULT_UNIT_ID = 1
+DEFAULT_BAUDRATE = 19200  # NeoPool's RS485 rate
 
 CONF_UNIT_ID = "unit_id"
 CONF_MODBUS_FRAMER = "modbus_framer"
+CONF_BAUDRATE = "baudrate"
+
+TYPE_TCP = "tcp"
+TYPE_SERIAL = "serial"
 
 CONF_USE_LIGHT = "use_light"
 CONF_USE_COVER_SENSOR = "use_cover_sensor"

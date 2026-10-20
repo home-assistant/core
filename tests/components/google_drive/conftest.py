@@ -5,6 +5,7 @@ import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
@@ -17,8 +18,6 @@ from homeassistant.const import UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_conversion import InformationConverter
-
-from tests.common import MockConfigEntry
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"

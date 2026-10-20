@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.marantz_rs232.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_DEVICE
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

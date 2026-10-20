@@ -6,6 +6,7 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
+      "accept_terms_failed": "Failed to accept the updated terms of service",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "send_verification_code": "Failed to send verification code",
@@ -15,6 +16,10 @@
       "user": "[%key:common::config_flow::initiate_flow::account%]"
     },
     "step": {
+      "accept_terms": {
+        "description": "Apple has updated the terms of service for your Apple Account, and access to iCloud stays blocked until they are accepted. Submit to accept the updated terms and continue; the current terms are published at {terms_url}",
+        "title": "Accept updated terms of service"
+      },
       "reauth_confirm": {
         "data": {
           "password": "[%key:component::icloud::config::step::user::data::password%]",

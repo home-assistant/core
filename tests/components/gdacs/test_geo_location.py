@@ -4,6 +4,7 @@ import datetime as dt
 from unittest.mock import patch
 
 from freezegun import freeze_time
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.gdacs.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.components.gdacs.geo_location import (
@@ -37,8 +38,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import _generate_mock_feed_entry
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 CONFIG = {CONF_RADIUS: 200}
 
