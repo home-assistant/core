@@ -6,6 +6,7 @@
       "api_unauthorized": "Could not verify your A Better Routeplanner account.",
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "cannot_connect": "Failed to connect to A Better Routeplanner.",
+      "cloud_not_enabled": "Please make sure you run Home Assistant with `{default_config}` enabled in your configuration.yaml.",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "no_vehicles": "No vehicles were found on this A Better Routeplanner account.",
@@ -71,9 +72,6 @@
     },
     "abrp_update_failed": {
       "message": "Failed to fetch vehicle data from A Better Routeplanner."
-    },
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
     "oauth2_session_not_valid": {
       "message": "The OAuth2 session is no longer valid; please re-authenticate."

@@ -36,12 +36,20 @@ class AbetterrouteplannerFlowHandler(
     @property
     @override
     def extra_authorize_data(self) -> dict[str, Any]:
-        """Extra data appended to the authorize URL.
+        """Extra data that needs to be appended to the authorize url."""
+        return {"scope": " ".join(OAUTH2_SCOPES)}
 
-        Scopes belong on the flow, not the implementation, so they still apply
-        when cloud account linking supplies the implementation.
-        """
-        return {**super().extra_authorize_data, "scope": " ".join(OAUTH2_SCOPES)}
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Check we have the cloud integration set up."""
+        if "cloud" not in self.hass.config.components:
+            return self.async_abort(
+                reason="cloud_not_enabled",
+                description_placeholders={"default_config": "default_config"},
+            )
+        return await super().async_step_user(user_input)
 
     @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:

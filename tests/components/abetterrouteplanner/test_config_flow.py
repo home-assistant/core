@@ -2,7 +2,6 @@
 
 from http import HTTPStatus
 from unittest.mock import AsyncMock
-from urllib.parse import parse_qs, urlparse
 
 from aioabrp import AbrpApiError, AbrpAuthError, AbrpVehicle
 from freezegun.api import FrozenDateTimeFactory
@@ -17,6 +16,7 @@ from homeassistant.components.abetterrouteplanner.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_entry_oauth2_flow
 
 from .conftest import (
     CLIENT_ID,
@@ -31,8 +31,6 @@ from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
-EXPECTED_SCOPE = "openid profile email offline_access"
-
 
 def _vehicle(vehicle_id: int, name: str) -> AbrpVehicle:
     """Build a typed ``AbrpVehicle`` for a config-flow garage."""
@@ -42,6 +40,12 @@ def _vehicle(vehicle_id: int, name: str) -> AbrpVehicle:
         vehicle_model=f"model:{vehicle_id}",
         paint=None,
     )
+
+
+@pytest.fixture
+def use_cloud(hass: HomeAssistant) -> None:
+    """Set up the cloud component."""
+    hass.config.components.add("cloud")
 
 
 def _mock_token_post(
@@ -60,7 +64,7 @@ def _mock_token_post(
     )
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -77,23 +81,18 @@ async def test_full_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-
-    assert result["type"] is FlowResultType.EXTERNAL_STEP
-    assert result["step_id"] == "auth"
-
-    parsed_url = urlparse(result["url"])
-    assert f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}" == (
-        OAUTH2_AUTHORIZE
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass, {"flow_id": result["flow_id"], "redirect_uri": REDIRECT_URI}
     )
 
-    parsed_query = parse_qs(parsed_url.query)
-    assert parsed_query["response_type"] == ["code"]
-    assert parsed_query["client_id"] == [CLIENT_ID]
-    assert parsed_query["redirect_uri"] == [REDIRECT_URI]
-    assert parsed_query["scope"] == [EXPECTED_SCOPE]
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert result["url"] == (
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
+        f"&redirect_uri={REDIRECT_URI}&state={state}"
+        "&scope=openid+profile+email+offline_access"
+    )
 
     await complete_oauth_callback(hass, hass_client_no_auth, result["flow_id"])
-
     _mock_token_post(aioclient_mock)
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -112,6 +111,16 @@ async def test_full_flow(
     assert data["code"] == "abcd"
 
 
+async def test_no_cloud(hass: HomeAssistant) -> None:
+    """The flow aborts when the cloud integration is not set up."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cloud_not_enabled"
+
+
 @pytest.mark.parametrize(
     ("id_token", "expected_title"),
     [
@@ -124,7 +133,7 @@ async def test_full_flow(
     ],
 )
 @pytest.mark.usefixtures(
-    "current_request_with_host", "mock_setup_entry", "mock_abrp_client"
+    "current_request_with_host", "use_cloud", "mock_setup_entry", "mock_abrp_client"
 )
 async def test_entry_title(
     hass: HomeAssistant,
@@ -147,7 +156,7 @@ async def test_entry_title(
     assert result["result"].unique_id == USER_SUB
 
 
-@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud", "mock_setup_entry")
 async def test_duplicate_entry(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -190,7 +199,7 @@ async def test_duplicate_entry(
         pytest.param(HTTPStatus.INTERNAL_SERVER_ERROR, "oauth_failed", id="5xx"),
     ],
 )
-@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud", "mock_setup_entry")
 async def test_token_endpoint_error(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -223,7 +232,7 @@ async def test_token_endpoint_error(
         ),
     ],
 )
-@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud", "mock_setup_entry")
 async def test_garage_size_decides_entry_creation(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -258,7 +267,7 @@ async def test_garage_size_decides_entry_creation(
         pytest.param("header.not-base64!.sig", id="unparsable"),
     ],
 )
-@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud", "mock_setup_entry")
 async def test_initial_add_unusable_id_token_aborts(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -304,7 +313,7 @@ async def test_initial_add_unusable_id_token_aborts(
         ),
     ],
 )
-@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud", "mock_setup_entry")
 async def test_garage_fetch_error_aborts(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
