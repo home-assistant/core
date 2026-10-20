@@ -129,7 +129,7 @@ class DaliCoordinator(DataUpdateCoordinator[dict[int, DaliGearData]]):
         previous = set(self.data or {})
         current = set(new_data)
         for address in previous - current:
-            LOGGER.warning("DALI control gear %d stopped responding", address)
+            LOGGER.info("DALI control gear %d stopped responding", address)
         for address in current - previous:
             if address in self._seen_gear:
                 LOGGER.info("DALI control gear %d is responding again", address)
