@@ -6,6 +6,7 @@ from typing import override
 
 from lighthouse_ble import PowerState
 
+from homeassistant.components.bluetooth import async_last_service_info
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -37,6 +38,15 @@ def _power_state(coordinator: SteamVRBaseStationCoordinator) -> str | None:
     return power.value
 
 
+def _rssi(coordinator: SteamVRBaseStationCoordinator) -> int | None:
+    # The manager also records advertisements the coordinator skips as unchanged.
+    if service_info := async_last_service_info(
+        coordinator.hass, coordinator.address, connectable=True
+    ):
+        return service_info.rssi
+    return None
+
+
 SENSORS: tuple[SteamVRBaseStationSensorEntityDescription, ...] = (
     SteamVRBaseStationSensorEntityDescription(
         key="power_state",
@@ -54,7 +64,7 @@ SENSORS: tuple[SteamVRBaseStationSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda coordinator: coordinator.rssi,
+        value_fn=_rssi,
     ),
 )
 
