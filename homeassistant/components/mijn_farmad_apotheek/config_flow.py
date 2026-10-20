@@ -30,7 +30,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 STEP_MFA_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_CODE): probatio.All(
-            probatio.Coerce(str), probatio.Match(r"^[0-9]{6}$")
+            probatio.Coerce(str), probatio.Match(r"^[0-9]{6}\Z")
         )
     }
 )
