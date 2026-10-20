@@ -46,6 +46,8 @@ from .const import (
     HumidifierEntityCapabilityAttribute,
     HumidifierEntityFeature,
     HumidifierEntityStateAttribute,
+    HumidifierService,
+    HumidifierServiceArgument,
 )
 from .entity import HumidifierEntity, HumidifierEntityDescription
 from .services import async_setup_services
@@ -101,6 +103,8 @@ __all__ = [
     "HumidifierEntityDescription",
     "HumidifierEntityFeature",
     "HumidifierEntityStateAttribute",
+    "HumidifierService",
+    "HumidifierServiceArgument",
 ]
 
 # mypy: disallow-any-generics
