@@ -612,23 +612,41 @@ class MatterClosure(MatterEntity, CoverEntity):
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the closure."""
-        command_kwargs: dict[str, Any] = {
-            "position": clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyOpen
-        }
-        if self._motion_latching_supported():
-            command_kwargs["latch"] = False
-        await self.send_device_command(
-            clusters.ClosureControl.Commands.MoveTo(**command_kwargs),
-            timed_request_timeout_ms=1000,
+        await self._move_closure(
+            clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyOpen,
+            clusters.ClosureControl.Enums.CurrentPositionEnum.kFullyOpened,
         )
 
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the closure."""
-        command_kwargs: dict[str, Any] = {
-            "position": clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyClosed
-        }
-        if self._motion_latching_supported():
+        await self._move_closure(
+            clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyClosed,
+            clusters.ClosureControl.Enums.CurrentPositionEnum.kFullyClosed,
+        )
+
+    async def _move_closure(
+        self,
+        target: clusters.ClosureControl.Enums.TargetPositionEnum,
+        fully_at: clusters.ClosureControl.Enums.CurrentPositionEnum,
+    ) -> None:
+        """Send MoveTo, unlatching only if currently latched and actually moving.
+
+        Spec 1.6.0 Sec. 5.4.8.2.4 only needs `latch=False` to unlatch a
+        latched closure when the move requires it. Sending it whenever
+        remote unlatching is merely supported would unlatch (and desecure,
+        per Sec. 5.4.6.5.4) a closure that's already at the requested
+        position, e.g. closing an already-closed, latched gate.
+        """
+        overall_current_state = self.get_matter_attribute_value(
+            clusters.ClosureControl.Attributes.OverallCurrentState
+        )
+        if _extract_struct_field(overall_current_state, 0, "position") == fully_at:
+            return
+        command_kwargs: dict[str, Any] = {"position": target}
+        if self._motion_latching_supported() and _extract_struct_field(
+            overall_current_state, 1, "latch"
+        ):
             command_kwargs["latch"] = False
         await self.send_device_command(
             clusters.ClosureControl.Commands.MoveTo(**command_kwargs),
@@ -664,17 +682,24 @@ class MatterClosure(MatterEntity, CoverEntity):
 
         A latched panel rejects SetTarget with InvalidInState until it's
         explicitly unlatched, so unlatch as part of the move when the panel
-        supports it (mirrors the parent's MoveTo `latch=False` above).
+        is currently latched and the move actually changes its position
+        (mirrors the parent's MoveTo `latch=False` in `_move_closure`).
         """
-        command_kwargs: dict[str, Any] = {
-            "position": _ha_position_to_percent100ths(position)
-        }
-        if _remote_unlatch_supported(
-            panel,
-            clusters.ClosureDimension.Attributes.FeatureMap,
-            clusters.ClosureDimension.Attributes.LatchControlModes,
-            clusters.ClosureDimension.Bitmaps.Feature.kMotionLatching,
-            clusters.ClosureDimension.Bitmaps.LatchControlModesBitmap.kRemoteUnlatching,
+        target_position = _ha_position_to_percent100ths(position)
+        command_kwargs: dict[str, Any] = {"position": target_position}
+        current_state = panel.get_attribute_value(
+            None, clusters.ClosureDimension.Attributes.CurrentState
+        )
+        if (
+            _extract_struct_field(current_state, 0, "position") != target_position
+            and _extract_struct_field(current_state, 1, "latch")
+            and _remote_unlatch_supported(
+                panel,
+                clusters.ClosureDimension.Attributes.FeatureMap,
+                clusters.ClosureDimension.Attributes.LatchControlModes,
+                clusters.ClosureDimension.Bitmaps.Feature.kMotionLatching,
+                clusters.ClosureDimension.Bitmaps.LatchControlModesBitmap.kRemoteUnlatching,
+            )
         ):
             command_kwargs["latch"] = False
         await self.send_device_command(

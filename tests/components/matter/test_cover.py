@@ -1071,6 +1071,17 @@ async def test_closure_cover_garage_door(
     )
     matter_client.send_device_command.reset_mock()
 
+    # the mock client doesn't simulate the device acting on the close command,
+    # so reflect it in OverallCurrentState for the open command below to see
+    # an actual move is needed (closing an already-open door is a no-op).
+    set_node_attribute(
+        matter_node,
+        1,
+        clusters.ClosureControl.id,
+        clusters.ClosureControl.Attributes.OverallCurrentState.attribute_id,
+        {0: clusters.ClosureControl.Enums.CurrentPositionEnum.kFullyClosed.value},
+    )
+
     await hass.services.async_call(
         "cover",
         "open_cover",
@@ -1185,23 +1196,15 @@ async def test_closure_cover_venetian_blinds(
     assert state.attributes["current_position"] == 0
     assert state.attributes["current_tilt_position"] == 0
 
+    # the fixture is already fully closed and latched: closing it again must
+    # not send a command, since doing so would needlessly unlatch it.
     await hass.services.async_call(
         "cover",
         "close_cover",
         {"entity_id": entity_id},
         blocking=True,
     )
-    assert matter_client.send_device_command.call_args == call(
-        node_id=matter_node.node_id,
-        endpoint_id=1,
-        # this fixture supports MotionLatching: MoveTo always specifies `latch`
-        command=clusters.ClosureControl.Commands.MoveTo(
-            position=clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyClosed,
-            latch=False,
-        ),
-        timed_request_timeout_ms=1000,
-    )
-    matter_client.send_device_command.reset_mock()
+    assert matter_client.send_device_command.call_count == 0
 
     await hass.services.async_call(
         "cover",
@@ -1351,9 +1354,9 @@ async def test_closure_cover_rotate_panel(
     assert matter_client.send_device_command.call_args == call(
         node_id=matter_node.node_id,
         endpoint_id=2,
-        command=clusters.ClosureDimension.Commands.SetTarget(
-            position=7000, latch=False
-        ),
+        # the panel's CurrentState.latch is False: not currently latched, so
+        # no `latch` kwarg is needed to unlatch it for the move.
+        command=clusters.ClosureDimension.Commands.SetTarget(position=7000),
         timed_request_timeout_ms=1000,
     )
 
@@ -1503,6 +1506,49 @@ async def test_closure_cover_gate(
         == 0
     )
 
+    # the fixture is already fully closed and latched: closing it again must
+    # not send a command, since doing so would unlatch (desecure) the gate
+    # for no reason.
+    await hass.services.async_call(
+        "cover",
+        "close_cover",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_count == 0
+
+    await hass.services.async_call(
+        "cover",
+        "open_cover",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        # this fixture supports MotionLatching (FeatureMap includes it) and
+        # is currently latched: unlatching is needed for this actual move
+        command=clusters.ClosureControl.Commands.MoveTo(
+            position=clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyOpen,
+            latch=False,
+        ),
+        timed_request_timeout_ms=1000,
+    )
+    matter_client.send_device_command.reset_mock()
+
+    # the mock client doesn't simulate the device acting on the open command,
+    # so reflect it in OverallCurrentState for the close command below to see
+    # an actual move is needed.
+    set_node_attribute(
+        matter_node,
+        1,
+        clusters.ClosureControl.id,
+        clusters.ClosureControl.Attributes.OverallCurrentState.attribute_id,
+        {
+            0: clusters.ClosureControl.Enums.CurrentPositionEnum.kFullyOpened.value,
+            1: True,
+        },
+    )
     await hass.services.async_call(
         "cover",
         "close_cover",
@@ -1512,7 +1558,6 @@ async def test_closure_cover_gate(
     assert matter_client.send_device_command.call_args == call(
         node_id=matter_node.node_id,
         endpoint_id=1,
-        # this fixture supports MotionLatching (FeatureMap includes it)
         command=clusters.ClosureControl.Commands.MoveTo(
             position=clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyClosed,
             latch=False,
