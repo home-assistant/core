@@ -398,10 +398,20 @@ def _coerce_config_value(param: Any, value: Any) -> Any:
     raise ValueError(f"Unknown config kind {kind!r}")
 
 
+def _primary_module_address(controller: Velbus, address: int) -> int:
+    """Return the canonical address for a module (first alias)."""
+    return _get_module(controller, address).get_addresses()[0]
+
+
 def _action_table_lock(
-    hass: HomeAssistant, entry_id: str, address: int, channel: int
+    hass: HomeAssistant,
+    entry_id: str,
+    controller: Velbus,
+    address: int,
+    channel: int,
 ) -> asyncio.Lock:
     """Return the lock that serializes action-table writes for one channel."""
+    address = _primary_module_address(controller, address)
     panel_data = hass.data.setdefault(DATA_PANEL, {})
     locks: dict[tuple[str, int, int], asyncio.Lock] = panel_data.setdefault(
         DATA_ACTION_LOCKS, {}
@@ -695,7 +705,7 @@ async def ws_set_channel_action(
         return
 
     lock = _action_table_lock(
-        hass, entry.entry_id, msg[CONF_ADDRESS], msg[CONF_CHANNEL]
+        hass, entry.entry_id, controller, msg[CONF_ADDRESS], msg[CONF_CHANNEL]
     )
     async with lock:
         try:
@@ -757,7 +767,7 @@ async def ws_clear_channel_action(
         return
 
     lock = _action_table_lock(
-        hass, entry.entry_id, msg[CONF_ADDRESS], msg[CONF_CHANNEL]
+        hass, entry.entry_id, controller, msg[CONF_ADDRESS], msg[CONF_CHANNEL]
     )
     async with lock:
         try:

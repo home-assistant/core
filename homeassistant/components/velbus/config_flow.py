@@ -196,9 +196,11 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
         """Step when user wants to use the VLP file."""
         step_errors: dict[str, str] = {}
         if user_input is not None:
+            finish_reconfigure = False
             if CONF_VLP_FILE not in user_input or user_input[CONF_VLP_FILE] == "":
                 # The VLP file is optional, so allow skipping it
                 self._vlp_file = None
+                finish_reconfigure = self.source == SOURCE_RECONFIGURE
             else:
                 try:
                     # handle the file upload
@@ -209,7 +211,10 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
                     await self._validate_vlp_file(self._vlp_file)
                 except InvalidVlpFile as e:
                     step_errors[CONF_VLP_FILE] = str(e)
-            if not step_errors and self.source == SOURCE_RECONFIGURE:
+                else:
+                    finish_reconfigure = self.source == SOURCE_RECONFIGURE
+
+            if finish_reconfigure and not step_errors:
                 old_entry = self._get_reconfigure_entry()
                 data = {
                     **old_entry.data,

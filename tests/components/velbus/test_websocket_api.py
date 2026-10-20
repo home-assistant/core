@@ -1,11 +1,13 @@
 """Tests for the Velbus config panel websocket API."""
 
+import asyncio
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, MockUser
 from pytest_homeassistant.typing import WebSocketGenerator
+from velbusaio.exceptions import VelbusConfigError
 
 from homeassistant.components.velbus.const import (
     CONF_ADVANCED_MODE,
@@ -13,7 +15,7 @@ from homeassistant.components.velbus.const import (
     CONF_CONFIG_ENTRY,
     DOMAIN,
 )
-from homeassistant.components.velbus.websocket_api import _get_entry
+from homeassistant.components.velbus.websocket_api import _action_table_lock, _get_entry
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -65,6 +67,35 @@ async def _ws_call(
     """Send a Velbus websocket command and return the response."""
     await client.send_json_auto_id({"type": msg_type, **payload})
     return await client.receive_json()
+
+
+PANEL_WS_COMMANDS: list[tuple[str, dict[str, Any]]] = [
+    ("velbus/config_panel/get_base_data", {}),
+    ("velbus/config_panel/modules", {}),
+    ("velbus/config_panel/module/schema", {"type_id": 40}),
+    ("velbus/config_panel/module/get", {CONF_ADDRESS: 88}),
+    (
+        "velbus/config_panel/module/config/set",
+        {CONF_ADDRESS: 88, CONF_CHANNEL: 1, "key": "name", "value": "Relay"},
+    ),
+    (
+        "velbus/config_panel/module/actions/get",
+        {CONF_ADDRESS: 88, CONF_CHANNEL: 1},
+    ),
+    (
+        "velbus/config_panel/module/actions/set",
+        {
+            CONF_ADDRESS: 88,
+            CONF_CHANNEL: 1,
+            "source_address": 1,
+            "action": "on",
+        },
+    ),
+    (
+        "velbus/config_panel/module/actions/clear",
+        {CONF_ADDRESS: 88, CONF_CHANNEL: 1, "slot": 1},
+    ),
+]
 
 
 async def test_get_base_data(
@@ -347,25 +378,64 @@ async def test_missing_config_entry(
     assert response["error"]["code"] == "not_found"
 
 
+@pytest.mark.parametrize(("msg_type", "extra"), PANEL_WS_COMMANDS)
 async def test_requires_admin(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     hass_ws_client: WebSocketGenerator,
     hass_admin_user: MockUser,
+    msg_type: str,
+    extra: dict[str, Any],
 ) -> None:
-    """Test config panel websocket commands require an admin user."""
+    """Test every config panel websocket command requires an admin user."""
     await _setup_entry(hass, config_entry, advanced_mode=True)
     hass_admin_user.groups = []
     client = await hass_ws_client(hass)
 
     response = await _ws_call(
         client,
-        "velbus/config_panel/get_base_data",
-        {CONF_CONFIG_ENTRY: config_entry.entry_id},
+        msg_type,
+        {CONF_CONFIG_ENTRY: config_entry.entry_id, **extra},
     )
 
     assert not response["success"]
     assert response["error"]["code"] == "unauthorized"
+
+
+async def test_read_commands_allow_non_advanced_mode(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test read-only panel endpoints work when advanced mode is disabled."""
+    await _setup_entry(hass, config_entry, advanced_mode=False)
+    client = await hass_ws_client(hass)
+    schema = {"type_id": 40, "sections": []}
+
+    with patch(
+        "homeassistant.components.velbus.websocket_api.get_module_type_schema",
+        return_value=schema,
+    ):
+        base = await _ws_call(
+            client,
+            "velbus/config_panel/get_base_data",
+            {CONF_CONFIG_ENTRY: config_entry.entry_id},
+        )
+        modules = await _ws_call(
+            client,
+            "velbus/config_panel/modules",
+            {CONF_CONFIG_ENTRY: config_entry.entry_id},
+        )
+        module_schema = await _ws_call(
+            client,
+            "velbus/config_panel/module/schema",
+            {CONF_CONFIG_ENTRY: config_entry.entry_id, "type_id": 40},
+        )
+
+    assert base["success"]
+    assert base["result"]["advanced_mode"] is False
+    assert modules["success"]
+    assert module_schema["success"]
 
 
 async def test_set_module_config(
@@ -509,6 +579,67 @@ async def test_set_module_config_errors(
     assert response["error"]["code"] == error_code
 
 
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        pytest.param(CONF_ADDRESS, 0, id="address_zero"),
+        pytest.param(CONF_ADDRESS, 255, id="address_above_max"),
+        pytest.param("type_id", 256, id="type_id_above_max"),
+        pytest.param(CONF_CHANNEL, 0, id="relay_channel_zero"),
+        pytest.param("slot", 256, id="slot_above_max"),
+        pytest.param("source_address", 0, id="source_address_zero"),
+    ],
+)
+async def test_schema_boundaries_reject_out_of_range(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+    field: str,
+    value: int,
+) -> None:
+    """Test probatio schema bounds for addresses, type ids, and action slots."""
+    await _setup_entry(hass, config_entry, advanced_mode=True)
+    client = await hass_ws_client(hass)
+
+    if field == "type_id":
+        msg_type = "velbus/config_panel/module/schema"
+        payload = {CONF_CONFIG_ENTRY: config_entry.entry_id, field: value}
+    elif field == "slot":
+        msg_type = "velbus/config_panel/module/actions/set"
+        payload = {
+            CONF_CONFIG_ENTRY: config_entry.entry_id,
+            CONF_ADDRESS: 88,
+            CONF_CHANNEL: 1,
+            "source_address": 1,
+            "action": "on",
+            field: value,
+        }
+    elif field == "source_address":
+        msg_type = "velbus/config_panel/module/actions/clear"
+        payload = {
+            CONF_CONFIG_ENTRY: config_entry.entry_id,
+            CONF_ADDRESS: 88,
+            CONF_CHANNEL: 1,
+            field: value,
+            "source_channel": 1,
+        }
+    elif field == CONF_CHANNEL:
+        msg_type = "velbus/config_panel/module/actions/get"
+        payload = {
+            CONF_CONFIG_ENTRY: config_entry.entry_id,
+            CONF_ADDRESS: 88,
+            CONF_CHANNEL: value,
+        }
+    else:
+        msg_type = "velbus/config_panel/module/get"
+        payload = {CONF_CONFIG_ENTRY: config_entry.entry_id, field: value}
+
+    response = await _ws_call(client, msg_type, payload)
+
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_format"
+
+
 async def test_set_module_config_mutation_failure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -539,6 +670,67 @@ async def test_set_module_config_mutation_failure(
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
     assert "eeprom write failed" in response["error"]["message"]
+
+
+async def test_set_module_config_velbus_config_error(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_module_subdevices: AsyncMock,
+    mock_relay: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test VelbusConfigError from EEPROM writes is surfaced to the client."""
+    param = _mock_config_parameter(key="name")
+    param.set_value.side_effect = VelbusConfigError("invalid eeprom value")
+    mock_relay.get_config_parameters.return_value = [param]
+    mock_module_subdevices.get_channels.return_value = {1: mock_relay}
+    await _setup_entry(hass, config_entry, advanced_mode=True)
+    client = await hass_ws_client(hass)
+
+    response = await _ws_call(
+        client,
+        "velbus/config_panel/module/config/set",
+        {
+            CONF_CONFIG_ENTRY: config_entry.entry_id,
+            CONF_ADDRESS: 88,
+            CONF_CHANNEL: 1,
+            "key": "name",
+            "value": "Relay",
+        },
+    )
+
+    assert not response["success"]
+    assert response["error"]["code"] == "home_assistant_error"
+    assert "invalid eeprom value" in response["error"]["message"]
+
+
+async def test_set_module_config_channel_not_configurable(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_module_subdevices: AsyncMock,
+    mock_relay: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test config writes fail when the channel has no EEPROM parameters."""
+    non_config_channel = MagicMock(spec=[])
+    mock_module_subdevices.get_channels.return_value = {1: non_config_channel}
+    await _setup_entry(hass, config_entry, advanced_mode=True)
+    client = await hass_ws_client(hass)
+
+    response = await _ws_call(
+        client,
+        "velbus/config_panel/module/config/set",
+        {
+            CONF_CONFIG_ENTRY: config_entry.entry_id,
+            CONF_ADDRESS: 88,
+            CONF_CHANNEL: 1,
+            "key": "name",
+            "value": "Relay",
+        },
+    )
+
+    assert not response["success"]
+    assert response["error"]["code"] == "not_found"
 
 
 async def test_get_channel_actions(
@@ -693,6 +885,77 @@ async def test_set_channel_action(
     assert response["success"]
     assert response["result"]["slot"]["slot"] == 1
     mock_relay.set_action.assert_awaited_once()
+
+
+async def test_action_table_lock_shared_for_module_aliases(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: AsyncMock,
+    mock_module_subdevices: AsyncMock,
+) -> None:
+    """Test action-table writes use one lock per module across address aliases."""
+    mock_module_subdevices.get_addresses.return_value = [88, 89]
+    await _setup_entry(hass, config_entry, advanced_mode=True)
+    velbus = controller.return_value
+
+    lock_primary = _action_table_lock(hass, config_entry.entry_id, velbus, 88, 1)
+    lock_alias = _action_table_lock(hass, config_entry.entry_id, velbus, 89, 1)
+
+    assert lock_primary is lock_alias
+
+
+async def test_action_table_writes_serialized_across_module_aliases(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_module_subdevices: AsyncMock,
+    mock_relay: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test concurrent writes via different aliases share the action-table lock."""
+    mock_module_subdevices.get_addresses.return_value = [88, 89]
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def slow_set_action(**_kwargs: Any) -> MagicMock:
+        started.set()
+        await release.wait()
+        return _mock_action_slot(slot=1)
+
+    mock_relay.set_action = AsyncMock(side_effect=slow_set_action)
+    mock_module_subdevices.get_channels.return_value = {1: mock_relay}
+    await _setup_entry(hass, config_entry, advanced_mode=True)
+    primary_client = await hass_ws_client(hass)
+    alias_client = await hass_ws_client(hass)
+
+    payload = {
+        CONF_CONFIG_ENTRY: config_entry.entry_id,
+        CONF_CHANNEL: 1,
+        "source_address": 1,
+        "action": "on",
+    }
+
+    first = asyncio.create_task(
+        _ws_call(
+            primary_client,
+            "velbus/config_panel/module/actions/set",
+            {**payload, CONF_ADDRESS: 88},
+        )
+    )
+    await started.wait()
+
+    second = asyncio.create_task(
+        _ws_call(
+            alias_client,
+            "velbus/config_panel/module/actions/set",
+            {**payload, CONF_ADDRESS: 89},
+        )
+    )
+    await asyncio.sleep(0)
+    assert mock_relay.set_action.await_count == 1
+
+    release.set()
+    await asyncio.gather(first, second)
+    assert mock_relay.set_action.await_count == 2
 
 
 async def test_set_channel_action_requires_advanced_mode(
@@ -1139,6 +1402,38 @@ async def test_set_channel_action_write_failure(
     assert "eeprom write failed" in response["error"]["message"]
 
 
+async def test_set_channel_action_velbus_config_error(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_module_subdevices: AsyncMock,
+    mock_relay: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test VelbusConfigError from action programming is surfaced to the client."""
+    mock_relay.set_action = AsyncMock(
+        side_effect=VelbusConfigError("action table full")
+    )
+    mock_module_subdevices.get_channels.return_value = {1: mock_relay}
+    await _setup_entry(hass, config_entry, advanced_mode=True)
+    client = await hass_ws_client(hass)
+
+    response = await _ws_call(
+        client,
+        "velbus/config_panel/module/actions/set",
+        {
+            CONF_CONFIG_ENTRY: config_entry.entry_id,
+            CONF_ADDRESS: 88,
+            CONF_CHANNEL: 1,
+            "source_address": 1,
+            "action": "on",
+        },
+    )
+
+    assert not response["success"]
+    assert response["error"]["code"] == "home_assistant_error"
+    assert "action table full" in response["error"]["message"]
+
+
 async def test_clear_channel_action_relay_not_found(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -1192,3 +1487,34 @@ async def test_clear_channel_action_write_failure(
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
     assert "eeprom clear failed" in response["error"]["message"]
+
+
+async def test_clear_channel_action_velbus_config_error(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_module_subdevices: AsyncMock,
+    mock_relay: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test VelbusConfigError from action clears is surfaced to the client."""
+    mock_relay.clear_action = AsyncMock(
+        side_effect=VelbusConfigError("slot not programmed")
+    )
+    mock_module_subdevices.get_channels.return_value = {1: mock_relay}
+    await _setup_entry(hass, config_entry, advanced_mode=True)
+    client = await hass_ws_client(hass)
+
+    response = await _ws_call(
+        client,
+        "velbus/config_panel/module/actions/clear",
+        {
+            CONF_CONFIG_ENTRY: config_entry.entry_id,
+            CONF_ADDRESS: 88,
+            CONF_CHANNEL: 1,
+            "slot": 1,
+        },
+    )
+
+    assert not response["success"]
+    assert response["error"]["code"] == "home_assistant_error"
+    assert "slot not programmed" in response["error"]["message"]
