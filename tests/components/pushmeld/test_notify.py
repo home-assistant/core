@@ -250,7 +250,7 @@ async def test_config_entry_registers_and_unloads_notification_service(
     assert not hass.services.has_service(NOTIFY_DOMAIN, "test_channel")
 
 
-async def test_unload_during_notification_setup_does_not_register_service(
+async def test_entry_setup_waits_for_notification_registration(
     hass: HomeAssistant,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -283,11 +283,17 @@ async def test_unload_during_notification_setup_does_not_register_service(
     )
     entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(entry.entry_id)
+    setup_task = asyncio.create_task(hass.config_entries.async_setup(entry.entry_id))
     await setup_started.wait()
 
-    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert not setup_task.done()
     release_setup.set()
+    assert await setup_task
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(NOTIFY_DOMAIN, "test_channel")
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     assert not hass.services.has_service(NOTIFY_DOMAIN, "test_channel")
@@ -300,8 +306,8 @@ async def test_reload_during_notification_setup_does_not_register_stale_service(
     """Do not retain a stale service when an entry reloads during setup."""
     old_setup_started = asyncio.Event()
     new_setup_started = asyncio.Event()
-    unload_started = asyncio.Event()
     release_old_setup = asyncio.Event()
+    release_new_setup = asyncio.Event()
     setup_count = 0
     original_setup = notify.PushMeldNotificationService.async_setup
 
@@ -318,6 +324,7 @@ async def test_reload_during_notification_setup_does_not_register_stale_service(
             await release_old_setup.wait()
         else:
             new_setup_started.set()
+            await release_new_setup.wait()
         await original_setup(
             service, setup_hass, service_name, target_service_name_prefix
         )
@@ -334,22 +341,19 @@ async def test_reload_during_notification_setup_does_not_register_stale_service(
     )
     entry.add_to_hass(hass)
 
-    def on_state_change() -> None:
-        """Record when the config entry starts unloading."""
-        if entry.state is ConfigEntryState.UNLOAD_IN_PROGRESS:
-            unload_started.set()
-
-    entry.async_on_state_change(on_state_change)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
+    setup_task = asyncio.create_task(hass.config_entries.async_setup(entry.entry_id))
     await old_setup_started.wait()
+    assert not setup_task.done()
+    release_old_setup.set()
+    assert await setup_task
+    await hass.async_block_till_done()
+    assert hass.services.has_service(NOTIFY_DOMAIN, "test_channel")
 
     reload_task = asyncio.create_task(hass.config_entries.async_reload(entry.entry_id))
-    await unload_started.wait()
-    release_old_setup.set()
-
-    assert await reload_task
     await new_setup_started.wait()
+    assert not hass.services.has_service(NOTIFY_DOMAIN, "test_channel")
+    release_new_setup.set()
+    assert await reload_task
     await hass.async_block_till_done()
 
     assert hass.services.has_service(NOTIFY_DOMAIN, "test_channel")

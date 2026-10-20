@@ -41,7 +41,7 @@ async def test_user_flow_rejects_empty_maxcode(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_MAXCODE: ""},
+        user_input={CONF_MAXCODE: "   "},
     )
 
     assert result["type"] is FlowResultType.FORM
