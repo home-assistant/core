@@ -85,17 +85,39 @@ async def test_calendar_snapshot(
 
 
 @pytest.mark.parametrize(
-    ("now", "expected_state", "has_event"),
+    ("now", "expected_state", "direction", "expected_message"),
     [
-        pytest.param("2026-09-11T16:59:59Z", STATE_OFF, True, id="before"),
-        pytest.param("2026-09-11T17:00:00Z", STATE_ON, True, id="start"),
-        pytest.param("2026-09-11T17:30:00Z", STATE_ON, True, id="during"),
-        pytest.param("2026-09-11T18:00:00Z", STATE_OFF, False, id="end"),
-        pytest.param("2026-09-11T18:00:01Z", STATE_OFF, False, id="after"),
+        pytest.param(
+            "2026-09-11T16:59:59Z", STATE_OFF, "import", "Import", id="before-import"
+        ),
+        pytest.param(
+            "2026-09-11T16:59:59Z", STATE_OFF, "export", "Export", id="before-export"
+        ),
+        pytest.param(
+            "2026-09-11T17:00:00Z", STATE_ON, "import", "Import", id="start-import"
+        ),
+        pytest.param(
+            "2026-09-11T17:00:00Z", STATE_ON, "export", "Export", id="start-export"
+        ),
+        pytest.param(
+            "2026-09-11T17:30:00Z", STATE_ON, "import", "Import", id="during-import"
+        ),
+        pytest.param(
+            "2026-09-11T17:30:00Z", STATE_ON, "export", "Export", id="during-export"
+        ),
+        pytest.param(
+            "2026-09-11T18:00:00Z", STATE_OFF, "import", None, id="end-import"
+        ),
+        pytest.param(
+            "2026-09-11T18:00:00Z", STATE_OFF, "export", None, id="end-export"
+        ),
+        pytest.param(
+            "2026-09-11T18:00:01Z", STATE_OFF, "import", None, id="after-import"
+        ),
+        pytest.param(
+            "2026-09-11T18:00:01Z", STATE_OFF, "export", None, id="after-export"
+        ),
     ],
-)
-@pytest.mark.parametrize(
-    ("direction", "summary"), [("import", "Import"), ("export", "Export")]
 )
 async def test_current_event(
     hass: HomeAssistant,
@@ -105,9 +127,8 @@ async def test_current_event(
     freezer: FrozenDateTimeFactory,
     now: str,
     expected_state: str,
-    has_event: bool,
     direction: Literal["import", "export"],
-    summary: str,
+    expected_message: str | None,
 ) -> None:
     """Only current and upcoming events appear in the calendar state."""
     freezer.move_to(now)
@@ -117,7 +138,7 @@ async def test_current_event(
     await setup(hass, mock_config_entry)
     state = hass.states.get(ENTITY_ID)
     assert state.state == expected_state
-    assert state.attributes.get("message") == (summary if has_event else None)
+    assert state.attributes.get("message") == expected_message
     assert hass.states.get("sensor.axle_energy_event_type").state == direction
 
 
@@ -190,7 +211,13 @@ async def test_empty_range(
 
 
 @pytest.mark.freeze_time("2026-09-11T16:59:00Z")
-@pytest.mark.parametrize("opted_out", [False, None])
+@pytest.mark.parametrize(
+    "opted_out",
+    [
+        pytest.param(False, id="opted-in"),
+        pytest.param(None, id="unknown-participation"),
+    ],
+)
 async def test_empty_schedule(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
