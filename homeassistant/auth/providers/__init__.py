@@ -2,6 +2,7 @@
 
 from collections.abc import Mapping
 import logging
+import time
 import types
 from typing import Any, override
 
@@ -14,7 +15,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowHandler
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.importlib import async_import_module
-from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
 from homeassistant.util.hass_dict import HassKey
 
@@ -207,7 +207,7 @@ class LoginFlow[_AuthProviderT: AuthProvider = AuthProvider](
         """Initialize the login flow."""
         self._auth_provider = auth_provider
         self._auth_manager = auth_provider.hass.auth
-        self.created_at = dt_util.utcnow()
+        self.created_at = time.monotonic()
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -308,8 +308,10 @@ class MfaLoginFlow[_AuthProviderT: AuthProvider = AuthProvider](
                 return self.async_abort(reason="unknown_error")
 
         if user_input is not None:
-            expires = self.created_at + MFA_SESSION_EXPIRATION
-            if dt_util.utcnow() > expires:
+            if (
+                time.monotonic() - self.created_at
+                > MFA_SESSION_EXPIRATION.total_seconds()
+            ):
                 return self.async_abort(reason="login_expired")
 
             result = await auth_module.async_validate(self.user.id, user_input)

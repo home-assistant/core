@@ -5,6 +5,7 @@ from collections import OrderedDict
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 from functools import partial
+from ipaddress import IPv4Address, IPv6Network
 import logging
 import time
 from typing import Any, cast, override
@@ -34,6 +35,7 @@ from .const import (
     LOGIN_FLOW_EVICTION_INTERVAL,
     LOGIN_FLOW_EXPIRATION,
     MAX_LOGIN_FLOWS,
+    MAX_LOGIN_FLOWS_PER_SOURCE,
     REFRESH_TOKEN_EXPIRATION,
 )
 from .mfa_modules import MultiFactorAuthModule, auth_mfa_module_from_config
@@ -122,6 +124,39 @@ async def auth_manager_from_config(
     return manager
 
 
+@callback
+def _async_login_flow_source(
+    context: AuthFlowContext | None,
+) -> IPv4Address | IPv6Network | None:
+    """Return the source a login flow counts toward.
+
+    IPv6 addresses are grouped by their /64 network, which a client usually has
+    all of to pick addresses from.
+    """
+    if context is None or (address := context.get("ip_address")) is None:
+        return None
+    if isinstance(address, IPv4Address):
+        return address
+    if (mapped := address.ipv4_mapped) is not None:
+        return mapped
+    return IPv6Network((address, 64), strict=False)
+
+
+@callback
+def _async_login_flow_evictable(flow: FlowHandler[Any, Any, Any]) -> bool:
+    """Return if a login flow may be evicted to make room for a new one.
+
+    Flows waiting for MFA passed a password check, so a flood can't create them.
+    """
+    return not isinstance(flow, MfaLoginFlow) or flow.user is None
+
+
+@callback
+def _async_login_flow_expired(flow: LoginFlow[Any], now: float) -> bool:
+    """Return if a login flow is too old to continue."""
+    return now - flow.created_at > LOGIN_FLOW_EXPIRATION.total_seconds()
+
+
 class AuthManagerFlowManager(
     FlowManager[AuthFlowContext, AuthFlowResult, tuple[str, str]]
 ):
@@ -133,7 +168,7 @@ class AuthManagerFlowManager(
         """Init auth manager flows."""
         super().__init__(hass)
         self.auth_manager = auth_manager
-        self._next_eviction = dt_util.utcnow()
+        self._next_eviction = 0.0
 
     @override
     async def async_create_flow(
@@ -151,26 +186,40 @@ class AuthManagerFlowManager(
             context or AuthFlowContext()
         ):
             raise UnknownHandler
-        now = dt_util.utcnow()
-        expired = now - LOGIN_FLOW_EXPIRATION
+        now = time.monotonic()
         for flow in list(self._progress.values()):
-            if cast(LoginFlow, flow).created_at < expired:
+            if _async_login_flow_expired(cast(LoginFlow, flow), now):
                 self.async_abort(flow.flow_id)
-        if len(self._progress) >= MAX_LOGIN_FLOWS:
-            # Flows waiting for MFA passed a password check, so a flood can't
-            # create them. Evicting at most one other flow per interval lets new
-            # logins in without pushing out the ones in progress.
-            evictable = next(
-                (
-                    flow
-                    for flow in self._progress.values()
-                    if not isinstance(flow, MfaLoginFlow) or flow.user is None
-                ),
-                None,
-            )
-            if evictable is None or now < self._next_eviction:
+
+        source = _async_login_flow_source(context)
+        source_flows = [
+            flow
+            for flow in self._progress.values()
+            if _async_login_flow_source(flow.context) == source
+        ]
+        if len(source_flows) >= MAX_LOGIN_FLOWS_PER_SOURCE:
+            # A source at its limit only pushes out its own oldest flow, so a
+            # flood from one place can't take away anybody else's login.
+            evictable = next(filter(_async_login_flow_evictable, source_flows), None)
+            if evictable is None:
                 raise TooManyRequestsError
-            self._next_eviction = now + LOGIN_FLOW_EVICTION_INTERVAL
+            self.async_abort(evictable.flow_id)
+        elif len(self._progress) >= MAX_LOGIN_FLOWS:
+            # Only a flood from many sources gets here. Evicting at most one
+            # flow per interval, from the source with the most, lets new logins
+            # in without pushing out the ones in progress.
+            evictable_by_source: dict[
+                IPv4Address | IPv6Network | None, list[FlowHandler[Any, Any, Any]]
+            ] = {}
+            for flow in filter(_async_login_flow_evictable, self._progress.values()):
+                evictable_by_source.setdefault(
+                    _async_login_flow_source(flow.context), []
+                ).append(flow)
+            largest = max(evictable_by_source.values(), key=len, default=None)
+            if largest is None or now < self._next_eviction:
+                raise TooManyRequestsError
+            evictable = largest[0]
+            self._next_eviction = now + LOGIN_FLOW_EVICTION_INTERVAL.total_seconds()
             self.async_abort(evictable.flow_id)
         return await auth_provider.async_login_flow(context)
 
@@ -179,9 +228,9 @@ class AuthManagerFlowManager(
         self, flow_id: str, user_input: dict | None = None
     ) -> AuthFlowResult:
         """Continue a login flow unless it has expired."""
-        if (flow := self._progress.get(flow_id)) is not None and cast(
-            LoginFlow, flow
-        ).created_at < dt_util.utcnow() - LOGIN_FLOW_EXPIRATION:
+        if (flow := self._progress.get(flow_id)) is not None and (
+            _async_login_flow_expired(cast(LoginFlow, flow), time.monotonic())
+        ):
             self.async_abort(flow_id)
         return await super().async_configure(flow_id, user_input)
 
