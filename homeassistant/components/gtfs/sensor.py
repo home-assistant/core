@@ -404,6 +404,7 @@ def get_next_departure(
     for key in sorted(timetable.keys()):
         if (value := dt_util.parse_datetime(key)) is not None and value > now:
             item = timetable[key]
+            item_date = value
             _LOGGER.debug(
                 "Departure found for station %s @ %s -> %s", start_station_id, key, item
             )
@@ -414,7 +415,7 @@ def get_next_departure(
 
     # Format arrival and departure dates and times, accounting for the
     # possibility of times crossing over midnight.
-    origin_arrival = now
+    origin_arrival = item_date
     if item["origin_arrival_time"] > item["origin_depart_time"]:
         origin_arrival -= dt.timedelta(days=1)
     origin_arrival_time = (
@@ -422,9 +423,11 @@ def get_next_departure(
         f"{item['origin_arrival_time']}"
     )
 
-    origin_depart_time = f"{now_date} {item['origin_depart_time']}"
+    origin_depart_time = (
+        f"{item_date.strftime(dt_util.DATE_STR_FORMAT)} {item['origin_depart_time']}"
+    )
 
-    dest_arrival = now
+    dest_arrival = item_date
     if item["dest_arrival_time"] < item["origin_depart_time"]:
         dest_arrival += dt.timedelta(days=1)
     dest_arrival_time = (

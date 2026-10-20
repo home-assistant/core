@@ -108,6 +108,18 @@ async def test_sensor(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
             id="include_tomorrow_before_last",
         ),
         pytest.param(
+            "2026-10-19 18:00:00-04:00",
+            {**DAY_ROUTE, "include_tomorrow": True},
+            DAY_ENTITY_ID,
+            "2026-10-20T12:00:00+00:00",
+            {
+                "day": "tomorrow",
+                "first": True,
+                "arrival": "2026-10-20T12:20:00+00:00",
+            },
+            id="include_tomorrow_after_last",
+        ),
+        pytest.param(
             "2026-10-20 00:15:00-04:00",
             NIGHT_ROUTE,
             NIGHT_ENTITY_ID,
