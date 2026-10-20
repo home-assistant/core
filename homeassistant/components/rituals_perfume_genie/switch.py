@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import RitualsConfigEntry, RitualsHubsCoordinator
-from .entity import DiffuserEntity
+from .entity import DiffuserEntity, rituals_action
 
 PARALLEL_UPDATES = 1
 
@@ -84,6 +84,7 @@ class RitualsSwitchEntity(DiffuserEntity, SwitchEntity):
         self._attr_is_on = description.is_on_fn(self.hub)
 
     @override
+    @rituals_action
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.entity_description.turn_on_fn(self.coordinator.client, self.hub.hash)
@@ -91,6 +92,7 @@ class RitualsSwitchEntity(DiffuserEntity, SwitchEntity):
         self.async_write_ha_state()
 
     @override
+    @rituals_action
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.entity_description.turn_off_fn(

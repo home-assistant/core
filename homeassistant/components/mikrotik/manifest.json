@@ -1,6 +1,10 @@
 {
   "domain": "mikrotik",
   "name": "MikroTik",
+  "categories": [
+    "computers_network.routers_network",
+    "presence_location.network_presence"
+  ],
   "codeowners": ["@engrbm87", "@chemelli74"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/mikrotik",

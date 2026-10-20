@@ -30,7 +30,7 @@ from homeassistant.components.plex.services import (
 )
 from homeassistant.const import CONF_URL, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, SECONDARY_DATA
 
@@ -204,7 +204,7 @@ async def test_search_service(
     assert all(x["media_type"] == "movie" for x in result["results"])
 
     # Test with non-existent library
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SEARCH,
@@ -212,6 +212,9 @@ async def test_search_service(
             blocking=True,
             return_response=True,
         )
+    assert exc_info.value.translation_key == "library_not_found"
+    assert exc_info.value.translation_placeholders["library"] == "Not a Library"
+    assert "Movies" in exc_info.value.translation_placeholders["libraries"]
 
     # Test with non-existent server
     with pytest.raises(HomeAssistantError):
@@ -267,7 +270,7 @@ async def test_search_service(
     assert result["results"][0]["media_type"] == "show"
 
     # Test filters without a library
-    with pytest.raises(HomeAssistantError, match="'library_name' is required"):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SEARCH,
@@ -275,6 +278,7 @@ async def test_search_service(
             blocking=True,
             return_response=True,
         )
+    assert exc_info.value.translation_key == "library_required"
 
     # Test a call without any search criteria
     with pytest.raises(probatio.Invalid):

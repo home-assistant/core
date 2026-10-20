@@ -17,7 +17,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .const import (
     DOMAIN,
@@ -201,7 +201,9 @@ def search_plex_media(hass: HomeAssistant, service_call: ServiceCall) -> dict[st
                 filters.setdefault("title", query)
             results = _search_library(plex_server, library_name, media_type, filters)
         elif filters:
-            raise HomeAssistantError("'library_name' is required to use filters")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="library_required"
+            )
         else:
             results = find_media(plex_server, query, media_type, fuzzy=fuzzy)
     except NotFound, MediaNotFound:
@@ -256,8 +258,13 @@ def _search_library(
         library_section = plex_server.library.section(library_name)
     except NotFound as err:
         library_names = [x.title for x in plex_server.library.sections()]
-        raise HomeAssistantError(
-            f"Library '{library_name}' not found in {library_names}"
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="library_not_found",
+            translation_placeholders={
+                "library": library_name,
+                "libraries": ", ".join(library_names),
+            },
         ) from err
     search_options: dict[str, Any] = {**filters, "allow_multiple": True}
     if media_type:

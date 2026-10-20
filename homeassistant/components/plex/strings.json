@@ -57,6 +57,14 @@
       }
     }
   },
+  "exceptions": {
+    "library_not_found": {
+      "message": "The Plex library {library} was not found. Choose one of: {libraries}."
+    },
+    "library_required": {
+      "message": "A library name is required to search with filters."
+    }
+  },
   "options": {
     "step": {
       "plex_mp_settings": {

@@ -50,12 +50,23 @@ class RitualsRuntimeData:
 def _update_failed(err: RitualsGenieError) -> Exception:
     """Return the exception a coordinator raises for a library error."""
     if isinstance(err, RitualsGenieAuthenticationError):
-        return ConfigEntryAuthFailed(err)
+        return ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="authentication_failed"
+        )
 
     if isinstance(err, RitualsGenieRateLimitError):
-        return UpdateFailed(str(err), retry_after=err.retry_after)
+        return UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="rate_limited",
+            retry_after=err.retry_after,
+        )
 
-    return UpdateFailed(str(err))
+    # The coordinator logs this message, so the error of the library is kept.
+    return UpdateFailed(
+        translation_domain=DOMAIN,
+        translation_key="update_failed",
+        translation_placeholders={"error": str(err)},
+    )
 
 
 class RitualsHubsCoordinator(DataUpdateCoordinator[dict[str, RitualsGenieHub]]):
@@ -177,7 +188,11 @@ class RitualsSensorsCoordinator(DataUpdateCoordinator[RitualsGenieSensors | None
     async def _async_update_data(self) -> RitualsGenieSensors | None:
         """Fetch the sensor readings from Rituals."""
         if (hub := self.hubs.data.get(self.hublot)) is None:
-            raise UpdateFailed(f"Diffuser {self.hublot} is no longer on the account")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="diffuser_not_found",
+                translation_placeholders={"hublot": self.hublot},
+            )
 
         client = self.hubs.client
         previous = self.data
