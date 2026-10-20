@@ -3,12 +3,7 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.valve import ATTR_IS_CLOSED, DOMAIN, ValveState
-from homeassistant.components.valve.trigger import TRIGGERS
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     TargetSupport,
     TriggerStateDescription,
     assert_trigger_behavior_all,
@@ -20,6 +15,10 @@ from tests.components.common import (
     parametrize_trigger_states,
     target_entities,
 )
+
+from homeassistant.components.valve import ATTR_IS_CLOSED, DOMAIN, ValveState
+from homeassistant.components.valve.trigger import TRIGGERS
+from homeassistant.core import HomeAssistant
 
 TRIGGER_STATES = [
     *parametrize_trigger_states(

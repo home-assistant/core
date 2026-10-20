@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 import re
 import secrets
+import struct
 from time import monotonic
 from typing import Any, Final, Protocol
 
@@ -44,7 +45,7 @@ from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import UNDEFINED, ConfigType
 from homeassistant.util import language as language_util, ulid as ulid_util
 
-from .const import (  # noqa: F401
+from .const import (
     ATTR_CACHE,
     ATTR_LANGUAGE,
     ATTR_MEDIA_PLAYER_ENTITY_ID,
@@ -72,6 +73,7 @@ from .services import async_setup_services
 
 __all__ = [
     "ATTR_AUDIO_OUTPUT",
+    "ATTR_MEDIA_PLAYER_ENTITY_ID",
     "ATTR_PREFERRED_BITRATE",
     "ATTR_PREFERRED_FORMAT",
     "ATTR_PREFERRED_SAMPLE_BYTES",
@@ -79,11 +81,14 @@ __all__ = [
     "ATTR_PREFERRED_SAMPLE_RATE",
     "CONF_LANG",
     "DEFAULT_CACHE_DIR",
+    "DOMAIN",
     "PLATFORM_SCHEMA",
     "PLATFORM_SCHEMA_BASE",
+    "SERVICE_CLEAR_CACHE",
     "Provider",
     "ResultStream",
     "SampleFormat",
+    "TTSAudioRequest",
     "TTSAudioResponse",
     "TextToSpeechEntity",
     "TtsAudioType",
@@ -91,6 +96,7 @@ __all__ = [
     "async_default_engine",
     "async_get_media_source_audio",
     "generate_media_source_id",
+    "get_engine_instance",
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -111,6 +117,18 @@ _PREFFERED_FORMAT_OPTIONS: Final[set[str]] = {
     ATTR_PREFERRED_SAMPLE_CHANNELS,
     ATTR_PREFERRED_SAMPLE_BYTES,
     ATTR_PREFERRED_BITRATE,
+}
+
+# Streaming WAV sources write a header before the sample rate and length of the
+# audio are known, so the data chunk size is left as a placeholder.
+_WAV_STREAMING_DATA_SIZES: Final[set[int]] = {0, 0xFFFFFFFF}
+_WAV_FORMAT_PCM: Final = 1
+_WAV_HEADER_MAX_BYTES: Final = 4096
+_WAV_PCM_FFMPEG_FORMATS: Final[dict[int, str]] = {
+    8: "u8",  # 8-bit WAV samples are unsigned
+    16: "s16le",
+    24: "s24le",
+    32: "s32le",
 }
 
 CONF_LANG = "language"
@@ -308,6 +326,110 @@ def async_get_text_to_speech_languages(hass: HomeAssistant) -> set[str]:
     return languages
 
 
+class _IncompleteWavHeader(Exception):
+    """Error to indicate more data is needed to parse a WAV header."""
+
+
+@dataclass(frozen=True)
+class _StreamingPcmInfo:
+    """Sample format of a streaming WAV source."""
+
+    ffmpeg_format: str
+    sample_rate: int
+    sample_channels: int
+
+    # Audio that was read past the end of the WAV header.
+    leftover: bytes
+
+
+def _parse_streaming_wav_header(header: bytes) -> _StreamingPcmInfo | None:
+    """Parse the header of a streaming WAV source.
+
+    Returns None if the audio cannot be fed to ffmpeg as raw samples, and raises
+    _IncompleteWavHeader if more data is needed to decide.
+    """
+    if len(header) < 12:
+        raise _IncompleteWavHeader
+    if header[0:4] != b"RIFF" or header[8:12] != b"WAVE":
+        return None
+
+    bits_per_sample: int | None = None
+    sample_rate = 0
+    sample_channels = 0
+    pos = 12
+
+    while True:
+        if len(header) < pos + 8:
+            raise _IncompleteWavHeader
+
+        chunk_id = header[pos : pos + 4]
+        (chunk_size,) = struct.unpack_from("<I", header, pos + 4)
+        chunk_start = pos + 8
+
+        if chunk_id == b"data":
+            # A known size means chunks may follow the audio, which would be fed
+            # to ffmpeg as if they were samples.
+            if bits_per_sample is None or chunk_size not in _WAV_STREAMING_DATA_SIZES:
+                return None
+            if (
+                ffmpeg_format := _WAV_PCM_FFMPEG_FORMATS.get(bits_per_sample)
+            ) is None or not (sample_rate and sample_channels):
+                return None
+            return _StreamingPcmInfo(
+                ffmpeg_format=ffmpeg_format,
+                sample_rate=sample_rate,
+                sample_channels=sample_channels,
+                leftover=header[chunk_start:],
+            )
+
+        if len(header) < chunk_start + chunk_size:
+            raise _IncompleteWavHeader
+
+        if chunk_id == b"fmt ":
+            if chunk_size < 16:
+                return None
+            format_tag, sample_channels, sample_rate, _byte_rate, _align, bits = (
+                struct.unpack_from("<HHIIHH", header, chunk_start)
+            )
+            if format_tag != _WAV_FORMAT_PCM:
+                return None
+            bits_per_sample = bits
+
+        # Chunks are word aligned.
+        pos = chunk_start + chunk_size + (chunk_size % 2)
+
+
+async def _async_read_streaming_wav_header(
+    audio_input: AsyncGenerator[bytes],
+) -> tuple[_StreamingPcmInfo | None, bytes]:
+    """Read a streaming WAV header from a generator.
+
+    Returns the sample format, if usable, and everything read from the generator.
+    """
+    buffer = b""
+    async for chunk in audio_input:
+        buffer += chunk
+        try:
+            if (pcm_info := _parse_streaming_wav_header(buffer)) is not None:
+                return pcm_info, buffer
+        except _IncompleteWavHeader:
+            if len(buffer) <= _WAV_HEADER_MAX_BYTES:
+                continue
+        return None, buffer
+
+    return None, buffer
+
+
+async def _async_prepend_audio(
+    prefix: bytes, audio_input: AsyncGenerator[bytes]
+) -> AsyncGenerator[bytes]:
+    """Yield already read audio before the rest of a generator."""
+    if prefix:
+        yield prefix
+    async for chunk in audio_input:
+        yield chunk
+
+
 async def _async_convert_audio(
     hass: HomeAssistant,
     from_extension: str | None,
@@ -318,16 +440,74 @@ async def _async_convert_audio(
     to_sample_bytes: int | None = None,
     to_bitrate: int | None = None,
 ) -> AsyncGenerator[bytes]:
-    """Convert audio to a preferred format using ffmpeg."""
+    """Convert audio to a preferred format, using ffmpeg when needed."""
     ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
     is_input_gen = not isinstance(audio_input, (str, Path))
 
+    is_streaming_wav = is_input_gen and from_extension == "wav"
+
+    pcm_info: _StreamingPcmInfo | None = None
+    if is_streaming_wav:
+        # Unwrapping the container lets ffmpeg start streaming immediately
+        # instead of buffering ahead to inspect the WAV file.
+        assert isinstance(audio_input, AsyncGenerator)
+        pcm_info, consumed = await _async_read_streaming_wav_header(audio_input)
+        audio_input = _async_prepend_audio(
+            pcm_info.leftover if pcm_info else consumed, audio_input
+        )
+
+    if (
+        pcm_info is not None
+        and to_extension == "wav"
+        and pcm_info.ffmpeg_format == "s16le"
+        and pcm_info.sample_channels <= 2
+        and to_sample_rate in (None, pcm_info.sample_rate)
+        and to_sample_channels in (None, pcm_info.sample_channels)
+        and to_sample_bytes in (None, 2)
+    ):
+        # ffmpeg would only copy the samples. Write the header ffmpeg writes to
+        # a pipe, since readers like the wave module take a data size of 0
+        # literally.
+        assert isinstance(audio_input, AsyncGenerator)
+        block_align = pcm_info.sample_channels * 2
+        yield struct.pack(
+            "<4sI4s4sIHHIIHH4sI",
+            b"RIFF",
+            0xFFFFFFFF,
+            b"WAVE",
+            b"fmt ",
+            16,
+            _WAV_FORMAT_PCM,
+            pcm_info.sample_channels,
+            pcm_info.sample_rate,
+            pcm_info.sample_rate * block_align,
+            block_align,
+            16,
+            b"data",
+            0xFFFFFFFF,
+        )
+        async for chunk in audio_input:
+            yield chunk
+        return
+
     command = [ffmpeg_manager.binary, "-hide_banner", "-loglevel", "error"]
-    if from_extension:
+    if pcm_info is not None:
+        command.extend(
+            [
+                "-f",
+                pcm_info.ffmpeg_format,
+                "-ar",
+                str(pcm_info.sample_rate),
+                "-ac",
+                str(pcm_info.sample_channels),
+            ]
+        )
+    elif from_extension:
         command.extend(["-f", from_extension])
 
-    if is_input_gen and from_extension == "wav":
-        # The container is known, so minimize probing latency for live TTS audio.
+    if is_streaming_wav:
+        # The stream parameters are known, so minimize probing latency for live
+        # TTS audio.
         command.extend(["-probesize", "32"])
 
     if is_input_gen:
@@ -625,6 +805,22 @@ class ResultStream:
             )
             return
 
+        # Overrides like the acknowledge sound repeat on many responses, so
+        # convert each format once.
+        cache_key = (
+            self._override_media_path,
+            frozenset(
+                (option, value)
+                for option, value in self.options.items()
+                if option in _PREFFERED_FORMAT_OPTIONS
+            ),
+        )
+        if (
+            converted := self._manager.converted_override_cache.get(cache_key)
+        ) is not None:
+            yield converted
+            return
+
         # Use ffmpeg to convert audio to preferred format
         if not preferred_format:
             preferred_format = self._override_media_path.suffix[1:]  # strip .
@@ -639,8 +835,12 @@ class ResultStream:
             to_sample_bytes=self.options.get(ATTR_PREFERRED_SAMPLE_BYTES),
             to_bitrate=self.options.get(ATTR_PREFERRED_BITRATE),
         )
+        chunks: list[bytes] = []
         async for chunk in converted_audio:
+            chunks.append(chunk)
             yield chunk
+
+        self._manager.converted_override_cache[cache_key] = b"".join(chunks)
 
     def delete(self) -> None:
         """Remove the result stream from the manager."""
@@ -739,6 +939,9 @@ class SpeechManager:
         self.file_cache: dict[str, str] = {}
         self.mem_cache: dict[str, TTSCache] = {}
         self.token_to_stream: dict[str, ResultStream] = {}
+        self.converted_override_cache: dict[
+            tuple[Path, frozenset[tuple[str, Any]]], bytes
+        ] = {}
         self.memcache_cleanup = DictCleaning(hass, memory_cache_maxage, self.mem_cache)
         self.token_to_stream_cleanup = DictCleaning(
             hass, memory_cache_maxage, self.token_to_stream
@@ -872,7 +1075,11 @@ class SpeechManager:
     ) -> ResultStream:
         """Create a streaming URL where the rendered TTS can be retrieved."""
         if (engine_instance := get_engine_instance(self.hass, engine)) is None:
-            raise HomeAssistantError(f"Provider {engine} not found")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="provider_not_found",
+                translation_placeholders={"engine": engine},
+            )
 
         supports_streaming_input = (
             isinstance(engine_instance, TextToSpeechEntity)
@@ -914,7 +1121,11 @@ class SpeechManager:
         Requires options, language to be processed.
         """
         if (engine_instance := get_engine_instance(self.hass, engine)) is None:
-            raise HomeAssistantError(f"Provider {engine} not found")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="provider_not_found",
+                translation_placeholders={"engine": engine},
+            )
 
         cache_key = ulid_util.ulid_now()
         extension = options.get(ATTR_PREFERRED_FORMAT, _DEFAULT_FORMAT)
@@ -951,7 +1162,11 @@ class SpeechManager:
         Requires options, language to be processed.
         """
         if (engine_instance := get_engine_instance(self.hass, engine)) is None:
-            raise HomeAssistantError(f"Provider {engine} not found")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="provider_not_found",
+                translation_placeholders={"engine": engine},
+            )
 
         options_key = _hash_options(options) if options else "-"
         msg_hash = hashlib.sha1(bytes(message, "utf-8")).hexdigest()
@@ -1058,6 +1273,19 @@ class SpeechManager:
         options = dict(options or {})
         supported_options = engine_instance.supported_options or []
 
+        # Options the engine handles itself must not trigger a conversion, but a
+        # conversion needed for another reason still has to keep them.
+        convert_options = {
+            option
+            for option in (
+                ATTR_PREFERRED_SAMPLE_RATE,
+                ATTR_PREFERRED_SAMPLE_CHANNELS,
+                ATTR_PREFERRED_SAMPLE_BYTES,
+                ATTR_PREFERRED_BITRATE,
+            )
+            if options.get(option) is not None and option not in supported_options
+        }
+
         # Extract preferred format options.
         #
         # These options are used by Assist pipelines, etc. to get a format that
@@ -1121,7 +1349,12 @@ class SpeechManager:
 
             if data is None or extension is None:
                 raise HomeAssistantError(
-                    f"No TTS from {engine_instance.name} for '{message}'"
+                    translation_domain=DOMAIN,
+                    translation_key="no_tts_audio",
+                    translation_placeholders={
+                        "engine": str(engine_instance.name),
+                        "message": message,
+                    },
                 )
 
             async def make_data_generator(data: bytes) -> AsyncGenerator[bytes]:
@@ -1149,14 +1382,8 @@ class SpeechManager:
 
         # Only convert if we have a preferred format different than the
         # expected format from the TTS system, or if a specific sample
-        # rate/format/channel count is requested.
-        needs_conversion = (
-            (final_extension != extension)
-            or (sample_rate is not None)
-            or (sample_channels is not None)
-            or (sample_bytes is not None)
-            or (bitrate is not None)
-        )
+        # rate/format/channel count is requested that the engine does not handle.
+        needs_conversion = (final_extension != extension) or bool(convert_options)
 
         if needs_conversion:
             data_gen = _async_convert_audio(

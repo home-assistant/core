@@ -15,6 +15,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     ClimateEntityStateAttribute,
     HVACMode,
+    RestoreClimate,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -22,10 +23,8 @@ from homeassistant.const import (
     PRECISION_WHOLE,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import TeslemetryConfigEntry
 from .const import TeslemetryClimateSide
@@ -59,28 +58,6 @@ POLLING_PRESET_MODES = {
 
 
 PARALLEL_UPDATES = 0
-
-
-def _restored_temperature(
-    hass: HomeAssistant,
-    state: State,
-    attribute: ClimateEntityStateAttribute,
-    native_unit: str,
-) -> float | None:
-    """Return a restored display-unit temperature attribute in the native unit."""
-    if (value := state.attributes.get(attribute)) is None:
-        return None
-    # States written before 2026.11 lack temperature_unit; assume the current system unit
-    unit = state.attributes.get(
-        ClimateEntityStateAttribute.TEMPERATURE_UNIT,
-        hass.config.units.temperature_unit,
-    )
-    if unit not in TemperatureConverter.VALID_UNITS:
-        return None
-    try:
-        return TemperatureConverter.convert(float(value), unit, native_unit)
-    except TypeError, ValueError:
-        return None
 
 
 async def async_setup_entry(
@@ -280,7 +257,7 @@ class TeslemetryVehiclePollingClimateEntity(
 
 
 class TeslemetryStreamingClimateEntity(
-    TeslemetryClimateEntity, TeslemetryVehicleStreamEntity, RestoreEntity
+    TeslemetryClimateEntity, TeslemetryVehicleStreamEntity, RestoreClimate
 ):
     """Teslemetry steering wheel climate control."""
 
@@ -334,20 +311,15 @@ class TeslemetryStreamingClimateEntity(
             self._attr_hvac_mode = (
                 HVACMode(state.state) if state.state in HVAC_MODES else None
             )
-            self._attr_native_current_temperature = _restored_temperature(
-                self.hass,
-                state,
-                ClimateEntityStateAttribute.CURRENT_TEMPERATURE,
-                self.native_temperature_unit,
-            )
-            self._attr_native_target_temperature = _restored_temperature(
-                self.hass,
-                state,
-                ClimateEntityStateAttribute.TARGET_TEMPERATURE,
-                self.native_temperature_unit,
-            )
             self._attr_preset_mode = state.attributes.get(
                 ClimateEntityStateAttribute.PRESET_MODE
+            )
+        if (climate_data := await self.async_get_last_climate_data()) is not None:
+            self._attr_native_current_temperature = (
+                climate_data.native_current_temperature
+            )
+            self._attr_native_target_temperature = (
+                climate_data.native_target_temperature
             )
 
         self.async_on_remove(
@@ -540,7 +512,7 @@ class TeslemetryVehiclePollingCabinOverheatProtectionEntity(
 class TeslemetryStreamingCabinOverheatProtectionEntity(
     TeslemetryVehicleStreamEntity,
     TeslemetryCabinOverheatProtectionEntity,
-    RestoreEntity,
+    RestoreClimate,
 ):
     """Vehicle Cabin Overheat Protection."""
 
@@ -581,17 +553,12 @@ class TeslemetryStreamingCabinOverheatProtectionEntity(
             self._attr_hvac_mode = (
                 HVACMode(state.state) if state.state in HVAC_MODES else None
             )
-            self._attr_native_current_temperature = _restored_temperature(
-                self.hass,
-                state,
-                ClimateEntityStateAttribute.CURRENT_TEMPERATURE,
-                self.native_temperature_unit,
+        if (climate_data := await self.async_get_last_climate_data()) is not None:
+            self._attr_native_current_temperature = (
+                climate_data.native_current_temperature
             )
-            self._attr_native_target_temperature = _restored_temperature(
-                self.hass,
-                state,
-                ClimateEntityStateAttribute.TARGET_TEMPERATURE,
-                self.native_temperature_unit,
+            self._attr_native_target_temperature = (
+                climate_data.native_target_temperature
             )
 
         self.async_on_remove(

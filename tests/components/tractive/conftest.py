@@ -7,11 +7,10 @@ from unittest.mock import AsyncMock, patch
 from aiotractive import PetStatus, Trackable, TrackerStatus, TractiveStatus
 from aiotractive.tracker import Tracker
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.tractive.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 TRACKER_ID = "device_id_123"
 PET_ID = "pet_id_123"
@@ -44,6 +43,7 @@ def mock_tractive_client() -> Generator[AsyncMock]:
                 minutes_day_sleep=100,
                 minutes_night_sleep=300,
                 minutes_rest=122,
+                weight=23700,
             )
         },
     )

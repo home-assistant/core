@@ -1,11 +1,17 @@
 """Fixtures for the todo component tests."""
 
 from collections.abc import Generator
-import datetime
+import datetime as dt
 from unittest.mock import AsyncMock
 import zoneinfo
 
 import pytest
+from pytest_homeassistant.common import (
+    MockModule,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -18,8 +24,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from . import TEST_DOMAIN, MockFlow, MockTodoListEntity
-
-from tests.common import MockModule, mock_config_flow, mock_integration, mock_platform
 
 TEST_TIMEZONE = zoneinfo.ZoneInfo("America/Regina")
 
@@ -83,7 +87,7 @@ def mock_test_entity_items() -> list[TodoItem]:
             summary="Item #2",
             uid="2",
             status=TodoItemStatus.COMPLETED,
-            completed=datetime.datetime(2026, 3, 27, 11, 0, 0, tzinfo=TEST_TIMEZONE),
+            completed=dt.datetime(2026, 3, 27, 11, 0, 0, tzinfo=TEST_TIMEZONE),
         ),
     ]
 

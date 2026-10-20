@@ -15,7 +15,7 @@ from homeassistant.helpers.service import async_register_admin_service
 from .const import DATA_SCHEDULE, DOMAIN, SERVICE_GET
 
 if TYPE_CHECKING:
-    from . import Schedule
+    from .entity import Schedule
 
 
 async def _async_get_schedule_service(

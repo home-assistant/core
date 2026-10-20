@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from tesla_powerwall import (
     AccessDeniedError,
     ApiError,
@@ -28,8 +29,6 @@ from .mocks import (
     _mock_powerwall_site_name,
     _mock_powerwall_with_fixtures,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 VALID_CONFIG = {CONF_IP_ADDRESS: "1.2.3.4", CONF_PASSWORD: "00GGX"}
 

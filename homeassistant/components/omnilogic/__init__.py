@@ -28,7 +28,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OmniLogicConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OmniLogicConfigEntry) -> None:
     """Set up Omnilogic from a config entry."""
 
     conf = entry.data
@@ -63,9 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmniLogicConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: OmniLogicConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OmniLogicConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

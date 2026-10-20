@@ -3,14 +3,13 @@
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import data_entry_flow
 from homeassistant.components.tellduslive import APPLICATION_NAME, DOMAIN, config_flow
 from homeassistant.config_entries import SOURCE_DISCOVERY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 def init_config_flow(

@@ -177,6 +177,7 @@
       "group_address": "Group address",
       "group_addresses": "Group addresses",
       "monitor_x_group_addresses": "Monitor {count} group addresses",
+      "read_value": "Read value",
       "sort": {
         "ascending": "Ascending",
         "ascending_tooltip": "Sorted ascending",
@@ -1474,7 +1475,8 @@
         },
         "raw_length": "Payload length",
         "raw_length_description": "Length of the raw payload in bytes. For DPT 1, 2 and 3 use `0`.",
-        "raw_payload": "Raw payload"
+        "raw_payload": "Raw payload",
+        "raw_payload_base_label": "Number base"
       },
       "knx-select-options-selector": {
         "add_option": "Add option",
@@ -1818,6 +1820,10 @@
     "reload": {
       "description": "Reloads the KNX integration.",
       "name": "[%key:common::action::reload%]"
+    },
+    "save_scene": {
+      "description": "Tells KNX actuators to store their current state in the scene of the selected scene entity. Requires actuators supporting scene learning (DPT 18.001).",
+      "name": "Save scene"
     },
     "send": {
       "description": "Sends arbitrary data directly to the KNX bus.",

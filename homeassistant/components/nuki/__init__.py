@@ -166,7 +166,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> None:
     """Set up the Nuki entry."""
 
     # Migration of entry unique_id
@@ -240,10 +240,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> None:
     """Unload the Nuki entry."""
     webhook.async_unregister(hass, entry.entry_id)
 
@@ -263,4 +261,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> boo
             f"Unable to remove callback. Error communicating with Bridge: {err}"
         ) from err
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

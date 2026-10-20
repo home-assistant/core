@@ -283,7 +283,9 @@ class KNXConfigStore:
                 )
             validated[unique_id] = data
         if invalid:
-            async_create_entity_validation_issue(self.hass, platform, invalid)
+            async_create_entity_validation_issue(
+                self.hass, self.config_entry.entry_id, platform, invalid
+            )
         return validated
 
     async def create_entity(
@@ -382,7 +384,9 @@ class KNXConfigStore:
             except EntityStoreValidationException:
                 invalid.append(entity_id)
         if invalid:
-            async_create_expose_validation_issue(self.hass, invalid)
+            async_create_expose_validation_issue(
+                self.hass, self.config_entry.entry_id, invalid
+            )
         return validated
 
     def get_expose_groups(self) -> dict[str, list[str]]:
@@ -442,7 +446,9 @@ class KNXConfigStore:
         try:
             return validate_time_server_data(dict(self.data["time_server"]))
         except EntityStoreValidationException:
-            async_create_time_server_validation_issue(self.hass)
+            async_create_time_server_validation_issue(
+                self.hass, self.config_entry.entry_id
+            )
             return None
 
     async def update_time_server_config(self, config: TimeServerConfig) -> None:
