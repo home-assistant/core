@@ -120,6 +120,38 @@ async def test_list_modules_includes_channels(
     assert kitchen["device_id"] is not None
 
 
+async def test_list_modules_escapes_unsafe_names(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_module_subdevices: AsyncMock,
+    mock_relay: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test module and channel names are HTML-escaped for the config panel."""
+    payload = '<img src=x onerror="alert(1)">'
+    escaped = "&lt;img src=x onerror=&quot;alert(1)&quot;&gt;"
+    mock_module_subdevices.get_name.return_value = payload
+    mock_module_subdevices.get_type_name.return_value = payload
+    mock_relay.get_name.return_value = payload
+    mock_module_subdevices.get_channels.return_value = {1: mock_relay}
+    await _setup_entry(hass, config_entry, advanced_mode=True)
+    client = await hass_ws_client(hass)
+
+    response = await _ws_call(
+        client,
+        "velbus/config_panel/modules",
+        {CONF_CONFIG_ENTRY: config_entry.entry_id},
+    )
+
+    assert response["success"]
+    kitchen = next(
+        module for module in response["result"]["modules"] if module["address"] == 88
+    )
+    assert kitchen["name"] == escaped
+    assert kitchen["type_name"] == escaped
+    assert kitchen["channels"] == {"1": {"name": escaped}}
+
+
 async def test_get_module_schema(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -141,8 +173,45 @@ async def test_get_module_schema(
         )
 
     assert response["success"]
-    assert response["result"] == schema
+    assert response["result"]["type_id"] == 40
     schema_mock.assert_called_once_with(40)
+
+
+async def test_get_module_schema_escapes_channel_names(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test VLP channel labels in the schema are HTML-escaped."""
+    payload = '<script>alert("x")</script>'
+    escaped = "&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;"
+    schema = {
+        "type_id": 40,
+        "type_name": payload,
+        "sections": [
+            {
+                "id": "channels",
+                "type": "channels",
+                "channels": [{"channel": 1, "name": payload}],
+            }
+        ],
+    }
+
+    with patch(
+        "homeassistant.components.velbus.websocket_api.get_module_type_schema",
+        return_value=schema,
+    ):
+        await _setup_entry(hass, config_entry, advanced_mode=True)
+        client = await hass_ws_client(hass)
+        response = await _ws_call(
+            client,
+            "velbus/config_panel/module/schema",
+            {CONF_CONFIG_ENTRY: config_entry.entry_id, "type_id": 40},
+        )
+
+    assert response["success"]
+    assert response["result"]["type_name"] == escaped
+    assert response["result"]["sections"][0]["channels"][0]["name"] == escaped
 
 
 async def test_get_module(

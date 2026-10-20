@@ -3,8 +3,9 @@
 import asyncio
 from collections.abc import Awaitable, Callable
 from functools import wraps
-import inspect
+import html
 from importlib.metadata import version
+import inspect
 from typing import TYPE_CHECKING, Any, Final, cast, overload
 
 import probatio
@@ -141,7 +142,7 @@ async def async_update_panel(
             )
             panel_data[DATA_STATIC_REGISTERED] = True
 
-    panel_version = version(FRONTEND_PACKAGE)
+    panel_version = await hass.async_add_executor_job(version, FRONTEND_PACKAGE)
     module_url = f"{URL_BASE}/{velbus_panel.entrypoint_js}?v={panel_version}"
     if async_panel_exists(hass, DOMAIN):
         if panel_data.get(DATA_BUILD_ID) == panel_version:
@@ -271,6 +272,82 @@ def _get_relay_channel(controller: Velbus, address: int, channel: int) -> Channe
     return cast(Channel, relay)
 
 
+def _escape_panel_text(value: str) -> str:
+    """Escape text rendered in the Velbus config panel (legacy ha-select innerHTML)."""
+    return html.escape(value, quote=True)
+
+
+def _escape_channel_names(channels: dict[str, Any]) -> dict[str, Any]:
+    """Escape channel display names in a channels mapping."""
+    escaped: dict[str, Any] = {}
+    for channel_id, channel_info in channels.items():
+        if not isinstance(channel_info, dict):
+            escaped[channel_id] = channel_info
+            continue
+        entry = dict(channel_info)
+        name = entry.get("name")
+        if isinstance(name, str):
+            entry["name"] = _escape_panel_text(name)
+        escaped[channel_id] = entry
+    return escaped
+
+
+def _escape_module_type_schema(schema: dict[str, Any]) -> dict[str, Any]:
+    """Escape VLP-supplied labels in a module type schema."""
+    escaped = dict(schema)
+    type_name = escaped.get("type_name")
+    if isinstance(type_name, str):
+        escaped["type_name"] = _escape_panel_text(type_name)
+
+    sections = escaped.get("sections")
+    if not isinstance(sections, list):
+        return escaped
+
+    new_sections: list[Any] = []
+    for section in sections:
+        if not isinstance(section, dict):
+            new_sections.append(section)
+            continue
+        section_copy = dict(section)
+        channels = section_copy.get("channels")
+        if isinstance(channels, list):
+            new_channels: list[Any] = []
+            for entry in channels:
+                if isinstance(entry, dict) and isinstance(entry.get("name"), str):
+                    new_channels.append(
+                        {**entry, "name": _escape_panel_text(entry["name"])}
+                    )
+                else:
+                    new_channels.append(entry)
+            section_copy["channels"] = new_channels
+        properties = section_copy.get("properties")
+        if isinstance(properties, list):
+            section_copy["properties"] = [
+                (
+                    {**prop, "name": _escape_panel_text(prop["name"])}
+                    if isinstance(prop, dict) and isinstance(prop.get("name"), str)
+                    else prop
+                )
+                for prop in properties
+            ]
+        new_sections.append(section_copy)
+    escaped["sections"] = new_sections
+    return escaped
+
+
+def _escape_module_instance_data(data: dict[str, Any]) -> dict[str, Any]:
+    """Escape device-supplied labels in live module panel data."""
+    escaped = dict(data)
+    for key in ("name", "type_name"):
+        value = escaped.get(key)
+        if isinstance(value, str):
+            escaped[key] = _escape_panel_text(value)
+    channels = escaped.get("channels")
+    if isinstance(channels, dict):
+        escaped["channels"] = _escape_channel_names(channels)
+    return escaped
+
+
 def _coerce_config_value(param: Any, value: Any) -> Any:
     """Return a value coerced to the parameter kind.
 
@@ -386,15 +463,15 @@ def ws_list_modules(
         seen_modules.add(module_id)
         address = module.get_addresses()[0]
         channels = {
-            str(channel_num): {"name": channel.get_name()}
+            str(channel_num): {"name": _escape_panel_text(channel.get_name())}
             for channel_num, channel in module.get_channels().items()
         }
         modules.append(
             {
                 "address": address,
-                "name": module.get_name(),
+                "name": _escape_panel_text(module.get_name()),
                 "type_id": module.get_type(),
-                "type_name": module.get_type_name(),
+                "type_name": _escape_panel_text(module.get_type_name()),
                 "serial": module.get_serial(),
                 "device_id": _device_id_for_module(hass, entry, address),
                 "channels": channels,
@@ -425,7 +502,7 @@ async def ws_get_module_schema(
 ) -> None:
     """Return the schema for a module type."""
     schema = await hass.async_add_executor_job(get_module_type_schema, msg["type_id"])
-    connection.send_result(msg["id"], schema)
+    connection.send_result(msg["id"], _escape_module_type_schema(schema))
 
 
 @websocket_api.require_admin
@@ -454,10 +531,10 @@ async def ws_get_module(
             f"Module {msg[CONF_ADDRESS]} not found",
         )
         return
-    data = await get_module_instance_data(module)
+    data = _escape_module_instance_data(await get_module_instance_data(module))
     data["device_id"] = _device_id_for_module(hass, entry, msg[CONF_ADDRESS])
-    data["schema"] = await hass.async_add_executor_job(
-        get_module_type_schema, module.get_type()
+    data["schema"] = _escape_module_type_schema(
+        await hass.async_add_executor_job(get_module_type_schema, module.get_type())
     )
     connection.send_result(msg["id"], data)
 
