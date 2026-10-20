@@ -111,13 +111,6 @@ async def test_user_flow_rejects_duplicate_service_name(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_MAXCODE: "new-maxcode", CONF_NAME: "Other channel"},
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-
 
 async def test_user_flow_rejects_existing_notify_service(
     hass: HomeAssistant,
@@ -136,6 +129,13 @@ async def test_user_flow_rejects_existing_notify_service(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_NAME: "name_exists"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_MAXCODE: "new-maxcode", CONF_NAME: "Other channel"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_rejects_duplicate_maxcode(
