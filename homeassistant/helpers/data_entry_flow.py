@@ -50,14 +50,9 @@ class _BaseFlowManagerView(HomeAssistantView, Generic[_FlowManagerT, _FlowResult
         if (schema := result["data_schema"]) is None:
             data["data_schema"] = []
         else:
-            serialized = probatio.to_field_list(
+            data["data_schema"] = probatio.to_field_list(
                 schema, custom_serializer=cv.custom_serializer
             )
-            if isinstance(serialized, list):
-                data_entry_flow.add_visible_conditions_to_serialized_schema(
-                    schema, serialized
-                )
-            data["data_schema"] = serialized
         return data
 
 
