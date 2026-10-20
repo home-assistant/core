@@ -17,10 +17,15 @@ from switchbot import (
 )
 from yarl import URL
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
 )
+from homeassistant.components.frontend import async_panel_exists
 from homeassistant.components.switchbot.const import (
     CONF_CURTAIN_SPEED,
     CONF_ENCRYPTION_KEY,
@@ -48,7 +53,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import config_entry_oauth2_flow, translation
+from homeassistant.setup import async_setup_component
 
 from . import (
     CIRCULATOR_FAN_PRO_SERVICE_INFO,
@@ -2151,7 +2157,10 @@ async def test_user_oauth_login(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test OAuth authorization, token exchange, and normal device setup."""
+    assert "my" not in hass.config.components
     result = await _async_start_user_oauth(hass)
+    assert "my" in hass.config.components
+    assert async_panel_exists(hass, "_my_redirect")
     state = _oauth_state(hass, result["flow_id"])
     authorize_url = URL(result["url"])
 
@@ -2222,6 +2231,49 @@ async def test_user_oauth_login(
     assert result["result"].unique_id == "aabbccddeeff"
     assert "token" not in result["data"]
     assert "auth_implementation" not in result["data"]
+
+
+@pytest.mark.usefixtures("current_request_with_host", "mock_scanners_all_passive")
+async def test_oauth_pick_implementation(hass: HomeAssistant) -> None:
+    """Test selecting application credentials from a translated OAuth form."""
+    assert await async_setup_component(hass, "application_credentials", {})
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential("client-id", "", name="Test client"),
+        auth_domain="test-client",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "oauth_login"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pick_implementation"
+
+    translations = await translation.async_get_translations(
+        hass, "en", "config", {DOMAIN}
+    )
+    assert translations["component.switchbot.config.step.pick_implementation.title"]
+    assert translations[
+        "component.switchbot.config.step.pick_implementation.data.implementation"
+    ]
+    assert translations[
+        "component.switchbot.config.step.pick_implementation.data_description.implementation"
+    ]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"implementation": "test-client"}
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    authorize_url = URL(result["url"])
+    assert authorize_url.query["client_id"] == "client-id"
+    assert (
+        authorize_url.query["redirect_uri"]
+        == config_entry_oauth2_flow.MY_AUTH_CALLBACK_PATH
+    )
 
 
 @pytest.mark.usefixtures("current_request_with_host")
