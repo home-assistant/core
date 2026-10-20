@@ -433,7 +433,7 @@ aiorussound==5.0.2
 aioruuvigateway==0.1.0
 
 # homeassistant.components.saj
-aiosaj==0.2.1
+aiosaj==0.2.2
 
 # homeassistant.components.shelly
 aioshelly==13.35.0

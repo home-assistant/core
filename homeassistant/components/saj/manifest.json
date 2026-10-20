@@ -8,5 +8,5 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["aiosaj"],
-  "requirements": ["aiosaj==0.2.1"]
+  "requirements": ["aiosaj==0.2.2"]
 }
