@@ -167,8 +167,8 @@ def test_timestamp_tracks_entity_on_every_render(
         template.Template(source + " ", hass),
     ):
         info = current_template.async_render_to_info()
-        assert info.result() == expected
         assert info.entities == {"sensor.test"}
+        assert info.result() == expected
 
 
 async def test_unavailable_states(hass: HomeAssistant) -> None:
