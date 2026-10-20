@@ -780,6 +780,7 @@ async def test_show_progress(hass: HomeAssistant, manager: MockFlowManager) -> N
             if uncompleted_task:
                 assert progress_action
                 return self.async_show_progress(
+                    step_id="init",
                     progress_action=progress_action,
                     progress_task=uncompleted_task,
                 )
@@ -877,7 +878,7 @@ async def test_show_progress_error(
                     return self.async_show_progress_done(next_step_id="error")
                 return self.async_show_progress_done(next_step_id="no_error")
             return self.async_show_progress(
-                progress_action="task", progress_task=self.progress_task
+                step_id="init", progress_action="task", progress_task=self.progress_task
             )
 
         async def async_step_error(self, user_input=None):
