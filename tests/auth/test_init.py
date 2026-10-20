@@ -24,6 +24,7 @@ from pytest_homeassistant.common import (
 from homeassistant import auth, data_entry_flow
 from homeassistant.auth import (
     EVENT_USER_UPDATED,
+    DuplicateCredentialsError,
     InvalidAuthError,
     auth_store,
     const as auth_const,
@@ -193,6 +194,74 @@ async def test_create_new_user(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(events) == 1
     assert events[0].data["user_id"] == user.id
+
+
+async def _async_sign_in(manager: auth.AuthManager) -> Credentials:
+    """Finish a login flow as test-user and return its credentials."""
+    step = await manager.login_flow.async_init(("insecure_example", None))
+    step = await manager.login_flow.async_configure(
+        step["flow_id"], {"username": "test-user", "password": "test-pass"}
+    )
+    return step["result"]
+
+
+async def test_new_credentials_signed_in_twice(hass: HomeAssistant) -> None:
+    """Test two first sign ins of one account create one user."""
+    manager = await auth.auth_manager_from_config(
+        hass,
+        [
+            {
+                "type": "insecure_example",
+                "users": [{"username": "test-user", "password": "test-pass"}],
+            }
+        ],
+        [],
+    )
+    first = await _async_sign_in(manager)
+    second = await _async_sign_in(manager)
+    assert first.is_new
+    assert second.is_new
+
+    user = await manager.async_get_or_create_user(first)
+    with pytest.raises(DuplicateCredentialsError):
+        await manager.async_get_or_create_user(second)
+
+    assert await manager.async_get_users() == [user]
+
+
+async def test_new_credentials_redeemed_concurrently(hass: HomeAssistant) -> None:
+    """Test concurrent first sign ins of one account create one user."""
+    manager = await auth.auth_manager_from_config(
+        hass,
+        [
+            {
+                "type": "insecure_example",
+                "users": [{"username": "test-user", "password": "test-pass"}],
+            }
+        ],
+        [],
+    )
+    provider = manager.auth_providers[0]
+    first = await _async_sign_in(manager)
+    second = await _async_sign_in(manager)
+    release = asyncio.Event()
+    user_meta = provider.async_user_meta_for_credentials
+
+    async def slow_user_meta(credentials: Credentials) -> auth_models.UserMeta:
+        await release.wait()
+        return await user_meta(credentials)
+
+    with patch.object(provider, "async_user_meta_for_credentials", slow_user_meta):
+        tasks = [
+            hass.async_create_task(manager.async_get_or_create_user(credentials))
+            for credentials in (first, second)
+        ]
+        await asyncio.sleep(0)
+        release.set()
+        user, error = await asyncio.gather(*tasks, return_exceptions=True)
+
+    assert isinstance(error, DuplicateCredentialsError)
+    assert await manager.async_get_users() == [user]
 
 
 async def test_login_as_existing_user(mock_hass) -> None:
