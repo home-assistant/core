@@ -71,41 +71,25 @@ class EpexQuarterHourPriceIsNegativeCondition(_EngieBinaryCondition):
     _translation_key = "epex_negative_quarter_hour"
 
 
-class EpexHourPriceIsBelowThresholdCondition(_EngieSensorCondition):
+class EpexHourPriceMeetsThresholdCondition(_EngieSensorCondition):
     """Condition that compares the current hourly EPEX price against a threshold."""
 
     _translation_key = "epex_current_hour"
 
 
-class EpexHourPriceIsAboveThresholdCondition(_EngieSensorCondition):
-    """Condition that compares the current hourly EPEX price against a threshold."""
-
-    _translation_key = "epex_current_hour"
-
-
-class EpexQuarterHourPriceIsBelowThresholdCondition(_EngieSensorCondition):
-    """Condition that compares the current quarter-hourly EPEX price against a threshold."""
-
-    _translation_key = "epex_current_quarter_hour"
-
-
-class EpexQuarterHourPriceIsAboveThresholdCondition(_EngieSensorCondition):
+class EpexQuarterHourPriceMeetsThresholdCondition(_EngieSensorCondition):
     """Condition that compares the current quarter-hourly EPEX price against a threshold."""
 
     _translation_key = "epex_current_quarter_hour"
 
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "epex_hour_price_is_above_threshold": EpexHourPriceIsAboveThresholdCondition,
-    "epex_hour_price_is_below_threshold": EpexHourPriceIsBelowThresholdCondition,
     "epex_hour_price_is_negative": EpexHourPriceIsNegativeCondition,
-    "epex_quarter_hour_price_is_above_threshold": (
-        EpexQuarterHourPriceIsAboveThresholdCondition
-    ),
-    "epex_quarter_hour_price_is_below_threshold": (
-        EpexQuarterHourPriceIsBelowThresholdCondition
-    ),
+    "epex_hour_price_meets_threshold": EpexHourPriceMeetsThresholdCondition,
     "epex_quarter_hour_price_is_negative": EpexQuarterHourPriceIsNegativeCondition,
+    "epex_quarter_hour_price_meets_threshold": (
+        EpexQuarterHourPriceMeetsThresholdCondition
+    ),
 }
 
 

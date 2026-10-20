@@ -43,7 +43,7 @@ epex_quarter_hour_price_is_negative:
     behavior: *condition_behavior
     for: *condition_for
 
-epex_hour_price_is_below_threshold:
+epex_hour_price_meets_threshold:
   target: *target_engie_sensor
   fields:
     behavior: *condition_behavior
@@ -56,33 +56,7 @@ epex_hour_price_is_below_threshold:
           mode: is
           number: *epex_threshold_number
 
-epex_hour_price_is_above_threshold:
-  target: *target_engie_sensor
-  fields:
-    behavior: *condition_behavior
-    for: *condition_for
-    threshold:
-      required: true
-      selector:
-        numeric_threshold:
-          entity: *epex_threshold_entity
-          mode: is
-          number: *epex_threshold_number
-
-epex_quarter_hour_price_is_below_threshold:
-  target: *target_engie_sensor
-  fields:
-    behavior: *condition_behavior
-    for: *condition_for
-    threshold:
-      required: true
-      selector:
-        numeric_threshold:
-          entity: *epex_threshold_entity
-          mode: is
-          number: *epex_threshold_number
-
-epex_quarter_hour_price_is_above_threshold:
+epex_quarter_hour_price_meets_threshold:
   target: *target_engie_sensor
   fields:
     behavior: *condition_behavior

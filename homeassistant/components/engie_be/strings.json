@@ -10,38 +10,6 @@
     "trigger_threshold_name": "Threshold"
   },
   "conditions": {
-    "epex_hour_price_is_above_threshold": {
-      "description": "True when the current EPEX hour day-ahead price meets the configured threshold. The direction is set in the threshold field.",
-      "fields": {
-        "behavior": {
-          "name": "[%key:component::engie_be::common::condition_behavior_name%]"
-        },
-        "for": {
-          "name": "[%key:component::engie_be::common::condition_for_name%]"
-        },
-        "threshold": {
-          "description": "[%key:component::engie_be::common::condition_threshold_description%]",
-          "name": "[%key:component::engie_be::common::condition_threshold_name%]"
-        }
-      },
-      "name": "EPEX hour price is above threshold"
-    },
-    "epex_hour_price_is_below_threshold": {
-      "description": "True when the current EPEX hour day-ahead price meets the configured threshold. The direction is set in the threshold field.",
-      "fields": {
-        "behavior": {
-          "name": "[%key:component::engie_be::common::condition_behavior_name%]"
-        },
-        "for": {
-          "name": "[%key:component::engie_be::common::condition_for_name%]"
-        },
-        "threshold": {
-          "description": "[%key:component::engie_be::common::condition_threshold_description%]",
-          "name": "[%key:component::engie_be::common::condition_threshold_name%]"
-        }
-      },
-      "name": "EPEX hour price is below threshold"
-    },
     "epex_hour_price_is_negative": {
       "description": "True when the current EPEX hour day-ahead price is negative (you are paid to consume).",
       "fields": {
@@ -54,8 +22,8 @@
       },
       "name": "EPEX hour price is negative"
     },
-    "epex_quarter_hour_price_is_above_threshold": {
-      "description": "True when the current quarter-hourly EPEX day-ahead price meets the configured threshold. The direction is set in the threshold field.",
+    "epex_hour_price_meets_threshold": {
+      "description": "True when the current EPEX hour day-ahead price meets the configured threshold.",
       "fields": {
         "behavior": {
           "name": "[%key:component::engie_be::common::condition_behavior_name%]"
@@ -68,23 +36,7 @@
           "name": "[%key:component::engie_be::common::condition_threshold_name%]"
         }
       },
-      "name": "EPEX quarter-hourly price is above threshold"
-    },
-    "epex_quarter_hour_price_is_below_threshold": {
-      "description": "True when the current quarter-hourly EPEX day-ahead price meets the configured threshold. The direction is set in the threshold field.",
-      "fields": {
-        "behavior": {
-          "name": "[%key:component::engie_be::common::condition_behavior_name%]"
-        },
-        "for": {
-          "name": "[%key:component::engie_be::common::condition_for_name%]"
-        },
-        "threshold": {
-          "description": "[%key:component::engie_be::common::condition_threshold_description%]",
-          "name": "[%key:component::engie_be::common::condition_threshold_name%]"
-        }
-      },
-      "name": "EPEX quarter-hourly price is below threshold"
+      "name": "EPEX hour price meets threshold"
     },
     "epex_quarter_hour_price_is_negative": {
       "description": "True when the current quarter-hourly EPEX day-ahead price is negative (you are paid to consume).",
@@ -97,6 +49,22 @@
         }
       },
       "name": "EPEX quarter-hourly price is negative"
+    },
+    "epex_quarter_hour_price_meets_threshold": {
+      "description": "True when the current quarter-hourly EPEX day-ahead price meets the configured threshold.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::engie_be::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::engie_be::common::condition_for_name%]"
+        },
+        "threshold": {
+          "description": "[%key:component::engie_be::common::condition_threshold_description%]",
+          "name": "[%key:component::engie_be::common::condition_threshold_name%]"
+        }
+      },
+      "name": "EPEX quarter-hourly price meets threshold"
     }
   },
   "config": {

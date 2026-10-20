@@ -1,22 +1,16 @@
 {
   "conditions": {
-    "epex_hour_price_is_above_threshold": {
-      "condition": "mdi:cash-plus"
-    },
-    "epex_hour_price_is_below_threshold": {
-      "condition": "mdi:cash-remove"
-    },
     "epex_hour_price_is_negative": {
       "condition": "mdi:cash-off"
     },
-    "epex_quarter_hour_price_is_above_threshold": {
-      "condition": "mdi:cash-plus"
-    },
-    "epex_quarter_hour_price_is_below_threshold": {
-      "condition": "mdi:cash-remove"
+    "epex_hour_price_meets_threshold": {
+      "condition": "mdi:cash-check"
     },
     "epex_quarter_hour_price_is_negative": {
       "condition": "mdi:cash-off"
+    },
+    "epex_quarter_hour_price_meets_threshold": {
+      "condition": "mdi:cash-check"
     }
   },
   "entity": {

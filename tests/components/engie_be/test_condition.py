@@ -64,24 +64,14 @@ async def _async_setup_condition_automation(
             id="quarter_hour_negative",
         ),
         pytest.param(
-            f"{DOMAIN}.epex_hour_price_is_above_threshold",
+            f"{DOMAIN}.epex_hour_price_meets_threshold",
             _BELOW_THRESHOLD_OPTIONS,
-            id="hour_above",
+            id="hour_meets_threshold",
         ),
         pytest.param(
-            f"{DOMAIN}.epex_hour_price_is_below_threshold",
+            f"{DOMAIN}.epex_quarter_hour_price_meets_threshold",
             _BELOW_THRESHOLD_OPTIONS,
-            id="hour_below",
-        ),
-        pytest.param(
-            f"{DOMAIN}.epex_quarter_hour_price_is_above_threshold",
-            _BELOW_THRESHOLD_OPTIONS,
-            id="quarter_hour_above",
-        ),
-        pytest.param(
-            f"{DOMAIN}.epex_quarter_hour_price_is_below_threshold",
-            _BELOW_THRESHOLD_OPTIONS,
-            id="quarter_hour_below",
+            id="quarter_hour_meets_threshold",
         ),
     ],
 )
@@ -160,7 +150,7 @@ async def test_negative_condition(
     ),
     [
         pytest.param(
-            "epex_hour_price_is_below_threshold",
+            "epex_hour_price_meets_threshold",
             f"{BAN}_epex_current_hour",
             f"{BAN}_epex_next_hour",
             {"type": "below", "value": {"number": 0.1}},
@@ -169,7 +159,7 @@ async def test_negative_condition(
             id="hour_below",
         ),
         pytest.param(
-            "epex_hour_price_is_above_threshold",
+            "epex_hour_price_meets_threshold",
             f"{BAN}_epex_current_hour",
             f"{BAN}_epex_next_hour",
             {"type": "above", "value": {"number": 0.1}},
@@ -178,7 +168,7 @@ async def test_negative_condition(
             id="hour_above",
         ),
         pytest.param(
-            "epex_quarter_hour_price_is_below_threshold",
+            "epex_quarter_hour_price_meets_threshold",
             f"{BAN}_epex_current_quarter_hour",
             f"{BAN}_epex_next_quarter_hour",
             {"type": "below", "value": {"number": 0.1}},
@@ -187,7 +177,7 @@ async def test_negative_condition(
             id="quarter_hour_below",
         ),
         pytest.param(
-            "epex_quarter_hour_price_is_above_threshold",
+            "epex_quarter_hour_price_meets_threshold",
             f"{BAN}_epex_current_quarter_hour",
             f"{BAN}_epex_next_quarter_hour",
             {"type": "above", "value": {"number": 0.1}},
