@@ -3,27 +3,24 @@
   dict({
     'options': dict({
       'api_key': '**REDACTED**',
-      'main_user': 'testaccount1',
-      'users': list([
-        'testaccount1',
-        'testaccount2',
-      ]),
+      'main_user': '**REDACTED**',
+      'users': '**REDACTED**',
     }),
-    'users': dict({
-      'testaccount1': dict({
+    'users': list([
+      dict({
         'image': 'image',
         'last_track': 'artist - title',
         'now_playing': 'artist - title',
         'play_count': 1,
         'top_track': 'artist - title',
       }),
-      'testaccount2': dict({
+      dict({
         'image': 'image',
         'last_track': 'artist - title',
         'now_playing': 'artist - title',
         'play_count': 1,
         'top_track': 'artist - title',
       }),
-    }),
+    ]),
   })
 # ---
