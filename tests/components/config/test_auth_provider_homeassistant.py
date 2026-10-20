@@ -308,27 +308,24 @@ async def test_create_auth_duplicate_username(
 async def test_delete_removes_just_auth(
     hass_ws_client: WebSocketGenerator,
     hass: HomeAssistant,
-    hass_storage: dict[str, Any],
+    auth_provider: prov_ha.HassAuthProvider,
 ) -> None:
     """Test deleting an auth without being connected to a user."""
     client = await hass_ws_client(hass)
-
-    hass_storage[prov_ha.STORAGE_KEY] = {
-        "version": 1,
-        "data": {"users": [{"username": "test-user"}]},
-    }
+    await auth_provider.async_add_auth("unlinked-user", "test-pass")
 
     await client.send_json(
         {
             "id": 5,
             "type": "config/auth_provider/homeassistant/delete",
-            "username": "test-user",
+            "username": "unlinked-user",
         }
     )
 
     result = await client.receive_json()
     assert result["success"], result
-    assert len(hass_storage[prov_ha.STORAGE_KEY]["data"]["users"]) == 0
+    assert auth_provider.data is not None
+    assert [user["username"] for user in auth_provider.data.users] == ["test-user"]
 
 
 async def test_delete_removes_credential(
@@ -454,6 +451,28 @@ async def test_change_password(
             "id": 6,
             "type": "config/auth_provider/homeassistant/change_password",
             "current_password": "test-pass",
+            "new_password": "new-pass",
+        }
+    )
+
+    result = await client.receive_json()
+    assert result["success"], result
+    await auth_provider.async_validate_login("test-user", "new-pass")
+
+
+async def test_change_password_from_an_empty_password(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    auth_provider: prov_ha.HassAuthProvider,
+) -> None:
+    """Test a user with an empty password can change it to a real one."""
+    await auth_provider.async_change_password("test-user", "")
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "config/auth_provider/homeassistant/change_password",
+            "current_password": "",
             "new_password": "new-pass",
         }
     )

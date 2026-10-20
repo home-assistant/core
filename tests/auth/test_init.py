@@ -309,6 +309,50 @@ async def test_linking_user_to_two_auth_providers(
     assert len(user_2.credentials) == 0
 
 
+async def test_removing_credentials_ends_their_sessions(
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test removing credentials revokes only the sessions that signed in with them."""
+    manager = await auth.auth_manager_from_config(
+        mock_hass,
+        [
+            {"type": "insecure_example", "users": []},
+            {"type": "insecure_example", "id": "another-provider", "users": []},
+        ],
+        [],
+    )
+    provider = manager.get_auth_provider("insecure_example", None)
+    other_provider = manager.get_auth_provider("insecure_example", "another-provider")
+    assert provider is not None
+    assert other_provider is not None
+    user = await manager.async_create_user("Alice")
+    removed = provider.async_create_credentials({"username": "alice"})
+    kept = other_provider.async_create_credentials({"username": "alice"})
+    await manager.async_link_user(user, removed)
+    await manager.async_link_user(user, kept)
+    removed_session = await manager.async_create_refresh_token(
+        user, CLIENT_ID, credential=removed
+    )
+    kept_session = await manager.async_create_refresh_token(
+        user, "https://other.example.com/", credential=kept
+    )
+    unrelated = await manager.async_create_refresh_token(
+        user, "https://unrelated.example.com/"
+    )
+    revoked: list[str] = []
+    manager.async_register_revoke_token_callback(
+        removed_session.id, lambda: revoked.append(removed_session.id)
+    )
+
+    await manager.async_remove_credentials(removed)
+
+    assert user.credentials == [kept]
+    assert manager.async_get_refresh_token(removed_session.id) is None
+    assert revoked == [removed_session.id]
+    assert manager.async_get_refresh_token(kept_session.id) is kept_session
+    assert manager.async_get_refresh_token(unrelated.id) is unrelated
+
+
 async def test_saving_loading(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
