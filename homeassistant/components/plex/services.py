@@ -29,7 +29,7 @@ from .const import (
 from .errors import MediaNotFound
 from .helpers import get_plex_servers
 from .media_browser import get_proxy_image_url
-from .media_search import find_media, search_media
+from .media_search import find_media, normalize_title, search_media, title_score
 from .models import PlexMediaSearchResult
 from .server import PlexServer
 
@@ -217,9 +217,15 @@ def search_plex_media(hass: HomeAssistant, service_call: ServiceCall) -> dict[st
     except NotFound, MediaNotFound:
         results = []
 
+    normalized_query = normalize_title(query) if query else None
     infos: list[dict[str, Any]] = []
     for item in results:
         info = _media_result_info(item, plex_server)
+        info["match_score"] = (
+            None
+            if normalized_query is None
+            else round(title_score(normalized_query, item.title), 2)
+        )
         if include_on_deck and item.type == "show":
             episode = item.onDeck()
             info["on_deck"] = (

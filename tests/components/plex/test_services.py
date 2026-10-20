@@ -139,6 +139,7 @@ async def test_search_service(
 
     movie_result = next(x for x in result["results"] if x["media_type"] == "movie")
     assert movie_result["title"] == "Movie 1"
+    assert movie_result["match_score"] == 1.0
     assert movie_result["year"] == 2000
     assert movie_result["summary"] == "Some elaborate summary."
     assert movie_result["guid"] == "plex://movie/5d776b85594b2b001e6dc641"
@@ -158,6 +159,7 @@ async def test_search_service(
 
     show_result = next(x for x in result["results"] if x["media_type"] == "show")
     assert show_result["title"] == "TV Show"
+    assert show_result["match_score"] < 0.6
     assert "on_deck" not in show_result
     assert "on_deck" not in movie_result
     assert show_result["guid"] == "plex://show/5d9c07f7e98e47001eb03fc7"
@@ -235,6 +237,7 @@ async def test_search_service(
         return_response=True,
     )
     assert [x["title"] for x in result["results"]] == ["Movie 1"]
+    assert result["results"][0]["match_score"] is None
 
     # Test lookup of an unknown Plex key
     requests_mock.get(f"{url}/library/metadata/999", status_code=HTTPStatus.NOT_FOUND)
