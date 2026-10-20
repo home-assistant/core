@@ -8,8 +8,10 @@ import logging
 from time import time
 from typing import TYPE_CHECKING
 
+import aiohttp
 from renault_api.exceptions import NotAuthenticatedException
 from renault_api.gigya.exceptions import (
+    GigyaException,
     InvalidCredentialsException,
     PendingTwoFactorAuthenticationException,
 )
@@ -295,6 +297,11 @@ class RenaultHub:
                     await self._async_add_vehicles(new_vehicle_links)
             except ConfigEntryAuthFailed, NotAuthenticatedException:
                 self._config_entry.async_start_reauth(self._hass)
+            except (aiohttp.ClientError, TimeoutError, GigyaException) as err:
+                LOGGER.debug(
+                    "Failed to update the vehicles, retrying at the next check: %s",
+                    err,
+                )
 
     @callback
     def _async_remove_stale_devices(

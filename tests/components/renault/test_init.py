@@ -576,6 +576,20 @@ async def _async_poll_vehicle_list(
     await hass.async_block_till_done(wait_background_tasks=True)
 
 
+def _device_vins(
+    device_registry: dr.DeviceRegistry, config_entry: ConfigEntry
+) -> set[str]:
+    """Return the VINs of the vehicle devices of the config entry."""
+    return {
+        identifier
+        for device in dr.async_entries_for_config_entry(
+            device_registry, config_entry.entry_id
+        )
+        for domain, identifier in device.identifiers
+        if domain == DOMAIN
+    }
+
+
 def _vehicle_entities(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -832,6 +846,39 @@ async def test_vehicle_details_authentication_expired(
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert len(flows) == 1
     assert flows[0]["context"]["source"] == SOURCE_REAUTH
+
+
+@pytest.mark.usefixtures("patch_renault_account", "fixtures_with_data")
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(aiohttp.ClientConnectionError, id="client_error"),
+        pytest.param(TimeoutError, id="timeout"),
+        pytest.param(GigyaException, id="gigya_error"),
+    ],
+)
+async def test_vehicle_details_connection_error(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_get_vehicles: AsyncMock,
+    mock_get_vehicle_details: AsyncMock,
+    side_effect: type[Exception],
+) -> None:
+    """Test a connection error while requesting new vehicle details is retried."""
+    mock_get_vehicles.return_value = _get_vehicles(ZOE_VIN, MISSING_DETAILS_VIN)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_get_vehicle_details.side_effect = side_effect
+    await _async_poll_vehicle_list(hass, freezer)
+    await _async_poll_vehicle_list(hass, freezer)
+
+    assert mock_get_vehicle_details.await_count == 3
+    assert _device_vins(device_registry, config_entry) == {ZOE_VIN}
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
 
 @pytest.mark.usefixtures("patch_renault_account", "fixtures_with_data")
