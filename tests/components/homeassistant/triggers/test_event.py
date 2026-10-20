@@ -4,14 +4,13 @@ import logging
 
 import attr
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, mock_component
 
 from homeassistant.components import automation
 from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, script, trigger
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, mock_component
 
 
 @pytest.fixture
@@ -300,7 +299,7 @@ async def test_if_fires_on_event_with_nested_data(
 ) -> None:
     """Test the firing of events with nested data.
 
-    This test exercises the slow path of using vol.Schema to validate
+    This test exercises the slow path of using probatio.Schema to validate
     matching event data.
     """
     assert await async_setup_component(
@@ -463,7 +462,7 @@ async def test_if_fires_on_multiple_user_ids(
 ) -> None:
     """Test the firing of event when the trigger has multiple user ids.
 
-    This test exercises the slow path of using vol.Schema to validate
+    This test exercises the slow path of using probatio.Schema to validate
     matching event context.
     """
     assert await async_setup_component(

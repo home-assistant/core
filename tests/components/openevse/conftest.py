@@ -4,11 +4,10 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.openevse.const import DOMAIN
 from homeassistant.const import CONF_HOST
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -37,6 +36,7 @@ def mock_charger() -> Generator[MagicMock]:
         charger.websocket = MagicMock()
         charger.callback = None
         # Status sensors
+        charger.state = "Charging"
         charger.status = "Charging"
         charger.mode = "STA"
         charger.charge_mode = "fast"
@@ -96,6 +96,9 @@ def mock_charger() -> Generator[MagicMock]:
         charger.shaper_active = False
         charger.has_limit = False
         charger.mqtt_connected = False
+        charger.get_override_state = AsyncMock(return_value="auto")
+        charger.set_override = AsyncMock()
+        charger.clear_override = AsyncMock()
         yield charger
 
 

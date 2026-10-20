@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.blue_current import DOMAIN
@@ -14,8 +15,6 @@ from homeassistant.components.blue_current.config_flow import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -61,6 +60,7 @@ async def test_user(hass: HomeAssistant) -> None:
     assert result2["title"] == "test@email.com"
     assert result2["data"] == {"api_token": "123"}
     assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["result"].unique_id == "1234"
 
 
 @pytest.mark.parametrize(

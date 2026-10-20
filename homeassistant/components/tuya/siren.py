@@ -1,5 +1,6 @@
 """Support for Tuya siren."""
 
+from dataclasses import dataclass
 from typing import Any, override
 
 from tuya_device_handlers.definition.siren import (
@@ -20,30 +21,36 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity
+from .entity import TuyaEntity, TuyaEntityDescription
 
-SIRENS: dict[DeviceCategory, tuple[SirenEntityDescription, ...]] = {
+
+@dataclass(frozen=True)
+class TuyaSirenEntityDescription(TuyaEntityDescription, SirenEntityDescription):
+    """Describes a Tuya siren entity."""
+
+
+SIRENS: dict[DeviceCategory, tuple[TuyaSirenEntityDescription, ...]] = {
     DeviceCategory.CO2BJ: (
-        SirenEntityDescription(
+        TuyaSirenEntityDescription(
             key=DPCode.ALARM_SWITCH,
             entity_category=EntityCategory.CONFIG,
             translation_key="siren",
         ),
     ),
     DeviceCategory.DGNBJ: (
-        SirenEntityDescription(
+        TuyaSirenEntityDescription(
             key=DPCode.ALARM_SWITCH,
             translation_key="siren",
         ),
     ),
     DeviceCategory.SGBJ: (
-        SirenEntityDescription(
+        TuyaSirenEntityDescription(
             key=DPCode.ALARM_SWITCH,
             name=None,
         ),
     ),
     DeviceCategory.SP: (
-        SirenEntityDescription(
+        TuyaSirenEntityDescription(
             key=DPCode.SIREN_SWITCH,
             translation_key="siren",
         ),
@@ -93,7 +100,7 @@ class TuyaSirenEntity(TuyaEntity, SirenEntity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
-        description: SirenEntityDescription,
+        description: TuyaSirenEntityDescription,
         definition: SirenDefinition,
     ) -> None:
         """Init Tuya Siren."""

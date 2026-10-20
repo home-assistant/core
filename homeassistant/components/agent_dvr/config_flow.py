@@ -5,7 +5,7 @@ from typing import Any, override
 
 from agent import AgentConnectionError, AgentError
 from agent.a import Agent
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -63,12 +63,12 @@ class AgentFlowHandler(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
 
         data = {
-            vol.Required(CONF_HOST): str,
-            vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+            probatio.Required(CONF_HOST): str,
+            probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
         }
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(data),
+            data_schema=probatio.Schema(data),
             errors=errors,
         )

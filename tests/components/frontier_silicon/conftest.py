@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock, patch
 
 from afsapi import Equaliser, PlayCaps, PlayerMode, PlayState, Preset
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.frontier_silicon.const import CONF_WEBFSAPI_URL, DOMAIN
 from homeassistant.const import CONF_PIN
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -23,9 +23,9 @@ ATTR_MEDIAURL = "media_url"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_FROM_NUMBER): vol.All(
+        probatio.Required(CONF_FROM_NUMBER): probatio.All(
             cv.string,
-            vol.Match(
+            probatio.Match(
                 r"^\+?[1-9]\d{1,14}$|"
                 r"^(?=.{1,11}$)[a-zA-Z0-9\s]*"
                 r"[a-zA-Z][a-zA-Z0-9\s]*$"

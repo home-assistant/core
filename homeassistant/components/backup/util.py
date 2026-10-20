@@ -213,7 +213,8 @@ def validate_password_stream(
 
 def _get_expected_archives(backup: AgentBackup) -> set[str]:
     """Get the expected archives in the backup."""
-    expected_archives = set()
+    # Supervisor specific config, not in the metadata (since Supervisor 2026.03.3)
+    expected_archives = {"supervisor"}
     if backup.homeassistant_included:
         expected_archives.add("homeassistant")
     for addon in backup.addons:

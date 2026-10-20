@@ -7,34 +7,8 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-
-from homeassistant.components import alarm_control_panel
-from homeassistant.components.alarm_control_panel import (
-    AlarmControlPanelEntityFeature,
-    AlarmControlPanelState,
-)
-from homeassistant.components.mqtt.alarm_control_panel import (
-    MQTT_ALARM_ATTRIBUTES_BLOCKED,
-)
-from homeassistant.components.mqtt.const import DOMAIN
-from homeassistant.components.mqtt.models import PublishPayloadType
-from homeassistant.const import (
-    ATTR_CODE,
-    ATTR_ENTITY_ID,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_CUSTOM_BYPASS,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_ARM_NIGHT,
-    SERVICE_ALARM_ARM_VACATION,
-    SERVICE_ALARM_DISARM,
-    SERVICE_ALARM_TRIGGER,
-    SERVICE_RELOAD,
-    STATE_UNKNOWN,
-)
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-
-from .common import (
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.components.mqtt.common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -66,10 +40,35 @@ from .common import (
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
 )
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
-from tests.common import async_fire_mqtt_message
+from homeassistant.components import alarm_control_panel
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
+)
+from homeassistant.components.mqtt.alarm_control_panel import (
+    MQTT_ALARM_ATTRIBUTES_BLOCKED,
+)
+from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.components.mqtt.models import PublishPayloadType
+from homeassistant.const import (
+    ATTR_CODE,
+    ATTR_ENTITY_ID,
+    SERVICE_ALARM_ARM_AWAY,
+    SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+    SERVICE_ALARM_ARM_HOME,
+    SERVICE_ALARM_ARM_NIGHT,
+    SERVICE_ALARM_ARM_VACATION,
+    SERVICE_ALARM_DISARM,
+    SERVICE_ALARM_TRIGGER,
+    SERVICE_RELOAD,
+    STATE_UNKNOWN,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+
 from tests.components.alarm_control_panel import common
-from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 CODE_NUMBER = "1234"
 CODE_TEXT = "HELLO_CODE"
@@ -1379,8 +1378,7 @@ async def test_reload_after_invalid_config(
         assert await mqtt_mock_entry()
         assert hass.states.get("alarm_control_panel.test") is None
         assert (
-            "not a valid option, did you mean 'availability_topic' or "
-            "'command_topic'? at 'invalid_topic' for "
+            "not a valid option at 'invalid_topic' for "
             "manually configured MQTT alarm_control_panel item, "
             "in ?, line ? Got {'name': 'test', 'invalid_topic': 'test-topic'}"
             in caplog.text
@@ -1409,9 +1407,16 @@ async def test_reload_after_invalid_config(
             )
             await hass.async_block_till_done()
 
-        # Test the config is loaded now and that the existing issue is removed
+        # Test the config is loaded now and that the existing issue is removed.
+        # The patch is module wide, so other integrations (e.g. http) may
+        # remove their own issues too; only count the MQTT one.
         assert hass.states.get("alarm_control_panel.test") is not None
-        assert mock_async_remove_issue.call_count == 1
+        mqtt_issue_removals = [
+            mock_call
+            for mock_call in mock_async_remove_issue.mock_calls
+            if mock_call.args[1] == "mqtt"
+        ]
+        assert len(mqtt_issue_removals) == 1
 
         # Reload with an invalid config
         invalid_config = {

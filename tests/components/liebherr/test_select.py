@@ -2,11 +2,9 @@
 
 import copy
 import dataclasses
-from datetime import timedelta
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-from freezegun.api import FrozenDateTimeFactory
 from pyliebherrhomeapi import (
     BioFreshPlusMode,
     Device,
@@ -22,6 +20,7 @@ from pyliebherrhomeapi import (
 )
 from pyliebherrhomeapi.exceptions import LiebherrConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
@@ -39,9 +38,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from .conftest import MOCK_DEVICE, MOCK_DEVICE_STATE, SSEStreamHelper
 
 
 @pytest.fixture
@@ -131,8 +128,6 @@ async def test_select_service_calls(
     kwargs: dict[str, Any],
 ) -> None:
     """Test select option service calls."""
-    initial_call_count = mock_liebherr_client.get_device_state.call_count
-
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
@@ -142,8 +137,22 @@ async def test_select_service_calls(
 
     getattr(mock_liebherr_client, method).assert_called_once_with(**kwargs)
 
-    # Verify coordinator refresh was triggered
-    assert mock_liebherr_client.get_device_state.call_count > initial_call_count
+
+@pytest.mark.usefixtures("init_integration")
+async def test_select_updates_optimistically(hass: HomeAssistant) -> None:
+    """Test select state updates before an SSE event arrives."""
+    entity_id = "select.test_fridge_bottom_zone_icemaker"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: IceMakerMode.ON.value},
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == IceMakerMode.ON.value
 
 
 @pytest.mark.parametrize(
@@ -187,7 +196,7 @@ async def test_select_failure(
 async def test_select_when_control_missing(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
-    freezer: FrozenDateTimeFactory,
+    sse_helper: SSEStreamHelper,
 ) -> None:
     """Test select entity behavior when control is removed."""
     entity_id = "select.test_fridge_bottom_zone_icemaker"
@@ -201,9 +210,7 @@ async def test_select_when_control_missing(
         device=MOCK_DEVICE, controls=[]
     )
 
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await sse_helper.async_reconnect()
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -272,7 +279,7 @@ async def test_single_zone_select(
 async def test_select_current_option_none_mode(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
-    freezer: FrozenDateTimeFactory,
+    sse_helper: SSEStreamHelper,
 ) -> None:
     """Test select entity state when control mode returns None."""
     entity_id = "select.test_fridge_top_zone_hydrobreeze"
@@ -296,9 +303,7 @@ async def test_select_current_option_none_mode(
         state_with_none_mode
     )
 
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await sse_helper.async_push()
 
     state = hass.states.get(entity_id)
     assert state is not None

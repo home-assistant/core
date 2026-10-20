@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from pyenphase import Envoy
 
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
@@ -14,13 +14,13 @@ from .const import DOMAIN, PLATFORMS
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> None:
     """Set up Enphase Envoy from a config entry."""
 
     host = entry.data[CONF_HOST]
     session = async_create_clientsession(hass, verify_ssl=False)
     envoy = Envoy(host, session)
-    coordinator = EnphaseUpdateCoordinator(hass, envoy, entry)
+    coordinator = EnphaseUpdateCoordinator(hass, envoy, entry, session)
 
     await coordinator.async_config_entry_first_refresh()
     if not entry.unique_id:
@@ -93,16 +93,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
+    @callback
+    def state_changes() -> None:
+        """Process config entry state change events."""
+        coordinator.state_changes()
+
+    entry.async_on_unload(entry.async_on_state_change(state_changes))
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> None:
     """Unload a config entry."""
     coordinator = entry.runtime_data
     coordinator.async_cancel_token_refresh()
     coordinator.async_cancel_firmware_refresh()
     coordinator.async_cancel_mac_verification()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(

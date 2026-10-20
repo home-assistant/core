@@ -103,7 +103,7 @@ class TibberDataAPIBinarySensor(
         self._attr_unique_id = f"{device.id}_{entity_description.key}"
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.external_id)},
+            identifiers={(DOMAIN, device.id)},
             name=device.name,
             manufacturer=device.brand,
             model=device.model,

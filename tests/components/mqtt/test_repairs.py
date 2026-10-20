@@ -6,6 +6,17 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
+from pytest_homeassistant.components.mqtt.common import (
+    MOCK_NOTIFY_SUBENTRY_DATA_MULTI,
+    async_fire_mqtt_message,
+)
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.plugins import ClientSessionGenerator
+from pytest_homeassistant.typing import MqttMockHAClientGenerator
 
 from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.config_entries import ConfigSubentry, ConfigSubentryData
@@ -14,13 +25,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.util.yaml import parse_yaml
-
-from .common import MOCK_NOTIFY_SUBENTRY_DATA_MULTI, async_fire_mqtt_message
-
-from tests.common import MockConfigEntry, async_capture_events
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.conftest import ClientSessionGenerator
-from tests.typing import MqttMockHAClientGenerator
 
 
 async def help_setup_yaml(hass: HomeAssistant, config: dict[str, str]) -> None:
@@ -89,7 +93,7 @@ async def test_subentry_reconfigure_export_settings(
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, subentry_id), config_entry.entry_id
     )
-    assert device.config_entries_subentries[config_entry.entry_id] == {subentry_id}
+    assert device.config_subentry_id == subentry_id
     assert device is not None
 
     # assert we entity for all subentry components
@@ -137,7 +141,7 @@ async def test_subentry_reconfigure_export_settings(
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, subentry_id), config_entry.entry_id
     )
-    assert device.config_entries_subentries[config_entry.entry_id] == {subentry_id}
+    assert device.config_subentry_id == subentry_id
     assert device is not None
 
     # Assert a repair flow was created
@@ -178,5 +182,5 @@ async def test_subentry_reconfigure_export_settings(
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, subentry_id), config_entry.entry_id
     )
-    assert device.config_entries_subentries[config_entry.entry_id] == {None}
+    assert device.config_subentry_id is None
     assert device is not None

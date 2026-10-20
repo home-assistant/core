@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock
 
 from aiocomelit.api import (
-    ComelitSerialBridgeObject,
+    ComelitDeviceObject,
     ComelitVedoAreaObject,
     ComelitVedoZoneObject,
 )
@@ -28,6 +28,7 @@ from aiocomelit.exceptions import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.comelit.const import SCAN_INTERVAL
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
@@ -35,8 +36,6 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 from .const import LIGHT0, ZONE0
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(
@@ -90,7 +89,7 @@ async def test_coordinator_stale_device_serial_bridge(
         COVER: {},
         LIGHT: {
             0: LIGHT0,
-            1: ComelitSerialBridgeObject(
+            1: ComelitDeviceObject(
                 index=1,
                 name="Light1",
                 status=0,

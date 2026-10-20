@@ -5,6 +5,9 @@ from unittest.mock import Mock, patch
 
 from gspread import GSpreadException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries
 from homeassistant.components.application_credentials import (
@@ -17,10 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -302,7 +301,7 @@ async def test_reauth_abort(
     # Simulate failure looking up existing spreadsheet
     mock_open = Mock()
     mock_open.return_value.id = SHEET_ID
-    mock_open.side_effect = GSpreadException()
+    mock_open.side_effect = PermissionError()
     mock_client.return_value.open_by_key = mock_open
 
     aioclient_mock.post(

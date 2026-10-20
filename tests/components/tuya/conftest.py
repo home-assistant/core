@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
 from tuya_sharing import CustomerDevice, Manager
 
@@ -17,8 +18,6 @@ from homeassistant.components.tuya.const import (
 from homeassistant.core import HomeAssistant
 
 from . import DEVICE_MOCKS, TuyaNotificationHelper, create_device, create_manager
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

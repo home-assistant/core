@@ -11,6 +11,8 @@ from onedrive_personal_sdk.exceptions import (
 )
 from onedrive_personal_sdk.models.items import Folder
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.onedrive_for_business.const import (
     CONF_FOLDER_ID,
@@ -25,9 +27,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_load_unload_config_entry(
@@ -56,26 +55,26 @@ async def test_load_unload_config_entry(
 
 
 @pytest.mark.parametrize(
-    ("status", "state", "reason", "reauth_expected"),
+    ("status", "state", "translation_key", "reauth_expected"),
     [
         pytest.param(
             HTTPStatus.BAD_REQUEST,
             ConfigEntryState.SETUP_ERROR,
-            "Authentication failed",
+            "oauth2_helper_reauth_required",
             True,
             id="reauth",
         ),
         pytest.param(
             HTTPStatus.TOO_MANY_REQUESTS,
             ConfigEntryState.SETUP_RETRY,
-            "Failed to connect to OneDrive",
+            "oauth2_helper_refresh_transient",
             False,
             id="transient",
         ),
         pytest.param(
             HTTPStatus.INTERNAL_SERVER_ERROR,
             ConfigEntryState.SETUP_RETRY,
-            "Failed to connect to OneDrive",
+            "oauth2_helper_refresh_transient",
             False,
             id="server_error",
         ),
@@ -88,7 +87,7 @@ async def test_token_refresh_errors(
     aioclient_mock: AiohttpClientMocker,
     status: HTTPStatus,
     state: ConfigEntryState,
-    reason: str,
+    translation_key: str,
     reauth_expected: bool,
 ) -> None:
     """Test a failing token refresh during setup."""
@@ -103,7 +102,7 @@ async def test_token_refresh_errors(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is state
-    assert mock_config_entry.reason == reason
+    assert mock_config_entry.error_reason_translation_key == translation_key
     assert bool(hass.config_entries.flow.async_progress()) is reauth_expected
 
 

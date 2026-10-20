@@ -2,10 +2,15 @@
 
 import logging
 
-from cookidoo_api import CookidooAuthException, CookidooRequestException
+from cookidoo_api import (
+    CookidooAuthException,
+    CookidooParseException,
+    CookidooRequestException,
+)
 
-from homeassistant.const import Platform
+from homeassistant.const import CONF_EMAIL, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN
@@ -22,7 +27,7 @@ PLATFORMS: list[Platform] = [
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: CookidooConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: CookidooConfigEntry) -> None:
     """Set up Cookidoo from a config entry."""
 
     coordinator = CookidooDataUpdateCoordinator(
@@ -34,12 +39,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: CookidooConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: CookidooConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: CookidooConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 def _migrate_identifiers(
@@ -87,7 +90,7 @@ def _migrate_identifiers(
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: CookidooConfigEntry
-) -> bool:
+) -> None:
     """Migrate config entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
@@ -98,9 +101,17 @@ async def async_migrate_entry(
         try:
             await cookidoo.login()
             user_info = await cookidoo.get_user_info()
-        except (CookidooRequestException, CookidooAuthException) as e:
-            _LOGGER.error("Could not migrate config entry: %s", e)
-            return False
+        except CookidooAuthException as e:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="setup_authentication_exception",
+                translation_placeholders={CONF_EMAIL: config_entry.data[CONF_EMAIL]},
+            ) from e
+        except (CookidooParseException, CookidooRequestException) as e:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="setup_request_exception",
+            ) from e
 
         _migrate_identifiers(hass, config_entry, config_entry.entry_id, user_info.id)
         hass.config_entries.async_update_entry(
@@ -114,9 +125,17 @@ async def async_migrate_entry(
         try:
             await cookidoo.login()
             user_info = await cookidoo.get_user_info()
-        except (CookidooRequestException, CookidooAuthException) as e:
-            _LOGGER.error("Could not migrate config entry: %s", e)
-            return False
+        except CookidooAuthException as e:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="setup_authentication_exception",
+                translation_placeholders={CONF_EMAIL: config_entry.data[CONF_EMAIL]},
+            ) from e
+        except (CookidooParseException, CookidooRequestException) as e:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="setup_request_exception",
+            ) from e
 
         old_unique_id = config_entry.unique_id
         if old_unique_id:
@@ -130,5 +149,3 @@ async def async_migrate_entry(
         config_entry.version,
         config_entry.minor_version,
     )
-
-    return True

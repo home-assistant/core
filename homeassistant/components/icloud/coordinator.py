@@ -1,12 +1,15 @@
-"""Coordinator for iCloud Calendars."""
+"""Coordinators for the iCloud integration."""
 
-from dataclasses import dataclass
+import asyncio
+from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, tzinfo
 import logging
 from typing import override
 
 from pyicloud.exceptions import PyiCloudException
 from pyicloud.services.calendar import CalendarService, EventObject
+from pyicloud.services.reminders.client import RemindersApiError, RemindersAuthError
+from pyicloud.services.reminders.service import RemindersService
 
 from homeassistant.components.calendar import CalendarEvent
 from homeassistant.core import HomeAssistant
@@ -15,16 +18,23 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .account import IcloudConfigEntry
-from .const import DOMAIN
+from .const import CONF_INCLUDE_COMPLETED, DEFAULT_INCLUDE_COMPLETED, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=15)
+CALENDAR_SCAN_INTERVAL = timedelta(minutes=15)
 
 # How much of the calendar to keep cached for the entity's current/next event.
 # `async_get_events` queries iCloud directly for anything outside this window.
 LOOKBACK = timedelta(days=1)
 LOOKAHEAD = timedelta(days=30)
+
+# Bound how long the coordinator waits for a fetch so a slow or unresponsive
+# Apple request cannot stall the refresh indefinitely. This frees the
+# coordinator, not the executor thread running the request, which is released
+# only once that request itself returns. The refresh no longer runs on the
+# startup path, so the bound is a generous backstop.
+FETCH_TIMEOUT = 300  # seconds
 
 
 @dataclass(slots=True)
@@ -52,7 +62,7 @@ class IcloudCalendarCoordinator(DataUpdateCoordinator[dict[str, IcloudCalendarDa
             _LOGGER,
             config_entry=entry,
             name=DOMAIN,
-            update_interval=SCAN_INTERVAL,
+            update_interval=CALENDAR_SCAN_INTERVAL,
         )
         self.account = entry.runtime_data
 
@@ -116,9 +126,12 @@ class IcloudCalendarCoordinator(DataUpdateCoordinator[dict[str, IcloudCalendarDa
     async def _async_update_data(self) -> dict[str, IcloudCalendarData]:
         """Fetch calendars and their upcoming events."""
         try:
-            return await self.hass.async_add_executor_job(self._fetch)
+            async with asyncio.timeout(FETCH_TIMEOUT):
+                return await self.hass.async_add_executor_job(self._fetch)
         except PyiCloudException as err:
             raise UpdateFailed(f"Error fetching calendars: {err}") from err
+        except TimeoutError as err:
+            raise UpdateFailed("Timed out fetching calendars") from err
 
 
 def _parse_apple_date(value: datetime | list[int] | None) -> datetime | None:
@@ -195,4 +208,181 @@ def _as_calendar_event(event: EventObject) -> CalendarEvent | None:
         start=start_value,
         end=end_value,
         location=event.location or None,
+    )
+
+
+REMINDERS_SCAN_INTERVAL = timedelta(minutes=5)
+
+# pyicloud raises these for CloudKit failures; neither subclasses
+# PyiCloudException, so both have to be caught explicitly.
+# `get()` raises a bare LookupError when a reminder was removed elsewhere.
+REMINDERS_ERRORS = (
+    PyiCloudException,
+    RemindersApiError,
+    RemindersAuthError,
+    LookupError,
+)
+
+# pyicloud substitutes this when a reminder's title cannot be decrypted, which
+# happens on Advanced Data Protection accounts whose session has no Protected
+# Cloud Storage key. Such a reminder has no readable title and no notes, and
+# `update()` rewrites TitleDocument and NotesDocument unconditionally, so
+# writing one back would replace the real title with this placeholder and blank
+# the notes. pyicloud requests that key before every Reminders access, so this
+# should not happen anymore, but any such reminder is still left out of the
+# to-do lists rather than risk overwriting it.
+UNDECODED_TITLE = "Error Decoding Title"
+
+# Reminders are fetched one list at a time, so keep the per-list page bounded.
+RESULTS_LIMIT = 200
+
+
+@dataclass(slots=True)
+class IcloudReminder:
+    """A single reminder."""
+
+    uid: str
+    summary: str
+    description: str | None
+    due: date | datetime | None
+    completed: bool
+    completed_at: datetime | None
+    # Only used to order subtasks after their parent; never exposed on the
+    # to-do item, which has no notion of a parent.
+    parent_uid: str | None
+
+
+@dataclass(slots=True)
+class IcloudReminderList:
+    """A reminder list and the reminders it holds."""
+
+    list_id: str
+    name: str
+    reminders: list[IcloudReminder] = field(default_factory=list)
+
+
+class IcloudRemindersCoordinator(DataUpdateCoordinator[dict[str, IcloudReminderList]]):
+    """Fetch reminder lists and their contents."""
+
+    def __init__(self, hass: HomeAssistant, entry: IcloudConfigEntry) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=entry,
+            name=DOMAIN,
+            update_interval=REMINDERS_SCAN_INTERVAL,
+        )
+        self.account = entry.runtime_data
+        self._warned_undecoded = False
+        self._skipped_undecoded = False
+        # Fetching years of completed reminders means paging through tens of
+        # thousands of CloudKit records on every refresh, which is what made
+        # setup hang. The default excludes them; the option brings them back.
+        self._include_completed = entry.options.get(
+            CONF_INCLUDE_COMPLETED,
+            entry.data.get(CONF_INCLUDE_COMPLETED, DEFAULT_INCLUDE_COMPLETED),
+        )
+
+    @property
+    def reminders(self) -> RemindersService:
+        """Return the reminders service of the authenticated account."""
+        if (api := self.account.api) is None:
+            raise ConfigEntryAuthFailed("iCloud account is not authenticated")
+        return api.reminders
+
+    def _fetch(self) -> dict[str, IcloudReminderList]:
+        """Fetch every list and its reminders. Runs in the executor."""
+        service = self.reminders
+        result: dict[str, IcloudReminderList] = {}
+        self._skipped_undecoded = False
+
+        for list_id, name in _live_lists(service):
+            batch = service.list_reminders(
+                list_id=list_id,
+                include_completed=self._include_completed,
+                results_limit=RESULTS_LIMIT,
+            )
+            reminders = []
+            for reminder in batch.reminders:
+                if reminder.deleted:
+                    continue
+                if reminder.title == UNDECODED_TITLE:
+                    self._skipped_undecoded = True
+                    continue
+                reminders.append(_as_reminder(reminder))
+
+            result[list_id] = IcloudReminderList(
+                list_id=list_id, name=name, reminders=reminders
+            )
+
+        return result
+
+    @override
+    async def _async_update_data(self) -> dict[str, IcloudReminderList]:
+        """Fetch reminders from iCloud."""
+        try:
+            async with asyncio.timeout(FETCH_TIMEOUT):
+                data = await self.hass.async_add_executor_job(self._fetch)
+        except REMINDERS_ERRORS as err:
+            raise UpdateFailed(f"Error fetching reminders: {err}") from err
+        except TimeoutError as err:
+            raise UpdateFailed("Timed out fetching reminders") from err
+
+        self._warn_if_undecoded()
+        return data
+
+    def _warn_if_undecoded(self) -> None:
+        """Warn once if reminders had to be left out because of encryption.
+
+        With Advanced Data Protection enabled, CloudKit only returns readable
+        content to a session holding a Protected Cloud Storage key. pyicloud
+        requests one, but if a reminder still comes back undecoded it is
+        skipped rather than shown as a placeholder, so say once why a list
+        looks short.
+        """
+        if self._warned_undecoded or not self._skipped_undecoded:
+            return
+
+        self._warned_undecoded = True
+        _LOGGER.warning(
+            "Some reminders could not be decrypted and have been left out of "
+            "the to-do lists"
+        )
+
+
+def _live_lists(service: RemindersService) -> list[tuple[str, str]]:
+    """Return the ``(list_id, name)`` pairs that should become todo entities.
+
+    ``lists()`` yields every List record in the CloudKit zone, which includes
+    groups: a folder holding other lists rather than reminders. A group and a
+    list inside it can share a name, so leaving groups in shows that name
+    twice, once as a permanently empty list.
+
+    Deleted lists leave tombstones that still carry the list's name while
+    holding no reminders. Sharing a list replaces its record, so every shared
+    list leaves one behind: leaving them in showed a second, always empty,
+    entity next to the live list.
+    """
+    return [
+        (reminder_list.id, reminder_list.title)
+        for reminder_list in service.lists()
+        if not reminder_list.is_group and not reminder_list.deleted
+    ]
+
+
+def _as_reminder(reminder) -> IcloudReminder:
+    """Convert a pyicloud reminder into the coordinator's model."""
+    due = reminder.due_date
+    if due is not None and reminder.all_day and isinstance(due, datetime):
+        due = due.date()
+
+    return IcloudReminder(
+        uid=reminder.id,
+        summary=reminder.title,
+        description=reminder.desc or None,
+        due=due,
+        completed=reminder.completed,
+        completed_at=reminder.completed_date,
+        parent_uid=reminder.parent_reminder_id,
     )

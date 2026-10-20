@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 ATTR_CACHE = "cache"
 ATTR_LANGUAGE = "language"
+ATTR_MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"
 ATTR_MESSAGE = "message"
 ATTR_OPTIONS = "options"
 
@@ -29,5 +30,7 @@ DATA_COMPONENT: HassKey[EntityComponent[TextToSpeechEntity]] = HassKey(DOMAIN)
 DATA_TTS_MANAGER: HassKey[SpeechManager] = HassKey("tts_manager")
 
 MEDIA_SOURCE_STREAM_PATH = "-stream-"
+
+SERVICE_CLEAR_CACHE = "clear_cache"
 
 type TtsAudioType = tuple[str | None, bytes | None]
