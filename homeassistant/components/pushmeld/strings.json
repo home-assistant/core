@@ -21,11 +21,11 @@
     }
   },
   "exceptions": {
-    "config_entry_error_name_exists": {
-      "message": "The notification action notify.{service_name} is already in use. Rename the PushMeld integration and try again."
-    },
     "cannot_connect": {
       "message": "Unable to connect to PushMeld."
+    },
+    "config_entry_error_name_exists": {
+      "message": "The notification action notify.{service_name} is already in use. Rename the PushMeld integration and try again."
     },
     "request_failed": {
       "message": "PushMeld returned HTTP status {status_code}."
