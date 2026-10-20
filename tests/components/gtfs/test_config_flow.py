@@ -311,7 +311,8 @@ async def test_user_flow_duplicate_finished_first(
     result = await hass.config_entries.flow.async_configure(flow_id)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    await hass.async_block_till_done()
+    # Flow removal deletes the database in a background executor job.
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert gtfs_files(hass) == []
 
 
@@ -410,7 +411,8 @@ async def test_user_flow_removed_before_finish(hass: HomeAssistant) -> None:
     assert len(gtfs_files(hass)) == 1
 
     hass.config_entries.flow.async_abort(flow_id)
-    await hass.async_block_till_done()
+    # Flow removal deletes the database in a background executor job.
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert gtfs_files(hass) == []
 
 
