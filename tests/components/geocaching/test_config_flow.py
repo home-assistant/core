@@ -1,10 +1,11 @@
 """Test the Geocaching config flow."""
 
+import asyncio
 from http import HTTPStatus
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from geocachingapi.exceptions import GeocachingApiError, GeocachingInvalidSettingsError
-from geocachingapi.models import GeocachingStatus, GeocachingTrackable
+from geocachingapi.models import GeocachingStatus
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
@@ -17,14 +18,11 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.components.geocaching import config_flow
 from homeassistant.components.geocaching.const import (
-    CONF_TRACKABLE_CODES,
     DOMAIN,
     ENVIRONMENT,
     ENVIRONMENT_URLS,
-    MAX_TRACKED_TRACKABLES,
     SUBENTRY_TYPE_TRACKED_CACHE,
 )
-from homeassistant.components.geocaching.sensor import PROFILE_SENSORS
 from homeassistant.config_entries import (
     SOURCE_USER,
     ConfigEntryState,
@@ -34,30 +32,12 @@ from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import OAuth2TokenRequestConnectionError
-from homeassistant.helpers import (
-    config_entry_oauth2_flow,
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
 from . import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
 
 CURRENT_ENVIRONMENT_URLS = ENVIRONMENT_URLS[ENVIRONMENT]
-
-
-def _create_status(
-    account_reference_code: str, *trackable_codes: str
-) -> GeocachingStatus:
-    """Create API status data for an account and its trackables."""
-    status = GeocachingStatus()
-    status.user.username = account_reference_code
-    status.user.reference_code = account_reference_code
-    status.trackables = {
-        code: GeocachingTrackable(reference_code=code, name=code)
-        for code in trackable_codes
-    }
-    return status
 
 
 @pytest.fixture(autouse=True)
@@ -248,8 +228,8 @@ async def test_reauthentication(
         await hass.async_block_till_done()
 
     with patch.object(
-        hass.config_entries, "async_reload", new_callable=AsyncMock
-    ) as async_reload:
+        hass.config_entries, "async_schedule_reload"
+    ) as async_schedule_reload:
         result = await mock_config_entry.start_reauth_flow(hass)
 
         flows = hass.config_entries.flow.async_progress()
@@ -288,7 +268,7 @@ async def test_reauthentication(
     assert result["reason"] == "reauth_successful"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert mock_config_entry.data["token"]["access_token"] == "mock-access-token"
-    async_reload.assert_awaited_once_with(mock_config_entry.entry_id)
+    async_schedule_reload.assert_called_once_with(mock_config_entry.entry_id)
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -317,8 +297,8 @@ async def test_reauthentication_reloads_unloaded_entry(
     mock_geocaching_config_flow.update = AsyncMock(return_value=status)
 
     with patch.object(
-        hass.config_entries, "async_reload", new_callable=AsyncMock
-    ) as async_reload:
+        hass.config_entries, "async_schedule_reload"
+    ) as async_schedule_reload:
         result = await mock_config_entry.start_reauth_flow(hass)
 
         flows = hass.config_entries.flow.async_progress()
@@ -354,7 +334,7 @@ async def test_reauthentication_reloads_unloaded_entry(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data["token"]["access_token"] == "mock-access-token"
-    async_reload.assert_awaited_once_with(mock_config_entry.entry_id)
+    async_schedule_reload.assert_called_once_with(mock_config_entry.entry_id)
 
 
 def _mock_loaded(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
@@ -598,396 +578,64 @@ async def test_subentry_flow_maximum(
     assert result["reason"] == "too_many_caches"
 
 
-async def test_options_flow(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_geocaching_config_flow: MagicMock,
-) -> None:
-    """Test configuring tracked trackables reloads a loaded entry."""
-    mock_config_entry.add_to_hass(hass)
-
-    status = GeocachingStatus()
-    status.user.username = "mock_user"
-    status.user.reference_code = "PR12345"
-    session = MagicMock()
-    session.token = {"access_token": "mock-token"}
-    session.async_ensure_token_valid = AsyncMock()
-
-    with (
-        patch(
-            "homeassistant.components.geocaching.async_get_config_entry_implementation",
-            return_value=MagicMock(),
-        ),
-        patch(
-            "homeassistant.components.geocaching.OAuth2Session",
-            return_value=session,
-        ),
-        patch(
-            "homeassistant.components.geocaching.coordinator.GeocachingApi"
-        ) as geocaching_api_mock,
-    ):
-        geocaching_api_mock.return_value.update = AsyncMock(return_value=status)
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    with patch.object(
-        hass.config_entries, "async_reload", new_callable=AsyncMock
-    ) as async_reload:
-        result = await hass.config_entries.options.async_init(
-            mock_config_entry.entry_id
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "init"
-
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={CONF_TRACKABLE_CODES: "TB12345, tb67890\nTB12345"},
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {CONF_TRACKABLE_CODES: ["TB12345", "TB67890"]}
-    assert mock_config_entry.options == {CONF_TRACKABLE_CODES: ["TB12345", "TB67890"]}
-    async_reload.assert_awaited_once_with(mock_config_entry.entry_id)
-    mock_geocaching_config_flow.verify_settings.assert_awaited_once()
-
-
-async def test_options_flow_removes_trackable_registry_entries(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-    mock_geocaching_config_flow: MagicMock,
-) -> None:
-    """Test removing a trackable cleans its entities and device before reload."""
-    removed_code = "TB12345"
-    retained_code = "TB67890"
-    account_reference_code = "PR12345"
-    config_entry = MockConfigEntry(
-        title="Account",
-        domain=DOMAIN,
-        data={"id": "mock_user", "auth_implementation": DOMAIN},
-        options={CONF_TRACKABLE_CODES: [" tb12345 ", retained_code]},
-        unique_id="mock_user",
-    )
-    config_entry.add_to_hass(hass)
-
-    initial_status = _create_status(account_reference_code, removed_code, retained_code)
-    reloaded_status = _create_status(account_reference_code, retained_code)
-    session = MagicMock()
-    session.token = {"access_token": "mock-token"}
-    session.async_ensure_token_valid = AsyncMock()
-
-    with (
-        patch(
-            "homeassistant.components.geocaching.async_get_config_entry_implementation",
-            return_value=MagicMock(),
-        ),
-        patch(
-            "homeassistant.components.geocaching.OAuth2Session",
-            return_value=session,
-        ),
-        patch(
-            "homeassistant.components.geocaching.coordinator.GeocachingApi"
-        ) as geocaching_api_mock,
-    ):
-        geocaching_api_mock.return_value.update = AsyncMock(
-            side_effect=[initial_status, reloaded_status]
-        )
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        removed_unique_id = (
-            f"{account_reference_code}_{removed_code}_kilometers_traveled"
-        )
-        removed_entity_id = entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, removed_unique_id
-        )
-        assert removed_entity_id is not None
-        removed_device = device_registry.async_get_device_by_identifier(
-            (DOMAIN, f"{account_reference_code}_{removed_code}"),
-            config_entry.entry_id,
-        )
-        assert removed_device is not None
-        disabled_entity = entity_registry.async_get_or_create(
-            "sensor",
-            DOMAIN,
-            f"{removed_unique_id}_disabled",
-            config_entry=config_entry,
-            device_id=removed_device.id,
-            disabled_by=er.RegistryEntryDisabler.USER,
-        )
-
-        retained_unique_id = (
-            f"{account_reference_code}_{retained_code}_kilometers_traveled"
-        )
-        retained_entity_id = entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, retained_unique_id
-        )
-        assert retained_entity_id is not None
-
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={CONF_TRACKABLE_CODES: retained_code},
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options == {CONF_TRACKABLE_CODES: [retained_code]}
-    assert hass.states.get(removed_entity_id) is None
-    assert entity_registry.async_get(removed_entity_id) is None
-    assert entity_registry.async_get(disabled_entity.entity_id) is None
-    assert (
-        device_registry.async_get_device_by_identifier(
-            (DOMAIN, f"{account_reference_code}_{removed_code}"),
-            config_entry.entry_id,
-        )
-        is None
-    )
-
-    assert hass.states.get(retained_entity_id) is not None
-    retained_entity = entity_registry.async_get(retained_entity_id)
-    assert retained_entity is not None
-    assert retained_entity.config_entry_id == config_entry.entry_id
-    assert retained_entity.config_subentry_id is None
-    assert (
-        device_registry.async_get_device_by_identifier(
-            (DOMAIN, f"{account_reference_code}_{retained_code}"),
-            config_entry.entry_id,
-        )
-        is not None
-    )
-
-    for description in PROFILE_SENSORS:
-        profile_entity_id = entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{account_reference_code}_{description.key}"
-        )
-        assert profile_entity_id is not None
-        assert hass.states.get(profile_entity_id) is not None
-    assert (
-        device_registry.async_get_device_by_identifier(
-            (DOMAIN, account_reference_code), config_entry.entry_id
-        )
-        is not None
-    )
-
-
-async def test_options_flow_removes_trackable_from_unloaded_entry(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test registry cleanup for an unloaded entry is scoped to that entry."""
-    trackable_code = "TB12345"
-    entries: list[tuple[MockConfigEntry, str]] = []
-
-    for account_reference_code, entry_id in (
-        ("PR11111", "entry-one"),
-        ("PR22222", "entry-two"),
-    ):
-        config_entry = MockConfigEntry(
-            title=account_reference_code,
-            domain=DOMAIN,
-            data={"id": entry_id, "auth_implementation": DOMAIN},
-            options={CONF_TRACKABLE_CODES: [trackable_code]},
-            entry_id=entry_id,
-            unique_id=entry_id,
-        )
-        config_entry.add_to_hass(hass)
-        status = _create_status(account_reference_code, trackable_code)
-        session = MagicMock()
-        session.token = {"access_token": "mock-token"}
-        with (
-            patch(
-                "homeassistant.components.geocaching.async_get_config_entry_implementation",
-                return_value=MagicMock(),
-            ),
-            patch(
-                "homeassistant.components.geocaching.OAuth2Session",
-                return_value=session,
-            ),
-            patch(
-                "homeassistant.components.geocaching.coordinator.GeocachingApi"
-            ) as geocaching_api_mock,
-        ):
-            geocaching_api_mock.return_value.update = AsyncMock(return_value=status)
-            await hass.config_entries.async_setup(config_entry.entry_id)
-            await hass.async_block_till_done()
-        entries.append((config_entry, account_reference_code))
-
-    removed_entry, removed_account = entries[0]
-    retained_entry, retained_account = entries[1]
-    removed_unique_id = f"{removed_account}_{trackable_code}_kilometers_traveled"
-    removed_entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, removed_unique_id
-    )
-    assert removed_entity_id is not None
-    removed_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, f"{removed_account}_{trackable_code}"), removed_entry.entry_id
-    )
-    assert removed_device is not None
-
-    assert await hass.config_entries.async_unload(removed_entry.entry_id)
-    await hass.async_block_till_done()
-    assert entity_registry.async_get(removed_entity_id) is not None
-    assert device_registry.async_get(removed_device.id) is not None
-
-    with patch.object(
-        hass.config_entries, "async_reload", new_callable=AsyncMock
-    ) as async_reload:
-        result = await hass.config_entries.options.async_init(removed_entry.entry_id)
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={CONF_TRACKABLE_CODES: ""}
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert removed_entry.options == {CONF_TRACKABLE_CODES: []}
-    assert entity_registry.async_get(removed_entity_id) is None
-    assert device_registry.async_get(removed_device.id) is None
-    async_reload.assert_not_awaited()
-
-    retained_unique_id = f"{retained_account}_{trackable_code}_kilometers_traveled"
-    retained_entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, retained_unique_id
-    )
-    assert retained_entity_id is not None
-    retained_entity = entity_registry.async_get(retained_entity_id)
-    assert retained_entity is not None
-    assert retained_entity.config_entry_id == retained_entry.entry_id
-    assert (
-        device_registry.async_get_device_by_identifier(
-            (DOMAIN, f"{retained_account}_{trackable_code}"),
-            retained_entry.entry_id,
-        )
-        is not None
-    )
-
-
-async def test_options_flow_maximum_trackables(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test configuring the maximum number of tracked trackables."""
-    mock_config_entry.add_to_hass(hass)
-    trackable_codes = [f"TB{number}" for number in range(MAX_TRACKED_TRACKABLES)]
-
-    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_TRACKABLE_CODES: "\n".join(trackable_codes)},
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {CONF_TRACKABLE_CODES: trackable_codes}
-
-
-@pytest.mark.parametrize(
-    ("trackable_codes", "error"),
-    [
-        pytest.param("INVALID", "invalid_trackable_code", id="invalid"),
-        pytest.param(
-            "\n".join(f"TB{number}" for number in range(MAX_TRACKED_TRACKABLES + 1)),
-            "too_many_trackables",
-            id="too-many",
-        ),
-    ],
-)
-async def test_options_flow_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    trackable_codes: str,
-    error: str,
-) -> None:
-    """Test invalid tracked trackable options."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_TRACKABLE_CODES: trackable_codes},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-    assert result["errors"] == {"base": error}
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_TRACKABLE_CODES: "TB12345"}
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {CONF_TRACKABLE_CODES: ["TB12345"]}
-    assert mock_config_entry.options == {CONF_TRACKABLE_CODES: ["TB12345"]}
-
-
-@pytest.mark.parametrize(
-    ("exception", "errors"),
-    [
-        pytest.param(
-            GeocachingInvalidSettingsError("trackable", {"TB12345"}),
-            {"base": "trackable_not_found"},
-            id="trackable_not_found",
-        ),
-        pytest.param(
-            GeocachingApiError(),
-            {"base": "cannot_connect"},
-            id="cannot_connect",
-        ),
-    ],
-)
-async def test_options_flow_verify_error(
+async def test_subentry_flow_maximum_with_concurrent_additions(
     hass: HomeAssistant,
     mock_geocaching_config_flow: MagicMock,
-    exception: Exception,
-    errors: dict[str, str],
 ) -> None:
-    """Test API verification errors when saving trackable options and recovering."""
+    """Test concurrent subentry flows cannot exceed the cache limit."""
     config_entry = MockConfigEntry(
         title="1234AB 1",
         domain=DOMAIN,
         data={"id": "mock_user", "auth_implementation": DOMAIN},
-        options={CONF_TRACKABLE_CODES: ["TB00000"]},
         unique_id="mock_user",
+        subentries_data=[
+            ConfigSubentryDataWithId(
+                data={CONF_CODE: f"GC{number}"},
+                subentry_type=SUBENTRY_TYPE_TRACKED_CACHE,
+                title=f"GC{number}",
+                unique_id=f"GC{number}",
+                subentry_id=f"subentry-{number}",
+            )
+            for number in range(49)
+        ],
     )
     _mock_loaded(hass, config_entry)
-    mock_geocaching_config_flow.verify_settings.side_effect = exception
 
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_TRACKABLE_CODES: "TB12345"},
+    verification_started = asyncio.Event()
+    verification_calls = 0
+
+    async def wait_for_both_verifications() -> None:
+        nonlocal verification_calls
+        verification_calls += 1
+        if verification_calls == 2:
+            verification_started.set()
+        await verification_started.wait()
+
+    mock_geocaching_config_flow.verify_settings.side_effect = (
+        wait_for_both_verifications
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == errors
-    assert config_entry.options == {CONF_TRACKABLE_CODES: ["TB00000"]}
-    geocaching_api = config_flow.GeocachingApi
-    assert geocaching_api.call_args.kwargs["settings"].tracked_trackable_codes == {
-        "TB12345"
-    }
+    flow_results = [
+        await hass.config_entries.subentries.async_init(
+            (config_entry.entry_id, SUBENTRY_TYPE_TRACKED_CACHE),
+            context={"source": SOURCE_USER},
+        )
+        for _ in range(2)
+    ]
+    configure_tasks = [
+        hass.config_entries.subentries.async_configure(
+            flow_result["flow_id"], {CONF_CODE: f"GC{number}"}
+        )
+        for number, flow_result in enumerate(flow_results, start=50000)
+    ]
 
-    mock_geocaching_config_flow.verify_settings.side_effect = None
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_TRACKABLE_CODES: "TB12345"},
+    results = await asyncio.gather(*configure_tasks)
+
+    assert len(config_entry.get_subentries_of_type(SUBENTRY_TYPE_TRACKED_CACHE)) == 50
+    assert [result["type"] for result in results].count(
+        FlowResultType.CREATE_ENTRY
+    ) == 1
+    abort_result = next(
+        result for result in results if result["type"] is FlowResultType.ABORT
     )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options == {CONF_TRACKABLE_CODES: ["TB12345"]}
-
-
-async def test_options_flow_skips_verification_when_not_loaded(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test saving trackable options without live validation while not loaded."""
-    mock_config_entry.add_to_hass(hass)
-    assert mock_config_entry.state is not ConfigEntryState.LOADED
-
-    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_TRACKABLE_CODES: "TB12345"},
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert mock_config_entry.options == {CONF_TRACKABLE_CODES: ["TB12345"]}
+    assert abort_result["reason"] == "too_many_caches"

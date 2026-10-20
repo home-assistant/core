@@ -3,21 +3,16 @@
 import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from geocachingapi.models import GeocachingCache, GeocachingStatus, GeocachingTrackable
+from geocachingapi.models import GeocachingCache, GeocachingStatus
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.geocaching.const import (
-    CONF_TRACKABLE_CODES,
     DOMAIN,
     SUBENTRY_TYPE_TRACKED_CACHE,
 )
 from homeassistant.components.geocaching.coordinator import GeocachingCoordinatorData
-from homeassistant.components.geocaching.sensor import (
-    CACHE_SENSORS,
-    PROFILE_SENSORS,
-    TRACKABLE_SENSORS,
-)
+from homeassistant.components.geocaching.sensor import CACHE_SENSORS, PROFILE_SENSORS
 from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.const import CONF_CODE, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -56,14 +51,12 @@ async def test_entities_are_linked_to_subentries(
 ) -> None:
     """Test entities are linked to their matching config subentries."""
     cache_code = "GC12345"
-    trackable_code = "TB12345"
     cache_subentry_id = "cache-subentry"
     missing_cache_code = "GC99999"
     config_entry = MockConfigEntry(
         title="1234AB 1",
         domain=DOMAIN,
         data={"id": "mock_user", "auth_implementation": DOMAIN},
-        options={CONF_TRACKABLE_CODES: [trackable_code]},
         unique_id="mock_user",
         subentries_data=[
             ConfigSubentryDataWithId(
@@ -92,26 +85,10 @@ async def test_entities_are_linked_to_subentries(
         owner=owner,
         favorite_points=10,
     )
-    trackable = GeocachingTrackable(
-        reference_code=" tb12345 ",
-        name="Test trackable",
-        owner=owner,
-        kilometers_traveled=10.5,
-    )
-    unmatched_trackable = GeocachingTrackable(
-        reference_code="TB99999",
-        name="Unmatched trackable",
-        owner=owner,
-        kilometers_traveled=20.5,
-    )
     status = GeocachingStatus()
     status.user.username = "mock_user"
     status.user.reference_code = "PR12345"
     status.tracked_caches = [cache]
-    status.trackables = {
-        trackable_code: trackable,
-        "TB99999": unmatched_trackable,
-    }
 
     session = MagicMock()
     session.token = {"access_token": "mock-token"}
@@ -152,26 +129,6 @@ async def test_entities_are_linked_to_subentries(
     assert state.state == "10"
     cache_entity_id = entity_id
 
-    for description in TRACKABLE_SENSORS:
-        entity_id = entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"PR12345_{trackable_code}_{description.key}"
-        )
-        assert entity_id is not None
-        entity = entity_registry.async_get(entity_id)
-        assert entity is not None
-        assert entity.config_entry_id == config_entry.entry_id
-        assert entity.config_subentry_id is None
-        assert (
-            entity_registry.async_get_entity_id(
-                "sensor", DOMAIN, f"PR12345_TB99999_{description.key}"
-            )
-            is None
-        )
-    trackable_entity_id = entity_id
-    state = hass.states.get(trackable_entity_id)
-    assert state is not None
-    assert state.state == "10.5"
-
     for description in CACHE_SENSORS:
         assert (
             entity_registry.async_get_entity_id(
@@ -194,11 +151,6 @@ async def test_entities_are_linked_to_subentries(
         (DOMAIN, cache_code), config_entry.entry_id
     )
     assert cache_device is not None
-    trackable_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, f"PR12345_{trackable_code}"), config_entry.entry_id
-    )
-    assert trackable_device is not None
-
     coordinator = config_entry.runtime_data
     updated_cache = GeocachingCache(
         reference_code=cache_code,
@@ -206,16 +158,9 @@ async def test_entities_are_linked_to_subentries(
         owner=owner,
         favorite_points=20,
     )
-    updated_trackable = GeocachingTrackable(
-        reference_code=trackable_code,
-        name="Test trackable",
-        owner=owner,
-        kilometers_traveled=20.5,
-    )
     coordinator.async_set_updated_data(
         GeocachingCoordinatorData(
             user=status.user,
-            trackables={trackable_code: updated_trackable},
             nearby_caches=status.nearby_caches,
             tracked_caches={cache_code: updated_cache},
         )
@@ -225,48 +170,39 @@ async def test_entities_are_linked_to_subentries(
     state = hass.states.get(cache_entity_id)
     assert state is not None
     assert state.state == "20"
-    state = hass.states.get(trackable_entity_id)
-    assert state is not None
-    assert state.state == "20.5"
-
     coordinator.async_set_updated_data(
         GeocachingCoordinatorData(
             user=status.user,
-            trackables={},
             nearby_caches=status.nearby_caches,
             tracked_caches={},
         )
     )
     await hass.async_block_till_done()
 
-    for entity_id in (cache_entity_id, trackable_entity_id):
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.state == STATE_UNAVAILABLE
+    state = hass.states.get(cache_entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
     coordinator.data = None
     coordinator.async_update_listeners()
     await hass.async_block_till_done()
 
-    for entity_id in (cache_entity_id, trackable_entity_id):
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.state == STATE_UNAVAILABLE
+    state = hass.states.get(cache_entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_entities_added_when_available_after_setup(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test configured caches/trackables missing at setup get entities later."""
+    """Test configured caches missing at setup get entities later."""
     cache_code = "GC12345"
-    trackable_code = "TB12345"
     cache_subentry_id = "cache-subentry"
     config_entry = MockConfigEntry(
         title="1234AB 1",
         domain=DOMAIN,
         data={"id": "mock_user", "auth_implementation": DOMAIN},
-        options={CONF_TRACKABLE_CODES: [trackable_code]},
         unique_id="mock_user",
         subentries_data=[
             ConfigSubentryDataWithId(
@@ -284,7 +220,6 @@ async def test_entities_added_when_available_after_setup(
     status.user.username = "mock_user"
     status.user.reference_code = "PR12345"
     status.tracked_caches = []
-    status.trackables = {}
 
     await _async_setup_geocaching_entry(hass, config_entry, status)
 
@@ -295,14 +230,6 @@ async def test_entities_added_when_available_after_setup(
             )
             is None
         )
-    for description in TRACKABLE_SENSORS:
-        assert (
-            entity_registry.async_get_entity_id(
-                "sensor", DOMAIN, f"PR12345_{trackable_code}_{description.key}"
-            )
-            is None
-        )
-
     owner = MagicMock()
     owner.username = "CacheOwner"
     cache = GeocachingCache(
@@ -311,18 +238,10 @@ async def test_entities_added_when_available_after_setup(
         owner=owner,
         favorite_points=10,
     )
-    trackable = GeocachingTrackable(
-        reference_code=trackable_code,
-        name="Test trackable",
-        owner=owner,
-        kilometers_traveled=10.5,
-    )
-
     coordinator = config_entry.runtime_data
     coordinator.async_set_updated_data(
         GeocachingCoordinatorData(
             user=status.user,
-            trackables={trackable_code: trackable},
             nearby_caches=[],
             tracked_caches={cache_code: cache},
         )
@@ -340,14 +259,6 @@ async def test_entities_added_when_available_after_setup(
         assert entity.config_subentry_id == cache_subentry_id
         cache_entity_ids.append(entity_id)
 
-    trackable_entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"PR12345_{trackable_code}_kilometers_traveled"
-    )
-    assert trackable_entity_id is not None
-    state = hass.states.get(trackable_entity_id)
-    assert state is not None
-    assert state.state == "10.5"
-
     entities_before = {
         entity.entity_id
         for entity in er.async_entries_for_config_entry(
@@ -359,7 +270,6 @@ async def test_entities_added_when_available_after_setup(
     coordinator.async_set_updated_data(
         GeocachingCoordinatorData(
             user=status.user,
-            trackables={trackable_code: trackable},
             nearby_caches=[],
             tracked_caches={cache_code: cache},
         )
@@ -373,7 +283,7 @@ async def test_entities_added_when_available_after_setup(
         )
     }
     assert entities_after == entities_before
-    for entity_id in (*cache_entity_ids, trackable_entity_id):
+    for entity_id in cache_entity_ids:
         assert entity_id in entities_after
 
 
@@ -385,12 +295,10 @@ async def test_listener_handles_missing_coordinator_data(
     """Test the entity-adding listener tolerates coordinator.data being None."""
     cache_code = "GC12345"
     missing_cache_code = "GC99999"
-    trackable_code = "TB12345"
     config_entry = MockConfigEntry(
         title="1234AB 1",
         domain=DOMAIN,
         data={"id": "mock_user", "auth_implementation": DOMAIN},
-        options={CONF_TRACKABLE_CODES: [trackable_code]},
         unique_id="mock_user",
         subentries_data=[
             ConfigSubentryDataWithId(
@@ -423,9 +331,6 @@ async def test_listener_handles_missing_coordinator_data(
     status.user.username = "mock_user"
     status.user.reference_code = "PR12345"
     status.tracked_caches = [cache]
-    # trackable_code is configured but absent from this refresh, so it is
-    # not yet in added_trackable_codes when data later disappears below.
-    status.trackables = {}
 
     await _async_setup_geocaching_entry(hass, config_entry, status)
 
@@ -439,13 +344,6 @@ async def test_listener_handles_missing_coordinator_data(
         )
         is None
     )
-    assert (
-        entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"PR12345_{trackable_code}_kilometers_traveled"
-        )
-        is None
-    )
-
     coordinator = config_entry.runtime_data
     coordinator.data = None
 
@@ -478,78 +376,36 @@ async def test_listener_handles_missing_coordinator_data(
         )
         is None
     )
-    assert (
-        entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"PR12345_{trackable_code}_kilometers_traveled"
-        )
-        is None
-    )
 
 
-async def test_entities_are_unique_per_account(
+async def test_profile_sensors_unavailable_without_coordinator_data(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test entities and devices are unique per Geocaching account."""
-    trackable_code = "TB12345"
-    entries: list[tuple[MockConfigEntry, str]] = []
+    """Test profile sensors become unavailable when coordinator data is missing."""
+    config_entry = MockConfigEntry(
+        title="1234AB 1",
+        domain=DOMAIN,
+        data={"id": "mock_user", "auth_implementation": DOMAIN},
+        unique_id="mock_user",
+    )
+    config_entry.add_to_hass(hass)
 
-    for account_reference_code, entry_id in (
-        ("PR11111", "entry-one"),
-        ("PR22222", "entry-two"),
-    ):
-        config_entry = MockConfigEntry(
-            title=account_reference_code,
-            domain=DOMAIN,
-            data={"id": entry_id, "auth_implementation": DOMAIN},
-            options={CONF_TRACKABLE_CODES: [trackable_code]},
-            entry_id=entry_id,
-            unique_id=entry_id,
+    status = GeocachingStatus()
+    status.user.username = "mock_user"
+    status.user.reference_code = "PR12345"
+    await _async_setup_geocaching_entry(hass, config_entry, status)
+
+    coordinator = config_entry.runtime_data
+    coordinator.data = None
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    for description in PROFILE_SENSORS:
+        entity_id = entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"PR12345_{description.key}"
         )
-        config_entry.add_to_hass(hass)
-
-        owner = MagicMock()
-        owner.username = "CacheOwner"
-        trackable = GeocachingTrackable(
-            reference_code=trackable_code,
-            name="Test trackable",
-            owner=owner,
-            kilometers_traveled=10.5,
-        )
-        status = GeocachingStatus()
-        status.user.username = entry_id
-        status.user.reference_code = account_reference_code
-        status.trackables = {trackable_code: trackable}
-
-        await _async_setup_geocaching_entry(hass, config_entry, status)
-        entries.append((config_entry, account_reference_code))
-
-    trackable_devices = []
-    for config_entry, account_reference_code in entries:
-        for description in TRACKABLE_SENSORS:
-            unique_id = f"{account_reference_code}_{trackable_code}_{description.key}"
-            entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
-            assert entity_id is not None
-            entity = entity_registry.async_get(entity_id)
-            assert entity is not None
-            assert entity.config_entry_id == config_entry.entry_id
-            assert entity.config_subentry_id is None
-
-        for description in PROFILE_SENSORS:
-            unique_id = f"{account_reference_code}_{description.key}"
-            entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
-            assert entity_id is not None
-            entity = entity_registry.async_get(entity_id)
-            assert entity is not None
-            assert entity.config_entry_id == config_entry.entry_id
-            assert entity.config_subentry_id is None
-
-        trackable_device = device_registry.async_get_device_by_identifier(
-            (DOMAIN, f"{account_reference_code}_{trackable_code}"),
-            config_entry.entry_id,
-        )
-        assert trackable_device is not None
-        trackable_devices.append(trackable_device)
-
-    assert trackable_devices[0].id != trackable_devices[1].id
+        assert entity_id is not None
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_UNAVAILABLE

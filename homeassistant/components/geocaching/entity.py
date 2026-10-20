@@ -1,8 +1,8 @@
 """Sensor entities for Geocaching."""
 
-from typing import cast, override
+from typing import override
 
-from geocachingapi.models import GeocachingCache, GeocachingTrackable
+from geocachingapi.models import GeocachingCache
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -57,41 +57,4 @@ class GeocachingCacheEntity(GeocachingBaseEntity):
             super().available
             and self.coordinator.data is not None
             and self._reference_code in self.coordinator.data.tracked_caches
-        )
-
-
-class GeocachingTrackableEntity(GeocachingBaseEntity):
-    """Base class for Geocaching trackable entities."""
-
-    def __init__(
-        self,
-        coordinator: GeocachingDataUpdateCoordinator,
-        trackable: GeocachingTrackable,
-    ) -> None:
-        """Initialize the Geocaching trackable entity."""
-        super().__init__(coordinator)
-
-        self._reference_code = cast(str, trackable.reference_code).strip().upper()
-        account_reference_code = cast(str, coordinator.data.user.reference_code)
-
-        self._attr_device_info = DeviceInfo(
-            name=f"Trackable {trackable.name}",
-            identifiers={(DOMAIN, f"{account_reference_code}_{self._reference_code}")},
-            entry_type=DeviceEntryType.SERVICE,
-            manufacturer="Groundspeak, Inc.",
-        )
-
-    @property
-    def trackable(self) -> GeocachingTrackable:
-        """Return the latest trackable data."""
-        return self.coordinator.data.trackables[self._reference_code]
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return whether the trackable is available."""
-        return (
-            super().available
-            and self.coordinator.data is not None
-            and self._reference_code in self.coordinator.data.trackables
         )

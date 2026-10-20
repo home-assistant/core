@@ -15,24 +15,15 @@ from homeassistant.config_entries import (
     ConfigEntryState,
     ConfigFlowResult,
     ConfigSubentryFlow,
-    OptionsFlow,
     SubentryFlowResult,
 )
 from homeassistant.const import CONF_CODE
 from homeassistant.core import callback
 from homeassistant.exceptions import OAuth2TokenRequestBaseError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
-from .const import (
-    CONF_TRACKABLE_CODES,
-    DOMAIN,
-    ENVIRONMENT,
-    MAX_TRACKED_CACHES,
-    MAX_TRACKED_TRACKABLES,
-    SUBENTRY_TYPE_TRACKED_CACHE,
-)
+from .const import DOMAIN, ENVIRONMENT, MAX_TRACKED_CACHES, SUBENTRY_TYPE_TRACKED_CACHE
 from .coordinator import GeocachingConfigEntry
 
 
@@ -52,13 +43,6 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         return {
             SUBENTRY_TYPE_TRACKED_CACHE: TrackedCacheSubentryFlow,
         }
-
-    @staticmethod
-    @callback
-    @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
-        """Create the options flow."""
-        return GeocachingOptionsFlow()
 
     @property
     @override
@@ -95,14 +79,10 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         if existing_entry := await self.async_set_unique_id(
             status.user.username.lower()
         ):
-            entry_was_loaded = existing_entry.state is ConfigEntryState.LOADED
             result = self.async_update_and_abort(
                 existing_entry, data=data, reason="reauth_successful"
             )
-            if not entry_was_loaded:
-                # A loaded entry's update listener already reloads it; an entry
-                # that never finished setup has no listener to do that for it.
-                await self.hass.config_entries.async_reload(existing_entry.entry_id)
+            self.hass.config_entries.async_schedule_reload(existing_entry.entry_id)
             return result
         return self.async_create_entry(title=status.user.username, data=data)
 
@@ -155,6 +135,11 @@ class GeocachingCodeSubentryFlow(ConfigSubentryFlow):
                 except GeocachingApiError, OAuth2TokenRequestBaseError:
                     errors["base"] = "cannot_connect"
                 else:
+                    if (
+                        len(entry.get_subentries_of_type(self._subentry_type))
+                        >= self.max_subentries
+                    ):
+                        return self.async_abort(reason=self.max_subentries_abort)
                     return self.async_create_entry(
                         title=code,
                         data={CONF_CODE: code},
@@ -176,100 +161,3 @@ class TrackedCacheSubentryFlow(GeocachingCodeSubentryFlow):
     not_found_error = "cache_not_found"
     max_subentries = MAX_TRACKED_CACHES
     max_subentries_abort = "too_many_caches"
-
-
-class GeocachingOptionsFlow(OptionsFlow):
-    """Handle Geocaching options."""
-
-    @callback
-    def _async_save_trackable_codes(
-        self, trackable_codes: list[str]
-    ) -> ConfigFlowResult:
-        """Persist the tracked trackable codes and clean up removed ones."""
-        current_codes = {
-            code.strip().upper()
-            for code in self.config_entry.options.get(CONF_TRACKABLE_CODES, [])
-        }
-        self._async_remove_trackables(current_codes - set(trackable_codes))
-        return self.async_create_entry(data={CONF_TRACKABLE_CODES: trackable_codes})
-
-    @callback
-    def _async_remove_trackables(self, removed_codes: set[str]) -> None:
-        """Remove registry entries for trackables removed from the options."""
-        device_registry = dr.async_get(self.hass)
-        entity_registry = er.async_get(self.hass)
-
-        for device in dr.async_entries_for_config_entry(
-            device_registry, self.config_entry.entry_id
-        ):
-            if not any(
-                identifier_domain == DOMAIN
-                and identifier.rpartition("_")[1]
-                and identifier.rpartition("_")[2] in removed_codes
-                for identifier_domain, identifier in device.identifiers
-            ):
-                continue
-
-            for entity in er.async_entries_for_device(
-                entity_registry, device.id, include_disabled_entities=True
-            ):
-                if entity.config_entry_id == self.config_entry.entry_id:
-                    entity_registry.async_remove(entity.entity_id)
-            device_registry.async_remove_device(device.id)
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage tracked trackables."""
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            raw_codes = user_input.get(CONF_TRACKABLE_CODES, "")
-            trackable_codes = [
-                code.strip().upper()
-                for code in raw_codes.replace(",", "\n").splitlines()
-                if code.strip()
-            ]
-            trackable_codes = list(dict.fromkeys(trackable_codes))
-
-            if len(trackable_codes) > MAX_TRACKED_TRACKABLES:
-                errors["base"] = "too_many_trackables"
-            elif any(
-                re.fullmatch(r"TB[A-Z0-9]+", code) is None for code in trackable_codes
-            ):
-                errors["base"] = "invalid_trackable_code"
-            elif self.config_entry.state is not ConfigEntryState.LOADED:
-                # Nothing to validate against, and a reload isn't possible either.
-                return self._async_save_trackable_codes(trackable_codes)
-            else:
-                session = self.config_entry.runtime_data.session
-                try:
-                    await session.async_ensure_token_valid()
-                    await GeocachingApi(
-                        environment=ENVIRONMENT,
-                        token=session.token["access_token"],
-                        settings=GeocachingSettings(
-                            trackable_codes=set(trackable_codes)
-                        ),
-                        session=async_get_clientsession(self.hass),
-                    ).verify_settings()
-                except GeocachingInvalidSettingsError:
-                    errors["base"] = "trackable_not_found"
-                except GeocachingApiError, OAuth2TokenRequestBaseError:
-                    errors["base"] = "cannot_connect"
-                else:
-                    return self._async_save_trackable_codes(trackable_codes)
-
-        current_codes = self.config_entry.options.get(CONF_TRACKABLE_CODES, [])
-        return self.async_show_form(
-            step_id="init",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Optional(
-                        CONF_TRACKABLE_CODES,
-                        default=", ".join(current_codes),
-                    ): str
-                }
-            ),
-            errors=errors,
-        )

@@ -5,30 +5,26 @@ from dataclasses import dataclass
 import datetime as dt
 from typing import cast, override
 
-from geocachingapi.models import GeocachingCache, GeocachingTrackable
+from geocachingapi.models import GeocachingCache
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import CONF_CODE, UnitOfLength
+from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import CONF_TRACKABLE_CODES, DOMAIN, SUBENTRY_TYPE_TRACKED_CACHE
+from .const import DOMAIN, SUBENTRY_TYPE_TRACKED_CACHE
 from .coordinator import (
     GeocachingConfigEntry,
     GeocachingCoordinatorData,
     GeocachingDataUpdateCoordinator,
 )
-from .entity import (
-    GeocachingBaseEntity,
-    GeocachingCacheEntity,
-    GeocachingTrackableEntity,
-)
+from .entity import GeocachingBaseEntity, GeocachingCacheEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -77,13 +73,6 @@ class GeocachingCacheSensorDescription(SensorEntityDescription):
     value_fn: Callable[[GeocachingCache], StateType | dt.date]
 
 
-@dataclass(frozen=True, kw_only=True)
-class GeocachingTrackableSensorDescription(SensorEntityDescription):
-    """Define trackable sensor entity description class."""
-
-    value_fn: Callable[[GeocachingTrackable], StateType | dt.date]
-
-
 CACHE_SENSORS: tuple[GeocachingCacheSensorDescription, ...] = (
     GeocachingCacheSensorDescription(
         key="found_date",
@@ -98,15 +87,6 @@ CACHE_SENSORS: tuple[GeocachingCacheSensorDescription, ...] = (
         key="hidden_date",
         device_class=SensorDeviceClass.DATE,
         value_fn=lambda cache: cache.hidden_date,
-    ),
-)
-
-TRACKABLE_SENSORS: tuple[GeocachingTrackableSensorDescription, ...] = (
-    GeocachingTrackableSensorDescription(
-        key="kilometers_traveled",
-        device_class=SensorDeviceClass.DISTANCE,
-        native_unit_of_measurement=UnitOfLength.KILOMETERS,
-        value_fn=lambda trackable: trackable.kilometers_traveled,
     ),
 )
 
@@ -125,11 +105,10 @@ async def async_setup_entry(
     )
 
     added_cache_codes: set[str] = set()
-    added_trackable_codes: set[str] = set()
 
     @callback
     def _async_add_tracked_entities() -> None:
-        """Add entities for configured caches and trackables once available.
+        """Add entities for configured caches once available.
 
         Coordinator refreshes do not rerun platform setup, so this also runs
         on every update to pick up configured codes that were missing from
@@ -155,22 +134,6 @@ async def async_setup_entry(
                     for description in CACHE_SENSORS
                 ),
                 config_subentry_id=subentry.subentry_id,
-            )
-
-        trackable_codes = {
-            code.strip().upper() for code in entry.options.get(CONF_TRACKABLE_CODES, [])
-        }
-        new_trackable_codes = (
-            trackable_codes & coordinator.data.trackables.keys()
-        ) - added_trackable_codes
-        if new_trackable_codes:
-            added_trackable_codes.update(new_trackable_codes)
-            async_add_entities(
-                GeoEntityTrackableSensorEntity(
-                    coordinator, coordinator.data.trackables[code], description
-                )
-                for code in new_trackable_codes
-                for description in TRACKABLE_SENSORS
             )
 
     _async_add_tracked_entities()
@@ -224,45 +187,6 @@ class GeoEntityCacheSensorEntity(GeoEntityBaseCache, SensorEntity):
         return self.entity_description.value_fn(self.cache)
 
 
-class GeoEntityBaseTrackable(GeocachingTrackableEntity, SensorEntity):
-    """Base class for trackable entities."""
-
-    def __init__(
-        self,
-        coordinator: GeocachingDataUpdateCoordinator,
-        trackable: GeocachingTrackable,
-        key: str,
-    ) -> None:
-        """Initialize the Geocaching trackable sensor."""
-        super().__init__(coordinator, trackable)
-
-        account_reference_code = cast(str, coordinator.data.user.reference_code)
-        self._attr_unique_id = f"{account_reference_code}_{self._reference_code}_{key}"
-        self._attr_translation_key = f"trackable_{key}"
-
-
-class GeoEntityTrackableSensorEntity(GeoEntityBaseTrackable, SensorEntity):
-    """Representation of a trackable sensor."""
-
-    entity_description: GeocachingTrackableSensorDescription
-
-    def __init__(
-        self,
-        coordinator: GeocachingDataUpdateCoordinator,
-        trackable: GeocachingTrackable,
-        description: GeocachingTrackableSensorDescription,
-    ) -> None:
-        """Initialize the Geocaching trackable sensor."""
-        super().__init__(coordinator, trackable, description.key)
-        self.entity_description = description
-
-    @property
-    @override
-    def native_value(self) -> StateType | dt.date:
-        """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.trackable)
-
-
 class GeocachingProfileSensor(GeocachingBaseEntity, SensorEntity):
     """Representation of a Sensor."""
 
@@ -287,6 +211,12 @@ class GeocachingProfileSensor(GeocachingBaseEntity, SensorEntity):
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="Groundspeak, Inc.",
         )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether profile data is available."""
+        return super().available and self.coordinator.data is not None
 
     @property
     @override

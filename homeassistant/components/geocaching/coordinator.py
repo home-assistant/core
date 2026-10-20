@@ -5,12 +5,7 @@ from typing import override
 
 from geocachingapi.exceptions import GeocachingApiError, GeocachingInvalidSettingsError
 from geocachingapi.geocachingapi import GeocachingApi
-from geocachingapi.models import (
-    GeocachingCache,
-    GeocachingSettings,
-    GeocachingTrackable,
-    GeocachingUser,
-)
+from geocachingapi.models import GeocachingCache, GeocachingSettings, GeocachingUser
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CODE
@@ -20,7 +15,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    CONF_TRACKABLE_CODES,
     DOMAIN,
     ENVIRONMENT,
     LOGGER,
@@ -36,7 +30,6 @@ class GeocachingCoordinatorData:
     """Data returned by the Geocaching coordinator."""
 
     user: GeocachingUser
-    trackables: dict[str, GeocachingTrackable]
     nearby_caches: list[GeocachingCache]
     tracked_caches: dict[str, GeocachingCache]
 
@@ -45,6 +38,7 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingCoordinato
     """Class to manage fetching Geocaching data from single endpoint."""
 
     config_entry: GeocachingConfigEntry
+    subentry_ids: frozenset[str]
 
     def __init__(
         self,
@@ -55,6 +49,7 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingCoordinato
     ) -> None:
         """Initialize global Geocaching data updater."""
         self.session = session
+        self.subentry_ids = frozenset(entry.subentries)
 
         async def async_token_refresh() -> str:
             await session.async_ensure_token_valid()
@@ -70,9 +65,6 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingCoordinato
                     SUBENTRY_TYPE_TRACKED_CACHE
                 )
             }
-        )
-        settings.set_tracked_trackables(
-            set(entry.options.get(CONF_TRACKABLE_CODES, []))
         )
         self.geocaching = GeocachingApi(
             environment=ENVIRONMENT,
@@ -102,11 +94,6 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingCoordinato
 
         return GeocachingCoordinatorData(
             user=status.user,
-            trackables={
-                trackable.reference_code.strip().upper(): trackable
-                for trackable in status.trackables.values()
-                if isinstance(trackable.reference_code, str)
-            },
             nearby_caches=status.nearby_caches,
             tracked_caches={
                 cache.reference_code.strip().upper(): cache
