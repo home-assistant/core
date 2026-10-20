@@ -29,6 +29,10 @@ class FakeDiscovery:
         """Add an event listener."""
         self._listeners.append(listener)
 
+    def close(self) -> None:
+        """Close discovery."""
+        self._listeners.clear()
+
     async def scan(self, wait_for: int = 0, bcast_ifaces=None):
         """Search for devices, return mocked data."""
         self.scan_count += 1
