@@ -1,10 +1,13 @@
 """Tests for setting up the Meraki integration."""
 
+import asyncio
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_array_fixture
 
+from homeassistant.components.meraki.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -73,3 +76,38 @@ async def test_invalid_auth_starts_reauth(
     await setup_integration(hass, mock_config_entry)
     flows = hass.config_entries.flow.async_progress()
     assert [flow["context"]["source"] for flow in flows] == [SOURCE_REAUTH]
+
+
+async def test_all_requests_finish_before_failing(
+    hass: HomeAssistant,
+    mock_meraki_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the client is only closed once every network's request finished."""
+    networks = await async_load_json_array_fixture(hass, "networks.json", DOMAIN)
+    networks[1]["productTypes"] = ["wireless"]
+    mock_meraki_client.organizations.getOrganizationNetworks.return_value = networks
+    first_failing = asyncio.Event()
+    running: set[str] = set()
+
+    async def _get_clients(network_id: str, **kwargs: Any) -> list[dict[str, Any]]:
+        if network_id == networks[0]["id"]:
+            first_failing.set()
+            raise api_error(503)
+        running.add(network_id)
+        await first_failing.wait()
+        # Slower than the error takes to reach config entry setup.
+        for _ in range(100):
+            await asyncio.sleep(0)
+        running.discard(network_id)
+        return []
+
+    mock_meraki_client.networks.getNetworkClients.side_effect = _get_clients
+    running_when_closed: list[set[str]] = []
+    mock_meraki_client.__aexit__.side_effect = lambda *args: running_when_closed.append(
+        set(running)
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert running_when_closed == [set()]

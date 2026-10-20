@@ -87,7 +87,8 @@ class MerakiDataUpdateCoordinator(DataUpdateCoordinator[MerakiData]):
             if CLIENT_PRODUCT_TYPES.intersection(network["productTypes"])
         ]
         timespan = int(CLIENT_TIMESPAN.total_seconds())
-        client_lists = await asyncio.gather(
+        # Let every request finish before raising, as they share the client.
+        results = await asyncio.gather(
             *(
                 self._async_call(
                     self.client.networks.getNetworkClients(
@@ -95,8 +96,14 @@ class MerakiDataUpdateCoordinator(DataUpdateCoordinator[MerakiData]):
                     )
                 )
                 for network_id in client_networks
-            )
+            ),
+            return_exceptions=True,
         )
+        client_lists: list[list[dict[str, Any]]] = []
+        for result in results:
+            if isinstance(result, BaseException):
+                raise result
+            client_lists.append(result)
         clients: dict[str, MerakiClient] = {}
         for network_id, items in zip(client_networks, client_lists, strict=True):
             for item in items:
