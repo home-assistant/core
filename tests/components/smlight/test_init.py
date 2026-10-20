@@ -88,6 +88,60 @@ async def test_async_setup_missing_credentials(
     assert progress[0]["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
 
 
+@pytest.mark.parametrize("method", ["check_auth_needed", "authenticate", "get_info"])
+async def test_setup_timeout_retries_with_diagnostic(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    method: str,
+) -> None:
+    """Setup timeouts retain their translation and retry after thirty seconds."""
+    pending = asyncio.Event()
+    read_started = asyncio.Event()
+
+    async def stalled_read(*args: object, **kwargs: object) -> None:
+        read_started.set()
+        await pending.wait()
+
+    mock_smlight_client.check_auth_needed.return_value = True
+    read = getattr(mock_smlight_client, method)
+    side_effect = read.side_effect
+    read.side_effect = stalled_read
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.smlight.coordinator.REQUEST_TIMEOUT", 0.001):
+        setup_task = hass.async_create_task(
+            hass.config_entries.async_setup(mock_config_entry.entry_id)
+        )
+        await read_started.wait()
+        freezer.tick(timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        assert await setup_task is False
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_domain == DOMAIN
+    assert mock_config_entry.error_reason_translation_key == "update_timeout"
+    assert "Timeout communicating with the SMLIGHT device" in caplog.text
+    assert "Retrying in 30 seconds" in caplog.text
+
+    read.side_effect = side_effect
+    calls = read.await_count
+    freezer.tick(timedelta(seconds=28))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert read.await_count == calls
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    freezer.tick(timedelta(seconds=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.error_reason_translation_key is None
+    assert hass.states.get("sensor.mock_title_core_chip_temp") is not None
+
+
 @pytest.mark.parametrize(
     "error",
     [

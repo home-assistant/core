@@ -100,8 +100,15 @@ class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     @override
     async def _async_setup(self) -> None:
         """Bound authentication and device identification reads."""
-        async with asyncio.timeout(REQUEST_TIMEOUT):
-            await self._async_authenticate()
+        try:
+            async with asyncio.timeout(REQUEST_TIMEOUT):
+                await self._async_authenticate()
+        except TimeoutError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_timeout",
+                retry_after=self._retry_after_seconds,
+            ) from err
 
     async def _async_authenticate(self) -> None:
         """Authenticate if needed during initial setup."""
@@ -246,6 +253,8 @@ class SmFirmwareUpdateCoordinator(SmBaseDataUpdateCoordinator[SmFwData]):
         """Fetch data from the SMLIGHT device."""
         info = await self.client.get_info()
         assert info.radios is not None
+        # Installation confirmation must not depend on cloud availability.
+        self.data.info = info
         esp_firmware = await self.client.get_firmware_version(
             info.fw_channel, device=info.model
         )

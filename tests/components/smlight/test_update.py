@@ -1,12 +1,15 @@
 """Tests for the SMLIGHT update platform."""
 
 import asyncio
+from contextlib import suppress
 from datetime import timedelta
+from json import JSONDecodeError
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pysmlight import Firmware, Info, Radio
 from pysmlight.const import Events as SmEvents
+from pysmlight.exceptions import SmlightConnectionError
 from pysmlight.sse import MessageEvent
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -30,6 +33,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from . import get_mock_event_function
 from .conftest import setup_integration
@@ -205,6 +209,109 @@ async def test_update_firmware(
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.7.5"
     assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "info", "version"),
+    [
+        pytest.param(
+            "update.mock_title_core_firmware",
+            Info(sw_version="v2.7.5"),
+            "v2.7.5",
+            id="core",
+        ),
+        pytest.param(
+            "update.mock_title_zigbee_firmware",
+            Info(radios=[Radio(zb_type=0, zb_version="20250201")]),
+            "20250201",
+            id="radio",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(SmlightConnectionError(), id="connection"),
+        pytest.param(TimeoutError(), id="timeout"),
+        pytest.param(JSONDecodeError("Expecting value", "", 0), id="malformed-json"),
+        pytest.param(TypeError("Missing firmware response"), id="missing-response"),
+    ],
+)
+async def test_install_finishes_when_catalog_fails(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+    entity_id: str,
+    info: Info,
+    version: str,
+    error: Exception,
+) -> None:
+    """Local readback confirms installation even when the cloud catalog fails."""
+    entry = await setup_integration(hass, mock_config_entry)
+    coordinator = entry.runtime_data.firmware
+    firmware = coordinator.data.esp_firmware
+    radios = coordinator.data.zb_firmware
+    get_firmware = mock_smlight_client.get_firmware_version.side_effect
+    catalog_failed = asyncio.Event()
+
+    async def failed_catalog(*args: object, **kwargs: object) -> None:
+        catalog_failed.set()
+        raise error
+
+    install_task = hass.async_create_task(
+        hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+    )
+    try:
+        await asyncio.sleep(0)
+        mock_smlight_client.fw_update.assert_awaited_once()
+        assert mock_smlight_client.fw_update.await_args.args[0].ver == version
+
+        mock_smlight_client.get_info.side_effect = None
+        mock_smlight_client.get_info.return_value = info
+        mock_smlight_client.get_firmware_version.side_effect = failed_catalog
+        event_function = get_mock_event_function(
+            mock_smlight_client, SmEvents.FW_UPD_done
+        )
+        event_function(MOCK_FIRMWARE_DONE)
+        await catalog_failed.wait()
+
+        assert coordinator.data.info is info
+        assert coordinator.data.esp_firmware is firmware
+        assert coordinator.data.zb_firmware is radios
+        assert coordinator.last_update_success is False
+        assert isinstance(coordinator.last_exception, UpdateFailed)
+        assert coordinator.last_exception.retry_after == 300
+        state = hass.states.get(entity_id)
+        assert state.state == STATE_UNAVAILABLE
+
+        freezer.tick(timedelta(seconds=2))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        await install_task
+
+        assert coordinator.in_progress is False
+        state = hass.states.get(entity_id)
+        assert state.state == STATE_UNAVAILABLE
+        mock_smlight_client.fw_update.assert_awaited_once()
+
+        mock_smlight_client.get_firmware_version.side_effect = get_firmware
+        freezer.tick(timedelta(minutes=5))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        state = hass.states.get(entity_id)
+        assert state.state == STATE_OFF
+        assert state.attributes[ATTR_INSTALLED_VERSION] == version
+        assert state.attributes[ATTR_IN_PROGRESS] is False
+    finally:
+        install_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await install_task
 
 
 async def test_update_zigbee2_firmware(
