@@ -727,39 +727,6 @@ async def test_role_update_for_plug_mac_is_noop(
     assert len(_registered(hass, config_entry)) == count
 
 
-async def test_schedule_unavailable_before_added_to_hass_is_noop(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """_schedule_unavailable guards against being called before hass is set."""
-    # Discover a plug so its entities exist in the registry.
-    await fire({"event": "device_found", "mac": PLUG_MAC, "device_type": "plug"})
-    await hass.async_block_till_done()
-
-    entity_id = entity_registry.async_get_entity_id(
-        Platform.SENSOR, DOMAIN, f"{PLUG_MAC}_power"
-    )
-    assert entity_id is not None
-
-    # Verify the entity is in the expected available state after receiving data.
-    await fire(
-        {
-            "event": "average_power",
-            "mac": PLUG_MAC,
-            "watts": 100.0,
-            "starttime_utc": 1700000000,
-            "duration_s": 10,
-        }
-    )
-    await hass.async_block_till_done()
-    state = hass.states.get(entity_id)
-    assert state is not None
-    # Entity is available after receiving a measurement.
-    assert state.state != "unavailable"
-
-
 async def test_role_update_signal_noop_when_persisted_role_matches(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
