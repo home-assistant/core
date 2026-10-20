@@ -246,6 +246,7 @@ _RECEIVED_COMMANDS: dict[
         (Generic21KeyCode.GHOST_WHITE, "on", "ghost_white"),
         (Generic21KeyCode.SKY_BLUE, "on", "sky_blue"),
         (Generic21KeyCode.PINK, "on", "pink"),
+        (Generic21KeyCode.LIGHT_GREEN, "on", "light_green"),
         (Generic21KeyCode.FLORAL_WHITE, "on", "floral_white"),
     ],
 }
