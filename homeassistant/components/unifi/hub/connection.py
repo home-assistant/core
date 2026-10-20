@@ -147,9 +147,9 @@ class UnifiConnectionManager:
             self.report_failure(probe_err)
         except aiounifi.AiounifiException as probe_err:
             LOGGER.debug("UniFi Network answered with '%s'", probe_err)
-        except Exception as probe_err:  # noqa: BLE001
+        except Exception:  # noqa: BLE001
+            # A broken probe must not take down a hub that still delivers data
             LOGGER.exception("Unexpected error while checking UniFi Network")
-            self.report_failure(probe_err)
         else:
             LOGGER.debug("UniFi Network is reachable, request failed with '%s'", err)
 

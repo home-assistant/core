@@ -10,12 +10,14 @@ from datetime import datetime, timedelta
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
+import aiounifi
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.models.api import ApiItem
 from aiounifi.models.client import Client
 
 from homeassistant.const import Platform
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -41,7 +43,6 @@ class UnifiEntityLoader:
         self._startup_only_api_updaters = (
             hub.api.clients_all.update,
             hub.api.sites.update,
-            self._async_update_system_information,
         )
         self.wireless_clients = hub.hass.data[UNIFI_WIRELESS_CLIENTS]
 
@@ -92,6 +93,14 @@ class UnifiEntityLoader:
 
     async def initialize(self) -> None:
         """Initialize API data and extra client support."""
+        try:
+            await self.hub.api.system_information.update()
+        except NOT_READY_ERRORS as err:
+            raise ConfigEntryNotReady("UniFi Network application is not ready") from err
+        except aiounifi.AiounifiException as err:
+            # The application answers, the account may not see system information
+            LOGGER.debug("UniFi Network answered system information with: %s", err)
+
         await asyncio.gather(
             self._refresh_data(self._startup_only_api_updaters),
             self._refresh_data(
@@ -123,14 +132,6 @@ class UnifiEntityLoader:
         for result in results:
             if result is not None:
                 LOGGER.warning("Exception on update %s", result)
-
-    async def _async_update_system_information(self) -> None:
-        """Refresh required Network application data and report readiness failures."""
-        try:
-            await self.hub.api.system_information.update()
-        except NOT_READY_ERRORS as err:
-            self.hub.connection.report_failure(err)
-            raise
 
     @callback
     def _restore_inactive_clients(self) -> None:

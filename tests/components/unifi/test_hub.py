@@ -254,19 +254,20 @@ TRANSPORT_ERRORS = [
 
 @pytest.mark.parametrize("exception", TRANSPORT_ERRORS)
 @pytest.mark.parametrize(
-    "probe_error",
+    ("probe_error", "available"),
     [
-        pytest.param(aiounifi.RequestError, id="probe_unreachable"),
-        pytest.param(KeyError, id="probe_malformed"),
+        pytest.param(aiounifi.RequestError, False, id="probe_unreachable"),
+        pytest.param(KeyError, True, id="probe_malformed"),
     ],
 )
-async def test_polling_transport_failure_with_unresponsive_application(
+async def test_polling_transport_failure_runs_readiness_probe(
     hass: HomeAssistant,
     config_entry_setup: MockConfigEntry,
     exception: type[Exception],
     probe_error: type[Exception],
+    available: bool,
 ) -> None:
-    """Mark the hub unavailable when the readiness probe fails as well."""
+    """Only an unreachable application marks the hub unavailable."""
     hub = config_entry_setup.runtime_data
     coordinator = hub.entity_loader.get_data_update_coordinator(
         hub.api.object_oriented_network_configs
@@ -280,7 +281,7 @@ async def test_polling_transport_failure_with_unresponsive_application(
         async_fire_time_changed(hass, dt_util.utcnow() + coordinator.update_interval)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert not hub.available
+    assert hub.available is available
 
 
 @pytest.mark.parametrize("exception", TRANSPORT_ERRORS)
@@ -347,31 +348,6 @@ async def test_polling_request_rejection_does_not_report_connection_failure(
     assert coordinator.last_update_success is False
 
 
-async def test_startup_network_information_failure_reports_connection_failure(
-    config_entry_setup: MockConfigEntry,
-) -> None:
-    """Ensure startup-only required API failures mark the shared connection down."""
-    hub = config_entry_setup.runtime_data
-
-    with (
-        patch.object(
-            hub.api.system_information,
-            "update",
-            side_effect=aiounifi.ServiceUnavailable,
-        ),
-        patch.object(
-            hub.connection,
-            "report_failure",
-            wraps=hub.connection.report_failure,
-        ) as report_failure,
-        pytest.raises(aiounifi.ServiceUnavailable),
-    ):
-        await hub.entity_loader._async_update_system_information()
-
-    report_failure.assert_called_once()
-    assert not hub.available
-
-
 async def test_connection_failure_reports_are_deduplicated(
     caplog: pytest.LogCaptureFixture,
     config_entry_setup: MockConfigEntry,
@@ -405,24 +381,38 @@ async def test_connection_does_not_retry_after_stop(
     assert connection._attempt == 0
 
 
-async def test_failed_setup_cancels_connection_retry(
+@pytest.mark.parametrize(
+    "exception",
+    [aiounifi.ServiceUnavailable, TimeoutError, aiounifi.LoginRequired, ValueError],
+)
+async def test_setup_retries_when_network_application_not_ready(
     config_entry_factory: ConfigEntryFactoryType,
+    exception: type[Exception],
 ) -> None:
-    """Ensure a retry scheduled during a failed setup does not outlive the entry."""
-    with (
-        patch(
-            "aiounifi.interfaces.system_information.SystemInformationHandler.update",
-            side_effect=aiounifi.ServiceUnavailable,
-        ),
-        patch(
-            "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
-            side_effect=RuntimeError,
-        ),
+    """Retry setup while the Network application cannot answer yet."""
+    with patch(
+        "aiounifi.interfaces.system_information.SystemInformationHandler.update",
+        side_effect=exception,
     ):
         config_entry = await config_entry_factory()
 
-    assert config_entry.state is ConfigEntryState.SETUP_ERROR
-    assert config_entry.runtime_data.connection._retry_handle is None
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("exception", [aiounifi.Forbidden, aiounifi.NoPermission])
+async def test_setup_continues_when_system_information_is_rejected(
+    config_entry_factory: ConfigEntryFactoryType,
+    exception: type[Exception],
+) -> None:
+    """An application that rejects system information is up."""
+    with patch(
+        "aiounifi.interfaces.system_information.SystemInformationHandler.update",
+        side_effect=exception,
+    ):
+        config_entry = await config_entry_factory()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.runtime_data.available
 
 
 async def test_setup_retries_when_sites_unavailable(
@@ -1153,3 +1143,38 @@ async def test_polled_coordinator_quiet_while_connection_is_down(
     async_fire_time_changed(hass, dt_util.utcnow() + IDLE_POLL_INTERVAL)
     await hass.async_block_till_done()
     assert calls
+
+
+async def test_poll_in_flight_does_not_resume_polling_while_down(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A poll that ends after the connection dropped keeps polling paused."""
+    hub = config_entry_setup.runtime_data
+    coordinator = hub.entity_loader.get_data_update_coordinator(
+        hub.api.object_oriented_network_configs
+    )
+    updates = 0
+
+    async def update_while_connection_drops() -> None:
+        nonlocal updates
+        updates += 1
+        hub.connection.report_failure()
+
+    with (
+        patch.object(hub.api, "login", side_effect=aiounifi.RequestError),
+        patch.object(
+            coordinator.handler, "update", side_effect=update_while_connection_drops
+        ),
+    ):
+        assert coordinator.update_interval is not None
+        async_fire_time_changed(hass, dt_util.utcnow() + coordinator.update_interval)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert not hub.available
+
+        async_fire_time_changed(hass, dt_util.utcnow() + IDLE_POLL_INTERVAL * 2)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert updates == 1
+    assert "Error fetching" not in caplog.text

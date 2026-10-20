@@ -98,6 +98,13 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
         if not self._connection.available:
             self._unschedule_refresh()
 
+    @callback
+    @override
+    def _schedule_refresh(self) -> None:
+        """Only poll while the session is up, a refresh in flight must not resume it."""
+        if self._connection.available:
+            super()._schedule_refresh()
+
     async def async_resync(self) -> None:
         """Refetch handler data after the connection is restored."""
         if not self._supports_websocket:
