@@ -958,7 +958,7 @@ async def test_ws_permit_ha12(
 
 
 async def test_ws_permit_overlapping_restores_log_levels(
-    zha_client: MockHAClientWebSocket,
+    zha_client: MockHAClientWebSocket, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test overlapping permit subscriptions restore the original log levels."""
 
@@ -966,45 +966,37 @@ async def test_ws_permit_overlapping_restores_log_levels(
         await zha_client.send_json(payload)
         msg = await zha_client.receive_json()
         # Skip the log events relayed to the open permit subscriptions
-        while msg["type"] != TYPE_RESULT or msg["id"] != payload[ID]:
+        while msg["type"] != TYPE_RESULT:
             msg = await zha_client.receive_json()
+        assert msg["id"] == payload[ID]
         assert msg["success"]
 
     def log_levels() -> dict[str, int]:
         return {name: logging.getLogger(name).level for name in DEBUG_LEVELS}
 
-    saved_levels = log_levels()
     for name in DEBUG_LEVELS:
-        logging.getLogger(name).setLevel(logging.INFO)
+        caplog.set_level(logging.INFO, logger=name)
 
-    try:
-        await send_and_wait_result({ID: 20, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}"})
-        await send_and_wait_result({ID: 21, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}"})
-        assert log_levels() == DEBUG_LEVELS
+    await send_and_wait_result({ID: 20, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}"})
+    await send_and_wait_result({ID: 21, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}"})
+    assert log_levels() == DEBUG_LEVELS
 
-        # Ending the first session must leave the second one in debug mode
-        await send_and_wait_result(
-            {ID: 22, TYPE: "unsubscribe_events", "subscription": 20}
-        )
-        assert log_levels() == DEBUG_LEVELS
+    # Ending the first session must leave the second one in debug mode
+    await send_and_wait_result({ID: 22, TYPE: "unsubscribe_events", "subscription": 20})
+    assert log_levels() == DEBUG_LEVELS
 
-        # and still relaying logs to it
-        logging.getLogger("zha").debug("still relayed")
-        async with asyncio.timeout(5):
-            while True:
-                msg = await zha_client.receive_json()
-                log_entry = msg.get("event", {}).get("log_entry", {})
-                if msg["id"] == 21 and log_entry.get("message") == ["still relayed"]:
-                    break
+    # and still relaying logs to it
+    logging.getLogger("zha").debug("still relayed")
+    async with asyncio.timeout(5):
+        while True:
+            msg = await zha_client.receive_json()
+            log_entry = msg.get("event", {}).get("log_entry", {})
+            if msg["id"] == 21 and log_entry.get("message") == ["still relayed"]:
+                break
 
-        # Ending the last session restores the levels from before the first one
-        await send_and_wait_result(
-            {ID: 23, TYPE: "unsubscribe_events", "subscription": 21}
-        )
-        assert log_levels() == dict.fromkeys(DEBUG_LEVELS, logging.INFO)
-    finally:
-        for name, level in saved_levels.items():
-            logging.getLogger(name).setLevel(level)
+    # Ending the last session restores the levels from before the first one
+    await send_and_wait_result({ID: 23, TYPE: "unsubscribe_events", "subscription": 21})
+    assert log_levels() == dict.fromkeys(DEBUG_LEVELS, logging.INFO)
 
 
 async def test_get_network_settings(
