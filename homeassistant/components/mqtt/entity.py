@@ -1441,9 +1441,9 @@ def ensure_via_device_exists(
         "Device Registry, creating new entry",
         identifier,
     )
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=config_entry.entry_id,
-        identifiers={identifier},
+        device_info=dr.DeviceInfo(identifiers={identifier}),
     )
 
 
