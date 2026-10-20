@@ -4,7 +4,13 @@ from collections.abc import Mapping
 from typing import Any, override
 
 import probatio
-from tarsius import BlankFrameError, BlankRegionError, ImageError, RoiError
+from tarsius import (
+    BackendError,
+    BlankFrameError,
+    BlankRegionError,
+    ImageError,
+    RoiError,
+)
 
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.config_entries import (
@@ -34,6 +40,7 @@ from .const import (
     DEFAULT_REGION,
     DEVICE_CLASSES,
     DOMAIN,
+    LOGGER,
     STATES,
 )
 from .coordinator import LocalVisionConfigEntry, LocalVisionCoordinator
@@ -109,6 +116,9 @@ async def _async_frame_error(
         return "blank_frame"
     except BlankRegionError:
         return "blank_region"
+    except BackendError:
+        LOGGER.exception("The recognition model failed")
+        return "unknown"
     return None
 
 
@@ -255,6 +265,9 @@ class LocalVisionOptionsFlow(OptionsFlow):
                 errors["base"] = "blank_frame"
             except BlankRegionError:
                 errors["base"] = "blank_region"
+            except BackendError:
+                LOGGER.exception("The recognition model failed")
+                errors["base"] = "unknown"
             else:
                 await coordinator.async_request_refresh()
                 return self.async_abort(reason="teach_successful")

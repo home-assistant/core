@@ -1,6 +1,7 @@
 """Tests for the Local vision binary sensor."""
 
 from datetime import timedelta
+from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -10,6 +11,7 @@ from pytest_homeassistant.common import (
     snapshot_platform,
 )
 from syrupy.assertion import SnapshotAssertion
+from tarsius import BackendError, StateDetector
 
 from homeassistant.components.local_vision.const import UPDATE_INTERVAL
 from homeassistant.const import (
@@ -188,23 +190,61 @@ async def test_unavailable_without_frame(
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
 
-@pytest.mark.parametrize(
-    "frame",
-    [
-        pytest.param(blank_frame(), id="blank_frame"),
-        pytest.param(render_frame(car=False, plain=True, corner=True), id="plain"),
-    ],
-)
-async def test_nothing_to_compare_is_unknown(
+async def _unknown_for(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    camera: FakeCamera,
+    entry: MockConfigEntry,
+    frame: bytes,
+) -> None:
+    await setup_integration(hass, entry)
+    await teach_both(hass, entry, camera)
+    camera.frame = frame
+    await _poll(hass, freezer)
+    assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
+
+
+async def test_blank_frame_is_unknown(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     camera: FakeCamera,
     mock_config_entry: MockConfigEntry,
-    frame: bytes,
 ) -> None:
-    """A dark frame or a plain region is unknown, not a camera error."""
+    """A frame that shows nothing, like a dark night, is unknown, not an error."""
+    await _unknown_for(hass, freezer, camera, mock_config_entry, blank_frame())
+
+
+@pytest.mark.usefixtures("edges_backend")
+async def test_plain_region_is_unknown(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    camera: FakeCamera,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A region without structure is unknown with a backend that detects it."""
+    await _unknown_for(
+        hass,
+        freezer,
+        camera,
+        mock_config_entry,
+        render_frame(car=False, plain=True, corner=True),
+    )
+
+
+async def test_model_failure_is_unavailable(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    camera: FakeCamera,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A failing model makes the sensor unavailable and says why."""
     await setup_integration(hass, mock_config_entry)
     await teach_both(hass, mock_config_entry, camera)
-    camera.frame = frame
-    await _poll(hass, freezer)
-    assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
+    with patch.object(StateDetector, "classify", side_effect=BackendError("broken")):
+        await _poll(hass, freezer)
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+    assert (
+        "Error fetching Garage data: The recognition model failed: broken"
+        in caplog.text
+    )

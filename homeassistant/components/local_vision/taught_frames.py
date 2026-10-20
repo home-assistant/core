@@ -126,7 +126,7 @@ class TaughtFrames:
     async def async_teach(self, frame: bytes, state: str) -> None:
         """Store a frame as a reference for ``state``.
 
-        Raises tarsius ImageError, BlankFrameError or BlankRegionError before
+        Raises tarsius ImageError, BlankFrameError, BlankRegionError or BackendError before
         anything is stored, EntryClosed when the entry was unloaded.
         """
         # A closed dialog cancels the flow step, not a change half done.

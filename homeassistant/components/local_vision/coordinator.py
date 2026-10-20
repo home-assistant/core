@@ -2,7 +2,7 @@
 
 from typing import override
 
-from tarsius import BlankFrameError, ImageError, Result, Status
+from tarsius import BackendError, BlankFrameError, ImageError, Result, Status
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
@@ -68,3 +68,9 @@ class LocalVisionCoordinator(DataUpdateCoordinator[Result]):
         except BlankFrameError:
             # A dark night looks the same as a camera showing nothing.
             return Result(Status.UNSURE)
+        except BackendError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="model_unavailable",
+                translation_placeholders={"error": str(err)},
+            ) from err

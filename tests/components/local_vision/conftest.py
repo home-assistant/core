@@ -1,6 +1,7 @@
 """Fixtures for Local vision tests."""
 
 from collections.abc import Generator
+from functools import partial
 from pathlib import Path
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -13,6 +14,7 @@ from pytest_homeassistant.common import (
     mock_platform,
     setup_test_component_platform,
 )
+from tarsius import EdgeBackend, StateDetector
 
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.local_vision.const import DOMAIN
@@ -78,3 +80,13 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         "homeassistant.components.local_vision.async_setup_entry", return_value=True
     ) as mock:
         yield mock
+
+
+@pytest.fixture
+def edges_backend() -> Generator[None]:
+    """Use the edges backend, the only one that finds a region without structure."""
+    with patch(
+        "homeassistant.components.local_vision.detection.StateDetector",
+        partial(StateDetector, backend=EdgeBackend()),
+    ):
+        yield

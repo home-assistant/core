@@ -4,10 +4,11 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from tarsius import BackendError, StateDetector
 
 from homeassistant.components.local_vision.const import (
     CONF_BOTTOM,
@@ -105,21 +106,9 @@ async def test_user_flow_adjust_region(hass: HomeAssistant) -> None:
     assert result["options"][CONF_REGION] == new_region
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
-@pytest.mark.usefixtures("camera")
-@pytest.mark.parametrize(
-    ("region", "error"),
-    [
-        pytest.param({**REGION, CONF_LEFT: 80}, "invalid_horizontal_range", id="left"),
-        pytest.param({**REGION, CONF_LEFT: 75}, "invalid_horizontal_range", id="width"),
-        pytest.param({**REGION, CONF_TOP: 90}, "invalid_vertical_range", id="height"),
-        pytest.param(PLAIN_REGION, "blank_region", id="plain"),
-    ],
-)
-async def test_user_flow_invalid_region(
+async def _region_refused(
     hass: HomeAssistant, region: dict[str, float], error: str
 ) -> None:
-    """An empty or plain region is rejected, a valid one recovers."""
     flow_id = await _start(hass)
     await hass.config_entries.flow.async_configure(flow_id, USER_INPUT)
     result = await hass.config_entries.flow.async_configure(flow_id, region)
@@ -131,6 +120,28 @@ async def test_user_flow_invalid_region(
         flow_id, {"next_step_id": "finish"}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "camera")
+@pytest.mark.parametrize(
+    ("region", "error"),
+    [
+        pytest.param({**REGION, CONF_LEFT: 80}, "invalid_horizontal_range", id="left"),
+        pytest.param({**REGION, CONF_LEFT: 75}, "invalid_horizontal_range", id="width"),
+        pytest.param({**REGION, CONF_TOP: 90}, "invalid_vertical_range", id="height"),
+    ],
+)
+async def test_user_flow_invalid_region(
+    hass: HomeAssistant, region: dict[str, float], error: str
+) -> None:
+    """An empty region is rejected, a valid one recovers."""
+    await _region_refused(hass, region, error)
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "camera", "edges_backend")
+async def test_user_flow_plain_region(hass: HomeAssistant) -> None:
+    """A region without structure is rejected by a backend that detects it."""
+    await _region_refused(hass, PLAIN_REGION, "blank_region")
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -263,38 +274,96 @@ async def test_options_teach(
     assert frame_files(config_dir, mock_config_entry) == {stored[0]["id"]}
 
 
-@pytest.mark.parametrize(
-    ("frame", "error"),
-    [
-        pytest.param(blank_frame(), "blank_frame", id="blank_frame"),
-        pytest.param(
-            render_frame(car=False, plain=True, corner=True),
-            "blank_region",
-            id="plain_region",
-        ),
-    ],
-)
-async def test_options_teach_unusable_frame(
+async def _teach_refused(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     camera: FakeCamera,
-    mock_config_entry: MockConfigEntry,
+    entry: MockConfigEntry,
     frame: bytes,
     error: str,
 ) -> None:
-    """A frame without anything to compare is refused, a new one can be taught."""
-    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, entry)
     camera.frame = frame
-    flow_id = await _open(hass, mock_config_entry, "teach")
+    flow_id = await _open(hass, entry, "teach")
     camera.frame = render_frame(car=True)
 
     result = await hass.config_entries.options.async_configure(flow_id, {"state": "on"})
     assert result["errors"] == {"base": error}
+    assert f"{DOMAIN}.{entry.entry_id}" not in hass_storage
+
+    result = await hass.config_entries.options.async_configure(flow_id, {"state": "on"})
+    assert result["reason"] == "teach_successful"
+    assert len(stored_frames(hass_storage, entry)) == 1
+
+
+async def test_options_teach_blank_frame(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    camera: FakeCamera,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A frame that shows nothing is refused, a new one can be taught."""
+    await _teach_refused(
+        hass, hass_storage, camera, mock_config_entry, blank_frame(), "blank_frame"
+    )
+
+
+@pytest.mark.usefixtures("edges_backend")
+async def test_options_teach_plain_region(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    camera: FakeCamera,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A region without structure is refused by a backend that detects it."""
+    await _teach_refused(
+        hass,
+        hass_storage,
+        camera,
+        mock_config_entry,
+        render_frame(car=False, plain=True, corner=True),
+        "blank_region",
+    )
+
+
+@pytest.mark.usefixtures("camera")
+async def test_options_teach_model_failure(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A failing model shows an error instead of a server error."""
+    await setup_integration(hass, mock_config_entry)
+    flow_id = await _open(hass, mock_config_entry, "teach")
+    with patch.object(StateDetector, "prepare", side_effect=BackendError("broken")):
+        result = await hass.config_entries.options.async_configure(
+            flow_id, {"state": "on"}
+        )
+    assert result["errors"] == {"base": "unknown"}
     assert f"{DOMAIN}.{mock_config_entry.entry_id}" not in hass_storage
 
     result = await hass.config_entries.options.async_configure(flow_id, {"state": "on"})
     assert result["reason"] == "teach_successful"
     assert len(stored_frames(hass_storage, mock_config_entry)) == 1
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "camera")
+async def test_user_flow_model_failure(hass: HomeAssistant) -> None:
+    """A model that fails to load shows an error, the next try recovers."""
+    flow_id = await _start(hass)
+    with patch(
+        "homeassistant.components.local_vision.detection.StateDetector",
+        side_effect=BackendError("model missing"),
+    ):
+        result = await hass.config_entries.flow.async_configure(flow_id, USER_INPUT)
+    assert result["errors"] == {"base": "unknown"}
+
+    await hass.config_entries.flow.async_configure(flow_id, USER_INPUT)
+    await hass.config_entries.flow.async_configure(flow_id, REGION)
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, {"next_step_id": "finish"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(

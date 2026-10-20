@@ -1,13 +1,17 @@
 """The Local vision integration."""
 
+from tarsius import BackendError
+
 from homeassistant.const import CONF_ENTITY_ID, CONF_REGION, Platform
 from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.device import async_entity_id_to_device_id
 from homeassistant.helpers.helper_integration import async_handle_source_entity_changes
 from homeassistant.helpers.start import async_at_started
 
+from .const import DOMAIN
 from .coordinator import LocalVisionConfigEntry, LocalVisionCoordinator
-from .detection import create_detector
+from .detection import async_create_detector
 from .taught_frames import TaughtFrames, async_remove_taught_frames
 
 PLATFORMS = [Platform.BINARY_SENSOR]
@@ -34,10 +38,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalVisionConfigEntry) 
         )
     )
 
-    taught_frames = TaughtFrames(
-        hass, entry.entry_id, create_detector(entry.options[CONF_REGION])
-    )
-    await taught_frames.async_load()
+    try:
+        taught_frames = await _async_load_taught_frames(hass, entry)
+    except BackendError as err:
+        # The model ships with tarsius, retrying won't bring it back.
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="model_unavailable",
+            translation_placeholders={"error": str(err)},
+        ) from err
     entry.async_on_unload(taught_frames.close)
     coordinator = LocalVisionCoordinator(hass, entry, taught_frames)
     # Cameras go offline at times; the sensor is unavailable meanwhile and
@@ -51,6 +60,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: LocalVisionConfigEntry) 
         entry.async_on_unload(async_at_started(hass, refresh_when_started))
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+
+async def _async_load_taught_frames(
+    hass: HomeAssistant, entry: LocalVisionConfigEntry
+) -> TaughtFrames:
+    detector = await async_create_detector(hass, entry.options[CONF_REGION])
+    taught_frames = TaughtFrames(hass, entry.entry_id, detector)
+    await taught_frames.async_load()
+    return taught_frames
 
 
 async def async_unload_entry(

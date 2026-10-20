@@ -9,7 +9,8 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_frame": "The camera returned an image that Home Assistant can't read. Check the camera's settings and try again.",
       "invalid_horizontal_range": "The left edge must be smaller than the right edge.",
-      "invalid_vertical_range": "The top edge must be smaller than the bottom edge."
+      "invalid_vertical_range": "The top edge must be smaller than the bottom edge.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "region": {
@@ -25,7 +26,7 @@
           "right": "Where the region ends, in percent of the frame width from the left edge.",
           "top": "Where the region starts, in percent of the frame height from the top edge."
         },
-        "description": "![Current frame with the region outlined]({preview})\n\nChoose the part of the frame the sensor watches. 0 is the left or top edge of the frame, 100 the right or bottom edge. The next step shows the result.\n\nKeep the region tight around what changes, such as the door itself. Leave out things that move for other reasons, such as people, plants, or things that get moved around.\n\nYou can't change the region later without adding the sensor again.",
+        "description": "![Current frame with the region outlined]({preview})\n\nChoose the part of the frame the sensor watches. 0 is the left or top edge of the frame, 100 the right or bottom edge. The next step shows the result.\n\nPut the region around what changes, such as the door itself. Leave out things that move for other reasons, such as people, plants, or things that get moved around.\n\nYou can't change the region later without adding the sensor again.",
         "title": "Choose the region"
       },
       "region_confirm": {
@@ -61,6 +62,9 @@
     },
     "invalid_frame": {
       "message": "The camera returned an image that could not be decoded: {error}"
+    },
+    "model_unavailable": {
+      "message": "The recognition model failed: {error}"
     }
   },
   "options": {
@@ -74,7 +78,8 @@
     "error": {
       "blank_frame": "The camera shows nothing, for example because it is dark or offline. A new frame is shown above. Try again.",
       "blank_region": "The region in this frame has nothing to compare, for example because it is dark or shows a plain surface. A new frame is shown above. Try again when the region shows more detail.",
-      "nothing_selected": "Select at least one frame to remove."
+      "nothing_selected": "Select at least one frame to remove.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "init": {

@@ -9,7 +9,7 @@ from unittest.mock import patch
 from PIL import Image
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from tarsius import FRAME_SIDE, StateDetector
+from tarsius import FRAME_SIDE, BackendError, StateDetector
 
 from homeassistant.components.local_vision.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -323,3 +323,18 @@ async def test_follows_renamed_camera(
     assert mock_config_entry.options[CONF_ENTITY_ID] == "camera.garage_left"
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("camera")
+async def test_model_failure_fails_setup(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Without a working model the entry fails instead of retrying forever."""
+    with patch(
+        "homeassistant.components.local_vision.detection.StateDetector",
+        side_effect=BackendError("model missing"),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.reason == ("The recognition model failed: model missing")
