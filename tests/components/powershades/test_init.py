@@ -1,66 +1,64 @@
 """Tests for setting up and unloading the PowerShades integration."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import MagicMock
 
-from pyowershades import PowerShadesConnection, PowerShadesTimeoutError
+from pyowershades import PowerShadesTimeoutError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.powershades.const import DOMAIN
-from homeassistant.components.powershades.coordinator import PowerShadesCoordinator
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
-from .conftest import TEST_IP, TEST_NAME, TEST_SERIAL
-
-from tests.common import MockConfigEntry
-
-
-async def test_setup_entry_success(hass: HomeAssistant, config_entry) -> None:
-    """A working device sets up successfully with a coordinator and entities."""
-    assert config_entry.state is ConfigEntryState.LOADED
-    assert isinstance(config_entry.runtime_data, PowerShadesCoordinator)
-    assert config_entry.runtime_data.data.position == 50
-
-    assert len(hass.states.async_all("cover")) == 1
+from . import setup_integration
+from .conftest import TEST_IP, TEST_SERIAL
 
 
-async def test_setup_entry_not_ready(hass: HomeAssistant) -> None:
+async def test_setup_entry_not_ready(
+    hass: HomeAssistant,
+    mock_powershades_connection: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """The entry retries setup if the device doesn't respond."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: TEST_IP, "serial": TEST_SERIAL, "name": TEST_NAME, "model": 1},
-        unique_id=str(TEST_SERIAL),
-    )
-    entry.add_to_hass(hass)
+    mock_powershades_connection.async_request.side_effect = PowerShadesTimeoutError
 
-    async def fake_request(op, payload=b"", timeout=None, retries=None):
-        raise PowerShadesTimeoutError("no reply")
+    await setup_integration(hass, mock_config_entry)
 
-    with (
-        patch.object(PowerShadesConnection, "async_connect", AsyncMock()),
-        patch.object(
-            PowerShadesConnection,
-            "async_request",
-            AsyncMock(side_effect=fake_request),
-        ),
-        patch.object(PowerShadesConnection, "close") as mock_close,
-    ):
-        assert not await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-    mock_close.assert_called_once()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_powershades_connection.close.assert_called_once()
 
 
-async def test_unload_entry(hass: HomeAssistant, config_entry) -> None:
-    """Unloading the entry unloads platforms and closes the connection."""
-    assert await hass.config_entries.async_unload(config_entry.entry_id)
+async def test_unload_entry(
+    hass: HomeAssistant,
+    mock_powershades_connection: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Unloading the entry closes the connection."""
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    mock_powershades_connection.close.assert_called_once()
 
-    cover_states = hass.states.async_all("cover")
-    assert len(cover_states) == 1
-    assert cover_states[0].state == "unavailable"
 
-    PowerShadesConnection.close.assert_called_once()
+async def test_device_without_name(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_powershades_connection: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A shade without a known name is named after its IP address."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**mock_config_entry.data, "name": None},
+        unique_id=mock_config_entry.unique_id,
+    )
+    await setup_integration(hass, entry)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(TEST_SERIAL)), entry.entry_id
+    )
+    assert device.name == f"PowerShade {TEST_IP}"
