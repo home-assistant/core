@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from chemelex_nuheat import HoldUntilStatus, NuHeatApiError, NuHeatAuthError, Thermostat
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.nuheat.account_identity import (
@@ -44,8 +45,6 @@ from homeassistant.exceptions import (
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
-
-from tests.common import MockConfigEntry
 
 
 def test_account_entry_data_validation() -> None:

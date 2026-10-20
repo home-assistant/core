@@ -5,6 +5,11 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+)
 
 from homeassistant.components.demo import DOMAIN, valve as demo_valve
 from homeassistant.components.valve import (
@@ -19,8 +24,6 @@ from homeassistant.components.valve import (
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_STATE_CHANGED, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
 
 FRONT_GARDEN = "valve.front_garden"
 ORCHARD = "valve.orchard"

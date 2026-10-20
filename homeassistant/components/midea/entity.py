@@ -70,9 +70,9 @@ class MideaEntity(Entity):
             hw_version=str(self._device.model),
         )
         if mac := self._device.mac:
-            device_info["connections"] = {(CONNECTION_NETWORK_MAC, mac)}
+            device_info.connections = {(CONNECTION_NETWORK_MAC, mac)}
         if serial_number := self._device.serial_number:
-            device_info["serial_number"] = serial_number
+            device_info.serial_number = serial_number
 
         return device_info
 

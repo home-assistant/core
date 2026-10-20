@@ -4,16 +4,16 @@ from unittest.mock import MagicMock, patch
 
 from pysmhi import SmhiForecastException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.smhi.const import DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -184,7 +184,10 @@ async def test_reconfigure_flow(
     entry.add_to_hass(hass)
 
     entity = entity_registry.async_get_or_create(
-        WEATHER_DOMAIN, DOMAIN, "57.2898, 13.6304"
+        WEATHER_DOMAIN, DOMAIN, "57.2898, 13.6304", config_entry=entry
+    )
+    sensor = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN, DOMAIN, "57.2898, 13.6304-thunder", config_entry=entry
     )
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -238,6 +241,9 @@ async def test_reconfigure_flow(
     entity = entity_registry.async_get(entity.entity_id)
     assert entity
     assert entity.unique_id == "58.2898, 14.6304"
+    sensor = entity_registry.async_get(sensor.entity_id)
+    assert sensor
+    assert sensor.unique_id == "58.2898, 14.6304-thunder"
     device = device_registry.async_get(device.id)
     assert device
     assert device.identifiers == {(DOMAIN, "58.2898, 14.6304")}

@@ -6,6 +6,7 @@ from datetime import timedelta
 from chemelex_nuheat import NuHeatApiError, NuHeatAuthError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.nuheat.climate import NuHeatClimateEntity
@@ -14,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .test_integration import add_entity_state, coordinator_with, thermostat
-
-from tests.common import async_fire_time_changed
 
 
 async def advance(

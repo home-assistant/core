@@ -5,14 +5,14 @@ import json
 from typing import Any
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
+
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2Implementation
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
 
 
 def jwt_access_token(

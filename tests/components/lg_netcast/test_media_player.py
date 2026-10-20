@@ -6,14 +6,13 @@ from unittest.mock import MagicMock, patch
 import xml.etree.ElementTree as ET
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import MODEL_NAME, setup_lgnetcast
-
-from tests.common import async_fire_time_changed
 
 ENTITY_ID = f"{MP_DOMAIN}.{MODEL_NAME.lower()}"
 

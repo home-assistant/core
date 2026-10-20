@@ -41,7 +41,7 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
     async_track_utc_time_change,
 )
-from homeassistant.helpers.recorder import DATA_RECORDER
+from homeassistant.helpers.recorder import DATA_RECORDER, session_scope
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
@@ -112,7 +112,6 @@ from .util import (
     end_incomplete_runs,
     is_second_sunday,
     move_away_broken_database,
-    session_scope,
     setup_connection_for_dialect,
     validate_or_move_away_sqlite_database,
     write_lock_db_sqlite,
@@ -199,6 +198,7 @@ class Recorder(threading.Thread):
         self.schema_version = 0
         self._commits_without_expire = 0
         self._event_session_has_pending_writes = False
+        self._processed_startup_batch = False
 
         self.recorder_runs_manager = RecorderRunsManager()
         self.states_manager = StatesManager()
@@ -555,10 +555,23 @@ class Recorder(threading.Thread):
 
     @callback
     def async_clear_statistics(
-        self, statistic_ids: list[str], *, on_done: Callable[[], None] | None = None
+        self,
+        statistic_ids: list[str],
+        *,
+        start_time: datetime | None = None,
+        end_time: datetime | None = None,
+        on_done: Callable[[], None] | None = None,
     ) -> None:
-        """Clear statistics for a list of statistic_ids."""
-        self.queue_task(ClearStatisticsTask(on_done, statistic_ids))
+        """Clear statistics for a list of statistic_ids.
+
+        With a time range, only the statistics which overlap the range are cleared.
+        """
+        # A one-sided range would otherwise clear the complete statistics.
+        if (start_time is None) != (end_time is None):
+            raise ValueError("start_time and end_time must be provided together")
+        self.queue_task(
+            ClearStatisticsTask(on_done, statistic_ids, start_time, end_time)
+        )
 
     @callback
     def async_update_statistics_metadata(
@@ -831,6 +844,7 @@ class Recorder(threading.Thread):
         self._pre_process_startup_events(startup_task_or_events)
         for task in startup_task_or_events:
             self._guarded_process_one_task_or_event_or_recover(task)
+        self._processed_startup_batch = True
 
         # Clear startup tasks since this thread runs forever
         # and we don't want to hold them in memory
@@ -1306,7 +1320,11 @@ class Recorder(threading.Thread):
 
         Returns None if nothing is pending.
         """
-        if self._queue.empty() and not self._event_session_has_pending_writes:
+        if (
+            self._queue.empty()
+            and not self._event_session_has_pending_writes
+            and self._processed_startup_batch
+        ):
             return None
         future: asyncio.Future[None] = self.hass.loop.create_future()
         self.queue_task(SynchronizeTask(future))

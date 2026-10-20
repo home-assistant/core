@@ -9,6 +9,20 @@ from unittest.mock import ANY, Mock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockUser,
+    assert_setup_component,
+    async_capture_events,
+    async_fire_time_changed,
+    async_mock_service,
+    mock_integration,
+    mock_platform,
+    mock_restore_cache,
+)
+from pytest_homeassistant.components.repairs import get_repairs
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import automation, input_boolean, script
 from homeassistant.components.automation import (
@@ -73,21 +87,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockUser,
-    assert_setup_component,
-    async_capture_events,
-    async_fire_time_changed,
-    async_mock_service,
-    mock_integration,
-    mock_platform,
-    mock_restore_cache,
-)
 from tests.components.logbook.common import MockRow, mock_humanify
-from tests.components.repairs import get_repairs
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
@@ -487,6 +487,72 @@ async def test_shared_context(hass: HomeAssistant, calls: list[ServiceCall]) -> 
     # shares the same context
     assert len(calls) == 1
     assert calls[0].context is second_trigger_context
+
+
+async def test_automation_triggered_event_trace_ids(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the automation triggered event identifies the trace of its run."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "id": "with_id",
+                    "alias": "with id",
+                    "triggers": {"trigger": "event", "event_type": "test_event"},
+                    "actions": {"event": "test_event2"},
+                },
+                {
+                    "alias": "without id",
+                    "triggers": {"trigger": "event", "event_type": "test_event"},
+                    "actions": {"event": "test_event2"},
+                },
+            ]
+        },
+    )
+    triggered_events = async_capture_events(hass, EVENT_AUTOMATION_TRIGGERED)
+
+    hass.bus.async_fire("test_event")
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id(
+        {"type": "trace/list", "domain": automation.DOMAIN, "item_id": "with_id"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    run_ids = [trace["run_id"] for trace in response["result"]]
+    assert len(run_ids) == 2
+
+    assert [
+        event.data
+        for event in triggered_events
+        if event.data[ATTR_ENTITY_ID] == "automation.with_id"
+    ] == [
+        {
+            ATTR_NAME: "with id",
+            ATTR_ENTITY_ID: "automation.with_id",
+            ATTR_SOURCE: "event 'test_event'",
+            "item_id": "with_id",
+            "run_id": run_id,
+        }
+        for run_id in run_ids
+    ]
+    # Without an id there is no item id to look up the trace by
+    assert [
+        event.data
+        for event in triggered_events
+        if event.data[ATTR_ENTITY_ID] == "automation.without_id"
+    ] == [
+        {
+            ATTR_NAME: "without id",
+            ATTR_ENTITY_ID: "automation.without_id",
+            ATTR_SOURCE: "event 'test_event'",
+        }
+    ] * 2
 
 
 async def test_services(hass: HomeAssistant, calls: list[ServiceCall]) -> None:

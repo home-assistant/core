@@ -15,6 +15,8 @@ from chemelex_nuheat import (
     Thermostat,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.nuheat.const import CONF_SERIAL_NUMBER, DOMAIN
@@ -70,9 +72,6 @@ from homeassistant.helpers import (
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 
 from .helpers import FakeOAuthImplementation, complete_oauth_flow, jwt_access_token
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
 
 ACCOUNT_SUBJECT = "synthetic-account-subject"
 LEGACY_PASSWORD = "synthetic-legacy-password"

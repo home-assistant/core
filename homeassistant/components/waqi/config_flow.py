@@ -119,33 +119,43 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm reauthentication with a new API key."""
+        return await self._async_step_update_api_key(
+            "reauth_confirm", self._get_reauth_entry(), user_input
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration with a new API key."""
+        return await self._async_step_update_api_key(
+            "reconfigure", self._get_reconfigure_entry(), user_input
+        )
+
+    async def _async_step_update_api_key(
+        self, step_id: str, entry: ConfigEntry, user_input: dict[str, Any] | None
+    ) -> ConfigFlowResult:
+        """Validate a new API key and store it in an existing entry."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            # Skips the entry being reauthenticated, so re-entering its key is allowed
+            # Skips the entry being updated, so re-entering its key is allowed
             self._async_abort_entries_match({CONF_API_KEY: user_input[CONF_API_KEY]})
             if not (
                 errors := await self._async_validate_api_key(user_input[CONF_API_KEY])
             ):
-                reauth_entry = self._get_reauth_entry()
                 # A loaded entry is reloaded by its update listener when data changes
                 reload = (
-                    reauth_entry.data[CONF_API_KEY] == user_input[CONF_API_KEY]
-                    or not reauth_entry.update_listeners
+                    entry.data[CONF_API_KEY] == user_input[CONF_API_KEY]
+                    or not entry.update_listeners
                 )
                 result = self.async_update_and_abort(
-                    reauth_entry,
-                    data_updates={CONF_API_KEY: user_input[CONF_API_KEY]},
+                    entry, data_updates={CONF_API_KEY: user_input[CONF_API_KEY]}
                 )
                 if reload:
-                    self.hass.config_entries.async_schedule_reload(
-                        reauth_entry.entry_id
-                    )
+                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
                 return result
 
         return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=API_KEY_SCHEMA,
-            errors=errors,
+            step_id=step_id, data_schema=API_KEY_SCHEMA, errors=errors
         )
 
 

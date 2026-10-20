@@ -5,6 +5,13 @@ from unittest.mock import AsyncMock
 
 from aioesphomeapi import APIClient, BinarySensorInfo, BinarySensorState, DeviceInfo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.repairs import (
+    get_repairs,
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components.esphome import repairs
 from homeassistant.components.esphome.const import DOMAIN
@@ -19,14 +26,6 @@ from homeassistant.helpers import (
 )
 
 from .conftest import MockESPHomeDeviceType
-
-from tests.common import MockConfigEntry
-from tests.components.repairs import (
-    get_repairs,
-    process_repair_fix_flow,
-    start_repair_fix_flow,
-)
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 async def test_create_fix_flow_raises_on_unknown_issue_id(hass: HomeAssistant) -> None:
@@ -225,3 +224,40 @@ async def test_device_conflict_migration(
         )
         is None
     )
+
+
+async def test_device_conflict_issue_deleted_on_entry_removal(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the device conflict issue is linked to and removed with its entry."""
+    disconnect_done = hass.loop.create_future()
+
+    async def async_disconnect(*args, **kwargs) -> None:
+        disconnect_done.set_result(None)
+
+    mock_client.disconnect = async_disconnect
+    device_info = DeviceInfo(
+        mac_address="1122334455ab", name="test", model="esp32-iso-poe"
+    )
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    async with asyncio.timeout(1):
+        await disconnect_done
+    mock_client.disconnect = AsyncMock()
+
+    issue_id = DEVICE_CONFLICT_ISSUE_FORMAT.format(mock_config_entry.entry_id)
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None

@@ -217,7 +217,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> N
         ):
             try:
                 # Ignore all exceptions during probing, they shouldn't halt setup
-                if await warn_on_wrong_silabs_firmware(hass, device_path):
+                if await warn_on_wrong_silabs_firmware(
+                    hass, device_path, config_entry.entry_id
+                ):
                     raise ConfigEntryError("Incorrect firmware installed") from exc
             except AlreadyRunningEZSP as ezsp_exc:
                 raise ConfigEntryNotReady from ezsp_exc
@@ -243,14 +245,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> N
         manufacturer = "Unknown"
         model = "Unknown"
 
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_ZIGBEE, str(zha_gateway.state.node_info.ieee))},
-        identifiers={(DOMAIN, str(zha_gateway.state.node_info.ieee))},
-        name="Zigbee Coordinator",
-        manufacturer=manufacturer,
-        model=model,
-        sw_version=zha_gateway.state.node_info.version,
+        device_info=dr.DeviceInfo(
+            connections={(dr.CONNECTION_ZIGBEE, str(zha_gateway.state.node_info.ieee))},
+            identifiers={(DOMAIN, str(zha_gateway.state.node_info.ieee))},
+            name="Zigbee Coordinator",
+            manufacturer=manufacturer,
+            model=model,
+            sw_version=zha_gateway.state.node_info.version,
+        ),
     )
 
     websocket_api.async_load_api(hass)

@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 import logging
 from typing import Any, override
 
-from broadlink.exceptions import BroadlinkException
+from broadlink_async.exceptions import BroadlinkException
 import probatio
 
 from homeassistant.components.switch import (

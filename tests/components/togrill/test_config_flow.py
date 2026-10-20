@@ -4,6 +4,8 @@ from unittest.mock import Mock, patch
 
 from bleak.exc import BleakError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 
 from homeassistant import config_entries
 from homeassistant.components.togrill.const import DOMAIN
@@ -11,9 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import TOGRILL_SERVICE_INFO, TOGRILL_SERVICE_INFO_NO_NAME, setup_entry
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

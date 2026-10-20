@@ -9,7 +9,6 @@ from midealocal.devices.ea import MideaEADevice
 from midealocal.devices.ec import MideaECDevice
 
 from homeassistant.components.sensor import (
-    EntityCategory,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -17,6 +16,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     REVOLUTIONS_PER_MINUTE,
+    EntityCategory,
     UnitOfDensity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
