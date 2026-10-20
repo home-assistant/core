@@ -191,7 +191,8 @@ async def test_update(
     freezer.move_to("2026-10-19 18:00:00-04:00")
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
-    assert hass.states.get(DAY_ENTITY_ID) == snapshot(name="no_departures")
+    assert (state := hass.states.get(DAY_ENTITY_ID)) == snapshot(name="no_departures")
+    assert not [key for key in state.attributes if key.startswith("trip_")]
 
     freezer.move_to("2026-10-20 00:15:00-04:00")
     async_fire_time_changed(hass)
