@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from flipr_api.exceptions import FliprError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -15,8 +16,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import MOCK_HUB_STATE_OFF
-
-from tests.common import MockConfigEntry
 
 SWITCH_ENTITY_ID = "switch.flipr_hub_myhubid"
 

@@ -6,6 +6,8 @@ from fronius_modbus.testing import build_sunspec_map
 from modbus_connection import IllegalDataValueError
 from modbus_connection.mock import MockModbusConnection, WriteEvent
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.number import (
     ATTR_VALUE,
@@ -18,9 +20,6 @@ from homeassistant.exceptions import HomeAssistantError
 
 from . import mock_responses, setup_fronius_integration
 from .test_modbus import GEN24_HYBRID_MODULES, assert_state
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 POWER_LIMIT = "number.gen24_storage_ac_power_limit"
 CHARGE_LIMIT = "number.gen24_storage_battery_charge_power_limit"

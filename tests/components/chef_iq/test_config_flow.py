@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.chef_iq.const import DOMAIN
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_IGNORE, SOURCE_USER
@@ -18,8 +19,6 @@ from . import (
     NOT_CHEFIQ_SERVICE_INFO,
     TITLE,
 )
-
-from tests.common import MockConfigEntry
 
 DISCOVERY = "homeassistant.components.chef_iq.config_flow.async_discovered_service_info"
 

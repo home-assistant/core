@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from unifi_access_api import (
     Door,
     DoorLockRelayStatus,
@@ -18,8 +19,6 @@ from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 MOCK_HOST = "192.168.1.1"
 MOCK_API_TOKEN = "test-api-token-12345"

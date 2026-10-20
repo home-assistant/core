@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.yalexs_ble.const import (
     CONF_KEY,
@@ -15,8 +16,6 @@ from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import CoreState, HomeAssistant
 
 from . import YALE_ACCESS_LOCK_DISCOVERY_INFO
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_retries_when_not_advertising_at_startup(

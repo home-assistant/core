@@ -93,7 +93,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -> None:
     """Set up an LMS Server from a config entry."""
     config = entry.data
     session = async_get_clientsession(hass)
@@ -239,10 +239,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
         hass, _player_discovery(), "squeezebox.media_player.player_discovery"
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -> None:
     """Unload a config entry."""
     # Stop player discovery task for this config entry.
     _LOGGER.debug(
@@ -258,7 +256,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) 
         hass.data[SQUEEZEBOX_HASS_DATA].cancel()
         hass.data.pop(SQUEEZEBOX_HASS_DATA)
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(

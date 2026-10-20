@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from aiotractive.exceptions import TractiveError, UnauthorizedError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.tractive.const import DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 BATTERY_ENTITY_ID = "sensor.tracker_device_id_123_battery"
 ACTIVITY_ENTITY_ID = "sensor.test_pet_activity_time"
@@ -85,6 +84,7 @@ async def test_server_unavailable(
     hass: HomeAssistant,
     mock_tractive_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test entities become unavailable on a channel error and recover."""
     await init_integration(hass, mock_config_entry)
@@ -96,12 +96,20 @@ async def test_server_unavailable(
     await hass.async_block_till_done()
 
     assert hass.states.get(BATTERY_ENTITY_ID).state == STATE_UNAVAILABLE
+    assert "Error requesting Tractive data: Connection lost" in caplog.text
+
+    mock_tractive_client.send_error_event(TractiveError("Still down"))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(BATTERY_ENTITY_ID).state == STATE_UNAVAILABLE
+    assert "Still down" not in caplog.text
 
     # The library notifies without an error once the channel reconnects
     mock_tractive_client.send_error_event(None)
     await hass.async_block_till_done()
 
     assert hass.states.get(BATTERY_ENTITY_ID).state == "96"
+    assert "Fetching Tractive data recovered" in caplog.text
 
     mock_tractive_client.set_tracker_status(
         battery_level=88,
@@ -112,6 +120,7 @@ async def test_server_unavailable(
     await hass.async_block_till_done()
 
     assert hass.states.get(BATTERY_ENTITY_ID).state == "88"
+    assert caplog.text.count("Fetching Tractive data recovered") == 1
 
 
 async def test_pet_without_health_data(

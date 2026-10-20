@@ -1543,6 +1543,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "F0A731*",
     },
     {
+        "domain": "trmnl",
+        "hostname": "trmnl-*",
+    },
+    {
         "domain": "tuya",
         "macaddress": "105A17*",
     },
@@ -1654,6 +1658,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "vistapool",
         "hostname": "sugarwifi",
+    },
+    {
+        "domain": "whirlpool",
+        "macaddress": "88E712*",
     },
     {
         "domain": "withings",
