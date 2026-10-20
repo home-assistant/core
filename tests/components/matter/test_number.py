@@ -193,12 +193,13 @@ async def test_power_on_color_temperature(
 
 @pytest.mark.parametrize("node_fixture", ["color_temperature_light"])
 @pytest.mark.parametrize(
-    ("value", "expected"),
+    ("value", "physical_max", "expected"),
     [
-        pytest.param(2700, 370, id="kelvin_to_mireds"),
-        pytest.param(0, None, id="keep_previous"),
-        # ColorTempPhysicalMaxMireds is 500 in the fixture
-        pytest.param(1000, 500, id="below_physical_range"),
+        pytest.param(2700, 500, 370, id="kelvin_to_mireds"),
+        pytest.param(0, 500, None, id="keep_previous"),
+        pytest.param(1000, 500, 500, id="below_physical_range"),
+        pytest.param(1000, 0, 1000, id="physical_max_zero"),
+        pytest.param(1000, None, 1000, id="physical_max_missing"),
     ],
 )
 async def test_power_on_color_temperature_set_value(
@@ -206,9 +207,11 @@ async def test_power_on_color_temperature_set_value(
     matter_client: MagicMock,
     matter_node: MatterNode,
     value: int,
+    physical_max: int | None,
     expected: int | None,
 ) -> None:
     """Test setting the power-on color temperature."""
+    set_node_attribute(matter_node, 1, 0x00000300, 0x400C, physical_max)
     await hass.services.async_call(
         "number",
         "set_value",
