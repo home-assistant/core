@@ -39,7 +39,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PushMeldConfigEntry) -> 
     """Set up a PushMeld notification service from a config entry."""
     entry.runtime_data = PushMeldRuntimeData()
 
-    hass.async_create_task(
+    entry.async_create_task(
+        hass,
         discovery.async_load_platform(
             hass,
             Platform.NOTIFY,
@@ -56,10 +57,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PushMeldConfigEntry) -> 
     return True
 
 
-async def async_unload_entry(_hass: HomeAssistant, entry: PushMeldConfigEntry) -> bool:
+async def async_unload_entry(
+    _hass: HomeAssistant, _entry: PushMeldConfigEntry
+) -> bool:
     """Unload a PushMeld config entry."""
-    if notify_service := entry.runtime_data.notify_service:
-        await notify_service.async_unregister_services()
-        entry.runtime_data.notify_service = None
-
     return True

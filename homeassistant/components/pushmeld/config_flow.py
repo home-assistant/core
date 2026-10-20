@@ -6,6 +6,7 @@ from typing import Any, override
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.const import CONF_NAME
 from homeassistant.util import slugify
 
@@ -29,8 +30,18 @@ class PushMeldConfigFlow(ConfigFlow, domain=DOMAIN):
     def _service_name_is_taken(self, name: str) -> bool:
         """Return whether the normalized local service name is already in use."""
         service_name = slugify(name)
+        if self.hass.services.has_service(NOTIFY_DOMAIN, service_name):
+            return True
+
         return any(
             slugify(entry.data.get(CONF_NAME, entry.title)) == service_name
+            for entry in self.hass.config_entries.async_entries(DOMAIN)
+        )
+
+    def _maxcode_is_configured(self, maxcode: str) -> bool:
+        """Return whether the MaxCode is already configured."""
+        return any(
+            entry.data.get(CONF_MAXCODE) == maxcode
             for entry in self.hass.config_entries.async_entries(DOMAIN)
         )
 
@@ -47,6 +58,8 @@ class PushMeldConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not maxcode:
                 errors[CONF_MAXCODE] = "invalid_maxcode"
+            elif self._maxcode_is_configured(maxcode):
+                return self.async_abort(reason="already_configured")
             elif not name:
                 errors[CONF_NAME] = "invalid_name"
             elif self._service_name_is_taken(name):

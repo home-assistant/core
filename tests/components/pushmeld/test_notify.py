@@ -1,6 +1,7 @@
 # tests/components/pushmeld/test_notify.py
 """Tests for the PushMeld notification service."""
 
+import asyncio
 from collections.abc import Callable
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
@@ -10,8 +11,11 @@ from aiohttp.test_utils import TestServer
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.notify import ATTR_DATA, ATTR_TITLE
-from homeassistant.components.notify.const import DOMAIN as NOTIFY_DOMAIN
+from homeassistant.components.notify import (
+    ATTR_DATA,
+    ATTR_TITLE,
+    DOMAIN as NOTIFY_DOMAIN,
+)
 from homeassistant.components.pushmeld import notify
 from homeassistant.components.pushmeld.const import ATTR_DETAILS, CONF_MAXCODE, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -22,7 +26,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 @pytest.fixture
 async def request_recorder(
-    aiohttp_server: Callable[[web.Application], TestServer],
+    aiohttp_server: Callable[[], TestServer],
 ) -> tuple[str, list[dict[str, Any]]]:
     """Start a local HTTP endpoint that records one or more requests."""
     requests: list[dict[str, Any]] = []
@@ -45,11 +49,11 @@ async def request_recorder(
     return str(server.make_url("/")), requests
 
 
+@pytest.mark.usefixtures("socket_enabled")
 async def test_send_message_forwards_pushmeld_payload(
     hass: HomeAssistant,
     request_recorder: tuple[str, list[dict[str, Any]]],
     monkeypatch: pytest.MonkeyPatch,
-    socket_enabled: None,
 ) -> None:
     """Send exactly the PushMeld payload without interpreting the response."""
     api_url, requests = request_recorder
@@ -82,11 +86,11 @@ async def test_send_message_forwards_pushmeld_payload(
     ]
 
 
+@pytest.mark.usefixtures("socket_enabled")
 async def test_send_message_omits_details_when_not_supplied(
     hass: HomeAssistant,
     request_recorder: tuple[str, list[dict[str, Any]]],
     monkeypatch: pytest.MonkeyPatch,
-    socket_enabled: None,
 ) -> None:
     """Do not invent a details field when Home Assistant did not provide one."""
     api_url, requests = request_recorder
@@ -104,11 +108,11 @@ async def test_send_message_omits_details_when_not_supplied(
     }
 
 
+@pytest.mark.usefixtures("socket_enabled")
 async def test_registered_service_forwards_home_assistant_call(
     hass: HomeAssistant,
     request_recorder: tuple[str, list[dict[str, Any]]],
     monkeypatch: pytest.MonkeyPatch,
-    socket_enabled: None,
 ) -> None:
     """Forward a real Home Assistant notify service call unchanged."""
     api_url, requests = request_recorder
@@ -144,11 +148,11 @@ async def test_registered_service_forwards_home_assistant_call(
     await hass.async_block_till_done()
 
 
+@pytest.mark.usefixtures("socket_enabled")
 async def test_send_message_raises_for_non_success_status(
     hass: HomeAssistant,
-    aiohttp_server: Callable[[web.Application], TestServer],
+    aiohttp_server: Callable[[], TestServer],
     monkeypatch: pytest.MonkeyPatch,
-    socket_enabled: None,
 ) -> None:
     """Surface an HTTP failure without reading or parsing its response body."""
 
@@ -242,3 +246,63 @@ async def test_config_entry_registers_and_unloads_notification_service(
     await hass.async_block_till_done()
 
     assert not hass.services.has_service(NOTIFY_DOMAIN, "test_channel")
+
+
+async def test_unload_during_notification_setup_does_not_register_service(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Do not register a notification action after its config entry unloads."""
+    setup_started = asyncio.Event()
+    release_setup = asyncio.Event()
+    original_setup = notify.PushMeldNotificationService.async_setup
+
+    async def delayed_setup(
+        service: notify.PushMeldNotificationService,
+        setup_hass: HomeAssistant,
+        service_name: str,
+        target_service_name_prefix: str,
+    ) -> None:
+        setup_started.set()
+        await release_setup.wait()
+        await original_setup(
+            service, setup_hass, service_name, target_service_name_prefix
+        )
+
+    monkeypatch.setattr(
+        notify.PushMeldNotificationService,
+        "async_setup",
+        delayed_setup,
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_MAXCODE: "test-maxcode", "name": "Test channel"},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await setup_started.wait()
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    release_setup.set()
+    await hass.async_block_till_done()
+
+    assert not hass.services.has_service(NOTIFY_DOMAIN, "test_channel")
+
+
+async def test_unload_does_not_remove_existing_notification_service(
+    hass: HomeAssistant,
+) -> None:
+    """Do not remove another integration's notify action during unload."""
+    hass.services.async_register(NOTIFY_DOMAIN, "test_channel", AsyncMock())
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_MAXCODE: "test-maxcode", "name": "Test channel"},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+    assert hass.services.has_service(NOTIFY_DOMAIN, "test_channel")
