@@ -63,6 +63,10 @@ class NeoPoolSensorEntityDescription(SensorEntityDescription):
     options_fn: Callable[[dict[str, Any]], list[str]] | None = None
     unit_fn: Callable[[dict[str, Any]], str | None] | None = None
     precision_fn: Callable[[dict[str, Any]], int | None] | None = None
+    # Timer block names this sensor needs polled; registered as the entity's
+    # coordinator context so the coordinator reads those blocks only while the
+    # sensor is enabled.
+    context: tuple[str, ...] | None = None
 
 
 SENSOR_DESCRIPTIONS: dict[str, NeoPoolSensorEntityDescription] = {
@@ -212,6 +216,16 @@ SENSOR_DESCRIPTIONS: dict[str, NeoPoolSensorEntityDescription] = {
         suggested_display_precision=0,
         supported_fn=has_filtvalve,
     ),
+    "FILTRATION_REMAINING": NeoPoolSensorEntityDescription(
+        key="FILTRATION_REMAINING",
+        translation_key="filtration_remaining",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+        context=("filtration1", "filtration2", "filtration3"),
+    ),
     "CELL_RUNTIME_TOTAL": NeoPoolSensorEntityDescription(
         key="CELL_RUNTIME_TOTAL",
         translation_key="cell_runtime_total",
@@ -318,7 +332,7 @@ class NeoPoolSensor(NeoPoolEntity, SensorEntity):
         description: NeoPoolSensorEntityDescription,
     ) -> None:
         """Initialize the NeoPool sensor entity."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, context=description.context)
         self.entity_description = description
         self._key = key
         self._attr_unique_id = (

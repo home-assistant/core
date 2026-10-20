@@ -243,3 +243,84 @@ async def test_setup_when_modules_absent(
     with patch("homeassistant.components.neopool.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_filtration_remaining_aggregates_timer_countdowns(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """FILTRATION_REMAINING reports the largest positive filtration countdown.
+
+    The aggregation lives in the library; the coordinator stores the result
+    under FILTRATION_REMAINING and the sensor reads it straight from data.
+    """
+
+    def _timers(
+        enabled_timers: list[str] | None = None, **_kwargs: object
+    ) -> dict[str, dict[str, object]]:
+        countdowns = {"filtration1": 1800, "filtration2": 3600, "filtration3": 0}
+        return {
+            name: {
+                "enable": 1,
+                "on": 0,
+                "interval": 0,
+                "period": 0,
+                "countdown": countdowns.get(name, 0),
+                "stop": None,
+            }
+            for name in (enabled_timers or [])
+        }
+
+    mock_neopool_client.read_all_timers.side_effect = _timers
+    await setup_integration(hass, mock_config_entry)
+    # The sensor's context registers after setup; poll again so the coordinator
+    # reads the filtration blocks and aggregates their countdown.
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.neopool_filtration_time_remaining")
+    assert state is not None
+    assert state.state == "3600"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_filtration_remaining_polls_filtration_blocks_when_enabled(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Enabling the sensor registers all three filtration blocks for polling."""
+    calls: list[list[str] | None] = []
+
+    def _capture(
+        enabled_timers: list[str] | None = None, **_kwargs: object
+    ) -> dict[str, dict[str, object]]:
+        calls.append(enabled_timers)
+        return {
+            name: {
+                "enable": 1,
+                "on": 0,
+                "interval": 0,
+                "period": 0,
+                "countdown": 0,
+                "stop": None,
+            }
+            for name in (enabled_timers or [])
+        }
+
+    mock_neopool_client.read_all_timers.side_effect = _capture
+    await setup_integration(hass, mock_config_entry)
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    enabled_timers = calls[-1]
+    assert enabled_timers is not None
+    assert "filtration1" in enabled_timers
+    assert "filtration2" in enabled_timers
+    assert "filtration3" in enabled_timers
