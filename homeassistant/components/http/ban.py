@@ -91,7 +91,14 @@ async def ban_middleware(
     try:
         return await handler(request)
     except HTTPUnauthorized:
-        await process_wrong_login(request)
+        if request.get(KEY_EXPIRED_SIGNED_REQUEST):
+            _LOGGER.debug(
+                "Rejected request with expired signature from %s for %s",
+                request.remote,
+                request.path,
+            )
+        else:
+            await process_wrong_login(request)
         raise
 
 
@@ -118,14 +125,6 @@ async def process_wrong_login(request: Request) -> None:
     Increase failed login attempts counter for remote IP address.
     Add ip ban entry if failed login attempts exceeds threshold.
     """
-    if request.get(KEY_EXPIRED_SIGNED_REQUEST):
-        _LOGGER.debug(
-            "Rejected request with expired signature from %s for %s",
-            request.remote,
-            request.path,
-        )
-        return
-
     hass = request.app[KEY_HASS]
 
     assert request.remote

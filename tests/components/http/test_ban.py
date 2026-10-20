@@ -21,6 +21,7 @@ from homeassistant.components.http.ban import (
     KEY_BAN_MANAGER,
     KEY_FAILED_LOGIN_ATTEMPTS,
     process_success_login,
+    process_wrong_login,
     setup_bans,
 )
 from homeassistant.components.http.view import request_handler_factory
@@ -466,16 +467,18 @@ async def test_failed_login_attempts_counter(
 
 
 @pytest.mark.parametrize(
-    ("expiration", "signature_suffix", "failed_attempts"),
+    ("signed_path", "expiration", "signature_suffix", "failed_attempts"),
     [
-        pytest.param(timedelta(seconds=-5), "", 0, id="expired"),
-        pytest.param(timedelta(seconds=-5), "x", 1, id="expired_invalid"),
-        pytest.param(timedelta(seconds=5), "x", 1, id="invalid"),
+        pytest.param("/auth", timedelta(seconds=-5), "", 0, id="expired"),
+        pytest.param("/auth", timedelta(seconds=-5), "x", 1, id="expired_invalid"),
+        pytest.param("/other", timedelta(seconds=-5), "", 1, id="expired_other_path"),
+        pytest.param("/auth", timedelta(seconds=5), "x", 1, id="invalid"),
     ],
 )
 async def test_expired_signed_path_not_counted_as_failed_login(
     hass: HomeAssistant,
     aiohttp_client: ClientSessionGenerator,
+    signed_path: str,
     expiration: timedelta,
     signature_suffix: str,
     failed_attempts: int,
@@ -504,11 +507,44 @@ async def test_expired_signed_path_not_counted_as_failed_login(
         client = await aiohttp_client(app)
 
     resp = await client.get(
-        async_sign_path(hass, "/auth", expiration) + signature_suffix
+        async_sign_path(hass, signed_path, expiration).replace(signed_path, "/auth")
+        + signature_suffix
     )
     assert resp.status == HTTPStatus.UNAUTHORIZED
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == failed_attempts
     assert len(async_get_persistent_notifications(hass)) == failed_attempts
+
+
+async def test_expired_signed_path_not_exempt_outside_middleware(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test an expired signature doesn't hide failed logins checked by a view."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+
+    async def login_handler(request: web.Request) -> tuple[None, int]:
+        """Reject the login like the websocket API does."""
+        await process_wrong_login(request)
+        return None, 401
+
+    app.router.add_get(
+        "/login",
+        request_handler_factory(hass, Mock(requires_auth=False), login_handler),
+    )
+    setup_bans(hass, app, 2)
+    remote_ip = ip_address("192.168.1.68")
+    mock_real_ip(app)(str(remote_ip))
+    await async_setup_auth(hass, app)
+
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        side_effect=FileNotFoundError,
+    ):
+        client = await aiohttp_client(app)
+
+    resp = await client.get(async_sign_path(hass, "/login", timedelta(seconds=-5)))
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 1
 
 
 async def test_failed_login_attempts_counter_reverse_dns_unicode_decode_error(

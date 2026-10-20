@@ -104,14 +104,20 @@ def _async_validate_signed_request(hass: HomeAssistant, request: Request) -> boo
     if (signature := request.query.get(SIGN_QUERY_PARAM)) is None:
         return False
 
+    expired = False
     try:
         claims = jwt_wrapper.verify_and_decode(
             signature, secret, algorithms=["HS256"], options={"verify_iss": False}
         )
     except jwt.ExpiredSignatureError:
-        # Only raised for a valid signature, so this is not a login attempt
-        request[KEY_EXPIRED_SIGNED_REQUEST] = True
-        return False
+        # Only raised for a valid signature
+        expired = True
+        claims = jwt_wrapper.verify_and_decode(
+            signature,
+            secret,
+            algorithms=["HS256"],
+            options={"verify_iss": False, "verify_exp": False},
+        )
     except jwt.InvalidTokenError:
         return False
 
@@ -124,6 +130,11 @@ def _async_validate_signed_request(hass: HomeAssistant, request: Request) -> boo
         if itm[0] not in SAFE_QUERY_PARAMS and itm[0] != SIGN_QUERY_PARAM
     ]
     if claims["params"] != params:
+        return False
+
+    if expired:
+        # A URL we issued, so not a login attempt
+        request[KEY_EXPIRED_SIGNED_REQUEST] = True
         return False
 
     refresh_token = hass.auth.async_get_refresh_token(claims["iss"])
