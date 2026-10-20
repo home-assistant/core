@@ -13,7 +13,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_REFRESH_TOKEN, DOMAIN
+from .const import BASKET_PAGE_SIZE, CONF_REFRESH_TOKEN, DOMAIN
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -65,9 +65,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: FarmadConfigEntry) -> bo
         account = await client.async_get_account()
         for apb in account.entitled_pharmacies:
             history = products.setdefault(apb, {})
-            for basket in await client.async_get_baskets(apb):
-                for line in basket.items:
-                    history.setdefault(line.cnk, line.description_nl)
+            skip = 0
+            while baskets := await client.async_get_baskets(
+                apb, skip=skip, take=BASKET_PAGE_SIZE
+            ):
+                for basket in baskets:
+                    for line in basket.items:
+                        history.setdefault(line.cnk, line.description_nl)
+                if len(baskets) < BASKET_PAGE_SIZE:
+                    break
+                skip += BASKET_PAGE_SIZE
     except FarmadAuthenticationError as err:
         await client.async_close()
         raise ConfigEntryError(

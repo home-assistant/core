@@ -31,8 +31,10 @@ API_APB = "343602"
 API_APB_2 = "343605"
 API_PRODUCT_CNK = "3093242"
 API_PRODUCT_CNK_2 = "3093243"
+API_PRODUCT_CNK_LATER = "3093244"
 API_PRODUCT_DESCRIPTION = "Dafalgan 500mg"
 API_PRODUCT_DESCRIPTION_2 = "Dafalgan 1g"
+API_PRODUCT_DESCRIPTION_LATER = "Dafalgan 2g"
 API_DRAFT_ID = "mock-draft-id"
 API_BASKET_ID = "mock-basket-id"
 API_SEARCH_QUERY = "dafalgan"
@@ -72,7 +74,9 @@ def get_mock_account(apbs: tuple[str, ...] = (API_APB,)) -> FarmadAccount:
     )
 
 
-def get_mock_baskets() -> tuple[CustomerBasket, ...]:
+def get_mock_baskets(
+    cnk: str = API_PRODUCT_CNK, description: str = API_PRODUCT_DESCRIPTION
+) -> tuple[CustomerBasket, ...]:
     """Return the order history for the mocked client."""
     return (
         CustomerBasket(
@@ -82,9 +86,9 @@ def get_mock_baskets() -> tuple[CustomerBasket, ...]:
             state="submitted",
             items=(
                 BasketLine(
-                    cnk=API_PRODUCT_CNK,
-                    description_nl=API_PRODUCT_DESCRIPTION,
-                    description_fr="Dafalgan 500mg",
+                    cnk=cnk,
+                    description_nl=description,
+                    description_fr=description,
                     quantity_ordered=1,
                     unit_price=None,
                 ),

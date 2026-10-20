@@ -23,6 +23,7 @@ from homeassistant.components.mijn_farmad_apotheek.const import (
     ATTR_BASKET_ID,
     ATTR_COMMENT,
     ATTR_DESCRIPTION,
+    BASKET_PAGE_SIZE,
     DOMAIN,
     SERVICE_ORDER_MEDICATION,
     SERVICE_SEARCH_MEDICATION,
@@ -41,8 +42,10 @@ from . import (
     API_DRAFT_ID,
     API_PRODUCT_CNK,
     API_PRODUCT_CNK_2,
+    API_PRODUCT_CNK_LATER,
     API_PRODUCT_DESCRIPTION,
     API_PRODUCT_DESCRIPTION_2,
+    API_PRODUCT_DESCRIPTION_LATER,
     API_SEARCH_QUERY,
     get_mock_account,
     get_mock_baskets,
@@ -141,6 +144,36 @@ async def test_order_medication_from_history(
     client.async_submit_basket.assert_awaited_once_with(
         API_APB, API_DRAFT_ID, products=PRODUCTS, comment=None
     )
+
+
+async def test_order_medication_from_later_history_page(
+    hass: HomeAssistant, mock_farmad_client: MagicMock
+) -> None:
+    """Test a product from a later history page needs no catalog search."""
+    client = mock_farmad_client.return_value
+    client.async_get_baskets.side_effect = [
+        get_mock_baskets() * BASKET_PAGE_SIZE,
+        get_mock_baskets(API_PRODUCT_CNK_LATER, API_PRODUCT_DESCRIPTION_LATER),
+    ]
+    await init_integration(hass)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_ORDER_MEDICATION,
+        {"product": API_PRODUCT_CNK_LATER, "apb": API_APB},
+        blocking=True,
+        return_response=True,
+    )
+
+    client.async_search_products_in_apb.assert_not_awaited()
+    client.async_save_draft_basket.assert_awaited_once_with(
+        API_APB,
+        products=(DraftProduct(product_cnk=API_PRODUCT_CNK_LATER, quantity=1),),
+    )
+    assert response == {
+        ATTR_BASKET_ID: API_BASKET_ID,
+        ATTR_DESCRIPTION: API_PRODUCT_DESCRIPTION_LATER,
+    }
 
 
 async def test_order_medication_existing_draft(
@@ -313,7 +346,7 @@ async def test_order_medication_history_other_pharmacy(
     client = mock_farmad_client.return_value
     client.async_get_account.return_value = get_mock_account((API_APB, API_APB_2))
 
-    def baskets(apb: str) -> tuple[CustomerBasket, ...]:
+    def baskets(apb: str, *, skip: int, take: int) -> tuple[CustomerBasket, ...]:
         return get_mock_baskets() if apb == API_APB else ()
 
     client.async_get_baskets.side_effect = baskets

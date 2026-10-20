@@ -4,7 +4,10 @@ from unittest.mock import MagicMock
 
 from aiofarmad import FarmadAuthenticationError, FarmadCommunicationError
 
-from homeassistant.components.mijn_farmad_apotheek.const import CONF_REFRESH_TOKEN
+from homeassistant.components.mijn_farmad_apotheek.const import (
+    BASKET_PAGE_SIZE,
+    CONF_REFRESH_TOKEN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
@@ -18,7 +21,9 @@ async def test_setup_entry(hass: HomeAssistant, mock_farmad_client: MagicMock) -
     assert entry.state is ConfigEntryState.LOADED
     client = mock_farmad_client.return_value
     client.async_get_account.assert_awaited_once()
-    client.async_get_baskets.assert_awaited_once_with(API_APB)
+    client.async_get_baskets.assert_awaited_once_with(
+        API_APB, skip=0, take=BASKET_PAGE_SIZE
+    )
 
 
 async def test_setup_entry_not_ready(
