@@ -200,8 +200,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
 
     # Create the bot device before the platforms are set up, so the per-chat devices can
     # resolve it as their via_device no matter which platform is set up first
-    dr.async_get(hass).async_get_or_create(
-        config_entry_id=entry.entry_id, **bot_device_info(entry, bot.id)
+    dr.async_get(hass).async_get_or_create_device(
+        config_entry_id=entry.entry_id, device_info=bot_device_info(entry, bot.id)
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
