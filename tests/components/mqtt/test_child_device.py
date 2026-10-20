@@ -2,7 +2,7 @@
 
 import json
 from typing import Any
-from unittest.mock import AsyncMock, call
+from unittest.mock import DEFAULT, AsyncMock, call
 
 import probatio
 import pytest
@@ -995,6 +995,57 @@ async def test_remove_old_parent_device_keeps_moved_device_discovery_topic(
     assert (
         call(DEVICE_TOPIC, None, 0, True, message_expiry_interval=None)
         not in mqtt_mock.async_publish.call_args_list
+    )
+
+
+async def test_remove_parent_device_skips_forgotten_device_discovery_topic(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a kept topic forgotten while clearing another topic is not cleared."""
+    mqtt_mock = await mqtt_mock_entry()
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+    other_topic = "homeassistant/device/parent_other/config"
+    for topic, child_id, component_id in (
+        (DEVICE_TOPIC, "sub1", "sw1"),
+        (other_topic, "sub2", "sw2"),
+    ):
+        payload = {
+            "dev": {"ids": ["parent"], "name": "Parent"},
+            "o": {"name": "Foo2Mqtt"},
+            "cdevs": [
+                {
+                    "ids": [child_id],
+                    "cmps": {
+                        component_id: {**DISCOVERY_SWITCH, "uniq_id": component_id}
+                    },
+                }
+            ],
+        }
+        async_fire_mqtt_message(hass, topic, json.dumps(payload))
+        await hass.async_block_till_done()
+        child_device = _get_child_device(hass, device_registry, child_id)
+        assert child_device is not None
+        device_registry.async_remove_device(child_device.id)
+        await hass.async_block_till_done()
+    parent = _get_device(hass, device_registry, "parent")
+    assert parent is not None
+    mqtt_mock.async_publish.reset_mock()
+
+    def forget_other_topic(*args: Any, **kwargs: Any) -> Any:
+        """Simulate a rediscovery of the other topic while publishing."""
+        hass.data[DATA_MQTT].retained_device_discovery_topics.pop(other_topic, None)
+        return DEFAULT
+
+    mqtt_mock.async_publish.side_effect = forget_other_topic
+    response = await ws_client.remove_device(parent.id)
+    assert response["success"]
+    await hass.async_block_till_done()
+    mqtt_mock.async_publish.assert_called_once_with(
+        DEVICE_TOPIC, None, 0, True, message_expiry_interval=None
     )
 
 
