@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from samsung_exlink import SamsungTVError
 
 from homeassistant.components.samsung_exlink.const import DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_DEVICE, MOCK_MODEL
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

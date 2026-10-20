@@ -6,6 +6,13 @@ from unittest.mock import AsyncMock, patch
 from modbus_connection import ModbusSerialParams, ModbusTcpParams, ModbusTlsParams
 from modbus_connection.tmodbus import ModbusConnection
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant.components.modbus.connection import (
     DATA_MODBUS_CONNECTIONS,
@@ -15,14 +22,6 @@ from homeassistant.components.modbus.connection import (
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
 
 type ConsumerFactory = Callable[[], MockConfigEntry]
 

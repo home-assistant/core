@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from bond_async import BPUPSubscriptions, DeviceType
 from bond_async.bpup import BPUP_ALIVE_TIMEOUT
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components import fan
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.util import utcnow
 
 from .common import patch_bond_device_state, setup_platform
-
-from tests.common import async_fire_time_changed
 
 
 def ceiling_fan(name: str):

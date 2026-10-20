@@ -7,6 +7,7 @@ from pyimouapi.const import PARAM_STATE, PARAM_STATUS
 from pyimouapi.exceptions import ImouException, InvalidAppIdOrSecretException
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.imou import async_remove_config_entry_device
 from homeassistant.components.imou.button import PARAM_MUTE, PARAM_PTZ_UP
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import create_offline_device, create_online_device, default_mock_devices
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 EXPECTED_TRANSLATION_KEYS = {
     "mute": PARAM_MUTE,

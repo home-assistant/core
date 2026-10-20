@@ -2,6 +2,7 @@
 
 from unittest.mock import Mock
 
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from soco import SoCo
 
 from homeassistant.components.sonos.const import (
@@ -14,8 +15,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
 
 from .conftest import SonosMockEvent, SonosMockSubscribe
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_subscription_repair_issues(

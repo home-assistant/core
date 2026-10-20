@@ -627,6 +627,13 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             for model_info in coordinator.data or []
             if coordinator.get_model_info(model_alias(model_info.id))[0].lifecycle
             != "retired"
+            and (
+                self._subentry_type != "ai_task_data"
+                or (
+                    model_info.capabilities
+                    and model_info.capabilities.structured_outputs.supported
+                )
+            )
         ]
 
     async def _get_location_data(self) -> dict[str, str]:

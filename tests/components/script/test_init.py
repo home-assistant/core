@@ -6,6 +6,16 @@ from typing import Any
 from unittest.mock import ANY, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockUser,
+    async_capture_events,
+    async_fire_time_changed,
+    async_mock_service,
+    mock_restore_cache,
+)
+from pytest_homeassistant.components.repairs import get_repairs
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import script
 from homeassistant.components.script import DOMAIN, EVENT_SCRIPT_STARTED
@@ -51,17 +61,7 @@ from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 
-from tests.common import (
-    MockConfigEntry,
-    MockUser,
-    async_capture_events,
-    async_fire_time_changed,
-    async_mock_service,
-    mock_restore_cache,
-)
 from tests.components.logbook.common import MockRow, mock_humanify
-from tests.components.repairs import get_repairs
-from tests.typing import WebSocketGenerator
 
 ENTITY_ID = "script.test"
 

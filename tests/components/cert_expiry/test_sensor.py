@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.cert_expiry.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -15,8 +16,6 @@ from homeassistant.util.dt import utcnow
 
 from .const import HOST, PORT
 from .helpers import future_timestamp, static_datetime
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.freeze_time(static_datetime())

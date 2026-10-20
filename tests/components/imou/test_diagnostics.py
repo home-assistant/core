@@ -5,15 +5,14 @@ from unittest.mock import MagicMock
 from freezegun.api import FrozenDateTimeFactory
 from pyimouapi.exceptions import ImouException, InvalidAppIdOrSecretException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_config_entry_diagnostics(

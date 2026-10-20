@@ -5,6 +5,16 @@ import logging
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    ANY,
+    MockConfigEntry,
+    MockEntity,
+    MockEntityPlatform,
+    MockUser,
+    RegistryEntryWithDefaults,
+    mock_registry,
+)
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 from pytest_unordered import unordered
 
 from homeassistant.components.config import entity_registry
@@ -22,17 +32,6 @@ from homeassistant.helpers.entity_registry import (
     RegistryEntryHider,
 )
 from homeassistant.util.dt import utcnow
-
-from tests.common import (
-    ANY,
-    MockConfigEntry,
-    MockEntity,
-    MockEntityPlatform,
-    MockUser,
-    RegistryEntryWithDefaults,
-    mock_registry,
-)
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
 @pytest.fixture

@@ -5,6 +5,12 @@ import logging
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.bluetooth import BluetoothChange
 from homeassistant.components.bthome import get_encryption_issue_id
@@ -14,10 +20,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import PRST_SERVICE_INFO, TEMP_HUMI_ENCRYPTED_SERVICE_INFO
-
-from tests.common import MockConfigEntry
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import ClientSessionGenerator
 
 BINDKEY = "231d39c1d7cc1ab1aee224cd096db932"
 

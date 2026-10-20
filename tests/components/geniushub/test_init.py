@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohttp import ClientResponseError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.geniushub import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -10,8 +11,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_MAC, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 async def test_cloud_unique_id_migration(
