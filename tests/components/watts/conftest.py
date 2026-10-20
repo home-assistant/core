@@ -4,6 +4,11 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 from visionpluspython.models import Device, create_device_from_data
 
 from homeassistant.components.application_credentials import (
@@ -14,12 +19,6 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.watts.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    load_json_array_fixture,
-    load_json_object_fixture,
-)
 
 CLIENT_ID = "test_client_id"
 CLIENT_SECRET = "test_client_secret"

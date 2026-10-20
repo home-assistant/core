@@ -35,7 +35,7 @@ from .const import (
 )
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
 from .helpers import create_modbus_params
-from .sensor import SENSOR_DESCRIPTIONS
+from .sensor import TOTAL_SENSOR_DESCRIPTIONS
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,7 +73,7 @@ def _async_remove_denied_meter_energy(
     if METER_ENERGY in served:
         return
     registry = er.async_get(hass)
-    for description in SENSOR_DESCRIPTIONS:
+    for description in TOTAL_SENSOR_DESCRIPTIONS:
         if description.component != METER_ENERGY:
             continue
         entity_id = registry.async_get_entity_id(
@@ -89,9 +89,7 @@ def _async_seed_high_water_marks(
     """Prime high-water marks before the first poll has nothing to compare."""
     registry = er.async_get(hass)
     restore_state_data = restore_state.async_get(hass)
-    for description in SENSOR_DESCRIPTIONS:
-        if (total_fn := description.total_fn) is None:
-            continue
+    for description in TOTAL_SENSOR_DESCRIPTIONS:
         entity_id = registry.async_get_entity_id(
             SENSOR_DOMAIN, DOMAIN, f"{serial}_{description.key}"
         )
@@ -105,7 +103,7 @@ def _async_seed_high_water_marks(
         extra = SensorExtraStoredData.from_dict(stored.extra_data.as_dict())
         if extra is None or not isinstance(extra.native_value, (int, float)):
             continue
-        total_fn(device).seed(float(extra.native_value))
+        description.total_fn(device).seed(float(extra.native_value))
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -177,9 +175,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> Non
         config_entry_id=entry.entry_id, **readings.device_info
     )
     entry.runtime_data = SofarRuntimeData(readings, settings, inverter.id)
-    _async_remove_denied_meter_energy(
-        hass, serial, entry.runtime_data.served_components
-    )
+    # Until the masks settle the type, nothing is served or denied.
+    if device.inverter_type:
+        _async_remove_denied_meter_energy(
+            hass, serial, entry.runtime_data.served_components
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

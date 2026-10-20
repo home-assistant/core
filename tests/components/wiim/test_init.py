@@ -4,6 +4,7 @@ from socket import AddressFamily  # pylint: disable=no-name-in-module
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from wiim.exceptions import WiimDeviceException, WiimRequestException
 
 from homeassistant.components.wiim.util import async_get_event_callback_host
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_entry(

@@ -4,12 +4,12 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from python_qube_heatpump import StatusCode
 from python_qube_heatpump.models import QubeState
 
 from homeassistant.components.hr_energy_qube.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -79,6 +79,7 @@ def mock_qube_client() -> Generator[MagicMock]:
         state.setpoint_room_cool_day = 25.0
         state.setpoint_room_cool_night = 23.0
         state.status_code = 1
+        state.status = StatusCode.STANDBY
         state.setpoint_dhw = 50.0
 
         # Binary sensors - Outputs

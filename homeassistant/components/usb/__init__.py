@@ -55,6 +55,7 @@ REQUEST_SCAN_COOLDOWN = 10  # 10 second cooldown
 ADD_REMOVE_SCAN_COOLDOWN = 5  # 5 second cooldown to give devices a chance to register
 
 __all__ = [
+    "DOMAIN",
     "SerialDevice",
     "SerialPortConsumer",
     "USBCallbackMatcher",

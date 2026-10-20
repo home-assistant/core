@@ -17,6 +17,17 @@ from aiohttp import (
 )
 from multidict import CIMultiDict, CIMultiDictProxy
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_integration,
+    mock_platform,
+)
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from yarl import URL
 
 from homeassistant import config_entries, data_entry_flow, setup
@@ -31,10 +42,6 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.network import NoURLAvailableError
-
-from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
-from tests.typing import ClientSessionGenerator
 
 TEST_DOMAIN = "oauth2_test"
 CLIENT_SECRET = "5678"

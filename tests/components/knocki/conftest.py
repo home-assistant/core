@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock, patch
 
 from knocki import TokenResponse, Trigger
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_array_fixture
 
 from homeassistant.components.knocki.const import DOMAIN
 from homeassistant.const import CONF_TOKEN
-
-from tests.common import MockConfigEntry, load_json_array_fixture
 
 
 @pytest.fixture

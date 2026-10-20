@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from mcstatus import BedrockServer, JavaServer, LegacyServer
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.minecraft_server.api import MinecraftServerType
 from homeassistant.components.minecraft_server.const import DOMAIN
@@ -22,8 +23,6 @@ from .const import (
     TEST_LEGACY_JAVA_STATUS_RESPONSE,
     TEST_PORT,
 )
-
-from tests.common import MockConfigEntry
 
 SERVER_EDITION_CASE_PARAM_NAMES = (
     "server_type",

@@ -15,6 +15,7 @@ from demetriek import (
     SoundURL,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lametric.const import (
     CONF_CYCLES,
@@ -34,8 +35,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 

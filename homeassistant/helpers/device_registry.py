@@ -298,7 +298,7 @@ class DeviceInfo(_DeviceInfoMapping):
     hw_version: str | UndefinedType | None = UNDEFINED
     translation_key: str | UndefinedType | None = UNDEFINED
     translation_placeholders: Mapping[str, str] | UndefinedType | None = UNDEFINED
-    via_device_id: str | UndefinedType = UNDEFINED
+    via_device_id: str | UndefinedType | None = UNDEFINED
 
     if not TYPE_CHECKING:
         # Deprecated fields, accepted until the versions listed in

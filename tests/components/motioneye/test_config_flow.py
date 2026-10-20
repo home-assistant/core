@@ -10,6 +10,7 @@ from motioneye_client.client import (
     MotionEyeClientRequestError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.motioneye.const import (
@@ -29,8 +30,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from . import TEST_URL, create_mock_motioneye_client, create_mock_motioneye_config_entry
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {
     CONF_URL: TEST_URL,

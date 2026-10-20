@@ -24,6 +24,7 @@ from openai.types.chat.chat_completion_chunk import (
 from openai.types.chat.chat_completion_message_tool_call import Function
 from openai.types.completion_usage import CompletionUsage
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
@@ -34,8 +35,6 @@ from homeassistant.helpers import intent
 from homeassistant.setup import async_setup_component
 
 from .conftest import ASSIST_OPTIONS, MockChatLog
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

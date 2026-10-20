@@ -3,6 +3,8 @@
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.fibaro.const import DOMAIN
 from homeassistant.const import Platform
@@ -12,8 +14,28 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_SERIALNUMBER, init_integration
 
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
+
+async def test_migrate_device_identifiers(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_fibaro_client: Mock,
+) -> None:
+    """Test migration converts integer Fibaro device identifiers to strings."""
+    mock_config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, 3)},  # type: ignore[arg-type]
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    migrated_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "3"), mock_config_entry.entry_id
+    )
+    assert migrated_device is not None
+    assert migrated_device.identifiers == {(DOMAIN, "3")}
+    assert mock_config_entry.version == 2
 
 
 async def test_unload_integration(
@@ -59,7 +81,7 @@ async def test_load_integration_links_device_to_hub(
         (DOMAIN, TEST_SERIALNUMBER), mock_config_entry.entry_id
     )
     light_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, mock_light.fibaro_id), mock_config_entry.entry_id
+        (DOMAIN, str(mock_light.fibaro_id)), mock_config_entry.entry_id
     )
     assert hub_device is not None
     assert light_device is not None
@@ -91,10 +113,9 @@ async def test_remove_device(
     with patch("homeassistant.components.fibaro.PLATFORMS", [Platform.LIGHT]):
         await init_integration(hass, mock_config_entry)
 
-    # The identifiers hold the integer fibaro_id
     device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, fibaro_id)},
+        identifiers={(DOMAIN, str(fibaro_id))},
     )
     client = await hass_ws_client(hass)
 

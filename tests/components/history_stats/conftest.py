@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.history_stats.const import (
     CONF_END,
@@ -19,8 +20,6 @@ from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, CONF_STATE, CONF_TYPE
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

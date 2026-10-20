@@ -6,13 +6,12 @@ from unittest.mock import AsyncMock, patch
 
 from PIL import Image as PilImage
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.camera import Image, async_get_image
 from homeassistant.components.proxy.camera import ProxyCamera
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.typing import ClientSessionGenerator
 
 CROP_CONFIG = {
     "platform": "proxy",
