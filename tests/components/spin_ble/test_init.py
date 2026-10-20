@@ -15,7 +15,7 @@ from homeassistant.components.spin_ble.const import (
     ConnectionMode,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -142,6 +142,20 @@ async def test_a_held_link_is_released_on_unload(
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_charger.async_disconnect.assert_awaited()
+
+
+async def test_a_held_link_is_released_on_stop(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_charger: AsyncMock
+) -> None:
+    """Stopping Home Assistant hands the charger back, as no unload runs then."""
+    await setup_persistent(hass, mock_config_entry)
+
+    mock_charger.async_disconnect.assert_not_awaited()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    mock_charger.async_disconnect.assert_awaited_once()
 
 
 async def test_a_held_link_that_drops_is_rebuilt(
