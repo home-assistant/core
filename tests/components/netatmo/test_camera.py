@@ -30,6 +30,7 @@ from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import dt as dt_util
 
 from .common import (
@@ -1123,6 +1124,73 @@ async def test_webhook_person_event(
     await simulate_webhook(hass, webhook_id, fake_webhook_event)
 
     assert test_netatmo_event
+
+
+@pytest.mark.parametrize(
+    ("camera_type", "camera_id", "camera_entity"),
+    [
+        ("NACamera", "12:34:56:00:f1:62", "camera.hall"),
+    ],
+)
+async def test_camera_event(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    camera_type: str,
+    camera_id: str,
+    camera_entity: str,
+) -> None:
+    """Test camera event processing."""
+    fake_post_hits = 0
+    home_id = "91763b24c43d3e344f424e8b"
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        """Fake error during requesting backend data."""
+        nonlocal fake_post_hits
+        fake_post_hits += 1
+        return await fake_post_request(hass, *args, **kwargs)
+
+    with (
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", ["camera"]),
+        patch(
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
+        ),
+        patch(
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
+        ),
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    netatmo_data = config_entry.runtime_data
+
+    await netatmo_data.account.async_update_events(home_id=home_id)
+
+    # Trigger the event update callback to parse them into runtime_data.events
+    async_dispatcher_send(hass, f"event-{home_id}")
+
+    processed_events = netatmo_data.events.get(camera_id)
+
+    assert processed_events is not None
+
+    person_event_found = False
+    for event_data in processed_events.values():
+        event_type = event_data.get("event_type")
+        subevents = [s.get("event_type") for s in event_data.get("subevents", [])]
+
+        if event_type == "person" or "human" in subevents or "person" in subevents:
+            person_event_found = True
+
+        assert "media_url" in event_data
+
+    assert person_event_found
 
 
 async def test_setup_component_no_devices(
