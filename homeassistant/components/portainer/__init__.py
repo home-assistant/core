@@ -318,7 +318,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
 
         hass.config_entries.async_update_entry(entry=entry, version=6)
 
-    return True
 
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
