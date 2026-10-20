@@ -15,7 +15,6 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.components.notify.legacy import NOTIFY_SERVICES
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -32,6 +31,9 @@ PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
         probatio.Required(probatio.Secret(CONF_MAXCODE)): cv.string,
     }
 )
+
+# The legacy notify loader stores services under this key.
+NOTIFY_SERVICES_KEY = f"{NOTIFY_DOMAIN}_services"
 
 
 async def async_get_service(
@@ -122,7 +124,7 @@ class PushMeldNotificationService(BaseNotificationService):
         if self.hass is None:
             return
 
-        notify_services = self.hass.data.get(NOTIFY_SERVICES)
+        notify_services = self.hass.data.get(NOTIFY_SERVICES_KEY)
         if not notify_services or DOMAIN not in notify_services:
             return
 

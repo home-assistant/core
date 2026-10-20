@@ -16,7 +16,6 @@ from homeassistant.components.notify import (
     ATTR_TITLE,
     DOMAIN as NOTIFY_DOMAIN,
 )
-from homeassistant.components.notify.legacy import NOTIFY_SERVICES
 from homeassistant.components.pushmeld import notify
 from homeassistant.components.pushmeld.const import ATTR_DETAILS, CONF_MAXCODE, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -341,9 +340,7 @@ async def test_reload_during_notification_setup_does_not_register_stale_service(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await old_setup_started.wait()
 
-    reload_task = asyncio.create_task(
-        hass.config_entries.async_reload(entry.entry_id)
-    )
+    reload_task = asyncio.create_task(hass.config_entries.async_reload(entry.entry_id))
     await unload_started.wait()
     release_old_setup.set()
 
@@ -352,7 +349,7 @@ async def test_reload_during_notification_setup_does_not_register_stale_service(
     await hass.async_block_till_done()
 
     assert hass.services.has_service(NOTIFY_DOMAIN, "test_channel")
-    assert hass.data[NOTIFY_SERVICES][DOMAIN] == [
+    assert hass.data[f"{NOTIFY_DOMAIN}_services"][DOMAIN] == [
         entry.runtime_data.notify_service
     ]
 
