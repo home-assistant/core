@@ -167,7 +167,10 @@ class PushMeldNotificationService(BaseNotificationService):
         service = self.hass.services.async_services_for_domain(NOTIFY_DOMAIN).get(
             self._service_name
         )
-        return service is not None and getattr(service.job.target, "__self__", None) is self
+        return (
+            service is not None
+            and getattr(service.job.target, "__self__", None) is self
+        )
 
     @override
     async def async_setup(
