@@ -87,7 +87,8 @@ FLOW_CONTROLLER_SENSORS: tuple[HydrawiseSensorEntityDescription, ...] = (
         key="daily_inactive_water_use",
         translation_key="daily_inactive_water_use",
         device_class=SensorDeviceClass.WATER,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        # No state class: this is total flow minus active use, which can drop
+        # during the day when the two reports update at different moments.
         suggested_display_precision=1,
         value_fn=lambda sensor: _get_water_use(sensor).total_inactive_use,
     ),
