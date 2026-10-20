@@ -6,6 +6,8 @@ from unittest.mock import AsyncMock
 
 import probatio
 import pytest
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClientGenerator
 
 from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.components.mqtt.models import DATA_MQTT
@@ -15,9 +17,6 @@ from homeassistant.components.mqtt.schemas import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import async_fire_mqtt_message
-from tests.typing import MqttMockHAClientGenerator
 
 PARENT_DEVICE = {"identifiers": ["parent"], "name": "Parent", "manufacturer": "Acme"}
 CHILD_DEVICE = {"identifiers": ["sub"], "name": "Sub"}
