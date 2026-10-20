@@ -1,12 +1,12 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.10
+    rev: v0.17.0
     hooks:
       - id: ruff-check
         args:
           - --fix
       - id: ruff-format
-        files: ^((homeassistant|pylint|script|tests)/.+)?[^/]+\.(py|pyi)$
+        files: ^((homeassistant|packages|script|tests)/.+)?[^/]+\.(py|pyi)$
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.3
     hooks:
@@ -23,6 +23,7 @@ repos:
       - id: zizmor
         args:
           - --pedantic
+          - --no-online-audits
         exclude: ^\.github/workflows/.*\.lock\.yml$
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -65,21 +66,21 @@ repos:
         language: script
         require_serial: true
         types_or: [python, pyi]
-        files: ^(homeassistant|pylint)/.+\.(py|pyi)$
+        files: ^(homeassistant|packages/pylint-home-assistant)/.+\.(py|pyi)$
       - id: pylint
         name: pylint
         entry: script/run-in-env.sh pylint --ignore-missing-annotations=y
         language: script
         require_serial: true
         types_or: [python, pyi]
-        files: ^(homeassistant|tests)/.+\.(py|pyi)$
+        files: ^(homeassistant|tests|packages/pytest-home-assistant)/.+\.(py|pyi)$
       - id: gen_requirements_all
         name: gen_requirements_all
         entry: script/run-in-env.sh python3 -m script.gen_requirements_all
         pass_filenames: false
         language: script
         types: [text]
-        files: ^(homeassistant/.+/manifest\.json|homeassistant/brands/.+\.json|pyproject\.toml|\.pre-commit-config\.yaml|script/gen_requirements_all\.py)$
+        files: ^(homeassistant/.+/manifest\.json|homeassistant/brands/.+\.json|pyproject\.toml|requirements_test\.txt|packages/pytest-home-assistant/pyproject\.toml|\.pre-commit-config\.yaml|script/gen_requirements_all\.py|script/hassfest/requirements_util\.py)$
       - id: gen_copilot_instructions
         name: gen_copilot_instructions
         entry: script/run-in-env.sh python3 -m script.gen_copilot_instructions

@@ -11,6 +11,7 @@ from hotspring import (
     Spa,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant.components.hotspring.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -18,8 +19,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 MOCK_ZEROCONF_DATA = ZeroconfServiceInfo(
     ip_address=ip_address("192.168.1.100"),

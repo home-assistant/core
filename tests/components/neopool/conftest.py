@@ -6,8 +6,11 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.neopool.const import (
+    CONF_BAUDRATE,
+    CONF_UNIT_ID,
     CONF_USE_AUX1,
     CONF_USE_AUX2,
     CONF_USE_AUX3,
@@ -15,19 +18,25 @@ from homeassistant.components.neopool.const import (
     CONF_USE_COVER_SENSOR,
     CONF_USE_LIGHT,
     CURRENT_VERSION,
+    DEFAULT_BAUDRATE,
     DEFAULT_PORT,
     DEFAULT_UNIT_ID,
     DOMAIN,
+    TYPE_SERIAL,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 MOCK_HOST = "192.0.2.1"
 MOCK_PORT = DEFAULT_PORT
 MOCK_NAME = "Pool"
 MOCK_SERIAL = "1234567890"
+
+
+@pytest.fixture(autouse=True)
+async def mock_usb_component(hass: HomeAssistant) -> None:
+    """Mark the usb component as loaded so neopool's dependency is satisfied."""
+    hass.config.components.add("usb")
 
 
 @asynccontextmanager
@@ -177,6 +186,24 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_NAME: MOCK_NAME,
             "unit_id": DEFAULT_UNIT_ID,
             "modbus_framer": "tcp",
+        },
+    )
+
+
+@pytest.fixture
+def mock_config_entry_serial() -> MockConfigEntry:
+    """Return a config entry reached over a direct serial device."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="/dev/ttyUSB0",
+        unique_id=MOCK_SERIAL,
+        version=CURRENT_VERSION,
+        data={
+            CONF_TYPE: TYPE_SERIAL,
+            CONF_DEVICE: "/dev/ttyUSB0",
+            CONF_BAUDRATE: DEFAULT_BAUDRATE,
+            CONF_NAME: MOCK_NAME,
+            CONF_UNIT_ID: DEFAULT_UNIT_ID,
         },
     )
 

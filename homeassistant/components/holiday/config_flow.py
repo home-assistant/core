@@ -235,6 +235,10 @@ class HolidayOptionsFlowHandler(OptionsFlowWithReload):
     ) -> ConfigFlowResult:
         """Manage Holiday options."""
         if user_input is not None:
+            match_dict = dict(self.config_entry.data)
+            if categories := user_input.get(CONF_CATEGORIES):
+                match_dict[CONF_CATEGORIES] = categories
+            self._async_abort_entries_match(match_dict)
             return self.async_create_entry(data=user_input)
 
         categories = await self.hass.async_add_executor_job(

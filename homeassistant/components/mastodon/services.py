@@ -42,6 +42,7 @@ from .const import (
     ATTR_ACCOUNT_NAME,
     ATTR_ATTRIBUTION_DOMAINS,
     ATTR_AVATAR,
+    ATTR_AVATAR_DESCRIPTION,
     ATTR_AVATAR_MIME_TYPE,
     ATTR_BOT,
     ATTR_CONTENT_WARNING,
@@ -54,6 +55,7 @@ from .const import (
     ATTR_FOCUS_X,
     ATTR_FOCUS_Y,
     ATTR_HEADER,
+    ATTR_HEADER_DESCRIPTION,
     ATTR_HEADER_MIME_TYPE,
     ATTR_HIDE_NOTIFICATIONS,
     ATTR_IDEMPOTENCY_KEY,
@@ -178,10 +180,12 @@ SERVICE_UPDATE_PROFILE_SCHEMA = probatio.Schema(
         probatio.Exclusive(ATTR_AVATAR, ATTR_AVATAR): MediaSelector(
             {"accept": ["image/*"]}
         ),
+        probatio.Optional(ATTR_AVATAR_DESCRIPTION): str,
         probatio.Exclusive(ATTR_DELETE_AVATAR, ATTR_AVATAR): cv.boolean,
         probatio.Exclusive(ATTR_HEADER, ATTR_HEADER): MediaSelector(
             {"accept": ["image/*"]}
         ),
+        probatio.Optional(ATTR_HEADER_DESCRIPTION): str,
         probatio.Exclusive(ATTR_DELETE_HEADER, ATTR_HEADER): cv.boolean,
         probatio.Optional(ATTR_LOCKED): bool,
         probatio.Optional(ATTR_BOT): bool,

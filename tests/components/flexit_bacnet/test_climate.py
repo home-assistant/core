@@ -11,6 +11,7 @@ from flexit_bacnet import (
     VENTILATION_MODE_STOP,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -36,8 +37,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_component, entity_registry as er
 
 from . import setup_with_selected_platforms
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "climate.device_name"
 

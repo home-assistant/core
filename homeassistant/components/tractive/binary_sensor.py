@@ -19,6 +19,8 @@ from .const import ATTR_POWER_SAVING
 from .coordinator import TractiveConfigEntry, TractiveCoordinator
 from .entity import TractiveEntity
 
+PARALLEL_UPDATES = 0
+
 
 class TractiveBinarySensor(TractiveEntity, BinarySensorEntity):
     """Tractive sensor."""
@@ -67,6 +69,7 @@ SENSOR_TYPES = [
         key=ATTR_POWER_SAVING,
         translation_key="tracker_power_saving",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 ]
 

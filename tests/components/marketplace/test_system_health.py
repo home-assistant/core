@@ -6,15 +6,14 @@ from unittest.mock import patch
 
 from aiogithubapi import GitHubAuthenticationException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_system_health_info
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.marketplace.base import MarketplaceManager
 from homeassistant.components.marketplace.const import DOMAIN
 from homeassistant.components.marketplace.enums import DisabledReason
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, get_system_health_info
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def _resolve(info: dict[str, Any]) -> dict[str, Any]:

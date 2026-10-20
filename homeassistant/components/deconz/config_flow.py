@@ -92,6 +92,11 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
                     self.bridge_id = bridge["id"]
                     self.host = bridge[CONF_HOST]
                     self.port = bridge[CONF_PORT]
+                    await self.async_set_unique_id(self.bridge_id)
+                    self._abort_if_unique_id_configured(
+                        updates={CONF_HOST: self.host, CONF_PORT: self.port},
+                        reload_on_update=False,
+                    )
                     return await self.async_step_link()
 
         session = aiohttp_client.async_get_clientsession(self.hass)

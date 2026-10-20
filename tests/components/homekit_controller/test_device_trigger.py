@@ -5,6 +5,7 @@ from collections.abc import Callable
 from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
+from pytest_homeassistant.common import async_get_device_automations
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
@@ -16,8 +17,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .common import setup_test_component
-
-from tests.common import async_get_device_automations
 
 
 def create_remote(accessory: Accessory) -> None:

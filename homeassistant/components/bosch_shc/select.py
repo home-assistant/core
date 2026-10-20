@@ -8,11 +8,15 @@ from boschshcpy import (
     OutdoorSirenService,
     SHCMotionDetector2,
     SHCOutdoorSiren,
+    SHCRoomThermostat2,
     SHCShutterContact2Plus,
     SHCSmokeDetector,
+    SHCThermostatGen2,
 )
 from boschshcpy.device import SHCDevice
 from boschshcpy.services_impl import (
+    DisplayDirection,
+    DisplayedTemperatureConfiguration,
     PirSensorConfigurationService,
     SmokeSensitivityService,
     VibrationSensorService,
@@ -115,6 +119,50 @@ SMOKE_SENSITIVITY_DESCRIPTION = SHCSelectEntityDescription[SHCSmokeDetector](
 )
 
 
+def _display_direction_select_option(
+    device: SHCThermostatGen2 | SHCRoomThermostat2, option: str
+) -> None:
+    """Write the thermostat's display direction."""
+    device.display_direction = DisplayDirection.Direction[option.upper()]
+
+
+DISPLAY_DIRECTION_DESCRIPTION = SHCSelectEntityDescription[
+    SHCThermostatGen2 | SHCRoomThermostat2
+](
+    key="display_direction",
+    translation_key="display_direction",
+    entity_category=EntityCategory.CONFIG,
+    options=["normal", "reversed"],
+    current_option_fn=lambda device, options: (
+        direction.name.lower() if (direction := device.display_direction) else None
+    ),
+    select_option_fn=_display_direction_select_option,
+)
+
+
+def _displayed_temperature_select_option(
+    device: SHCThermostatGen2 | SHCRoomThermostat2, option: str
+) -> None:
+    """Write which temperature the thermostat display shows."""
+    device.displayed_temperature = (
+        DisplayedTemperatureConfiguration.DisplayedTemperature[option.upper()]
+    )
+
+
+DISPLAYED_TEMPERATURE_DESCRIPTION = SHCSelectEntityDescription[
+    SHCThermostatGen2 | SHCRoomThermostat2
+](
+    key="displayed_temperature",
+    translation_key="displayed_temperature",
+    entity_category=EntityCategory.CONFIG,
+    options=["setpoint", "measured"],
+    current_option_fn=lambda device, options: (
+        shown.name.lower() if (shown := device.displayed_temperature) else None
+    ),
+    select_option_fn=_displayed_temperature_select_option,
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BoschConfigEntry,
@@ -126,7 +174,8 @@ async def async_setup_entry(
     if TYPE_CHECKING:
         assert shc_info is not None and shc_info.unique_id is not None
 
-    async_add_entities(
+    entities: list[SHCSelect] = []
+    entities.extend(
         SHCSelect(
             hass=hass,
             device=siren,
@@ -146,7 +195,7 @@ async def async_setup_entry(
             continue
         motion_detectors.append(detector)
 
-    async_add_entities(
+    entities.extend(
         SHCSelect(
             hass=hass,
             device=detector,
@@ -157,7 +206,7 @@ async def async_setup_entry(
         for detector in motion_detectors
     )
 
-    async_add_entities(
+    entities.extend(
         SHCSelect(
             hass=hass,
             device=contact,
@@ -169,7 +218,7 @@ async def async_setup_entry(
         if isinstance(contact, SHCShutterContact2Plus)
     )
 
-    async_add_entities(
+    entities.extend(
         SHCSelect(
             hass=hass,
             device=smoke_detector,
@@ -180,6 +229,39 @@ async def async_setup_entry(
         for smoke_detector in session.device_helper.smoke_detectors
         if smoke_detector.smoke_sensitivity is not None
     )
+
+    thermostats = [
+        thermostat
+        for thermostat in (
+            *session.device_helper.thermostats,
+            *session.device_helper.roomthermostats,
+        )
+        if isinstance(thermostat, (SHCThermostatGen2, SHCRoomThermostat2))
+    ]
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=thermostat,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=DISPLAY_DIRECTION_DESCRIPTION,
+        )
+        for thermostat in thermostats
+        if thermostat.supports_display_direction
+    )
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=thermostat,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=DISPLAYED_TEMPERATURE_DESCRIPTION,
+        )
+        for thermostat in thermostats
+        if thermostat.supports_displayed_temperature
+    )
+
+    async_add_entities(entities)
 
 
 class SHCSelect[_DeviceT: SHCDevice](SHCEntity, SelectEntity):
