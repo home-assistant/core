@@ -142,8 +142,9 @@ class EntityConditionBase(Condition):
         self._priming: set[str] = set()
         # Entities whose `for:` anchor was resolved without complete recorder
         # history. They are reported in the condition trace, and re-primed once
-        # the recorder processes its queue if that is what was missing.
-        self._incomplete_history: set[str] = set()
+        # the recorder processes its queue if that is what was missing. Mapped to
+        # the live anchor: the entity has been valid since, as live tracking saw.
+        self._incomplete_history: dict[str, datetime] = {}
         self._unsub_recorder_ready: CALLBACK_TYPE | None = None
         self._prime_tasks: set[asyncio.Task[None]] = set()
 
@@ -198,8 +199,9 @@ class EntityConditionBase(Condition):
         else:
             # An invalidation breaks the run, so any history being loaded for the
             # entity is now stale; stop priming it and let live tracking own it.
+            # Live tracking observed the break, so its next anchor is exact.
             self._priming.discard(entity_id)
-            self._incomplete_history.discard(entity_id)
+            self._incomplete_history.pop(entity_id, None)
             self._valid_since.pop(entity_id, None)
 
     @property
@@ -303,7 +305,7 @@ class EntityConditionBase(Condition):
         """
         for entity_id in removed:
             self._priming.discard(entity_id)
-            self._incomplete_history.discard(entity_id)
+            self._incomplete_history.pop(entity_id, None)
             self._valid_since.pop(entity_id, None)
         await self._async_prime_valid_since(added)
 
@@ -329,16 +331,24 @@ class EntityConditionBase(Condition):
         history over the live tracking that observed the break.
         """
         # Conservative anchor from the live state for each currently-valid entity.
-        anchors = {
-            entity_id: self._state_valid_since(_state)
-            for entity_id in entity_ids
-            if (_state := self._hass.states.get(entity_id)) is not None
-            and self._should_include(_state)
-            and self.is_valid_state(_state)
-        }
-        if not anchors:
+        live_anchors: dict[str, datetime] = {}
+        for entity_id in entity_ids:
+            if (
+                (_state := self._hass.states.get(entity_id)) is None
+                or not self._should_include(_state)
+                or not self.is_valid_state(_state)
+            ):
+                continue
+            live_anchor = self._state_valid_since(_state)
+            # When priming again, live tracking has seen the entity stay valid
+            # since the earlier anchor; a later update must not cut that short.
+            if (earlier := self._incomplete_history.get(entity_id)) is not None:
+                live_anchor = min(live_anchor, earlier)
+            live_anchors[entity_id] = live_anchor
+        if not live_anchors:
             return
 
+        anchors = dict(live_anchors)
         self._priming.update(anchors)
         try:
             priming = _HistoryPriming.COMPLETE
@@ -352,9 +362,9 @@ class EntityConditionBase(Condition):
                     continue
                 self._valid_since[entity_id] = anchor
                 if priming is _HistoryPriming.COMPLETE:
-                    self._incomplete_history.discard(entity_id)
+                    self._incomplete_history.pop(entity_id, None)
                 else:
-                    self._incomplete_history.add(entity_id)
+                    self._incomplete_history[entity_id] = live_anchors[entity_id]
         finally:
             self._priming.difference_update(anchors)
 
@@ -551,9 +561,8 @@ class EntityConditionBase(Condition):
             and self._should_include(_state)
         ]
         if self._incomplete_history and (
-            incomplete_history := self._incomplete_history.intersection(
-                _state.entity_id for _state in entity_states
-            )
+            incomplete_history := self._incomplete_history.keys()
+            & {_state.entity_id for _state in entity_states}
         ):
             condition_trace_update_result(incomplete_history=sorted(incomplete_history))
         return self._matcher(entity_states)

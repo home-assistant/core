@@ -6153,6 +6153,55 @@ async def test_state_condition_attr_duration_unload_before_recorder_ready(
     get_significant_states.assert_not_called()
 
 
+async def test_state_condition_attr_duration_reprime_keeps_live_anchor(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Priming again keeps the run live tracking saw, even without history.
+
+    The entity has no usable history, e.g. it is excluded from recording. Live
+    tracking sees it stay valid across an unrelated update after setup; priming
+    again once the recorder is ready must not restart the run at that update.
+    """
+    entity_id = "test.entity_1"
+    instance = get_instance(hass)
+    start = dt_util.utcnow()
+    with (
+        freeze_time(start) as freezer,
+        patch(
+            "homeassistant.components.recorder.history.get_significant_states",
+            return_value={},
+        ),
+    ):
+        hass.states.async_set(entity_id, STATE_ON, {"test_attr": True})
+        await hass.async_block_till_done()
+
+        instance.async_recorder_ready.clear()
+        test = await _setup_attr_state_condition(
+            hass,
+            entity_ids=entity_id,
+            states={True},
+            condition_options={CONF_FOR: {"seconds": 5}},
+        )
+
+        # Unrelated update at t=8: still valid, so the run continues.
+        freezer.move_to(start + timedelta(seconds=8))
+        hass.states.async_set(entity_id, STATE_OFF, {"test_attr": True})
+        await hass.async_block_till_done()
+
+        freezer.move_to(start + timedelta(seconds=10))
+        assert test.async_check() is True
+        assert_condition_trace(
+            {"": [{"result": {"result": True, "incomplete_history": [entity_id]}}]}
+        )
+
+        instance.async_recorder_ready.set()
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        # Still valid since t=0, not since the update at t=8.
+        assert test.async_check() is True
+        assert_condition_trace({"": [{"result": {"result": True}}]})
+
+
 async def test_state_condition_attr_duration_unload_cancels_reprime(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
