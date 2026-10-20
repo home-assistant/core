@@ -197,7 +197,15 @@ def _write_error_status(result: Any) -> int | None:
 
 
 class MatterBitmapSwitch(MatterSwitch):
-    """Representation of a single bit of a Matter bitmap attribute as a Switch entity."""
+    """Representation of a single bit of a Matter bitmap attribute as a Switch entity.
+
+    Writes read the other bits from the last reported value, so two entities on
+    the same attribute would race: both compose from that value and the second
+    write drops the first one's bit. Discovery prevents this today by claiming
+    the attribute for one schema, so giving a second bit of the same attribute
+    an entity needs allow_multi plus serialization, as MatterAlarmEnabledSwitch
+    does for AlarmsEnabled.
+    """
 
     entity_description: MatterBitmapSwitchEntityDescription
 
@@ -584,5 +592,8 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterBitmapSwitch,
         required_attributes=(clusters.WindowCovering.Attributes.Mode,),
+        # Mode is mandatory on every covering, but the bit reverses the lift
+        # direction, so a tilt-only covering has nothing to configure
+        featuremap_contains=clusters.WindowCovering.Bitmaps.Feature.kLift,
     ),
 ]
