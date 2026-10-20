@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.number import (
     ATTR_VALUE,
@@ -19,8 +20,6 @@ from .conftest import (
     smart_plug_compact_device,
     smart_plug_device,
 )
-
-from tests.common import MockConfigEntry
 
 IMPULSE_LENGTH_ENTITY_ID = "number.relay_pulse_length"
 BYPASS_TIMEOUT_ENTITY_ID = "number.shutter_contact_break_function_timeout"

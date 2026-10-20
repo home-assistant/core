@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from google_weather_api import GoogleWeatherApiAuthError, GoogleWeatherApiError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant import config_entries
 from homeassistant.components.google_weather.const import (
@@ -20,8 +21,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 def _assert_create_entry_result(

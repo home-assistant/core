@@ -4,14 +4,13 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.mvglive.const import (
     CONF_STATION_ID,
     CONF_STATION_NAME,
     DOMAIN,
 )
-
-from tests.common import MockConfigEntry
 
 TEST_STATION = {"id": "de:09162:6", "name": "Hauptbahnhof", "place": "München"}
 

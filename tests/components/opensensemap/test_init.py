@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 from freezegun.api import FrozenDateTimeFactory
 from opensensemap_api.exceptions import OpenSenseMapError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.opensensemap.const import CONF_STATION_ID, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -14,8 +15,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_STATION_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_opensensemap_api")

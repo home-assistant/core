@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock
 from freezegun.api import FrozenDateTimeFactory
 from mvg import MvgApiError, TransportType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mvglive.const import (
@@ -31,8 +32,6 @@ from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 from .conftest import TEST_DEPARTURES, TEST_STATION, TEST_STATIONS
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 TEST_ENTITY_ID = "sensor.hauptbahnhof"
 

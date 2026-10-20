@@ -11,7 +11,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import (  # noqa: F401
+from .const import (
     ATTR_ATTRIBUTES,
     ATTR_BATTERY,
     ATTR_DEV_ID,
@@ -43,7 +43,7 @@ from .const import (  # noqa: F401
     TrackerEntityStateAttribute,
     TrackingType,
 )
-from .entity import (  # noqa: F401
+from .entity import (
     BaseScannerEntity,
     BaseTrackerEntity,
     ScannerEntity,
@@ -51,7 +51,7 @@ from .entity import (  # noqa: F401
     TrackerEntity,
     TrackerEntityDescription,
 )
-from .legacy import (  # noqa: F401
+from .legacy import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
     SERVICE_SEE,
@@ -67,6 +67,52 @@ from .legacy import (  # noqa: F401
 )
 
 DATA_COMPONENT: HassKey[EntityComponent[BaseTrackerEntity]] = HassKey(DOMAIN)
+
+__all__ = [
+    "ATTR_ATTRIBUTES",
+    "ATTR_BATTERY",
+    "ATTR_DEV_ID",
+    "ATTR_GPS",
+    "ATTR_HOST_NAME",
+    "ATTR_IN_ZONES",
+    "ATTR_IP",
+    "ATTR_LOCATION_NAME",
+    "ATTR_MAC",
+    "ATTR_SOURCE_TYPE",
+    "ATTR_TRACKING_TYPE",
+    "CONF_ASSOCIATED_ZONE",
+    "CONF_CONSIDER_HOME",
+    "CONF_NEW_DEVICE_DEFAULTS",
+    "CONF_SCAN_INTERVAL",
+    "CONF_TRACK_NEW",
+    "CONNECTED_DEVICE_REGISTERED",
+    "DEFAULT_CONSIDER_HOME",
+    "DEFAULT_TRACK_NEW",
+    "DOMAIN",
+    "ENTITY_ID_FORMAT",
+    "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
+    "SERVICE_SEE",
+    "SERVICE_SEE_PAYLOAD_SCHEMA",
+    "SOURCE_TYPES",
+    "AsyncSeeCallback",
+    "BaseScannerEntity",
+    "BaseTrackerEntity",
+    "DeviceScanner",
+    "DeviceTrackerEntityCapabilityAttribute",
+    "DeviceTrackerEntityStateAttribute",
+    "ScannerEntity",
+    "ScannerEntityDescription",
+    "ScannerEntityStateAttribute",
+    "SeeCallback",
+    "SourceType",
+    "TrackerEntity",
+    "TrackerEntityDescription",
+    "TrackerEntityStateAttribute",
+    "TrackingType",
+    "is_on",
+    "see",
+]
 
 
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:

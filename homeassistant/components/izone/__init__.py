@@ -52,7 +52,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> None:
     """Set up from a config entry."""
     try:
         discovery = await async_ensure_discovery(hass)
@@ -119,20 +119,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> boo
     # Register the controller device before forwarding platforms so zone
     # entities can resolve their via_device_id parent at construction time.
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, controller.device_uid)},
-        manufacturer="IZone",
-        model=controller.sys_type,
-        name=f"iZone Controller {controller.device_uid}",
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, controller.device_uid)},
+            manufacturer="IZone",
+            model=controller.sys_type,
+            name=f"iZone Controller {controller.device_uid}",
+        ),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_migrate_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> None:
     """Migrate old config entry schema to the current version.
 
     Discovery for legacy ``unique_id=DOMAIN`` / missing ``CONF_HOST`` runs here so
@@ -213,16 +213,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> b
             data=data,
         )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> None:
     """Unload the config entry and release the controller."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        coordinator = entry.runtime_data
-        await coordinator.async_shutdown()
-        await coordinator.controller.close()
-        if not hass.config_entries.async_loaded_entries(DOMAIN):
-            await async_stop_discovery(hass)
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    coordinator = entry.runtime_data
+    await coordinator.async_shutdown()
+    await coordinator.controller.close()
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
+        await async_stop_discovery(hass)

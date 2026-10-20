@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 from aiohttp import ClientConnectionError, ClientResponseError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.bond.const import DOMAIN
@@ -26,8 +27,6 @@ from .common import (
     patch_bond_token,
     patch_bond_version,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_form(hass: HomeAssistant) -> None:

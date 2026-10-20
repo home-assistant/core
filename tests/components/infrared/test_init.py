@@ -6,6 +6,19 @@ from unittest.mock import AsyncMock, Mock
 from freezegun.api import FrozenDateTimeFactory
 from infrared_protocols.commands.nec import NECCommand
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+    mock_restore_cache,
+)
+from pytest_homeassistant.components.infrared.common import (
+    MockInfraredEmitterEntity,
+    MockInfraredReceiverEntity,
+)
 
 from homeassistant.components.infrared import (
     DATA_COMPONENT,
@@ -23,18 +36,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from .common import MockInfraredEmitterEntity, MockInfraredReceiverEntity
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-    mock_restore_cache,
-)
 
 TEST_DOMAIN = "test"
 

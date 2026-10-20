@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aemet_opendata.exceptions import AuthError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.aemet.const import (
     CONF_RADAR_UPDATES,
@@ -17,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .util import mock_api_call
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

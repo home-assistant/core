@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from mvg import MvgApiError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.mvglive.const import (
     CONF_DESTINATIONS,
@@ -25,8 +26,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_integration
 from .conftest import TEST_STATION, TEST_STATIONS
-
-from tests.common import MockConfigEntry
 
 # The legacy YAML product default, expressed as current transport types.
 LEGACY_DEFAULT_AS_TRANSPORT_TYPES = ["S-Bahn", "U-Bahn", "Tram", "Bus"]

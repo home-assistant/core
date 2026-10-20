@@ -33,7 +33,7 @@ PLATFORMS = [
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) -> None:
     """Set up Hunter Douglas PowerView from a config entry."""
     config = entry.data
     hub_address: str = config[CONF_HOST]
@@ -67,15 +67,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) ->
 
     # manual registration of the hub
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, hub.mac_address)},
-        identifiers={(DOMAIN, hub.serial_number)},
-        manufacturer=MANUFACTURER,
-        name=hub.name,
-        model=hub.model,
-        sw_version=hub.firmware,
-        hw_version=hub.main_processor_version.name,
+        device_info=dr.DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, hub.mac_address)},
+            identifiers={(DOMAIN, hub.serial_number)},
+            manufacturer=MANUFACTURER,
+            name=hub.name,
+            model=hub.model,
+            sw_version=hub.firmware,
+            hw_version=hub.main_processor_version.name,
+        ),
     )
 
     try:
@@ -121,15 +123,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) -> None:
     """Migrate entry."""
 
     _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
@@ -143,8 +143,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) 
             hass.config_entries.async_update_entry(entry, minor_version=2)
 
     _LOGGER.debug("Migrated to version %s.%s", entry.version, entry.minor_version)
-
-    return True
 
 
 async def _async_add_missing_entry_unique_id(

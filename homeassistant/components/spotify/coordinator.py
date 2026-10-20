@@ -101,6 +101,7 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
                 self.hass,
                 DOMAIN,
                 f"user_not_premium_{self.config_entry.unique_id}",
+                config_entry_id=self.config_entry.entry_id,
                 is_fixable=False,
                 issue_domain=DOMAIN,
                 severity=IssueSeverity.ERROR,
@@ -108,9 +109,16 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
                 translation_placeholders={"entry_title": self.config_entry.title},
                 learn_more_url=FREE_API_BLOGPOST,
             )
-            raise ConfigEntryError("User is not subscribed to Spotify") from err
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="user_not_premium",
+            ) from err
         except SpotifyConnectionError as err:
-            raise UpdateFailed("Error communicating with Spotify API") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     @override
     async def _async_update_data(self) -> SpotifyCoordinatorData:
@@ -118,7 +126,11 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
         try:
             current = await self.client.get_playback()
         except SpotifyConnectionError as err:
-            raise UpdateFailed("Error communicating with Spotify API") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
         if not current:
             return SpotifyCoordinatorData(
                 current_playback=None,
@@ -207,4 +219,8 @@ class SpotifyDeviceCoordinator(DataUpdateCoordinator[list[Device]]):
         try:
             return await self._client.get_devices()
         except SpotifyConnectionError as err:
-            raise UpdateFailed from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err

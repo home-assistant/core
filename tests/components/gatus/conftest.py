@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock, patch
 
 from gatus_api import EndpointStatus, Event, Result
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.gatus.const import DOMAIN
 from homeassistant.const import CONF_URL
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

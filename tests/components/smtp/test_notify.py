@@ -11,6 +11,7 @@ from aiosmtplib import (
     SMTPException as aiosmtplib_SMTPException,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import media_source
@@ -39,8 +40,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util.ssl import create_client_context
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 class MockSMTP(MailNotificationService):
