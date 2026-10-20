@@ -1,4 +1,4 @@
-"""Creates Select entities for the my-PV Home Assistant integration."""
+"""Creates Select entities for the my-PV integration."""
 
 from typing import override
 

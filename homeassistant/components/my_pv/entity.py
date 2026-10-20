@@ -53,7 +53,7 @@ class MyPVDataEntity(MyPVBaseEntity):
 
 
 class MyPVSetupEntity(MyPVBaseEntity):
-    """The my-PV data entity."""
+    """The my-PV setup entity."""
 
     @property
     @override

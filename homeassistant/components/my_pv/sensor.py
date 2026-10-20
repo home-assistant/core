@@ -1,4 +1,4 @@
-"""Creates Sensor entities for the my-PV Home Assistant integration."""
+"""Creates Sensor entities for the my-PV integration."""
 
 from datetime import date, datetime
 from decimal import Decimal

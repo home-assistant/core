@@ -1,4 +1,4 @@
-"""Creates Water Heater entities for the my-PV Home Assistant integration."""
+"""Creates Water Heater entities for the my-PV integration."""
 
 from typing import Any, override
 

@@ -1,5 +1,4 @@
-# pylint: disable=duplicate-code
-"""Creates Number entities for the my-PV Home Assistant integration."""
+"""Creates Number entities for the my-PV integration."""
 
 from typing import Any, Final, override
 

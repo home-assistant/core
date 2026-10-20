@@ -1,4 +1,4 @@
-"""Creates Switch entities for the my-PV Home Assistant integration."""
+"""Creates Switch entities for the my-PV integration."""
 
 from typing import Any, Final, override
 
