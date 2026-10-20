@@ -13,6 +13,7 @@ from homeassistant.components.dali.const import CONF_BUS_POWER, DOMAIN
 from homeassistant.components.dali.coordinator import (
     DaliCoordinator,
     DaliGearData,
+    _brightness_to_dali_level,
     _dali_level_to_brightness,
 )
 from homeassistant.const import CONF_DEVICE
@@ -37,7 +38,9 @@ def coordinator(
         (255, False, None),
         (0, False, 0),
         (86, False, 3),
-        (170, True, 128),
+        (170, True, 171),
+        (200, False, 58),
+        (200, True, 201),
         (254, False, 255),
         (254, True, 255),
     ],
@@ -46,26 +49,20 @@ def test_dali_level_to_brightness(
     level: object, linear: bool, expected: int | None
 ) -> None:
     """Test DALI readback conversion branches."""
-    assert _dali_level_to_brightness(level, linear, 86) == expected
+    assert _dali_level_to_brightness(level, linear) == expected
 
 
-@pytest.mark.parametrize(
-    ("level", "linear", "expected"),
-    [(200, False, 58), (200, True, 1), (201, False, 60)],
-)
-def test_dali_level_to_brightness_keeps_log_curve_at_raised_minimum(
-    level: int, linear: bool, expected: int
-) -> None:
-    """Test a raised minimum keeps the logarithmic readback but floors linear."""
-    assert _dali_level_to_brightness(level, linear, 200) == expected
+def test_linear_readback_is_independent_of_minimum() -> None:
+    """Test the linear readback is a fixed curve; the minimum only clamps commands.
 
-
-@pytest.mark.parametrize("linear", [False, True])
-def test_dali_level_to_brightness_full_output_overrides_min_level(
-    linear: bool,
-) -> None:
-    """Test full arc power reports full brightness even when min_level is 254."""
-    assert _dali_level_to_brightness(254, linear, 254) == 255
+    Level 200 reads back the same brightness whatever the configured minimum,
+    and a request below the minimum is clamped to it rather than rescaled.
+    """
+    assert _dali_level_to_brightness(200, True) == 201
+    # Mid brightness maps near mid level, far below a raised minimum.
+    assert _brightness_to_dali_level(128, True, 1) < 200
+    # With a raised minimum the command clamps to it instead of driving higher.
+    assert _brightness_to_dali_level(128, True, 200) == 200
 
 
 async def test_invalid_min_level_uses_default(
