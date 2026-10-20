@@ -6,6 +6,11 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from besen.models import BesenData, ChargerConfig, ChargerInfo, ChargeStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
 
 from homeassistant.components.besen.const import DOMAIN, PLATFORMS
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
@@ -13,9 +18,6 @@ from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN, Platform
 from homeassistant.core import HomeAssistant
 
 from . import publish_besen_state
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 FIXTURE_ADDRESS = "AA:BB"
 FIXTURE_DISCOVERY_ADDRESS = "aa:bb"

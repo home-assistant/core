@@ -4,6 +4,9 @@ import time
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from youtubeaio.types import ForbiddenError
 
 from homeassistant import config_entries
@@ -29,10 +32,6 @@ from .conftest import (
     TITLE,
     ComponentSetup,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.usefixtures("current_request_with_host")

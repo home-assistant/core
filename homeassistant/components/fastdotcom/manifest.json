@@ -1,6 +1,7 @@
 {
   "domain": "fastdotcom",
   "name": "Fast.com",
+  "categories": ["computers_network.monitoring"],
   "codeowners": ["@rohankapoorcom", "@erwindouna"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/fastdotcom",

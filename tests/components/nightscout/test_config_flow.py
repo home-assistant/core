@@ -4,6 +4,7 @@ from http import HTTPStatus
 from unittest.mock import patch
 
 from aiohttp import ClientConnectionError, ClientResponseError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.nightscout.const import DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import GLUCOSE_READINGS, SERVER_STATUS, SERVER_STATUS_STATUS_ONLY
-
-from tests.common import MockConfigEntry
 
 CONFIG = {CONF_URL: "https://some.url:1234"}
 

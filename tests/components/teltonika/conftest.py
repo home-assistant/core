@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from teltasync.modems import ModemStatusFull
 from teltasync.system import DeviceStatusData
 from teltasync.unauthorized import UnauthorizedStatusData
@@ -11,8 +12,6 @@ from teltasync.unauthorized import UnauthorizedStatusData
 from homeassistant.components.teltonika.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture

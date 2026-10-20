@@ -9,6 +9,7 @@ from typing import Final
 
 from homeassistant.const import REQUIRED_PYTHON_VER
 
+from .core_files import MISSING_ALL, get_core_integrations
 from .model import Config, Integration
 
 # Component modules which should set no_implicit_reexport = true.
@@ -108,7 +109,6 @@ PLUGIN_CONFIG: Final[dict[str, dict[str, str]]] = {
         "init_forbid_extra": "true",
         "init_typed": "true",
         "warn_required_dynamic_aliases": "true",
-        "warn_untyped_fields": "true",
     }
 }
 
@@ -165,10 +165,15 @@ def _generate_and_validate_mypy_config(config: Config) -> str:
         else:
             strict_core_modules.append(module)
 
+    # The package root of a core integration only exports the names in its __all__
+    reexport_modules = NO_IMPLICIT_REEXPORT_MODULES | {
+        f"homeassistant.components.{domain}"
+        for domain in get_core_integrations(config.root) - MISSING_ALL
+        if (config.root / "homeassistant" / "components" / domain).is_dir()
+    }
+
     # Validate that all modules exist.
-    all_modules = (
-        strict_modules + strict_core_modules + list(NO_IMPLICIT_REEXPORT_MODULES)
-    )
+    all_modules = strict_modules + strict_core_modules + list(reexport_modules)
     for module in all_modules:
         if module.endswith(".*"):
             module_path = Path(module[:-2].replace(".", os.path.sep))
@@ -227,12 +232,10 @@ def _generate_and_validate_mypy_config(config: Config) -> str:
         mypy_config.add_section(strict_section)
         for key in STRICT_SETTINGS:
             mypy_config.set(strict_section, key, "true")
-        if strict_module in NO_IMPLICIT_REEXPORT_MODULES:
+        if strict_module in reexport_modules:
             mypy_config.set(strict_section, "no_implicit_reexport", "true")
 
-    for reexport_module in sorted(
-        NO_IMPLICIT_REEXPORT_MODULES.difference(strict_modules)
-    ):
+    for reexport_module in sorted(reexport_modules.difference(strict_modules)):
         reexport_section = f"mypy-{reexport_module}"
         mypy_config.add_section(reexport_section)
         mypy_config.set(reexport_section, "no_implicit_reexport", "true")

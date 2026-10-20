@@ -101,6 +101,7 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
                 self.hass,
                 DOMAIN,
                 f"user_not_premium_{self.config_entry.unique_id}",
+                config_entry_id=self.config_entry.entry_id,
                 is_fixable=False,
                 issue_domain=DOMAIN,
                 severity=IssueSeverity.ERROR,

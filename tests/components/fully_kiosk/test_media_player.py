@@ -3,6 +3,8 @@
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import media_player
 from homeassistant.components.fully_kiosk.const import DOMAIN, MEDIA_SUPPORT_FULLYKIOSK
@@ -12,9 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def test_media_player(

@@ -23,6 +23,8 @@ from google_nest_sdm.exceptions import (
     SubscriberTimeoutException,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.nest import DOMAIN
 from homeassistant.components.nest.const import OAUTH2_TOKEN
@@ -39,9 +41,6 @@ from .common import (
     PlatformSetup,
     create_nest_event,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 PLATFORM = "sensor"
 

@@ -13,9 +13,9 @@ from probatio.humanize import humanize_error
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import FRONTEND_HANDLED_ISSUES
-from script.translations import upload
 
 from .model import Config, Integration, IntegrationType
+from .translation_data import generate_upload_data
 
 UNDEFINED = 0
 REQUIRED = 1
@@ -693,6 +693,30 @@ def gen_ha_hardware_schema(
     return _with_integration(schema, config, integration)
 
 
+def gen_homeassistant_schema(
+    config: Config, integration: Integration
+) -> Callable[[Any], Any]:
+    """Generate the strings schema for the homeassistant integration."""
+    schema = _gen_strings_schema(False, _frontend_issues(integration)).extend(
+        {
+            # The integration categories shared by the website, the
+            # frontend and the Marketplace.
+            probatio.Optional("integration_category"): cv.schema_with_slug_keys(
+                {
+                    probatio.Required("name"): translation_value_validator,
+                    probatio.Required("description"): translation_value_validator,
+                    probatio.Optional("subcategory"): cv.schema_with_slug_keys(
+                        {probatio.Required("name"): translation_value_validator},
+                        slug_validator=translation_key_validator,
+                    ),
+                },
+                slug_validator=translation_key_validator,
+            ),
+        }
+    )
+    return _with_integration(schema, config, integration)
+
+
 ONBOARDING_SCHEMA = probatio.Schema(
     {
         probatio.Required("area"): {str: translation_value_validator},
@@ -725,6 +749,8 @@ def validate_translation_file(
         strings_schema = ONBOARDING_SCHEMA
     elif integration.domain == "homeassistant_hardware":
         strings_schema = gen_ha_hardware_schema(config, integration)
+    elif integration.domain == "homeassistant":
+        strings_schema = gen_homeassistant_schema(config, integration)
     else:
         strings_schema = gen_strings_schema(config, integration)
 
@@ -796,7 +822,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     if config.specific_integrations:
         all_strings = None
     else:
-        all_strings = upload.generate_upload_data()  # type: ignore[no-untyped-call]
+        all_strings = generate_upload_data(config.root)
 
     for integration in integrations.values():
         validate_translation_file(config, integration, all_strings)
