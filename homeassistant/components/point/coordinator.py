@@ -55,11 +55,13 @@ class PointDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
             for home_id in new_homes:
                 # Register the home before its child devices so they can resolve
                 # it as their via_device parent when their entities are created.
-                device_registry.async_get_or_create(
+                device_registry.async_get_or_create_device(
                     config_entry_id=self.config_entry.entry_id,
-                    identifiers={(DOMAIN, home_id)},
-                    manufacturer="Minut",
-                    name=self.point.homes[home_id]["name"],
+                    device_info=dr.DeviceInfo(
+                        identifiers={(DOMAIN, home_id)},
+                        manufacturer="Minut",
+                        name=self.point.homes[home_id]["name"],
+                    ),
                 )
                 if self.new_home_callback:
                     self.new_home_callback(home_id)

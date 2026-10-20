@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 from afsapi import FSConnectionError, FSNotImplementedError, PlayCaps
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.frontier_silicon.media_player import AFSAPIMediaPlayer
 from homeassistant.components.media_player import (
@@ -25,8 +26,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 MEDIA_PLAYER_ENTITY_ID = "media_player.name_of_the_device"
 DST_SWITCH_ENTITY_ID = "switch.name_of_the_device_daylight_saving_time"

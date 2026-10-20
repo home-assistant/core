@@ -5,14 +5,13 @@ from contextlib import contextmanager
 from unittest.mock import patch
 
 import aiohttp
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.ovo_energy.const import CONF_ACCOUNT, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 FIXTURE_REAUTH_INPUT = {CONF_PASSWORD: "something1"}
 FIXTURE_USER_INPUT = {

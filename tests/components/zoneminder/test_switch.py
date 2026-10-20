@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from zoneminder.monitor import MonitorState
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -22,8 +23,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .conftest import create_mock_monitor
-
-from tests.common import async_fire_time_changed
 
 
 async def _setup_zm_with_switches(

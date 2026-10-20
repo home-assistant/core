@@ -49,7 +49,9 @@ ETHERNET_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     }
 )
 
-PLATFORM_SCHEMA = probatio.Schema(probatio.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA))
+PLATFORM_SCHEMA = probatio.Schema(
+    probatio.TaggedUnion(CONF_TYPE, [SERIAL_SCHEMA, ETHERNET_SCHEMA])
+)
 
 
 def setup_platform(

@@ -33,7 +33,7 @@ PLATFORMS = [
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TedeeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TedeeConfigEntry) -> None:
     """Integration setup."""
 
     coordinator = TedeeApiCoordinator(hass, entry)
@@ -41,13 +41,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TedeeConfigEntry) -> boo
     await coordinator.async_config_entry_first_refresh()
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, coordinator.bridge.serial)},
-        manufacturer="Tedee",
-        name=coordinator.bridge.name,
-        model="Bridge",
-        serial_number=coordinator.bridge.serial,
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, coordinator.bridge.serial)},
+            manufacturer="Tedee",
+            name=coordinator.bridge.name,
+            model="Bridge",
+            serial_number=coordinator.bridge.serial,
+        ),
     )
 
     entry.runtime_data = coordinator
@@ -95,12 +97,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TedeeConfigEntry) -> boo
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: TedeeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TedeeConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 def get_webhook_handler(
@@ -132,7 +132,7 @@ def get_webhook_handler(
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: TedeeConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
 
     version = config_entry.version
@@ -145,4 +145,3 @@ async def async_migrate_entry(
         data = {**config_entry.data, CONF_WEBHOOK_ID: webhook_generate_id()}
         hass.config_entries.async_update_entry(config_entry, data=data, minor_version=2)
         _LOGGER.debug("Migration to version 1.2 successful")
-    return True

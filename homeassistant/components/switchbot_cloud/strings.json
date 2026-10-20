@@ -9,6 +9,14 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "description": "The SwitchBot API token and secret are no longer valid. Please enter a new token and secret from the SwitchBot app.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
