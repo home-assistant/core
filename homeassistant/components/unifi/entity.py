@@ -87,6 +87,25 @@ def async_wlan_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
 
 
 @callback
+def async_wan_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
+    """Create device registry entry for WAN network."""
+    network = hub.api.networks[obj_id]
+    return DeviceInfo(
+        entry_type=DeviceEntryType.SERVICE,
+        identifiers={(DOMAIN, network.id)},
+        manufacturer=ATTR_MANUFACTURER,
+        model="UniFi WAN",
+        name=network.name,
+    )
+
+
+@callback
+def async_wan_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if WAN network devices and entities are enabled."""
+    return hub.config.option_track_wan_networks
+
+
+@callback
 def async_client_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
     """Create device registry entry for client."""
     client = hub.api.clients[obj_id]
