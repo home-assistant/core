@@ -658,6 +658,7 @@ FLOWS = {
         "pure_energie",
         "purpleair",
         "pushbullet",
+        "pushmeld",
         "pushover",
         "pvoutput",
         "pvpc_hourly_pricing",

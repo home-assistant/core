@@ -1536,6 +1536,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/push/ @dgomes
 /homeassistant/components/pushbullet/ @engrbm87
 /tests/components/pushbullet/ @engrbm87
+/homeassistant/components/pushmeld/ @alexfsn
+/tests/components/pushmeld/ @alexfsn
 /homeassistant/components/pushover/ @engrbm87
 /tests/components/pushover/ @engrbm87
 /homeassistant/components/pvoutput/ @frenck
