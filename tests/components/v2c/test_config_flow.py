@@ -143,6 +143,13 @@ async def test_options_flow_pv_enabled(hass: HomeAssistant) -> None:
         CONF_CONTRACTED_POWER_ENTITY: "number.contracted_power",
     }
 
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    schema = result["data_schema"]({})
+    assert schema[CONF_PV_AVAILABLE] is True
+
 
 @pytest.mark.usefixtures("mock_v2c_client")
 async def test_options_flow_pv_step_requires_entities(hass: HomeAssistant) -> None:
@@ -184,31 +191,6 @@ async def test_options_flow_pv_step_requires_entities(hass: HomeAssistant) -> No
         CONF_POWER_DEVIATION_ENTITY: "number.power_deviation",
         CONF_CONTRACTED_POWER_ENTITY: "number.contracted_power",
     }
-
-
-@pytest.mark.usefixtures("mock_v2c_client")
-async def test_options_flow_shows_existing_values(hass: HomeAssistant) -> None:
-    """Test the init step defaults to the currently stored pv_available value."""
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="EVSE 1.1.1.1",
-        unique_id="ABC123",
-        data={CONF_HOST: "1.1.1.1"},
-        options={
-            CONF_PV_AVAILABLE: True,
-            CONF_POWER_DEVIATION_ENTITY: "number.power_deviation",
-            CONF_CONTRACTED_POWER_ENTITY: "number.contracted_power",
-        },
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    schema = result["data_schema"]({})
-    assert schema[CONF_PV_AVAILABLE] is True
 
 
 @pytest.mark.usefixtures("mock_v2c_client")
