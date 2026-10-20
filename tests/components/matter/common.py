@@ -34,6 +34,7 @@ FIXTURES = [
     "atios_knx_bridge",
     "color_temperature_light",
     "cync_keypad_dimmer",
+    "dewenwils_3_zone_transformer",
     "eberle_ute3000",
     "ecovacs_deebot",
     "eufy_vacuum_omni_e28",
