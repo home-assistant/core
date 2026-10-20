@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_server_found": "No LMS found."
+      "no_server_found": "No LMS found.",
+      "unique_id_mismatch": "The server does not match the configured LMS. Please add it as a new entry instead."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -76,6 +77,18 @@
         },
         "description": "{desc}",
         "title": "Edit additional connection information"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The password from LMS Advanced Security.",
+          "username": "The username from LMS Advanced Security."
+        },
+        "description": "The LMS at {host} rejected the credentials. Enter the current credentials.",
+        "title": "[%key:common::config_flow::title::reauth%]"
       },
       "user": {
         "menu_options": {

@@ -263,6 +263,50 @@ async def test_state_gets_saved_when_set_before_start_event(
         assert db_states[0].event_id is None
 
 
+async def test_commit_future_covers_startup_batch(
+    hass: HomeAssistant, async_setup_recorder_instance: RecorderInstanceGenerator
+) -> None:
+    """Test a commit future is returned while the startup batch is processed.
+
+    Once Home Assistant has started, the recorder drains its whole queue into a
+    startup batch before processing it. The queue is then empty although the
+    batch is not committed yet.
+    """
+    hass.set_state(CoreState.not_running)
+    recorder_helper.async_initialize_recorder(hass)
+    hass.async_create_task(async_setup_recorder_instance(hass))
+    await async_wait_recorder(hass)
+    instance = get_instance(hass)
+    hass.states.async_set("test.recorder", "on")
+
+    batch_drained = threading.Event()
+    release_batch = threading.Event()
+    real_pre_process = instance._pre_process_startup_events
+
+    def _pre_process_startup_events(
+        startup_task_or_events: list[recorder.tasks.RecorderTask | Event],
+    ) -> None:
+        batch_drained.set()
+        release_batch.wait()
+        real_pre_process(startup_task_or_events)
+
+    with patch.object(
+        instance, "_pre_process_startup_events", _pre_process_startup_events
+    ):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        try:
+            assert await hass.async_add_executor_job(batch_drained.wait, 10)
+            assert instance.backlog == 0
+            commit_future = instance.async_get_commit_future()
+        finally:
+            release_batch.set()
+
+    assert commit_future is not None
+    await commit_future
+    with session_scope(hass=hass, read_only=True) as session:
+        assert len(list(session.query(States))) == 1
+
+
 async def test_saving_state(hass: HomeAssistant, setup_recorder: None) -> None:
     """Test saving and restoring a state."""
     entity_id = "test.recorder"

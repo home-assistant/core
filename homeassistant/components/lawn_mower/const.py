@@ -49,3 +49,12 @@ SERVICE_START_MOWING = "start_mowing"
 SERVICE_PAUSE = "pause"
 SERVICE_DOCK = "dock"
 SERVICE_STOP = "stop"
+
+
+class LawnMowerService(StrEnum):
+    """Store keys for lawn mower services."""
+
+    DOCK = "dock"
+    PAUSE = "pause"
+    START_MOWING = "start_mowing"
+    STOP = "stop"

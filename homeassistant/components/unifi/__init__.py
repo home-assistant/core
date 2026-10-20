@@ -63,9 +63,11 @@ async def async_setup_entry(
     # when entities with DeviceInfo are added by their respective platforms.
     device_registry = dr.async_get(hass)
     for device in hub.api.devices.values():
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=config_entry.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, device.mac)},
+            device_info=dr.DeviceInfo(
+                connections={(dr.CONNECTION_NETWORK_MAC, device.mac)}
+            ),
         )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)

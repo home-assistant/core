@@ -48,13 +48,15 @@ async def async_setup_entry(
     config_entry.runtime_data = coordinator
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, coordinator.serial_num)},
-        manufacturer=ATTR_MANUFACTURER,
-        model=coordinator.model,
-        name=coordinator.hostname,
-        sw_version=coordinator.firmware,
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, coordinator.serial_num)},
+            manufacturer=ATTR_MANUFACTURER,
+            model=coordinator.model,
+            name=coordinator.hostname,
+            sw_version=coordinator.firmware,
+        ),
     )
 
     @callback
