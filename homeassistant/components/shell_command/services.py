@@ -27,8 +27,7 @@ from homeassistant.helpers import (
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType
 
-from .const import DOMAIN
-from .schema import CONFIG_SCHEMA
+from .const import CONFIG_SCHEMA, DOMAIN
 
 COMMAND_TIMEOUT = 60
 

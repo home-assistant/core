@@ -3,8 +3,7 @@
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
-from .schema import CONFIG_SCHEMA  # noqa: F401
+from .const import CONFIG_SCHEMA, DOMAIN  # noqa: F401
 from .services import async_register_shell_commands, async_setup_services
 
 
