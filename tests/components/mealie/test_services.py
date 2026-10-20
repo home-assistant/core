@@ -74,6 +74,11 @@ from . import setup_integration
             id="note-only",
         ),
         pytest.param(
+            {"food_id": "", "note": "Kitchen roll"},
+            MutateShoppingItem(note="Kitchen roll", quantity=0.0, is_food=False),
+            id="empty-food-id",
+        ),
+        pytest.param(
             {
                 "food_id": "09322430-d24c-4b1a-abb6-22b6ed3a88f5",
                 "note": "Diced",

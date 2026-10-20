@@ -216,6 +216,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
         quantity: float = 0.0,
     ) -> None:
         """Add an ingredient directly to the shopping list."""
+        food_id = food_id or None
         if not food_id and not note:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -228,7 +229,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
                 note=note,
                 unit_id=unit_id,
                 quantity=quantity,
-                is_food=food_id is not None,
+                is_food=bool(food_id),
             )
         )
 
