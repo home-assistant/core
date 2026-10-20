@@ -50,6 +50,27 @@ def async_device_available_fn(hub: UnifiHub, obj_id: str) -> bool:
 
 
 @callback
+def async_device_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if device is adopted by the controller.
+
+    The controller also lists devices that are only pending adoption,
+    like a neighbour's access point. Those are not part of the site.
+    """
+    if "_" in obj_id:  # Sub device (outlet or port)
+        obj_id = obj_id.partition("_")[0]
+
+    return hub.api.devices[obj_id].raw.get("adopted", True)
+
+
+@callback
+def async_port_poe_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if port supports PoE."""
+    return async_device_supported_fn(hub, obj_id) and bool(
+        hub.api.ports[obj_id].port_poe
+    )
+
+
+@callback
 def async_wlan_available_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if WLAN is available."""
     wlan = hub.api.wlans[obj_id]

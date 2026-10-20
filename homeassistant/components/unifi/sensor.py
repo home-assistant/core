@@ -59,6 +59,8 @@ from .entity import (
     async_client_device_info_fn,
     async_device_available_fn,
     async_device_device_info_fn,
+    async_device_supported_fn,
+    async_port_poe_supported_fn,
     async_wlan_available_fn,
     async_wlan_device_info_fn,
     is_locally_administered_mac,
@@ -196,13 +198,19 @@ def async_uptime_value_changed_fn(
 @callback
 def async_device_outlet_power_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Determine if an outlet has the power property."""
-    return hub.api.outlets[obj_id].has_metering is True
+    return (
+        async_device_supported_fn(hub, obj_id)
+        and hub.api.outlets[obj_id].has_metering is True
+    )
 
 
 @callback
 def async_device_outlet_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Determine if a device supports reading overall power metrics."""
-    return hub.api.devices[obj_id].outlet_ac_power_budget is not None
+    return (
+        async_device_supported_fn(hub, obj_id)
+        and hub.api.devices[obj_id].outlet_ac_power_budget is not None
+    )
 
 
 @callback
@@ -210,6 +218,8 @@ def async_device_battery_pool_supported_fn(
     field: str, key: str, hub: UnifiHub, obj_id: str
 ) -> bool:
     """Discover reported battery pool fields and retain discovered sensors."""
+    if not async_device_supported_fn(hub, obj_id):
+        return False
     return (key, obj_id) in hub.entity_loader.known_objects or (
         async_device_battery_pool_value_fn(field, hub, hub.api.devices[obj_id])
         is not None
@@ -225,8 +235,28 @@ def async_device_battery_pool_value_fn(
 
 
 @callback
+def async_port_speed_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Determine if a port reports a link speed."""
+    return (
+        async_device_supported_fn(hub, obj_id)
+        and hub.api.ports[obj_id].raw.get("speed", 0) > 0
+    )
+
+
+@callback
+def async_device_temperature_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Determine if a device reports a general temperature."""
+    return (
+        async_device_supported_fn(hub, obj_id)
+        and hub.api.devices[obj_id].has_temperature
+    )
+
+
+@callback
 def async_device_uplink_mac_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Determine if a device supports reading uplink MAC address."""
+    if not async_device_supported_fn(hub, obj_id):
+        return False
     return "uplink_mac" in hub.api.devices[obj_id].raw.get("uplink", {})
 
 
@@ -235,7 +265,8 @@ def device_system_stats_supported_fn(
 ) -> bool:
     """Determine if a device supports reading item at index in system stats."""
     return (
-        "system-stats" in hub.api.devices[obj_id].raw
+        async_device_supported_fn(hub, obj_id)
+        and "system-stats" in hub.api.devices[obj_id].raw
         and hub.api.devices[obj_id].system_stats[stat_index] != ""
     )
 
@@ -268,6 +299,8 @@ def async_device_wan_latency_supported_fn(
     obj_id: str,
 ) -> bool:
     """Determine if an device have a latency monitor."""
+    if not async_device_supported_fn(hub, obj_id):
+        return False
     if (device := hub.api.devices[obj_id]) and device.uptime_stats:
         return _device_wan_latency_monitor(wan, monitor_target, device) is not None
     return False
@@ -367,6 +400,8 @@ def async_device_temperatures_supported_fn(
     temperature_name: str, hub: UnifiHub, obj_id: str
 ) -> bool:
     """Determine if an device have a temperatures."""
+    if not async_device_supported_fn(hub, obj_id):
+        return False
     if (device := hub.api.devices[obj_id]) and device.temperatures:
         return any(
             temperature_name in temperature["name"]
@@ -501,7 +536,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.ports[obj_id],
-        supported_fn=lambda hub, obj_id: bool(hub.api.ports[obj_id].port_poe),
+        supported_fn=async_port_poe_supported_fn,
         translation_placeholders_fn=lambda port: {"port_name": port.name},
         unique_id_fn=lambda hub, obj_id: f"poe_power-{obj_id}",
         value_fn=lambda _, obj: obj.poe_power if obj.poe_mode != "off" else "0",
@@ -520,6 +555,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.ports[obj_id],
+        supported_fn=async_device_supported_fn,
         translation_placeholders_fn=lambda port: {"port_name": port.name},
         unique_id_fn=lambda hub, obj_id: f"port_rx-{obj_id}",
         value_fn=lambda hub, port: port.rx_bytes_r,
@@ -538,6 +574,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.ports[obj_id],
+        supported_fn=async_device_supported_fn,
         translation_placeholders_fn=lambda port: {"port_name": port.name},
         unique_id_fn=lambda hub, obj_id: f"port_tx-{obj_id}",
         value_fn=lambda hub, port: port.tx_bytes_r,
@@ -554,7 +591,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.ports[obj_id],
-        supported_fn=lambda hub, obj_id: hub.api.ports[obj_id].raw.get("speed", 0) > 0,
+        supported_fn=async_port_speed_supported_fn,
         translation_placeholders_fn=lambda port: {"port_name": port.name},
         unique_id_fn=lambda hub, obj_id: f"port_link_speed-{obj_id}",
         value_fn=lambda hub, port: port.raw.get("speed", 0),
@@ -597,6 +634,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
         should_poll=True,
+        supported_fn=async_device_supported_fn,
         unique_id_fn=lambda hub, obj_id: f"device_clients-{obj_id}",
         value_fn=async_device_clients_value_fn,
     ),
@@ -808,6 +846,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
+        supported_fn=async_device_supported_fn,
         unique_id_fn=lambda hub, obj_id: f"device_uptime-{obj_id}",
         value_fn=async_device_uptime_value_fn,
         value_changed_fn=async_uptime_value_changed_fn,
@@ -822,7 +861,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=lambda hub, obj_id: hub.api.devices[obj_id].has_temperature,
+        supported_fn=async_device_temperature_supported_fn,
         unique_id_fn=lambda hub, obj_id: f"device_temperature-{obj_id}",
         value_fn=lambda hub, device: device.general_temperature,
     ),
@@ -848,6 +887,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
+        supported_fn=async_device_supported_fn,
         unique_id_fn=lambda hub, obj_id: f"device_state-{obj_id}",
         value_fn=async_device_state_value_fn,
         options=list(DEVICE_STATES.values()),
