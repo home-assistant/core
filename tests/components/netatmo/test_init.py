@@ -40,6 +40,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import (
+    HomeAssistantError,
     OAuth2TokenRequestReauthError,
     ServiceValidationError,
 )
@@ -2337,6 +2338,146 @@ async def test_the_register_action_settles_the_registration(
         await hass.async_block_till_done()
 
     mock_auth.return_value.async_addwebhook.assert_not_called()
+
+
+async def test_the_register_action_fails_when_netatmo_rejects_the_webhook(
+    hass: HomeAssistant, config_entry: MockConfigEntry, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test the action reports a rejected registration and the retry still runs."""
+    with (
+        _patched_retry_delays(),
+        _cloud_subscribed(hass),
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", []),
+        patch(
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
+        ),
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = partial(
+            fake_post_request, hass
+        )
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_addwebhook = AsyncMock(
+            side_effect=pyatmo.ApiError("Webhook rejected")
+        )
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        with pytest.raises(HomeAssistantError) as exc_info:
+            await hass.services.async_call(DOMAIN, "register_webhook", blocking=True)
+
+        assert exc_info.value.translation_key == "webhook_registration_failed"
+
+        # The background retry is unaffected by the action failing
+        mock_auth.return_value.async_addwebhook.reset_mock(side_effect=True)
+        freezer.tick(timedelta(seconds=TEST_MAX_RETRY_DELAY))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    mock_auth.return_value.async_addwebhook.assert_called_once()
+
+
+async def test_the_register_action_fails_while_the_cloud_is_disconnected(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test the action reports a registration deferred until the cloud is back."""
+    with (
+        _cloud_subscribed(hass),
+        patch.object(cloud, "async_is_connected", return_value=False),
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", []),
+        patch(
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
+        ),
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = partial(
+            fake_post_request, hass
+        )
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        with pytest.raises(HomeAssistantError) as exc_info:
+            await hass.services.async_call(DOMAIN, "register_webhook", blocking=True)
+
+    assert exc_info.value.translation_key == "webhook_registration_failed"
+    mock_auth.return_value.async_addwebhook.assert_not_called()
+
+
+async def test_the_register_action_rejects_a_url_that_cannot_work(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test the action reports a webhook URL Netatmo cannot deliver to."""
+    with (
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", []),
+        patch(
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
+        ),
+        patch(
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
+            return_value="http://example.com",
+        ),
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = partial(
+            fake_post_request, hass
+        )
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        with pytest.raises(HomeAssistantError) as exc_info:
+            await hass.services.async_call(DOMAIN, "register_webhook", blocking=True)
+
+    assert exc_info.value.translation_key == "webhook_url_not_supported"
+    mock_auth.return_value.async_addwebhook.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(pyatmo.ApiError("Webhook removal timed out"), id="api_error"),
+        pytest.param(aiohttp.ClientError("Connection reset"), id="cannot_connect"),
+    ],
+)
+async def test_the_unregister_action_fails_when_the_drop_fails(
+    hass: HomeAssistant, config_entry: MockConfigEntry, error: Exception
+) -> None:
+    """Test the action reports a drop Netatmo did not confirm."""
+    with (
+        _cloud_subscribed(hass),
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", []),
+        patch(
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
+        ),
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = partial(
+            fake_post_request, hass
+        )
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook = AsyncMock(side_effect=error)
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        with pytest.raises(HomeAssistantError) as exc_info:
+            await hass.services.async_call(DOMAIN, "unregister_webhook", blocking=True)
+
+    assert exc_info.value.translation_key == "webhook_unregister_failed"
 
 
 @pytest.mark.parametrize(

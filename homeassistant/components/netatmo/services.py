@@ -6,7 +6,7 @@ from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.climate import ATTR_PRESET_MODE, DOMAIN as CLIMATE_DOMAIN
 from homeassistant.const import ATTR_PERSONS
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.service import async_register_platform_entity_service
 
@@ -61,17 +61,36 @@ def _deprecate(hass: HomeAssistant, service: str) -> None:
 async def _register_webhook(call: ServiceCall) -> None:
     """Handle the deprecated register_webhook action."""
     _deprecate(call.hass, SERVICE_REGISTER_WEBHOOK)
-    manager = _get_loaded_entry(call.hass).runtime_data.webhook_manager
+    data_handler = _get_loaded_entry(call.hass).runtime_data
+    manager = data_handler.webhook_manager
     # Drop any existing registration first so re-registering an already-active
     # webhook does not raise "Handler is already defined!".
     await manager.async_unregister()
     await manager.async_ensure_registered()
 
+    # Unsettled means a retry is scheduled, which keeps running after this fails
+    if not manager.registered:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="webhook_registration_failed",
+        )
+    # Settled without registering: the URL cannot receive Netatmo's deliveries
+    if not data_handler.webhook_registered:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="webhook_url_not_supported",
+        )
+
 
 async def _unregister_webhook(call: ServiceCall) -> None:
     """Handle the deprecated unregister_webhook action."""
     _deprecate(call.hass, SERVICE_UNREGISTER_WEBHOOK)
-    await _get_loaded_entry(call.hass).runtime_data.webhook_manager.async_unregister()
+    manager = _get_loaded_entry(call.hass).runtime_data.webhook_manager
+    if not await manager.async_drop():
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="webhook_unregister_failed",
+        )
 
 
 @callback
