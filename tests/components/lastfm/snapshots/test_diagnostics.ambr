@@ -1,11 +1,6 @@
 # serializer version: 1
 # name: test_diagnostics
   dict({
-    'options': dict({
-      'api_key': '**REDACTED**',
-      'main_user': '**REDACTED**',
-      'users': '**REDACTED**',
-    }),
     'users': list([
       dict({
         'image': 'image',
