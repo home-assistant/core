@@ -1,9 +1,11 @@
 """Tests for the Uptime Kuma integration."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.typing import WebSocketGenerator
 from pythonkuma import (
     UptimeKumaAuthenticationException,
@@ -193,3 +195,44 @@ async def test_remove_entry_device(
     assert device_registry.async_get_device_by_identifier(
         (DOMAIN, "123456789"), config_entry.entry_id
     )
+
+
+@pytest.mark.usefixtures("mock_pythonkuma")
+async def test_device_info_sw_version_update(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    mock_pythonkuma: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test device info is updated on Uptime Kuma version change."""
+
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert (
+        device_entry := device_registry.async_get_device_by_identifier(
+            (DOMAIN, "123456789_1"), config_entry.entry_id
+        )
+    )
+
+    assert device_entry.sw_version == "2.0.0"
+
+    mock_pythonkuma.version = UptimeKumaVersion(
+        version="2.5.6", major="2", minor="5", patch="6"
+    )
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        device_entry := device_registry.async_get_device_by_identifier(
+            (DOMAIN, "123456789_1"), config_entry.entry_id
+        )
+    )
+
+    assert device_entry.sw_version == "2.5.6"

@@ -17,6 +17,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_URL, PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -285,6 +286,14 @@ class UptimeKumaSensorEntity(
         """Handle updated data from the coordinator."""
         if TYPE_CHECKING:
             assert isinstance(self.device_info, DeviceInfo)
-        self.device_info.sw_version = self.coordinator.api.version.version
+        if self.device_info.sw_version != self.coordinator.api.version.version:
+            device_registry = dr.async_get(self.hass)
+            if device_entry := device_registry.async_get_device_by_identifier(
+                (DOMAIN, f"{self.coordinator.config_entry.entry_id}_{self.monitor!s}"),
+                self.coordinator.config_entry.entry_id,
+            ):
+                device_registry.async_update_device(
+                    device_entry.id, sw_version=self.coordinator.api.version.version
+                )
 
         super()._handle_coordinator_update()
