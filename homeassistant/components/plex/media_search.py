@@ -113,7 +113,13 @@ SECTION_TYPE_FOR_MEDIATYPE = {
     "album": "artist",
     "track": "artist",
 }
-SEARCHABLE_SECTION_TYPES = {"movie", "show", "artist"}
+# Types compared without a media type. Episodes and tracks are only compared
+# when asked for, because listing all of them takes many requests.
+DEFAULT_TYPES_BY_SECTION = {
+    "movie": ("movie",),
+    "show": ("show",),
+    "artist": ("artist", "album"),
+}
 IGNORED_LEADING_WORDS = {"the", "a", "an"}
 # Letters that Unicode normalization does not split into a base letter
 FOLDED_LETTERS = str.maketrans(
@@ -148,8 +154,12 @@ def _sorted_words(text: str) -> str:
 
 
 def _sound_key(text: str) -> str:
-    """Return a key that is the same for words that sound alike in English."""
-    return " ".join(jellyfish.metaphone(word) for word in text.split())
+    """Return a key that is the same for words that sound alike in English.
+
+    Words without a sound, such as numbers or words in other scripts, stay as
+    they are, so they must match exactly.
+    """
+    return " ".join(jellyfish.metaphone(word) or word for word in text.split())
 
 
 def title_score(query: str, title: str) -> float:
@@ -171,6 +181,20 @@ def title_score(query: str, title: str) -> float:
     return score
 
 
+def _is_media(item: Any) -> bool:
+    """Return if a search result is a media item with a title."""
+    return hasattr(item, "title") and hasattr(item, "ratingKey")
+
+
+def _rank(
+    normalized_query: str, items: list[Any], min_score: float = 0.0
+) -> list[tuple[float, Any]]:
+    """Return the items with their score, best match first."""
+    scored = [(title_score(normalized_query, item.title), item) for item in items]
+    scored.sort(key=lambda scored_item: scored_item[0], reverse=True)
+    return [(score, item) for score, item in scored if score >= min_score]
+
+
 def fuzzy_search(
     plex_server: PlexServer,
     query: str,
@@ -180,39 +204,50 @@ def fuzzy_search(
 ) -> list[Any]:
     """Search Plex tolerating misspellings, best match first.
 
-    Uses the Plex server search first. When that finds nothing, titles in the
-    libraries are compared locally so near misses still produce results.
+    The search of Plex itself runs first, on the server or in the library.
+    When it finds no good match, titles are compared locally so near misses
+    still produce results.
     """
     normalized_query = normalize_title(query)
 
-    items: list[Any] = []
-    if library_section is None:
-        items = plex_server.search(query, mediatype=mediatype)
-        items = [x for x in items if hasattr(x, "title") and hasattr(x, "ratingKey")]
-        items.sort(key=lambda x: title_score(normalized_query, x.title), reverse=True)
-        if items and title_score(normalized_query, items[0].title) >= FUZZY_MIN_SCORE:
-            return items
+    try:
+        if library_section is None:
+            native = plex_server.search(query, mediatype=mediatype)
+        else:
+            native = library_section.search(title=query, libtype=mediatype)
+    except BadRequest, NotFound:
+        native = []
+    ranked_native = _rank(normalized_query, [x for x in native if _is_media(x)])
+    if ranked_native and ranked_native[0][0] >= FUZZY_MIN_SCORE:
+        return [item for _, item in ranked_native]
 
-    sections = [library_section] if library_section else plex_server.library.sections()
-    wanted_section_type = SECTION_TYPE_FOR_MEDIATYPE.get(mediatype or "")
-    scored: list[tuple[float, Any]] = []
-    for section in sections:
-        if section.type not in SEARCHABLE_SECTION_TYPES:
-            continue
-        if wanted_section_type and section.type != wanted_section_type:
-            continue
-        candidates = section.search(libtype=mediatype) if mediatype else section.all()
-        scored.extend(
-            (score, candidate)
-            for candidate in candidates
-            if (score := title_score(normalized_query, candidate.title))
-            >= FUZZY_MIN_SCORE
+    candidates: list[Any] = []
+    if mediatype == "playlist":
+        # Playlists belong to the server and are not listed in a library
+        if library_section is None:
+            candidates = list(plex_server.playlists())
+    else:
+        sections = (
+            [library_section] if library_section else plex_server.library.sections()
         )
+        wanted_section_type = SECTION_TYPE_FOR_MEDIATYPE.get(mediatype or "")
+        for section in sections:
+            if section.type not in DEFAULT_TYPES_BY_SECTION:
+                continue
+            if wanted_section_type and section.type != wanted_section_type:
+                continue
+            types = (
+                (mediatype,) if mediatype else DEFAULT_TYPES_BY_SECTION[section.type]
+            )
+            for libtype in types:
+                candidates.extend(section.search(libtype=libtype))
 
-    scored.sort(key=lambda x: x[0], reverse=True)
-    fuzzy_items = [item for _, item in scored[:limit]]
+    matches = _rank(normalized_query, candidates, FUZZY_MIN_SCORE)[:limit]
+    fuzzy_items = [item for _, item in matches]
     seen = {x.ratingKey for x in fuzzy_items}
-    return fuzzy_items + [x for x in items if x.ratingKey not in seen]
+    return fuzzy_items + [
+        item for _, item in ranked_native if item.ratingKey not in seen
+    ]
 
 
 def find_media(
@@ -232,5 +267,4 @@ def find_media(
         return fuzzy_search(plex_server, query, mediatype, library_section)
     if library_section is not None:
         return list(library_section.search(title=query, libtype=mediatype))
-    items = plex_server.search(query, mediatype=mediatype)
-    return [x for x in items if hasattr(x, "title") and hasattr(x, "ratingKey")]
+    return [x for x in plex_server.search(query, mediatype=mediatype) if _is_media(x)]

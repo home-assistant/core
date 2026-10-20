@@ -550,6 +550,20 @@ async def test_on_deck_service(
     assert result["results"] == []
 
 
+async def test_search_service_fuzzy_library_ranking(
+    hass: HomeAssistant, mock_plex_server
+) -> None:
+    """Test fuzzy library searches rank the results of the library."""
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH,
+        {"library_name": "Movies", "query": "Moovie 3", "fuzzy": True},
+        blocking=True,
+        return_response=True,
+    )
+    assert result["results"][0]["title"] == "Movie 3"
+
+
 async def test_search_service_library_filters(
     hass: HomeAssistant, mock_plex_server
 ) -> None:

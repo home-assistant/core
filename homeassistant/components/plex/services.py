@@ -190,6 +190,8 @@ def search_plex_media(hass: HomeAssistant, service_call: ServiceCall) -> dict[st
     fuzzy = data.pop("fuzzy", None)
     filters = {**data.pop("filters", {}), **data}
 
+    fuzzy_enabled = plex_server.option_fuzzy_search if fuzzy is None else fuzzy
+
     results: list[Any]
     try:
         if plex_key is not None:
@@ -199,19 +201,21 @@ def search_plex_media(hass: HomeAssistant, service_call: ServiceCall) -> dict[st
         elif library_name:
             if query:
                 filters.setdefault("title", query)
-            results = _search_library(plex_server, library_name, media_type, filters)
+            library_section = _get_library_section(plex_server, library_name)
+            if fuzzy_enabled and query and filters == {"title": query}:
+                results = find_media(
+                    plex_server, query, media_type, library_section, fuzzy=True
+                )
+            else:
+                results = _search_library(library_section, media_type, filters)
         elif filters:
             raise ServiceValidationError(
                 translation_domain=DOMAIN, translation_key="library_required"
             )
         else:
-            results = find_media(plex_server, query, media_type, fuzzy=fuzzy)
+            results = find_media(plex_server, query, media_type, fuzzy=fuzzy_enabled)
     except NotFound, MediaNotFound:
         results = []
-        fuzzy_enabled = plex_server.option_fuzzy_search if fuzzy is None else fuzzy
-        if fuzzy_enabled and query and library_name and filters == {"title": query}:
-            section = plex_server.library.section(library_name)
-            results = find_media(plex_server, query, media_type, section, fuzzy=True)
 
     infos: list[dict[str, Any]] = []
     for item in results:
@@ -247,15 +251,10 @@ def get_on_deck_media(hass: HomeAssistant, service_call: ServiceCall) -> dict[st
     }
 
 
-def _search_library(
-    plex_server: PlexServer,
-    library_name: str,
-    media_type: str | None,
-    filters: dict[str, Any],
-) -> list[Any]:
-    """Search a single library using play_media compatible filters."""
+def _get_library_section(plex_server: PlexServer, library_name: str) -> Any:
+    """Return a library of the Plex server."""
     try:
-        library_section = plex_server.library.section(library_name)
+        return plex_server.library.section(library_name)
     except NotFound as err:
         library_names = [x.title for x in plex_server.library.sections()]
         raise ServiceValidationError(
@@ -266,6 +265,12 @@ def _search_library(
                 "libraries": ", ".join(library_names),
             },
         ) from err
+
+
+def _search_library(
+    library_section: Any, media_type: str | None, filters: dict[str, Any]
+) -> list[Any]:
+    """Search a single library using play_media compatible filters."""
     search_options: dict[str, Any] = {**filters, "allow_multiple": True}
     if media_type:
         search_options["libtype"] = media_type
