@@ -24,6 +24,19 @@
       }
     }
   },
+  "entity": {
+    "switch": {
+      "light": {
+        "name": "Panel light"
+      },
+      "turbo": {
+        "name": "Turbo"
+      },
+      "xfan": {
+        "name": "Xtra fan"
+      }
+    }
+  },
   "selector": {
     "hvac_modes": {
       "options": {

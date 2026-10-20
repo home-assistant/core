@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from simplepush.legacy import UnknownError
 
 from homeassistant import config_entries
@@ -10,8 +11,6 @@ from homeassistant.components.simplepush.const import CONF_DEVICE_KEY, CONF_SALT
 from homeassistant.const import CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 MOCK_CONFIG = {
     CONF_DEVICE_KEY: "abc",

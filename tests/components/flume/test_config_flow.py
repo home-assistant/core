@@ -6,6 +6,7 @@ from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import requests.exceptions
 from requests_mock.mocker import Mocker
 
@@ -21,8 +22,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import DEVICE_LIST, DEVICE_LIST_URL
-
-from tests.common import MockConfigEntry
 
 
 @contextmanager

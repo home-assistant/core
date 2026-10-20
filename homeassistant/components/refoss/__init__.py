@@ -17,7 +17,7 @@ PLATFORMS: Final = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: RefossConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RefossConfigEntry) -> None:
     """Set up Refoss from a config entry."""
     discover = await refoss_discovery_server(hass)
     refoss_discovery = DiscoveryService(hass, entry, discover)
@@ -36,10 +36,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: RefossConfigEntry) -> bo
         )
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: RefossConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RefossConfigEntry) -> None:
     """Unload a config entry."""
     entry.runtime_data.discovery.clean_up()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

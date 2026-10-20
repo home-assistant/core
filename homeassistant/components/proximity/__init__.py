@@ -15,7 +15,7 @@ from .coordinator import ProximityConfigEntry, ProximityDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ProximityConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ProximityConfigEntry) -> None:
     """Set up Proximity from a config entry."""
     _LOGGER.debug("setup %s with config:%s", entry.title, entry.data)
 
@@ -41,9 +41,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ProximityConfigEntry) ->
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR])
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ProximityConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ProximityConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, [Platform.SENSOR])
+    await hass.config_entries.async_unload_platforms_or_raise(entry, [Platform.SENSOR])

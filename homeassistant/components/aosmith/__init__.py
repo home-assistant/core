@@ -17,7 +17,7 @@ from .coordinator import (
 PLATFORMS: list[Platform] = [Platform.SELECT, Platform.SENSOR, Platform.WATER_HEATER]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AOSmithConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AOSmithConfigEntry) -> None:
     """Set up A. O. Smith from a config entry."""
     email = entry.data[CONF_EMAIL]
     password = entry.data[CONF_PASSWORD]
@@ -30,15 +30,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: AOSmithConfigEntry) -> b
 
     device_registry = dr.async_get(hass)
     for junction_id, aosmith_device in status_coordinator.data.items():
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, junction_id)},
-            manufacturer="A. O. Smith",
-            name=aosmith_device.name,
-            model=aosmith_device.model,
-            serial_number=aosmith_device.serial,
-            suggested_area=aosmith_device.install_location,
-            sw_version=aosmith_device.status.firmware_version,
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, junction_id)},
+                manufacturer="A. O. Smith",
+                name=aosmith_device.name,
+                model=aosmith_device.model,
+                serial_number=aosmith_device.serial,
+                suggested_area=aosmith_device.install_location,
+                sw_version=aosmith_device.status.firmware_version,
+            ),
         )
 
     energy_coordinator = AOSmithEnergyCoordinator(
@@ -54,9 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AOSmithConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: AOSmithConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AOSmithConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

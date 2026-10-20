@@ -30,6 +30,7 @@ from .const import (
     CONF_KNX_TELEGRAM_DB_BACKEND,
     CONF_KNX_TELEGRAM_DB_POSTGRES_DSN,
     CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
+    DOMAIN,
     KNX_TELEGRAM_BACKEND_POSTGRES,
     KNX_TELEGRAM_DB_PATH_SQLITE,
     SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
@@ -106,12 +107,14 @@ class Telegrams:
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry_id: str,
         xknx: XKNX,
         project: KNXProject,
         config: KNXConfigEntryOptions,
     ) -> None:
         """Initialize Telegrams class."""
         self.hass = hass
+        self.config_entry_id = config_entry_id
         self.project = project
         self.config = config
 
@@ -170,19 +173,24 @@ class Telegrams:
         try:
             async with self._store_init_timeout():
                 needs_migration = await self._uninitialized_store.needs_migration()
+            init_timeout: contextlib.AbstractAsyncContextManager[Any]
             if needs_migration:
                 _LOGGER.warning(
                     "KNX telegram history database schema upgrade/migration is required. "
                     "This may take some time depending on your database size. Please do not restart Home Assistant"
                 )
-                await self._uninitialized_store.initialize()
+                init_timeout = contextlib.nullcontext()
             else:
                 _LOGGER.debug(
                     "Initializing KNX telegram storage backend '%s'",
                     self.backend,
                 )
-                async with self._store_init_timeout():
-                    await self._uninitialized_store.initialize()
+                init_timeout = self._store_init_timeout()
+            # SQLite initialization is unbounded, so hold off the bootstrap stage
+            # timeout: a cancelled migration rolls back and starts over on the next
+            # start, never finishing on a large database.
+            async with self.hass.timeout.async_freeze(DOMAIN), init_timeout:
+                await self._uninitialized_store.initialize()
             _LOGGER.info(
                 "Successfully initialized KNX telegram storage backend '%s'",
                 self.backend,
@@ -292,7 +300,7 @@ class Telegrams:
 
     async def _abort_store_init(self) -> None:
         """Create a repair issue and tear down a store that failed to init."""
-        async_create_telegram_storage_issue(self.hass)
+        async_create_telegram_storage_issue(self.hass, self.config_entry_id)
         if self._uninitialized_store is not None:
             with contextlib.suppress(Exception):
                 await self._uninitialized_store.close()

@@ -9,6 +9,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from neopool_modbus.exceptions import NeoPoolConnectionError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.time import DOMAIN as TIME_DOMAIN, SERVICE_SET_VALUE
@@ -19,8 +24,6 @@ from homeassistant.helpers import entity_platform as ep, entity_registry as er
 
 from . import setup_integration
 from .conftest import MOCK_POOL_DATA, _read_all_timers
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 FLUSH = timedelta(seconds=5)
 PARTIAL = timedelta(seconds=2)

@@ -1,6 +1,7 @@
 {
   "domain": "ecoforest",
   "name": "Ecoforest",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@pjanuario"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ecoforest",

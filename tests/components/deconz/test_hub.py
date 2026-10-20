@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from pydeconz.websocket import State
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.deconz.config_flow import DECONZ_MANUFACTURERURL
@@ -20,8 +21,6 @@ from homeassistant.helpers.service_info.ssdp import (
 )
 
 from .conftest import BRIDGE_ID
-
-from tests.common import MockConfigEntry
 
 
 async def test_device_registry_entry(

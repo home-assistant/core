@@ -63,8 +63,7 @@ def setup_platform(
     _LOGGER.debug("Setting up")
 
     mon = Monitor(hass, mac, name)
-    add_entities([SkybeaconTemp(name, mon)])
-    add_entities([SkybeaconHumid(name, mon)])
+    add_entities([SkybeaconTemp(name, mon), SkybeaconHumid(name, mon)])
 
     def monitor_stop(_service_or_event):
         """Stop the monitor thread."""
