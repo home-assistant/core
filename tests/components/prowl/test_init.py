@@ -330,6 +330,37 @@ async def test_legacy_service_setup_cancelled_on_unload(hass: HomeAssistant) -> 
 
 
 @pytest.mark.usefixtures("mock_prowlpy")
+async def test_other_yaml_notify_platform_name_wins_over_imported_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test an imported entry leaves a name used by other YAML notify platforms."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="phone",
+        data={CONF_API_KEY: TEST_API_KEY},
+        source=SOURCE_IMPORT,
+    )
+    entry.add_to_hass(hass)
+    config = {
+        notify.DOMAIN: [
+            {
+                CONF_PLATFORM: "group",
+                CONF_NAME: "phone",
+                "services": [{"action": "persistent_notification"}],
+            }
+        ]
+    }
+    with patch(
+        "homeassistant.components.prowl.discovery.async_load_platform"
+    ) as mock_load_platform:
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+    mock_load_platform.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_prowlpy")
 async def test_legacy_service_not_registered_after_unload(hass: HomeAssistant) -> None:
     """Test the notify loader does not register the action of an unloaded entry."""
     started = asyncio.Event()
