@@ -18,6 +18,8 @@ from homeassistant.helpers.typing import StateType
 from .coordinator import MyPVConfigEntry
 from .entity import MyPVDataEntity
 
+PARALLEL_UPDATES = 0
+
 SENSOR_DESCRIPTIONS: Final[dict[str, dict[str, Any]]] = {
     "cur_eth_mode": {
         "enabled": False,

@@ -16,6 +16,8 @@ from .const import DOMAIN
 from .coordinator import MyPVConfigEntry
 from .entity import MyPVSetupEntity
 
+PARALLEL_UPDATES = 0
+
 NUMBER_DESCRIPTIONS: Final[dict[str, dict[str, Any]]] = {
     "bsttemp": {
         "device_class": NumberDeviceClass.TEMPERATURE,

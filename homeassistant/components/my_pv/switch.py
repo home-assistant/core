@@ -18,6 +18,8 @@ from .const import DOMAIN
 from .coordinator import MyPVConfigEntry
 from .entity import MyPVBaseEntity, MyPVSetupEntity
 
+PARALLEL_UPDATES = 0
+
 ENTITY_DESCRIPTIONS: Final[dict[str, SwitchEntityDescription]] = {
     "bstmode": SwitchEntityDescription(
         key="bstmode",

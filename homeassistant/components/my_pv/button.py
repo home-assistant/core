@@ -16,6 +16,8 @@ from .const import DOMAIN
 from .coordinator import MyPVConfigEntry
 from .entity import MyPVBaseEntity
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
