@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from onvif.exceptions import ONVIFTimeoutError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.onvif.const import CONF_SNAPSHOT_AUTH, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -27,8 +28,6 @@ from . import (
     setup_mock_device,
     setup_mock_onvif_camera,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_migrate_camera_entities_unique_ids(

@@ -9,6 +9,13 @@ from unittest.mock import AsyncMock, patch
 from aioaxlevpp import AxleConnectionError, AxleStatus, GridEvent
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_mock_service,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.calendar import (
@@ -27,14 +34,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_mock_service,
-    snapshot_platform,
-)
-from tests.typing import ClientSessionGenerator
 
 ENTITY_ID = "calendar.axle_energy_events"
 EVENT = {

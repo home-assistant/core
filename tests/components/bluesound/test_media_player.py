@@ -5,6 +5,7 @@ import dataclasses
 from pyblu import PairedPlayer
 from pyblu.errors import PlayerUnreachableError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -39,8 +40,6 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import PlayerMocks
-
-from tests.common import MockConfigEntry, async_capture_events
 
 
 @pytest.mark.parametrize(

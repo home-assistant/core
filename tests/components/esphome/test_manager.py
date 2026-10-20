@@ -47,6 +47,13 @@ import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_call_logger_set_level,
+    async_capture_events,
+    async_fire_time_changed,
+    async_mock_service,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.esphome.config_flow import PROBE_NOISE_PSK
@@ -93,14 +100,6 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.setup import async_setup_component
 
 from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
-
-from tests.common import (
-    MockConfigEntry,
-    async_call_logger_set_level,
-    async_capture_events,
-    async_fire_time_changed,
-    async_mock_service,
-)
 
 
 async def test_esphome_device_subscribe_logs(
@@ -196,15 +195,19 @@ async def test_esphome_device_service_calls_not_allowed(
     )
     await hass.async_block_till_done()
     assert len(mock_esphome_test) == 0
-    issue = issue_registry.async_get_issue(
-        "esphome", "service_calls_not_enabled-11:22:33:44:55:aa"
-    )
+    issue_id = "service_calls_not_enabled-11:22:33:44:55:aa"
+    issue = issue_registry.async_get_issue("esphome", issue_id)
     assert issue is not None
+    assert issue.config_entry_id == device.entry.entry_id
     assert (
         "If you trust this device and want to allow access "
         "for it to make Home Assistant service calls, you can "
         "enable this functionality in the options flow"
     ) in caplog.text
+
+    await hass.config_entries.async_remove(device.entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue("esphome", issue_id) is None
 
 
 @pytest.mark.parametrize("has_deep_sleep", [True, False])
@@ -1183,18 +1186,22 @@ async def test_esphome_device_with_old_bluetooth(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a device with old bluetooth creates an issue."""
-    await mock_esphome_device(
+    device = await mock_esphome_device(
         mock_client=mock_client,
         device_info={"bluetooth_proxy_feature_flags": 1, "esphome_version": "2023.3.0"},
     )
     await hass.async_block_till_done()
-    issue = issue_registry.async_get_issue(
-        "esphome", "ble_firmware_outdated-11:22:33:44:55:AA"
-    )
+    issue_id = "ble_firmware_outdated-11:22:33:44:55:AA"
+    issue = issue_registry.async_get_issue("esphome", issue_id)
     assert (
         issue.learn_more_url
         == f"https://esphome.io/changelog/{STABLE_BLE_URL_VERSION}.html"
     )
+    assert issue.config_entry_id == device.entry.entry_id
+
+    await hass.config_entries.async_remove(device.entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue("esphome", issue_id) is None
 
 
 async def test_esphome_device_with_password(
@@ -1219,15 +1226,19 @@ async def test_esphome_device_with_password(
         entry=entry,
     )
     await hass.async_block_till_done()
-    assert (
-        issue_registry.async_get_issue(
-            # This issue uses the ESPHome mac address which
-            # is always UPPER case
-            "esphome",
-            "api_password_deprecated-11:22:33:44:55:AA",
-        )
-        is not None
+    issue_id = "api_password_deprecated-11:22:33:44:55:AA"
+    issue = issue_registry.async_get_issue(
+        # This issue uses the ESPHome mac address which
+        # is always UPPER case
+        "esphome",
+        issue_id,
     )
+    assert issue is not None
+    assert issue.config_entry_id == entry.entry_id
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue("esphome", issue_id) is None
 
 
 async def test_esphome_device_with_current_bluetooth(

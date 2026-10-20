@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     PERCENTAGE,
     EntityCategory,
+    UnitOfMass,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
@@ -31,6 +32,8 @@ from .const import (
 )
 from .coordinator import TractiveConfigEntry, TractiveCoordinator
 from .entity import TractiveEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -102,30 +105,43 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         key=ATTR_MINUTES_ACTIVE,
         translation_key="activity_time",
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_REST,
         translation_key="rest_time",
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_DAILY_GOAL,
         translation_key="daily_goal",
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_DAY_SLEEP,
         translation_key="minutes_day_sleep",
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_NIGHT_SLEEP,
         translation_key="minutes_night_sleep",
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL,
+    ),
+    TractiveSensorEntityDescription(
+        key="weight",
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        suggested_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 

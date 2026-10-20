@@ -4,6 +4,11 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_fixture,
+    load_json_object_fixture,
+)
 from python_homeassistant_analytics import CurrentAnalytics
 from python_homeassistant_analytics.models import Addon, CustomIntegration, Integration
 
@@ -13,8 +18,6 @@ from homeassistant.components.analytics_insights.const import (
     CONF_TRACKED_INTEGRATIONS,
     DOMAIN,
 )
-
-from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
 
 
 @pytest.fixture

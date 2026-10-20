@@ -15,6 +15,7 @@
         }),
         'device_class': None,
         'disabled_by': None,
+        'domain': 'conversation',
         'entity_category': None,
         'entity_id': 'conversation.meta_llama_3_3_70b_instruct',
         'has_entity_name': True,
@@ -23,7 +24,7 @@
         'labels': list([
         ]),
         'name': None,
-        'next_name_part': 'device',
+        'object_id_base': None,
         'options': dict({
           'conversation': dict({
             'should_expose': False,
@@ -33,7 +34,11 @@
         'original_icon': None,
         'original_name': None,
         'platform': 'ovhcloud_ai_endpoints',
+        'previous_unique_id': None,
+        'suggested_object_id': None,
+        'supported_features': 0,
         'translation_key': None,
+        'unit_of_measurement': None,
       }),
     }),
     'entry_version': '1.1',

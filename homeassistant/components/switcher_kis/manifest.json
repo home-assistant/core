@@ -1,6 +1,7 @@
 {
   "domain": "switcher_kis",
   "name": "Switcher",
+  "categories": ["plugs_switches", "climate.water_heaters", "blinds_curtains"],
   "codeowners": ["@thecode", "@YogevBokobza"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/switcher_kis",

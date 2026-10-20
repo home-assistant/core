@@ -48,10 +48,18 @@ async def async_get_config_entry_diagnostics(
         title.model_dump()
         for title in config_entry.runtime_data.presence.data.title_info.values()
     ]
+    # Keyed by title id instead of xuid, as dict keys are not redacted.
+    achievement_totals = {
+        config_entry.runtime_data.presence.data.title_info[xuid].title_id: total
+        for xuid, total in (
+            config_entry.runtime_data.presence.data.achievement_totals.items()
+        )
+    }
 
     return {
         "consoles_status": consoles_status,
         "consoles_list": consoles_list,
         "presence": presence,
         "title_info": title_info,
+        "achievement_totals": achievement_totals,
     }
