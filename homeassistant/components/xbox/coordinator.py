@@ -107,7 +107,7 @@ class AchievementUnlock:
             name=achievement.name,
             description=achievement.description,
             gamerscore=achievement.gamerscore,
-            # Xbox 360 achievements carry neither.
+            # Xbox 360 achievements carry neither, they are looked up when needed
             game=None,
             title_id=achievement.title_id,
             rarity=(
@@ -426,6 +426,7 @@ class XboxAchievementsCoordinator(
 
         self.online: set[str] = set()
         self.last_sweep: datetime | None = None
+        self.titles_360: dict[int, Title | None] = {}
 
     @override
     async def _async_update_data(self) -> dict[str, list[AchievementUnlock]]:
@@ -483,3 +484,23 @@ class XboxAchievementsCoordinator(
                 translation_key="request_exception",
             )
         return data
+
+    async def async_get_360_title(self, title_id: int) -> Title | None:
+        """Return the title details of an Xbox 360 game."""
+
+        if title_id not in self.titles_360:
+            try:
+                response = await self.client.titlehub.get_title_info(str(title_id))
+            except HTTPStatusError as e:
+                _LOGGER.debug("Unable to retrieve title %s: %s", title_id, e)
+                if e.response.status_code != HTTPStatus.NOT_FOUND:
+                    return None
+                # Titlehub doesn't know every Xbox 360 game, so don't ask again.
+                self.titles_360[title_id] = None
+            except RequestError as e:
+                _LOGGER.debug("Unable to retrieve title %s: %s", title_id, e)
+                return None
+            else:
+                self.titles_360[title_id] = next(iter(response.titles), None)
+
+        return self.titles_360[title_id]

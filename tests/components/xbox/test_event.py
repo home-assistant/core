@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -20,6 +21,7 @@ from pythonxbox.api.provider.achievements.models import (
     AchievementResponse,
 )
 from pythonxbox.api.provider.people.models import PeopleResponse
+from pythonxbox.api.provider.titlehub.models import TitleHubResponse
 from pythonxbox.common.exceptions import RateLimitExceededException
 from syrupy.assertion import SnapshotAssertion
 
@@ -34,6 +36,8 @@ OWN_XUID = "271958441785640"
 ONLINE_FRIEND_XUID = "2533274913657542"
 OFFLINE_FRIEND_XUID = "2533274838782903"
 UPDATE_INTERVAL = timedelta(seconds=30)
+
+titlehub_request = Request("GET", "https://titlehub.xboxlive.com")
 
 
 @pytest.fixture(autouse=True)
@@ -132,6 +136,93 @@ async def test_xboxone_unlocks(
 
     assert unlocked(events) == ["Cow Tipper", "Pork Chop"]
     assert hass.states.get(ENTITY_ID) == snapshot
+
+
+@pytest.mark.parametrize(
+    ("titlehub", "game", "titlehub_calls"),
+    [
+        pytest.param(
+            {
+                "return_value": TitleHubResponse(
+                    **load_json_object_fixture(
+                        "titlehub_titleinfo_xbox360.json", DOMAIN
+                    )
+                )
+            },
+            "Joy Ride Turbo",
+            1,
+            id="found",
+        ),
+        pytest.param(
+            {
+                "side_effect": HTTPStatusError(
+                    "Not Found",
+                    request=titlehub_request,
+                    response=Response(404, request=titlehub_request),
+                )
+            },
+            None,
+            1,
+            id="not_found",
+        ),
+        pytest.param(
+            {
+                "side_effect": HTTPStatusError(
+                    "Too Many Requests",
+                    request=titlehub_request,
+                    response=Response(429, request=titlehub_request),
+                )
+            },
+            None,
+            4,
+            id="too_many_requests",
+        ),
+        pytest.param(
+            {"side_effect": ConnectError("Network is unreachable")},
+            None,
+            4,
+            id="connection_error",
+        ),
+    ],
+)
+@pytest.mark.freeze_time("2021-03-06T18:50:00+00:00")
+async def test_xbox360_unlocks(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    xbox_live_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
+    titlehub: dict[str, Any],
+    game: str | None,
+    titlehub_calls: int,
+) -> None:
+    """Test Xbox 360 unlocks are announced with the game looked up once."""
+    achievements = xbox_live_client.achievements
+    achievements.get_achievements_xboxone_recent_unlocks.return_value = xboxone()
+    achievements.get_achievements_xbox360_recent_unlocks.return_value = xbox360(
+        "Supercharged", "Databass"
+    )
+    xbox_live_client.titlehub.get_title_info.configure_mock(**titlehub)
+
+    await setup_integration(hass, config_entry)
+
+    achievements.get_achievements_xbox360_recent_unlocks.return_value = xbox360(
+        "Keep on Truckin'", "Supercharged", "Databass"
+    )
+    await next_update(hass, freezer)
+
+    achievements.get_achievements_xbox360_recent_unlocks.return_value = xbox360(
+        "Flex Those Muscles", "Keep on Truckin'", "Supercharged", "Databass"
+    )
+    await next_update(hass, freezer)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.attributes["name"] == "Flex Those Muscles"
+    assert state.attributes["game"] == game
+    assert state == snapshot
+    # Both people online share the mocked unlocks, and only answers are cached.
+    assert xbox_live_client.titlehub.get_title_info.await_count == titlehub_calls
 
 
 @pytest.mark.freeze_time("2026-09-13T16:00:00+00:00")

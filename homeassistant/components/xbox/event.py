@@ -11,7 +11,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .coordinator import XboxAchievementsCoordinator, XboxConfigEntry
+from .coordinator import AchievementUnlock, XboxAchievementsCoordinator, XboxConfigEntry
 from .entity import to_https
 
 PARALLEL_UPDATES = 0
@@ -95,19 +95,34 @@ class XboxAchievementEventEntity(
         )
         self.last_unlock = max(self.last_unlock, latest)
 
-        for unlock in new_unlocks:
+        if new_unlocks:
+            self.coordinator.config_entry.async_create_background_task(
+                self.hass,
+                self._async_trigger_unlocks(new_unlocks),
+                f"{DOMAIN}_{self.xuid}_{EVENT_ACHIEVEMENT_UNLOCKED}",
+            )
+
+    async def _async_trigger_unlocks(self, unlocks: list[AchievementUnlock]) -> None:
+        """Trigger an event for each unlock, oldest first."""
+        for unlock in unlocks:
+            game, image = unlock.game, unlock.image
+            if unlock.game is None and (
+                title := await self.coordinator.async_get_360_title(unlock.title_id)
+            ):
+                game, image = title.name, title.display_image
+
             self._trigger_event(
                 EVENT_ACHIEVEMENT_UNLOCKED,
                 {
                     "name": unlock.name,
                     "description": unlock.description,
                     "gamerscore": unlock.gamerscore,
-                    "game": unlock.game,
+                    "game": game,
                     "title_id": unlock.title_id,
                     "rarity": unlock.rarity,
                     "rarity_percentage": unlock.rarity_percentage,
                     "time_unlocked": unlock.time_unlocked,
-                    "image": to_https(unlock.image) if unlock.image else None,
+                    "image": to_https(image) if image else None,
                 },
             )
             self.async_write_ha_state()

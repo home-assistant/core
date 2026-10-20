@@ -173,6 +173,110 @@
     'state': 'unknown',
   })
 # ---
+# name: test_xbox360_unlocks[connection_error]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'description': 'You completed a Muscle-Only Series',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'achievement_unlocked',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'achievement_unlocked',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Achievement unlocked',
+      'game': None,
+      'gamerscore': 10,
+      'image': None,
+      'name': 'Flex Those Muscles',
+      'rarity': 'common',
+      'rarity_percentage': 46.32,
+      'time_unlocked': datetime.datetime(2021, 3, 6, 18, 42, 11, 570000, tzinfo=TzInfo(0)),
+      'title_id': 1480659550,
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.gsr_ae_achievement_unlocked',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2021-03-06T18:51:00.000+00:00',
+  })
+# ---
+# name: test_xbox360_unlocks[found]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'description': 'You completed a Muscle-Only Series',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'achievement_unlocked',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'achievement_unlocked',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Achievement unlocked',
+      'game': 'Joy Ride Turbo',
+      'gamerscore': 10,
+      'image': 'https://store-images.s-microsoft.com/image/apps.55462.65697580773346286.de1a7dea-d35c-459d-a15c-a737811ee00f.6e8da1e2-791b-4bc8-aaf6-a2665f7cdc90',
+      'name': 'Flex Those Muscles',
+      'rarity': 'common',
+      'rarity_percentage': 46.32,
+      'time_unlocked': datetime.datetime(2021, 3, 6, 18, 42, 11, 570000, tzinfo=TzInfo(0)),
+      'title_id': 1480659550,
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.gsr_ae_achievement_unlocked',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2021-03-06T18:51:00.000+00:00',
+  })
+# ---
+# name: test_xbox360_unlocks[not_found]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'description': 'You completed a Muscle-Only Series',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'achievement_unlocked',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'achievement_unlocked',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Achievement unlocked',
+      'game': None,
+      'gamerscore': 10,
+      'image': None,
+      'name': 'Flex Those Muscles',
+      'rarity': 'common',
+      'rarity_percentage': 46.32,
+      'time_unlocked': datetime.datetime(2021, 3, 6, 18, 42, 11, 570000, tzinfo=TzInfo(0)),
+      'title_id': 1480659550,
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.gsr_ae_achievement_unlocked',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2021-03-06T18:51:00.000+00:00',
+  })
+# ---
+# name: test_xbox360_unlocks[too_many_requests]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'description': 'You completed a Muscle-Only Series',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'achievement_unlocked',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        'achievement_unlocked',
+      ]),
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Achievement unlocked',
+      'game': None,
+      'gamerscore': 10,
+      'image': None,
+      'name': 'Flex Those Muscles',
+      'rarity': 'common',
+      'rarity_percentage': 46.32,
+      'time_unlocked': datetime.datetime(2021, 3, 6, 18, 42, 11, 570000, tzinfo=TzInfo(0)),
+      'title_id': 1480659550,
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.gsr_ae_achievement_unlocked',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2021-03-06T18:51:00.000+00:00',
+  })
+# ---
 # name: test_xboxone_unlocks
   StateSnapshot({
     'attributes': ReadOnlyDict({
