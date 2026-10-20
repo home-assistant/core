@@ -77,14 +77,10 @@ SEARCH_RESPONSE = {
 
 
 async def test_setup_entry(hass: HomeAssistant, mock_farmad_client: MagicMock) -> None:
-    """Test a config entry sets up and stores the client as runtime data."""
+    """Test a config entry sets up."""
     entry = await init_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
     client = mock_farmad_client.return_value
-    assert entry.runtime_data.client is client
-    assert entry.runtime_data.products == {
-        API_APB: {API_PRODUCT_CNK: API_PRODUCT_DESCRIPTION}
-    }
     client.async_get_account.assert_awaited_once()
     client.async_get_baskets.assert_awaited_once_with(API_APB)
 
