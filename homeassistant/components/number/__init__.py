@@ -28,6 +28,8 @@ from .const import (
     NumberDeviceClass,
     NumberEntityCapabilityAttribute,
     NumberMode,
+    NumberService,
+    NumberServiceArgument,
 )
 from .entity import (
     NumberEntity,
@@ -71,6 +73,8 @@ __all__ = [
     "NumberEntityDescription",
     "NumberExtraStoredData",
     "NumberMode",
+    "NumberService",
+    "NumberServiceArgument",
     "RestoreNumber",
 ]
 

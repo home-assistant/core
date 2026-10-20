@@ -250,6 +250,183 @@ async def test_reconfigure_deprecated_model_repair(
     assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
 
 
+@pytest.mark.parametrize(
+    "subentry_type",
+    [
+        pytest.param("conversation", id="conversation"),
+        pytest.param("ai_task_data", id="ai_task"),
+    ],
+)
+@pytest.mark.parametrize(
+    "lifecycle",
+    [
+        pytest.param("deprecated", id="deprecated"),
+        pytest.param("retired", id="retired"),
+    ],
+)
+async def test_reconfigure_clears_model_repair(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_model_list: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+    subentry_type: str,
+    lifecycle: Literal["deprecated", "retired"],
+) -> None:
+    """Clear a repair discovered by the model picker after replacing that model."""
+    configured_model = model_list[0].model_copy(update={"id": "claude-configured"})
+    replacement_model = model_list[0].model_copy(update={"id": "claude-replacement"})
+    subentry = next(
+        subentry
+        for subentry in mock_config_entry.subentries.values()
+        if subentry.subentry_type == subentry_type
+    )
+    hass.config_entries.async_update_subentry(
+        mock_config_entry, subentry, data={CONF_CHAT_MODEL: configured_model.id}
+    )
+    mock_model_list.side_effect = partial(
+        _model_page, [configured_model, replacement_model]
+    )
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is None
+
+    mock_model_list.side_effect = partial(
+        _model_page,
+        [
+            configured_model.model_copy(update={"lifecycle": lifecycle}),
+            replacement_model,
+        ],
+    )
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_RECOMMENDED: False}
+    )
+    assert result["step_id"] == "additional"
+    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_CHAT_MODEL: replacement_model.id}
+    )
+    assert result["step_id"] == "model"
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert subentry.data[CONF_CHAT_MODEL] == replacement_model.id
+    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is None
+
+
+async def test_model_repair_retained_for_other_subentries(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_model_list: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Retain the shared repair until all affected accounts and subentries are fixed."""
+    deprecated_model = model_list[0].model_copy(
+        update={"id": "claude-deprecated", "lifecycle": "deprecated"}
+    )
+    active_model = model_list[0].model_copy(update={"id": "claude-active"})
+    for subentry in mock_config_entry.subentries.values():
+        hass.config_entries.async_update_subentry(
+            mock_config_entry, subentry, data={CONF_CHAT_MODEL: deprecated_model.id}
+        )
+    mock_model_list.side_effect = partial(_model_page, [deprecated_model, active_model])
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
+
+    disabled_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Disabled account",
+        data={CONF_API_KEY: "disabled-api-key"},
+        version=2,
+        disabled_by=ConfigEntryDisabler.USER,
+        subentries_data=[
+            {
+                "data": {CONF_CHAT_MODEL: deprecated_model.id},
+                "subentry_type": "conversation",
+                "title": "Disabled conversation",
+                "unique_id": None,
+            }
+        ],
+    )
+    disabled_entry.add_to_hass(hass)
+    assert disabled_entry.state is ConfigEntryState.NOT_LOADED
+
+    healthy_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Other account",
+        data={CONF_API_KEY: "other-api-key"},
+        version=2,
+        subentries_data=[
+            {
+                "data": {CONF_CHAT_MODEL: active_model.id},
+                "subentry_type": "conversation",
+                "title": "Other conversation",
+                "unique_id": None,
+            }
+        ],
+    )
+    healthy_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(healthy_entry.entry_id)
+    await hass.async_block_till_done()
+    assert healthy_entry.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
+
+    mock_model_list.side_effect = partial(
+        _model_page,
+        [
+            deprecated_model,
+            active_model.model_copy(update={"display_name": "Updated active model"}),
+        ],
+    )
+    healthy_subentry = next(iter(healthy_entry.subentries.values()))
+    result = await healthy_entry.start_subentry_reconfigure_flow(
+        hass, healthy_subentry.subentry_id
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_RECOMMENDED: False}
+    )
+    assert result["step_id"] == "additional"
+    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_CHAT_MODEL: active_model.id}
+    )
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
+    assert result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+    assert healthy_entry.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
+
+    for subentry, expected_issue in zip(
+        mock_config_entry.subentries.values(), (True, False), strict=True
+    ):
+        result = await mock_config_entry.start_subentry_reconfigure_flow(
+            hass, subentry.subentry_id
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_RECOMMENDED: False}
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_CHAT_MODEL: active_model.id}
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        assert result["reason"] == "reconfigure_successful"
+        await hass.async_block_till_done()
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+        assert subentry.data[CONF_CHAT_MODEL] == active_model.id
+        assert (
+            issue_registry.async_get_issue(DOMAIN, "model_deprecated") is not None
+        ) is expected_issue
+
+
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_downgrade_from_v3_to_v2(
     hass: HomeAssistant,
