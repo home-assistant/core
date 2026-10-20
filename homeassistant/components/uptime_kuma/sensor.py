@@ -3,7 +3,7 @@
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from pythonkuma import MonitorType, UptimeKumaMonitor
 from pythonkuma.models import MonitorStatus
@@ -278,3 +278,13 @@ class UptimeKumaSensorEntity(
         if (fn := self.entity_description.attributes_fn) is not None:
             return fn(self.coordinator.data[self.monitor])
         return super().extra_state_attributes
+
+    @override
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if TYPE_CHECKING:
+            assert isinstance(self.device_info, DeviceInfo)
+        self.device_info.sw_version = self.coordinator.api.version.version
+
+        super()._handle_coordinator_update()

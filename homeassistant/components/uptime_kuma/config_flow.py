@@ -68,8 +68,9 @@ async def validate_connection(
     except Exception:
         _LOGGER.exception("Unexpected exception")
         errors["base"] = "unknown"
-    if int(uptime_kuma.version.major) < 2:
-        errors["base"] = "version_unsupported"
+    else:
+        if int(uptime_kuma.version.major) < 2:
+            errors["base"] = "version_unsupported"
     return errors
 
 

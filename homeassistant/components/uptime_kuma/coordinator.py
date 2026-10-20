@@ -11,7 +11,6 @@ from pythonkuma import (
     UptimeKumaException,
     UptimeKumaMonitor,
     UptimeKumaParseException,
-    UptimeKumaVersion,
 )
 from pythonkuma.update import LatestRelease, UpdateChecker
 
@@ -55,7 +54,6 @@ class UptimeKumaDataUpdateCoordinator(
         self.api = UptimeKuma(
             session, config_entry.data[CONF_URL], config_entry.data[CONF_API_KEY]
         )
-        self.version: UptimeKumaVersion | None = None
 
     @override
     async def _async_update_data(self) -> dict[str | int, UptimeKumaMonitor]:
@@ -86,7 +84,6 @@ class UptimeKumaDataUpdateCoordinator(
                     translation_domain=DOMAIN,
                     translation_key="unsupported_version",
                 )
-            self.version = self.api.version
 
             return metrics
 
