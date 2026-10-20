@@ -55,7 +55,7 @@ def _handle_device_errors[**P](
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_unavailable",
-                translation_placeholders={"uri": str(self.device.uri)},
+                translation_placeholders={"uri": self.device.uri},
             ) from exc
 
     return wrapper

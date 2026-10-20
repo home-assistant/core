@@ -10,6 +10,7 @@ import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PASSWORD
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     TextSelector,
@@ -87,7 +88,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         password_needed = False
 
-        device = MyPVLocalDevice(self._host)
+        device = MyPVLocalDevice(self._host, session=async_get_clientsession(self.hass))
         try:
             if not await device.connect():
                 return self.async_abort(reason="cannot_connect")
@@ -138,7 +139,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             password_needed = False
 
-            device = MyPVLocalDevice(host)
+            device = MyPVLocalDevice(host, session=async_get_clientsession(self.hass))
             try:
                 if not await device.connect():
                     errors[CONF_BASE] = "cannot_connect"
@@ -182,7 +183,9 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             host = self._host
             password = user_input[CONF_PASSWORD]
 
-            device = MyPVLocalDevice(host, password)
+            device = MyPVLocalDevice(
+                host, password, session=async_get_clientsession(self.hass)
+            )
             try:
                 if not await device.connect():
                     errors[CONF_BASE] = "cannot_connect"
@@ -237,7 +240,9 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             password = user_input[CONF_PASSWORD]
 
-            device = MyPVLocalDevice(host, password)
+            device = MyPVLocalDevice(
+                host, password, session=async_get_clientsession(self.hass)
+            )
             try:
                 if not await device.connect():
                     errors[CONF_BASE] = "cannot_connect"
