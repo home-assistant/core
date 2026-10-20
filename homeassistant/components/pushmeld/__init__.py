@@ -57,8 +57,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PushMeldConfigEntry) -> 
     return True
 
 
-async def async_unload_entry(
-    _hass: HomeAssistant, _entry: PushMeldConfigEntry
-) -> bool:
+async def async_unload_entry(_hass: HomeAssistant, _entry: PushMeldConfigEntry) -> bool:
     """Unload a PushMeld config entry."""
     return True

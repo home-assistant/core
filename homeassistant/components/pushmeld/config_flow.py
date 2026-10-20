@@ -5,8 +5,8 @@ from typing import Any, override
 
 import probatio
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME
 from homeassistant.util import slugify
 
