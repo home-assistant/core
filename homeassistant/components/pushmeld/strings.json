@@ -27,6 +27,15 @@
     "config_entry_error_name_exists": {
       "message": "The notification action notify.{service_name} is already in use. Rename the PushMeld integration and try again."
     },
+    "config_entry_error_invalid_maxcode": {
+      "message": "The PushMeld MaxCode is invalid."
+    },
+    "config_entry_error_invalid_name": {
+      "message": "The PushMeld integration name cannot be blank."
+    },
+    "config_entry_error_not_active": {
+      "message": "The PushMeld integration is no longer active."
+    },
     "request_failed": {
       "message": "PushMeld returned HTTP status {status_code}."
     },
