@@ -349,7 +349,7 @@ class TokenView(HomeAssistantView):
 
         entry = self._retrieve_auth(client_id, code)
 
-        if entry is None:
+        if entry is None or await _async_credentials_removed(hass, entry.credentials):
             return self.json(
                 {"error": "invalid_request", "error_description": "Invalid code"},
                 status_code=HTTPStatus.BAD_REQUEST,
@@ -511,7 +511,11 @@ class LinkUserView(HomeAssistantView):
 
         entry = self._retrieve_credentials(data["client_id"], data["code"])
 
-        if entry is None or entry.code_challenge is not None:
+        if (
+            entry is None
+            or entry.code_challenge is not None
+            or await _async_credentials_removed(hass, entry.credentials)
+        ):
             return self.json_message("Invalid code", status_code=HTTPStatus.BAD_REQUEST)
 
         linked_user = await hass.auth.async_get_user_by_credentials(entry.credentials)
@@ -524,6 +528,16 @@ class LinkUserView(HomeAssistantView):
         if linked_user != user:
             await hass.auth.async_link_user(user, entry.credentials)
         return self.json_message("User linked")
+
+
+async def _async_credentials_removed(
+    hass: HomeAssistant, credentials: Credentials
+) -> bool:
+    """Return if the credentials were removed after their code was issued."""
+    return (
+        not credentials.is_new
+        and await hass.auth.async_get_user_by_credentials(credentials) is None
+    )
 
 
 @callback
