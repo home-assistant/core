@@ -6,9 +6,8 @@ from typing import Any, override
 
 import probatio
 from teltasync import Teltasync, TeltonikaAuthenticationError, TeltonikaConnectionError
-from yarl import URL
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -17,7 +16,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN
-from .util import get_url_variants
+from .util import entry_data_to_url, get_url_variants, url_to_entry_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,22 +89,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     raise CannotConnect from last_error
 
 
-def _rediscovered_host(entry: ConfigEntry | None, ip: str, default: str) -> str:
-    """Return the host to store for a rediscovered device.
-
-    Keep the scheme and port of an existing URL, only replacing its host.
-    """
-    if entry is not None:
-        configured_url = URL(entry.data.get(CONF_HOST, ""))
-        if configured_url.is_absolute():
-            return str(configured_url.with_host(ip))
-    return default
-
-
 class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Teltonika."""
 
-    VERSION = 1
+    VERSION = 2
     MINOR_VERSION = 1
     _discovered_host: str | None = None
 
@@ -131,13 +118,9 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(info["device_id"])
                 self._abort_if_unique_id_configured()
 
-                data_to_store = dict(user_input)
-                if "host" in info:
-                    data_to_store[CONF_HOST] = info["host"]
-
                 return self.async_create_entry(
                     title=info["title"],
-                    data=data_to_store,
+                    data={**user_input, **url_to_entry_data(info["host"])},
                 )
 
         return self.async_show_form(
@@ -156,10 +139,11 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reauth confirmation."""
         errors: dict[str, str] = {}
         reauth_entry = self._get_reauth_entry()
+        base_url = entry_data_to_url(reauth_entry.data)
 
         if user_input is not None:
             data = {
-                CONF_HOST: reauth_entry.data[CONF_HOST],
+                CONF_HOST: base_url,
                 CONF_USERNAME: user_input[CONF_USERNAME],
                 CONF_PASSWORD: user_input[CONF_PASSWORD],
                 CONF_VERIFY_SSL: reauth_entry.data.get(CONF_VERIFY_SSL, False),
@@ -199,7 +183,7 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={
                 "name": reauth_entry.title,
-                "host": reauth_entry.data[CONF_HOST],
+                "host": base_url,
             },
         )
 
@@ -262,8 +246,7 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Use the MAC as a placeholder unique_id when nothing matched, so
         # parallel DHCP advertisements don't both reach dhcp_confirm.
-        existing_entry = await self.async_set_unique_id(device_id or formatted_mac)
-        host = _rediscovered_host(existing_entry, host, host)
+        await self.async_set_unique_id(device_id or formatted_mac)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         # Store discovery info for the user step
@@ -303,21 +286,15 @@ class TeltonikaConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 # Update unique ID to device identifier
                 # if we didn't get it during discovery
-                existing_entry = await self.async_set_unique_id(
+                await self.async_set_unique_id(
                     info["device_id"], raise_on_progress=False
                 )
-                self._abort_if_unique_id_configured(
-                    updates={
-                        CONF_HOST: _rediscovered_host(
-                            existing_entry, host, info["host"]
-                        )
-                    }
-                )
+                self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
                 return self.async_create_entry(
                     title=info["title"],
                     data={
-                        CONF_HOST: info["host"],
+                        **url_to_entry_data(info["host"]),
                         CONF_USERNAME: user_input[CONF_USERNAME],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
                         CONF_VERIFY_SSL: False,
