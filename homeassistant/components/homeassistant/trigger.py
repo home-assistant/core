@@ -4,7 +4,7 @@ from typing import cast, override
 
 import probatio
 
-from homeassistant.config import DATA_PREVIOUS_VERSION
+from homeassistant.config import DATA_PREVIOUS_VERSION, DATA_UPDATED_AUTOMATICALLY
 from homeassistant.const import (
     CONF_OPTIONS,
     CONF_PLATFORM,
@@ -169,7 +169,11 @@ class HomeAssistantUpdatedTrigger(Trigger):
             unsub = None
             # A downgrade, like restoring an older backup, counts as well
             run_action(
-                {"from_version": previous_version, "to_version": __version__},
+                {
+                    "from_version": previous_version,
+                    "to_version": __version__,
+                    "automatic": self._hass.data.get(DATA_UPDATED_AUTOMATICALLY, False),
+                },
                 "Home Assistant updated",
             )
 

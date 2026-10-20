@@ -14,6 +14,7 @@ from aiohasupervisor.models import ContextType, IssueType, Job, UpdateChannel
 from awesomeversion import AwesomeVersion
 import probatio
 
+from homeassistant.config import DATA_UPDATED_AUTOMATICALLY
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DOMAIN,
@@ -308,6 +309,10 @@ class AutoUpdateManager:
         # Settled once started: Supervisor rolls back a version that does not
         # come up, and that has to find the record still there.
         if self._pending is not None:
+            # Set before Home Assistant has started, so the updated trigger
+            # can tell automations this update was automatic
+            if self._pending["to_version"] == HA_VERSION:
+                self._hass.data[DATA_UPDATED_AUTOMATICALLY] = True
             self._restored_pending = self._pending
             self._entry.async_on_unload(
                 async_at_started(self._hass, self._async_start_settling)

@@ -25,6 +25,7 @@ from pytest_homeassistant.common import (
     MockConfigEntry,
     async_capture_events,
     async_fire_time_changed,
+    async_mock_service,
 )
 
 from homeassistant.components.backup import (
@@ -46,6 +47,7 @@ from homeassistant.components.hassio.const import (
     HASSIO_MAIN_UPDATE_INTERVAL,
     MAIN_COORDINATOR,
 )
+from homeassistant.config import DATA_PREVIOUS_VERSION
 from homeassistant.const import EVENT_LOGBOOK_ENTRY, WEEKDAYS
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -2069,3 +2071,71 @@ async def test_switch_available_once_on_stable_channel(
     await _refresh_main_coordinator(hass, freezer)
 
     assert hass.states.get(AUTO_UPDATE_SWITCH).state == "on"
+
+
+@pytest.mark.parametrize(
+    ("running_version", "automatic"),
+    [
+        pytest.param("2026.10.2", True, id="updated"),
+        pytest.param("2026.10.1", False, id="rolled_back"),
+    ],
+)
+async def test_updated_trigger_automatic(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    resolution_info: AsyncMock,
+    running_version: str,
+    automatic: bool,
+) -> None:
+    """Test the updated trigger tells automations about an automatic update."""
+    supervisor_rolled_back(resolution_info)
+    calls = async_mock_service(hass, "test", "automation")
+    hass.set_state(CoreState.not_running)
+    hass.data[DATA_PREVIOUS_VERSION] = "2026.10.1"
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {"trigger": "homeassistant.updated"},
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"automatic": "{{ trigger.automatic }}"},
+                },
+            }
+        },
+    )
+
+    with patch(
+        "homeassistant.components.hassio.auto_update.HA_VERSION", running_version
+    ):
+        await _setup_after_update(hass, hass_storage, running_version, PENDING)
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert [call.data["automatic"] for call in calls] == [automatic]
+
+
+async def test_updated_trigger_manual_update(hass: HomeAssistant) -> None:
+    """Test a manual update is not reported as automatic."""
+    calls = async_mock_service(hass, "test", "automation")
+    hass.set_state(CoreState.not_running)
+    hass.data[DATA_PREVIOUS_VERSION] = "2026.10.1"
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {"trigger": "homeassistant.updated"},
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"automatic": "{{ trigger.automatic }}"},
+                },
+            }
+        },
+    )
+    await _setup_hassio(hass, ENABLED)
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert [call.data["automatic"] for call in calls] == [False]
