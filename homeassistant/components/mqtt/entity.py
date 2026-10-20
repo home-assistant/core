@@ -370,7 +370,7 @@ def async_setup_entity_entry_helper(  # noqa: C901
                 entity = entity_class(
                     hass, config, entry, discovery_payload.discovery_data
                 )
-                entity.async_register_device()
+                entity.async_register_device_on_add()
                 entry.async_create_task(
                     hass,
                     _async_add_discovered_entity(
@@ -467,7 +467,7 @@ def async_setup_entity_entry_helper(  # noqa: C901
                     continue
 
                 entity = entity_class(hass, config, entry, None)
-                entity.async_register_device()
+                entity.async_register_device_on_add()
                 entities.append(entity)
             except probatio.Invalid as exc:
                 error = str(exc)
@@ -1564,11 +1564,31 @@ class MqttEntityDeviceInfo(Entity):
     # The device of the registry entry before the entity is added, set by MqttEntity
     _previous_device_id: str | None = None
     _device_registration_failed = False
+    _register_device_on_add = False
 
     def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
         """Initialize the device mixin."""
         self._set_device_specifications(config)
         self._config_entry = config_entry
+
+    @callback
+    def async_register_device_on_add(self) -> None:
+        """Register the device when the entity is added.
+
+        The entity platform registers the device of a subentry entity instead.
+        """
+        self._register_device_on_add = True
+
+    @override
+    async def async_prepare_to_add_to_hass(self) -> None:
+        """Register the device, right before the entity platform links it.
+
+        Registering it earlier lets the cleanup of another entity in the same
+        batch, that is not added, remove the device before this entity uses it.
+        """
+        await super().async_prepare_to_add_to_hass()
+        if self._register_device_on_add:
+            self.async_register_device()
 
     def _set_device_specifications(self, config: ConfigType) -> None:
         """Set the device specifications, a device requires a unique ID."""

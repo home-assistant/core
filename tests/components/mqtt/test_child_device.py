@@ -1298,6 +1298,59 @@ async def test_yaml_device_registration_error(
     assert after_entry.device_id == other.id
 
 
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            DOMAIN: {
+                "switch": [
+                    {
+                        "name": "First",
+                        "command_topic": "first/set",
+                        "unique_id": "dup",
+                        "device": {"identifiers": ["other"], "name": "Other"},
+                    },
+                    {
+                        "name": "Duplicate",
+                        "command_topic": "dup/set",
+                        "unique_id": "dup",
+                        "device": {**PARENT_DEVICE, "child_device": CHILD_DEVICE},
+                    },
+                    {
+                        "name": "Between",
+                        "command_topic": "between/set",
+                        "state_topic": "between/state",
+                        "unique_id": "between",
+                    },
+                    {
+                        "name": "Later",
+                        "command_topic": "later/set",
+                        "unique_id": "later",
+                        "device": {**PARENT_DEVICE, "child_device": CHILD_DEVICE},
+                    },
+                ]
+            }
+        }
+    ],
+)
+async def test_yaml_rejected_duplicate_keeps_shared_child_device(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a rejected duplicate keeps a child device of a later YAML entity."""
+    await mqtt_mock_entry()
+
+    assert "ID dup already exists" in caplog.text
+    child_device = _get_child_device(hass, device_registry, "sub")
+    assert child_device is not None
+    later_entry = entity_registry.async_get("switch.parent_sub_later")
+    assert later_entry is not None
+    assert later_entry.device_id == child_device.id
+
+
 async def test_via_device_referencing_child_device(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
