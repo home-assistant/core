@@ -1460,6 +1460,33 @@ async def test_release_stale_hass_media_on_startup(
 
 
 @pytest.mark.usefixtures("async_autosetup_sonos")
+async def test_release_skipped_after_switch_during_transition(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    no_media_event: SonosMockEvent,
+) -> None:
+    """Test a source selected in a transition event is not replaced by the queue."""
+    hass.config.internal_url = "http://10.0.0.1:8123"
+    variables = no_media_event.variables | {"current_track_uri": HASS_MEDIA_URI}
+    queue_uri = "x-rincon-queue:RINCON_test#0"
+    events = [
+        variables | {"transport_state": "STOPPED", "av_transport_uri": HASS_MEDIA_URI},
+        variables | {"transport_state": "PLAYING"},
+        # Switching source while playing only reports the new URI in a transition
+        no_media_event.variables
+        | {"transport_state": "TRANSITIONING", "av_transport_uri": queue_uri},
+        no_media_event.variables | {"transport_state": "PLAYING"},
+        no_media_event.variables | {"transport_state": "STOPPED"},
+    ]
+    for event_vars in events:
+        event = SonosMockEvent(soco, soco.avTransport, event_vars)
+        soco.avTransport.subscribe.return_value.callback(event)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    soco.avTransport.SetAVTransportURI.assert_not_called()
+
+
+@pytest.mark.usefixtures("async_autosetup_sonos")
 async def test_release_hass_media_retried_after_failure(
     hass: HomeAssistant,
     soco: MockSoCo,

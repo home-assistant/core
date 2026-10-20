@@ -153,9 +153,6 @@ class SonosMedia:
         """Update information about currently playing media using an event payload."""
         new_status = evars["transport_state"]
         state_changed = new_status != self.playback_status
-        # Only included in events when it changes
-        if "av_transport_uri" in evars:
-            self.transport_uri = evars["av_transport_uri"]
         self.release_finished_hass_media(new_status, self.playback_status is None)
 
         self.play_mode = evars["current_play_mode"]

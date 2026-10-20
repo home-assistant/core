@@ -585,6 +585,10 @@ class SonosSpeaker:
         if (new_status := event.variables.get("transport_state")) is None:
             return
 
+        # Only included when it changes, which can be in a transition
+        if "av_transport_uri" in event.variables:
+            self.media.transport_uri = event.variables["av_transport_uri"]
+
         # Ignore transitions, we should get the target state soon
         if new_status == SONOS_STATE_TRANSITIONING:
             return
