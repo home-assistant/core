@@ -66,14 +66,14 @@ async def websocket_create(
 
     await provider.async_add_auth(msg["username"], msg["password"])
 
-    credentials = await provider.async_get_or_create_credentials(
-        {"username": msg["username"]}
-    )
+    # A password that isn't linked must not stay behind as a login of its own.
     try:
+        credentials = await provider.async_get_or_create_credentials(
+            {"username": msg["username"]}
+        )
         await hass.auth.async_link_user(user, credentials)
     except CredentialsExistError:
-        # Another request linked a password first, so this one must not stay
-        # behind as a login of its own.
+        # Another request linked a password first.
         await provider.async_remove_auth(msg["username"])
         connection.send_error(
             msg["id"],
@@ -81,6 +81,9 @@ async def websocket_create(
             "User already has credentials for this provider",
         )
         return
+    except BaseException:
+        await provider.async_remove_auth(msg["username"])
+        raise
 
     connection.send_result(msg["id"])
 

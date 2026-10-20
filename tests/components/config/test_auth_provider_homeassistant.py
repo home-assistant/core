@@ -114,6 +114,35 @@ async def test_create_auth_user_already_credentials(
         await auth_provider.async_validate_login("test-user3", "test-pass")
 
 
+async def test_create_auth_link_fails(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    auth_provider: prov_ha.HassAuthProvider,
+) -> None:
+    """Test a password that can't be linked doesn't stay behind as a login."""
+    client = await hass_ws_client(hass)
+    user = MockUser().add_to_hass(hass)
+
+    with patch.object(
+        hass.auth, "async_link_user", side_effect=RuntimeError("Link failed")
+    ):
+        await client.send_json(
+            {
+                "id": 5,
+                "type": "config/auth_provider/homeassistant/create",
+                "user_id": user.id,
+                "username": "test-user2",
+                "password": "test-pass",
+            }
+        )
+        result = await client.receive_json()
+
+    assert not result["success"], result
+    assert user.credentials == []
+    with pytest.raises(prov_ha.InvalidAuth):
+        await auth_provider.async_validate_login("test-user2", "test-pass")
+
+
 async def test_create_auth_concurrent(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
