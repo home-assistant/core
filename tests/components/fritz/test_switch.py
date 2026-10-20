@@ -7,6 +7,11 @@ from freezegun.api import FrozenDateTimeFactory
 from fritzconnection.core.exceptions import FritzActionError
 from fritzconnection.lib.fritzstatus import DefaultConnectionService
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fritz import switch as fritz_switch
@@ -38,8 +43,6 @@ from .const import (
     MOCK_SERIAL_NUMBER,
     MOCK_USER_DATA,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 MOCK_WLANCONFIGS_24_5_GUEST_SAME_SSID: dict[str, dict] = {
     "WLANConfiguration1": {

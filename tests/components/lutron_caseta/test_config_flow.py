@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, patch
 from pylutron_caseta.pairing import PAIR_CA, PAIR_CERT, PAIR_KEY
 from pylutron_caseta.smartbridge import Smartbridge
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.lutron_caseta import (
@@ -27,8 +28,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import ENTRY_MOCK_DATA, MockBridge
-
-from tests.common import MockConfigEntry
 
 ATTR_HOSTNAME = "hostname"
 

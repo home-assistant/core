@@ -3,13 +3,12 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.braviatv.const import CONF_USE_PSK, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 ENTRY_DATA = {
     CONF_HOST: "bravia-host",

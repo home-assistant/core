@@ -17,11 +17,10 @@ from lunatone_rest_api_client.models import (
 )
 from lunatone_rest_api_client.models.common import ColorRGBData, ColorWAFData, Status
 from lunatone_rest_api_client.models.devices import DeviceStatus
+from pytest_homeassistant.common import MockConfigEntry
 from yarl import URL
 
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 BASE_IP: Final = "10.0.0.131"
 BASE_URL: Final = URL.build(scheme="http", host=BASE_IP).human_repr()[:-1]

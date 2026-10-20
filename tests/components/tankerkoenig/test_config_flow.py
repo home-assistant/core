@@ -9,6 +9,7 @@ from aiotankerkoenig.exceptions import (
     TankerkoenigInvalidKeyError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.tankerkoenig.const import CONF_STATIONS, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -26,8 +27,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
 from .const import NEARBY_STATIONS
-
-from tests.common import MockConfigEntry
 
 MOCK_USER_DATA = {
     CONF_NAME: "Home",

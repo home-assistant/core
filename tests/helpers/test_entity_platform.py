@@ -10,6 +10,16 @@ from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockEntityPlatform,
+    MockPlatform,
+    RegistryEntryWithDefaults,
+    async_fire_time_changed,
+    mock_platform,
+    mock_registry,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentryData
@@ -44,17 +54,6 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntity,
-    MockEntityPlatform,
-    MockPlatform,
-    RegistryEntryWithDefaults,
-    async_fire_time_changed,
-    mock_platform,
-    mock_registry,
-)
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "test_domain"
@@ -1522,6 +1521,53 @@ async def test_device_info_called(
     assert device.config_entry_id == config_entry.entry_id
     assert device.config_subentry_id == "mock-subentry-id-1"
     assert device.via_device_id == via.id
+
+
+async def test_device_info_clears_via_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test a device info with via_device_id None removes the via device link."""
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+    via = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("hue", "via-id")}
+    )
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("hue", "1234")},
+        via_device_id=via.id,
+    )
+
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setup entry method."""
+        async_add_entities(
+            [
+                MockEntity(
+                    unique_id="qwer",
+                    device_info=dr.DeviceInfo(
+                        identifiers={("hue", "1234")}, via_device_id=None
+                    ),
+                )
+            ]
+        )
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        ("hue", "1234"), config_entry.entry_id
+    )
+    assert device is not None
+    assert device.via_device_id is None
 
 
 @pytest.mark.parametrize(

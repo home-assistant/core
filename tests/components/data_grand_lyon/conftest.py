@@ -15,6 +15,7 @@ from data_grand_lyon_ha import (
     VelovStationStatus,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.data_grand_lyon.const import (
     CONF_LINE,
@@ -28,8 +29,6 @@ from homeassistant.components.data_grand_lyon.const import (
 )
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-
-from tests.common import MockConfigEntry
 
 MOCK_DEPARTURES = [
     TclPassage(

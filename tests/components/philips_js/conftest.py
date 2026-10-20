@@ -5,14 +5,13 @@ from unittest.mock import AsyncMock, create_autospec, patch
 
 from haphilipsjs import PhilipsTV
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.philips_js.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import MOCK_CONFIG, MOCK_ENTITY_ID, MOCK_NAME, MOCK_SERIAL_NO, MOCK_SYSTEM
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, Mock, PropertyMock
 import blebox_uniapi
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.blebox.const import CO2_LEVEL, DOMAIN, OPEN_STATUS
 from homeassistant.components.sensor import (
@@ -39,8 +40,6 @@ from .conftest import (
     mock_only_feature,
     setup_multi_feature_product,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 TANK_FILL_LEVEL_UNIQUE_ID = "BleBox-multiSensor-1afe34db9437-fillLevel_2"
 PROBE_ISSUE_ID = f"probe_not_configured_{TANK_FILL_LEVEL_UNIQUE_ID}"
