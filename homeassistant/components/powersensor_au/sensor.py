@@ -644,7 +644,9 @@ class PowersensorMeasurementEntity(PowersensorEntity, SensorEntity):
                 # Firmware may report roles this integration doesn't know yet.
                 # Core rejects an ENUM state outside its options on every write,
                 # so show those as unknown.  Only the display is clamped: the
-                # real role is still persisted and passed to VirtualHousehold.
+                # real role is still persisted and passed to VirtualHousehold,
+                # which ignores it.  Clamped any earlier, it would read as a
+                # missing role and fall back to the sensor's saved role.
                 if role not in _DEVICE_ROLE_OPTIONS:
                     if role != self._unrecognised_role:
                         _LOGGER.debug(
