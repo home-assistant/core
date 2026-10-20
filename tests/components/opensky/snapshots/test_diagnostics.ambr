@@ -5,10 +5,13 @@
       'latitude': '**REDACTED**',
       'longitude': '**REDACTED**',
     }),
-    'flights_in_area': 2,
+    'flights_in_area': 1,
     'options': dict({
-      'altitude': 0.0,
+      'altitude': 12500.0,
+      'contributing_user': True,
+      'password': '**REDACTED**',
       'radius': 10.0,
+      'username': '**REDACTED**',
     }),
   })
 # ---
