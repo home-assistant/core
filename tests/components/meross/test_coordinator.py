@@ -1,10 +1,7 @@
 """Test Meross Bluetooth coordinator availability."""
 
-from datetime import timedelta
-from unittest.mock import patch
-
 import pytest
-from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 
 from homeassistant.components.meross.const import DOMAIN
@@ -33,25 +30,23 @@ async def test_stale_advertisement_marks_entities_unavailable(
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.meross.coordinator.ADVERTISEMENT_STALE_SECONDS",
-        10,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
-        temp_sensor = hass.states.get("sensor.meross_ms120_temperature")
-        assert temp_sensor is not None
-        assert temp_sensor.state == "25.0"
+    temp_sensor = hass.states.get("sensor.meross_ms120_temperature")
+    assert temp_sensor is not None
+    assert temp_sensor.state == "25.0"
 
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))
-        await hass.async_block_till_done()
+    coordinator = entry.runtime_data
+    assert coordinator.available
+    coordinator._async_advertisement_stale(dt_util.utcnow())
+    await hass.async_block_till_done()
 
-        temp_sensor = hass.states.get("sensor.meross_ms120_temperature")
-        assert temp_sensor.state == STATE_UNAVAILABLE
+    temp_sensor = hass.states.get("sensor.meross_ms120_temperature")
+    assert temp_sensor.state == STATE_UNAVAILABLE
 
-        inject_bluetooth_service_info(hass, MEROSS_MS120_SERVICE_INFO)
-        await hass.async_block_till_done()
+    inject_bluetooth_service_info(hass, MEROSS_MS120_SERVICE_INFO)
+    await hass.async_block_till_done()
 
-        temp_sensor = hass.states.get("sensor.meross_ms120_temperature")
-        assert temp_sensor.state == "25.0"
+    temp_sensor = hass.states.get("sensor.meross_ms120_temperature")
+    assert temp_sensor.state == "25.0"

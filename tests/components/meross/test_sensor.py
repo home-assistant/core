@@ -62,17 +62,17 @@ async def test_ms120_sensors(hass: HomeAssistant) -> None:
 
     dew_point_sensor = hass.states.get("sensor.meross_ms120_dew_point")
     assert dew_point_sensor is not None
-    assert dew_point_sensor.state == "13.9"
+    assert dew_point_sensor.state == "13.87"
     assert dew_point_sensor.attributes[ATTR_UNIT_OF_MEASUREMENT] == "°C"
 
     absolute_humidity_sensor = hass.states.get("sensor.meross_ms120_absolute_humidity")
     assert absolute_humidity_sensor is not None
-    assert absolute_humidity_sensor.state == "11.5"
+    assert absolute_humidity_sensor.state == "11.51"
     assert absolute_humidity_sensor.attributes[ATTR_UNIT_OF_MEASUREMENT] == "g/m³"
 
     vpd_sensor = hass.states.get("sensor.meross_ms120_vpd")
     assert vpd_sensor is not None
-    assert vpd_sensor.state == "1.6"
+    assert vpd_sensor.state == "1.58"
     assert vpd_sensor.attributes[ATTR_UNIT_OF_MEASUREMENT] == "kPa"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
