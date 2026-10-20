@@ -561,11 +561,14 @@ class ZHADeviceProxy(EventBase):
             for route in topology.routes[self.device.ieee]
         ]
 
-        # Return endpoint device type Names
+        # Return endpoint device type Names. Green Power devices have no endpoints.
         names: list[dict[str, str]] = []
-        for endpoint in (
-            ep for epid, ep in self.device.device.endpoints.items() if epid
-        ):
+        endpoints = (
+            self.device.device.endpoints.items()
+            if isinstance(self.device, Device)
+            else ()
+        )
+        for endpoint in (ep for epid, ep in endpoints if epid):
             profile = PROFILES.get(endpoint.profile_id)
             if profile and endpoint.device_type is not None:
                 # DeviceType provides undefined enums
@@ -1628,6 +1631,9 @@ def async_cluster_exists(hass: HomeAssistant, cluster_id, skip_coordinator=True)
     zha_gateway = get_zha_gateway(hass)
     zha_devices = zha_gateway.devices.values()
     for zha_device in zha_devices:
+        # Green Power devices have no clusters
+        if not isinstance(zha_device, Device):
+            continue
         if skip_coordinator and zha_device.is_coordinator:
             continue
         clusters_by_endpoint = zha_device.async_get_clusters()
