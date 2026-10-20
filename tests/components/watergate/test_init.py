@@ -17,10 +17,13 @@ from watergate_local_api import WatergateApiException
 from homeassistant.components.valve import ValveState
 from homeassistant.components.watergate.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import init_integration
 from .const import DEFAULT_DEVICE_STATE_V2, MOCK_WEBHOOK_ID
+
+NEGATIVE_VOLUME_ENTITY_ID = "sensor.sonic_water_meter_negative_volume"
 
 
 async def test_async_setup_entry(
@@ -98,7 +101,7 @@ async def test_coordinator_fetches_auto_shut_off(
     await init_integration(hass, mock_entry)
 
     mock_watergate_client.async_get_auto_shut_off.assert_called_once()
-    assert mock_entry.runtime_data.data.auto_shut_off.enabled is True
+    assert hass.states.get("switch.sonic_auto_shut_off").state == STATE_ON
 
 
 async def test_setup_retry_when_device_unavailable(
@@ -136,7 +139,7 @@ async def test_device_state_missing_from_the_v1_fallback(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_entry.runtime_data.data.state is None
+    assert hass.states.get("sensor.sonic_water_meter_volume").state == STATE_UNAVAILABLE
 
 
 async def test_device_state_v2_is_not_probed_again_after_falling_back(
@@ -185,7 +188,7 @@ async def test_unreachable_device_does_not_fall_back_to_device_state_v1(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_entry.runtime_data.data.state.water_meter_negative is not None
+    assert hass.states.get(NEGATIVE_VOLUME_ENTITY_ID).state == "0.3"
 
 
 async def test_device_state_v2_survives_a_blip_that_ends_during_the_first_update(
@@ -201,7 +204,7 @@ async def test_device_state_v2_survives_a_blip_that_ends_during_the_first_update
 
     await init_integration(hass, mock_entry)
 
-    assert mock_entry.runtime_data.data.state.water_meter_negative is not None
+    assert hass.states.get(NEGATIVE_VOLUME_ENTITY_ID).state == "0.3"
     assert mock_watergate_client.async_get_device_state_v2.call_count == 2
 
 
@@ -222,7 +225,7 @@ async def test_confirmed_device_state_v2_is_never_downgraded(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert not mock_entry.runtime_data.last_update_success
+    assert hass.states.get(NEGATIVE_VOLUME_ENTITY_ID).state == STATE_UNAVAILABLE
     mock_watergate_client.async_get_device_state.assert_not_called()
 
     mock_watergate_client.async_get_device_state_v2.side_effect = None
@@ -230,5 +233,4 @@ async def test_confirmed_device_state_v2_is_never_downgraded(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_entry.runtime_data.last_update_success
-    assert mock_entry.runtime_data.data.state.water_meter_negative is not None
+    assert hass.states.get(NEGATIVE_VOLUME_ENTITY_ID).state == "0.3"
