@@ -36,6 +36,7 @@ from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_platform import async_get_platforms
 
 from .common import (
     set_node_attribute,
@@ -1664,6 +1665,68 @@ async def test_closure_cover_feature_map_subscription_on_all_children(
     assert state
     # Tilt should be restored
     assert state.attributes["supported_features"] & CoverEntityFeature.SET_TILT_POSITION
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_closure_venetian_blinds"])
+async def test_closure_cover_refresh_subscriptions_only_on_structure_changes(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test panel subscriptions are refreshed only where panel membership can change.
+
+    Panel membership only changes on a child's FeatureMap, the parent's own
+    FeatureMap, or a node structure update (NODE_UPDATED) - never on a plain
+    CurrentState/TargetState report. Refreshing on every event, and refreshing
+    twice for the parent's own FeatureMap (`_on_featuremap_update` calling
+    `super()`, which calls `_on_matter_event`), wastes cycles walking the
+    compose map and tag lists on every single update.
+    """
+    entity_id = hass.states.async_all(Platform.COVER)[0].entity_id
+    platform = next(
+        p for p in async_get_platforms(hass, "matter") if p.domain == "cover"
+    )
+    entity = platform.entities[entity_id]
+    refresh = MagicMock(wraps=entity._refresh_closure_panel_subscriptions)
+    entity._refresh_closure_panel_subscriptions = refresh
+
+    # a plain CurrentState report on a panel never changes panel membership
+    set_node_attribute(
+        matter_node,
+        2,
+        clusters.ClosureDimension.id,
+        clusters.ClosureDimension.Attributes.CurrentState.attribute_id,
+        {0: 5000, 1: True, 2: 0},
+    )
+    await trigger_subscription_callback_debounced(
+        hass,
+        freezer,
+        matter_client,
+        node_id=matter_node.node_id,
+        attribute_path=f"2/{clusters.ClosureDimension.id}/"
+        f"{clusters.ClosureDimension.Attributes.CurrentState.attribute_id}",
+    )
+    assert refresh.call_count == 0
+
+    # the parent's own FeatureMap changing must refresh exactly once, not
+    # twice via the super() call chain into _on_matter_event
+    set_node_attribute(
+        matter_node,
+        1,
+        clusters.ClosureControl.id,
+        clusters.ClosureControl.Attributes.FeatureMap.attribute_id,
+        clusters.ClosureControl.Bitmaps.Feature.kPositioning,
+    )
+    await trigger_subscription_callback_debounced(
+        hass,
+        freezer,
+        matter_client,
+        node_id=matter_node.node_id,
+        attribute_path=f"1/{clusters.ClosureControl.id}/"
+        f"{clusters.ClosureControl.Attributes.FeatureMap.attribute_id}",
+    )
+    assert refresh.call_count == 1
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_closure_tilt_only"])

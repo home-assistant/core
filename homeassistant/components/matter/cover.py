@@ -531,50 +531,49 @@ class MatterClosure(MatterEntity, CoverEntity):
         """Refresh subscriptions for panel endpoints.
 
         Subscribes to FeatureMap changes on ALL ClosureDimension children (including
-        those without Positioning) to detect capability restoration. Subscribes to
-        CurrentState and TargetState only for active panels (those with Positioning
-        and a valid role).
+        those without Positioning) to detect capability restoration, routed through
+        `_on_closure_panel_capability_changed` since panel membership may change.
+        Subscribes to CurrentState and TargetState only for active panels (those
+        with Positioning and a valid role); those can't change panel membership,
+        so they're routed through the plain `_on_matter_event`.
         """
-        current_paths: set[str] = set()
+        path_callbacks: dict[str, Callable[[EventType, Any], None]] = {}
 
-        # Subscribe to FeatureMap on all ClosureDimension children to detect
-        # capability changes (e.g., Positioning being added to a latch-only panel)
         for child in self._closure_dimension_children:
-            current_paths.add(
+            path_callbacks[
                 create_attribute_path(
                     child.endpoint_id,
                     clusters.ClosureDimension.Attributes.FeatureMap.cluster_id,
                     clusters.ClosureDimension.Attributes.FeatureMap.attribute_id,
                 )
-            )
+            ] = self._on_closure_panel_capability_changed
 
-        # Subscribe to CurrentState and TargetState only on active panels
         for panel in self._closure_panels.values():
-            current_paths.add(
+            path_callbacks[
                 create_attribute_path(
                     panel.endpoint_id,
                     clusters.ClosureDimension.Attributes.CurrentState.cluster_id,
                     clusters.ClosureDimension.Attributes.CurrentState.attribute_id,
                 )
-            )
-            current_paths.add(
+            ] = self._on_matter_event
+            path_callbacks[
                 create_attribute_path(
                     panel.endpoint_id,
                     clusters.ClosureDimension.Attributes.TargetState.cluster_id,
                     clusters.ClosureDimension.Attributes.TargetState.attribute_id,
                 )
-            )
+            ] = self._on_matter_event
 
         for path, unsubscribe in list(self._closure_panel_subscriptions.items()):
-            if path not in current_paths:
+            if path not in path_callbacks:
                 unsubscribe()
                 del self._closure_panel_subscriptions[path]
-        for path in current_paths:
+        for path, path_callback in path_callbacks.items():
             if path in self._closure_panel_subscriptions:
                 continue
             self._closure_panel_subscriptions[path] = (
                 self.matter_client.subscribe_events(
-                    callback=self._on_matter_event,
+                    callback=path_callback,
                     event_filter=EventType.ATTRIBUTE_UPDATED,
                     node_filter=self._endpoint.node.node_id,
                     attr_path_filter=path,
@@ -596,16 +595,25 @@ class MatterClosure(MatterEntity, CoverEntity):
         self._closure_panel_subscriptions.clear()
 
     @callback
+    def _on_closure_panel_capability_changed(
+        self, event: EventType, data: Any = None
+    ) -> None:
+        """Handle a child panel's FeatureMap change: panel membership may change."""
+        self._refresh_closure_panel_subscriptions()
+        self._on_matter_event(event, data)
+
+    @callback
     @override
     def _on_matter_event(self, event: EventType, data: Any = None) -> None:
-        """Refresh panel subscriptions before updating state."""
-        self._refresh_closure_panel_subscriptions()
+        """Refresh panel subscriptions on node structure changes before updating state."""
+        if event is EventType.NODE_UPDATED:
+            self._refresh_closure_panel_subscriptions()
         super()._on_matter_event(event, data)
 
     @callback
     @override
     def _on_featuremap_update(self, event: EventType, data: int | None) -> None:
-        """Refresh panel mappings when capabilities change."""
+        """Refresh panel mappings when the parent's own capabilities change."""
         self._refresh_closure_panel_subscriptions()
         super()._on_featuremap_update(event, data)
 
@@ -726,6 +734,7 @@ class MatterClosure(MatterEntity, CoverEntity):
             clusters.ClosureControl.Attributes.OverallTargetState
         )
 
+        closure_panels = self._closure_panels
         position = _extract_struct_field(overall_current_state, 0, "position")
         target_position = _extract_struct_field(overall_target_state, 0, "position")
 
@@ -767,7 +776,7 @@ class MatterClosure(MatterEntity, CoverEntity):
                 self._attr_is_closing = True
             else:
                 # Infer movement direction from child panel target positions
-                for panel in self._closure_panels.values():
+                for panel in closure_panels.values():
                     panel_state = panel.get_attribute_value(
                         None, clusters.ClosureDimension.Attributes.CurrentState
                     )
@@ -793,7 +802,7 @@ class MatterClosure(MatterEntity, CoverEntity):
             clusters.ClosureControl.Bitmaps.Feature.kInstantaneous,
         ):
             supported_features |= CoverEntityFeature.STOP
-        if position_panel := self._closure_panels.get(ClosurePanelRole.POSITION):
+        if position_panel := closure_panels.get(ClosurePanelRole.POSITION):
             position_state = position_panel.get_attribute_value(
                 None, clusters.ClosureDimension.Attributes.CurrentState
             )
@@ -803,7 +812,7 @@ class MatterClosure(MatterEntity, CoverEntity):
             supported_features |= CoverEntityFeature.SET_POSITION
         else:
             self._attr_current_cover_position = None
-        if tilt := self._closure_panels.get(ClosurePanelRole.TILT):
+        if tilt := closure_panels.get(ClosurePanelRole.TILT):
             tilt_state = tilt.get_attribute_value(
                 None, clusters.ClosureDimension.Attributes.CurrentState
             )
