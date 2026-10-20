@@ -1,6 +1,7 @@
 # homeassistant/components/pushmeld/__init__.py
 """The PushMeld integration."""
 
+import asyncio
 from asyncio import Future
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -9,7 +10,7 @@ from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
@@ -78,11 +79,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: PushMeldConfigEntry) -> 
     )
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
+    setup_future = entry.runtime_data.notify_service_ready
+
     try:
-        await entry.runtime_data.notify_service_ready
-    except BaseException:
+        await discovery_task
+        await hass.async_block_till_done()
+        if not setup_future.done():
+            setup_future.set_exception(
+                ConfigEntryNotReady(
+                    "Unable to set up the PushMeld notification service"
+                )
+            )
+        await setup_future
+    except BaseException as err:
         if not discovery_task.done():
             discovery_task.cancel()
+        if not setup_future.done():
+            if isinstance(err, asyncio.CancelledError):
+                setup_future.cancel()
+            else:
+                setup_future.set_exception(err)
+        elif not setup_future.cancelled():
+            setup_future.exception()
         raise
 
     return True

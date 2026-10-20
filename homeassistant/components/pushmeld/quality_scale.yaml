@@ -12,7 +12,9 @@ rules:
     status: exempt
     comment: The integration has one small notification platform and no shared entity modules.
   config-flow: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage:
+    status: done
+    comment: The flow test submits a valid MaxCode after recovering from a blank value.
   dependency-transparency: done
   docs-actions:
     status: exempt

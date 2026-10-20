@@ -11,6 +11,7 @@ from aiohttp.test_utils import TestServer
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
+from homeassistant.components import pushmeld
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TITLE,
@@ -250,6 +251,26 @@ async def test_config_entry_registers_and_unloads_notification_service(
     assert not hass.services.has_service(NOTIFY_DOMAIN, "test_channel")
 
 
+async def test_setup_retries_when_notification_platform_fails_to_load(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Retry setup when discovery cannot load the notification platform."""
+    discovery_load = AsyncMock(return_value=None)
+    monkeypatch.setattr(pushmeld.discovery, "async_load_platform", discovery_load)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Test channel",
+        data={CONF_MAXCODE: "test-maxcode"},
+    )
+    entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    discovery_load.assert_awaited_once()
+
+
 async def test_entry_setup_waits_for_notification_registration(
     hass: HomeAssistant,
     monkeypatch: pytest.MonkeyPatch,
@@ -363,6 +384,29 @@ async def test_reload_during_notification_setup_does_not_register_stale_service(
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_unload_does_not_remove_replacement_notification_service(
+    hass: HomeAssistant,
+) -> None:
+    """Keep a replacement action that is no longer owned by PushMeld."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Test channel",
+        data={CONF_MAXCODE: "test-maxcode"},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    replacement = AsyncMock()
+    hass.services.async_register(NOTIFY_DOMAIN, "test_channel", replacement)
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(NOTIFY_DOMAIN, "test_channel")
 
 
 async def test_setup_does_not_remove_existing_notification_service(

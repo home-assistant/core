@@ -32,8 +32,8 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
     assert result["data"] == {CONF_MAXCODE: "test-maxcode"}
 
 
-async def test_user_flow_rejects_empty_maxcode(hass: HomeAssistant) -> None:
-    """Require a MaxCode before creating an entry."""
+async def test_user_flow_recovers_from_empty_maxcode(hass: HomeAssistant) -> None:
+    """Recover from an invalid MaxCode on the same flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
@@ -53,6 +53,7 @@ async def test_user_flow_rejects_empty_maxcode(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_MAXCODE: "test-maxcode"}
 
 
 async def test_user_flow_generates_an_available_title(hass: HomeAssistant) -> None:

@@ -61,6 +61,9 @@ async def async_get_service(
     if not hasattr(entry, "runtime_data"):
         return None
 
+    if entry.runtime_data.notify_service_ready.done():
+        return None
+
     if not isinstance(maxcode, str) or not maxcode:
         error = ConfigEntryError(
             translation_domain=DOMAIN,
@@ -127,6 +130,12 @@ class PushMeldNotificationService(BaseNotificationService):
             return True
 
         if not hasattr(self._entry, "runtime_data"):
+            return False
+
+        setup_future = self._entry.runtime_data.notify_service_ready
+        if setup_future.done() and (
+            setup_future.cancelled() or setup_future.exception() is not None
+        ):
             return False
 
         return self._entry.runtime_data.notify_service is self
@@ -219,7 +228,7 @@ class PushMeldNotificationService(BaseNotificationService):
     async def async_unregister_services(self) -> None:
         """Unregister only the notify action owned by this service."""
         if self._service_registered:
-            if self._entry_owns_runtime_service():
+            if self._entry_owns_runtime_service() and self._service_is_owned():
                 await super().async_unregister_services()
             self._service_registered = False
 
