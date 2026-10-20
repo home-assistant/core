@@ -105,7 +105,10 @@ class DaliLight(CoordinatorEntity[DaliCoordinator], LightEntity):
         """Turn the light on."""
         try:
             gear_data = self.coordinator.data[self._address]
-            brightness = max(1, min(kwargs.get("brightness", 255), 255))
+            # Turning on without a brightness keeps the current level rather than
+            # jumping an already-dimmed light to full output.
+            default = gear_data.level or 255
+            brightness = max(1, min(kwargs.get("brightness", default), 255))
             level = _brightness_to_dali_level(
                 brightness, gear_data.linear_dimming, gear_data.min_level
             )

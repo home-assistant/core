@@ -218,6 +218,26 @@ def test_brightness_to_level_snaps_to_closest_readback(
             assert chosen_error <= other_error
 
 
+async def test_light_turn_on_without_brightness_keeps_level(
+    hass: HomeAssistant, fake_dali_driver: FakeDaliDriver
+) -> None:
+    """Test turning on without a brightness keeps the current dimmed level."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_DEVICE: "/dev/ttyACM0"})
+    coordinator = DaliCoordinator(hass, fake_dali_driver, entry)
+    coordinator.data = {
+        0: DaliGearData(level=128, min_level=1, linear_dimming=True, device_types=(6,))
+    }
+    light = DaliLight(coordinator, entry.entry_id, entry.title, 0, set())
+
+    with patch.object(coordinator, "async_update_gear", new_callable=AsyncMock):
+        await light.async_turn_on()
+
+    assert isinstance(fake_dali_driver.sent[-1], DAPC)
+    assert fake_dali_driver.sent[-1].power == _brightness_to_dali_level(128, True, 1)
+    # Not the full-output level a missing brightness used to command.
+    assert fake_dali_driver.sent[-1].power != _brightness_to_dali_level(255, True, 1)
+
+
 async def test_light_turn_on_failure_raises_home_assistant_error(
     hass: HomeAssistant, fake_dali_driver: FakeDaliDriver
 ) -> None:
