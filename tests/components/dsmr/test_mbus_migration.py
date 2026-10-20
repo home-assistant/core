@@ -11,13 +11,12 @@ from dsmr_parser.obis_references import (
 )
 from dsmr_parser.objects import CosemObject, MBusObject, Telegram
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.dsmr.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 async def test_migrate_gas_to_mbus(

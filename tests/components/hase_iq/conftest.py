@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyhaseiq import Phase, Status
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hase_iq.const import DOMAIN
 from homeassistant.const import CONF_HOST
-
-from tests.common import MockConfigEntry
 
 MOCK_HOST = "192.168.1.165"
 

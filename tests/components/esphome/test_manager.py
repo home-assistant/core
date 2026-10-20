@@ -47,6 +47,13 @@ import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_call_logger_set_level,
+    async_capture_events,
+    async_fire_time_changed,
+    async_mock_service,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.esphome.config_flow import PROBE_NOISE_PSK
@@ -93,14 +100,6 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.setup import async_setup_component
 
 from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
-
-from tests.common import (
-    MockConfigEntry,
-    async_call_logger_set_level,
-    async_capture_events,
-    async_fire_time_changed,
-    async_mock_service,
-)
 
 
 async def test_esphome_device_subscribe_logs(

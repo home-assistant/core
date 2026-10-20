@@ -1,6 +1,7 @@
 {
   "domain": "netio",
   "name": "Netio",
+  "categories": ["plugs_switches"],
   "codeowners": ["@agners"],
   "config_flow": true,
   "dependencies": ["http"],

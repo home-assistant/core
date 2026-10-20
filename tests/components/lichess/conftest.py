@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock, patch
 
 from aiolichess.models import LichessStatistics, LichessUser
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lichess.const import DOMAIN
 from homeassistant.const import CONF_API_TOKEN
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

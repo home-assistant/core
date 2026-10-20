@@ -141,9 +141,6 @@ class HKDevice:
         self._polling_lock_warned = False
         self._poll_failures = 0
 
-        # This is set to True if we can't rely on serial numbers to be unique
-        self.unreliable_serial_numbers = False
-
         self.watchable_characteristics: set[tuple[int, int]] = set()
 
         self._debounced_update = Debouncer(
@@ -410,16 +407,6 @@ class HKDevice:
 
     def device_info_for_accessory(self, accessory: Accessory) -> DeviceInfo:
         """Build a DeviceInfo for a given accessory."""
-        identifiers = {
-            (
-                IDENTIFIER_ACCESSORY_ID,
-                f"{self.unique_id}:aid:{accessory.aid}",
-            )
-        }
-
-        if not self.unreliable_serial_numbers:
-            identifiers.add((IDENTIFIER_SERIAL_NUMBER, accessory.serial_number))
-
         connections: set[tuple[str, str]] = set()
         if self.pairing.transport is Transport.BLE and (
             discovery := self.pairing.controller.discoveries.get(
@@ -687,49 +674,6 @@ class HKDevice:
 
         self.devices = devices
 
-    @callback
-    def async_detect_workarounds(self) -> None:
-        """Detect any workarounds that are needed for this pairing."""
-        unreliable_serial_numbers = False
-
-        devices = set()
-
-        for accessory in self.entity_map.accessories:
-            if not valid_serial_number(accessory.serial_number):
-                _LOGGER.debug(
-                    (
-                        "Serial number %r is not valid, it cannot be used as a unique"
-                        " identifier"
-                    ),
-                    accessory.serial_number,
-                )
-                unreliable_serial_numbers = True
-
-            elif accessory.serial_number in devices:
-                _LOGGER.debug(
-                    (
-                        "Serial number %r is duplicated within this pairing, it cannot"
-                        " be used as a unique identifier"
-                    ),
-                    accessory.serial_number,
-                )
-                unreliable_serial_numbers = True
-
-            elif accessory.serial_number == accessory.hardware_revision:
-                # This is a known bug with some devices (e.g. RYSE SmartShades)
-                _LOGGER.debug(
-                    (
-                        "Serial number %r is actually the hardware revision, it cannot"
-                        " be used as a unique identifier"
-                    ),
-                    accessory.serial_number,
-                )
-                unreliable_serial_numbers = True
-
-            devices.add(accessory.serial_number)
-
-        self.unreliable_serial_numbers = unreliable_serial_numbers
-
     async def async_process_entity_map(self) -> None:
         """Process the entity map and load any platforms or entities that need adding.
 
@@ -737,13 +681,6 @@ class HKDevice:
         we detect metadata changes via the c# counter on the
         zeroconf record.
         """
-        # Ensure the Pairing object has access to the latest
-        # version of the entity map. This is especially important
-        # for BLE, as the Pairing instance relies on the entity
-        # map to map aid/iid to GATT characteristics. So push it
-        # to there as well.
-        self.async_detect_workarounds()
-
         # Migrate to new device ids
         self.async_migrate_devices()
 

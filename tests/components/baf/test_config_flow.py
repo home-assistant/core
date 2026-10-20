@@ -3,6 +3,8 @@
 from ipaddress import ip_address
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.baf.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
@@ -11,8 +13,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import MOCK_NAME, MOCK_UUID, MockBAFDevice
-
-from tests.common import MockConfigEntry
 
 
 def _patch_device_config_flow(side_effect=None):

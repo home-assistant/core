@@ -7,6 +7,7 @@ from enum import StrEnum
 import logging
 import random
 from typing import Any, Self, TypedDict, override
+from uuid import UUID
 
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import ContextType, IssueType, Job, UpdateChannel
@@ -178,8 +179,6 @@ class PendingUpdate(TypedDict):
     from_version: str
     to_version: str
     started: str
-    # Supervisor's Core rollback issues from before; they are not about this one
-    known_rollbacks: list[str]
 
 
 class AutoUpdateHistoryEntry(TypedDict):
@@ -197,6 +196,7 @@ class AutoUpdateStoreData(TypedDict):
 
     first_seen: dict[str, str]
     skipped: list[str]
+    withdrawn: list[str]
     window_offset: float
     attempted_window: str | None
     pending: PendingUpdate | None
@@ -228,6 +228,7 @@ class _AutoUpdateStore(Store[AutoUpdateStoreData]):
             # updates, and the window it last tried to update in
             old_data["window_offset"] = random.random()
             old_data["attempted_window"] = None
+            old_data["withdrawn"] = []
         if old_minor_version < 4:
             # Version 1.4 adds the update in progress and the past updates
             old_data["pending"] = None
@@ -277,6 +278,8 @@ class AutoUpdateManager:
         self._store = _AutoUpdateStore(hass)
         self._first_seen: dict[str, datetime] = {}
         self._skipped: set[str] = set()
+        # Offered once, then pulled again by rolling back the version file
+        self._withdrawn: set[str] = set()
         self._window_offset = random.random()
         self._attempted_window: datetime | None = None
         self._pending: PendingUpdate | None = None
@@ -293,6 +296,7 @@ class AutoUpdateManager:
                 for version, first_seen in data["first_seen"].items()
             }
             self._skipped = set(data["skipped"])
+            self._withdrawn = set(data["withdrawn"])
             self._window_offset = data["window_offset"]
             if (attempted_window := data["attempted_window"]) is not None:
                 self._attempted_window = datetime.fromisoformat(attempted_window)
@@ -385,35 +389,39 @@ class AutoUpdateManager:
             self._unsub_settling()
             self._unsub_settling = None
 
-    async def _async_core_rollbacks(self) -> set[str]:
+    async def _async_core_rollbacks(self) -> list[UUID]:
         """Return Supervisor's issues about rolling Core back.
 
         Asked directly; hassio's own issue list can be empty after a failed
         refresh, or miss an issue whose suggestions could not be loaded.
         """
         info = await get_supervisor_client(self._hass).resolution.info()
-        return {
-            issue.uuid.hex
+        return [
+            issue.uuid
             for issue in info.issues
             if issue.type == IssueType.UPDATE_ROLLBACK
             and issue.context == ContextType.CORE
-        }
+        ]
 
-    async def _async_supervisor_rolled_back(
-        self, pending: PendingUpdate
-    ) -> bool | None:
-        """Return if Supervisor rolled this update back, or None if unknown.
+    async def _async_dismiss_core_rollbacks(self) -> None:
+        """Dismiss Supervisor's issues about earlier Core rollbacks.
 
-        The issue carries no version and stays until dismissed, so only one
-        that was not there before the update counts.
+        Supervisor keeps a single rollback issue for Core, without a version,
+        and does not raise it again while it is open. Dismissed before an
+        update, any rollback issue afterwards is about that update. Core does
+        not show this issue; our own repair takes its place.
         """
+        client = get_supervisor_client(self._hass)
+        for issue in await self._async_core_rollbacks():
+            await client.resolution.dismiss_issue(issue)
+
+    async def _async_supervisor_rolled_back(self) -> bool | None:
+        """Return if Supervisor rolled the update back, or None if unknown."""
         try:
-            rollbacks = await self._async_core_rollbacks()
+            return bool(await self._async_core_rollbacks())
         except SupervisorError as err:
             _LOGGER.debug("Could not ask Supervisor about a rollback: %s", err)
             return None
-
-        return bool(rollbacks - set(pending["known_rollbacks"]))
 
     async def _async_settle(self) -> None:
         """Find out how the update restored from the record went.
@@ -444,7 +452,7 @@ class AutoUpdateManager:
                 },
             )
         elif pending["from_version"] == HA_VERSION:
-            rolled_back = await self._async_supervisor_rolled_back(pending)
+            rolled_back = await self._async_supervisor_rolled_back()
             # Settled meanwhile, or Supervisor cannot tell yet
             if self._pending is not pending or rolled_back is None:
                 return
@@ -572,6 +580,7 @@ class AutoUpdateManager:
             AwesomeVersion(version)
             for version in self._first_seen
             if _major(version) == _major(core.version)
+            and version not in self._withdrawn
             and running < AwesomeVersion(version) <= offered
         ]
         if not patches:
@@ -616,20 +625,24 @@ class AutoUpdateManager:
         )
 
     @callback
-    def _async_is_backing_up(self) -> bool:
-        """Return if a backup is running."""
+    def _async_backup_manager_busy(self) -> bool:
+        """Return if Core's backup manager is creating, uploading or restoring.
+
+        Supervisor's backup job ends before Core uploads to the backup agents.
+        """
         # Imported here like update_helper does, to keep backup out of startup
-        from homeassistant.components.backup import (  # noqa: PLC0415
-            DATA_MANAGER,
-            IdleEvent,
-        )
+        from homeassistant.components.backup import IdleEvent, async_get_manager  # noqa: PLC0415
 
-        # Supervisor's backup job ends before Core uploads to the backup agents
-        if (backup_manager := self._hass.data.get(DATA_MANAGER)) is not None and (
-            not isinstance(backup_manager.last_event, IdleEvent)
-        ):
-            return True
+        try:
+            backup_manager = async_get_manager(self._hass)
+        except HomeAssistantError:
+            # Without the backup integration there is no backup to wait for
+            return False
+        return not isinstance(backup_manager.last_event, IdleEvent)
 
+    @callback
+    def _async_backup_job_running(self) -> bool:
+        """Return if Supervisor runs a backup job."""
         return any(
             job.done is False
             and job.name is not None
@@ -686,7 +699,8 @@ class AutoUpdateManager:
         if (
             (version := self._async_due_version(now)) is None
             or self._async_is_unsafe()
-            or self._async_is_backing_up()
+            or self._async_backup_manager_busy()
+            or self._async_backup_job_running()
         ):
             return
 
@@ -705,25 +719,28 @@ class AutoUpdateManager:
 
                 await backup_core_before_update(self._hass)
 
+            await self._async_dismiss_core_rollbacks()
+
             # Stored before asking Supervisor; Home Assistant restarts during
             # the update and finds out afterwards how it went
             self._pending = PendingUpdate(
                 from_version=HA_VERSION,
                 to_version=version,
                 started=dt_util.utcnow().isoformat(),
-                known_rollbacks=sorted(await self._async_core_rollbacks()),
             )
             await self._store.async_save(self._data_to_save())
 
             # Checked again, with nothing awaited until the request: the saves
             # and the backup let the version be skipped or pulled, the data go
-            # stale or another update start. The window only bounds the start,
-            # so a long backup may run past its end. After our own backup the
-            # backup check is left out; it may not show as finished yet.
+            # stale or another update or backup start. The window only bounds
+            # the start, so a long backup may run past its end. After our own
+            # backup, Supervisor's job for it may still show as running; the
+            # backup manager is idle again by the time it returns.
             if (
                 self._async_eligible_version(dt_util.now()) != version
                 or self._async_is_unsafe()
-                or (not backup and self._async_is_backing_up())
+                or self._async_backup_manager_busy()
+                or (not backup and self._async_backup_job_running())
             ):
                 _LOGGER.info(
                     "Not installing Home Assistant %s automatically, "
@@ -756,7 +773,6 @@ class AutoUpdateManager:
                 from_version=HA_VERSION,
                 to_version=version,
                 started=dt_util.utcnow().isoformat(),
-                known_rollbacks=[],
             ),
             AutoUpdateResult.FAILED,
         )
@@ -793,15 +809,26 @@ class AutoUpdateManager:
             self._first_seen[core.version_latest] = dt_util.utcnow()
             changed = True
 
+        # A version offered before but newer than the offer now was pulled.
+        # It stays out, even once a newer major is offered, until offered again.
+        offered = AwesomeVersion(core.version_latest)
+        withdrawn = {
+            version for version in self._first_seen if AwesomeVersion(version) > offered
+        }
+        if withdrawn - self._withdrawn or core.version_latest in self._withdrawn:
+            self._withdrawn = (self._withdrawn | withdrawn) - {core.version_latest}
+            changed = True
+
         running_major = _major(core.version)
         for version in list(self._first_seen):
             if _major(version) < running_major:
                 del self._first_seen[version]
                 changed = True
-        for version in list(self._skipped):
-            if _major(version) < running_major:
-                self._skipped.discard(version)
-                changed = True
+        for versions in (self._skipped, self._withdrawn):
+            for version in list(versions):
+                if _major(version) < running_major:
+                    versions.discard(version)
+                    changed = True
 
         if changed:
             self._async_save()
@@ -826,6 +853,7 @@ class AutoUpdateManager:
                 for version, first_seen in self._first_seen.items()
             },
             "skipped": sorted(self._skipped),
+            "withdrawn": sorted(self._withdrawn),
             "window_offset": self._window_offset,
             "attempted_window": (
                 self._attempted_window.isoformat()

@@ -11,6 +11,23 @@ from unittest.mock import ANY, Mock, patch
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import mock_platform, setup_test_component_platform
+from pytest_homeassistant.components.recorder.common import (
+    assert_dict_of_states_equal_without_context_and_last_changed,
+    assert_multiple_states_equal_without_context_and_last_changed,
+    async_recorder_block_till_done,
+    async_wait_recording_done,
+    db_state_attributes_to_native,
+    db_state_to_native,
+    do_adhoc_statistics,
+    get_start_time,
+    statistics_during_period,
+)
+from pytest_homeassistant.typing import (
+    MockHAClientWebSocket,
+    RecorderInstanceContextManager,
+    WebSocketGenerator,
+)
 
 from homeassistant import loader
 from homeassistant.components.recorder import (
@@ -58,24 +75,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from .common import MockSensor
-
-from tests.common import mock_platform, setup_test_component_platform
-from tests.components.recorder.common import (
-    assert_dict_of_states_equal_without_context_and_last_changed,
-    assert_multiple_states_equal_without_context_and_last_changed,
-    async_recorder_block_till_done,
-    async_wait_recording_done,
-    db_state_attributes_to_native,
-    db_state_to_native,
-    do_adhoc_statistics,
-    get_start_time,
-    statistics_during_period,
-)
-from tests.typing import (
-    MockHAClientWebSocket,
-    RecorderInstanceContextManager,
-    WebSocketGenerator,
-)
 
 BATTERY_SENSOR_ATTRIBUTES = {
     "device_class": "battery",
