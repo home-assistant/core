@@ -7,11 +7,10 @@ from unittest.mock import AsyncMock, Mock, patch
 from lorawan_connection import ConnectionUnavailable
 from lorawan_connection.backend.chirpstack import AuthenticationError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

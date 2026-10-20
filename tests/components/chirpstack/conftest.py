@@ -5,10 +5,9 @@ from unittest.mock import Mock, patch
 
 from lorawan_connection.backend.chirpstack import ChirpStackConnection
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

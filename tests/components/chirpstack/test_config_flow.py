@@ -5,12 +5,11 @@ from unittest.mock import Mock, patch
 import grpc
 from lorawan_connection import ConnectionUnavailable
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
