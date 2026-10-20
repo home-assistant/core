@@ -200,10 +200,10 @@
       "message": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "command_invalid_access_code": {
-      "message": "The alarm panel did not recognize the configured access code. Check the code in the integration options."
+      "message": "The alarm panel did not recognize the access code."
     },
     "command_no_access": {
-      "message": "The configured access code does not have permission to perform this action."
+      "message": "The access code does not have permission to perform this action."
     },
     "command_outcome_unknown": {
       "message": "The alarm panel did not confirm the command. The requested action may have completed; check the panel state before trying again."
