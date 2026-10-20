@@ -51,7 +51,6 @@ from homeassistant.components.cloud.const import (
     DOMAIN,
 )
 from homeassistant.components.cloud.http_api import validate_language_voice
-from homeassistant.components.frontend import DATA_THEMES
 from homeassistant.components.google_assistant.helpers import GoogleEntity  # pylint: disable=home-assistant-component-root-import
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.websocket_api import ERR_INVALID_FORMAT
@@ -2827,12 +2826,6 @@ async def test_download_support_package(
 
     assert await async_setup_component(hass, "system_health", {})
 
-    # Register custom themes so the support package surfaces them
-    hass.data[DATA_THEMES] = {
-        "midnight": {"primary-color": "#000000"},
-        "solarized-dark": {"primary-color": "#002b36"},
-    }
-
     with patch("uuid.UUID.hex", new_callable=PropertyMock) as hexmock:
         hexmock.return_value = "12345678901234567890"
         assert await async_setup_component(
@@ -2882,6 +2875,11 @@ async def test_download_support_package(
     cloud_client = await hass_client()
     with (
         patch.object(hass.config, "config_dir", new="config"),
+        # Custom themes so the support package surfaces them
+        patch(
+            "homeassistant.components.cloud.http_api.async_get_theme_names",
+            return_value=["midnight", "solarized-dark"],
+        ),
         patch(
             "homeassistant.components.homeassistant.system_health.system_info.async_get_system_info",
             return_value={

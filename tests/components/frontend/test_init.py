@@ -36,6 +36,7 @@ from homeassistant.components.frontend import (
     EVENT_PANELS_UPDATED,
     THEMES_STORAGE_KEY,
     add_extra_js_url,
+    async_get_theme_names,
     async_panel_exists,
     async_register_built_in_panel,
     async_remove_panel,
@@ -760,6 +761,15 @@ async def test_async_panel_exists(hass: HomeAssistant) -> None:
 
     async_remove_panel(hass, "test_panel")
     assert async_panel_exists(hass, "test_panel") is False
+
+
+@pytest.mark.usefixtures("ignore_frontend_deps")
+async def test_async_get_theme_names(hass: HomeAssistant) -> None:
+    """Test async_get_theme_names helper."""
+    assert async_get_theme_names(hass) == []
+
+    assert await async_setup_component(hass, DOMAIN, CONFIG_THEMES)
+    assert async_get_theme_names(hass) == sorted(MOCK_THEMES)
 
 
 async def test_register_panel_collision_names_the_owner(hass: HomeAssistant) -> None:

@@ -36,12 +36,7 @@ from homeassistant.util import dt as dt_util, json as json_util
 from homeassistant.util.async_iterator import AsyncIteratorReader
 
 from . import util as backup_util
-from .agent import (
-    BackupAgent,
-    BackupAgentError,
-    BackupAgentPlatformProtocol,
-    LocalBackupAgent,
-)
+from .agent import BackupAgent, BackupAgentPlatformProtocol, LocalBackupAgent
 from .config import (
     BackupConfig,
     CreateBackupParametersDict,
@@ -60,6 +55,7 @@ from .const import (
 from .models import (
     AddonInfo,
     AgentBackup,
+    BackupAgentError,
     BackupError,
     BackupManagerError,
     BackupNotFound,
