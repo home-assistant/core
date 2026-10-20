@@ -26,7 +26,7 @@ DATETIME_RE = re.compile(
     r"(?P<year>\d{4})-(?P<month>\d{1,2})-(?P<day>\d{1,2})"
     r"[T ](?P<hour>\d{1,2}):(?P<minute>\d{1,2})"
     r"(?::(?P<second>\d{1,2})(?:\.(?P<microsecond>\d{1,6})\d{0,6})?)?"
-    r"(?P<tzinfo>Z|[+-]\d{2}(?::?\d{2})?)?$"
+    r"(?P<tzinfo>Z|[+-]\d{2}(?::?\d{2}(?::?\d{2})?)?)?$"
 )
 
 # Copyright (c) Django Software Foundation and individual contributors.
@@ -245,9 +245,12 @@ def parse_datetime(dt_str: str, *, raise_on_error: bool = False) -> dt.datetime 
     if tzinfo_str == "Z":
         tzinfo = UTC
     elif tzinfo_str is not None:
-        offset_mins = int(tzinfo_str[-2:]) if len(tzinfo_str) > 3 else 0
-        offset_hours = int(tzinfo_str[1:3])
-        offset = dt.timedelta(hours=offset_hours, minutes=offset_mins)
+        offset_digits = tzinfo_str[1:].replace(":", "")
+        offset = dt.timedelta(
+            hours=int(offset_digits[:2]),
+            minutes=int(offset_digits[2:4] or 0),
+            seconds=int(offset_digits[4:] or 0),
+        )
         if tzinfo_str[0] == "-":
             offset = -offset
         tzinfo = dt.timezone(offset)
