@@ -11,8 +11,11 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
 
-# Mark an entity unavailable when no update has arrived for this long.
-UPDATE_TIMEOUT = timedelta(seconds=60)
+# Mark an entity unavailable when no update has arrived for this long.  Plugs
+# report every second.  Sensors report every 30 seconds, relayed through a plug
+# over Bluetooth, so they are allowed to miss several reports in a row.
+PLUG_UPDATE_TIMEOUT = timedelta(seconds=60)
+SENSOR_UPDATE_TIMEOUT = timedelta(seconds=300)
 
 
 class PowersensorEntity(Entity):
@@ -20,11 +23,13 @@ class PowersensorEntity(Entity):
 
     Subscribes to the dispatcher signal for one device and event, and marks the
     entity unavailable when no update has arrived within the timeout.
-    Subclasses apply each pushed message to their own state.
+    Subclasses apply each pushed message to their own state, and set the
+    timeout for their type of device.
     """
 
     _attr_has_entity_name = True
     _attr_should_poll = False
+    _update_timeout: timedelta
 
     def __init__(
         self,
@@ -60,7 +65,7 @@ class PowersensorEntity(Entity):
             self._remove_unavailability_tracker()
         self._remove_unavailability_tracker = async_call_later(
             self.hass,
-            UPDATE_TIMEOUT,
+            self._update_timeout,
             self._async_make_unavailable,
         )
 

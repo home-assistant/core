@@ -535,20 +535,51 @@ async def test_vhh_mains_not_duplicated_on_repeated_signal(
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.parametrize(
+    ("mac", "device_type", "message", "key", "timeout"),
+    [
+        pytest.param(
+            SENSOR_MAC,
+            "sensor",
+            {"event": "battery_level", "volts": 4.0},
+            "battery_level",
+            300,
+            id="sensor",
+        ),
+        pytest.param(
+            PLUG_MAC,
+            "plug",
+            {
+                "event": "average_power",
+                "watts": 100.0,
+                "starttime_utc": 1700000000,
+                "duration_s": 1,
+            },
+            "power",
+            60,
+            id="plug",
+        ),
+    ],
+)
 async def test_entity_becomes_unavailable_after_timeout(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
     entity_registry: er.EntityRegistry,
+    mac: str,
+    device_type: str,
+    message: dict[str, Any],
+    key: str,
+    timeout: int,
 ) -> None:
-    """An entity goes unavailable once no updates arrive within the timeout window."""
+    """An entity goes unavailable once no updates arrive within its device's timeout."""
 
-    await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
-    await fire({"event": "battery_level", "mac": SENSOR_MAC, "volts": 4.0})
+    await fire({"event": "device_found", "mac": mac, "device_type": device_type})
+    await fire({**message, "mac": mac})
     await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
-        Platform.SENSOR, DOMAIN, f"{SENSOR_MAC}_battery_level"
+        Platform.SENSOR, DOMAIN, f"{mac}_{key}"
     )
     assert entity_id is not None
 
@@ -556,8 +587,14 @@ async def test_entity_becomes_unavailable_after_timeout(
     assert state is not None
     assert state.state != "unavailable"
 
-    # Advance time past the 60-second unavailability timeout.
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=65))
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=timeout - 5))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != "unavailable"
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=timeout + 5))
     await hass.async_block_till_done()
 
     unavailable_state = hass.states.get(entity_id)

@@ -56,7 +56,7 @@ from .const import (
     ROLE_WATER,
     UPDATE_VHH_SIGNAL,
 )
-from .entity import PowersensorEntity
+from .entity import PLUG_UPDATE_TIMEOUT, SENSOR_UPDATE_TIMEOUT, PowersensorEntity
 from .models import PowersensorConfigEntry, PowersensorRuntimeData
 from .powersensor_message_dispatcher import PowersensorMessageDispatcher
 
@@ -666,6 +666,8 @@ class PowersensorMeasurementEntity(PowersensorEntity, SensorEntity):
 class PowersensorSensorEntity(PowersensorMeasurementEntity):
     """Entity representing a single measurement from a Powersensor electricity/water sensor."""
 
+    _update_timeout = SENSOR_UPDATE_TIMEOUT
+
     @property
     @override
     def device_info(self) -> DeviceInfo:
@@ -689,6 +691,8 @@ class PowersensorSensorEntity(PowersensorMeasurementEntity):
 
 class PowersensorPlugEntity(PowersensorMeasurementEntity):
     """Entity representing a single measurement from a Powersensor smart plug."""
+
+    _update_timeout = PLUG_UPDATE_TIMEOUT
 
     @property
     @override
