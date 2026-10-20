@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock
 import probatio
 import pytest
 from pytest_homeassistant.common import async_fire_mqtt_message
-from pytest_homeassistant.typing import MqttMockHAClientGenerator
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, WebSocketGenerator
 
 from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.components.mqtt.models import DATA_MQTT
@@ -17,6 +17,7 @@ from homeassistant.components.mqtt.schemas import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 PARENT_DEVICE = {"identifiers": ["parent"], "name": "Parent", "manufacturer": "Acme"}
 CHILD_DEVICE = {"identifiers": ["sub"], "name": "Sub"}
@@ -892,9 +893,15 @@ async def test_remove_last_child_device_keeps_parent_device(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test removing the last child device keeps a parent without components."""
+    """Test removing the last child device keeps a parent without components.
+
+    Removing the parent device afterwards clears the topic.
+    """
     mqtt_mock = await mqtt_mock_entry()
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
     payload = {
         "dev": {"ids": ["parent"], "name": "Parent"},
         "o": {"name": "Foo2Mqtt"},
@@ -920,8 +927,18 @@ async def test_remove_last_child_device_keeps_parent_device(
     # after the first entity would clear the topic when the next one is removed
     device_registry.async_remove_device(child_device.id)
     await hass.async_block_till_done()
-    assert _get_device(hass, device_registry, "parent") is not None
+    parent = _get_device(hass, device_registry, "parent")
+    assert parent is not None
     mqtt_mock.async_publish.assert_not_called()
+
+    # The parent device has no entities left that clear the topic when removed
+    response = await ws_client.remove_device(parent.id)
+    assert response["success"]
+    await hass.async_block_till_done()
+    assert _get_device(hass, device_registry, "parent") is None
+    mqtt_mock.async_publish.assert_any_call(
+        DEVICE_TOPIC, None, 0, True, message_expiry_interval=None
+    )
 
 
 async def test_remove_parent_device_with_child_device_components_clears_topic(
