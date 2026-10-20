@@ -32,7 +32,7 @@ async def _async_setup_integration(
     client = AsyncMock()
     client.stop_listen = MagicMock()
     client.data = {
-        Attribute.MAC_ADDRESS: "1234567890ab",
+        Attribute.MAC_ADDRESS: "12:34:56:78:90:ab",
         Attribute.NAME: "Aprilaire",
         Attribute.MODEL_NUMBER: 0,
         Attribute.HARDWARE_REVISION: ord("B"),
