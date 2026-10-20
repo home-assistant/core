@@ -52,7 +52,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = CALENDAR_PLATFORM_SCHEMA.extend(
     {
-        probatio.Required(CONF_TOKEN): cv.string,
+        probatio.Required(probatio.Secret(CONF_TOKEN)): cv.string,
         probatio.Optional(CONF_EXTRA_PROJECTS, default=[]): probatio.All(
             probatio.EnsureList(),
             probatio.Schema(

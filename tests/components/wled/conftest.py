@@ -5,13 +5,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from wled import Device as WLEDDevice, Releases
 
 from homeassistant.components.wled.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_json_object_fixture
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
@@ -85,6 +85,7 @@ def mock_wled(
         )
         wled.connected = False
         wled.host = "127.0.0.1"
+        wled.firmware_available.return_value = True
 
         yield wled
 

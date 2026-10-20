@@ -4,6 +4,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClient
 
 from homeassistant.components.mysensors.const import (
     CONF_GATEWAY_TYPE,
@@ -17,9 +19,6 @@ from homeassistant.components.mysensors.const import (
 from homeassistant.components.mysensors.gateway import is_serial_port
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_mqtt_message
-from tests.typing import MqttMockHAClient
 
 
 @pytest.mark.parametrize(

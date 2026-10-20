@@ -4,6 +4,12 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import mock_restore_cache
+from pytest_homeassistant.components.radio_frequency import ENTITY_ID
+from pytest_homeassistant.components.radio_frequency.common import (
+    MockRadioFrequencyCommand,
+    MockRadioFrequencyEntity,
+)
 from rf_protocols import ModulationType
 
 from homeassistant.components.radio_frequency import (
@@ -17,11 +23,6 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from . import ENTITY_ID
-from .common import MockRadioFrequencyCommand, MockRadioFrequencyEntity
-
-from tests.common import mock_restore_cache
 
 
 async def test_get_transmitters_component_not_loaded(hass: HomeAssistant) -> None:

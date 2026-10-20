@@ -1,6 +1,7 @@
 {
   "domain": "tilt_pi",
   "name": "Tilt Pi",
+  "categories": ["appliances_cleaning.cooking"],
   "codeowners": ["@michaelheyman"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tilt_pi",

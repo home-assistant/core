@@ -4,6 +4,7 @@ from functools import partial
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from roborock import RoborockException
 from roborock.data.v1 import (
     RoborockDockErrorCode,
@@ -24,8 +25,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import FakeDevice
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 RESOLVE_DOCK_ERROR_ENTITY_ID = "button.roborock_s7_maxv_dock_resolve_error"
 DOCK_ERROR_SENSOR_ENTITY_ID = "sensor.roborock_s7_maxv_dock_dock_error"

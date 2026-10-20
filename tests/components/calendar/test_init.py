@@ -9,6 +9,8 @@ from typing import Any
 from freezegun import freeze_time
 import probatio
 import pytest
+from pytest_homeassistant.common import MockUser, async_fire_time_changed
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.calendar import (
@@ -25,9 +27,6 @@ from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util import dt as dt_util
 
 from .conftest import MockCalendarEntity, MockConfigEntry
-
-from tests.common import MockUser, async_fire_time_changed
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(name="frozen_time")
@@ -250,7 +249,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
         (
             {},
             probatio.error.MultipleInvalid,
-            "must contain at least one of start_date, start_date_time, in",
+            "at least one of ['start_date', 'start_date_time', 'in'] is required",
         ),
         (
             {
@@ -264,7 +263,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 "end_date": "2022-04-02",
             },
             probatio.error.MultipleInvalid,
-            "must contain at least one of start_date, start_date_time, in.",
+            "at least one of ['start_date', 'start_date_time', 'in'] is required",
         ),
         (
             {
@@ -278,7 +277,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 "end_date_time": "2022-04-02T07:00:00",
             },
             probatio.error.MultipleInvalid,
-            "must contain at least one of start_date, start_date_time, in.",
+            "at least one of ['start_date', 'start_date_time', 'in'] is required",
         ),
         (
             {
@@ -287,7 +286,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 "end_date_time": "2022-04-02T07:00:00",
             },
             probatio.error.MultipleInvalid,
-            "must contain at most one of start_date, start_date_time, in.",
+            "at most one of ['start_date', 'start_date_time', 'in'] is allowed",
         ),
         (
             {
@@ -333,7 +332,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 },
             },
             probatio.error.MultipleInvalid,
-            "must contain at most one of start_date, start_date_time, in.",
+            "at most one of ['start_date', 'start_date_time', 'in'] is allowed",
         ),
         (
             {
@@ -344,7 +343,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 },
             },
             probatio.error.MultipleInvalid,
-            "must contain at most one of start_date, start_date_time, in.",
+            "at most one of ['start_date', 'start_date_time', 'in'] is allowed",
         ),
         (
             {
@@ -406,7 +405,7 @@ async def test_create_event_service_invalid_params(
 ) -> None:
     """Test creating an event using the create_event service."""
 
-    with pytest.raises(expected_error, match=error_match):
+    with pytest.raises(expected_error, match=re.escape(error_match)):
         await hass.services.async_call(
             DOMAIN,
             CREATE_EVENT_SERVICE,

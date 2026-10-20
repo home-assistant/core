@@ -1,6 +1,6 @@
 """Support for GTFS (Google/General Transport Format Schema)."""
 
-import datetime
+import datetime as dt
 import logging
 import os
 import threading
@@ -267,15 +267,15 @@ def get_next_departure(
     schedule: Any,
     start_station_id: Any,
     end_station_id: Any,
-    offset: datetime.timedelta,
+    offset: dt.timedelta,
     include_tomorrow: bool = False,
 ) -> dict:
     """Get the next departure for the given schedule."""
     now = dt_util.now().replace(tzinfo=None) + offset
     now_date = now.strftime(dt_util.DATE_STR_FORMAT)
-    yesterday = now - datetime.timedelta(days=1)
+    yesterday = now - dt.timedelta(days=1)
     yesterday_date = yesterday.strftime(dt_util.DATE_STR_FORMAT)
-    tomorrow = now + datetime.timedelta(days=1)
+    tomorrow = now + dt.timedelta(days=1)
     tomorrow_date = tomorrow.strftime(dt_util.DATE_STR_FORMAT)
 
     # Fetch all departures for yesterday, today and optionally tomorrow,
@@ -404,6 +404,7 @@ def get_next_departure(
     for key in sorted(timetable.keys()):
         if (value := dt_util.parse_datetime(key)) is not None and value > now:
             item = timetable[key]
+            item_date = value
             _LOGGER.debug(
                 "Departure found for station %s @ %s -> %s", start_station_id, key, item
             )
@@ -414,26 +415,28 @@ def get_next_departure(
 
     # Format arrival and departure dates and times, accounting for the
     # possibility of times crossing over midnight.
-    origin_arrival = now
+    origin_arrival = item_date
     if item["origin_arrival_time"] > item["origin_depart_time"]:
-        origin_arrival -= datetime.timedelta(days=1)
+        origin_arrival -= dt.timedelta(days=1)
     origin_arrival_time = (
         f"{origin_arrival.strftime(dt_util.DATE_STR_FORMAT)} "
         f"{item['origin_arrival_time']}"
     )
 
-    origin_depart_time = f"{now_date} {item['origin_depart_time']}"
+    origin_depart_time = (
+        f"{item_date.strftime(dt_util.DATE_STR_FORMAT)} {item['origin_depart_time']}"
+    )
 
-    dest_arrival = now
+    dest_arrival = item_date
     if item["dest_arrival_time"] < item["origin_depart_time"]:
-        dest_arrival += datetime.timedelta(days=1)
+        dest_arrival += dt.timedelta(days=1)
     dest_arrival_time = (
         f"{dest_arrival.strftime(dt_util.DATE_STR_FORMAT)} {item['dest_arrival_time']}"
     )
 
     dest_depart = dest_arrival
     if item["dest_depart_time"] < item["dest_arrival_time"]:
-        dest_depart += datetime.timedelta(days=1)
+        dest_depart += dt.timedelta(days=1)
     dest_depart_time = (
         f"{dest_depart.strftime(dt_util.DATE_STR_FORMAT)} {item['dest_depart_time']}"
     )
@@ -488,7 +491,7 @@ def setup_platform(
     origin = config.get(CONF_ORIGIN)
     destination = config.get(CONF_DESTINATION)
     name = config.get(CONF_NAME)
-    offset: datetime.timedelta = config[CONF_OFFSET]
+    offset: dt.timedelta = config[CONF_OFFSET]
     include_tomorrow = config[CONF_TOMORROW]
 
     os.makedirs(gtfs_dir, exist_ok=True)
@@ -522,7 +525,7 @@ class GTFSDepartureSensor(SensorEntity):
         name: Any | None,
         origin: Any,
         destination: Any,
-        offset: datetime.timedelta,
+        offset: dt.timedelta,
         include_tomorrow: bool,
     ) -> None:
         """Initialize the sensor."""
@@ -536,7 +539,7 @@ class GTFSDepartureSensor(SensorEntity):
         self._available = False
         self._icon = ICON
         self._name = ""
-        self._state: datetime.datetime | None = None
+        self._state: dt.datetime | None = None
         self._attributes: dict[str, Any] = {}
 
         self._agency = None
@@ -557,7 +560,7 @@ class GTFSDepartureSensor(SensorEntity):
 
     @property
     @override
-    def native_value(self) -> datetime.datetime | None:
+    def native_value(self) -> dt.datetime | None:
         """Return the state of the sensor."""
         return self._state
 

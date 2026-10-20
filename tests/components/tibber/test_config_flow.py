@@ -7,6 +7,9 @@ from urllib.parse import parse_qs, urlparse
 
 from aiohttp import ClientError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from tibber import (
     FatalHttpExceptionError,
     InvalidLoginError,
@@ -25,10 +28,6 @@ from homeassistant.components.tibber.const import AUTH_IMPLEMENTATION, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(name="tibber_setup", autouse=True)
@@ -136,6 +135,7 @@ async def test_oauth_create_entry_connection_error_retry(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Mock Name"
+    assert result["result"].unique_id == "unique_user_id"
 
 
 async def test_data_api_requires_credentials(
@@ -204,6 +204,7 @@ async def test_full_flow_success(
     assert data[CONF_TOKEN]["access_token"] == "mock-access-token"
     assert data[AUTH_IMPLEMENTATION] == DOMAIN
     assert result["title"] == "Mock Name"
+    assert result["result"].unique_id == "unique_user_id"
 
 
 @pytest.mark.usefixtures("setup_credentials", "current_request_with_host")

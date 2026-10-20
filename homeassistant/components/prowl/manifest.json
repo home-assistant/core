@@ -1,6 +1,7 @@
 {
   "domain": "prowl",
   "name": "Prowl",
+  "categories": ["messaging_notifications.push_notifications"],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/prowl",

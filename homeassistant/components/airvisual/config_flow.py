@@ -45,7 +45,9 @@ from .const import (
     LOGGER,
 )
 
-API_KEY_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_API_KEY): cv.string})
+API_KEY_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string}
+)
 GEOGRAPHY_NAME_SCHEMA = API_KEY_DATA_SCHEMA.extend(
     {
         probatio.Required(CONF_CITY): cv.string,

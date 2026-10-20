@@ -47,8 +47,8 @@ class ArveConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_ACCESS_TOKEN): str,
-                    probatio.Required(CONF_CLIENT_SECRET): str,
+                    probatio.Required(probatio.Secret(CONF_ACCESS_TOKEN)): str,
+                    probatio.Required(probatio.Secret(CONF_CLIENT_SECRET)): str,
                 }
             ),
             errors=errors,

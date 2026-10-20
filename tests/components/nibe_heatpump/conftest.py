@@ -7,12 +7,11 @@ from unittest.mock import AsyncMock, Mock, patch
 from freezegun.api import FrozenDateTimeFactory
 from nibe.exceptions import CoilNotFoundException
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.core import HomeAssistant
 
 from . import MockConnection
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.fixture
