@@ -28,54 +28,27 @@ CONDITION_SCHEMA = probatio.Schema(
 VISIBLE_SCHEMA = probatio.Any(bool, CONDITION_SCHEMA, [CONDITION_SCHEMA])
 
 
-# Sentinel distinguishing an absent field from an explicit ``None`` value.
-_MISSING = object()
-
-
-def _condition_value_is_empty(value: Any) -> bool:
-    return value is _MISSING or value is None or value == ""
-
-
-def _strict_equal(actual: Any, value: Any) -> bool:
-    """Compare by value and type, so a boolean never equals a number.
-
-    A missing field and an omitted condition value are both undefined, so they
-    equal each other but nothing else, and containers never compare equal,
-    matching a renderer where a missing value is distinct from ``None`` and
-    separately parsed lists or dicts are distinct references.
-    """
-    if actual is _MISSING or value is _MISSING:
-        return actual is value
-    if isinstance(actual, (list, tuple, dict)) or isinstance(
-        value, (list, tuple, dict)
-    ):
-        return False
-    if isinstance(actual, bool) != isinstance(value, bool):
-        return False
-    return bool(actual == value)
+def _is_empty(value: Any) -> bool:
+    return value is None or value == ""
 
 
 def evaluate_condition(condition: Mapping[str, Any], data: Mapping[str, Any]) -> bool:
     """Evaluate a field condition against submitted step data."""
-    actual = data.get(condition["field"], _MISSING)
-    value = condition.get("value", _MISSING)
+    actual = data.get(condition["field"])
+    value = condition.get("value")
     match condition.get("operator", "eq"):
         case "eq":
-            return _strict_equal(actual, value)
+            return bool(actual == value)
         case "not_eq":
-            return not _strict_equal(actual, value)
+            return bool(actual != value)
         case "in":
-            return isinstance(value, (list, tuple)) and any(
-                _strict_equal(actual, item) for item in value
-            )
+            return isinstance(value, (list, tuple)) and actual in value
         case "not_in":
-            return isinstance(value, (list, tuple)) and not any(
-                _strict_equal(actual, item) for item in value
-            )
+            return isinstance(value, (list, tuple)) and actual not in value
         case "exists":
-            return not _condition_value_is_empty(actual)
+            return not _is_empty(actual)
         case "not_exists":
-            return _condition_value_is_empty(actual)
+            return _is_empty(actual)
         case _:
             return False
 
