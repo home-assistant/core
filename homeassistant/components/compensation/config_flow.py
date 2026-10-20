@@ -6,11 +6,14 @@ from typing import Any, cast, override
 import numpy as np
 import probatio
 
+from homeassistant.components.sensor import CONF_STATE_CLASS
 from homeassistant.const import (
     CONF_ATTRIBUTE,
+    CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
     CONF_NAME,
     CONF_UNIT_OF_MEASUREMENT,
+    Platform,
 )
 from homeassistant.data_entry_flow import SectionConfig, section
 from homeassistant.helpers import entity_registry as er
@@ -24,6 +27,8 @@ from homeassistant.helpers.selector import (
     AttributeSelector,
     AttributeSelectorConfig,
     BooleanSelector,
+    DeviceClassSelector,
+    DeviceClassSelectorConfig,
     EntitySelector,
     NumberSelector,
     NumberSelectorConfig,
@@ -31,8 +36,10 @@ from homeassistant.helpers.selector import (
     ObjectSelector,
     ObjectSelectorConfig,
     ObjectSelectorField,
+    StateClassSelector,
     TextSelector,
     UnitOfMeasurementSelector,
+    UnitOfMeasurementSelectorConfig,
 )
 
 from .const import (
@@ -107,7 +114,18 @@ async def get_options_schema(handler: SchemaCommonFlowHandler) -> probatio.Schem
             ): NumberSelector(
                 NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
             ),
-            probatio.Optional(CONF_UNIT_OF_MEASUREMENT): UnitOfMeasurementSelector(),
+            probatio.Optional(CONF_DEVICE_CLASS): DeviceClassSelector(
+                DeviceClassSelectorConfig(domain=Platform.SENSOR)
+            ),
+            probatio.Optional(CONF_STATE_CLASS): StateClassSelector(),
+            probatio.Optional(CONF_UNIT_OF_MEASUREMENT): UnitOfMeasurementSelector(
+                UnitOfMeasurementSelectorConfig(
+                    context={
+                        "filter_device_class": CONF_DEVICE_CLASS,
+                        "filter_state_class": CONF_STATE_CLASS,
+                    }
+                )
+            ),
         }
     )
 

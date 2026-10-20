@@ -19,8 +19,22 @@ from homeassistant.components.compensation.const import (
     DEFAULT_NAME,
     DOMAIN,
 )
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    CONF_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_ENTITY_ID, CONF_NAME
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
+    CONF_DEVICE_CLASS,
+    CONF_ENTITY_ID,
+    CONF_NAME,
+    CONF_UNIT_OF_MEASUREMENT,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
@@ -177,6 +191,9 @@ async def test_options_flow(
                 CONF_DEGREE: 1,
             },
             CONF_PRECISION: 1,
+            CONF_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+            CONF_STATE_CLASS: SensorStateClass.MEASUREMENT,
+            CONF_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
         },
     )
     await hass.async_block_till_done()
@@ -194,8 +211,15 @@ async def test_options_flow(
             CONF_DEGREE: 1,
         },
         CONF_PRECISION: 1,
+        CONF_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+        CONF_STATE_CLASS: SensorStateClass.MEASUREMENT,
+        CONF_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
         CONF_UPPER_LIMIT: False,
     }
 
     # The reloaded sensor picks up the existing source state without a new change
-    assert hass.states.get("sensor.my_compensation").state == "10.0"
+    state = hass.states.get("sensor.my_compensation")
+    assert state.state == "10.0"
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS

@@ -11,16 +11,19 @@
       "options": {
         "data": {
           "attribute": "Attribute",
+          "device_class": "Device class",
           "lower_limit": "Lower limit",
           "precision": "Precision",
-
+          "state_class": "State class",
           "unit_of_measurement": "Unit of measurement",
           "upper_limit": "Upper limit"
         },
         "data_description": {
           "attribute": "Attribute from the source to monitor/compensate.",
+          "device_class": "The device class of the compensation sensor. If not set, the device class of the source entity is used.",
           "lower_limit": "Enables a lower limit for the sensor. The lower limit is defined by the data point with the lowest uncompensated value.",
           "precision": "Defines the precision of the calculated values, through the argument of round().",
+          "state_class": "The state class of the compensation sensor. If not set, the state class of the source entity is used.",
           "unit_of_measurement": "The unit of measurement of the compensation sensor, if any.",
           "upper_limit": "Enables an upper limit for the sensor. The upper limit is defined by the data point with the highest uncompensated value."
         },
@@ -69,19 +72,22 @@
       "init": {
         "data": {
           "attribute": "[%key:component::compensation::config::step::options::data::attribute%]",
+          "device_class": "[%key:component::compensation::config::step::options::data::device_class%]",
           "lower_limit": "[%key:component::compensation::config::step::options::data::lower_limit%]",
           "precision": "[%key:component::compensation::config::step::options::data::precision%]",
+          "state_class": "[%key:component::compensation::config::step::options::data::state_class%]",
           "unit_of_measurement": "[%key:component::compensation::config::step::options::data::unit_of_measurement%]",
           "upper_limit": "[%key:component::compensation::config::step::options::data::upper_limit%]"
         },
         "data_description": {
           "attribute": "[%key:component::compensation::config::step::options::data_description::attribute%]",
+          "device_class": "[%key:component::compensation::config::step::options::data_description::device_class%]",
           "lower_limit": "[%key:component::compensation::config::step::options::data_description::lower_limit%]",
           "precision": "[%key:component::compensation::config::step::options::data_description::precision%]",
+          "state_class": "[%key:component::compensation::config::step::options::data_description::state_class%]",
           "unit_of_measurement": "[%key:component::compensation::config::step::options::data_description::unit_of_measurement%]",
           "upper_limit": "[%key:component::compensation::config::step::options::data_description::upper_limit%]"
         },
-
         "description": "[%key:component::compensation::config::step::options::description%]",
         "sections": {
           "polynomial_config": {
