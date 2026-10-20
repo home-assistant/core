@@ -4,6 +4,11 @@ from unittest.mock import patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    async_capture_events,
+    async_mock_service,
+    patch_yaml_files,
+)
 import yaml
 
 from homeassistant import config
@@ -13,8 +18,6 @@ from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_capture_events, async_mock_service, patch_yaml_files
 
 
 async def test_reload_config_service(hass: HomeAssistant) -> None:
@@ -81,6 +84,8 @@ async def test_reload_config_service_failed(
 async def test_apply_service(hass: HomeAssistant) -> None:
     """Test the apply service."""
     assert await async_setup_component(hass, "scene", {})
+    # demo needs the homeassistant component, set up by scene in the background
+    await hass.async_block_till_done()
     assert await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
     await hass.async_block_till_done()
 

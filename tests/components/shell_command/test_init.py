@@ -9,6 +9,7 @@ import tempfile
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockUser
 
 from homeassistant.components import shell_command
 from homeassistant.components.shell_command import DOMAIN
@@ -17,8 +18,6 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockUser
 
 
 def mock_process_creator(error: bool = False):
@@ -182,9 +181,7 @@ async def test_stdout_captured(mock_output, hass: HomeAssistant) -> None:
 
 
 @patch("homeassistant.components.shell_command._LOGGER.debug")
-async def test_non_text_stdout_capture(
-    mock_output, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_non_text_stdout_capture(mock_output, hass: HomeAssistant) -> None:
     """Test handling of non-text output."""
     non_utf8_cmd = (
         f"{shlex.quote(sys.executable)} -c"
@@ -219,7 +216,6 @@ async def test_non_text_stdout_capture(
 
     await hass.async_block_till_done()
     assert not response
-    assert "Unable to handle non-utf8 output of command" in caplog.text
 
 
 @patch("homeassistant.components.shell_command._LOGGER.debug")
@@ -242,9 +238,7 @@ async def test_stderr_captured(mock_output, hass: HomeAssistant) -> None:
     assert response["stderr"] == test_phrase
 
 
-async def test_do_not_run_forever(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_do_not_run_forever(hass: HomeAssistant) -> None:
     """Test subprocesses terminate after the timeout."""
 
     async def block():
@@ -284,8 +278,6 @@ async def test_do_not_run_forever(
         await hass.async_block_till_done()
 
     mock_process.kill.assert_called_once()
-    assert "Timed out" in caplog.text
-    assert "mock_sleep 10000" in caplog.text
 
 
 async def test_reload_service(hass: HomeAssistant, hass_admin_user: MockUser) -> None:

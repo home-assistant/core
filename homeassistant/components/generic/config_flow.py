@@ -10,7 +10,7 @@ import time
 from typing import Any, cast, override
 
 from aiohttp import web
-from httpx import HTTPStatusError, RequestError, TimeoutException
+from httpx2 import HTTPStatusError, RequestError, TimeoutException
 import PIL.Image
 import probatio
 import yarl
@@ -133,7 +133,7 @@ def build_schema(
         probatio.Optional(CONF_STREAM_SOURCE): str,
         probatio.Optional(CONF_STILL_IMAGE_URL): str,
         probatio.Optional(CONF_USERNAME): str,
-        probatio.Optional(CONF_PASSWORD): str,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
         probatio.Required(SECTION_ADVANCED): section(
             probatio.Schema(advanced_section), {"collapsed": True}
         ),

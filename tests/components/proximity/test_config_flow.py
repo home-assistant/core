@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.proximity.const import (
     CONF_IGNORED_ZONES,
@@ -14,8 +15,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

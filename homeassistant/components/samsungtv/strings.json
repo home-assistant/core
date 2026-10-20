@@ -85,7 +85,7 @@
       "message": "Media ID must be a positive integer."
     },
     "service_unsupported": {
-      "message": "Entity {entity} does not support this action."
+      "message": "Unable to turn on {entity}, as it does not have an automation configured."
     },
     "source_unsupported": {
       "message": "Entity {entity} does not support source {source}."

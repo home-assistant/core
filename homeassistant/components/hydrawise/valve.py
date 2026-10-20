@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import HydrawiseConfigEntry
-from .entity import HydrawiseEntity
+from .entity import HydrawiseEntity, exception_handler
 
 PARALLEL_UPDATES = 1
 
@@ -60,11 +60,13 @@ class HydrawiseValve(HydrawiseEntity, ValveEntity):
     zone: Zone
 
     @override
+    @exception_handler
     async def async_open_valve(self, **kwargs: Any) -> None:
         """Open the valve."""
         await self.coordinator.api.start_zone(self.zone)
 
     @override
+    @exception_handler
     async def async_close_valve(self) -> None:
         """Close the valve."""
         await self.coordinator.api.stop_zone(self.zone)

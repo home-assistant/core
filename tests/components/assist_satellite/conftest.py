@@ -4,6 +4,14 @@ import pathlib
 from unittest.mock import Mock
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+    setup_test_component_platform,
+)
 
 from homeassistant.components.assist_pipeline import PipelineEvent
 from homeassistant.components.assist_satellite import (
@@ -20,15 +28,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util.ulid import ulid_hex
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-    setup_test_component_platform,
-)
 
 TEST_DOMAIN = "test"
 
@@ -47,10 +46,8 @@ class MockAssistSatellite(AssistSatelliteEntity):
         """Initialize the mock entity."""
         self._attr_unique_id = ulid_hex()
         self._attr_device_info = DeviceInfo(
-            {
-                "name": name,
-                "identifiers": {(TEST_DOMAIN, self._attr_unique_id)},
-            }
+            name=name,
+            identifiers={(TEST_DOMAIN, self._attr_unique_id)},
         )
         self._attr_name = name
         self._attr_supported_features = features

@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PointConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PointConfigEntry) -> None:
     """Set up Minut Point from a config entry."""
 
     if "auth_implementation" not in entry.data:
@@ -60,8 +60,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PointConfigEntry) -> boo
         entry, [*PLATFORMS, Platform.ALARM_CONTROL_PANEL]
     )
 
-    return True
-
 
 async def async_setup_webhook(
     hass: HomeAssistant, entry: PointConfigEntry, session: PointSession
@@ -91,16 +89,15 @@ async def async_setup_webhook(
     )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: PointConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PointConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         entry, [*PLATFORMS, Platform.ALARM_CONTROL_PANEL]
-    ):
-        session = entry.runtime_data.point
-        if CONF_WEBHOOK_ID in entry.data:
-            webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-            await session.remove_webhook()
-    return unload_ok
+    )
+    session = entry.runtime_data.point
+    if CONF_WEBHOOK_ID in entry.data:
+        webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+        await session.remove_webhook()
 
 
 async def handle_webhook(

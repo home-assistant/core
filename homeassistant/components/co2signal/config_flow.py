@@ -37,7 +37,7 @@ TYPE_SPECIFY_COUNTRY = "specify_country_code"
 _LOGGER = logging.getLogger(__name__)
 
 DESCRIPTION_PLACEHOLDER = {
-    "register_link": "https://electricitymaps.com/free-tier",
+    "register_link": "https://app.electricitymaps.com/home-assistant",
 }
 
 
@@ -65,7 +65,7 @@ class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
                         ],
                     )
                 ),
-                probatio.Required(CONF_API_KEY): cv.string,
+                probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
             }
         )
 
@@ -141,7 +141,7 @@ class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the reauth step."""
         data_schema = probatio.Schema(
             {
-                probatio.Required(CONF_API_KEY): cv.string,
+                probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
             }
         )
         return await self._validate_and_create(

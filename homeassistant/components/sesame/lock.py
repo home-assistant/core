@@ -18,7 +18,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 ATTR_SERIAL_NO = "serial"
 
 PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
-    {probatio.Required(CONF_API_KEY): cv.string}
+    {probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string}
 )
 
 

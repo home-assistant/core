@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import MyPVConfigEntry, MyPVCoordinator
-from .entity import MyPVDataEntity
+from .entity import MyPVBaseEntity
 
 
 async def async_setup_entry(
@@ -29,8 +29,10 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
     entities = []
 
-    if coordinator.device.supports_main_mode(MyPVDeviceMainMode.HOT_WATER) and (
-        configuration := coordinator.device.get_setup_configuration("ww1target")
+    if (
+        coordinator.device.supports_main_mode(MyPVDeviceMainMode.HOT_WATER)
+        and coordinator.device.current_temperature is not None
+        and (configuration := coordinator.device.get_setup_configuration("ww1target"))
     ):
         entity_description = WaterHeaterEntityDescription(
             key="temp1",
@@ -47,7 +49,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class MyPVWaterHeater(MyPVDataEntity, WaterHeaterEntity):
+class MyPVWaterHeater(MyPVBaseEntity, WaterHeaterEntity):
     """my-PV water heater."""
 
     _attr_name = None
@@ -69,7 +71,7 @@ class MyPVWaterHeater(MyPVDataEntity, WaterHeaterEntity):
         super().__init__(coordinator, entity_description, serial_number)
 
         self._attr_target_temperature_step = configuration["step"]
-        self._attr_temperature_unit = configuration["unit"]
+        self._attr_native_temperature_unit = configuration["unit"]
         self._attr_min_temp = configuration["min"]
         self._attr_max_temp = configuration["max"]
 
@@ -81,13 +83,13 @@ class MyPVWaterHeater(MyPVDataEntity, WaterHeaterEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.coordinator.device.current_temperature
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self.coordinator.device.target_temperature
 

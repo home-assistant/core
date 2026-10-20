@@ -16,7 +16,11 @@ from uiprotect.data import (
     LightModeType,
     ProtectAdoptableDeviceModel,
 )
-from uiprotect.data.public_devices import PublicDeviceModel, PublicLight
+from uiprotect.data.public_devices import (
+    PublicDeviceModel,
+    PublicDoorbellSettings,
+    PublicLight,
+)
 from uiprotect.exceptions import ClientError, NotAuthorized
 
 from homeassistant.const import (
@@ -106,6 +110,16 @@ def async_get_light_motion_current_public(obj: PublicDeviceModel) -> str | None:
     if mode is LightModeType.MOTION and settings.enable_at is LightModeEnableType.DARK:
         return f"{LightModeType.MOTION.value}_dark"
     return mode.value
+
+
+@callback
+def async_get_doorbell_settings_public(
+    api: ProtectApiClient,
+) -> PublicDoorbellSettings:
+    """Return the public NVR doorbell settings, empty when the NVR has none."""
+    if (nvr := api.public_bootstrap.nvr) is None or nvr.doorbell_settings is None:
+        return PublicDoorbellSettings()
+    return nvr.doorbell_settings
 
 
 @callback

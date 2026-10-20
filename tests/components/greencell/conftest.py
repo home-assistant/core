@@ -4,6 +4,8 @@ import time
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import MqttMockHAClient
 
 from homeassistant.components import mqtt as real_mqtt
 from homeassistant.components.greencell.const import (
@@ -15,9 +17,6 @@ from homeassistant.components.greencell.const import (
 from homeassistant.components.mqtt import ReceiveMessage
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
-
-from tests.common import MockConfigEntry
-from tests.typing import MqttMockHAClient
 
 # Test constants
 TEST_SERIAL_NUMBER = "EVGC021A22750001ZM0001"
@@ -54,6 +53,7 @@ TEST_STATUS_PAYLOAD_WAITING_FOR_CAR = b'{"state": "WAITING_FOR_CAR"}'
 TEST_STATUS_PAYLOAD_ERROR_CAR = b'{"state": "ERROR_CAR"}'
 TEST_STATUS_PAYLOAD_UNAVAILABLE = b"UNAVAILABLE"
 TEST_STATUS_PAYLOAD_OFFLINE = b"OFFLINE"
+TEST_DEVICE_STATE_PAYLOAD_EXECUTE = b'{"level": "EXECUTE"}'
 
 
 @pytest.fixture

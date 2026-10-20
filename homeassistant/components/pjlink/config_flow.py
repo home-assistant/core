@@ -18,7 +18,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): str,
         probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
-        probatio.Optional(CONF_PASSWORD): str,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 

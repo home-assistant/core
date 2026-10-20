@@ -1,6 +1,12 @@
 """Tests for repairs issue_handler.py."""
 
 import pytest
+from pytest_homeassistant.common import (
+    AsyncMock,
+    Mock,
+    async_setup_component,
+    mock_platform,
+)
 
 from homeassistant.components.repairs import (
     DOMAIN,
@@ -10,8 +16,6 @@ from homeassistant.components.repairs import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.issue_registry as ir
-
-from tests.common import AsyncMock, Mock, async_setup_component, mock_platform
 
 
 @pytest.fixture(autouse=True)
