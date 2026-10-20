@@ -198,6 +198,7 @@ class Recorder(threading.Thread):
         self.schema_version = 0
         self._commits_without_expire = 0
         self._event_session_has_pending_writes = False
+        self._processed_startup_batch = False
 
         self.recorder_runs_manager = RecorderRunsManager()
         self.states_manager = StatesManager()
@@ -843,6 +844,7 @@ class Recorder(threading.Thread):
         self._pre_process_startup_events(startup_task_or_events)
         for task in startup_task_or_events:
             self._guarded_process_one_task_or_event_or_recover(task)
+        self._processed_startup_batch = True
 
         # Clear startup tasks since this thread runs forever
         # and we don't want to hold them in memory
@@ -1318,7 +1320,11 @@ class Recorder(threading.Thread):
 
         Returns None if nothing is pending.
         """
-        if self._queue.empty() and not self._event_session_has_pending_writes:
+        if (
+            self._queue.empty()
+            and not self._event_session_has_pending_writes
+            and self._processed_startup_batch
+        ):
             return None
         future: asyncio.Future[None] = self.hass.loop.create_future()
         self.queue_task(SynchronizeTask(future))
