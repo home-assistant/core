@@ -23,12 +23,20 @@ from aioabrp import (
 import pytest
 
 from homeassistant.components.abetterrouteplanner.const import DOMAIN
+from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
+CLIENT_ID = "client-id"
+CLIENT_SECRET = "client-secret"
 USER_SUB = "user-sub-12345"
 REDIRECT_URI = "https://example.com/auth/external/callback"
 
@@ -99,6 +107,15 @@ def build_id_token(
     payload = json.dumps(payload_dict).encode()
     payload_b64 = base64.urlsafe_b64encode(payload).rstrip(b"=").decode()
     return f"header.{payload_b64}.signature"
+
+
+@pytest.fixture(autouse=True)
+async def setup_credentials(hass: HomeAssistant) -> None:
+    """Set up application credentials."""
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
+    )
 
 
 @pytest.fixture(name="expires_at")

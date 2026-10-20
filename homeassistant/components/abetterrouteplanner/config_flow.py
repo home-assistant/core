@@ -16,7 +16,6 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from . import async_import_built_in_credential
 from .const import ABRP_APP_KEY, DOMAIN, OAUTH2_SCOPES
 
 
@@ -45,18 +44,6 @@ class AbetterrouteplannerFlowHandler(
         return {**super().extra_authorize_data, "scope": " ".join(OAUTH2_SCOPES)}
 
     @override
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Import the built-in client, then pick an implementation.
-
-        Starting a flow sets up dependencies but not this integration, so on a
-        fresh install ``async_setup`` has not imported the client yet.
-        """
-        await async_import_built_in_credential(self.hass)
-        return await super().async_step_user(user_input)
-
-    @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Handle a successful OAuth2 authorization.
 
@@ -82,9 +69,9 @@ class AbetterrouteplannerFlowHandler(
         self._abort_if_unique_id_configured()
 
         title = (
-            f"{self.flow_impl.name} ({identity.display_name})"
+            f"A Better Routeplanner ({identity.display_name})"
             if identity.display_name
-            else self.flow_impl.name
+            else "A Better Routeplanner"
         )
 
         client = AbrpClient(

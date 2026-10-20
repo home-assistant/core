@@ -5,10 +5,6 @@ import logging
 from aioabrp import AbrpClient, TelemetryStream
 from aiohttp import ClientError
 
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import (
@@ -17,16 +13,11 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
-from homeassistant.helpers import (
-    config_entry_oauth2_flow,
-    config_validation as cv,
-    device_registry as dr,
-)
+from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
 
 from .auth import AbetterrouteplannerAuth
-from .const import ABRP_APP_KEY, DOMAIN, OAUTH2_CLIENT_ID
+from .const import ABRP_APP_KEY, DOMAIN
 from .coordinator import (
     AbetterrouteplannerConfigEntry,
     AbrpData,
@@ -36,32 +27,13 @@ from .coordinator import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the A Better Routeplanner component."""
-    await async_import_built_in_credential(hass)
-    return True
-
-
-async def async_import_built_in_credential(hass: HomeAssistant) -> None:
-    """Import the built-in public client, which needs no client secret."""
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential(OAUTH2_CLIENT_ID, "", name="A Better Routeplanner"),
-    )
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: AbetterrouteplannerConfigEntry
 ) -> bool:
     """Set up A Better Routeplanner from a config entry."""
-    # Restores the credential if it was deleted in the UI since startup.
-    await async_import_built_in_credential(hass)
     try:
         implementation = (
             await config_entry_oauth2_flow.async_get_config_entry_implementation(

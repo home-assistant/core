@@ -1,7 +1,5 @@
 """Test the A Better Routeplanner config flow."""
 
-import base64
-import hashlib
 from http import HTTPStatus
 from unittest.mock import AsyncMock
 from urllib.parse import parse_qs, urlparse
@@ -14,15 +12,20 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.abetterrouteplanner.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
-    OAUTH2_CLIENT_ID,
     OAUTH2_TOKEN,
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.setup import async_setup_component
 
-from .conftest import REDIRECT_URI, USER_SUB, build_id_token, complete_oauth_callback
+from .conftest import (
+    CLIENT_ID,
+    CLIENT_SECRET,
+    REDIRECT_URI,
+    USER_SUB,
+    build_id_token,
+    complete_oauth_callback,
+)
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -57,23 +60,6 @@ def _mock_token_post(
     )
 
 
-@pytest.fixture(autouse=True)
-async def setup_credentials(hass: HomeAssistant) -> None:
-    """Set up application credentials, which the flow imports the client into."""
-    assert await async_setup_component(hass, "application_credentials", {})
-
-
-def _compute_expected_challenge(verifier: str) -> str:
-    """Recompute the PKCE S256 challenge from a verifier."""
-    digest = hashlib.sha256(verifier.encode("ascii")).digest()
-    return base64.urlsafe_b64encode(digest).rstrip(b"=").decode("ascii")
-
-
-def _code_challenge(authorize_url: str) -> str:
-    """Pull the PKCE challenge out of an authorize URL."""
-    return parse_qs(urlparse(authorize_url).query)["code_challenge"][0]
-
-
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
@@ -84,7 +70,7 @@ async def test_full_flow(
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Happy-path OAuth flow creates a config entry with a verified PKCE round-trip."""
+    """Happy-path OAuth flow creates a config entry."""
     # Freeze time so the token ``expires_at`` is stable for the snapshot.
     freezer.move_to("2026-01-01 00:00:00+00:00")
 
@@ -102,13 +88,9 @@ async def test_full_flow(
 
     parsed_query = parse_qs(parsed_url.query)
     assert parsed_query["response_type"] == ["code"]
-    assert parsed_query["client_id"] == [OAUTH2_CLIENT_ID]
+    assert parsed_query["client_id"] == [CLIENT_ID]
     assert parsed_query["redirect_uri"] == [REDIRECT_URI]
     assert parsed_query["scope"] == [EXPECTED_SCOPE]
-    assert parsed_query["code_challenge_method"] == ["S256"]
-    code_challenge = parsed_query["code_challenge"][0]
-    assert code_challenge
-    assert "client_secret" not in parsed_query
 
     await complete_oauth_callback(hass, hass_client_no_auth, result["flow_id"])
 
@@ -118,21 +100,16 @@ async def test_full_flow(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == USER_SUB
-    assert result["result"].data["token"]["access_token"] == "mock-access-token"
     assert result["result"].data == snapshot
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
-    # First aioclient call is the OAuth token exchange; verify PKCE round-trip.
     _method, _url, data, _headers = aioclient_mock.mock_calls[0]
-    assert "client_secret" not in data
+    assert data["client_id"] == CLIENT_ID
+    assert data["client_secret"] == CLIENT_SECRET
     assert data["grant_type"] == "authorization_code"
     assert data["code"] == "abcd"
-    code_verifier = data["code_verifier"]
-    assert isinstance(code_verifier, str)
-    assert code_verifier
-    assert _compute_expected_challenge(code_verifier) == code_challenge
 
 
 @pytest.mark.parametrize(
@@ -168,21 +145,6 @@ async def test_entry_title(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].title == expected_title
     assert result["result"].unique_id == USER_SUB
-
-
-@pytest.mark.usefixtures("current_request_with_host")
-async def test_pkce_verifier_is_per_authorization(hass: HomeAssistant) -> None:
-    """RFC 7636 requires a fresh verifier per authorization request."""
-    first = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    second = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert first["type"] is FlowResultType.EXTERNAL_STEP
-    assert second["type"] is FlowResultType.EXTERNAL_STEP
-    assert _code_challenge(first["url"]) != _code_challenge(second["url"])
 
 
 @pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
@@ -303,7 +265,7 @@ async def test_initial_add_unusable_id_token_aborts(
     aioclient_mock: AiohttpClientMocker,
     id_token: str | None,
 ) -> None:
-    """An absent or unparsable id_token aborts the initial add (finding D)."""
+    """An absent or unparsable id_token aborts the initial add."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )

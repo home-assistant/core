@@ -4,7 +4,6 @@ DOMAIN = "abetterrouteplanner"
 
 OAUTH2_AUTHORIZE = "https://accounts.abetterrouteplanner.com/authorize"
 OAUTH2_TOKEN = "https://accounts.abetterrouteplanner.com/token"
-OAUTH2_CLIENT_ID = "ha-abrp-integration"
 
 OAUTH2_SCOPES: list[str] = ["openid", "profile", "email", "offline_access"]
 
