@@ -392,6 +392,46 @@ async def test_legacy_service_not_registered_after_unload(hass: HomeAssistant) -
 
 
 @pytest.mark.usefixtures("mock_prowlpy")
+async def test_legacy_service_of_setup_before_reload_not_registered(
+    hass: HomeAssistant,
+) -> None:
+    """Test a delayed legacy setup from before a reload does not register."""
+    release = asyncio.Event()
+    started: list[asyncio.Event] = []
+    original_setup = ProwlNotificationService.async_setup
+
+    async def paused_setup(self: ProwlNotificationService, *args: Any) -> None:
+        await original_setup(self, *args)
+        started[-1].set()
+        await release.wait()
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="prowl",
+        data={CONF_API_KEY: TEST_API_KEY},
+        source=SOURCE_IMPORT,
+    )
+    entry.add_to_hass(hass)
+    with patch.object(ProwlNotificationService, "async_setup", paused_setup):
+        started.append(asyncio.Event())
+        await hass.config_entries.async_setup(entry.entry_id)
+        await started[-1].wait()
+        await hass.config_entries.async_unload(entry.entry_id)
+        # Reload before the notify loader resumes the setup from before the unload
+        started.append(asyncio.Event())
+        await hass.config_entries.async_setup(entry.entry_id)
+        await started[-1].wait()
+        release.set()
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.services.has_service(notify.DOMAIN, "prowl")
+    # The current setup owns the action, so unloading removes it
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert not hass.services.has_service(notify.DOMAIN, "prowl")
+
+
+@pytest.mark.usefixtures("mock_prowlpy")
 async def test_legacy_service_unload_keeps_action_of_other_entry(
     hass: HomeAssistant,
 ) -> None:

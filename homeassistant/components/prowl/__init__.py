@@ -8,7 +8,7 @@ from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN, SERVICE_NOT
 from homeassistant.config import config_per_platform
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -16,7 +16,15 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 from homeassistant.util.hass_dict import HassKey
 
-from .const import CONF_ENTRY, CONF_LEGACY_SERVICE_NAME, CONF_NAMES, DOMAIN, PLATFORMS
+from .const import (
+    CONF_ENTRY,
+    CONF_LEGACY_SERVICE_NAME,
+    CONF_NAMES,
+    CONF_SETUP,
+    DATA_LEGACY_SETUPS,
+    DOMAIN,
+    PLATFORMS,
+)
 from .helpers import async_verify_key
 
 _LOGGER = logging.getLogger(__name__)
@@ -95,6 +103,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         and entry.data[CONF_API_KEY] not in hass.data[DATA_YAML_API_KEYS]
         and slugify(legacy_service_name) not in hass.data[DATA_YAML_SERVICE_NAMES]
     ):
+        # A delayed setup from before an unload or reload must not register
+        setup = object()
+        legacy_setups = hass.data.setdefault(DATA_LEGACY_SETUPS, {})
+        legacy_setups[entry.entry_id] = setup
+
+        @callback
+        def _async_invalidate_legacy_setup() -> None:
+            if legacy_setups.get(entry.entry_id) is setup:
+                del legacy_setups[entry.entry_id]
+
+        entry.async_on_unload(_async_invalidate_legacy_setup)
         # Owned by the entry, so unloading cancels a pending setup
         entry.async_create_background_task(
             hass,
@@ -102,7 +121,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 hass,
                 Platform.NOTIFY,
                 DOMAIN,
-                {CONF_NAME: legacy_service_name, CONF_ENTRY: entry},
+                {CONF_NAME: legacy_service_name, CONF_ENTRY: entry, CONF_SETUP: setup},
                 hass.data[DATA_HASS_CONFIG],
             ),
             name=f"{DOMAIN} legacy notify setup",

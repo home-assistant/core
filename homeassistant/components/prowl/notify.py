@@ -17,7 +17,7 @@ from homeassistant.components.notify import (
     BaseNotificationService,
     NotifyEntity,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_ENTRY, CONF_LEGACY_SERVICE_NAME
+from .const import CONF_ENTRY, CONF_LEGACY_SERVICE_NAME, CONF_SETUP, DATA_LEGACY_SETUPS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +49,10 @@ async def async_get_service(
 
     entry: ConfigEntry = discovery_info[CONF_ENTRY]
     service = ProwlNotificationService(
-        hass, entry.data[CONF_API_KEY], get_async_client(hass), entry
+        hass,
+        entry.data[CONF_API_KEY],
+        get_async_client(hass),
+        (entry.entry_id, discovery_info[CONF_SETUP]),
     )
     entry.async_on_unload(service.async_unregister_services)
     return service
@@ -83,24 +86,24 @@ class ProwlNotificationService(BaseNotificationService):
         hass: HomeAssistant,
         api_key: str,
         httpx_client: httpx2.AsyncClient,
-        entry: ConfigEntry | None = None,
+        legacy_setup: tuple[str, object] | None = None,
     ) -> None:
         """Initialize the service."""
         self._hass = hass
         self._prowl = prowlpy.AsyncProwl(api_key, client=httpx_client)
-        self._entry = entry
+        # Entry ID and setup of an entry-backed legacy service
+        self._legacy_setup = legacy_setup
         self._owns_service = False
 
     @override
     async def async_register_services(self) -> None:
-        """Register the legacy action if the entry is active and the name is free."""
+        """Register the legacy action for a current setup if the name is free."""
         # The notify loader sets the service up in its own task, so the entry
-        # can unload before registration
-        if self._entry is not None and self._entry.state not in (
-            ConfigEntryState.SETUP_IN_PROGRESS,
-            ConfigEntryState.LOADED,
-        ):
-            return
+        # can unload or reload before registration
+        if self._legacy_setup is not None:
+            entry_id, setup = self._legacy_setup
+            if self.hass.data.get(DATA_LEGACY_SETUPS, {}).get(entry_id) is not setup:
+                return
         if self.hass.services.has_service(NOTIFY_DOMAIN, self._service_name):
             return
         await super().async_register_services()
