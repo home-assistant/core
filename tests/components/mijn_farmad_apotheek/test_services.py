@@ -12,6 +12,7 @@ from aiofarmad import (
     FarmadAuthorizationError,
     FarmadCommunicationError,
     FarmadError,
+    FarmadRejectedError,
     FarmadTimeoutError,
 )
 import probatio
@@ -376,6 +377,13 @@ async def test_order_medication_invalid_product(
             "order_failed",
             1,
             id="rejected",
+        ),
+        pytest.param(
+            "async_submit_basket",
+            FarmadRejectedError("mock", status=400),
+            "order_failed",
+            1,
+            id="rejected-400",
         ),
         pytest.param(
             "async_submit_basket",
