@@ -9926,6 +9926,16 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "sensecap_lorawan": {
+      "name": "SenseCAP",
+      "integration_type": "hub",
+      "categories": [
+        "sensors"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push",
+      "single_config_entry": true
+    },
     "sensereo": {
       "name": "Sensereo",
       "iot_standards": [
