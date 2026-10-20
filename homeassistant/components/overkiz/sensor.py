@@ -448,7 +448,6 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         device_class=SensorDeviceClass.ENUM,
         options=["dead", "low_battery", "maintenance_required", "no_defect"],
     ),
-    # Atlantic heat pumps and heaters report 0 when there is no fault
     OverkizSensorDescription(
         key=OverkizState.CORE_ERROR_CODE,
         name="Error code",
