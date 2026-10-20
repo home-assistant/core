@@ -25,6 +25,23 @@ LAST_MOTION_CAMERA_ENTITY_ID = "camera.mydoorbird_last_motion"
 LAST_RING_ISSUE_ID = "deprecated_camera_1234ABCD_last_ring"
 
 
+def create_stale_issue(hass: HomeAssistant, issue_id: str) -> None:
+    """Create a repair issue left over from an earlier setup."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_camera_last_ring",
+        translation_placeholders={
+            "entity_id": LAST_RING_CAMERA_ENTITY_ID,
+            "entity_name": "Last ring",
+            "docs_url": "",
+        },
+    )
+
+
 async def test_doorbird_live_camera(
     hass: HomeAssistant,
     doorbird_mocker: DoorbirdMockerType,
@@ -67,6 +84,8 @@ async def test_deprecated_camera_not_created_for_new_installs(
     entity_id: str,
 ) -> None:
     """Test the deprecated still cameras are not created on a fresh install."""
+    create_stale_issue(hass, f"deprecated_camera_1234ABCD_{camera_id}")
+
     await doorbird_mocker()
 
     assert hass.states.get(entity_id) is None
@@ -162,6 +181,7 @@ async def test_deprecated_camera_removed_when_disabled(
         suggested_object_id=f"mydoorbird_{camera_id}",
         disabled_by=er.RegistryEntryDisabler.USER,
     )
+    create_stale_issue(hass, f"deprecated_camera_1234ABCD_{camera_id}")
 
     await doorbird_mocker()
 
@@ -191,6 +211,7 @@ async def test_deprecated_camera_kept_when_disabled_by_device(
         suggested_object_id="mydoorbird_last_ring",
         disabled_by=er.RegistryEntryDisabler.DEVICE,
     )
+    create_stale_issue(hass, LAST_RING_ISSUE_ID)
 
     await doorbird_mocker()
 
