@@ -16,10 +16,10 @@ from pytest_homeassistant.typing import (
 )
 
 from homeassistant.components.backup import (
-    DATA_MANAGER,
     DOMAIN as BACKUP_DOMAIN,
     AgentBackup,
     UploadBackupEvent,
+    async_get_manager,
 )
 from homeassistant.components.cloudflare_r2.backup import (
     MULTIPART_MIN_PART_SIZE_BYTES,
@@ -443,7 +443,7 @@ async def test_agents_upload_on_progress(
     """Test agent upload backup emits UploadBackupEvent via on_progress."""
     client = await hass_client()
 
-    manager = hass.data[DATA_MANAGER]
+    manager = async_get_manager(hass)
     events: list[UploadBackupEvent] = []
 
     def _collect(event: UploadBackupEvent) -> None:

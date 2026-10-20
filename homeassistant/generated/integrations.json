@@ -582,6 +582,16 @@
       ],
       "supported_by": "energyzero"
     },
+    "any_list": {
+      "name": "AnyList",
+      "integration_type": "service",
+      "categories": [
+        "productivity_information.shopping_groceries",
+        "productivity_information.calendars_todos"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "aosmith": {
       "name": "A. O. Smith",
       "integration_type": "hub",
@@ -4857,6 +4867,15 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "hp_printer": {
+      "name": "HP Printer",
+      "integration_type": "device",
+      "categories": [
+        "computers_network.printers"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "hr_energy_qube": {
       "name": "Qube heat pump",
       "integration_type": "hub",
@@ -5555,14 +5574,28 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "kaco_modbus": {
-      "name": "KACO Modbus",
-      "integration_type": "device",
-      "categories": [
-        "energy.solar_batteries"
-      ],
-      "config_flow": true,
-      "iot_class": "local_polling"
+    "kaco": {
+      "name": "KACO new energy",
+      "integrations": {
+        "kaco_modbus": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "categories": [
+            "energy.solar_batteries"
+          ],
+          "name": "KACO Modbus"
+        },
+        "kaco_rs485": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "categories": [
+            "energy.solar_batteries"
+          ],
+          "name": "KACO RS485"
+        }
+      }
     },
     "kaiser_nienhaus": {
       "name": "Kaiser Nienhaus",
@@ -7925,6 +7958,15 @@
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "okok_scale": {
+      "name": "OKOK Scale",
+      "integration_type": "device",
+      "categories": [
+        "health_wellbeing"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "olimpia_splendid": {
       "name": "Olimpia Splendid",
@@ -10775,14 +10817,28 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
-    "steam_online": {
+    "steam": {
       "name": "Steam",
-      "integration_type": "service",
-      "categories": [
-        "media_entertainment.gaming"
-      ],
-      "config_flow": true,
-      "iot_class": "cloud_polling"
+      "integrations": {
+        "steam_online": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "categories": [
+            "media_entertainment.gaming"
+          ],
+          "name": "Steam"
+        },
+        "steamvr_base_station": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "categories": [
+            "media_entertainment.gaming"
+          ],
+          "name": "SteamVR Base Station"
+        }
+      }
     },
     "steamist": {
       "name": "Steamist",
