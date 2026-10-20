@@ -10748,6 +10748,9 @@
     "spin_ble": {
       "name": "Spin EV Charger",
       "integration_type": "device",
+      "categories": [
+        "energy.ev_charging"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },
