@@ -211,6 +211,18 @@
     "monitoring_start_failed": {
       "message": "Connected to the alarm panel, but the panel did not confirm the request to start sending status updates."
     },
+    "output_command_invalid_access_code": {
+      "message": "The alarm panel did not recognize the configured access code. Check the code in the integration options."
+    },
+    "output_command_no_access": {
+      "message": "The configured access code does not have permission to control this output."
+    },
+    "output_command_outcome_unknown": {
+      "message": "The alarm panel did not confirm the output command. The output may have changed; check its state before trying again."
+    },
+    "output_command_rejected": {
+      "message": "The alarm panel rejected the output command. Check the panel configuration and event log for more information."
+    },
     "panel_busy": {
       "message": "[%key:component::satel_integra::config::error::panel_busy%]"
     }
