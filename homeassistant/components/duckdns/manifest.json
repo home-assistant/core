@@ -1,6 +1,7 @@
 {
   "domain": "duckdns",
   "name": "Duck DNS",
+  "categories": ["computers_network.routers_network"],
   "codeowners": ["@tr4nt0r"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/duckdns",

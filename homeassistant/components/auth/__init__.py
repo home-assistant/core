@@ -149,14 +149,11 @@ from homeassistant.auth.models import (
     User,
 )
 from homeassistant.components import websocket_api
-from homeassistant.components.http import KEY_HASS
-from homeassistant.components.http.auth import (
-    async_sign_path,
-    async_user_not_allowed_do_auth,
-)
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.components.http.auth import async_sign_path
+from homeassistant.components.http.auth_util import async_user_not_allowed_do_auth
 from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2AuthorizeCallbackView
@@ -167,6 +164,11 @@ from homeassistant.util.hass_dict import HassKey
 from . import indieauth, login_flow, mfa_setup_flow
 
 DOMAIN = "auth"
+
+__all__ = [
+    "DOMAIN",
+    "create_auth_code",
+]
 
 
 @dataclass(slots=True)
@@ -328,7 +330,9 @@ class TokenView(HomeAssistantView):
     ) -> web.Response:
         """Handle authorization code request."""
         client_id = data.get("client_id")
-        if client_id is None or not indieauth.verify_client_id(client_id):
+        if client_id is None or not indieauth.verify_client_id(
+            client_id, request_scheme=request.scheme, request_netloc=request.host
+        ):
             return self.json(
                 {"error": "invalid_request", "error_description": "Invalid client id"},
                 status_code=HTTPStatus.BAD_REQUEST,
@@ -425,7 +429,9 @@ class TokenView(HomeAssistantView):
     ) -> web.Response:
         """Handle refresh token request."""
         client_id = data.get("client_id")
-        if client_id is not None and not indieauth.verify_client_id(client_id):
+        if client_id is not None and not indieauth.verify_client_id(
+            client_id, request_scheme=request.scheme, request_netloc=request.host
+        ):
             return self.json(
                 {"error": "invalid_request", "error_description": "Invalid client id"},
                 status_code=HTTPStatus.BAD_REQUEST,

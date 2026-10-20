@@ -5,13 +5,12 @@ from contextlib import contextmanager
 from unittest.mock import patch
 
 from omnilogic import LoginException, OmniLogicException
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.omnilogic.const import DEFAULT_PH_OFFSET, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 DATA = {"username": "test-username", "password": "test-password"}
 

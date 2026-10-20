@@ -5,6 +5,12 @@ import json
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_mqtt_message,
+    load_json_object_fixture,
+)
+from pytest_homeassistant.typing import MqttMockHAClient
 
 from homeassistant.components.qbus.const import CONF_SERIAL_NUMBER, DOMAIN
 from homeassistant.components.qbus.entity import QbusEntity
@@ -13,13 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util.json import JsonObjectType
 
 from .const import FIXTURE_PAYLOAD_CONFIG, TOPIC_CONFIG
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_mqtt_message,
-    load_json_object_fixture,
-)
-from tests.typing import MqttMockHAClient
 
 
 @pytest.fixture

@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from nrgkick_api import ChargingStatus, ConnectorType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_UNKNOWN, Platform
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("entity_registry_enabled_by_default")
 

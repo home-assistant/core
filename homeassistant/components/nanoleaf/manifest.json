@@ -1,6 +1,7 @@
 {
   "domain": "nanoleaf",
   "name": "Nanoleaf",
+  "categories": ["lighting.lighting_systems"],
   "codeowners": [
     "@milanmeu",
     "@joostlek",
@@ -16,7 +17,7 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["aionanoleaf2"],
-  "requirements": ["aionanoleaf2==1.2.0"],
+  "requirements": ["aionanoleaf2==1.2.1"],
   "ssdp": [
     {
       "st": "Nanoleaf_aurora:light"
