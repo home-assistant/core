@@ -79,7 +79,9 @@ class FakeDaliDriver:
             return SimpleNamespace(value=self.max_levels.get(address, 254))
         if isinstance(command, QueryDimmingCurve):
             value = 1 if self.linear_dimming.get(address, False) else 0
-            return SimpleNamespace(raw_value=SimpleNamespace(as_integer=value))
+            return SimpleNamespace(
+                raw_value=SimpleNamespace(as_integer=value, error=False)
+            )
         return SimpleNamespace(value=None)
 
     async def _run_sequence(self, sequence, progress=None):
