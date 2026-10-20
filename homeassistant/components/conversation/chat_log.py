@@ -360,6 +360,7 @@ class ChatLog:
     content: list[Content] = field(default_factory=lambda: [SystemContent(content="")])
     extra_system_prompt: str | None = None
     llm_api: llm.APIInstance | None = None
+    _llm_api_key: tuple[Any, ...] | None = None
     delta_listener: Callable[[ChatLog, dict], None] | None = None
     llm_input_provided_index = 0
     created: datetime = field(init=False, default_factory=utcnow)
@@ -714,9 +715,21 @@ class ChatLog:
     ) -> None:
         """Set the LLM system prompt."""
         llm_api: llm.APIInstance | None = None
+        llm_api_key = (
+            llm_context.platform,
+            llm_context.assistant,
+            llm_context.language,
+            llm_context.device_id,
+            llm_context.context.user_id if llm_context.context else None,
+            user_llm_hass_api,
+        )
 
         if not user_llm_hass_api:
             pass
+        elif self.llm_api is not None and llm_api_key == self._llm_api_key:
+            # Keep the prompt and tools stable between turns so LLM providers
+            # can cache them. Tool calls still get the context of this turn.
+            llm_api = replace(self.llm_api, llm_context=llm_context)
         elif isinstance(user_llm_hass_api, llm.API):
             llm_api = await llm.async_get_authorized_api_instance(
                 user_llm_hass_api, llm_context
@@ -795,6 +808,7 @@ class ChatLog:
 
         self.llm_input_provided_index = len(self.content)
         self.llm_api = llm_api
+        self._llm_api_key = llm_api_key
         self.extra_system_prompt = extra_system_prompt
         self.content[0] = SystemContent(content=prompt)
         _async_notify_subscribers(
