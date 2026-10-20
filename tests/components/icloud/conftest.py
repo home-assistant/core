@@ -5,15 +5,14 @@ from unittest.mock import patch
 
 from pyicloud.services.photos import AlbumContainer, PhotoAlbumFolder, PhotoAsset
 import pytest
+from pytest_homeassistant.common import AsyncMock, MockConfigEntry
+from pytest_homeassistant.typing import MagicMock
 
 from homeassistant.components.icloud.const import DOMAIN
 from homeassistant.util import dt as dt_util
 
 from . import MockAppleDevice, MockDevicesContainer
 from .const import DEVICE, USER_INFO
-
-from tests.common import AsyncMock, MockConfigEntry
-from tests.typing import MagicMock
 
 
 @pytest.fixture(autouse=True)

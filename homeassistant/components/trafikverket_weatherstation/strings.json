@@ -13,18 +13,29 @@
       "reauth_confirm": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::trafikverket_weatherstation::config::step::user::data_description::api_key%]"
         }
       },
       "reconfigure": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "station": "[%key:component::trafikverket_weatherstation::config::step::user::data::station%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::trafikverket_weatherstation::config::step::user::data_description::api_key%]",
+          "station": "[%key:component::trafikverket_weatherstation::config::step::user::data_description::station%]"
         }
       },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "station": "Station"
+        },
+        "data_description": {
+          "api_key": "The API key from your Trafikverket open data account",
+          "station": "The name of the weather station, as shown on the Trafikverket traffic information map"
         }
       }
     }

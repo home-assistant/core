@@ -7,6 +7,8 @@ from unittest.mock import MagicMock, Mock, patch
 from httpx2 import HTTPStatusError, RequestError
 from pysenz import TOKEN_ENDPOINT
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.senz.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -17,9 +19,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 
 from . import setup_integration
 from .const import ENTRY_UNIQUE_ID
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_load_unload_entry(

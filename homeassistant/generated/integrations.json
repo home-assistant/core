@@ -330,6 +330,15 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "alpha_bidet_infrared": {
+      "name": "Alpha Bidet Infrared",
+      "integration_type": "device",
+      "categories": [
+        "health_wellbeing"
+      ],
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "alpha_vantage": {
       "name": "Alpha Vantage",
       "integration_type": "hub",
@@ -572,6 +581,16 @@
         "energy.energy_prices"
       ],
       "supported_by": "energyzero"
+    },
+    "any_list": {
+      "name": "AnyList",
+      "integration_type": "service",
+      "categories": [
+        "productivity_information.shopping_groceries",
+        "productivity_information.calendars_todos"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_push"
     },
     "aosmith": {
       "name": "A. O. Smith",
@@ -2560,6 +2579,15 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "ecosmart": {
+      "name": "ecosmart",
+      "integration_type": "service",
+      "categories": [
+        "energy.energy_prices"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "ecospar": {
       "name": "EcoSpar",
       "integration_type": "virtual",
@@ -4526,13 +4554,27 @@
       ]
     },
     "helty": {
-      "name": "Helty Flow",
-      "integration_type": "device",
-      "categories": [
-        "climate.fans_ventilation"
-      ],
-      "config_flow": true,
-      "iot_class": "local_polling"
+      "name": "Helty",
+      "integrations": {
+        "helty": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "categories": [
+            "climate.fans_ventilation"
+          ],
+          "name": "Helty Flow"
+        },
+        "helty_cloud": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "categories": [
+            "climate.fans_ventilation"
+          ],
+          "name": "Helty Flow Cloud"
+        }
+      }
     },
     "here_travel_time": {
       "name": "HERE Travel Time",
@@ -4823,6 +4865,15 @@
         "computers_network.nas_servers"
       ],
       "config_flow": false,
+      "iot_class": "local_polling"
+    },
+    "hp_printer": {
+      "name": "HP Printer",
+      "integration_type": "device",
+      "categories": [
+        "computers_network.printers"
+      ],
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "hr_energy_qube": {
@@ -5523,14 +5574,28 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "kaco_modbus": {
-      "name": "KACO Modbus",
-      "integration_type": "device",
-      "categories": [
-        "energy.solar_batteries"
-      ],
-      "config_flow": true,
-      "iot_class": "local_polling"
+    "kaco": {
+      "name": "KACO new energy",
+      "integrations": {
+        "kaco_modbus": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "categories": [
+            "energy.solar_batteries"
+          ],
+          "name": "KACO Modbus"
+        },
+        "kaco_rs485": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "categories": [
+            "energy.solar_batteries"
+          ],
+          "name": "KACO RS485"
+        }
+      }
     },
     "kaiser_nienhaus": {
       "name": "Kaiser Nienhaus",
@@ -7894,6 +7959,15 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "okok_scale": {
+      "name": "OKOK Scale",
+      "integration_type": "device",
+      "categories": [
+        "health_wellbeing"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "olimpia_splendid": {
       "name": "Olimpia Splendid",
       "integration_type": "virtual",
@@ -9852,6 +9926,16 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "sensecap_lorawan": {
+      "name": "SenseCAP",
+      "integration_type": "hub",
+      "categories": [
+        "sensors"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push",
+      "single_config_entry": true
+    },
     "sensereo": {
       "name": "Sensereo",
       "iot_standards": [
@@ -10171,6 +10255,15 @@
       ],
       "config_flow": false,
       "iot_class": "local_push"
+    },
+    "skoda": {
+      "name": "\u0160koda",
+      "integration_type": "device",
+      "categories": [
+        "vehicles_transport.cars_evs"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "sky": {
       "name": "Sky",
@@ -10734,14 +10827,28 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
-    "steam_online": {
+    "steam": {
       "name": "Steam",
-      "integration_type": "service",
-      "categories": [
-        "media_entertainment.gaming"
-      ],
-      "config_flow": true,
-      "iot_class": "cloud_polling"
+      "integrations": {
+        "steam_online": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "categories": [
+            "media_entertainment.gaming"
+          ],
+          "name": "Steam"
+        },
+        "steamvr_base_station": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "categories": [
+            "media_entertainment.gaming"
+          ],
+          "name": "SteamVR Base Station"
+        }
+      }
     },
     "steamist": {
       "name": "Steamist",

@@ -6,12 +6,11 @@ from unittest.mock import AsyncMock, create_autospec, patch
 from ayla_iot_unofficial import AylaApi
 from ayla_iot_unofficial.fujitsu_hvac import FanSpeed, FujitsuHVAC, OpMode, SwingMode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.fujitsu_fglair.const import DOMAIN, REGION_DEFAULT
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 TEST_DEVICE_NAME = "Test device"
 TEST_DEVICE_SERIAL = "testserial"

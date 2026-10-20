@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from whirlpool.auth import AccountLockedError
 from whirlpool.backendselector import Brand, Region
 
@@ -14,8 +15,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-
-from tests.common import MockConfigEntry
 
 CONFIG_INPUT = {
     CONF_USERNAME: "test-username",
