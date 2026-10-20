@@ -296,6 +296,31 @@ def test_entity_domain() -> None:
     assert schema("binary_sensor.LIGHT") == "binary_sensor.light"
 
 
+@pytest.mark.parametrize(
+    "validator",
+    [
+        pytest.param(cv.entity_ids, id="entity_ids"),
+        pytest.param(cv.entity_ids_or_uuids, id="entity_ids_or_uuids"),
+        pytest.param(cv.comp_entity_ids, id="comp_entity_ids"),
+        pytest.param(cv.comp_entity_ids_or_uuids, id="comp_entity_ids_or_uuids"),
+        pytest.param(cv.entity_domain("sensor"), id="entity_domain"),
+        pytest.param(cv.entities_domain("sensor"), id="entities_domain"),
+    ],
+)
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param(True, id="bool"),
+        pytest.param(4, id="int"),
+        pytest.param(1.5, id="float"),
+    ],
+)
+def test_entity_ids_non_iterable(validator: Callable[[Any], Any], value: Any) -> None:
+    """Test entity ID validators reject non-string scalars with Invalid."""
+    with pytest.raises(probatio.Invalid):
+        validator(value)
+
+
 def test_entities_domain() -> None:
     """Test entities domain validation."""
     schema = probatio.Schema(cv.entities_domain("sensor"))
