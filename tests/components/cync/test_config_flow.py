@@ -533,9 +533,25 @@ async def test_form_reauth_retry_with_new_password(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert len(auth_class.call_args_list) == 2
-    assert auth_class.call_args_list[0].kwargs["password"] == "wrong-password"
-    assert auth_class.call_args_list[1].kwargs["password"] == "right-password"
+    assert mock_config_entry.data == {
+        CONF_USER_ID: MOCKED_USER.user_id,
+        CONF_AUTHORIZE_STRING: "test_authorize_string",
+        CONF_EXPIRES_AT: ANY,
+        CONF_ACCESS_TOKEN: "test_token",
+        CONF_REFRESH_TOKEN: "test_refresh_token",
+    }
+    assert [call.kwargs["password"] for call in auth_class.call_args_list] == [
+        "wrong-password",
+        "wrong-password",
+        "right-password",
+        "right-password",
+    ]
+    assert [call.args[0] for call in auth_class.return_value.login.call_args_list] == [
+        None,
+        "123456",
+        None,
+        "567890",
+    ]
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -597,7 +613,16 @@ async def test_form_retry_with_new_password(
         CONF_ACCESS_TOKEN: "test_token",
         CONF_REFRESH_TOKEN: "test_refresh_token",
     }
-    assert len(auth_class.call_args_list) == 2
-    assert auth_class.call_args_list[0].kwargs["password"] == "wrong-password"
-    assert auth_class.call_args_list[1].kwargs["password"] == "right-password"
+    assert [call.kwargs["password"] for call in auth_class.call_args_list] == [
+        "wrong-password",
+        "wrong-password",
+        "right-password",
+        "right-password",
+    ]
+    assert [call.args[0] for call in auth_class.return_value.login.call_args_list] == [
+        None,
+        "123456",
+        None,
+        "567890",
+    ]
     assert len(mock_setup_entry.mock_calls) == 1

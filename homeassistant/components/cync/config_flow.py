@@ -39,20 +39,23 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     cync_auth: Auth = None
+    user_pass: dict[str, Any] = {}
 
     @override
     async def async_step_user(
-        self,
-        user_input: dict[str, Any] | None = None,
-        errors: dict[str, str] | None = None,
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Attempt login with user credentials."""
-        errors = errors or {}
+        errors: dict[str, str] = {}
 
         if user_input:
             try:
                 errors = await self._validate_credentials(user_input)
             except TwoFactorRequiredError:
+                self.user_pass = {
+                    CONF_EMAIL: user_input[CONF_EMAIL],
+                    CONF_PASSWORD: user_input[CONF_PASSWORD],
+                }
                 return await self.async_step_two_factor()
 
             if not errors:
@@ -65,22 +68,16 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_two_factor(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Attempt login with the two factor auth code sent to the user."""
-        errors: dict[str, str] = {}
-
+        """Collect the two-factor code."""
         if user_input:
-            errors = await self._validate_credentials(user_input)
-
-            if not errors:
-                return await self._create_config_entry(self.cync_auth.username)
-
+            merged = {**self.user_pass, **user_input}
             if self.source == SOURCE_REAUTH:
-                return await self.async_step_reauth_confirm(errors=errors)
-
-            return await self.async_step_user(errors=errors)
-
+                return await self.async_step_reauth_confirm(merged)
+            return await self.async_step_user(merged)
         return self.async_show_form(
-            step_id="two_factor", data_schema=STEP_TWO_FACTOR_SCHEMA, errors=errors
+            step_id="two_factor",
+            data_schema=STEP_TWO_FACTOR_SCHEMA,
+            errors={},
         )
 
     async def async_step_reauth(
@@ -90,12 +87,10 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
-        self,
-        user_input: dict[str, Any] | None = None,
-        errors: dict[str, str] | None = None,
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Inform the user that reauth is required and prompt for Cync credentials."""
-        errors = errors or {}
+        errors: dict[str, str] = {}
 
         reauth_entry = self._get_reauth_entry()
 
@@ -103,6 +98,10 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 errors = await self._validate_credentials(user_input)
             except TwoFactorRequiredError:
+                self.user_pass = {
+                    CONF_EMAIL: user_input[CONF_EMAIL],
+                    CONF_PASSWORD: user_input[CONF_PASSWORD],
+                }
                 return await self.async_step_two_factor()
 
             if not errors:
