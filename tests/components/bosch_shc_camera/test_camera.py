@@ -1,5 +1,6 @@
 """Test the Bosch Smart Home Camera setup, coordinator and camera platform."""
 
+from dataclasses import replace
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
@@ -121,6 +122,30 @@ async def test_update_failure_makes_camera_unavailable(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == "idle"
+
+
+async def test_device_name_and_firmware_follow_the_account(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_list_cameras: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a rename or firmware update in the account reaches the device."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_list_cameras.return_value = [
+        replace(CAMERAS[0], title="Patio", firmware_version="9.40.26")
+    ]
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, CAMERAS[0].id), mock_config_entry.entry_id
+    )
+    assert device.name == "Patio"
+    assert device.sw_version == "9.40.26"
 
 
 async def test_camera_added_and_removed(

@@ -80,17 +80,29 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
                 translation_domain=DOMAIN, translation_key="cannot_connect"
             ) from err
         data = {camera.id: camera for camera in cameras}
-        self._remove_stale_devices(data)
+        self._sync_devices(data)
         return data
 
-    def _remove_stale_devices(self, cameras: dict[str, Camera]) -> None:
-        """Remove devices of cameras that are no longer part of the account."""
+    def _sync_devices(self, cameras: dict[str, Camera]) -> None:
+        """Remove devices of cameras no longer in the account, refresh the rest."""
         device_registry = dr.async_get(self.hass)
         for device in dr.async_entries_for_config_entry(
             device_registry, self.config_entry.entry_id
         ):
-            if not any(
-                domain == DOMAIN and camera_id in cameras
-                for domain, camera_id in device.identifiers
-            ):
+            camera = next(
+                (
+                    cameras[camera_id]
+                    for domain, camera_id in device.identifiers
+                    if domain == DOMAIN and camera_id in cameras
+                ),
+                None,
+            )
+            if camera is None:
                 device_registry.async_remove_device(device.id)
+            elif (
+                device.name != camera.title
+                or device.sw_version != camera.firmware_version
+            ):
+                device_registry.async_update_device(
+                    device.id, name=camera.title, sw_version=camera.firmware_version
+                )
