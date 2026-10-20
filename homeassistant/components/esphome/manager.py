@@ -147,7 +147,7 @@ def async_create_api_client(
 
 
 if TYPE_CHECKING:
-    from aioesphomeapi.api_pb2 import SubscribeLogsResponse  # type: ignore[attr-defined]  # noqa: I001
+    from aioesphomeapi.api_pb2 import SubscribeLogsResponse  # type: ignore[attr-defined]
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -180,7 +180,10 @@ LOGGER_TO_LOG_LEVEL = {
 
 @callback
 def _async_check_firmware_version(
-    hass: HomeAssistant, device_info: EsphomeDeviceInfo, api_version: APIVersion
+    hass: HomeAssistant,
+    entry: ESPHomeConfigEntry,
+    device_info: EsphomeDeviceInfo,
+    api_version: APIVersion,
 ) -> None:
     """Create or delete an the ble_firmware_outdated issue."""
     # ESPHome device_info.mac_address is the unique_id
@@ -206,12 +209,16 @@ def _async_check_firmware_version(
             "name": device_info.name,
             "version": STABLE_BLE_VERSION_STR,
         },
+        config_entry_id=entry.entry_id,
     )
 
 
 @callback
 def _async_check_using_api_password(
-    hass: HomeAssistant, device_info: EsphomeDeviceInfo, has_password: bool
+    hass: HomeAssistant,
+    entry: ESPHomeConfigEntry,
+    device_info: EsphomeDeviceInfo,
+    has_password: bool,
 ) -> None:
     """Create or delete an the api_password_deprecated issue."""
     # ESPHome device_info.mac_address is the unique_id
@@ -230,6 +237,7 @@ def _async_check_using_api_password(
         translation_placeholders={
             "name": device_info.name,
         },
+        config_entry_id=entry.entry_id,
     )
 
 
@@ -376,6 +384,7 @@ class ESPHomeManager:
                 translation_placeholders={
                     "name": device_info.friendly_name or device_info.name,
                 },
+                config_entry_id=self.entry.entry_id,
             )
             _LOGGER.error(
                 "%s: Service call %s.%s: with data %s rejected; "
@@ -688,6 +697,7 @@ class ESPHomeManager:
                     hass,
                     DOMAIN,
                     issue,
+                    config_entry_id=entry.entry_id,
                     is_fixable=True,
                     severity=IssueSeverity.ERROR,
                     translation_key="device_conflict",
@@ -793,8 +803,8 @@ class ESPHomeManager:
         )
 
         entry_data.async_save_to_store()
-        _async_check_firmware_version(hass, device_info, api_version)
-        _async_check_using_api_password(hass, device_info, bool(self.password))
+        _async_check_firmware_version(hass, entry, device_info, api_version)
+        _async_check_using_api_password(hass, entry, device_info, bool(self.password))
 
     def _async_zwave_proxy_request(self, request: ZWaveProxyRequest) -> None:
         """Handle a request to create a zwave_js config flow."""
@@ -1329,15 +1339,17 @@ def _async_setup_device_registry(
         suggested_area = device_info.suggested_area
 
     # Create/update main device
-    device_entry = device_registry.async_get_or_create(
+    device_entry = device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        configuration_url=configuration_url,
-        connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
-        name=entry_data.friendly_name or entry_data.name,
-        manufacturer=manufacturer,
-        model=model,
-        sw_version=sw_version,
-        suggested_area=suggested_area,
+        device_info=dr.DeviceInfo(
+            configuration_url=configuration_url,
+            connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
+            name=entry_data.friendly_name or entry_data.name,
+            manufacturer=manufacturer,
+            model=model,
+            sw_version=sw_version,
+            suggested_area=suggested_area,
+        ),
     )
 
     # Handle sub devices
@@ -1353,14 +1365,18 @@ def _async_setup_device_registry(
         if sub_device.area_id is not None and sub_device.area_id in areas_by_id:
             sub_device_suggested_area = areas_by_id[sub_device.area_id].name
 
-        sub_device_entry = device_registry.async_get_or_create(
+        sub_device_entry = device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, f"{device_info.mac_address}_{sub_device.device_id}")},
-            name=sub_device.name or device_entry.name,
-            manufacturer=manufacturer,
-            model=model,
-            sw_version=sw_version,
-            suggested_area=sub_device_suggested_area,
+            device_info=dr.DeviceInfo(
+                identifiers={
+                    (DOMAIN, f"{device_info.mac_address}_{sub_device.device_id}")
+                },
+                name=sub_device.name or device_entry.name,
+                manufacturer=manufacturer,
+                model=model,
+                sw_version=sw_version,
+                suggested_area=sub_device_suggested_area,
+            ),
         )
 
         # Update the sub device to set via_device_id
@@ -1578,6 +1594,8 @@ def _async_register_service(
     esphome_supports_response = service.supports_response or SupportsResponseType.NONE
     ha_supports_response = _RESPONSE_TYPE_MAPPER.from_esphome(esphome_supports_response)
 
+    # Cannot be moved: action names come from the device
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(
         DOMAIN,
         service_name,

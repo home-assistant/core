@@ -9,14 +9,13 @@ from bitvis_protobuf.parse import PayloadDiagnostic, PayloadSample, parse_payloa
 from bitvis_protobuf.powerhub_pb2 import Payload
 from bitvis_protobuf.utils import InvalidMacAddressError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bitvis.const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 TEST_DEVICE_MAC = "aa:bb:cc:dd:ee:ff"
 SECOND_DEVICE_MAC = "11:22:33:44:55:66"

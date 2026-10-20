@@ -95,6 +95,7 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
                 self.hass,
                 DOMAIN,
                 f"firmware_update_required_{device_id}",
+                config_entry_id=self.config_entry.entry_id,
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="firmware_update_required",

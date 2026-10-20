@@ -12,11 +12,10 @@ from energieleser import (
     WasserleserDevice,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.energieleser.const import DOMAIN
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST
-
-from tests.common import MockConfigEntry
 
 STROMLESER_DEVICE_ID = "STROM_ONE_8529546829"
 GASLESER_DEVICE_ID = "GAS_8530321017"

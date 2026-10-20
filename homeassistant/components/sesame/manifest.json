@@ -1,6 +1,7 @@
 {
   "domain": "sesame",
   "name": "Sesame Smart Lock",
+  "categories": ["security_safety.locks_access"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/sesame",
   "iot_class": "cloud_polling",

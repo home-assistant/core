@@ -6,6 +6,12 @@ from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import IllegalDataAddressError, ModbusTimeoutError
 from modbus_connection.mock import MockModbusUnit
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.solaredge_modbus.const import SCAN_INTERVAL
@@ -18,13 +24,6 @@ from .conftest import (
     STORAGE_CAPACITY_BASE,
     add_second_meter,
     add_storage_capacity,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    mock_restore_cache_with_extra_data,
-    snapshot_platform,
 )
 
 LIFETIME_ENERGY_ENTITY = "sensor.solaredge_se10000h_energy"

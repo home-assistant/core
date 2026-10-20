@@ -3,6 +3,11 @@
 from unittest.mock import ANY, AsyncMock
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    SnapshotAssertion,
+    snapshot_platform,
+)
 from pyvlx.const import Velocity
 from pyvlx.exception import PyVLXException
 from pyvlx.opening_device import (
@@ -43,8 +48,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import update_callback_entity
-
-from tests.common import MockConfigEntry, SnapshotAssertion, snapshot_platform
 
 # Apply setup_integration fixture to all tests in this module
 pytestmark = pytest.mark.usefixtures("setup_integration")

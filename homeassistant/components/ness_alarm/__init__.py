@@ -46,7 +46,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NessAlarmConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NessAlarmConfigEntry) -> None:
     """Set up Ness Alarm from a config entry."""
     client = Client(
         host=entry.data[CONF_HOST],
@@ -102,17 +102,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: NessAlarmConfigEntry) ->
     # Register update listener for options
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: NessAlarmConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NessAlarmConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
-    if unload_ok:
-        await entry.runtime_data.close()
-
-    return unload_ok
+    await entry.runtime_data.close()
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:

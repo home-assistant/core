@@ -5,14 +5,13 @@ from unittest.mock import AsyncMock
 
 import mpd
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.mpd.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_full_flow(
@@ -49,6 +48,7 @@ async def test_full_flow(
         (TimeoutError, "cannot_connect"),
         (gaierror, "cannot_connect"),
         (mpd.ConnectionError, "cannot_connect"),
+        (mpd.ProtocolError, "cannot_connect"),
         (OSError, "cannot_connect"),
         pytest.param(
             mpd.CommandError("[3@0] {password} incorrect password"),
