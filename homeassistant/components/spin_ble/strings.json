@@ -38,14 +38,14 @@
         "state": {
           "available": "Available",
           "booting": "Starting up",
-          "charging": "Charging",
+          "charging": "[%key:common::state::charging%]",
           "ev_suspended": "Paused by vehicle",
           "evse_suspended": "Paused by charger",
-          "fault": "Fault",
+          "fault": "[%key:common::state::fault%]",
           "finishing": "Finishing",
-          "idle": "Idle",
-          "starting": "Starting",
-          "unavailable": "Unavailable"
+          "idle": "[%key:common::state::idle%]",
+          "out_of_service": "Out of service",
+          "starting": "Starting"
         }
       }
     }

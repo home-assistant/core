@@ -22,7 +22,11 @@ from .entity import SpinEvEntity
 
 PARALLEL_UPDATES = 0
 
-STATE_OPTIONS = [state.name.lower() for state in ChargerState]
+# "unavailable" is reserved for entities Home Assistant cannot read.
+CHARGER_STATES: dict[ChargerState, str] = {
+    **{state: state.name.lower() for state in ChargerState},
+    ChargerState.UNAVAILABLE: "out_of_service",
+}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -37,8 +41,8 @@ SENSORS: tuple[SpinEvSensorEntityDescription, ...] = (
         key="state",
         translation_key="state",
         device_class=SensorDeviceClass.ENUM,
-        options=STATE_OPTIONS,
-        value_fn=lambda status: status.state.name.lower() if status.state else None,
+        options=list(CHARGER_STATES.values()),
+        value_fn=lambda status: CHARGER_STATES[status.state] if status.state else None,
     ),
     SpinEvSensorEntityDescription(
         key="power",
