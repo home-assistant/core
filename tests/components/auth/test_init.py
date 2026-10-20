@@ -126,6 +126,28 @@ async def test_login_new_user_and_trying_refresh_token(
     assert resp.status == HTTPStatus.OK
 
 
+async def test_auth_code_of_removed_credentials(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test a code issued before its credentials were removed buys no tokens."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    credentials = await hass.auth.auth_providers[0].async_get_or_create_credentials(
+        {"username": "test-user"}
+    )
+    user = await hass.auth.async_get_or_create_user(credentials)
+    code = auth.create_auth_code(hass, CLIENT_ID, credentials)
+
+    await hass.auth.async_remove_credentials(credentials)
+    resp = await client.post(
+        "/auth/token",
+        data={"client_id": CLIENT_ID, "grant_type": "authorization_code", "code": code},
+    )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    assert (await resp.json())["error_description"] == "Invalid code"
+    assert user.refresh_tokens == {}
+
+
 async def test_auth_code_checks_local_only_user(
     hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
 ) -> None:
