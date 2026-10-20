@@ -4,7 +4,7 @@ from abc import abstractmethod
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from datetime import timedelta
+from json import JSONDecodeError
 from typing import Any, override
 
 from pysmlight import Api2, Info, Sensors
@@ -95,8 +95,7 @@ class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         self.client = client
         self.unique_id: str | None = None
         self.legacy_api: int = 0
-        self._poll_interval = SCAN_INTERVAL
-        self._retry_interval = timedelta(seconds=30)
+        self._retry_after_seconds = 30
 
     @override
     async def _async_setup(self) -> None:
@@ -140,22 +139,26 @@ class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
 
     @override
     async def _async_update_data(self) -> _DataT:
-        self.update_interval = self._retry_interval
         try:
             async with asyncio.timeout(REQUEST_TIMEOUT):
-                data = await self._internal_update_data()
+                return await self._internal_update_data()
         except SmlightAuthError as err:
             raise ConfigEntryAuthFailed from err
 
-        except SmlightConnectionError as err:
+        except TimeoutError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_timeout",
+                retry_after=self._retry_after_seconds,
+            ) from err
+
+        except (SmlightConnectionError, JSONDecodeError, TypeError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect_device",
                 translation_placeholders={"error": str(err)},
+                retry_after=self._retry_after_seconds,
             ) from err
-
-        self.update_interval = self._poll_interval
-        return data
 
     @abstractmethod
     async def _internal_update_data(self) -> _DataT:
@@ -229,8 +232,8 @@ class SmFirmwareUpdateCoordinator(SmBaseDataUpdateCoordinator[SmFwData]):
         self.legacy_api = info.legacy_api
         self.data = SmFwData(info=info, esp_firmware=None, zb_firmware=[])
         self.last_update_success = False
-        self._poll_interval = self.update_interval = SCAN_FIRMWARE_INTERVAL
-        self._retry_interval = timedelta(minutes=5)
+        self.update_interval = SCAN_FIRMWARE_INTERVAL
+        self._retry_after_seconds = 300
         # only one update can run at a time (core or zibgee)
         self.in_progress = False
 
