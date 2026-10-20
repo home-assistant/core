@@ -18,9 +18,9 @@ from probatio.humanize import humanize_error
 from homeassistant.const import Platform
 from homeassistant.helpers import config_validation as cv
 from homeassistant.loader import LORAWAN_SCHEMA
-from script.util import sort_manifest as util_sort_manifest
 
 from .icons import integration_category_keys
+from .manifest_util import sort_manifest as util_sort_manifest
 from .model import Config, Integration, IntegrationType, ScaledQualityScaleTiers
 
 DOCUMENTATION_URL_SCHEMA = "https"
@@ -143,6 +143,10 @@ NO_CATEGORIES_INTEGRATION_TYPES = {
     IntegrationType.ENTITY,
     IntegrationType.SYSTEM,
 }
+
+CATEGORIES_DOCUMENTATION_URL = (
+    "https://contributors.home-assistant.io/core/integrations/categories/"
+)
 
 
 def core_documentation_url(value: str) -> str:
@@ -396,17 +400,28 @@ def load_known_categories(config: Config) -> set[str] | None:
     Read from the source strings, so a new category can be used before
     integration_categories.json is regenerated.
     """
-    # Invalid strings are reported by the json and translations plugins
+    # Invalid strings are reported by the json and translations plugins, and the
+    # strings are missing when validating integrations outside a core checkout
     try:
         strings = json.loads((config.root / HOMEASSISTANT_STRINGS_PATH).read_text())
         return integration_category_keys(strings.get("integration_category", {}))
-    except ValueError, AttributeError, TypeError:
+    except OSError, ValueError, AttributeError, TypeError:
         return None
 
 
 def validate_categories(integration: Integration, known_categories: set[str]) -> None:
     """Validate the categories of an integration."""
     if not (categories := integration.manifest.get("categories")):
+        # Every core integration people browse for has a place. Virtual
+        # integrations show the categories of the integration they point to.
+        if integration.core and integration.integration_type not in (
+            NO_CATEGORIES_INTEGRATION_TYPES | {IntegrationType.VIRTUAL}
+        ):
+            integration.add_error(
+                "manifest",
+                f"Integrations of type {integration.integration_type} need categories, "
+                f"see {CATEGORIES_DOCUMENTATION_URL} to pick them",
+            )
         return
 
     if integration.integration_type in NO_CATEGORIES_INTEGRATION_TYPES:
@@ -415,9 +430,12 @@ def validate_categories(integration: Integration, known_categories: set[str]) ->
             f"Integrations of type {integration.integration_type} can't have categories",
         )
 
+    # Custom integrations only get a warning, so a category that is renamed
+    # or removed in core never breaks an existing repository
+    report = integration.add_error if integration.core else integration.add_warning
     for category in categories:
         if category not in known_categories:
-            integration.add_error(
+            report(
                 "manifest",
                 f"Unknown category `{category}`, "
                 f"see {HOMEASSISTANT_STRINGS_PATH} for the known categories",

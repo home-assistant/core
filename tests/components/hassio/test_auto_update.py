@@ -14,12 +14,13 @@ from aiohasupervisor.models import HomeAssistantUpdateOptions, Job, UpdateChanne
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.backup import (
-    DATA_MANAGER,
     CreateBackupEvent,
     CreateBackupStage,
     CreateBackupState,
+    IdleEvent,
 )
 from homeassistant.components.hassio import DOMAIN
 from homeassistant.components.hassio.auto_update import (
@@ -42,8 +43,6 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 STORAGE_KEY = "hassio.auto_update"
@@ -858,7 +857,10 @@ async def test_no_install_while_backup_uploads(
         stage=CreateBackupStage.UPLOAD_TO_AGENTS,
         state=CreateBackupState.IN_PROGRESS,
     )
-    with patch.dict(hass.data, {DATA_MANAGER: Mock(last_event=uploading)}):
+    with patch(
+        "homeassistant.components.backup.async_get_manager",
+        return_value=Mock(last_event=uploading),
+    ):
         await _setup_scheduled(
             hass,
             hass_storage,
@@ -1349,11 +1351,16 @@ async def test_other_backup_started_after_ours(
         state=CreateBackupState.IN_PROGRESS,
     )
 
+    backup_manager = Mock(last_event=IdleEvent())
+
     async def backup_then_another(hass: HomeAssistant) -> None:
-        hass.data[DATA_MANAGER] = Mock(last_event=uploading)
+        backup_manager.last_event = uploading
 
     with (
-        patch.dict(hass.data),
+        patch(
+            "homeassistant.components.backup.async_get_manager",
+            return_value=backup_manager,
+        ),
         patch(
             "homeassistant.components.hassio.backup.backup_core_before_update",
             side_effect=backup_then_another,

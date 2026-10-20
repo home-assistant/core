@@ -13,13 +13,12 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.knx.const import KNX_MODULE_KEY
 from homeassistant.core import HomeAssistant
 
 from .conftest import KNXTestKit
-
-from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.usefixtures("load_knxproj")

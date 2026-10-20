@@ -6,6 +6,8 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockUser, mock_component, mock_restore_cache
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import person
 from homeassistant.components.device_tracker import (
@@ -39,9 +41,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import DEVICE_TRACKER, DEVICE_TRACKER_2
-
-from tests.common import MockUser, mock_component, mock_restore_cache
-from tests.typing import WebSocketGenerator
 
 
 async def test_minimal_setup(hass: HomeAssistant) -> None:

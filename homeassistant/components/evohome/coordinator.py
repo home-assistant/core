@@ -104,7 +104,9 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
                 """
             ) from err
 
-        self.tcs = self.loc.gateways[0].systems[0]
+        if (tcs := self.loc.tcs) is None:
+            raise UpdateFailed(f"Config error: location {self.loc.id} has no TCS")
+        self.tcs = tcs
 
         if self.logger.isEnabledFor(logging.DEBUG):
             loc_info = {
@@ -181,9 +183,10 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             self.temps = {}  # high-precision temps now considered stale
 
         else:
-            self.temps = await self.client_v1.location_by_id[
-                self.loc.id
-            ].get_temperatures(dont_update_status=True)
+            tcs = self.client_v1.location_by_id[self.loc.id].tcs
+            self.temps = (
+                await tcs.get_temperatures(dont_update_status=True) if tcs else {}
+            )
 
         self.logger.debug("Status (high-res temps) = %s", self.temps)
 

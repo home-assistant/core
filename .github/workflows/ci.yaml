@@ -116,7 +116,7 @@ jobs:
       - name: Generate partial Python venv restore key
         id: generate_python_cache_key
         env:
-          HASH_REQUIREMENTS_TEST: ${{ hashFiles('requirements_test.txt', 'requirements_test_pre_commit.txt') }}
+          HASH_REQUIREMENTS_TEST: ${{ hashFiles('requirements_test.txt', 'requirements_test_pre_commit.txt', 'packages/pytest-home-assistant/pyproject.toml') }}
           HASH_REQUIREMENTS: ${{ hashFiles('requirements.txt') }}
           HASH_REQUIREMENTS_ALL: ${{ hashFiles('requirements_all.txt') }}
           HASH_PACKAGE_CONSTRAINTS: ${{ hashFiles('homeassistant/package_constraints.txt') }}
@@ -296,26 +296,6 @@ jobs:
           PREK_SKIP: no-commit-to-branch,mypy,pylint,gen_requirements_all,hassfest,hassfest-metadata,hassfest-mypy-config,zizmor
           RUFF_OUTPUT_FORMAT: github
 
-  zizmor:
-    name: Check GitHub Actions workflows
-    runs-on: ubuntu-26.04
-    permissions:
-      contents: read # To check out the repository
-    needs: [info]
-    if: |
-      github.event.inputs.pylint-only != 'true'
-      && github.event.inputs.mypy-only != 'true'
-      && github.event.inputs.audit-licenses-only != 'true'
-    steps:
-      - name: Check out code from GitHub
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Run zizmor
-        uses: j178/prek-action@1382ad72dea72f9d53832f2bcb65b3e87a947204 # v3.0.1
-        with:
-          extra-args: --all-files zizmor
-
   lint-hadolint:
     name: Check ${{ matrix.file }}
     runs-on: ubuntu-26.04
@@ -481,6 +461,39 @@ jobs:
       - name: Run gen_copilot_instructions.py
         run: |
           uv run --no-project python -m script.gen_copilot_instructions validate
+
+  build-pylint-package:
+    name: Build pylint-home-assistant package
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+    needs:
+      - info
+    if: |
+      github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
+      && needs.info.outputs.test_full_suite == 'true'
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: $/.github/actions/setup-uv-python
+        with:
+          uv-version: ${{ needs.info.outputs.uv_version }}
+          python-version: ${{ needs.info.outputs.default_python }}
+      - name: Build source distribution and wheel
+        run: uv build packages/pylint-home-assistant --out-dir dist
+      - name: Install wheel in a clean environment
+        run: |
+          uv venv "${RUNNER_TEMP}/package-venv"
+          uv pip install --python "${RUNNER_TEMP}/package-venv/bin/python" dist/*.whl
+      - name: Load installed Pylint plugin outside the checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          "${RUNNER_TEMP}/package-venv/bin/pylint" \
+            --rcfile=/dev/null --load-plugins=pylint_home_assistant --list-msgs > /dev/null
 
   gen-recorder-db-versions:
     name: Check recorder database versions
@@ -662,7 +675,7 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          pylint --jobs 0 tests
+          pylint --jobs 0 tests packages/pytest-home-assistant/pytest_homeassistant
       - name: Run pylint (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
@@ -724,7 +737,7 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          mypy --num-workers=4 homeassistant pylint
+          mypy --num-workers=4 homeassistant packages/pylint-home-assistant
       - name: Run mypy (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
@@ -776,6 +789,64 @@ jobs:
           run: |
             . venv/bin/activate
             pytest benchmarks --codspeed --no-cov -o addopts="-p no:respx"
+
+  build-pytest-package:
+    name: Build pytest-home-assistant package
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+    needs:
+      - info
+    if: |
+      github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
+      && needs.info.outputs.test_full_suite == 'true'
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: $/.github/actions/setup-uv-python
+        with:
+          uv-version: ${{ needs.info.outputs.uv_version }}
+          python-version: ${{ needs.info.outputs.default_python }}
+      - name: Build source distribution and wheel
+        run: uv build packages/pytest-home-assistant --out-dir dist
+      - name: Install wheel and matching Home Assistant in a clean environment
+        run: |
+          uv venv "${RUNNER_TEMP}/pytest-package-venv"
+          uv pip install --python "${RUNNER_TEMP}/pytest-package-venv/bin/python" . dist/*.whl
+          cp -R packages/pytest-home-assistant/tests/standalone "${RUNNER_TEMP}/pytest-package-tests"
+      - name: Test installed package outside the checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          "${RUNNER_TEMP}/pytest-package-venv/bin/pytest" \
+            -c "${RUNNER_TEMP}/pytest-package-tests/pytest.ini" \
+            "${RUNNER_TEMP}/pytest-package-tests/integration_tests/test_plugin.py"
+      - name: Test optional helpers and fixtures
+        run: |
+          for wheel in dist/*.whl; do
+            uv pip install --python "${RUNNER_TEMP}/pytest-package-venv/bin/python" \
+              "${wheel}[bluetooth,infrared,radio-frequency]"
+          done
+          cd "${RUNNER_TEMP}"
+          "${RUNNER_TEMP}/pytest-package-venv/bin/python" - <<'PY'
+          import importlib
+
+          for module in (
+              "pytest_homeassistant.plugins",
+              "pytest_homeassistant.components.bluetooth",
+              "pytest_homeassistant.components.infrared.common",
+              "pytest_homeassistant.components.radio_frequency.common",
+          ):
+              importlib.import_module(module)
+          PY
+
+          "${RUNNER_TEMP}/pytest-package-venv/bin/pytest" \
+            -c "${RUNNER_TEMP}/pytest-package-tests/pytest.ini" \
+            "${RUNNER_TEMP}/pytest-package-tests/integration_tests/test_optional.py"
 
   prepare-pytest-full:
     name: Split tests for full run

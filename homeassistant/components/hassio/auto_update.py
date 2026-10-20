@@ -390,14 +390,14 @@ class AutoUpdateManager:
         Supervisor's backup job ends before Core uploads to the backup agents.
         """
         # Imported here like update_helper does, to keep backup out of startup
-        from homeassistant.components.backup import (  # noqa: PLC0415
-            DATA_MANAGER,
-            IdleEvent,
-        )
+        from homeassistant.components.backup import IdleEvent, async_get_manager  # noqa: PLC0415
 
-        return (
-            backup_manager := self._hass.data.get(DATA_MANAGER)
-        ) is not None and not isinstance(backup_manager.last_event, IdleEvent)
+        try:
+            backup_manager = async_get_manager(self._hass)
+        except HomeAssistantError:
+            # Without the backup integration there is no backup to wait for
+            return False
+        return not isinstance(backup_manager.last_event, IdleEvent)
 
     @callback
     def _async_backup_job_running(self) -> bool:

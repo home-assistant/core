@@ -7,6 +7,9 @@ from unittest.mock import patch
 
 from google_nest_sdm.exceptions import AuthException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries
 from homeassistant.components.nest.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
@@ -27,13 +30,10 @@ from .common import (
 )
 from .conftest import FakeAuth, PlatformSetup
 
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
-
 WEB_REDIRECT_URL = "https://example.com/auth/external/callback"
 APP_REDIRECT_URL = "urn:ietf:wg:oauth:2.0:oob"
 RAND_SUFFIX = "ABCDEF"
+NEW_TOPIC_NAME = f"projects/{CLOUD_PROJECT_ID}/topics/home-assistant-{RAND_SUFFIX}"
 
 FAKE_DHCP_DATA = DhcpServiceInfo(
     ip="127.0.0.2", macaddress="001122334455", hostname="fake_hostname"
@@ -575,19 +575,6 @@ async def test_full_flow(
             True,
             [],
             [],
-            {"selected_topic": "projects/sdm-prod/topics/enterprise-new-project-id"},
-            {
-                "topic_name": "projects/sdm-prod/topics/enterprise-new-project-id",
-                "subscription_name": (
-                    "projects/new-cloud-project-id/subscriptions/"
-                    f"home-assistant-{RAND_SUFFIX}"
-                ),
-            },
-        ),
-        (
-            True,
-            [],
-            [],
             {"selected_topic": "create_new_topic"},
             {
                 "topic_name": (
@@ -674,7 +661,6 @@ async def test_full_flow(
         ),
     ],
     ids=[
-        "sdm-managed-topic-only",
         "sdm-managed-topic",
         "existing-topics-ignored",
         "user-managed-topic",
@@ -776,7 +762,7 @@ async def test_config_flow_wrong_project_id(
 
     result = await oauth.async_configure(result, {"code": "1234"})
     result = await oauth.async_complete_pubsub_flow(
-        result, selected_topic="projects/sdm-prod/topics/enterprise-some-project-id"
+        result, selected_topic="create_new_topic"
     )
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("context", {}).get("unique_id") == PROJECT_ID
@@ -794,7 +780,7 @@ async def test_config_flow_wrong_project_id(
         "subscription_name": (
             "projects/cloud-id-9876/subscriptions/home-assistant-ABCDEF"
         ),
-        "topic_name": "projects/sdm-prod/topics/enterprise-some-project-id",
+        "topic_name": NEW_TOPIC_NAME,
         "token": {
             "refresh_token": "mock-refresh-token",
             "access_token": "mock-access-token",
@@ -833,14 +819,14 @@ async def test_config_flow_pubsub_create_subscription_failure(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "pubsub_topic"
     assert result.get("data_schema")({}) == {
-        "topic_name": f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}",
+        "topic_name": "create_new_topic",
     }
 
     # Select Pub/Sub topic the show available subscriptions (none)
     result = await oauth.async_configure(
         result,
         {
-            "topic_name": f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}",
+            "topic_name": "create_new_topic",
         },
     )
     assert result.get("type") is FlowResultType.FORM
@@ -892,7 +878,7 @@ async def test_config_flow_pubsub_create_subscription_failure(
         "subscription_name": (
             f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}"
         ),
-        "topic_name": f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}",
+        "topic_name": NEW_TOPIC_NAME,
         "token": {
             "refresh_token": "mock-refresh-token",
             "access_token": "mock-access-token",
@@ -908,7 +894,7 @@ async def test_config_flow_pubsub_create_subscription_failure(
             TEST_CONFIG_APP_CREDS,
             True,
             "project-id-2",
-            {"selected_topic": "projects/sdm-prod/topics/enterprise-project-id-2"},
+            {"selected_topic": "create_new_topic"},
         ),
         (
             TEST_CONFIG_APP_CREDS,
@@ -1102,7 +1088,7 @@ async def test_config_entry_title_from_home(
 
     result = await oauth.async_configure(result, {"code": "1234"})
     result = await oauth.async_complete_pubsub_flow(
-        result, selected_topic=f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}"
+        result, selected_topic="create_new_topic"
     )
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("context", {}).get("unique_id") == PROJECT_ID
@@ -1115,16 +1101,13 @@ async def test_config_entry_title_from_home(
         entry.data.get("subscription_name")
         == f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}"
     )
-    assert (
-        entry.data.get("topic_name")
-        == f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}"
-    )
+    assert entry.data.get("topic_name") == NEW_TOPIC_NAME
 
 
 @pytest.mark.parametrize(
     ("sdm_managed_topic", "topic_args"),
     [
-        (True, {"selected_topic": f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}"}),
+        (True, {"selected_topic": "create_new_topic"}),
         (False, {"selected_topic": "create_new_topic"}),
     ],
 )
@@ -1190,7 +1173,7 @@ async def test_title_failure_fallback(
 
     result = await oauth.async_configure(result, {"code": "1234"})
     result = await oauth.async_complete_pubsub_flow(
-        result, selected_topic=f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}"
+        result, selected_topic="create_new_topic"
     )
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("context", {}).get("unique_id") == PROJECT_ID
@@ -1203,10 +1186,7 @@ async def test_title_failure_fallback(
         entry.data.get("subscription_name")
         == f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}"
     )
-    assert (
-        entry.data.get("topic_name")
-        == f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}"
-    )
+    assert entry.data.get("topic_name") == NEW_TOPIC_NAME
 
 
 @pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
@@ -1232,7 +1212,7 @@ async def test_structure_missing_trait(
 
     result = await oauth.async_configure(result, {"code": "1234"})
     result = await oauth.async_complete_pubsub_flow(
-        result, selected_topic=f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}"
+        result, selected_topic="create_new_topic"
     )
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("context", {}).get("unique_id") == PROJECT_ID
@@ -1297,11 +1277,11 @@ async def test_dhcp_discovery_already_setup(
             [],  # No existing topics
             [],  # No existing subscriptions
             {
-                "selected_topic": f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}",
+                "selected_topic": "create_new_topic",
                 "selected_subscription": "create_new_subscription",
             },
             {
-                "topic_name": f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}",
+                "topic_name": NEW_TOPIC_NAME,
                 "subscription_name": (
                     f"projects/{CLOUD_PROJECT_ID}/subscriptions/"
                     f"home-assistant-{RAND_SUFFIX}"
@@ -1320,11 +1300,11 @@ async def test_dhcp_discovery_already_setup(
                 )
             ],
             {
-                "selected_topic": f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}",
+                "selected_topic": "create_new_topic",
                 "selected_subscription": "create_new_subscription",
             },
             {
-                "topic_name": f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}",
+                "topic_name": NEW_TOPIC_NAME,
                 "subscription_name": (
                     f"projects/{CLOUD_PROJECT_ID}/subscriptions/"
                     f"home-assistant-{RAND_SUFFIX}"
@@ -1720,7 +1700,7 @@ async def test_list_subscriptions_failure(
     result = await oauth.async_configure(
         result,
         {
-            "topic_name": f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}",
+            "topic_name": "create_new_topic",
         },
     )
     assert result.get("type") is FlowResultType.FORM
@@ -1755,7 +1735,7 @@ async def test_list_subscriptions_failure(
         "subscription_name": (
             f"projects/{CLOUD_PROJECT_ID}/subscriptions/home-assistant-{RAND_SUFFIX}"
         ),
-        "topic_name": f"projects/sdm-prod/topics/enterprise-{PROJECT_ID}",
+        "topic_name": NEW_TOPIC_NAME,
         "token": {
             "refresh_token": "mock-refresh-token",
             "access_token": "mock-access-token",

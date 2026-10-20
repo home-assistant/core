@@ -5,6 +5,8 @@ from unittest.mock import MagicMock, Mock
 from aiohttp import ClientConnectionError, ClientResponseError
 from bond_async import DeviceType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.bond import DOMAIN, BondData
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
@@ -31,9 +33,6 @@ from .common import (
     setup_bond_entity,
     setup_platform,
 )
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def test_async_setup_no_domain_config(hass: HomeAssistant) -> None:

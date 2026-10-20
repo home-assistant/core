@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from boschshcpy import RoomClimateControlService
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
@@ -31,8 +32,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
 from .conftest import climate_control_device, setup_integration
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "climate.living_room"
 AUTOMATIC = RoomClimateControlService.OperationMode.AUTOMATIC

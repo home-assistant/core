@@ -4,6 +4,7 @@ import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.onvif import config_flow
@@ -27,8 +28,6 @@ from . import (
     setup_mock_onvif_camera,
     setup_onvif_integration,
 )
-
-from tests.common import MockConfigEntry
 
 DISCOVERY = [
     {

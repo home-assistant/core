@@ -4,11 +4,10 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.namecheapdns.const import DOMAIN
 from homeassistant.const import CONF_DOMAIN, CONF_HOST, CONF_PASSWORD
-
-from tests.common import MockConfigEntry
 
 TEST_HOST = "home"
 TEST_DOMAIN = "example.com"
