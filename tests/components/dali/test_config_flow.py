@@ -132,6 +132,51 @@ async def test_usb_discovery_already_configured(hass: HomeAssistant) -> None:
     assert entry.data[CONF_DEVICE] == "/dev/serial/by-id/usb-Lunatone_USB-DALI2"
 
 
+async def test_user_flow_selected_port_removed(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test a selected serial port disappearing before submission is handled."""
+    other_port = SerialDevice(
+        device="/dev/ttyUSB1",
+        serial_number=None,
+        manufacturer=None,
+        description=None,
+    )
+    with (
+        patch(
+            "homeassistant.components.dali.config_flow.async_scan_serial_ports",
+            side_effect=[[USB_PORT], [other_port], [other_port]],
+        ),
+        patch(
+            "homeassistant.components.dali.config_flow.usb.get_serial_by_id",
+            return_value="/dev/ttyUSB1",
+        ),
+        patch("homeassistant.components.dali.config_flow.DriverLubaRs232") as driver,
+    ):
+        _mock_driver(driver)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+        )
+        assert result["step_id"] == "user"
+
+        # The originally selected port is gone on submission.
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_DEVICE: "/dev/ttyACM0"}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": "cannot_connect"}
+
+        # Selecting a port that is still present recovers and creates the entry.
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_DEVICE: "/dev/ttyUSB1"}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_DEVICE] == "/dev/ttyUSB1"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test the manual flow selects a serial port and creates an entry."""
     with (

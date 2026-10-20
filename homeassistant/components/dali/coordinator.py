@@ -1,5 +1,6 @@
 """Data update coordinator for the Tridonic DALI integration."""
 
+import asyncio
 from dataclasses import dataclass, replace
 from datetime import timedelta
 import logging
@@ -86,6 +87,9 @@ class DaliCoordinator(DataUpdateCoordinator[dict[int, DaliGearData]]):
         )
         self.driver = driver
         self._last_full_scan: float | None = None
+        # Serialises the periodic bus scan with single-gear command updates so a
+        # mid-scan read cannot publish a stale level over a just-sent command.
+        self._refresh_lock = asyncio.Lock()
 
     async def async_update_gear(
         self, address: int, optimistic_level: int | None = None
@@ -98,15 +102,16 @@ class DaliCoordinator(DataUpdateCoordinator[dict[int, DaliGearData]]):
         mid-fade value; the override shows the target at once and the periodic
         scan reconciles it.
         """
-        gear = await self._query_gear(address)
-        data = dict(self.data or {})
-        if gear is None:
-            data.pop(address, None)
-        elif optimistic_level is not None:
-            data[address] = replace(gear, level=optimistic_level)
-        else:
-            data[address] = gear
-        self.async_set_updated_data(data)
+        async with self._refresh_lock:
+            gear = await self._query_gear(address)
+            data = dict(self.data or {})
+            if gear is None:
+                data.pop(address, None)
+            elif optimistic_level is not None:
+                data[address] = replace(gear, level=optimistic_level)
+            else:
+                data[address] = gear
+            self.async_set_updated_data(data)
 
     async def _query_gear(self, address: int) -> DaliGearData | None:
         """Return a gear's state and metadata, or None when absent.
@@ -205,10 +210,11 @@ class DaliCoordinator(DataUpdateCoordinator[dict[int, DaliGearData]]):
             LOGGER.info("Scanning DALI bus for control gear")
         data: dict[int, DaliGearData] = {}
         try:
-            for address in addresses:
-                gear = await self._query_gear(address)
-                if gear is not None:
-                    data[address] = gear
+            async with self._refresh_lock:
+                for address in addresses:
+                    gear = await self._query_gear(address)
+                    if gear is not None:
+                        data[address] = gear
             if full_scan:
                 LOGGER.info("Found %d control gear", len(data))
         except TransmissionError as err:
@@ -303,6 +309,10 @@ def _dali_level_to_brightness(
         return None
     if level <= 0:
         return 0
+    # Full arc power maps to full brightness before the minimum-level shortcut,
+    # which would otherwise report level 254 as brightness 1 when min_level is 254.
+    if level >= 254:
+        return 255
     if level <= min_level:
         return 1
     if linear_dimming:
