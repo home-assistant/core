@@ -215,7 +215,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         domain=DOMAIN,
-        service="ask_question",
+        service=AssistSatelliteService.ASK_QUESTION,
         service_func=handle_ask_question,
         schema=probatio.All(
             {

@@ -13,7 +13,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
 )
 from homeassistant.components.stream import FORMAT_CONTENT_TYPE, OUTPUT_FORMATS
-from homeassistant.const import ATTR_ENTITY_ID, CONF_FILENAME
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -24,8 +24,6 @@ from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     CAMERA_IMAGE_TIMEOUT,
-    CONF_DURATION,
-    CONF_LOOKBACK,
     DATA_COMPONENT,
     DOMAIN,
     CameraService,
@@ -52,9 +50,9 @@ CAMERA_SERVICE_PLAY_STREAM: VolDictType = {
 
 
 CAMERA_SERVICE_RECORD: VolDictType = {
-    probatio.Required(CONF_FILENAME): cv.template,
-    probatio.Optional(CONF_DURATION, default=30): probatio.Coerce(int),
-    probatio.Optional(CONF_LOOKBACK, default=0): probatio.Coerce(int),
+    probatio.Required(CameraServiceArgument.FILENAME): cv.template,
+    probatio.Optional(CameraServiceArgument.DURATION, default=30): probatio.Coerce(int),
+    probatio.Optional(CameraServiceArgument.LOOKBACK, default=0): probatio.Coerce(int),
 }
 
 
@@ -139,13 +137,13 @@ async def _async_handle_record_service(
             translation_placeholders={"entity_id": camera.entity_id},
         )
 
-    filename = service_call.data[CONF_FILENAME]
+    filename = service_call.data[CameraServiceArgument.FILENAME]
     video_path = filename.async_render()
 
     await stream.async_record(
         video_path,
-        duration=service_call.data[CONF_DURATION],
-        lookback=service_call.data[CONF_LOOKBACK],
+        duration=service_call.data[CameraServiceArgument.DURATION],
+        lookback=service_call.data[CameraServiceArgument.LOOKBACK],
     )
 
 

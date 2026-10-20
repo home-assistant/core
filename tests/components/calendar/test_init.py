@@ -249,7 +249,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
         (
             {},
             probatio.error.MultipleInvalid,
-            "at least one of ['start_date', 'start_date_time', 'in'] is required",
+            "at least one of [<CalendarServiceArgument.START_DATE: 'start_date'>, <CalendarServiceArgument.START_DATE_TIME: 'start_date_time'>, <CalendarServiceArgument.IN: 'in'>] is required",
         ),
         (
             {
@@ -263,7 +263,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 "end_date": "2022-04-02",
             },
             probatio.error.MultipleInvalid,
-            "at least one of ['start_date', 'start_date_time', 'in'] is required",
+            "at least one of [<CalendarServiceArgument.START_DATE: 'start_date'>, <CalendarServiceArgument.START_DATE_TIME: 'start_date_time'>, <CalendarServiceArgument.IN: 'in'>] is required",
         ),
         (
             {
@@ -277,7 +277,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 "end_date_time": "2022-04-02T07:00:00",
             },
             probatio.error.MultipleInvalid,
-            "at least one of ['start_date', 'start_date_time', 'in'] is required",
+            "at least one of [<CalendarServiceArgument.START_DATE: 'start_date'>, <CalendarServiceArgument.START_DATE_TIME: 'start_date_time'>, <CalendarServiceArgument.IN: 'in'>] is required",
         ),
         (
             {
@@ -286,7 +286,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 "end_date_time": "2022-04-02T07:00:00",
             },
             probatio.error.MultipleInvalid,
-            "at most one of ['start_date', 'start_date_time', 'in'] is allowed",
+            "at most one of [<CalendarServiceArgument.START_DATE: 'start_date'>, <CalendarServiceArgument.START_DATE_TIME: 'start_date_time'>, <CalendarServiceArgument.IN: 'in'>] is allowed",
         ),
         (
             {
@@ -332,7 +332,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 },
             },
             probatio.error.MultipleInvalid,
-            "at most one of ['start_date', 'start_date_time', 'in'] is allowed",
+            "at most one of [<CalendarServiceArgument.START_DATE: 'start_date'>, <CalendarServiceArgument.START_DATE_TIME: 'start_date_time'>, <CalendarServiceArgument.IN: 'in'>] is allowed",
         ),
         (
             {
@@ -343,7 +343,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
                 },
             },
             probatio.error.MultipleInvalid,
-            "at most one of ['start_date', 'start_date_time', 'in'] is allowed",
+            "at most one of [<CalendarServiceArgument.START_DATE: 'start_date'>, <CalendarServiceArgument.START_DATE_TIME: 'start_date_time'>, <CalendarServiceArgument.IN: 'in'>] is allowed",
         ),
         (
             {
