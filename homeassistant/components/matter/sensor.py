@@ -1181,9 +1181,11 @@ DISCOVERY_SCHEMAS = [
             translation_key="power_factor",
             device_class=SensorDeviceClass.POWER_FACTOR,
             entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+            suggested_display_precision=0,
             state_class=SensorStateClass.MEASUREMENT,
-            # PowerFactor is reported as -10000 to 10000, representing -1 to 1
-            device_to_ha=lambda x: x / 10000,
+            # PowerFactor is reported as -10000 to 10000, representing -100% to 100%
+            device_to_ha=lambda x: x / 100,
         ),
         entity_class=MatterSensor,
         required_attributes=(
