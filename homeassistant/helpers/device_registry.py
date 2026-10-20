@@ -426,9 +426,13 @@ def _validate_device_info(config_entry: ConfigEntry, device_info: DeviceInfo) ->
         )
     for field in ("manufacturer", "model", "name"):
         # The deprecated default_ fields are hidden from type checkers
-        if (
-            getattr(device_info, field) is not UNDEFINED
-            and getattr(device_info, f"default_{field}") is not UNDEFINED
+        if getattr(device_info, f"default_{field}") is UNDEFINED:
+            continue
+        # A translation key supplies the name
+        if getattr(device_info, field) is not UNDEFINED or (
+            field == "name"
+            and isinstance(device_info.translation_key, str)
+            and device_info.translation_key
         ):
             raise DeviceInfoError(
                 config_entry.domain,

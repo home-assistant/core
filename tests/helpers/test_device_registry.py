@@ -7620,6 +7620,23 @@ async def test_get_or_create_rejects_field_and_its_default(
         )
 
 
+async def test_get_or_create_rejects_translation_key_and_default_name(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a translation key, which supplies the name, is rejected with default_name."""
+    with pytest.raises(
+        dr.DeviceInfoError,
+        match="passing both `name` and `default_name` is not allowed",
+    ):
+        device_registry.async_get_or_create(
+            config_entry_id=mock_config_entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+            translation_key="translated_name",
+            default_name="default name",
+        )
+
+
 async def test_verify_suggested_area_does_not_overwrite_area_id(
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
