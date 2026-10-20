@@ -6,6 +6,8 @@ from unittest.mock import AsyncMock, patch
 from aio_wattwaechter import WattwaechterConnectionError
 from aio_wattwaechter.models import OtaCheckResponse
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INSTALL
@@ -16,9 +18,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_DEVICE_ID, MOCK_FW_VERSION, MOCK_OTA_CHECK
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.typing import WebSocketGenerator
 
 
 async def test_all_entities(

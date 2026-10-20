@@ -8,6 +8,11 @@ from aidot.device_client import DeviceStatusData
 from aidot.exceptions import AidotAuthFailed
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.aidot.coordinator import UPDATE_DEVICE_LIST_INTERVAL
@@ -32,8 +37,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import async_init_integration
 from .const import ENTITY_LIGHT, LIGHT_DOMAIN
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_state(

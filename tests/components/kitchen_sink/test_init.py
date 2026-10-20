@@ -6,6 +6,8 @@ from unittest.mock import ANY
 
 import probatio
 import pytest
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.kitchen_sink import DOMAIN
@@ -23,9 +25,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
-
-from tests.components.recorder.common import async_wait_recording_done
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture

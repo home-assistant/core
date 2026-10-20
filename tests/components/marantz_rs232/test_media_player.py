@@ -8,6 +8,7 @@ from unittest.mock import MagicMock
 
 from marantz_rs232 import V2007ReceiverState, V2007Source
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.marantz_rs232.media_player import INPUT_SOURCE_TO_HA
@@ -36,8 +37,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.json import load_json
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 MAIN = "media_player.marantz_receiver"
 MULTI = "media_player.marantz_receiver_multi_room"

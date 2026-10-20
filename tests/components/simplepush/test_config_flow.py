@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from simplepush import ApiError
 from simplepush.legacy import UnknownError
 
@@ -11,8 +12,6 @@ from homeassistant.components.simplepush.const import CONF_DEVICE_KEY, CONF_SALT
 from homeassistant.const import CONF_API_TOKEN, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
-
-from tests.common import MockConfigEntry
 
 MOCK_CONFIG = {CONF_API_TOKEN: "token"}
 

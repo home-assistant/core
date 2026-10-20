@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pytrafikverket import (
     CameraInfoModel,
     InvalidAuthentication,
@@ -15,8 +16,6 @@ from homeassistant.components.trafikverket_camera.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_LOCATION
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant, get_camera: CameraInfoModel) -> None:
@@ -55,6 +54,37 @@ async def test_form(hass: HomeAssistant, get_camera: CameraInfoModel) -> None:
     }
     assert len(mock_setup_entry.mock_calls) == 1
     assert result2["result"].unique_id == "trafikverket_camera-1234"
+
+
+async def test_form_already_configured(
+    hass: HomeAssistant, get_camera: CameraInfoModel
+) -> None:
+    """Test we abort when the camera is already configured."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "1234567890", CONF_ID: "1234"},
+        unique_id="trafikverket_camera-1234",
+        version=3,
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.trafikverket_camera.config_flow.TrafikverketCamera.async_get_cameras",
+        return_value=[get_camera],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "1234567890",
+                CONF_LOCATION: "Test loc",
+            },
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_form_multiple_cameras(

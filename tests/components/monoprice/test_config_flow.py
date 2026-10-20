@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from serialx import SerialException
 
 from homeassistant import config_entries
@@ -15,8 +16,6 @@ from homeassistant.components.monoprice.const import (
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 CONFIG = {
     CONF_PORT: "/test/port",

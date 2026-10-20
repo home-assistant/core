@@ -36,6 +36,8 @@ from .const import (
     FanEntityCapabilityAttribute,
     FanEntityFeature,
     FanEntityStateAttribute,
+    FanService,
+    FanServiceArgument,
 )
 from .entity import FanEntity, FanEntityDescription, NotValidPresetModeError
 from .services import async_setup_services
@@ -76,6 +78,8 @@ __all__ = [
     "FanEntityDescription",
     "FanEntityFeature",
     "FanEntityStateAttribute",
+    "FanService",
+    "FanServiceArgument",
     "NotValidPresetModeError",
 ]
 

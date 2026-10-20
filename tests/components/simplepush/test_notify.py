@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import MagicMock, call
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from simplepush import ApiError
 from simplepush.legacy import BadRequest, UnknownError
 from syrupy.assertion import SnapshotAssertion
@@ -22,8 +23,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 MOCK_CONFIG = {
     CONF_DEVICE_KEY: "abc",

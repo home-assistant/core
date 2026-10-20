@@ -27,6 +27,7 @@ class BackupCoordinatorData:
     backup_manager_state: BackupManagerState
     last_attempted_automatic_backup: datetime | None
     last_successful_automatic_backup: datetime | None
+    last_successful_automatic_backup_size: int | None
     next_scheduled_automatic_backup: datetime | None
     last_event: ManagerStateEvent | BackupPlatformEvent | None
 
@@ -72,6 +73,7 @@ class BackupDataUpdateCoordinator(DataUpdateCoordinator[BackupCoordinatorData]):
             self.backup_manager.state,
             self.backup_manager.config.data.last_attempted_automatic_backup,
             self.backup_manager.config.data.last_completed_automatic_backup,
+            self.backup_manager.config.data.last_completed_automatic_backup_size,
             self.backup_manager.config.data.schedule.next_automatic_backup,
             self._last_event,
         )

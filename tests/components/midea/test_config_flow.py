@@ -10,6 +10,7 @@ from midealocal.const import DeviceType, ProtocolVersion
 from midealocal.device import MideaDevice
 from midealocal.exceptions import CloudLoginError, MideaCloudError, NoDeviceRegistered
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant.components.midea.config_flow import (
     DEFAULT_CLOUD,
@@ -63,8 +64,6 @@ from .const import (
     TEST_TOKEN,
     TEST_TYPE,
 )
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

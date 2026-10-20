@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from aiohttp import ClientConnectionError
 import faadelays
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.faa_delays.const import DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import MockConfigEntry
 
 
 async def mock_valid_airport(self, *args, **kwargs):
