@@ -119,6 +119,9 @@ class PushMeldNotificationService(BaseNotificationService):
 
     def _remove_from_legacy_registry(self) -> None:
         """Remove this service instance from the legacy notify registry."""
+        if self.hass is None:
+            return
+
         notify_services = self.hass.data.get(NOTIFY_SERVICES)
         if not notify_services or DOMAIN not in notify_services:
             return
