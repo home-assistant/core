@@ -24,19 +24,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliConfigEntry) -> bool
         uri=f"luba232:{entry.data[CONF_DEVICE]}",
         bus_power=entry.data.get(CONF_BUS_POWER, False),
     )
+
+    def _close_transport() -> None:
+        """Close the interface's serial transport if it was opened."""
+        if transport := getattr(driver, "_transport", None):
+            transport.close()
+
+    # Registered before connecting so a failed or cancelled connect, first
+    # refresh, or platform setup still closes the serial transport.
+    entry.async_on_unload(_close_transport)
     try:
         # Only control gear is used, so skip the control-device instance scan
         # that would broadcast quiescent mode and interrupt DALI-2 input devices.
         await driver.connect(scan_dev_inst=False)
     except (TransmissionError, OSError, TimeoutError) as err:
-        if transport := getattr(driver, "_transport", None):
-            transport.close()
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
         ) from err
     coordinator = DaliCoordinator(hass, driver, entry)
-    entry.async_on_unload(coordinator.close)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 

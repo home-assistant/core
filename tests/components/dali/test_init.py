@@ -1,5 +1,6 @@
 """Test the Tridonic DALI integration setup."""
 
+import asyncio
 import logging
 from types import GeneratorType, SimpleNamespace
 from unittest.mock import AsyncMock, patch
@@ -88,6 +89,24 @@ async def test_setup_entry_connection_failure(
             return_value=fake_dali_driver,
         ),
         patch.object(fake_dali_driver, "connect", side_effect=OSError("offline")),
+    ):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+
+    assert fake_dali_driver.closed
+
+
+async def test_setup_closes_transport_when_connect_is_cancelled(
+    hass: HomeAssistant, fake_dali_driver: FakeDaliDriver
+) -> None:
+    """Test a cancelled connect still closes the serial transport."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_DEVICE: "/dev/ttyACM0"})
+    entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.dali.DriverLubaRs232",
+            return_value=fake_dali_driver,
+        ),
+        patch.object(fake_dali_driver, "connect", side_effect=asyncio.CancelledError),
     ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
 
