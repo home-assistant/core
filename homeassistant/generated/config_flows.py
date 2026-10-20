@@ -11,6 +11,7 @@ FLOWS = {
         "generic_thermostat",
         "group",
         "history_stats",
+        "image_classification",
         "integration",
         "min_max",
         "mold_indicator",

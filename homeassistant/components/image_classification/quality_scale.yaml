@@ -1,0 +1,107 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: The integration has no actions.
+  appropriate-polling: done
+  brands: todo
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency:
+    status: exempt
+    comment: The integration has no requirements.
+  docs-actions:
+    status: exempt
+    comment: The integration has no actions.
+  docs-conditions:
+    status: exempt
+    comment: The integration has no conditions.
+  docs-high-level-description: todo
+  docs-installation-instructions: todo
+  docs-removal-instructions: todo
+  docs-triggers:
+    status: exempt
+    comment: The integration has no triggers.
+  entity-event-setup:
+    status: exempt
+    comment: The entity only reads coordinator data.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup:
+    status: exempt
+    comment: |
+      The sources are a camera and an AI Task entity, which can be unavailable
+      at times. The entry loads anyway, the sensor is unavailable until they
+      return and the options stay usable.
+  unique-config-entry:
+    status: exempt
+    comment: One camera can watch several regions, each is its own entry.
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: The integration has no actions.
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: The sources are local entities, there is nothing to authenticate.
+  test-coverage: done
+
+  # Gold
+  devices:
+    status: exempt
+    comment: A helper creates no device, the sensor is added to the device of its camera.
+  diagnostics: todo
+  discovery:
+    status: exempt
+    comment: A helper has nothing to discover.
+  discovery-update-info:
+    status: exempt
+    comment: A helper has nothing to discover.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: A helper has nothing to discover.
+  entity-category:
+    status: exempt
+    comment: The only entity is the primary state.
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: The only entity is the primary state.
+  entity-translations:
+    status: exempt
+    comment: The entity is named by the user.
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: The icon follows the device class.
+  reconfiguration-flow: todo
+  repair-issues: todo
+  stale-devices:
+    status: exempt
+    comment: A helper has nothing to discover.
+
+  # Platinum
+  async-dependency:
+    status: exempt
+    comment: The integration has no library.
+  inject-websession:
+    status: exempt
+    comment: The integration makes no HTTP requests.
+  strict-typing: done

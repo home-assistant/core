@@ -1,0 +1,166 @@
+{
+  "config": {
+    "create_entry": {
+      "default": "The sensor stays unknown until you teach it both states. Go to **Settings** > **Devices & services** > **Helpers**, select the sensor, select the settings icon, then **Image classification options**. Teach one frame of each state, for example door open and door closed. If a state is not visible right now, teach it later."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_frame": "The camera returned an image that Home Assistant can't read. Check the camera's settings and try again.",
+      "invalid_horizontal_range": "The left edge must be smaller than the right edge.",
+      "invalid_vertical_range": "The top edge must be smaller than the bottom edge."
+    },
+    "step": {
+      "region": {
+        "data": {
+          "bottom": "Bottom",
+          "left": "Left",
+          "right": "Right",
+          "top": "Top"
+        },
+        "data_description": {
+          "bottom": "Where the region ends, in percent of the frame height from the top edge.",
+          "left": "Where the region starts, in percent of the frame width from the left edge.",
+          "right": "Where the region ends, in percent of the frame width from the left edge.",
+          "top": "Where the region starts, in percent of the frame height from the top edge."
+        },
+        "description": "![Current frame with the region outlined]({preview})\n\nChoose the part of the frame the sensor watches. 0 is the left or top edge of the frame, 100 the right or bottom edge. The next step shows the result.\n\nPut the region around what changes, such as the door itself. Leave out things that move for other reasons, such as people, plants, or things that get moved around.\n\nYou can't change the region later without adding the sensor again.",
+        "title": "Choose the region"
+      },
+      "region_confirm": {
+        "description": "![Current frame with the region outlined]({preview})\n\nThe sensor only looks at the outlined region.",
+        "menu_option_descriptions": {
+          "finish": "Create the sensor with this region.",
+          "region": "Go back and adjust the edges."
+        },
+        "menu_options": {
+          "finish": "Use this region",
+          "region": "Change the region"
+        },
+        "title": "Check the region"
+      },
+      "user": {
+        "data": {
+          "ai_task_entity_id": "AI Task entity",
+          "device_class": "Device class",
+          "entity_id": "Camera",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "ai_task_entity_id": "Compares the camera frames with the taught frames. Hosted models may charge for each comparison, the sensor makes one every 5 minutes.",
+          "device_class": "What the region shows. This sets the state names, such as Open and Closed or Detected and Clear, and the icon.",
+          "entity_id": "The camera that shows what you want to watch.",
+          "name": "For example, Garage door. The sensor is added to the camera's device, so the device name is shown in front, for example Garage camera Garage door. Don't repeat the camera name here."
+        },
+        "description": "Create a binary sensor that recognizes the state of a part of the camera view, such as a garage door that is open or closed. You teach it with example frames from the camera, an AI Task entity compares new frames with them."
+      }
+    }
+  },
+  "exceptions": {
+    "camera_unavailable": {
+      "message": "Could not get a frame from {entity_id}: {error}"
+    },
+    "classification_failed": {
+      "message": "Could not classify the frame: {error}"
+    },
+    "unknown_frame": {
+      "message": "There is no taught frame {identifier}."
+    }
+  },
+  "options": {
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_frame": "[%key:component::image_classification::config::error::invalid_frame%]",
+      "not_loaded": "The sensor is not loaded right now. Check it under **Settings** > **Devices & services** > **Helpers**, then open the options again.",
+      "remove_successful": "The selected frames were removed.",
+      "teach_successful": "The frame was taught. To teach another one, open the options again. Teach more frames when the region looks different, for example at night or in the other state."
+    },
+    "error": {
+      "nothing_selected": "Select at least one frame to remove."
+    },
+    "step": {
+      "ai_task": {
+        "data": {
+          "ai_task_entity_id": "[%key:component::image_classification::config::step::user::data::ai_task_entity_id%]"
+        },
+        "data_description": {
+          "ai_task_entity_id": "[%key:component::image_classification::config::step::user::data_description::ai_task_entity_id%]"
+        },
+        "description": "The taught frames stay, the new entity compares the camera frames with them.",
+        "title": "Change the AI Task entity"
+      },
+      "init": {
+        "menu_option_descriptions": {
+          "ai_task": "Choose the AI Task entity that compares the frames.",
+          "remove": "Remove frames taught with the wrong state or that no longer match the view.",
+          "teach": "Take the current camera frame and tell the sensor what it shows."
+        },
+        "menu_options": {
+          "ai_task": "Change the AI Task entity",
+          "remove": "Remove taught frames",
+          "teach": "Teach the current frame"
+        }
+      },
+      "remove": {
+        "data": {
+          "frames": "Frames to remove"
+        },
+        "data_description": {
+          "frames": "Each entry shows the state the frame was taught as and when it was taught."
+        },
+        "description": "Remove frames that were taught with the wrong state or that no longer match the view, for example after the camera was moved. If a state has no frames left, the sensor is unknown until you teach that state again.",
+        "title": "Remove taught frames"
+      },
+      "teach": {
+        "data": {
+          "state": "What does the region show?"
+        },
+        "data_description": {
+          "state": "Only teach a frame that clearly shows one state."
+        },
+        "description": "![Current frame with the region outlined]({preview})\n\nTeach at least one frame of each state. More frames in different light, such as day, night, or with the lights on, make the sensor more reliable.\n\nFrames taught so far: {counts}. The sensor shows unknown while it is unsure.",
+        "title": "Teach the current frame"
+      }
+    }
+  },
+  "selector": {
+    "device_class": {
+      "options": {
+        "door": "[%key:component::binary_sensor::entity_component::door::name%]",
+        "garage_door": "[%key:component::binary_sensor::entity_component::garage_door::name%]",
+        "occupancy": "[%key:component::binary_sensor::entity_component::occupancy::name%]",
+        "opening": "[%key:component::binary_sensor::entity_component::opening::name%]",
+        "window": "[%key:component::binary_sensor::entity_component::window::name%]"
+      }
+    },
+    "state_door": {
+      "options": {
+        "off": "[%key:common::state::closed%]",
+        "on": "[%key:common::state::open%]"
+      }
+    },
+    "state_garage_door": {
+      "options": {
+        "off": "[%key:common::state::closed%]",
+        "on": "[%key:common::state::open%]"
+      }
+    },
+    "state_occupancy": {
+      "options": {
+        "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+        "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+      }
+    },
+    "state_opening": {
+      "options": {
+        "off": "[%key:common::state::closed%]",
+        "on": "[%key:common::state::open%]"
+      }
+    },
+    "state_window": {
+      "options": {
+        "off": "[%key:common::state::closed%]",
+        "on": "[%key:common::state::open%]"
+      }
+    }
+  }
+}

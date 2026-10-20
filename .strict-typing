@@ -316,6 +316,7 @@ homeassistant.components.hypontech.*
 homeassistant.components.ibeacon.*
 homeassistant.components.idasen_desk.*
 homeassistant.components.image.*
+homeassistant.components.image_classification.*
 homeassistant.components.image_processing.*
 homeassistant.components.image_upload.*
 homeassistant.components.imap.*

@@ -894,6 +894,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/illuminance/ @home-assistant/core
 /homeassistant/components/image/ @home-assistant/core
 /tests/components/image/ @home-assistant/core
+/homeassistant/components/image_classification/ @RaHehl
+/tests/components/image_classification/ @RaHehl
 /homeassistant/components/image_processing/ @home-assistant/core
 /tests/components/image_processing/ @home-assistant/core
 /homeassistant/components/image_upload/ @home-assistant/core

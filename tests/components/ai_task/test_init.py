@@ -12,6 +12,7 @@ from pytest_homeassistant.common import MockUser, flush_store
 from homeassistant.components import media_source
 from homeassistant.components.ai_task import (
     AITaskPreferences,
+    async_get_classify_image_entity_id,
     async_is_automatic_evaluation_enabled,
 )
 from homeassistant.components.ai_task.const import (
@@ -42,6 +43,22 @@ async def test_automatic_evaluation_preference(hass: HomeAssistant) -> None:
 
     preferences.async_set_preferences(allow_automatic_evaluation=False)
     assert async_is_automatic_evaluation_enabled(hass) is False
+
+
+async def test_classify_image_entity_id_without_setup(hass: HomeAssistant) -> None:
+    """No image classification entity is preferred before AI Task is set up."""
+    assert async_get_classify_image_entity_id(hass) is None
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_classify_image_entity_id_preference(hass: HomeAssistant) -> None:
+    """The public helper reflects the preferred image classification entity."""
+    assert async_get_classify_image_entity_id(hass) is None
+
+    hass.data[DATA_PREFERENCES].async_set_preferences(
+        classify_image_entity_id=TEST_ENTITY_ID
+    )
+    assert async_get_classify_image_entity_id(hass) == TEST_ENTITY_ID
 
 
 async def test_preferences_storage_load(

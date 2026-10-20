@@ -63,6 +63,7 @@ __all__ = [
     "async_evaluate",
     "async_generate_data",
     "async_generate_image",
+    "async_get_classify_image_entity_id",
     "async_is_automatic_evaluation_enabled",
     "crop_image",
 ]
@@ -106,6 +107,14 @@ def async_is_automatic_evaluation_enabled(hass: HomeAssistant) -> bool:
     if (preferences := hass.data.get(DATA_PREFERENCES)) is None:
         return False
     return preferences.allow_automatic_evaluation
+
+
+@callback
+def async_get_classify_image_entity_id(hass: HomeAssistant) -> str | None:
+    """Return the preferred image classification entity, None if not set."""
+    if (preferences := hass.data.get(DATA_PREFERENCES)) is None:
+        return None
+    return preferences.classify_image_entity_id
 
 
 class AITaskPreferences:
