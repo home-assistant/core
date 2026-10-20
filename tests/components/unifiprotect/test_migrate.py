@@ -1,6 +1,7 @@
 """Test the UniFi Protect setup flow."""
 
 from collections.abc import Callable, Coroutine
+import logging
 from typing import Any
 
 import pytest
@@ -16,8 +17,8 @@ from homeassistant.components.unifiprotect.migrate import (
     async_remove_hdr_switch,
     async_remove_sense_setting_mirrors,
 )
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, Platform
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -682,6 +683,204 @@ async def test_migrate_light_setting_mirror_repair_clears_when_unused(
 
     assert entity_registry.async_get(mirror.entity_id) is not None
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_migrate_light_setting_mirror_waits_for_start(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    light: Light,
+) -> None:
+    """Automations loaded after the entry still get the repair."""
+    setup_public_light(ufp)
+    mirror = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR, DOMAIN, f"{light.mac}_light", config_entry=ufp.entry
+    )
+    hass.set_state(CoreState.starting)
+
+    await init_entry(hass, ufp, [light], regenerate_ids=False)
+    await _load_automation(hass, mirror.entity_id)
+    assert not issue_registry.issues
+
+    hass.set_state(CoreState.running)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"setting_mirror_deprecated_{light.mac}_light"
+    )
+
+
+@pytest.mark.parametrize(
+    ("platform", "key", "issue"),
+    [
+        *REMOVED_ENTITIES,
+        pytest.param(
+            Platform.CAMERA,
+            "0_insecure",
+            "insecure_camera_removed",
+            id="insecure_camera",
+        ),
+    ],
+)
+async def test_migrate_removed_entity_waits_for_start(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    platform: Platform,
+    key: str,
+    issue: str,
+) -> None:
+    """A used entity is only removed, with its repair, once startup is done."""
+    # The insecure camera is only removed next to its secure counterpart. The
+    # other entities ignore it.
+    entity_registry.async_get_or_create(
+        Platform.CAMERA, DOMAIN, f"{doorbell.mac}_0", config_entry=ufp.entry
+    )
+    entity = entity_registry.async_get_or_create(
+        platform, DOMAIN, f"{doorbell.mac}_{key}", config_entry=ufp.entry
+    )
+    hass.set_state(CoreState.starting)
+
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+    await _load_automation(hass, entity.entity_id)
+    assert entity_registry.async_get(entity.entity_id) is not None
+    assert not issue_registry.issues
+
+    hass.set_state(CoreState.running)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(entity.entity_id) is None
+    assert issue_registry.async_get_issue(DOMAIN, f"{issue}_{doorbell.mac}_{key}")
+
+
+@pytest.mark.parametrize(
+    ("platform", "device", "key"),
+    [
+        pytest.param(Platform.SWITCH, "doorbell", "hdr_mode", id="removal"),
+        pytest.param(Platform.BINARY_SENSOR, "light", "light", id="deprecation"),
+    ],
+)
+async def test_migrate_unload_before_start(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    light: Light,
+    request: pytest.FixtureRequest,
+    platform: Platform,
+    device: str,
+    key: str,
+) -> None:
+    """An entry unloaded before startup finishes leaves its entities alone."""
+    setup_public_light(ufp)
+    mac = request.getfixturevalue(device).mac
+    entity = entity_registry.async_get_or_create(
+        platform, DOMAIN, f"{mac}_{key}", config_entry=ufp.entry
+    )
+    await _load_automation(hass, entity.entity_id)
+    hass.set_state(CoreState.starting)
+    await init_entry(hass, ufp, [doorbell, light], regenerate_ids=False)
+
+    await hass.config_entries.async_unload(ufp.entry.entry_id)
+    hass.set_state(CoreState.running)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(entity.entity_id) is not None
+    assert not issue_registry.issues
+
+
+async def test_migrate_removed_entity_deleted_before_start(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """An entity the user deletes during startup is skipped."""
+    entity = entity_registry.async_get_or_create(
+        Platform.SWITCH, DOMAIN, f"{doorbell.mac}_hdr_mode", config_entry=ufp.entry
+    )
+    await _load_automation(hass, entity.entity_id)
+    hass.set_state(CoreState.starting)
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    entity_registry.async_remove(entity.entity_id)
+    hass.set_state(CoreState.running)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    assert not issue_registry.issues
+    # A failing STARTED listener is only logged, not raised.
+    assert not [r for r in caplog.records if r.levelno >= logging.ERROR]
+
+
+async def test_migrate_removed_entity_renamed_before_start(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """An entity renamed during startup is still removed with its repair."""
+    entity = entity_registry.async_get_or_create(
+        Platform.SWITCH, DOMAIN, f"{doorbell.mac}_hdr_mode", config_entry=ufp.entry
+    )
+    hass.set_state(CoreState.starting)
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    renamed = entity_registry.async_update_entity(
+        entity.entity_id, new_entity_id="switch.renamed_hdr"
+    )
+    await _load_automation(hass, renamed.entity_id)
+    hass.set_state(CoreState.running)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(renamed.entity_id) is None
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"hdr_switch_removed_{doorbell.mac}_hdr_mode"
+    )
+    assert issue is not None
+    assert issue.translation_placeholders["entity_id"] == renamed.entity_id
+
+
+async def test_migrate_sense_setting_mirror_waits_for_start(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """A used sense mirror is only removed, with its repair, once startup is done."""
+    setup_public_sensor(ufp)
+    mirror = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        f"{sensor_all.mac}_alarm",
+        config_entry=ufp.entry,
+    )
+    hass.set_state(CoreState.starting)
+
+    await init_entry(hass, ufp, [sensor_all], regenerate_ids=False)
+    await _load_automation(hass, mirror.entity_id)
+    assert entity_registry.async_get(mirror.entity_id) is not None
+
+    hass.set_state(CoreState.running)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(mirror.entity_id) is None
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"sense_setting_mirror_removed_{mirror.unique_id}"
+    )
 
 
 async def test_migrate_light_setting_mirror_without_replacement(
