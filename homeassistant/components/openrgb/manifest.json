@@ -1,6 +1,7 @@
 {
   "domain": "openrgb",
   "name": "OpenRGB",
+  "categories": ["lighting.led_strips_controllers"],
   "codeowners": ["@felipecrs"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/openrgb",

@@ -72,7 +72,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: TransmissionConfigEntry
-) -> bool:
+) -> None:
     """Set up the Transmission Component."""
 
     @callback
@@ -133,19 +133,17 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: TransmissionConfigEntry
-) -> bool:
+) -> None:
     """Unload Transmission Entry from config_entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: TransmissionConfigEntry
-) -> bool:
+) -> None:
     """Migrate an old config entry."""
     _LOGGER.debug(
         "Migrating from version %s.%s",
@@ -168,8 +166,6 @@ async def async_migrate_entry(
         config_entry.version,
         config_entry.minor_version,
     )
-
-    return True
 
 
 async def get_api(

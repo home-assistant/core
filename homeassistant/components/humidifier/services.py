@@ -25,7 +25,7 @@ from .const import (
 )
 
 if TYPE_CHECKING:
-    from . import HumidifierEntity
+    from .entity import HumidifierEntity
 
 _LOGGER = logging.getLogger(__name__)
 

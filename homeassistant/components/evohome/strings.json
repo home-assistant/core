@@ -3,9 +3,6 @@
     "controller_only_service": {
       "message": "Only Evohome controllers support the `{service}` action"
     },
-    "entity_not_found": {
-      "message": "The specified entity `{entity_id}` could not be found"
-    },
     "invalid_system_mode": {
       "message": "The requested system mode is not supported: {error}"
     },
@@ -56,10 +53,6 @@
         "duration": {
           "description": "The duration in hours; used only with `AutoWithEco` mode (up to 24 hours).",
           "name": "Duration"
-        },
-        "entity_id": {
-          "description": "The Evohome controller climate entity.",
-          "name": "Entity"
         },
         "mode": {
           "description": "Mode to set the system to.",

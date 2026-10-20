@@ -15,6 +15,7 @@ from midealocal.devices.dc import DeviceAttributes as DCAttributes
 from midealocal.devices.e2 import DeviceAttributes as E2Attributes
 from midealocal.exceptions import SocketException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import (
@@ -37,8 +38,6 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 from .conftest import DummyDevice, entity_entries
 from .const import TEST_DEVICE_ID
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def _assert_service_call(
@@ -180,6 +179,8 @@ async def _assert_service_call(
                     E2Attributes.whole_tank_heating: False,
                     E2Attributes.variable_heating: False,
                     E2Attributes.sterilization: False,
+                    E2Attributes.memory: False,
+                    E2Attributes.eplus: False,
                 },
             ),
             id="e2",
@@ -510,6 +511,8 @@ async def test_a1_pump_not_created_without_capability(
         pytest.param(E2Attributes.whole_tank_heating, id="whole_tank_heating"),
         pytest.param(E2Attributes.variable_heating, id="variable_heating"),
         pytest.param(E2Attributes.sterilization, id="sterilization"),
+        pytest.param(E2Attributes.memory, id="memory"),
+        pytest.param(E2Attributes.eplus, id="eplus"),
     ],
 )
 async def test_e2_switch_services(
@@ -527,6 +530,8 @@ async def test_e2_switch_services(
             E2Attributes.whole_tank_heating: False,
             E2Attributes.variable_heating: False,
             E2Attributes.sterilization: False,
+            E2Attributes.eplus: False,
+            E2Attributes.memory: False,
         },
     )
 

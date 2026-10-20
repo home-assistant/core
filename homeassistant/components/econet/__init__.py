@@ -16,7 +16,7 @@ from pyeconet.errors import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
@@ -39,7 +39,7 @@ type EconetConfigEntry = ConfigEntry[dict[EquipmentType, list[Equipment]]]
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: EconetConfigEntry
-) -> bool:
+) -> None:
     """Set up EcoNet as config entry."""
 
     email = config_entry.data[CONF_EMAIL]
@@ -48,7 +48,7 @@ async def async_setup_entry(
     try:
         api = await EcoNetApiInterface.login(email, password=password)
     except InvalidCredentialsError as err:
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="invalid_credentials",
         ) from err
@@ -89,9 +89,7 @@ async def async_setup_entry(
 
     config_entry.async_on_unload(async_track_time_interval(hass, resubscribe, INTERVAL))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: EconetConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EconetConfigEntry) -> None:
     """Unload a EcoNet config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

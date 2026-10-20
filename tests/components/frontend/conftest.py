@@ -6,17 +6,18 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.frontend import MANIFEST_JSON, Manifest
+from homeassistant.components.frontend import MANIFEST_JSON
 
 
 @pytest.fixture(autouse=True)
 def isolated_manifest_json() -> Generator[None]:
     """Prevent theme changes to the module-level manifest leaking between tests."""
-    with patch(
-        "homeassistant.components.frontend.MANIFEST_JSON",
-        Manifest(deepcopy(MANIFEST_JSON.manifest)),
-    ):
-        yield
+    original = deepcopy(MANIFEST_JSON.manifest)
+    yield
+    for key in MANIFEST_JSON.manifest.keys() - original.keys():
+        del MANIFEST_JSON.manifest[key]
+    for key, value in original.items():
+        MANIFEST_JSON.update_key(key, value)
 
 
 @pytest.fixture

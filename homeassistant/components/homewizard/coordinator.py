@@ -66,6 +66,7 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
                 self.hass,
                 DOMAIN,
                 issue_id,
+                config_entry_id=self.config_entry.entry_id,
                 is_fixable=True,
                 is_persistent=False,
                 translation_key=ISSUE_BATTERY_MODE_CLOUD_DISABLED,

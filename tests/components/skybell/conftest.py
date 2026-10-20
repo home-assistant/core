@@ -6,14 +6,13 @@ from aioskybell import Skybell, SkybellDevice
 from aioskybell.helpers.const import BASE_URL, USERS_ME_URL
 import orjson
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.skybell.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-from tests.common import MockConfigEntry, async_load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 USERNAME = "user"
 PASSWORD = "password"

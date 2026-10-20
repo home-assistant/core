@@ -1,6 +1,7 @@
 {
   "domain": "bitvis",
   "name": "Bitvis Power Hub",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@MandusBorjesson", "@real-tintin", "@simontegelid"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bitvis",

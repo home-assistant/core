@@ -32,7 +32,7 @@ class InelsData:
     devices: list[Device]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: InelsConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: InelsConfigEntry) -> None:
     """Set up iNELS from a config entry."""
 
     async def mqtt_publish(topic: str, payload: str, qos: int, retain: bool) -> None:
@@ -81,12 +81,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: InelsConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: InelsConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: InelsConfigEntry) -> None:
     """Unload a config entry."""
     await entry.runtime_data.mqtt.unsubscribe_topics()
     entry.runtime_data.mqtt.unsubscribe_listeners()
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

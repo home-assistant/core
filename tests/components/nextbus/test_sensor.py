@@ -8,6 +8,7 @@ from urllib.error import HTTPError
 from freezegun.api import FrozenDateTimeFactory
 from py_nextbus.client import NextBusFormatError, NextBusHTTPError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.nextbus import NEXTBUS_KEY
 from homeassistant.components.nextbus.const import CONF_AGENCY, CONF_ROUTE, DOMAIN
@@ -33,8 +34,6 @@ from .const import (
     VALID_ROUTE_TITLE,
     VALID_STOP_TITLE,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_predictions(
