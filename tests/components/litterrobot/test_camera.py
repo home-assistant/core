@@ -710,3 +710,37 @@ async def test_streaming_follows_started_sessions_not_pending_offers(
         with pytest.raises(HomeAssistantError):
             await pending
     assert state() == "idle"
+
+
+async def test_unload_waits_for_a_pending_relay_close(
+    hass: HomeAssistant, mock_account_with_litterrobot_5_pro: MagicMock
+) -> None:
+    """A close still running when the entry unloads is awaited, not abandoned."""
+    mock_client = mock_account_with_litterrobot_5_pro.robots[0].get_camera_client()
+    mock_client.generate_session = AsyncMock(
+        return_value=CameraSession.from_response(MOCK_SESSION_DATA)
+    )
+    await setup_integration(hass, mock_account_with_litterrobot_5_pro, CAMERA_DOMAIN)
+
+    entity = hass.data[CAMERA_DOMAIN].get_entity(CAMERA_ENTITY_ID)
+    finished = asyncio.Event()
+
+    async def slow_close() -> None:
+        await asyncio.sleep(0.05)
+        finished.set()
+
+    relay = MagicMock()
+    relay.start = AsyncMock(return_value=CameraSession.from_response(MOCK_SESSION_DATA))
+    relay.close = AsyncMock(side_effect=slow_close)
+    with patch(
+        "homeassistant.components.litterrobot.camera.CameraSignalingRelay",
+        return_value=relay,
+    ):
+        await entity.async_handle_async_webrtc_offer("v=0\r\n", "late", MagicMock())
+
+    # the viewer leaves, and the entry unloads before the close has finished
+    entity.close_webrtc_session("late")
+    (entry,) = hass.config_entries.async_entries(DOMAIN)
+    assert await hass.config_entries.async_unload(entry.entry_id)
+
+    assert finished.is_set()

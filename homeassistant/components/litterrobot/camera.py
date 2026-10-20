@@ -197,7 +197,9 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
                 _LOGGER.debug("Camera session expired, fetching a new one")
             session = None
             self._cached_session = None
-            self.hass.async_create_task(self._refresh_cached_session())
+            self.coordinator.config_entry.async_create_task(
+                self.hass, self._refresh_cached_session()
+            )
         ice_servers = _build_ice_servers(session) if session else []
         if not ice_servers:
             _LOGGER.debug("Serving the WebRTC configuration without TURN servers")
@@ -292,7 +294,7 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
         """Close a WebRTC session."""
         if relay := self._relays.pop(session_id, None):
             _LOGGER.debug("Closing WebRTC session %s", session_id)
-            self.hass.async_create_task(relay.close())
+            self.coordinator.config_entry.async_create_task(self.hass, relay.close())
             self._started.discard(session_id)
             self._update_streaming()
         super().close_webrtc_session(session_id)
