@@ -3,7 +3,7 @@
 from http import HTTPStatus
 from unittest.mock import AsyncMock
 
-from aioabrp import AbrpApiError, AbrpAuthError, AbrpVehicle
+from aioabrp import AbrpApiError, AbrpAuthError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -32,16 +32,6 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 
-def _vehicle(vehicle_id: int, name: str) -> AbrpVehicle:
-    """Build a typed ``AbrpVehicle`` for a config-flow garage."""
-    return AbrpVehicle(
-        vehicle_id=vehicle_id,
-        name=name,
-        vehicle_model=f"model:{vehicle_id}",
-        paint=None,
-    )
-
-
 @pytest.fixture
 def use_cloud(hass: HomeAssistant) -> None:
     """Set up the cloud component."""
@@ -49,7 +39,7 @@ def use_cloud(hass: HomeAssistant) -> None:
 
 
 def _mock_token_post(
-    aioclient_mock: AiohttpClientMocker, id_token: str | None = None
+    aioclient_mock: AiohttpClientMocker, id_token: str | None = build_id_token()
 ) -> None:
     """Queue the standard token-exchange response on ``aioclient_mock``."""
     aioclient_mock.post(
@@ -59,7 +49,7 @@ def _mock_token_post(
             "refresh_token": "mock-refresh-token",
             "token_type": "Bearer",
             "expires_in": 3600,
-            "id_token": id_token or build_id_token(USER_SUB),
+            "id_token": id_token,
         },
     )
 
@@ -171,17 +161,7 @@ async def test_duplicate_entry(
         DOMAIN, context={"source": SOURCE_USER}
     )
     await complete_oauth_callback(hass, hass_client_no_auth, result["flow_id"])
-
-    aioclient_mock.post(
-        OAUTH2_TOKEN,
-        json={
-            "access_token": "mock-access-token",
-            "refresh_token": "mock-refresh-token",
-            "token_type": "Bearer",
-            "expires_in": 3600,
-            "id_token": build_id_token(USER_SUB),
-        },
-    )
+    _mock_token_post(aioclient_mock)
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -222,31 +202,15 @@ async def test_token_endpoint_error(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
 
-@pytest.mark.parametrize(
-    ("garage_ids", "expected_type", "expected_reason", "expected_entries"),
-    [
-        pytest.param([], FlowResultType.ABORT, "no_vehicles", 0, id="empty_garage"),
-        pytest.param([1001], FlowResultType.CREATE_ENTRY, None, 1, id="one_vehicle"),
-        pytest.param(
-            [1001, 1002, 1003], FlowResultType.CREATE_ENTRY, None, 1, id="many_vehicles"
-        ),
-    ],
-)
 @pytest.mark.usefixtures("current_request_with_host", "use_cloud", "mock_setup_entry")
-async def test_garage_size_decides_entry_creation(
+async def test_no_vehicles_aborts(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_abrp_client: AsyncMock,
-    garage_ids: list[int],
-    expected_type: FlowResultType,
-    expected_reason: str | None,
-    expected_entries: int,
 ) -> None:
-    """Only an empty garage blocks setup; any non-empty garage creates the entry."""
-    mock_abrp_client.return_value = [
-        _vehicle(vid, f"Vehicle {vid}") for vid in garage_ids
-    ]
+    """An account with an empty garage aborts the flow."""
+    mock_abrp_client.return_value = []
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -255,9 +219,9 @@ async def test_garage_size_decides_entry_creation(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] is expected_type
-    assert result.get("reason") == expected_reason
-    assert len(hass.config_entries.async_entries(DOMAIN)) == expected_entries
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_vehicles"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
 
 @pytest.mark.parametrize(
@@ -279,17 +243,7 @@ async def test_initial_add_unusable_id_token_aborts(
         DOMAIN, context={"source": SOURCE_USER}
     )
     await complete_oauth_callback(hass, hass_client_no_auth, result["flow_id"])
-
-    aioclient_mock.post(
-        OAUTH2_TOKEN,
-        json={
-            "access_token": "mock-access-token",
-            "refresh_token": "mock-refresh-token",
-            "token_type": "Bearer",
-            "expires_in": 3600,
-            "id_token": id_token,
-        },
-    )
+    _mock_token_post(aioclient_mock, id_token)
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 

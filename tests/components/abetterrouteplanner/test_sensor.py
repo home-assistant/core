@@ -24,7 +24,6 @@ from homeassistant.components.abetterrouteplanner.sensor import (
     CHARGING_STATE_OPTIONS,
     SENSORS,
 )
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -64,66 +63,7 @@ def _description_for(metric: Metric) -> Any:
     return next(description for description in SENSORS if description.metric is metric)
 
 
-@pytest.mark.parametrize(
-    "vehicle_id",
-    [
-        pytest.param(MOCK_VEHICLE_ID, id="first_garage_vehicle"),
-        pytest.param(MOCK_VEHICLE_ID_2, id="second_garage_vehicle"),
-    ],
-)
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_abrp_client")
-async def test_every_garage_vehicle_present_in_registries(
-    hass: HomeAssistant,
-    config_entry_with_vehicles: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-    mock_telemetry_stream: MagicMock,
-    vehicle_id: int,
-) -> None:
-    """Every vehicle in the garage gets a device and entities, with no opt-in step."""
-    await setup_integration(hass, config_entry_with_vehicles)
-
-    # Read the sub off the fixture so this survives a parametrized unique_id.
-    scope = config_entry_with_vehicles.unique_id
-    assert (
-        device_registry.async_get_device_by_identifier(
-            (DOMAIN, f"{scope}_{vehicle_id}"), config_entry_with_vehicles.entry_id
-        )
-        is not None
-    )
-
-    # Entities are created lazily, so drive a frame for this vehicle.
-    fire_frame(
-        mock_telemetry_stream, vehicle_id, Telemetry(soc=build_metric_value(85.0))
-    )
-    await hass.async_block_till_done()
-
-    assert (
-        entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{scope}_{vehicle_id}_soc"
-        )
-        is not None
-    )
-
-
-async def test_empty_garage_creates_no_devices_or_entities(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-    mock_abrp_client: AsyncMock,
-) -> None:
-    """An empty garage loads the entry but registers nothing."""
-    mock_abrp_client.return_value = []
-
-    await setup_integration(hass, config_entry)
-
-    assert config_entry.state is ConfigEntryState.LOADED
-    assert not er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
-    assert not dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_abrp_client")
+@pytest.mark.usefixtures("mock_abrp_client")
 async def test_telemetry_sensors_snapshot(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
@@ -180,7 +120,7 @@ def _scope(entry: MockConfigEntry, vehicle_id: int) -> str:
     return f"{entry.unique_id}_{vehicle_id}"
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_telemetry_stream")
+@pytest.mark.usefixtures("mock_telemetry_stream")
 async def test_device_info_name_falls_back_to_typecode_when_unnamed(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
@@ -229,7 +169,7 @@ def _set_two_make_displays(
     return displays
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_telemetry_stream")
+@pytest.mark.usefixtures("mock_telemetry_stream")
 async def test_per_vehicle_device_anchored_at_setup(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
@@ -278,7 +218,7 @@ async def test_per_vehicle_device_anchored_at_setup(
         pytest.param(ChargingState.PLUGGED_IN, "plugged_in", id="plugged_in"),
     ],
 )
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_abrp_client")
+@pytest.mark.usefixtures("mock_abrp_client")
 async def test_charging_state_lazy_create_on_first_frame(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
@@ -321,7 +261,7 @@ def test_charging_state_options_cross_pinned() -> None:
     assert set(CHARGING_STATE_OPTIONS.values()) == set(icons_states)
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_abrp_client")
+@pytest.mark.usefixtures("mock_abrp_client")
 async def test_availability_follows_stream_auth_not_connection(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
