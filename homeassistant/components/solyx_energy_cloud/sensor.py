@@ -17,6 +17,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfTime,
 )
+from homeassistant.core import callback
 
 from .coordinator import SolyxEnergyConfigEntry, SolyxEnergyData
 from .entity import SolyxNymoEntity
@@ -125,10 +126,23 @@ async def async_setup_entry(
 ) -> None:
     """Set up Solyx Energy sensors from a config entry."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        SolyxSensorEntity(coordinator, description)
-        for description in SENSOR_DESCRIPTIONS
-    )
+    known_devices: set[str] = set()
+
+    @callback
+    def _add_new_devices() -> None:
+        new_devices = set(coordinator.data) - known_devices
+        if not new_devices:
+            return
+
+        known_devices.update(new_devices)
+        async_add_entities(
+            SolyxSensorEntity(coordinator, description, device_id)
+            for device_id in new_devices
+            for description in SENSOR_DESCRIPTIONS
+        )
+
+    _add_new_devices()
+    entry.async_on_unload(coordinator.async_add_listener(_add_new_devices))
 
 
 class SolyxSensorEntity(SolyxNymoEntity, SensorEntity):
@@ -140,4 +154,4 @@ class SolyxSensorEntity(SolyxNymoEntity, SensorEntity):
     @override
     def native_value(self) -> float | None:
         """Retrieve the parsed (native) value of the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        return self.entity_description.value_fn(self.coordinator.data[self.device_id])

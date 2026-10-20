@@ -1,0 +1,20 @@
+[
+  {
+    "id": "nymo-12345",
+    "name": "Nymo",
+    "type": "NymoAsset",
+    "attributes": {
+      "boilerPower": { "value": 1234.0 },
+      "gridPower": { "value": -100.0 }
+    }
+  },
+  {
+    "id": "nymo-67890",
+    "name": "Nymo",
+    "type": "NymoAsset",
+    "attributes": {
+      "boilerPower": { "value": 567.0 },
+      "gridPower": { "value": 42.0 }
+    }
+  }
+]

@@ -1,6 +1,6 @@
 """Base entity for the Solyx Energy integration."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -21,15 +21,23 @@ class SolyxNymoEntity(CoordinatorEntity[SolyxEnergyCoordinator]):
         self,
         coordinator: SolyxEnergyCoordinator,
         description: EntityDescription,
+        device_id: str,
     ) -> None:
         """Initialize a Solyx Nymo entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.device_id}-{description.key}"
+        self.device_id = device_id
+        self._attr_unique_id = f"{device_id}-{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.device_id)},
+            identifiers={(DOMAIN, device_id)},
             name="Nymo",
             manufacturer="Solyx Energy",
             model="Nymo",
-            serial_number=coordinator.device_id,
+            serial_number=device_id,
         )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if the device is still reported by the Solyx Energy cloud."""
+        return super().available and self.device_id in self.coordinator.data

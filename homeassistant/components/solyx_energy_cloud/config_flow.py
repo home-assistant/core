@@ -22,7 +22,6 @@ from .const import (
     BASE_URL,
     CONF_NYMO_CLIENT_ID,
     CONF_NYMO_CLIENT_SECRET,
-    CONF_NYMO_DEVICE_ID,
     DOMAIN,
     REALM_ID,
 )
@@ -34,7 +33,6 @@ STEP_USER_SCHEMA = probatio.Schema(
         probatio.Required(CONF_NYMO_CLIENT_SECRET): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD),
         ),
-        probatio.Required(CONF_NYMO_DEVICE_ID): TextSelector(),
     },
 )
 
@@ -53,9 +51,6 @@ class SolyxEnergyConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_NYMO_DEVICE_ID])
-            self._abort_if_unique_id_configured()
-
             try:
                 await self._validate_input(user_input)
             except SolyxEnergyAuthError:
@@ -63,8 +58,10 @@ class SolyxEnergyConfigFlow(ConfigFlow, domain=DOMAIN):
             except (SolyxEnergyTokenError, SolyxEnergyDataError) as _err:
                 errors["base"] = "cannot_connect"
             else:
+                await self.async_set_unique_id(user_input[CONF_NYMO_CLIENT_ID])
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=f"Nymo {user_input[CONF_NYMO_DEVICE_ID]}",
+                    title="Solyx Energy Cloud",
                     data=user_input,
                 )
 
@@ -84,4 +81,4 @@ class SolyxEnergyConfigFlow(ConfigFlow, domain=DOMAIN):
             base_url=BASE_URL,
             realm_id=REALM_ID,
         )
-        await client.async_test_connection(user_input[CONF_NYMO_DEVICE_ID])
+        await client.async_test_connection()

@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
@@ -12,15 +12,13 @@
       "user": {
         "data": {
           "nymo_client_id": "Client ID",
-          "nymo_client_secret": "Client secret",
-          "nymo_device_id": "Nymo device ID"
+          "nymo_client_secret": "Client secret"
         },
         "data_description": {
           "nymo_client_id": "The Client ID that is copied from the Solyx Energy app.",
-          "nymo_client_secret": "The Client secret that is copied from the Solyx Energy app.",
-          "nymo_device_id": "The Nymo device ID that is copied from the Solyx Energy app."
+          "nymo_client_secret": "The Client secret that is copied from the Solyx Energy app."
         },
-        "description": "Set up your Nymo to integrate with Home Assistant."
+        "description": "Set up your Solyx Energy Cloud account to integrate with Home Assistant."
       }
     }
   },

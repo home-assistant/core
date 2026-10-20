@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components.solyx_energy_cloud.const import DOMAIN
 
-from .const import NYMO_DEVICE_ID
+from .const import NYMO_DEVICE_ID, NYMO_DEVICE_ID_2
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -14,22 +14,45 @@ if TYPE_CHECKING:
 
 
 @pytest.mark.parametrize(
-    ("key", "expected"),
+    ("device_id", "key", "expected"),
     [
-        ("boiler_power", ("1234.0", "W", "power")),
-        ("grid_power", ("-100.0", "W", "power")),
+        pytest.param(
+            NYMO_DEVICE_ID,
+            "boiler_power",
+            ("1234.0", "W", "power"),
+            id="boiler_power",
+        ),
+        pytest.param(
+            NYMO_DEVICE_ID,
+            "grid_power",
+            ("-100.0", "W", "power"),
+            id="grid_power",
+        ),
+        pytest.param(
+            NYMO_DEVICE_ID_2,
+            "boiler_power",
+            ("567.0", "W", "power"),
+            id="boiler_power_2",
+        ),
+        pytest.param(
+            NYMO_DEVICE_ID_2,
+            "grid_power",
+            ("42.0", "W", "power"),
+            id="grid_power_2",
+        ),
     ],
 )
+@pytest.mark.usefixtures("init_integration")
 async def test_sensor_states(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,
-    init_integration,
-    key,
-    expected,
+    device_id: str,
+    key: str,
+    expected: tuple[str, str, str],
 ) -> None:
     """Test each sensor has the correct state, unit, and device class."""
     entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{NYMO_DEVICE_ID}-{key}"
+        "sensor", DOMAIN, f"{device_id}-{key}"
     )
     assert entity_id is not None
 

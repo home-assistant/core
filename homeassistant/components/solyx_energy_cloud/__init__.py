@@ -6,20 +6,14 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    BASE_URL,
-    CONF_NYMO_CLIENT_ID,
-    CONF_NYMO_CLIENT_SECRET,
-    CONF_NYMO_DEVICE_ID,
-    REALM_ID,
-)
+from .const import BASE_URL, CONF_NYMO_CLIENT_ID, CONF_NYMO_CLIENT_SECRET, REALM_ID
 from .coordinator import SolyxEnergyConfigEntry, SolyxEnergyCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SolyxEnergyConfigEntry) -> bool:
-    """Init function upon Solyx Energy device setup from a config entry."""
+    """Init function upon Solyx Energy account setup from a config entry."""
     session = async_get_clientsession(hass)
     api_client = SolyxEnergyApiClient(
         session=session,
@@ -31,7 +25,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolyxEnergyConfigEntry) 
     coordinator = SolyxEnergyCoordinator(
         hass=hass,
         api_client=api_client,
-        device_id=entry.data[CONF_NYMO_DEVICE_ID],
         config_entry=entry,
     )
     await coordinator.async_config_entry_first_refresh()

@@ -38,7 +38,7 @@ type SolyxEnergyConfigEntry = ConfigEntry[SolyxEnergyCoordinator]
 
 @dataclass(frozen=True)
 class SolyxEnergyData:
-    """Hold a snapshot of all Solyx Energy integration values exposed to Home Assistant."""
+    """Hold a snapshot of the values of a single Nymo device exposed to Home Assistant."""
 
     boiler_current: float | None
     boiler_power: float | None
@@ -51,14 +51,13 @@ class SolyxEnergyData:
     saved_today: float | None
 
 
-class SolyxEnergyCoordinator(DataUpdateCoordinator[SolyxEnergyData]):
+class SolyxEnergyCoordinator(DataUpdateCoordinator[dict[str, SolyxEnergyData]]):
     """Coordinator that fetches data over HTTPS using the SolyxEnergyApiClient class."""
 
     def __init__(
         self,
         hass: HomeAssistant,
         api_client: SolyxEnergyApiClient,
-        device_id: str,
         config_entry: SolyxEnergyConfigEntry,
     ) -> None:
         """Initialize the main coordinator for the Solyx Energy integration."""
@@ -70,29 +69,31 @@ class SolyxEnergyCoordinator(DataUpdateCoordinator[SolyxEnergyData]):
             update_interval=timedelta(seconds=DATA_INTERVAL_SECONDS),
         )
         self.api_client = api_client
-        self.device_id = device_id
 
     @override
-    async def _async_update_data(self) -> SolyxEnergyData:
+    async def _async_update_data(self) -> dict[str, SolyxEnergyData]:
         """Fetch data with the SolyxEnergyApiClient class and update the device entities accordingly."""
         try:
             _LOGGER.debug("Retrieving data from Solyx Energy API")
-            nymo_data = await self.api_client.async_get_asset_data(self.device_id)
+            assets = await self.api_client.async_get_assets()
         except SolyxEnergyAuthError as err:
             raise UpdateFailed(f"Auth error: {err}") from err
         except (SolyxEnergyTokenError, SolyxEnergyDataError) as err:
             raise UpdateFailed(f"API error: {err}") from err
 
-        return SolyxEnergyData(
-            boiler_current=parse_float(nymo_data, ATTRIBUTE_BOILER_CURRENT),
-            boiler_power=parse_float(nymo_data, ATTRIBUTE_BOILER_POWER),
-            boiler_voltage=parse_float(nymo_data, ATTRIBUTE_BOILER_VOLTAGE),
-            days_since_maximum_temperature=parse_float(
-                nymo_data, ATTRIBUTE_DAYS_SINCE_MAX_TEMPERATURE
-            ),
-            grid_power=parse_float(nymo_data, ATTRIBUTE_GRID_POWER),
-            legionella_days=parse_float(nymo_data, ATTRIBUTE_LEGIONELLA_DAYS),
-            saved_this_month=parse_float(nymo_data, ATTRIBUTE_SAVED_THIS_MONTH),
-            saved_this_week=parse_float(nymo_data, ATTRIBUTE_SAVED_THIS_WEEK),
-            saved_today=parse_float(nymo_data, ATTRIBUTE_SAVED_TODAY),
-        )
+        return {
+            asset["id"]: SolyxEnergyData(
+                boiler_current=parse_float(asset, ATTRIBUTE_BOILER_CURRENT),
+                boiler_power=parse_float(asset, ATTRIBUTE_BOILER_POWER),
+                boiler_voltage=parse_float(asset, ATTRIBUTE_BOILER_VOLTAGE),
+                days_since_maximum_temperature=parse_float(
+                    asset, ATTRIBUTE_DAYS_SINCE_MAX_TEMPERATURE
+                ),
+                grid_power=parse_float(asset, ATTRIBUTE_GRID_POWER),
+                legionella_days=parse_float(asset, ATTRIBUTE_LEGIONELLA_DAYS),
+                saved_this_month=parse_float(asset, ATTRIBUTE_SAVED_THIS_MONTH),
+                saved_this_week=parse_float(asset, ATTRIBUTE_SAVED_THIS_WEEK),
+                saved_today=parse_float(asset, ATTRIBUTE_SAVED_TODAY),
+            )
+            for asset in assets
+        }

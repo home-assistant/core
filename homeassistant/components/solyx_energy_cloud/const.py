@@ -10,7 +10,6 @@ DATA_INTERVAL_SECONDS = 60
 # Config entry keys
 CONF_NYMO_CLIENT_ID = "nymo_client_id"
 CONF_NYMO_CLIENT_SECRET = "nymo_client_secret"
-CONF_NYMO_DEVICE_ID = "nymo_device_id"
 
 # Device attributes in camelCase for mapping the HTTP API response to a device entity
 ATTRIBUTE_BOILER_CURRENT = "boilerCurrent"

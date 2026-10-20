@@ -6953,7 +6953,7 @@
     },
     "solyx_energy_cloud": {
       "name": "Solyx Energy Cloud",
-      "integration_type": "device",
+      "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
