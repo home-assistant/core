@@ -22,7 +22,7 @@ from homeassistant.components.camera import (
     DynamicStreamSettings,
     _async_get_image,
 )
-from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.stream import (
     CONF_RTSP_TRANSPORT,
     CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
