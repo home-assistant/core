@@ -4,7 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from dali.exceptions import TransmissionError
-from dali.gear.general import QueryControlGearPresent
+from dali.gear.general import QueryControlGearPresent, QueryMinLevel
 from dali.gear.led import QueryDimmingCurve
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -126,6 +126,44 @@ async def test_missing_dimming_curve_is_retried(
     assert curve_reads == 2
     assert gear is not None
     assert gear.linear_dimming is True
+
+
+async def test_framing_error_dimming_curve_is_rejected(
+    coordinator: DaliCoordinator, fake_dali_driver: FakeDaliDriver
+) -> None:
+    """Test a framing-error dimming-curve reply is treated as a miss."""
+    original_send = fake_dali_driver.send
+
+    async def send(command: object) -> object:
+        if isinstance(command, QueryDimmingCurve):
+            return SimpleNamespace(raw_value=SimpleNamespace(error=True, as_integer=1))
+        return await original_send(command)
+
+    with patch.object(fake_dali_driver, "send", side_effect=send):
+        assert await coordinator._query_gear_once(0) is None
+
+
+async def test_missing_min_level_keeps_cached_value(
+    coordinator: DaliCoordinator, fake_dali_driver: FakeDaliDriver
+) -> None:
+    """Test a dropped minimum-level reply keeps the known minimum."""
+    gear = await coordinator._query_gear_once(0)
+    assert gear is not None
+    assert gear.min_level == 86
+    coordinator.data = {0: gear}
+
+    original_send = fake_dali_driver.send
+
+    async def send(command: object) -> object:
+        if isinstance(command, QueryMinLevel):
+            return SimpleNamespace(value=None)
+        return await original_send(command)
+
+    with patch.object(fake_dali_driver, "send", side_effect=send):
+        refreshed = await coordinator._query_gear_once(0)
+
+    assert refreshed is not None
+    assert refreshed.min_level == 86
 
 
 async def test_communication_failure_raises_update_failed(
