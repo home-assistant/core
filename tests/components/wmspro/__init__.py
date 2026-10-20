@@ -1,9 +1,9 @@
 """Tests for the wmspro integration."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def setup_config_entry(

@@ -5,6 +5,8 @@ from typing import Any
 from unittest.mock import Mock, mock_open, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.camera import async_get_image
 from homeassistant.components.local_file.const import DOMAIN, SERVICE_UPDATE_FILE_PATH
@@ -12,9 +14,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import ATTR_ENTITY_ID, CONF_FILE_PATH
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_loading_file(

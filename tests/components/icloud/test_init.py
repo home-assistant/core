@@ -11,6 +11,7 @@ from pyicloud.exceptions import (
     PyiCloudServiceNotActivatedException,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from requests import Response
 
 from homeassistant.components.icloud.config_flow import (
@@ -24,8 +25,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import DEVICE, MOCK_CONFIG, USER_INFO, USERNAME
-
-from tests.common import MockConfigEntry
 
 
 class MockDevice(dict):

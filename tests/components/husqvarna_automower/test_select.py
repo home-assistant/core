@@ -6,6 +6,7 @@ from aioautomower.exceptions import ApiError
 from aioautomower.model import HeadlightModes, MowerAttributes
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
@@ -13,8 +14,6 @@ from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_integration
 from .const import TEST_MOWER_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_select_states(

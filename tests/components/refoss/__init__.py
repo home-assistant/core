@@ -4,12 +4,11 @@ import asyncio
 import logging
 from unittest.mock import AsyncMock, Mock
 
+from pytest_homeassistant.common import MockConfigEntry
 from refoss_ha.discovery import Listener
 
 from homeassistant.components.refoss.const import DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

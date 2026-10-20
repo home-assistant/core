@@ -1,10 +1,11 @@
 {
   "domain": "electrasmart",
   "name": "Electra Smart",
+  "categories": ["climate.heat_pumps_air_conditioning"],
   "codeowners": ["@jafar-atili", "@noamokman"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/electrasmart",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "requirements": ["pyElectra==1.2.5"]
+  "requirements": ["pyElectra==1.2.8"]
 }

@@ -21,12 +21,9 @@ from packaging.version import InvalidVersion, Version
 from tqdm import tqdm
 
 import homeassistant.util.package as pkg_util
-from script.gen_requirements_all import (
-    EXCLUDED_REQUIREMENTS_ALL,
-    normalize_package_name,
-)
 
 from .model import Config, Integration
+from .requirements_util import EXCLUDED_REQUIREMENTS_ALL, normalize_package_name
 
 PACKAGE_CHECK_VERSION_RANGE = {
     "aiohttp": "SemVer",
@@ -340,8 +337,6 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     },
     # https://github.com/smappee/pysmappee
     "smappee": {"homeassistant": {"pysmappee"}},
-    # https://github.com/mosquito/caio/pull/75
-    "velbus": {"aiofile": {"caio"}},
     # https://github.com/watergate-ai/watergate-local-api-python
     "watergate": {"homeassistant": {"watergate-local-api"}},
     # https://github.com/markusressel/xs1-api-client

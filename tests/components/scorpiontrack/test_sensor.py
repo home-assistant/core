@@ -6,6 +6,11 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from pyscorpiontrack import ScorpionTrackConnectionError, ScorpionTrackShare
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.scorpiontrack.const import DEFAULT_SCAN_INTERVAL
@@ -22,8 +27,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "sensor.ab12_cde_speed"
 LAST_REPORTED_ENTITY_ID = "sensor.ab12_cde_last_reported"

@@ -14,6 +14,7 @@ from pyicloud.exceptions import (
     PyiCloudServiceUnavailable,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from requests import Response
 
 from homeassistant.components.icloud.config_flow import (
@@ -45,8 +46,6 @@ from .const import (
     USERNAME,
     WITH_FAMILY,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="icloud_bypass_setup", autouse=True)

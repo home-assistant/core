@@ -4,6 +4,8 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.foscam import config_flow
 from homeassistant.components.foscam.const import DOMAIN
@@ -12,8 +14,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import setup_mock_foscam_camera
 from .const import CAMERA_NAME, INVALID_RESPONSE_CONFIG, VALID_CONFIG
-
-from tests.common import MockConfigEntry
 
 
 @contextmanager

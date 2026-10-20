@@ -45,6 +45,8 @@ from .util import async_get_result_from_chat_log, get_config_intents
 __all__ = [
     "DOMAIN",
     "HOME_ASSISTANT_AGENT",
+    "AbstractConversationAgent",
+    "AgentInfo",
     "AssistantContent",
     "AssistantContentDeltaDict",
     "Attachment",
@@ -62,6 +64,7 @@ __all__ = [
     "UserContent",
     "async_conversation_trace_append",
     "async_converse",
+    "async_get_agent",
     "async_get_agent_info",
     "async_get_chat_log",
     "async_get_result_from_chat_log",

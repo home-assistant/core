@@ -4,6 +4,13 @@ from collections.abc import Generator
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    AsyncMock,
+    MockConfigEntry,
+    patch,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import EntityCategory, Platform
@@ -12,9 +19,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
 from .const import DEFAULT_NETWORKING_STATE, DEFAULT_TELEMETRY_STATE, MOCK_WEBHOOK_ID
-
-from tests.common import AsyncMock, MockConfigEntry, patch, snapshot_platform
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

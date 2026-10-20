@@ -3,17 +3,17 @@
 import asyncio
 import dataclasses
 import logging
+from typing import Any
 from unittest.mock import Mock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import async_capture_events
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.decorator import Registry
-
-from .common import async_capture_events
 
 
 class MockFlowManager(data_entry_flow.FlowManager):
@@ -116,6 +116,196 @@ async def test_configure_two_steps(manager: MockFlowManager) -> None:
     result = manager.mock_created_entries[0]
     assert result["handler"] == "test"
     assert result["data"] == ["INIT-DATA", "SECOND-DATA"]
+
+
+async def test_flow_step_nested_step_id(manager: MockFlowManager) -> None:
+    """Test a decorated step that hands off to another step reports the inner id."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 1
+        data: list[str] | None = None
+
+        @data_entry_flow.flow_step
+        async def async_step_first(self, user_input=None):
+            if user_input is not None:
+                self.data = user_input
+                return await self.async_step_second()
+            return self.async_show_form(data_schema=probatio.Schema([str]))
+
+        @data_entry_flow.flow_step
+        async def async_step_second(self, user_input=None):
+            return await self.async_step_third()
+
+        @data_entry_flow.flow_step
+        async def async_step_third(self, user_input=None):
+            if user_input is not None:
+                return self.async_create_entry(
+                    title="Test Entry", data=self.data + user_input
+                )
+            return self.async_show_form(data_schema=probatio.Schema([str]))
+
+    form = await manager.async_init("test", context={"init_step": "first"})
+    assert form["step_id"] == "first"
+    form = await manager.async_configure(form["flow_id"], ["FIRST-DATA"])
+    assert form["step_id"] == "third"
+    form = await manager.async_configure(form["flow_id"], ["THIRD-DATA"])
+    assert form["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert form["data"] == ["FIRST-DATA", "THIRD-DATA"]
+
+
+@pytest.mark.parametrize(
+    ("method", "params"),
+    [
+        pytest.param("async_show_form", {}, id="form"),
+        pytest.param("async_show_menu", {"menu_options": ["first"]}, id="menu"),
+        pytest.param(
+            "async_show_progress",
+            {"progress_action": "task", "progress_task": Mock()},
+            id="progress",
+        ),
+        pytest.param("async_external_step", {"url": "https://example.com"}, id="ext"),
+    ],
+)
+async def test_flow_step_all_result_types(
+    manager: MockFlowManager, method: str, params: dict[str, Any]
+) -> None:
+    """Test every result builder picks up the id of the decorated step."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        @data_entry_flow.flow_step
+        async def async_step_first(self, user_input=None):
+            return await self.async_step_second()
+
+        @data_entry_flow.flow_step
+        async def async_step_second(self, user_input=None):
+            return getattr(self, method)(**params)
+
+    result = await manager.async_init("test", context={"init_step": "first"})
+    assert result["step_id"] == "second"
+
+
+async def test_flow_step_restores_outer_step_id(manager: MockFlowManager) -> None:
+    """Test a step that resumes after awaiting another step keeps its own id."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        @data_entry_flow.flow_step
+        async def async_step_init(self, user_input=None):
+            await self.async_step_helper()
+            return self.async_show_form(data_schema=probatio.Schema([str]))
+
+        @data_entry_flow.flow_step
+        async def async_step_helper(self, user_input=None):
+            return self.async_abort(reason="unused")
+
+    form = await manager.async_init("test")
+    assert form["step_id"] == "init"
+    assert form["flow_id"] in [flow["flow_id"] for flow in manager.async_progress()]
+
+
+async def test_flow_step_concurrent_configure(
+    hass: HomeAssistant, manager: MockFlowManager
+) -> None:
+    """Test overlapping configure calls on one flow keep their own step ids."""
+    confirm_entered = asyncio.Event()
+    release = asyncio.Event()
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        @data_entry_flow.flow_step
+        async def async_step_user(self, user_input=None):
+            if user_input is None:
+                return self.async_show_form(data_schema=probatio.Schema([str]))
+            if user_input == ["confirm"]:
+                return await self.async_step_confirm()
+            # Suspend here so the other call reaches the confirm step meanwhile
+            await confirm_entered.wait()
+            return self.async_show_form(errors={"base": "invalid"})
+
+        @data_entry_flow.flow_step
+        async def async_step_confirm(self, user_input=None):
+            confirm_entered.set()
+            await release.wait()
+            return self.async_show_form()
+
+    form = await manager.async_init("test", context={"init_step": "user"})
+    erroring = hass.async_create_task(
+        manager.async_configure(form["flow_id"], ["error"])
+    )
+    confirming = hass.async_create_task(
+        manager.async_configure(form["flow_id"], ["confirm"])
+    )
+    assert (await erroring)["step_id"] == "user"
+    release.set()
+    assert (await confirming)["step_id"] == "confirm"
+
+
+async def test_flow_step_does_not_leak_into_nested_flow(
+    manager: MockFlowManager,
+) -> None:
+    """Test a step that starts another flow does not leak its id into it."""
+    inner_results: list[data_entry_flow.FlowResult] = []
+
+    @manager.mock_reg_handler("inner")
+    class InnerFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            return self.async_show_form(data_schema=probatio.Schema([str]))
+
+    @manager.mock_reg_handler("outer")
+    class OuterFlow(data_entry_flow.FlowHandler):
+        @data_entry_flow.flow_step
+        async def async_step_start(self, user_input=None):
+            inner_results.append(await manager.async_init("inner"))
+            return self.async_show_form(data_schema=probatio.Schema([str]))
+
+    outer = await manager.async_init("outer", context={"init_step": "start"})
+    assert outer["step_id"] == "start"
+    assert inner_results[0]["step_id"] == "init"
+
+
+async def test_flow_step_explicit_step_id_wins(manager: MockFlowManager) -> None:
+    """Test an explicit step_id overrides the decorated step's id."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        @data_entry_flow.flow_step
+        async def async_step_init(self, user_input=None):
+            return self.async_show_form(step_id="other")
+
+        async def async_step_other(self, user_input=None):
+            return self.async_create_entry(title="done", data={})
+
+    form = await manager.async_init("test")
+    assert form["step_id"] == "other"
+
+
+async def test_undecorated_step_uses_dispatched_step_id(
+    manager: MockFlowManager,
+) -> None:
+    """Test the manager still fills in the dispatched step for undecorated steps."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_first(self, user_input=None):
+            return await self.async_step_second()
+
+        async def async_step_second(self, user_input=None):
+            return self.async_show_form(data_schema=probatio.Schema([str]))
+
+    form = await manager.async_init("test", context={"init_step": "first"})
+    assert form["step_id"] == "first"
+
+
+def test_flow_step_rejects_non_step_method() -> None:
+    """Test the decorator requires the async_step_ naming convention."""
+
+    with pytest.raises(TypeError, match="is not an async_step_ method"):
+
+        @data_entry_flow.flow_step
+        async def async_not_a_step(self, user_input=None):
+            return None
 
 
 async def test_show_form(manager: MockFlowManager) -> None:

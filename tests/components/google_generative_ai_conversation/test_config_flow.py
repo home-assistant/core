@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from requests.exceptions import Timeout
 
 from homeassistant import config_entries
@@ -51,8 +52,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import API_ERROR_500, CLIENT_ERROR_API_KEY_INVALID
-
-from tests.common import MockConfigEntry
 
 
 def get_models_pager():

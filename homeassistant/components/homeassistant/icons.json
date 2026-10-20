@@ -1,4 +1,12 @@
 {
+  "conditions": {
+    "host_reboot_required": {
+      "condition": "mdi:restart-alert"
+    },
+    "restart_required": {
+      "condition": "mdi:restart-alert"
+    }
+  },
   "integration_category": {
     "ai_voice": {
       "default": "mdi:creation",
@@ -116,6 +124,17 @@
     },
     "health_wellbeing": {
       "default": "mdi:heart-pulse"
+    },
+    "helpers": {
+      "default": "mdi:tools",
+      "subcategory": {
+        "calculate_value": {
+          "default": "mdi:calculator-variant"
+        },
+        "store_value": {
+          "default": "mdi:form-textbox"
+        }
+      }
     },
     "hubs_protocols": {
       "default": "mdi:hub",
@@ -344,8 +363,14 @@
     }
   },
   "triggers": {
+    "host_reboot_required": {
+      "trigger": "mdi:restart-alert"
+    },
+    "restart_required": {
+      "trigger": "mdi:restart-alert"
+    },
     "updated": {
-      "trigger": "mdi:update"
+      "trigger": "mdi:package-up"
     }
   }
 }
