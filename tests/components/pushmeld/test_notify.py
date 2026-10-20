@@ -298,6 +298,7 @@ async def test_reload_during_notification_setup_does_not_register_stale_service(
     """Do not retain a stale service when an entry reloads during setup."""
     old_setup_started = asyncio.Event()
     new_setup_started = asyncio.Event()
+    unload_started = asyncio.Event()
     release_old_setup = asyncio.Event()
     setup_count = 0
     original_setup = notify.PushMeldNotificationService.async_setup
@@ -330,15 +331,24 @@ async def test_reload_during_notification_setup_does_not_register_stale_service(
     )
     entry.add_to_hass(hass)
 
+    def on_state_change() -> None:
+        """Record when the config entry starts unloading."""
+        if entry.state is ConfigEntryState.UNLOAD_IN_PROGRESS:
+            unload_started.set()
+
+    entry.async_on_state_change(on_state_change)
+
     assert await hass.config_entries.async_setup(entry.entry_id)
     await old_setup_started.wait()
 
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await new_setup_started.wait()
-    await hass.async_block_till_done()
-
+    reload_task = asyncio.create_task(
+        hass.config_entries.async_reload(entry.entry_id)
+    )
+    await unload_started.wait()
     release_old_setup.set()
+
+    assert await reload_task
+    await new_setup_started.wait()
     await hass.async_block_till_done()
 
     assert hass.services.has_service(NOTIFY_DOMAIN, "test_channel")
