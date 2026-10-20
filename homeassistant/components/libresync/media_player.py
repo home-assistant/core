@@ -77,20 +77,27 @@ class LibreSyncMediaPlayer(LibreSyncEntity, MediaPlayerEntity):
         super().__init__(client, unique_id, name)
         self._attr_unique_id = unique_id
         self._written = client.state
+        self._received_position_ms = client.state.position_ms
         self._take_position(client.state)
 
     @callback
     @override
     def _handle_state(self, state: DeviceState) -> None:
         """Write the new state, unless only the position moved, as expected."""
+        received = self._received_position_ms
+        self._received_position_ms = state.position_ms
         if self._position_on_course(state):
             return
         # A write for another reason keeps the time the position was read,
-        # unless playback started or stopped: the frontend extrapolates from
-        # that time only while playing.
-        if state.position_ms != self._written.position_ms or (
-            state.playback is PlayState.PLAYING
-        ) != (self._written.playback is PlayState.PLAYING):
+        # unless the position jumped, also back to the written one, or playback
+        # started or stopped: the frontend extrapolates from that time only
+        # while playing.
+        if (
+            state.position_ms != self._written.position_ms
+            or state.position_ms != received
+            or (state.playback is PlayState.PLAYING)
+            != (self._written.playback is PlayState.PLAYING)
+        ):
             self._take_position(state)
         self._written = state
         super()._handle_state(state)

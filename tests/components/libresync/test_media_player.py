@@ -259,6 +259,31 @@ async def test_position_time_kept_on_other_writes(
     assert attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == read_at
 
 
+async def test_position_time_restamped_on_seek_back(
+    hass: HomeAssistant, mock_client: MagicMock, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test a seek back to the written position is written with a new time."""
+    playing = STATE.evolve(
+        play_state=PlayState.PLAYING, audio_state=PlayState.PLAYING, position_ms=10000
+    )
+    push(mock_client, playing)
+    await hass.async_block_till_done()
+    read_at = hass.states.get(ENTITY_ID).attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
+
+    # Positions as extrapolated are not written.
+    freezer.tick(timedelta(seconds=1))
+    push(mock_client, playing.evolve(position_ms=11000))
+    freezer.tick(timedelta(seconds=1))
+    push(mock_client, playing.evolve(position_ms=12000))
+
+    freezer.tick(timedelta(seconds=1))
+    push(mock_client, playing)
+    await hass.async_block_till_done()
+    attributes = hass.states.get(ENTITY_ID).attributes
+    assert attributes[ATTR_MEDIA_POSITION] == 10
+    assert attributes[ATTR_MEDIA_POSITION_UPDATED_AT] - read_at == timedelta(seconds=3)
+
+
 async def test_position_time_restamped_on_resume(
     hass: HomeAssistant, mock_client: MagicMock, freezer: FrozenDateTimeFactory
 ) -> None:
