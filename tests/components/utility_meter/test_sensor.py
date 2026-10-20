@@ -1360,6 +1360,37 @@ async def test_delta_values(
 
 
 @pytest.mark.parametrize(
+    ("readings", "expected"),
+    [
+        pytest.param(["5", "5", "5", "2"], "17", id="repeated_readings"),
+        pytest.param(["5", "2", "5"], "12", id="distinct_readings"),
+    ],
+)
+async def test_delta_values_repeated_reading(
+    hass: HomeAssistant, readings: list[str], expected: str
+) -> None:
+    """Test every delta value is counted, even when it equals the previous one."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {DOMAIN: {"energy_bill": {"delta_values": True, "source": "sensor.energy"}}},
+    )
+    await hass.async_block_till_done()
+
+    for reading in readings:
+        hass.states.async_set(
+            "sensor.energy",
+            reading,
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_bill")
+    assert state is not None
+    assert state.state == expected
+
+
+@pytest.mark.parametrize(
     ("yaml_config", "config_entry_config"),
     [
         (
