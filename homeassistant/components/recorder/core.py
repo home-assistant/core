@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Callable, Iterable
 from concurrent.futures import CancelledError
 import contextlib
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 import queue
@@ -34,6 +35,7 @@ from homeassistant.core import (
     Event,
     EventStateChangedData,
     HomeAssistant,
+    State,
     callback,
 )
 from homeassistant.helpers.event import (
@@ -142,6 +144,15 @@ CONNECTIVITY_ERR = "Error in database connectivity during commit"
 MAX_DB_EXECUTOR_WORKERS = POOL_SIZE - 1
 
 
+@dataclass(slots=True, frozen=True)
+class QueuedStates:
+    """State changes queued in the recorder, by entity, oldest first."""
+
+    states: dict[str, list[State | None]]
+    # False if the recorder stopped listening, so later changes are missing
+    complete: bool
+
+
 class Recorder(threading.Thread):
     """A threaded recorder class."""
 
@@ -218,6 +229,12 @@ class Recorder(threading.Thread):
         self._db_executor: DBInterruptibleThreadPoolExecutor | None = None
 
         self._event_listener: CALLBACK_TYPE | None = None
+        # State changes put in the queue before the recorder is ready, by entity.
+        # None once the recorder is ready.
+        self._queued_states: dict[str, list[State | None]] | None = {}
+        self._queued_states_listener: CALLBACK_TYPE | None = None
+        # False once the recorder stopped listening before it was ready
+        self._queued_states_complete = True
         self._queue_watcher: CALLBACK_TYPE | None = None
         self._keep_alive_listener: CALLBACK_TYPE | None = None
         self._commit_listener: CALLBACK_TYPE | None = None
@@ -319,6 +336,23 @@ class Recorder(threading.Thread):
             MATCH_ALL,
             _event_listener,
         )
+        if EVENT_STATE_CHANGED not in exclude_event_types:
+            if TYPE_CHECKING:
+                assert self._queued_states is not None
+            queued_states = self._queued_states
+
+            @callback
+            def _queued_state_listener(event: Event[EventStateChangedData]) -> None:
+                """Index the state changes the event listener queued."""
+                entity_id = event.data["entity_id"]
+                if entity_filter is None or entity_filter(entity_id):
+                    queued_states.setdefault(entity_id, []).append(
+                        event.data["new_state"]
+                    )
+
+            self._queued_states_listener = self.hass.bus.async_listen(
+                EVENT_STATE_CHANGED, _queued_state_listener
+            )
         self._queue_watcher = async_track_time_interval(
             self.hass,
             self._async_check_queue,
@@ -394,6 +428,38 @@ class Recorder(threading.Thread):
         if self._event_listener:
             self._event_listener()
             self._event_listener = None
+        # Later changes are not queued, so they are missing from the index too
+        if self._queued_states_listener:
+            self._queued_states_listener()
+            self._queued_states_listener = None
+            self._queued_states_complete = False
+
+    @callback
+    def _async_drop_queued_states(self) -> None:
+        """Stop indexing queued state changes and drop the index."""
+        if self._queued_states_listener:
+            self._queued_states_listener()
+            self._queued_states_listener = None
+        self._queued_states = None
+
+    @callback
+    def async_get_queued_states(self, entity_ids: Iterable[str]) -> QueuedStates | None:
+        """Return the state changes queued for `entity_ids`, oldest first.
+
+        Until the recorder is ready it does not process its queue, so these are
+        not in the database yet. Returns None if and only if the recorder is
+        ready; wait for `async_get_commit_future` instead then.
+        """
+        if (queued_states := self._queued_states) is None:
+            return None
+        return QueuedStates(
+            {
+                entity_id: list(states)
+                for entity_id in entity_ids
+                if (states := queued_states.get(entity_id))
+            },
+            self._queued_states_complete,
+        )
 
     @callback
     def _async_stop_listeners(self) -> None:
@@ -497,6 +563,8 @@ class Recorder(threading.Thread):
         Called after all migration steps are finished.
         """
         self._async_setup_periodic_tasks()
+        # From here on, callers flush the queue instead of reading the index
+        self._async_drop_queued_states()
         self.async_recorder_ready.set()
 
     @callback

@@ -57,6 +57,7 @@ if TYPE_CHECKING:
     from homeassistant.components.recorder import Recorder
 
 from .models import Condition, ConditionCheckParams, ConditionConfig
+from .tracing import condition_trace_update_result
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -130,6 +131,9 @@ class EntityConditionBase(Condition):
         # a token of the priming pass that owns the entity: when passes for an
         # entity overlap, only the most recent one applies its result.
         self._priming: dict[str, object] = {}
+        # Entities whose `for:` anchor was resolved without complete recorder
+        # history, reported in the condition trace.
+        self._incomplete_history: set[str] = set()
 
     def entity_filter(self, entities: set[str]) -> set[str]:
         """Filter entities matching any of the domain specs."""
@@ -183,6 +187,7 @@ class EntityConditionBase(Condition):
             # An invalidation breaks the run, so any history being loaded for the
             # entity is now stale; stop priming it and let live tracking own it.
             self._priming.pop(entity_id, None)
+            self._incomplete_history.discard(entity_id)
             self._valid_since.pop(entity_id, None)
 
     @property
@@ -286,6 +291,7 @@ class EntityConditionBase(Condition):
         """
         for entity_id in removed:
             self._priming.pop(entity_id, None)
+            self._incomplete_history.discard(entity_id)
             self._valid_since.pop(entity_id, None)
         await self._async_prime_valid_since(added)
 
@@ -294,13 +300,16 @@ class EntityConditionBase(Condition):
 
         For each currently-valid entity the anchor is the start of its current
         continuous run of validity, read from recorder history (bounded by
-        `MAX_HISTORY_PRIMING_LOOKBACK`). The earlier of that and the current
-        state's own anchor wins, so a run that began before the lookback window
-        is not cut short. When the recorder is unavailable or the read fails,
-        the current state's anchor is used alone. An entity is added to
-        `_valid_since` only once this resolves, so a newly tracked entity does
-        not participate in the condition until its anchor is known — rather than
-        briefly using a conservative anchor that then changes.
+        `MAX_HISTORY_PRIMING_LOOKBACK`), including changes still queued in the
+        recorder. The earlier of that and the current state's own anchor wins,
+        so a run that began before the lookback window is not cut short. When
+        the recorder is unavailable or the read fails, the current state's
+        anchor is used alone. Entities whose history is incomplete, because the
+        read failed or the recorder had stopped recording before priming, are
+        flagged in `_incomplete_history`. An entity is added to `_valid_since`
+        only once this resolves, so a newly tracked entity does not participate
+        in the condition until its anchor is known — rather than briefly using a
+        conservative anchor that then changes.
 
         While loading, an entity is held in `_priming`. A live change that keeps
         it valid is ignored (the run is unbroken, history is accurate), but an
@@ -324,15 +333,21 @@ class EntityConditionBase(Condition):
         token = object()
         self._priming.update(dict.fromkeys(anchors, token))
         try:
+            complete = True
             if "recorder" in self._hass.config.components:
-                await self._async_refine_anchors_from_history(anchors)
+                complete = await self._async_refine_anchors_from_history(anchors)
             for entity_id, anchor in anchors.items():
                 # Skip entities a live change invalidated mid-load: they were
                 # removed from `_priming`, the run broke, and live tracking (which
                 # saw the break) owns them — applying this history would be stale.
                 # Also skip those a later pass took over.
-                if self._priming.get(entity_id) is token:
-                    self._valid_since[entity_id] = anchor
+                if self._priming.get(entity_id) is not token:
+                    continue
+                self._valid_since[entity_id] = anchor
+                if complete:
+                    self._incomplete_history.discard(entity_id)
+                else:
+                    self._incomplete_history.add(entity_id)
         finally:
             for entity_id in anchors:
                 if self._priming.get(entity_id) is token:
@@ -340,12 +355,18 @@ class EntityConditionBase(Condition):
 
     async def _async_refine_anchors_from_history(
         self, anchors: dict[str, datetime]
-    ) -> None:
+    ) -> bool:
         """Move each anchor in `anchors` back to the true start of its run.
 
         For each entity the anchor becomes the earlier of the recorded run start
         and the existing (live) anchor; entities with no usable history keep
-        their existing anchor. Mutates `anchors` in place.
+        their existing anchor. Mutates `anchors` in place. Returns whether the
+        history was complete.
+
+        The recorder only processes its queue once Home Assistant has started
+        and any live schema migration is done, so the queue is not flushed
+        before that; the changes still queued are taken from the recorder's
+        index of them instead.
         """
         from sqlalchemy.exc import SQLAlchemyError  # noqa: PLC0415
 
@@ -359,8 +380,8 @@ class EntityConditionBase(Condition):
         async def _read_history(
             instance: Recorder,
         ) -> dict[str, list[State | dict[str, Any]]]:
-            # The history query only sees committed rows; the priming manager
-            # flushes the recorder queue before running this.
+            # The history query only sees committed rows; once the recorder is
+            # ready the priming manager flushes its queue before running this.
             return await instance.async_add_executor_job(
                 ft.partial(
                     history.get_significant_states,
@@ -377,26 +398,34 @@ class EntityConditionBase(Condition):
             )
 
         manager = self._hass.data[DATA_HISTORY_PRIMING_MANAGER]
+        # None once the recorder is ready, then its queue is flushed instead.
+        queued = get_instance(self._hass).async_get_queued_states(anchors)
         try:
             # The timeout also covers waiting for our turn, so under a flood of
             # primings a condition falls back to its conservative anchor rather
             # than blocking on the queue indefinitely.
             async with asyncio.timeout(HISTORY_PRIMING_TIMEOUT):
-                historical_states = await manager.async_prime(_read_history)
+                historical_states = await manager.async_prime(
+                    _read_history, flush=queued is None
+                )
         except (SQLAlchemyError, TimeoutError) as err:
             # Best effort: keep the conservative anchors rather than failing.
             _LOGGER.debug("Error priming condition durations from history: %s", err)
-            return
+            return False
 
-        for entity_id, rows in historical_states.items():
-            valid_since = self._valid_since_from_history(
-                entity_id, cast(list[State], rows)
-            )
+        queued_states = queued.states if queued is not None else {}
+        for entity_id, anchor in anchors.items():
+            rows: list[State | None] = [
+                *cast(list[State], historical_states.get(entity_id, [])),
+                *queued_states.get(entity_id, []),
+            ]
+            valid_since = self._valid_since_from_history(entity_id, rows)
             if valid_since is not None:
-                anchors[entity_id] = min(valid_since, anchors[entity_id])
+                anchors[entity_id] = min(valid_since, anchor)
+        return queued is None or queued.complete
 
     def _valid_since_from_history(
-        self, entity_id: str, rows: list[State]
+        self, entity_id: str, rows: list[State | None]
     ) -> datetime | None:
         """Return when the current continuous run of valid states began.
 
@@ -406,12 +435,15 @@ class EntityConditionBase(Condition):
         in the window: an intervening invalid period breaks the run, so the
         anchor must come from after it.) Returns None when the latest recorded
         state is not valid, e.g. the recorder lags behind the live state machine.
+        A None row, an entity removed while queued, also breaks the run.
         """
         # Recorder rows are LazyState objects, which skip State.__init__ and so
         # never populate the domain/object_id that the validity checks rely on.
         domain, object_id = split_entity_id(entity_id)
         valid_since: datetime | None = None
         for _state in reversed(rows):
+            if _state is None:
+                break
             _state.domain = domain
             _state.object_id = object_id
             if not (self._should_include(_state) and self.is_valid_state(_state)):
@@ -495,6 +527,12 @@ class EntityConditionBase(Condition):
             if (_state := self._hass.states.get(entity_id))
             and self._should_include(_state)
         ]
+        if self._incomplete_history and (
+            incomplete_history := self._incomplete_history.intersection(
+                _state.entity_id for _state in entity_states
+            )
+        ):
+            condition_trace_update_result(incomplete_history=sorted(incomplete_history))
         return self._matcher(entity_states)
 
 
@@ -852,10 +890,11 @@ class HistoryPrimingManager:
         self._query_lock = asyncio.Lock()
 
     async def async_prime[_T](
-        self, job: Callable[[Recorder], Coroutine[Any, Any, _T]]
+        self, job: Callable[[Recorder], Coroutine[Any, Any, _T]], *, flush: bool
     ) -> _T:
         """Flush the recorder, then run `job`, coordinated with other primings."""
-        await self._async_flush()
+        if flush:
+            await self._async_flush()
         async with self._query_lock:
             return await job(get_instance(self._hass))
 
