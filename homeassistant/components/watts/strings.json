@@ -4,8 +4,7 @@
       "account_mismatch": "The authenticated account does not match the configured account",
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "invalid_token": "The provided access token is invalid.",
-      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"

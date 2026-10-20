@@ -2,11 +2,29 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.prusalink.config_flow import InvalidAuth
 from homeassistant.components.prusalink.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResult, FlowResultType
+
+
+async def _async_configure_valid(hass: HomeAssistant, flow_id: str) -> FlowResult:
+    """Configure the flow with valid input."""
+    with patch(
+        "homeassistant.components.prusalink.async_setup_entry",
+        return_value=True,
+    ):
+        return await hass.config_entries.flow.async_configure(
+            flow_id,
+            {
+                "host": "1.1.1.1",
+                "username": "abcdefg",
+                "password": "abcdefg",
+            },
+        )
 
 
 async def test_form(hass: HomeAssistant, mock_version_api) -> None:
@@ -69,6 +87,7 @@ async def test_form_mk3(hass: HomeAssistant, mock_version_api) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_version_api")
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
@@ -91,7 +110,11 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
+    result3 = await _async_configure_valid(hass, result2["flow_id"])
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
+
+@pytest.mark.usefixtures("mock_version_api")
 async def test_form_unknown(hass: HomeAssistant) -> None:
     """Test we handle unknown error."""
     result = await hass.config_entries.flow.async_init(
@@ -114,8 +137,13 @@ async def test_form_unknown(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
+    result3 = await _async_configure_valid(hass, result2["flow_id"])
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
-async def test_form_too_low_version(hass: HomeAssistant, mock_version_api) -> None:
+
+async def test_form_too_low_version(
+    hass: HomeAssistant, mock_version_api: dict[str, str]
+) -> None:
     """Test we handle too low API version."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -135,8 +163,14 @@ async def test_form_too_low_version(hass: HomeAssistant, mock_version_api) -> No
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "not_supported"}
 
+    mock_version_api["api"] = "2.0.0"
+    result3 = await _async_configure_valid(hass, result2["flow_id"])
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
-async def test_form_invalid_version_2(hass: HomeAssistant, mock_version_api) -> None:
+
+async def test_form_invalid_version_2(
+    hass: HomeAssistant, mock_version_api: dict[str, str]
+) -> None:
     """Test we handle invalid version."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -156,9 +190,13 @@ async def test_form_invalid_version_2(hass: HomeAssistant, mock_version_api) -> 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "not_supported"}
 
+    mock_version_api["api"] = "2.0.0"
+    result3 = await _async_configure_valid(hass, result2["flow_id"])
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_invalid_mk3_server_version(
-    hass: HomeAssistant, mock_version_api
+    hass: HomeAssistant, mock_version_api: dict[str, str]
 ) -> None:
     """Test we handle invalid version for MK2/MK3."""
     result = await hass.config_entries.flow.async_init(
@@ -181,7 +219,12 @@ async def test_form_invalid_mk3_server_version(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "not_supported"}
 
+    mock_version_api["server"] = "0.7.2"
+    result3 = await _async_configure_valid(hass, result2["flow_id"])
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
+
+@pytest.mark.usefixtures("mock_version_api")
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
@@ -203,3 +246,6 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    result3 = await _async_configure_valid(hass, result2["flow_id"])
+    assert result3["type"] is FlowResultType.CREATE_ENTRY

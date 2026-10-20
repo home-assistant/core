@@ -5,19 +5,20 @@ from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
 )
 from homeassistant.components.freebox import SCAN_INTERVAL
+from homeassistant.components.freebox.const import DOMAIN
 from homeassistant.const import ATTR_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from .common import setup_platform
 from .const import DATA_HOME_PIR_GET_VALUE, DATA_STORAGE_GET_RAIDS
-
-from tests.common import async_fire_time_changed
 
 
 async def test_raid_array_degraded(
@@ -89,3 +90,21 @@ async def test_home(
     assert hass.states.get("binary_sensor.detecteur_cover").state == "on"
     assert hass.states.get("binary_sensor.ouverture_porte").state == "off"
     assert hass.states.get("binary_sensor.ouverture_porte_cover").state == "on"
+
+
+@pytest.mark.usefixtures("router")
+async def test_home_node_firmware_version(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the firmware version of a home node is passed as a string."""
+    entry = await setup_platform(hass, BINARY_SENSOR_DOMAIN)
+
+    # The PIR detector from the fixture reports its firmware version as a number
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, 26), entry.entry_id
+    )
+    assert device is not None
+    assert device.sw_version == "29871925"
+    assert "non-string value" not in caplog.text

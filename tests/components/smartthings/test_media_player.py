@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 from pysmartthings import Attribute, Capability, Command, Status
 from pysmartthings.models import HealthStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
@@ -13,7 +14,10 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
+    ATTR_SOUND_MODE,
+    ATTR_SOUND_MODE_LIST,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
     MediaPlayerEntityFeature,
     RepeatMode,
@@ -49,8 +53,6 @@ from . import (
     trigger_health_update,
     trigger_update,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_all_entities(
@@ -510,6 +512,60 @@ async def test_media_repeat_mode(
         Command.SET_PLAYBACK_REPEAT_MODE,
         MAIN,
         argument=argument,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["vd_network_audio_002s"])
+async def test_select_sound_mode(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test media player select sound mode command."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOUND_MODE,
+        {
+            ATTR_ENTITY_ID: "media_player.theater_soundbar_living",
+            ATTR_SOUND_MODE: "adaptive_sound",
+        },
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "0d94e5db-8501-2355-eb4f-214163702cac",
+        Capability.EXECUTE,
+        Command.EXECUTE,
+        MAIN,
+        argument=[
+            "/sec/networkaudio/soundmode",
+            {"x.com.samsung.networkaudio.soundmode": "adaptive sound"},
+        ],
+    )
+    assert (
+        hass.states.get("media_player.theater_soundbar_living").attributes[
+            ATTR_SOUND_MODE
+        ]
+        == "adaptive_sound"
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["im_speaker_ai_0001"])
+async def test_no_sound_mode_on_non_soundbar(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test non-soundbar network audio devices don't expose sound mode."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("media_player.galaxy_home_mini")
+    assert state is not None
+    assert ATTR_SOUND_MODE_LIST not in state.attributes
+    assert not (
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        & MediaPlayerEntityFeature.SELECT_SOUND_MODE
     )
 
 

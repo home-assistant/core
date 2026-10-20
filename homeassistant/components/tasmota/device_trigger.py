@@ -6,7 +6,7 @@ import logging
 import attr
 from hatasmota.models import DiscoveryHashType
 from hatasmota.trigger import TasmotaTrigger, TasmotaTriggerConfig
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
@@ -31,12 +31,12 @@ DEVICE = "device"
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_PLATFORM): DEVICE,
-        vol.Required(CONF_DOMAIN): DOMAIN,
-        vol.Required(CONF_DEVICE_ID): str,
-        vol.Required(CONF_DISCOVERY_ID): str,
-        vol.Required(CONF_TYPE): cv.string,
-        vol.Required(CONF_SUBTYPE): cv.string,
+        probatio.Required(CONF_PLATFORM): DEVICE,
+        probatio.Required(CONF_DOMAIN): DOMAIN,
+        probatio.Required(CONF_DEVICE_ID): str,
+        probatio.Required(CONF_DISCOVERY_ID): str,
+        probatio.Required(CONF_TYPE): cv.string,
+        probatio.Required(CONF_SUBTYPE): cv.string,
     }
 )
 

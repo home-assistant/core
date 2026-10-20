@@ -25,6 +25,11 @@
       }
     }
   },
+  "exceptions": {
+    "town_not_found": {
+      "message": "No AEMET town found for coordinates {latitude}, {longitude}"
+    }
+  },
   "options": {
     "step": {
       "init": {

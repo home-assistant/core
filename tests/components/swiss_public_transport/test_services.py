@@ -7,8 +7,9 @@ from opendata_transport.exceptions import (
     OpendataTransportConnectionError,
     OpendataTransportError,
 )
+import probatio
 import pytest
-from voluptuous import error as vol_er
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_array_fixture
 
 from homeassistant.components.swiss_public_transport.const import (
     ATTR_LIMIT,
@@ -25,8 +26,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_load_json_array_fixture
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,12 +89,12 @@ async def test_service_call_fetch_connections_success(
 @pytest.mark.parametrize(
     ("limit", "config_data", "expected_result", "raise_error"),
     [
-        (-1, MOCK_DATA_STEP_BASE, pytest.raises(vol_er.MultipleInvalid), None),
-        (0, MOCK_DATA_STEP_BASE, pytest.raises(vol_er.MultipleInvalid), None),
+        (-1, MOCK_DATA_STEP_BASE, pytest.raises(probatio.error.MultipleInvalid), None),
+        (0, MOCK_DATA_STEP_BASE, pytest.raises(probatio.error.MultipleInvalid), None),
         (
             CONNECTIONS_MAX + 1,
             MOCK_DATA_STEP_BASE,
-            pytest.raises(vol_er.MultipleInvalid),
+            pytest.raises(probatio.error.MultipleInvalid),
             None,
         ),
         (

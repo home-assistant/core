@@ -1,6 +1,6 @@
 """Repairs for DoorBird."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.core import HomeAssistant
@@ -35,7 +35,7 @@ class DoorBirdReloadConfirmRepairFlow(RepairsFlow):
 
         return self.async_show_form(
             step_id="confirm",
-            data_schema=vol.Schema({}),
+            data_schema=probatio.Schema({}),
             description_placeholders=description_placeholders,
         )
 

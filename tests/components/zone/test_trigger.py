@@ -4,8 +4,21 @@ from datetime import timedelta
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import async_fire_time_changed, mock_component
+from pytest_homeassistant.components.common import (
+    TargetSupport,
+    TriggerStateDescription,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
+    assert_trigger_behavior_first,
+    assert_trigger_options_supported,
+    assert_triggers_target_support,
+    parametrize_target_entities,
+    parametrize_trigger_states,
+    target_entities,
+)
 
 from homeassistant.components import automation, zone
 from homeassistant.components.zone.trigger import TRIGGERS
@@ -20,20 +33,6 @@ from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_fire_time_changed, mock_component
-from tests.components.common import (
-    TargetSupport,
-    TriggerStateDescription,
-    assert_trigger_behavior_all,
-    assert_trigger_behavior_each,
-    assert_trigger_behavior_first,
-    assert_trigger_options_supported,
-    assert_triggers_target_support,
-    parametrize_target_entities,
-    parametrize_trigger_states,
-    target_entities,
-)
 
 
 @pytest.fixture(autouse=True)
@@ -572,7 +571,7 @@ async def test_zone_trigger_rejects_non_zone_entity_id(
     hass: HomeAssistant, trigger_key: str
 ) -> None:
     """Test that the zone option must reference entities in the zone domain."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await async_validate_trigger_config(
             hass,
             [

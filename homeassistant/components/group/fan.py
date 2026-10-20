@@ -5,7 +5,7 @@ import logging
 from operator import ior
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
@@ -59,9 +59,9 @@ PARALLEL_UPDATES = 0
 
 PLATFORM_SCHEMA = FAN_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITIES): cv.entities_domain(FAN_DOMAIN),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Required(CONF_ENTITIES): cv.entities_domain(FAN_DOMAIN),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 

@@ -166,7 +166,8 @@ class LitterRobotSelectEntity(
     @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        return str(self.entity_description.current_fn(self.robot))
+        option = self.entity_description.current_fn(self.robot)
+        return None if option is None else str(option)
 
     @whisker_command
     @override

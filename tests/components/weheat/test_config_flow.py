@@ -3,12 +3,17 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from weheat.exceptions import ApiException
+from yarl import URL
 
 from homeassistant.components.weheat.const import (
     DOMAIN,
     ENTRY_TITLE,
     OAUTH2_AUTHORIZE,
+    OAUTH2_SCOPES,
     OAUTH2_TOKEN,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
@@ -26,10 +31,6 @@ from .const import (
     USER_UUID_1,
     USER_UUID_2,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -57,6 +58,10 @@ async def test_full_flow(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_weheat.mock_calls) == 1
+
+    token_request_data = aioclient_mock.mock_calls[-1][2]
+    assert token_request_data["grant_type"] == "authorization_code"
+    assert token_request_data["code_verifier"]
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == USER_UUID_1
@@ -189,12 +194,17 @@ async def handle_oauth(
         },
     )
 
-    assert result["url"] == (
-        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
-        "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}"
-        "&scope=openid+offline_access"
+    result_url = URL(result["url"])
+    assert f"{result_url.origin()}{result_url.path}" == OAUTH2_AUTHORIZE
+    assert result_url.query["response_type"] == "code"
+    assert result_url.query["client_id"] == CLIENT_ID
+    assert (
+        result_url.query["redirect_uri"] == "https://example.com/auth/external/callback"
     )
+    assert result_url.query["state"] == state
+    assert result_url.query["scope"] == " ".join(OAUTH2_SCOPES)
+    assert result_url.query["code_challenge"]
+    assert result_url.query["code_challenge_method"] == "S256"
 
     client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")

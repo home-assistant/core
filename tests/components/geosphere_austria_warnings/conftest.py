@@ -6,11 +6,10 @@ from unittest.mock import AsyncMock, patch
 
 from pygeosphere_warnings import LocationWarnings
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.geosphere_austria_warnings.const import DOMAIN
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 TEST_LATITUDE = 48.2486
 TEST_LONGITUDE = 16.3564
@@ -55,4 +54,5 @@ def mock_config_entry() -> MockConfigEntry:
         title="Schwechat",
         data={CONF_LATITUDE: TEST_LATITUDE, CONF_LONGITUDE: TEST_LONGITUDE},
         unique_id="30740",
+        version=2,
     )

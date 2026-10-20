@@ -3,9 +3,6 @@
     "binary_sensor": {
       "mount": {
         "name": "Connected"
-      },
-      "state": {
-        "name": "Running"
       }
     },
     "sensor": {
@@ -49,9 +46,6 @@
     },
     "mount_reload_invalid_device": {
       "message": "Device is not a supervisor mount point"
-    },
-    "mount_reload_unknown_device_id": {
-      "message": "Device ID not found"
     },
     "supervisor_not_connected": {
       "message": "Not connected with the supervisor / system too busy"
@@ -323,6 +317,10 @@
       "description": "System is unsupported because the Docker version is out of date. For information about the required version and how to fix this, select Learn more.",
       "title": "Unsupported system - Docker version"
     },
+    "unsupported_home_assistant_core_custom_image": {
+      "description": "System is unsupported because Home Assistant Core is running from a custom container image instead of the official one. For troubleshooting information, select Learn more.",
+      "title": "Unsupported system - Custom Home Assistant Core image"
+    },
     "unsupported_home_assistant_core_version": {
       "description": "System is unsupported because the Home Assistant Core version in use is not supported. For troubleshooting information, select Learn more.",
       "title": "Unsupported system - Home Assistant Core version"
@@ -362,6 +360,10 @@
     "unsupported_supervisor_version": {
       "description": "System is unsupported because an out-of-date version of Supervisor is in use and auto-update has been disabled. For troubleshooting information, select Learn more.",
       "title": "Unsupported system - Supervisor version"
+    },
+    "unsupported_system_architecture": {
+      "description": "System is unsupported because its CPU architecture is no longer supported. For troubleshooting information, select Learn more.",
+      "title": "Unsupported system - System architecture"
     },
     "unsupported_systemd": {
       "description": "System is unsupported because Systemd is missing, inactive or misconfigured. For troubleshooting information, select Learn more.",

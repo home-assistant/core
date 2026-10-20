@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import jwt
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from yoto_api import (
     Card,
     CardInsertionState,
@@ -31,8 +32,6 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.yoto.const import DOMAIN, YOTO_SCOPES
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 USER_ID = "auth0|user-test"
 PLAYER_ID = "player-test"
@@ -166,7 +165,6 @@ def mock_yoto_client() -> Generator[MagicMock]:
         client.players = {PLAYER_ID: _build_player()}
         client.library = {CARD_ID: _build_card()}
         client.groups = {GROUP_ID: _build_group()}
-        client.token = MagicMock(refresh_token="mock-refresh-token")
         yield client
 
 

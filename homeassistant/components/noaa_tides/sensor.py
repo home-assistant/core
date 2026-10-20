@@ -1,12 +1,11 @@
 """Support for the NOAA Tides and Currents API."""
 
-from datetime import datetime
 import logging
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, override
 
 import noaa_coops as coops
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -18,6 +17,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
@@ -39,10 +39,12 @@ UNIT_SYSTEMS = ["english", "metric"]
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_STATION_ID): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_TIME_ZONE, default=DEFAULT_TIMEZONE): vol.In(TIMEZONES),
-        vol.Optional(CONF_UNIT_SYSTEM): vol.In(UNIT_SYSTEMS),
+        probatio.Required(CONF_STATION_ID): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_TIME_ZONE, default=DEFAULT_TIMEZONE): probatio.In(
+            TIMEZONES
+        ),
+        probatio.Optional(CONF_UNIT_SYSTEM): probatio.In(UNIT_SYSTEMS),
     }
 )
 
@@ -157,7 +159,7 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
 
     def update(self) -> None:
         """Get the latest data from NOAA Tides and Currents API."""
-        begin = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
+        begin = dt_util.now()
         end = begin + DEFAULT_PREDICTION_LENGTH
         try:
             df_predictions = self._station.get_data(
