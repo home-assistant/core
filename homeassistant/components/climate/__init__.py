@@ -80,6 +80,8 @@ from .const import (
     ClimateEntityCapabilityAttribute,
     ClimateEntityFeature,
     ClimateEntityStateAttribute,
+    ClimateService,
+    ClimateServiceArgument,
     HVACAction,
     HVACMode,
 )
@@ -173,6 +175,8 @@ __all__ = [
     "ClimateEntityFeature",
     "ClimateEntityStateAttribute",
     "ClimateExtraStoredData",
+    "ClimateService",
+    "ClimateServiceArgument",
     "HVACAction",
     "HVACMode",
     "RestoreClimate",

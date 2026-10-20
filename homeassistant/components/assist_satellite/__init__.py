@@ -18,6 +18,8 @@ from .const import (
     PREANNOUNCE_FILENAME,
     PREANNOUNCE_URL,
     AssistSatelliteEntityFeature,
+    AssistSatelliteService,
+    AssistSatelliteServiceArgument,
 )
 from .entity import (
     AssistSatelliteAnnouncement,
@@ -39,6 +41,8 @@ __all__ = [
     "AssistSatelliteEntity",
     "AssistSatelliteEntityDescription",
     "AssistSatelliteEntityFeature",
+    "AssistSatelliteService",
+    "AssistSatelliteServiceArgument",
     "AssistSatelliteWakeWord",
     "SatelliteBusyError",
 ]

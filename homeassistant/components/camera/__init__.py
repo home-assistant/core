@@ -51,6 +51,8 @@ from .const import (
     SERVICE_SNAPSHOT,
     CameraEntityFeature,
     CameraEntityStateAttribute,
+    CameraService,
+    CameraServiceArgument,
     CameraState,
     StreamType,
 )
@@ -124,6 +126,8 @@ __all__ = [
     "CameraEntityFeature",
     "CameraEntityStateAttribute",
     "CameraImageView",
+    "CameraService",
+    "CameraServiceArgument",
     "CameraState",
     "CameraView",
     "CameraWebRTCProvider",

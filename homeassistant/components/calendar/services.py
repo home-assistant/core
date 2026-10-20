@@ -34,8 +34,8 @@ from .const import (
     EVENT_SUMMARY,
     EVENT_TIME_FIELDS,
     EVENT_TYPES,
-    SERVICE_GET_EVENTS,
     CalendarEntityFeature,
+    CalendarService,
 )
 from .helper import (
     MIN_NEW_EVENT_DURATION,
@@ -180,7 +180,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         required_features=[CalendarEntityFeature.CREATE_EVENT],
     )
     component.async_register_entity_service(
-        SERVICE_GET_EVENTS,
+        CalendarService.GET_EVENTS,
         SERVICE_GET_EVENTS_SCHEMA,
         async_get_events_service,
         supports_response=SupportsResponse.ONLY,
