@@ -214,7 +214,6 @@ async def async_setup_entry(
                 MyPVSensor(
                     coordinator,
                     entity_description,
-                    coordinator.device.serial_number,
                 )
             )
 

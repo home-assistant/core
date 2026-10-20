@@ -36,7 +36,6 @@ async def async_setup_entry(
             MyPVSelect(
                 coordinator,
                 entity_description,
-                coordinator.device.serial_number,
             )
         )
 

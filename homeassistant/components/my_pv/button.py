@@ -39,7 +39,6 @@ async def async_setup_entry(
             MyPVCommandButton(
                 coordinator,
                 entity_description,
-                coordinator.device.serial_number,
             )
         )
 

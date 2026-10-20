@@ -17,13 +17,14 @@ class MyPVBaseEntity(CoordinatorEntity[MyPVCoordinator]):
         self,
         coordinator: MyPVCoordinator,
         entity_description: EntityDescription,
-        serial_number: str,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
 
         self._attr_device_info = coordinator.device_info
-        self._attr_unique_id = f"{serial_number}-{entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.device.serial_number}-{entity_description.key}"
+        )
 
         self.entity_description = entity_description
 

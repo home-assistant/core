@@ -49,7 +49,6 @@ async def async_setup_entry(
             MyPVSwitch(
                 coordinator,
                 ENTITY_DESCRIPTIONS["bstmode"],
-                coordinator.device.serial_number,
             )
         )
 
@@ -61,7 +60,6 @@ async def async_setup_entry(
             MyPVWaterHeaterSwitch(
                 coordinator,
                 ENTITY_DESCRIPTIONS["devmode"],
-                coordinator.device.serial_number,
             )
         )
 
