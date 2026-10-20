@@ -1,11 +1,14 @@
 """Tests for the error handling of Netatmo entity actions."""
 
+from datetime import timedelta
 from typing import Any
 
 import aiohttp
+from freezegun.api import FrozenDateTimeFactory
 import pyatmo
 from pyatmo.exceptions import ApiTooManyRequestError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
@@ -62,8 +65,7 @@ from .common import (
     simulate_webhook,
 )
 
-from tests.common import MockConfigEntry
-
+BUTTON_ENTITY = "button.entrance_blinds_preferred_position"
 CAMERA_ENTITY = "camera.hall"
 CLIMATE_ENTITY = "climate.livingroom_livingroom"
 COVER_ENTITY = "cover.entrance_blinds"
@@ -109,16 +111,10 @@ async def _setup_with_webhook(
     await simulate_webhook(hass, webhook_id, FLOODLIGHT_ON)
 
 
-@pytest.mark.usefixtures("netatmo_auth", "entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("netatmo_auth")
 @pytest.mark.parametrize(
     ("domain", "service", "service_data"),
     [
-        pytest.param(
-            BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.entrance_blinds_preferred_position"},
-            id="button_press",
-        ),
         pytest.param(
             CAMERA_DOMAIN,
             SERVICE_TURN_ON,
@@ -301,15 +297,19 @@ async def _setup_with_webhook(
 async def test_failed_action_raises(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
     domain: str,
     service: str,
     service_data: dict[str, Any],
 ) -> None:
-    """Test a failed Netatmo request raises a translated error."""
+    """Test a failed Netatmo request raises a translated error and writes no state."""
     await _setup_with_webhook(hass, config_entry)
-    assert hass.states.get(service_data[ATTR_ENTITY_ID])
+    entity_id = service_data[ATTR_ENTITY_ID]
+    reported = hass.states.get(entity_id).last_reported
 
     fail_write_requests(hass, config_entry, pyatmo.ApiError("Device unreachable"))
+    # Any write after this point gets a newer timestamp
+    freezer.tick(timedelta(seconds=1))
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(domain, service, service_data, blocking=True)
@@ -317,9 +317,36 @@ async def test_failed_action_raises(
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == "api_error"
     assert exc_info.value.translation_placeholders == {"error": "Device unreachable"}
+    # Compared by last_reported: writing an unchanged state keeps the same State
+    # object, so comparing states would miss an optimistic write of the old value
+    assert hass.states.get(entity_id).last_reported == reported
 
 
 @pytest.mark.usefixtures("netatmo_auth", "entity_registry_enabled_by_default")
+async def test_failed_button_press_raises(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test a failed button press raises a translated error.
+
+    The button records the press time before calling the device, so unlike the
+    other actions its state does change.
+    """
+    await _setup_with_webhook(hass, config_entry)
+    fail_write_requests(hass, config_entry, pyatmo.ApiError("Device unreachable"))
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: BUTTON_ENTITY},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "api_error"
+    assert exc_info.value.translation_placeholders == {"error": "Device unreachable"}
+
+
+@pytest.mark.usefixtures("netatmo_auth")
 @pytest.mark.parametrize(
     ("error", "translation_key", "placeholders"),
     [
@@ -358,7 +385,6 @@ async def test_failed_action_error_types(
 ) -> None:
     """Test each kind of request failure maps to its translated error."""
     await _setup_with_webhook(hass, config_entry)
-    state = hass.states.get(SWITCH_ENTITY)
     fail_write_requests(hass, config_entry, error)
 
     with pytest.raises(HomeAssistantError) as exc_info:
@@ -371,5 +397,3 @@ async def test_failed_action_error_types(
 
     assert exc_info.value.translation_key == translation_key
     assert exc_info.value.translation_placeholders == placeholders
-    # No optimistic state for a command Netatmo did not accept
-    assert hass.states.get(SWITCH_ENTITY) == state
