@@ -67,7 +67,6 @@ class AirGradientUpdate(AirGradientEntity, UpdateEntity):
         try:
             self._attr_latest_version = (
                 await self.coordinator.client.get_latest_firmware_version(
-                    self.coordinator.serial_number,
                     model=self.coordinator.data.measures.model,
                 )
             )

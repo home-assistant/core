@@ -4,10 +4,10 @@ from typing import override
 
 from bosch_alarm_mode2 import Panel
 
-from homeassistant.components.sensor import Entity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 

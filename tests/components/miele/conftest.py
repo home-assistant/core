@@ -6,6 +6,11 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    load_json_value_fixture,
+)
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
@@ -19,12 +24,6 @@ from homeassistant.util.json import JsonValueType
 
 from . import get_actions_callback, get_data_callback
 from .const import CLIENT_ID, CLIENT_SECRET
-
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_object_fixture,
-    load_json_value_fixture,
-)
 
 
 @pytest.fixture(name="expires_at")

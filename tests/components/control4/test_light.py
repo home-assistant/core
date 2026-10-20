@@ -7,6 +7,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.control4.const import WEBSOCKET_RESYNC_INTERVAL_SEC
@@ -23,8 +28,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util.color import brightness_to_value, value_to_brightness
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 CONTROL4_BRIGHTNESS_SCALE = (1, 100)
 

@@ -4,9 +4,8 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-from modbus_connection import ModbusError
+from modbus_connection import ModbusError, ModbusTimeoutError
 import probatio
-from sofar_modbus.modern import async_detect_type
 from sofar_modbus.modern.device import SofarInverter
 
 from homeassistant.components.modbus import async_get_temporary_unit
@@ -70,17 +69,20 @@ STEP_SERIAL_DATA_SCHEMA = probatio.Schema(
 )
 
 
+class _InverterSilentError(Exception):
+    """The adapter is reachable, but the inverter behind it is not answering."""
+
+
 async def _async_probe(hass: HomeAssistant, data: Mapping[str, Any]) -> SofarInverter:
     """Connect to the inverter and identify it, or raise."""
     params = create_modbus_params(data)
     async with async_get_temporary_unit(hass, params, data[CONF_UNIT_ID]) as unit:
-        device = await SofarInverter.async_detect(unit)
-        if (
-            not device.inverter_type
-            and (detected := await async_detect_type(unit)) is not None
-        ):
-            device.inverter_type = detected
-        return device
+        try:
+            return await SofarInverter.async_detect(unit)
+        except ModbusTimeoutError as err:
+            if unit.connected:
+                raise _InverterSilentError from err
+            raise
 
 
 class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -141,16 +143,16 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle updating an existing entry's connection details."""
-        entry = self._get_reconfigure_entry()
-        if entry.data.get(CONF_TYPE, TYPE_TCP) == TYPE_SERIAL:
-            return await self.async_step_reconfigure_serial()
-        return await self.async_step_reconfigure_tcp()
+        """Let the user pick how the inverter is reached from now on."""
+        return self.async_show_menu(
+            step_id="reconfigure",
+            menu_options=[STEP_RECONFIGURE_TCP, STEP_RECONFIGURE_SERIAL],
+        )
 
     async def async_step_reconfigure_tcp(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle updating an inverter reached over the network."""
+        """Reach this inverter over the network from now on."""
         return await self._async_step_reconfigure_link(
             STEP_RECONFIGURE_TCP, TYPE_TCP, STEP_TCP_DATA_SCHEMA, user_input
         )
@@ -158,7 +160,7 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure_serial(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle updating an inverter reached over a serial port."""
+        """Reach this inverter over a serial port from now on."""
         return await self._async_step_reconfigure_link(
             STEP_RECONFIGURE_SERIAL, TYPE_SERIAL, STEP_SERIAL_DATA_SCHEMA, user_input
         )
@@ -197,11 +199,15 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(entry, data=data)
 
+        suggested = user_input or (
+            entry.data
+            if entry.data.get(CONF_TYPE, TYPE_TCP) == connection_type
+            else {CONF_UNIT_ID: entry.data[CONF_UNIT_ID]}
+        )
+
         return self.async_show_form(
             step_id=step_id,
-            data_schema=self.add_suggested_values_to_schema(
-                schema, user_input or entry.data
-            ),
+            data_schema=self.add_suggested_values_to_schema(schema, suggested),
             errors=errors,
             description_placeholders=description_placeholders,
         )
@@ -212,10 +218,12 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
         """Probe the inverter, returning it or the errors to show instead."""
         try:
             device = await _async_probe(self.hass, data)
+        except _InverterSilentError:
+            return None, {"base": "inverter_silent"}, {}
         except (ModbusError, HomeAssistantError) as err:
             return None, {"base": "cannot_connect"}, {"error": str(err)}
 
-        if not device.inverter_type:
+        if device.unrecognized:
             return None, {"base": "unrecognized_inverter"}, {}
 
         return device, {}, {}

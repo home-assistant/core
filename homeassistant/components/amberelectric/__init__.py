@@ -2,10 +2,10 @@
 
 import amberelectric
 
-from homeassistant.components.sensor import ConfigType
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_SITE_ID, DOMAIN, PLATFORMS
 from .coordinator import AmberConfigEntry, AmberUpdateCoordinator
@@ -20,7 +20,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AmberConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AmberConfigEntry) -> None:
     """Set up Amber Electric from a config entry."""
     configuration = amberelectric.Configuration(access_token=entry.data[CONF_API_TOKEN])
     api_client = amberelectric.ApiClient(configuration)
@@ -31,9 +31,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmberConfigEntry) -> boo
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: AmberConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AmberConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

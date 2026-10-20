@@ -33,7 +33,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SensiboConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SensiboConfigEntry) -> None:
     """Set up Sensibo from a config entry."""
 
     coordinator = SensiboDataUpdateCoordinator(hass, entry)
@@ -59,15 +59,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: SensiboConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SensiboConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SensiboConfigEntry) -> None:
     """Unload Sensibo config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: SensiboConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: SensiboConfigEntry) -> None:
     """Migrate old entry."""
     # Change entry unique id from api_key to username
     if entry.version == 1:
@@ -98,8 +96,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SensiboConfigEntry) ->
             unique_id=new_unique_id,
             version=2,
         )
-
-    return True
 
 
 async def async_remove_config_entry_device(

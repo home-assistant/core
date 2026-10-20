@@ -15,6 +15,7 @@ from aioshelly.const import (
 from aioshelly.exceptions import DeviceConnectionError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import mock_restore_cache
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -40,8 +41,6 @@ from . import (
     register_entity,
     register_sub_device,
 )
-
-from tests.common import mock_restore_cache
 
 RELAY_BLOCK_ID = 0
 SENSOR_BLOCK_ID = 3

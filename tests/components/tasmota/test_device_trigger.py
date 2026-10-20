@@ -6,6 +6,11 @@ from unittest.mock import Mock, patch
 
 from hatasmota.switch import TasmotaSwitchTriggerConfig
 import pytest
+from pytest_homeassistant.common import (
+    async_fire_mqtt_message,
+    async_get_device_automations,
+)
+from pytest_homeassistant.typing import MqttMockHAClient, WebSocketGenerator
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
@@ -18,9 +23,6 @@ from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.setup import async_setup_component
 
 from .test_common import DEFAULT_CONFIG, remove_device
-
-from tests.common import async_fire_mqtt_message, async_get_device_automations
-from tests.typing import MqttMockHAClient, WebSocketGenerator
 
 
 async def test_get_triggers_btn(

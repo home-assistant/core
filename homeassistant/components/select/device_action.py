@@ -35,40 +35,43 @@ from .const import (
     SelectEntityCapabilityAttribute,
 )
 
-_ACTION_SCHEMA = probatio.Any(
-    cv.DEVICE_ACTION_BASE_SCHEMA.extend(
-        {
-            probatio.Required(CONF_TYPE): SERVICE_SELECT_FIRST,
-            probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        }
-    ),
-    cv.DEVICE_ACTION_BASE_SCHEMA.extend(
-        {
-            probatio.Required(CONF_TYPE): SERVICE_SELECT_LAST,
-            probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        }
-    ),
-    cv.DEVICE_ACTION_BASE_SCHEMA.extend(
-        {
-            probatio.Required(CONF_TYPE): SERVICE_SELECT_NEXT,
-            probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-            probatio.Optional(CONF_CYCLE, default=True): cv.boolean,
-        }
-    ),
-    cv.DEVICE_ACTION_BASE_SCHEMA.extend(
-        {
-            probatio.Required(CONF_TYPE): SERVICE_SELECT_PREVIOUS,
-            probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-            probatio.Optional(CONF_CYCLE, default=True): cv.boolean,
-        }
-    ),
-    cv.DEVICE_ACTION_BASE_SCHEMA.extend(
-        {
-            probatio.Required(CONF_TYPE): SERVICE_SELECT_OPTION,
-            probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-            probatio.Required(CONF_OPTION): cv.string,
-        }
-    ),
+_ACTION_SCHEMA = probatio.TaggedUnion(
+    CONF_TYPE,
+    [
+        cv.DEVICE_ACTION_BASE_SCHEMA.extend(
+            {
+                probatio.Required(CONF_TYPE): SERVICE_SELECT_FIRST,
+                probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+            }
+        ),
+        cv.DEVICE_ACTION_BASE_SCHEMA.extend(
+            {
+                probatio.Required(CONF_TYPE): SERVICE_SELECT_LAST,
+                probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+            }
+        ),
+        cv.DEVICE_ACTION_BASE_SCHEMA.extend(
+            {
+                probatio.Required(CONF_TYPE): SERVICE_SELECT_NEXT,
+                probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+                probatio.Optional(CONF_CYCLE, default=True): cv.boolean,
+            }
+        ),
+        cv.DEVICE_ACTION_BASE_SCHEMA.extend(
+            {
+                probatio.Required(CONF_TYPE): SERVICE_SELECT_PREVIOUS,
+                probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+                probatio.Optional(CONF_CYCLE, default=True): cv.boolean,
+            }
+        ),
+        cv.DEVICE_ACTION_BASE_SCHEMA.extend(
+            {
+                probatio.Required(CONF_TYPE): SERVICE_SELECT_OPTION,
+                probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+                probatio.Required(CONF_OPTION): cv.string,
+            }
+        ),
+    ],
 )
 
 

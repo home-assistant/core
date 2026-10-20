@@ -7,6 +7,7 @@ from aiohttp import client_exceptions
 from freezegun.api import FrozenDateTimeFactory
 from pyControl4.error_handling import BadCredentials, BadToken
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.control4 import RefreshTokensObject, _periodic_resync
 from homeassistant.components.control4.director_utils import (
@@ -21,8 +22,6 @@ from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.util import dt as dt_util
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture

@@ -8,6 +8,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyControl4.error_handling import BadToken
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.control4.const import WEBSOCKET_RESYNC_INTERVAL_SEC
@@ -27,8 +32,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "cover.test_controller_living_room_shade"
 

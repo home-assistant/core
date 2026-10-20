@@ -14,6 +14,7 @@ from google_photos_library_api.model import (
     Status,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.google_photos.const import DOMAIN, READ_SCOPE
 from homeassistant.components.google_photos.services import (
@@ -25,8 +26,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_FILENAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-
-from tests.common import MockConfigEntry
 
 TEST_FILENAME = "doorbell_snapshot.jpg"
 ALBUM_TITLE = "Album title"

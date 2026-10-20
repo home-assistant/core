@@ -93,7 +93,7 @@ def _schedule_next_refresh(
         )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> None:
     """Set up Control4 from a config entry."""
     account, director, director_token_dict = await _fetch_tokens(hass, entry)
 
@@ -181,14 +181,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
     # Platform setup failures are caught inside HA's own entity_platform
     # setup, never raised here, so this needs no cleanup block.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if not unload_ok:
-        return False
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
     runtime_data = entry.runtime_data
     _LOGGER.debug("Disconnecting C4Websocket for config entry unload")
@@ -201,7 +198,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: Control4ConfigEntry) ->
         runtime_data.cancel_periodic_resync_callback()
         # A reload reuses this runtime_data; only reschedule when unset.
         runtime_data.cancel_periodic_resync_callback = None
-    return unload_ok
 
 
 async def get_items_of_category(

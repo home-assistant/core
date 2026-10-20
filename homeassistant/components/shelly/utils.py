@@ -26,6 +26,7 @@ from aioshelly.const import (
     ShellyDevice,
 )
 from aioshelly.rpc_device import RpcDevice, WsServer
+from aioshelly.rpc_device.models import ShellyLedStripEffect
 from yarl import URL
 
 from homeassistant.components import network
@@ -627,6 +628,7 @@ def async_create_issue_unsupported_firmware(
             "device_name": entry.title,
             "ip_address": entry.data[CONF_HOST],
         },
+        config_entry_id=entry.entry_id,
     )
 
 
@@ -807,6 +809,20 @@ async def get_rpc_scripts_event_types(
         script_events[script_id] = await get_rpc_script_event_types(device, script_id)
 
     return script_events
+
+
+def is_rpc_ledstrip_control_available(
+    effects: dict[str, ShellyLedStripEffect] | None,
+    status: dict[str, Any],
+    control: str,
+) -> bool:
+    """Return True if the current effect supports the control and reports it."""
+    return (
+        effects is not None
+        and (effect := effects.get(status["effect"])) is not None
+        and control in effect["controls"]
+        and control in status
+    )
 
 
 def get_irrigation_zone_id(device: RpcDevice, key: str) -> int | None:
@@ -1150,6 +1166,7 @@ async def async_manage_coiot_issues_task(
                 "device_name": device.name,
                 "ip_address": device.ip_address,
             },
+            config_entry_id=entry.entry_id,
         )
         return
 
@@ -1168,4 +1185,11 @@ async def async_manage_coiot_issues_task(
             "ip_address": device.ip_address,
         },
         data={"entry_id": entry.entry_id},
+        config_entry_id=entry.entry_id,
     )
+
+
+def normalize_command_source(source: str | None) -> str | None:
+    """Normalize the last command source to match translation keys."""
+    # Sources mix case (e.g. "WS_in"); Wall Display also uses spaces ("RPC Set")
+    return source and source.lower().replace(" ", "_")
