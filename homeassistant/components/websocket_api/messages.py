@@ -192,6 +192,82 @@ def _partial_cached_state_diff_message(event: Event[EventStateChangedData]) -> b
     )[:-1]
 
 
+_REMOVE_KEY: Final = ENTITY_EVENT_REMOVE.encode()
+
+
+def batched_state_diff_message(
+    message_id_as_bytes: bytes, fragments: list[tuple[bytes, bytes]]
+) -> bytes:
+    """Return one event message describing several state changes.
+
+    The state update format already describes any number of entities at once. Takes
+    fragments resolved by cached_state_diff_fragment rather than events, because they
+    have to be serialized while the event is being dispatched - see _StateDiffBatch -
+    and this only joins them.
+    """
+    # Grouped rather than appended, because the format keys additions, removals and
+    # changes separately. A caller must not place two updates for the same entity in
+    # one batch - see _StateDiffBatch, which flushes instead, since the groups are
+    # applied by the client in a fixed order that need not match the order the events
+    # happened in.
+    if len(fragments) == 1:
+        # The median batch carries one change, so that case skips the grouping.
+        key, entry = fragments[0]
+        opening, closing = (b'":[', b"]") if key == _REMOVE_KEY else (b'":{', b"}")
+        return b"".join(
+            (
+                b'{"id":',
+                message_id_as_bytes,
+                b',"type":"event","event":{"',
+                key,
+                opening,
+                entry,
+                closing,
+                b"}}",
+            )
+        )
+
+    grouped: dict[bytes, list[bytes]] = {}
+    for key, entry in fragments:
+        grouped.setdefault(key, []).append(entry)
+
+    parts: list[bytes] = [b'{"id":', message_id_as_bytes, b',"type":"event","event":{']
+    first = True
+    for key, entries in grouped.items():
+        if not first:
+            parts.append(b",")
+        first = False
+        opening, closing = (b'":[', b"]") if key == _REMOVE_KEY else (b'":{', b"}")
+        parts.extend((b'"', key, opening, b",".join(entries), closing))
+    parts.append(b"}}")
+    return b"".join(parts)
+
+
+@lru_cache(maxsize=128)
+def cached_state_diff_fragment(
+    event: Event[EventStateChangedData],
+) -> tuple[bytes, bytes] | None:
+    """Cache and serialize one state change as a fragment of a batched message.
+
+    Returns the group the change belongs to - "a", "r" or "c" - and the entry that
+    goes inside it, or None if it cannot be serialized.
+
+    Callers must resolve a fragment while the bus is dispatching that event, so that
+    every subscription asks for it consecutively and the cache is actually hit.
+    """
+    diff = _state_diff_event(event)
+    key = next(iter(diff))
+    try:
+        # The group holds exactly one entity, so stripping the brackets from
+        # {"light.kitchen": {...}} or ["light.kitchen"] leaves the entry that goes
+        # inside it. One json_bytes call rather than one per part.
+        return key.encode(), json_bytes(diff[key])[1:-1]
+    except ValueError, TypeError:
+        # Deliberately not logged here: the caller sends this change on its own, and
+        # cached_state_diff_message reports the unserializable path when it does.
+        return None
+
+
 def _state_diff_event(
     event: Event[EventStateChangedData],
 ) -> dict[

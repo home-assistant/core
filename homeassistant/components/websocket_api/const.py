@@ -18,11 +18,15 @@ type AsyncWebSocketCommandHandler = Callable[
 
 DOMAIN: Final = "websocket_api"
 URL: Final = "/api/websocket"
+# Pending entity state changes a client may stay above for PENDING_MSG_PEAK_TIME
+# seconds before it is disconnected, counted the same way as MAX_PENDING_MSG below.
 PENDING_MSG_PEAK: Final = 1024
 PENDING_MSG_PEAK_TIME: Final = 10
-# Maximum number of messages that can be pending at any given time.
-# This is effectively the upper limit of the number of entities
-# that can fire state changes within ~1 second.
+# Maximum number of pending entity state changes at any given time, which is
+# the upper limit of the number of entities that can fire state changes within
+# ~1 second. A message counts one, except a batched state update, which counts
+# the changes it carries - one message can describe many, so counting queued
+# messages would no longer measure this.
 # Ideally we would use homeassistant.const.MAX_EXPECTED_ENTITY_IDS
 # but since chrome will lock up with too many messages we need to
 # limit it to a lower number.
