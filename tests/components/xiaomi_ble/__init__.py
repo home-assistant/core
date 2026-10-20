@@ -1,8 +1,11 @@
 """Tests for the SensorPush integration."""
 
-from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
 
-from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 
 NOT_SENSOR_PUSH_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="Not it",

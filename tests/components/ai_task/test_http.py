@@ -1,10 +1,9 @@
 """Test the HTTP API for AI Task integration."""
 
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.core import HomeAssistant
-
-from tests.typing import WebSocketGenerator
 
 
 async def test_ws_preferences(

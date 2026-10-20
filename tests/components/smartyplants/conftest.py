@@ -6,11 +6,10 @@ from unittest.mock import AsyncMock, patch
 
 from pysmartyplants import Sensor
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_array_fixture
 
 from homeassistant.components.smartyplants.const import CONF_WEBHOOK_SECRET, DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_WEBHOOK_ID
-
-from tests.common import MockConfigEntry, load_json_array_fixture
 
 ACCOUNT_ID = "acct-0001"
 API_KEY = "sp_test_key_12345678"

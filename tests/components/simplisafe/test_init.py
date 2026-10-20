@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from simplipy.errors import (
     EndpointUnavailableError,
     InvalidCredentialsError,
@@ -25,8 +26,6 @@ from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_base_station_migration(
