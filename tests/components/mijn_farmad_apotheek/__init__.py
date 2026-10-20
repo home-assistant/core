@@ -11,7 +11,6 @@ from aiofarmad import (
     CatalogProductStock,
     CustomerBasket,
     FarmadAccount,
-    Pharmacy,
 )
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -30,10 +29,6 @@ API_ACCESS_TOKEN = "mock-access-token"
 API_REFRESH_TOKEN = "mock-refresh-token"
 API_APB = "343602"
 API_APB_2 = "343605"
-API_PHARMACY_NAME = "Apotheek De Valke"
-API_PHARMACY_NAME_2 = "Apotheek Sint-Anna"
-API_PHARMACY_CITY = "Zottegem"
-API_PHARMACY_CITY_2 = "Gent"
 API_PRODUCT_CNK = "3093242"
 API_PRODUCT_CNK_2 = "3093243"
 API_PRODUCT_DESCRIPTION = "Dafalgan 500mg"
@@ -50,15 +45,6 @@ ENTRY_DATA = {
 USER_INPUT = {
     "email": API_ACCOUNT_EMAIL,
     "password": "mock-password",
-}
-
-ORGANIZATIONS = {
-    API_APB: Pharmacy(
-        apb=API_APB, name=API_PHARMACY_NAME, city=API_PHARMACY_CITY, email=None
-    ),
-    API_APB_2: Pharmacy(
-        apb=API_APB_2, name=API_PHARMACY_NAME_2, city=API_PHARMACY_CITY_2, email=None
-    ),
 }
 
 
@@ -84,11 +70,6 @@ def get_mock_account(apbs: tuple[str, ...] = (API_APB,)) -> FarmadAccount:
             for apb in apbs
         ),
     )
-
-
-def get_mock_organization(apb: str) -> Pharmacy:
-    """Return the pharmacy that matches an apb number."""
-    return ORGANIZATIONS[apb]
 
 
 def get_mock_baskets() -> tuple[CustomerBasket, ...]:
@@ -150,7 +131,6 @@ def get_mock_client() -> Mock:
     client.refresh_token = API_REFRESH_TOKEN
     client.async_login = AsyncMock(return_value=None)
     client.async_get_account = AsyncMock(return_value=get_mock_account())
-    client.async_get_organization = AsyncMock(side_effect=get_mock_organization)
     client.async_get_baskets = AsyncMock(return_value=get_mock_baskets())
     client.async_search_products_in_apb = AsyncMock(
         return_value=(get_mock_catalog_product(),)

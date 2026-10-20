@@ -41,10 +41,6 @@ from . import (
     API_APB_2,
     API_BASKET_ID,
     API_DRAFT_ID,
-    API_PHARMACY_CITY,
-    API_PHARMACY_CITY_2,
-    API_PHARMACY_NAME,
-    API_PHARMACY_NAME_2,
     API_PRODUCT_CNK,
     API_PRODUCT_CNK_2,
     API_PRODUCT_DESCRIPTION,
@@ -86,17 +82,10 @@ async def test_setup_entry(hass: HomeAssistant, mock_farmad_client: MagicMock) -
     assert entry.state is ConfigEntryState.LOADED
     client = mock_farmad_client.return_value
     assert entry.runtime_data.client is client
-    assert entry.runtime_data.pharmacies == [
-        {
-            "value": API_APB,
-            "label": f"{API_PHARMACY_NAME} ({API_PHARMACY_CITY})",
-        }
-    ]
     assert entry.runtime_data.products == {
         API_APB: {API_PRODUCT_CNK: API_PRODUCT_DESCRIPTION}
     }
     client.async_get_account.assert_awaited_once()
-    client.async_get_organization.assert_awaited_once_with(API_APB)
     client.async_get_baskets.assert_awaited_once_with(API_APB)
 
 
@@ -344,23 +333,6 @@ async def test_order_medication_quantity(
     client.async_save_draft_basket.assert_awaited_once_with(
         API_APB, products=(DraftProduct(product_cnk=API_PRODUCT_CNK, quantity=3),)
     )
-
-
-async def test_order_medication_derived_apb(
-    hass: HomeAssistant, mock_farmad_client: MagicMock
-) -> None:
-    """Test ordering without an apb uses the only entitled pharmacy."""
-    await init_integration(hass)
-    client = mock_farmad_client.return_value
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_ORDER_MEDICATION,
-        {"product": API_PRODUCT_CNK},
-        blocking=True,
-    )
-
-    client.async_save_draft_basket.assert_awaited_once_with(API_APB, products=PRODUCTS)
 
 
 async def test_order_medication_by_cnk(
@@ -685,15 +657,27 @@ async def test_order_medication_invalid_quantity(
     [
         pytest.param(
             SERVICE_SEARCH_MEDICATION,
-            {"query": ""},
+            {"query": "", "apb": API_APB},
             "query",
             id="search-empty-query",
+        ),
+        pytest.param(
+            SERVICE_SEARCH_MEDICATION,
+            {"query": API_SEARCH_QUERY},
+            "apb",
+            id="search-missing-apb",
         ),
         pytest.param(
             SERVICE_SEARCH_MEDICATION,
             {"query": API_SEARCH_QUERY, "apb": ""},
             "apb",
             id="search-empty-apb",
+        ),
+        pytest.param(
+            SERVICE_ORDER_MEDICATION,
+            {"product": API_PRODUCT_CNK},
+            "apb",
+            id="order-missing-apb",
         ),
         pytest.param(
             SERVICE_ORDER_MEDICATION,
@@ -710,7 +694,7 @@ async def test_empty_input_rejected(
     data: dict[str, str],
     field: str,
 ) -> None:
-    """Test an empty search term or apb is rejected before reaching Farmad."""
+    """Test an empty or missing search term or apb is rejected before reaching Farmad."""
     await init_integration(hass)
     client = mock_farmad_client.return_value
 
@@ -737,72 +721,6 @@ async def test_order_medication_after_unload(
         )
 
 
-RESOLVE_APB_ACTIONS = pytest.mark.parametrize(
-    ("action", "data"),
-    [
-        pytest.param(
-            SERVICE_ORDER_MEDICATION, {"product": API_PRODUCT_CNK}, id="order"
-        ),
-        pytest.param(
-            SERVICE_SEARCH_MEDICATION, {"query": API_SEARCH_QUERY}, id="search"
-        ),
-    ],
-)
-
-
-@RESOLVE_APB_ACTIONS
-async def test_multiple_pharmacies(
-    hass: HomeAssistant,
-    mock_farmad_client: MagicMock,
-    action: str,
-    data: dict[str, str],
-) -> None:
-    """Test an action without an apb fails when several pharmacies are entitled."""
-    mock_farmad_client.return_value.async_get_account.return_value = get_mock_account(
-        (API_APB, API_APB_2)
-    )
-    await init_integration(hass)
-    client = mock_farmad_client.return_value
-
-    with pytest.raises(ServiceValidationError) as exc_info:
-        await hass.services.async_call(
-            DOMAIN, action, data, blocking=True, return_response=True
-        )
-
-    assert exc_info.value.translation_key == "multiple_pharmacies"
-    assert exc_info.value.translation_placeholders is not None
-    assert exc_info.value.translation_placeholders["pharmacies"] == (
-        f"{API_PHARMACY_NAME} ({API_PHARMACY_CITY}): {API_APB},"
-        f" {API_PHARMACY_NAME_2} ({API_PHARMACY_CITY_2}): {API_APB_2}"
-    )
-    client.async_search_products_in_apb.assert_not_awaited()
-    client.async_get_draft_basket.assert_not_awaited()
-
-
-@RESOLVE_APB_ACTIONS
-async def test_no_pharmacy(
-    hass: HomeAssistant,
-    mock_farmad_client: MagicMock,
-    action: str,
-    data: dict[str, str],
-) -> None:
-    """Test an action without an apb fails when no pharmacy is entitled."""
-    mock_farmad_client.return_value.async_get_account.return_value = get_mock_account(
-        ()
-    )
-    await init_integration(hass)
-    client = mock_farmad_client.return_value
-
-    with pytest.raises(ServiceValidationError) as exc_info:
-        await hass.services.async_call(
-            DOMAIN, action, data, blocking=True, return_response=True
-        )
-
-    assert exc_info.value.translation_key == "no_pharmacy"
-    client.async_search_products_in_apb.assert_not_awaited()
-    client.async_get_draft_basket.assert_not_awaited()
-
-
 async def test_search_medication(
     hass: HomeAssistant, mock_farmad_client: MagicMock
 ) -> None:
@@ -822,26 +740,6 @@ async def test_search_medication(
         API_APB, API_SEARCH_QUERY, limit=25
     )
     assert response == SEARCH_RESPONSE
-
-
-async def test_search_medication_derived_apb(
-    hass: HomeAssistant, mock_farmad_client: MagicMock
-) -> None:
-    """Test searching without an apb uses the only entitled pharmacy."""
-    await init_integration(hass)
-    client = mock_farmad_client.return_value
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SEARCH_MEDICATION,
-        {"query": API_SEARCH_QUERY},
-        blocking=True,
-        return_response=True,
-    )
-
-    client.async_search_products_in_apb.assert_awaited_once_with(
-        API_APB, API_SEARCH_QUERY, limit=25
-    )
 
 
 async def test_search_medication_no_results(

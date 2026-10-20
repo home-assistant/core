@@ -33,7 +33,6 @@ from .const import (
     ATTR_DESCRIPTION,
     ATTR_IS_ON_PRESCRIPTION,
     ATTR_PACKAGE_QUANTITY,
-    ATTR_PHARMACIES,
     ATTR_PRICE,
     ATTR_PRODUCT,
     ATTR_PRODUCTS,
@@ -58,7 +57,7 @@ NON_EMPTY_STRING = probatio.All(cv.string, probatio.Length(min=1))
 SEARCH_MEDICATION_SCHEMA = probatio.Schema(
     {
         probatio.Required(ATTR_QUERY): NON_EMPTY_STRING,
-        probatio.Optional(ATTR_APB): NON_EMPTY_STRING,
+        probatio.Required(ATTR_APB): NON_EMPTY_STRING,
     }
 )
 
@@ -68,7 +67,7 @@ ORDER_MEDICATION_SCHEMA = probatio.Schema(
         probatio.Optional(ATTR_QUANTITY, default=1): probatio.All(
             probatio.Number(scale=0), probatio.Coerce(int), probatio.Range(min=1)
         ),
-        probatio.Optional(ATTR_APB): NON_EMPTY_STRING,
+        probatio.Required(ATTR_APB): NON_EMPTY_STRING,
         probatio.Optional(ATTR_COMMENT): cv.string,
     }
 )
@@ -92,28 +91,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         schema=ORDER_MEDICATION_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
     )
-
-
-def _resolve_apb(data: FarmadData, apb: str | None) -> str:
-    """Return the given apb or the only pharmacy the account is entitled at."""
-    if apb is not None:
-        return apb
-    if not data.pharmacies:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN, translation_key="no_pharmacy"
-        )
-    if len(data.pharmacies) > 1:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="multiple_pharmacies",
-            translation_placeholders={
-                ATTR_PHARMACIES: ", ".join(
-                    f"{option['label']}: {option['value']}"
-                    for option in data.pharmacies
-                )
-            },
-        )
-    return data.pharmacies[0]["value"]
 
 
 def _translate_error(
@@ -261,7 +238,7 @@ async def _async_search_medication(call: ServiceCall) -> ServiceResponse:
     """Search the catalog of a Farmad pharmacy."""
     entry: FarmadConfigEntry = service.async_get_config_entry(call.hass, DOMAIN, None)
     data = entry.runtime_data
-    apb = _resolve_apb(data, call.data.get(ATTR_APB))
+    apb = call.data[ATTR_APB]
     try:
         products = await data.client.async_search_products_in_apb(
             apb, call.data[ATTR_QUERY], limit=SEARCH_RESULT_LIMIT
@@ -275,7 +252,7 @@ async def _async_order_medication(call: ServiceCall) -> ServiceResponse:
     """Order one product at a Farmad pharmacy."""
     entry: FarmadConfigEntry = service.async_get_config_entry(call.hass, DOMAIN, None)
     data = entry.runtime_data
-    apb = _resolve_apb(data, call.data.get(ATTR_APB))
+    apb = call.data[ATTR_APB]
     try:
         cnk, description = await _async_resolve_product(
             data, apb, call.data[ATTR_PRODUCT]

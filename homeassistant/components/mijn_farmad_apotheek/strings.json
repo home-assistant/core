@@ -31,12 +31,6 @@
     "invalid_product": {
       "message": "{product} is not a CNK code of seven digits. Use the 'Search medication' action to find the CNK code of a product."
     },
-    "multiple_pharmacies": {
-      "message": "Your account is linked to several pharmacies: {pharmacies}. Pass the apb number of the pharmacy to use."
-    },
-    "no_pharmacy": {
-      "message": "Your account is not linked to a pharmacy. Link a pharmacy in the Mijn Farmad Apotheek app first."
-    },
     "no_search_results": {
       "message": "No product at pharmacy {apb} matches {query}."
     },
@@ -61,7 +55,7 @@
       "description": "Places an order for one product at a Farmad pharmacy. The product is paid at pickup.",
       "fields": {
         "apb": {
-          "description": "The APB number of the pharmacy to order from. Leave empty when your account is linked to one pharmacy.",
+          "description": "The APB number of the pharmacy to order from.",
           "name": "Pharmacy"
         },
         "comment": {
@@ -83,7 +77,7 @@
       "description": "Searches the catalog of a Farmad pharmacy by product name or CNK and returns up to 25 matching products.",
       "fields": {
         "apb": {
-          "description": "The APB number of the pharmacy to search in. Leave empty when your account is linked to one pharmacy.",
+          "description": "The APB number of the pharmacy to search in.",
           "name": "Pharmacy"
         },
         "query": {
