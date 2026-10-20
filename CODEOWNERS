@@ -1702,6 +1702,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/select/ @home-assistant/core
 /homeassistant/components/sense/ @kbickar
 /tests/components/sense/ @kbickar
+/homeassistant/components/sensecap_lorawan/ @balloob
+/tests/components/sensecap_lorawan/ @balloob
 /homeassistant/components/sensibo/ @andrey-git @gjohansson-ST
 /tests/components/sensibo/ @andrey-git @gjohansson-ST
 /homeassistant/components/sensirion_ble/ @akx
