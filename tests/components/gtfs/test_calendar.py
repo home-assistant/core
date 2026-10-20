@@ -1,5 +1,7 @@
 """Tests for the GTFS calendar."""
 
+import json
+
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
@@ -7,6 +9,7 @@ from pytest_homeassistant.common import (
     async_fire_time_changed,
     snapshot_platform,
 )
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.calendar import (
@@ -25,9 +28,45 @@ from homeassistant.components.gtfs.const import (
 from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.const import ATTR_ENTITY_ID, CONF_URL, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import FEED_URL, ROUTE_ENTITY_ID, TEST_DATABASE, setup_integration
+from . import (
+    FEED_URL,
+    ROUTE_ENTITY_ID,
+    ROUTE_SUBENTRY_ID,
+    TEST_DATABASE,
+    build_feed_zip,
+    setup_integration,
+)
+
+HEADSIGN_TRIPS = (
+    "route_id,service_id,trip_id,trip_headsign\n"
+    "R1,DAILY,T1,Airport\n"
+    "R1,DAILY,T2,Airport\n"
+    "N,DAILY,NT1,\n"
+)
+
+
+def _route_entry(
+    *routes: tuple[str, str, str], pref_disable_polling: bool = False
+) -> MockConfigEntry:
+    """Return a feed entry with a route subentry for each (origin, destination, title)."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="Test Agency",
+        data={CONF_URL: FEED_URL, CONF_DATABASE: TEST_DATABASE},
+        pref_disable_polling=pref_disable_polling,
+        subentries_data=[
+            ConfigSubentryDataWithId(
+                data={CONF_ORIGIN: origin, CONF_DESTINATION: destination},
+                subentry_id=f"route_{origin}_{destination}".lower(),
+                subentry_type=SUBENTRY_TYPE_ROUTE,
+                title=title,
+                unique_id=json.dumps([origin, destination]),
+            )
+            for origin, destination, title in routes
+        ],
+    )
 
 
 @pytest.mark.freeze_time("2026-10-19 07:30:00-04:00")
@@ -36,12 +75,23 @@ async def test_calendar(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the route calendar entity and its device."""
     await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+    assert (
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, ROUTE_SUBENTRY_ID), mock_config_entry.entry_id
+        )
+    ) is not None
+    assert device.name == "First Street to Third Street"
+    assert device.entry_type is dr.DeviceEntryType.SERVICE
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.config_subentry_id == ROUTE_SUBENTRY_ID
 
 
 @pytest.mark.freeze_time("2026-10-19 07:30:00-04:00")
@@ -98,23 +148,130 @@ async def test_get_events(
 
 @pytest.mark.freeze_time("2026-10-19 07:30:00-04:00")
 @pytest.mark.usefixtures("mock_feed_download")
-async def test_calendar_without_departures(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
+async def test_calendar_without_departures(hass: HomeAssistant) -> None:
     """Test a route with no departures within a week is off without an event."""
-    mock_config_entry.add_to_hass(hass)
-    subentry = next(iter(mock_config_entry.subentries.values()))
-    hass.config_entries.async_update_subentry(
-        mock_config_entry,
-        subentry,
-        data={CONF_ORIGIN: "S3", CONF_DESTINATION: "S1"},
+    entry = _route_entry(("S3", "S1", "Third Street to First Street"))
+    await setup_integration(hass, entry)
+
+    assert (
+        state := hass.states.get("calendar.third_street_to_first_street")
+    ) is not None
+    assert state.state == STATE_OFF
+    assert "message" not in state.attributes
+
+
+@pytest.mark.usefixtures("mock_feed_download")
+@pytest.mark.parametrize(
+    ("now", "route", "entity_id", "expected_state", "start_time"),
+    [
+        pytest.param(
+            "2026-10-19 08:05:00-04:00",
+            ("S1", "S3", "First Street to Third Street"),
+            ROUTE_ENTITY_ID,
+            STATE_ON,
+            "2026-10-19 08:00:00",
+            id="trip_in_progress",
+        ),
+        pytest.param(
+            "2026-10-20 00:35:00-04:00",
+            ("N1", "N2", "Night Depot to Night Terminal"),
+            "calendar.night_depot_to_night_terminal",
+            STATE_ON,
+            "2026-10-20 00:30:00",
+            id="overnight_trip_from_previous_service_day",
+        ),
+        pytest.param(
+            "2026-10-19 18:00:00-04:00",
+            ("S1", "S3", "First Street to Third Street"),
+            ROUTE_ENTITY_ID,
+            STATE_OFF,
+            "2026-10-20 08:00:00",
+            id="next_departure_tomorrow",
+        ),
+    ],
+)
+async def test_calendar_at_setup(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    now: str,
+    route: tuple[str, str, str],
+    entity_id: str,
+    expected_state: str,
+    start_time: str,
+) -> None:
+    """Test the state and event found when the entry is set up."""
+    freezer.move_to(now)
+    await setup_integration(hass, _route_entry(route))
+
+    assert (state := hass.states.get(entity_id)) is not None
+    assert state.state == expected_state
+    assert state.attributes["start_time"] == start_time
+
+
+@pytest.mark.freeze_time("2026-10-19 07:30:00-04:00")
+@pytest.mark.usefixtures("mock_feed_download")
+async def test_calendar_steps_to_next_departure_without_polling(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test the calendar's own alarms advance to the next cached departure."""
+    entry = _route_entry(
+        ("S1", "S3", "First Street to Third Street"), pref_disable_polling=True
     )
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, entry)
+
+    freezer.move_to("2026-10-19 08:21:00-04:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (state := hass.states.get(ROUTE_ENTITY_ID)) is not None
     assert state.state == STATE_OFF
-    assert "message" not in state.attributes
+    assert state.attributes["start_time"] == "2026-10-19 17:00:00"
+
+
+@pytest.mark.freeze_time("2026-10-19 07:30:00-04:00")
+@pytest.mark.usefixtures("mock_feed_download")
+@pytest.mark.parametrize(
+    "feed_zip",
+    [
+        pytest.param(
+            build_feed_zip(replace={"trips.txt": HEADSIGN_TRIPS}), id="headsign"
+        )
+    ],
+)
+async def test_trip_headsign_in_summary(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the trip's headsign replaces the destination name in the summary."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get(ROUTE_ENTITY_ID)) is not None
+    assert state.attributes["message"] == "1 to Airport"
+
+
+@pytest.mark.freeze_time("2026-10-19 07:30:00-04:00")
+@pytest.mark.usefixtures("mock_feed_download")
+async def test_events_have_stable_uids(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test each departure's uid names its trip and service day."""
+    await setup_integration(hass, mock_config_entry)
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/calendars/{ROUTE_ENTITY_ID}",
+        params={
+            "start": "2026-10-20T00:00:00-04:00",
+            "end": "2026-10-22T00:00:00-04:00",
+        },
+    )
+
+    assert response.status == 200
+    assert [event["uid"] for event in await response.json()] == [
+        "T1-2026-10-20",
+        "T2-2026-10-20",
+    ]
 
 
 @pytest.mark.freeze_time("2026-10-19 07:30:00-04:00")
@@ -150,3 +307,15 @@ async def test_routes_share_a_feed(hass: HomeAssistant) -> None:
         state := hass.states.get("calendar.second_street_to_third_street")
     ) is not None
     assert state.attributes["start_time"] == "2026-10-19 08:10:00"
+
+
+@pytest.mark.freeze_time("2026-10-19 07:30:00-04:00")
+@pytest.mark.usefixtures("mock_feed_download")
+async def test_route_with_stop_missing_from_feed(hass: HomeAssistant) -> None:
+    """Test a route whose stop left the feed still gets a calendar."""
+    entry = _route_entry(("S1", "GONE", "First Street to Gone"))
+    await setup_integration(hass, entry)
+
+    assert (state := hass.states.get("calendar.first_street_to_gone")) is not None
+    assert state.state == STATE_OFF
+    assert "message" not in state.attributes
