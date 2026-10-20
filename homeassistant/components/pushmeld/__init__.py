@@ -42,11 +42,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: PushMeldConfigEntry) -> bool:
     """Set up a PushMeld notification service from a config entry."""
+    title = entry.title.strip()
+    if not title:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="config_entry_error_invalid_name",
+        )
+
     entry.runtime_data = PushMeldRuntimeData(
         notify_service_ready=hass.loop.create_future()
     )
 
-    service_name = slugify(entry.title)
+    service_name = slugify(title)
     if hass.services.has_service(NOTIFY_DOMAIN, service_name):
         raise ConfigEntryError(
             translation_domain=DOMAIN,
@@ -62,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PushMeldConfigEntry) -> 
             DOMAIN,
             {
                 CONF_MAXCODE: entry.data[CONF_MAXCODE],
-                CONF_NAME: entry.title,
+                CONF_NAME: title,
                 "entry_id": entry.entry_id,
             },
             hass.data[DATA_HASS_CONFIG],
