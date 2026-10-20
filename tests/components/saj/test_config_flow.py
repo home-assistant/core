@@ -142,7 +142,7 @@ async def test_form_missing_serial_number(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    mock_aiosaj_saj.serialnumber = None
+    mock_aiosaj_saj.serialnumber = aiosaj.UNKNOWN_SERIAL
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         MOCK_USER_INPUT_ETHERNET,
@@ -345,7 +345,7 @@ async def test_import_aborts_missing_serial(
     hass: HomeAssistant, mock_aiosaj_saj: MagicMock
 ) -> None:
     """Test YAML import aborts when the device does not return a serial number."""
-    mock_aiosaj_saj.serialnumber = None
+    mock_aiosaj_saj.serialnumber = aiosaj.UNKNOWN_SERIAL
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},

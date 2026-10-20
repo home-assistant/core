@@ -102,8 +102,10 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
             if not done:
                 raise CannotConnect("Failed to read sensor data")
 
+            # aiosaj keeps reading when the info page is unavailable and leaves
+            # the serial at its placeholder, which is not a usable unique ID.
             serial_number = saj.serialnumber
-            if not serial_number:
+            if serial_number == aiosaj.UNKNOWN_SERIAL:
                 raise CannotConnect("Device did not return a serial number")
             return serial_number
 
