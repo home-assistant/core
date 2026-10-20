@@ -26,7 +26,7 @@ from homeassistant.components.mealie.services import (
     MealieService,
     MealieServiceArgument,
 )
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_DATE, ATTR_ENTITY_ID
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -438,7 +438,7 @@ async def test_service_set_random_mealplan(
         MealieService.SET_RANDOM_MEALPLAN,
         {
             ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            ATTR_DATE: "2023-10-21",
+            MealieServiceArgument.DATE: "2023-10-21",
             MealieServiceArgument.ENTRY_TYPE: "lunch",
         },
         blocking=True,
@@ -455,7 +455,7 @@ async def test_service_set_random_mealplan(
         MealieService.SET_RANDOM_MEALPLAN,
         {
             ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            ATTR_DATE: "2023-10-21",
+            MealieServiceArgument.DATE: "2023-10-21",
             MealieServiceArgument.ENTRY_TYPE: "lunch",
         },
         blocking=True,
@@ -482,7 +482,7 @@ async def test_service_set_random_mealplan_invalid_entry_type(
             MealieService.SET_RANDOM_MEALPLAN,
             {
                 ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_DATE: "2023-10-21",
+                MealieServiceArgument.DATE: "2023-10-21",
                 MealieServiceArgument.ENTRY_TYPE: "dessert",
             },
             blocking=True,
@@ -532,7 +532,7 @@ async def test_service_set_mealplan(
         MealieService.SET_MEALPLAN,
         {
             ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            ATTR_DATE: "2023-10-21",
+            MealieServiceArgument.DATE: "2023-10-21",
             MealieServiceArgument.ENTRY_TYPE: "lunch",
         }
         | payload,
@@ -550,7 +550,7 @@ async def test_service_set_mealplan(
         MealieService.SET_MEALPLAN,
         {
             ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            ATTR_DATE: "2023-10-21",
+            MealieServiceArgument.DATE: "2023-10-21",
             MealieServiceArgument.ENTRY_TYPE: "lunch",
         }
         | payload,
@@ -578,7 +578,7 @@ async def test_service_set_mealplan_invalid_entry_type(
             MealieService.SET_MEALPLAN,
             {
                 ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_DATE: "2023-10-21",
+                MealieServiceArgument.DATE: "2023-10-21",
                 MealieServiceArgument.ENTRY_TYPE: "dessert",
                 MealieServiceArgument.NOTE_TITLE: "Note Title",
             },
@@ -685,7 +685,7 @@ async def test_service_update_mealplan(
         {
             ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.MEALPLAN_ID: "16",
-            ATTR_DATE: "2023-10-21",
+            MealieServiceArgument.DATE: "2023-10-21",
             MealieServiceArgument.ENTRY_TYPE: "lunch",
         }
         | payload,
@@ -704,7 +704,7 @@ async def test_service_update_mealplan(
         {
             ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.MEALPLAN_ID: "16",
-            ATTR_DATE: "2023-10-21",
+            MealieServiceArgument.DATE: "2023-10-21",
             MealieServiceArgument.ENTRY_TYPE: "lunch",
         }
         | payload,
@@ -722,7 +722,7 @@ async def test_service_update_mealplan(
         {
             ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             MealieServiceArgument.MEALPLAN_ID: 16,
-            ATTR_DATE: "2023-10-21",
+            MealieServiceArgument.DATE: "2023-10-21",
             MealieServiceArgument.ENTRY_TYPE: "lunch",
         }
         | payload,
@@ -751,7 +751,7 @@ async def test_service_update_mealplan_invalid_entry_type(
             {
                 ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 MealieServiceArgument.MEALPLAN_ID: "16",
-                ATTR_DATE: "2023-10-21",
+                MealieServiceArgument.DATE: "2023-10-21",
                 MealieServiceArgument.ENTRY_TYPE: "dessert",
                 MealieServiceArgument.NOTE_TITLE: "Note Title",
             },
@@ -778,7 +778,7 @@ async def test_service_update_mealplan_not_found(
             {
                 ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 MealieServiceArgument.MEALPLAN_ID: "16",
-                ATTR_DATE: "2023-10-21",
+                MealieServiceArgument.DATE: "2023-10-21",
                 MealieServiceArgument.ENTRY_TYPE: "lunch",
                 MealieServiceArgument.RECIPE_ID: "recipe_id",
             },
@@ -1000,7 +1000,10 @@ async def test_service_get_ingredient_parse_failure(
         ),
         (
             MealieService.SET_RANDOM_MEALPLAN,
-            {ATTR_DATE: "2023-10-21", MealieServiceArgument.ENTRY_TYPE: "lunch"},
+            {
+                MealieServiceArgument.DATE: "2023-10-21",
+                MealieServiceArgument.ENTRY_TYPE: "lunch",
+            },
             "random_mealplan",
             MealieConnectionError,
             HomeAssistantError,
@@ -1010,7 +1013,7 @@ async def test_service_get_ingredient_parse_failure(
         (
             MealieService.SET_MEALPLAN,
             {
-                ATTR_DATE: "2023-10-21",
+                MealieServiceArgument.DATE: "2023-10-21",
                 MealieServiceArgument.ENTRY_TYPE: "lunch",
                 MealieServiceArgument.RECIPE_ID: "recipe_id",
             },
@@ -1033,7 +1036,7 @@ async def test_service_get_ingredient_parse_failure(
             MealieService.UPDATE_MEALPLAN,
             {
                 MealieServiceArgument.MEALPLAN_ID: "16",
-                ATTR_DATE: "2023-10-21",
+                MealieServiceArgument.DATE: "2023-10-21",
                 MealieServiceArgument.ENTRY_TYPE: "lunch",
                 MealieServiceArgument.RECIPE_ID: "recipe_id",
             },
@@ -1104,13 +1107,16 @@ async def test_services_connection_error(
         ),
         (
             MealieService.SET_RANDOM_MEALPLAN,
-            {ATTR_DATE: "2023-10-21", MealieServiceArgument.ENTRY_TYPE: "lunch"},
+            {
+                MealieServiceArgument.DATE: "2023-10-21",
+                MealieServiceArgument.ENTRY_TYPE: "lunch",
+            },
             True,
         ),
         (
             MealieService.SET_MEALPLAN,
             {
-                ATTR_DATE: "2023-10-21",
+                MealieServiceArgument.DATE: "2023-10-21",
                 MealieServiceArgument.ENTRY_TYPE: "lunch",
                 MealieServiceArgument.RECIPE_ID: "recipe_id",
             },
@@ -1125,7 +1131,7 @@ async def test_services_connection_error(
             MealieService.UPDATE_MEALPLAN,
             {
                 MealieServiceArgument.MEALPLAN_ID: "16",
-                ATTR_DATE: "2023-10-21",
+                MealieServiceArgument.DATE: "2023-10-21",
                 MealieServiceArgument.ENTRY_TYPE: "lunch",
                 MealieServiceArgument.RECIPE_ID: "recipe_id",
             },

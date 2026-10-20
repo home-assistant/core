@@ -14,7 +14,7 @@ from awesomeversion import AwesomeVersion
 import probatio
 
 from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_DATE
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -50,6 +50,7 @@ class MealieService(StrEnum):
 class MealieServiceArgument(StrEnum):
     """Service argument names for Mealie."""
 
+    DATE = "date"
     END_DATE = "end_date"
     ENTRY_TYPE = "entry_type"
     FOOD_ID = "food_id"
@@ -110,7 +111,7 @@ SERVICE_IMPORT_RECIPE_SCHEMA = probatio.Schema(
 SERVICE_SET_RANDOM_MEALPLAN_SCHEMA = probatio.Schema(
     {
         probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
-        probatio.Required(ATTR_DATE): cv.date,
+        probatio.Required(MealieServiceArgument.DATE): cv.date,
         probatio.Required(MealieServiceArgument.ENTRY_TYPE): probatio.In(
             [x.lower() for x in MealplanEntryType]
         ),
@@ -121,7 +122,7 @@ SERVICE_SET_MEALPLAN_SCHEMA = probatio.Any(
     probatio.Schema(
         {
             probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
-            probatio.Required(ATTR_DATE): cv.date,
+            probatio.Required(MealieServiceArgument.DATE): cv.date,
             probatio.Required(MealieServiceArgument.ENTRY_TYPE): probatio.In(
                 [x.lower() for x in MealplanEntryType]
             ),
@@ -131,7 +132,7 @@ SERVICE_SET_MEALPLAN_SCHEMA = probatio.Any(
     probatio.Schema(
         {
             probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
-            probatio.Required(ATTR_DATE): cv.date,
+            probatio.Required(MealieServiceArgument.DATE): cv.date,
             probatio.Required(MealieServiceArgument.ENTRY_TYPE): probatio.In(
                 [x.lower() for x in MealplanEntryType]
             ),
@@ -153,7 +154,7 @@ SERVICE_UPDATE_MEALPLAN_SCHEMA = probatio.Any(
             probatio.Required(MealieServiceArgument.MEALPLAN_ID): probatio.Any(
                 str, int
             ),
-            probatio.Required(ATTR_DATE): cv.date,
+            probatio.Required(MealieServiceArgument.DATE): cv.date,
             probatio.Required(MealieServiceArgument.ENTRY_TYPE): probatio.In(
                 [x.lower() for x in MealplanEntryType]
             ),
@@ -166,7 +167,7 @@ SERVICE_UPDATE_MEALPLAN_SCHEMA = probatio.Any(
             probatio.Required(MealieServiceArgument.MEALPLAN_ID): probatio.Any(
                 str, int
             ),
-            probatio.Required(ATTR_DATE): cv.date,
+            probatio.Required(MealieServiceArgument.DATE): cv.date,
             probatio.Required(MealieServiceArgument.ENTRY_TYPE): probatio.In(
                 [x.lower() for x in MealplanEntryType]
             ),
@@ -303,7 +304,7 @@ async def _async_set_random_mealplan(call: ServiceCall) -> ServiceResponse:
     entry: MealieConfigEntry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
     )
-    mealplan_date = call.data[ATTR_DATE]
+    mealplan_date = call.data[MealieServiceArgument.DATE]
     entry_type = MealplanEntryType(call.data[MealieServiceArgument.ENTRY_TYPE])
     client = entry.runtime_data.client
 
@@ -326,7 +327,7 @@ async def _async_set_mealplan(call: ServiceCall) -> ServiceResponse:
     entry: MealieConfigEntry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
     )
-    mealplan_date = call.data[ATTR_DATE]
+    mealplan_date = call.data[MealieServiceArgument.DATE]
     entry_type = MealplanEntryType(call.data[MealieServiceArgument.ENTRY_TYPE])
     client = entry.runtime_data.client
 
@@ -382,7 +383,7 @@ async def _async_update_mealplan(call: ServiceCall) -> ServiceResponse:
         call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
     )
     mealplan_id = int(call.data[MealieServiceArgument.MEALPLAN_ID])
-    mealplan_date = call.data[ATTR_DATE]
+    mealplan_date = call.data[MealieServiceArgument.DATE]
     entry_type = MealplanEntryType(call.data[MealieServiceArgument.ENTRY_TYPE])
     client = entry.runtime_data.client
 
