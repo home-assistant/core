@@ -31,6 +31,7 @@ from homeassistant.helpers.selector import (
     ObjectSelectorConfig,
     ObjectSelectorField,
     TextSelector,
+    UnitOfMeasurementSelector,
 )
 
 from .const import (
@@ -105,7 +106,7 @@ async def get_options_schema(handler: SchemaCommonFlowHandler) -> probatio.Schem
             ): NumberSelector(
                 NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
             ),
-            probatio.Optional(CONF_UNIT_OF_MEASUREMENT): TextSelector(),
+            probatio.Optional(CONF_UNIT_OF_MEASUREMENT): UnitOfMeasurementSelector(),
         }
     )
 

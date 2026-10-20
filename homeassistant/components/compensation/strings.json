@@ -19,10 +19,10 @@
         },
         "data_description": {
           "attribute": "Attribute from the source to monitor/compensate.",
-          "lower_limit": "Enables a lower limit for the sensor. The lower limit is defined by the data point's lowest uncompensated value.",
+          "lower_limit": "Enables a lower limit for the sensor. The lower limit is defined by the data point with the lowest uncompensated value.",
           "precision": "Defines the precision of the calculated values, through the argument of round().",
           "unit_of_measurement": "The unit of measurement of the compensation sensor, if any.",
-          "upper_limit": "Enables an upper limit for the sensor. The upper limit is defined by the data point's highest uncompensated value."
+          "upper_limit": "Enables an upper limit for the sensor. The upper limit is defined by the data point with the highest uncompensated value."
         },
         "description": "Refer to the documentation for further details on how to configure the compensation sensor using these options.",
         "sections": {
