@@ -64,7 +64,7 @@ class SeventeenTrackSummarySensor(SeventeenTrackSensor):
     @override
     def available(self) -> bool:
         """Return whether the entity is available."""
-        return self._status in self.coordinator.data.summary
+        return super().available and self._status in self.coordinator.data.summary
 
     @property
     @override

@@ -1,6 +1,7 @@
 {
   "domain": "meteoalarm",
   "name": "MeteoAlarm",
+  "categories": ["weather_alerts.public_warnings"],
   "codeowners": ["@rolfberkenbosch"],
   "documentation": "https://www.home-assistant.io/integrations/meteoalarm",
   "iot_class": "cloud_polling",

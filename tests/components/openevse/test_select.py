@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 from aiohttp import ContentTypeError, ServerTimeoutError
+from freezegun.api import FrozenDateTimeFactory
 from openevsehttp.exceptions import (
     AuthenticationError,
     ParseJSONError,
@@ -10,9 +11,15 @@ from openevsehttp.exceptions import (
     UnsupportedFeature,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.openevse.const import DOMAIN
+from homeassistant.components.openevse.coordinator import SCAN_INTERVAL
 from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
@@ -26,8 +33,6 @@ from homeassistant.exceptions import (
     ServiceValidationError,
 )
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -231,6 +236,7 @@ async def test_select_unavailable_when_initial_read_fails(
 
 async def test_select_coordinator_update_failure_marks_unavailable(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_charger: MagicMock,
 ) -> None:
@@ -244,9 +250,9 @@ async def test_select_coordinator_update_failure_marks_unavailable(
     assert state.state == "auto"
 
     mock_charger.get_override_state.side_effect = TimeoutError
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("select.openevse_mock_config_override_state")
     assert state is not None

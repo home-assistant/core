@@ -14,6 +14,15 @@ from unittest.mock import ANY, AsyncMock, MagicMock, patch
 from freezegun import freeze_time
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    async_capture_events,
+    async_fire_time_changed,
+    async_mock_service,
+    mock_integration,
+    mock_platform,
+)
 
 # Otherwise can't test just this file (import order issue)
 from homeassistant import config_entries, exceptions
@@ -47,16 +56,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    async_capture_events,
-    async_fire_time_changed,
-    async_mock_service,
-    mock_integration,
-    mock_platform,
-)
 
 ENTITY_ID = "script.test"
 
@@ -6693,16 +6692,139 @@ async def test_disabled_actions(
     )
 
 
-async def test_enabled_error_non_limited_template(hass: HomeAssistant) -> None:
-    """Test that a script aborts when an action enabled uses non-limited template."""
+async def test_enabled_template_uses_state(hass: HomeAssistant) -> None:
+    """Test an action enabled template is rendered with full access to states."""
     event = "test_event"
     events = async_capture_events(hass, event)
     sequence = cv.SCRIPT_SCHEMA(
         [
             {
                 "event": event,
-                "enabled": "{{ states('sensor.limited') }}",
+                "enabled": "{{ states('input_boolean.run_step') == 'on' }}",
             }
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    hass.states.async_set("input_boolean.run_step", "off")
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(events) == 0
+    assert_action_trace({"0": [{"result": {"enabled": False}}]})
+
+    # The template is rendered again on each run, so a state change is picked up
+    hass.states.async_set("input_boolean.run_step", "on")
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert_action_trace(
+        {"0": [{"result": {"event": event, "event_data": {}}}]},
+    )
+
+
+async def test_enabled_template_uses_variables(hass: HomeAssistant) -> None:
+    """Test an action enabled template is rendered with the run variables."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"variables": {"from_sequence": True}},
+            {
+                "alias": "Sequence variable",
+                "event": event,
+                "event_data": {"step": "sequence"},
+                "enabled": "{{ from_sequence }}",
+            },
+            {
+                "alias": "Run variable",
+                "event": event,
+                "event_data": {"step": "run"},
+                "enabled": "{{ from_run }}",
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(run_variables={"from_run": False}, context=Context())
+    await hass.async_block_till_done()
+
+    assert [event.data["step"] for event in events] == ["sequence"]
+
+    await script_obj.async_run(run_variables={"from_run": True}, context=Context())
+    await hass.async_block_till_done()
+
+    assert [event.data["step"] for event in events] == ["sequence", "sequence", "run"]
+
+
+async def test_enabled_template_on_condition_step(hass: HomeAssistant) -> None:
+    """Test the enabled template of a condition step uses states and variables."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "condition": "template",
+                "value_template": "{{ condition_passes }}",
+                "enabled": "{{ check_enabled and is_state('input_boolean.check', 'on') }}",
+            },
+            {"event": event},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    hass.states.async_set("input_boolean.check", "on")
+
+    # Enabled and passing, so the run continues
+    await script_obj.async_run(
+        run_variables={"check_enabled": True, "condition_passes": True},
+        context=Context(),
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+
+    # Enabled and failing, so the run stops
+    await script_obj.async_run(
+        run_variables={"check_enabled": True, "condition_passes": False},
+        context=Context(),
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+
+    # Disabled by a variable, so the failing condition is skipped
+    await script_obj.async_run(
+        run_variables={"check_enabled": False, "condition_passes": False},
+        context=Context(),
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 2
+
+    # Disabled by a state change, so the failing condition is skipped
+    hass.states.async_set("input_boolean.check", "off")
+    await script_obj.async_run(
+        run_variables={"check_enabled": True, "condition_passes": False},
+        context=Context(),
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 3
+
+
+async def test_enabled_template_error(hass: HomeAssistant) -> None:
+    """Test that a script aborts when an action enabled template fails to render."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "event": event,
+                "enabled": "{{ states('sensor.missing') | float }}",
+                "continue_on_error": True,
+            },
+            {"event": event},
         ]
     )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
@@ -6717,8 +6839,10 @@ async def test_enabled_error_non_limited_template(hass: HomeAssistant) -> None:
         "0": [
             {
                 "error": (
-                    "TemplateError: Use of 'states' is not"
-                    " supported in limited templates"
+                    "ValueError: Template error: float got"
+                    " invalid input 'unknown' when rendering template"
+                    " '{{ states('sensor.missing') | float }}' but no default"
+                    " was specified"
                 )
             }
         ],

@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from azure.core.exceptions import ClientAuthenticationError, ResourceNotFoundError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.azure_storage.const import (
     CONF_ACCOUNT_NAME,
@@ -17,8 +18,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_integration
 from .const import USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 async def __async_start_flow(

@@ -30,6 +30,7 @@ from zwave_js_server.util.node import (
 )
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -46,6 +47,7 @@ from homeassistant.helpers.typing import VolDictType
 from . import const
 from .config_validation import BITMASK_SCHEMA, VALUE_SCHEMA
 from .helpers import (
+    DriverNotReadyError,
     async_get_node_from_device_id,
     async_get_node_from_entity_id,
     async_get_nodes_from_area_id,
@@ -71,6 +73,17 @@ TARGET_VALIDATORS: VolDictType = {
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register integration services."""
     _async_register_credential_services(hass)
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        const.SERVICE_RESET_METER,
+        entity_domain=SENSOR_DOMAIN,
+        schema={
+            probatio.Optional(const.ATTR_METER_TYPE): probatio.Coerce(int),
+            probatio.Optional(const.ATTR_VALUE): probatio.Coerce(int),
+        },
+        func="async_reset_meter",
+    )
     services = ZWaveServices(hass, er.async_get(hass), dr.async_get(hass))
     services.async_register()
 
@@ -320,9 +333,21 @@ class ZWaveServices:
         @callback
         def get_nodes_from_service_data(val: dict[str, Any]) -> dict[str, Any]:
             """Get nodes set from service data."""
-            val[const.ATTR_NODES] = async_get_nodes_from_targets(
-                self._hass, val, self._ent_reg, self._dev_reg, _LOGGER
-            )
+            try:
+                val[const.ATTR_NODES] = async_get_nodes_from_targets(
+                    self._hass,
+                    val,
+                    self._ent_reg,
+                    self._dev_reg,
+                    _LOGGER,
+                    raise_on_driver_not_ready=True,
+                )
+            except DriverNotReadyError as err:
+                # Not a validation error, so continue_on_error can tolerate it
+                raise HomeAssistantError(
+                    translation_domain=const.DOMAIN,
+                    translation_key="driver_not_ready",
+                ) from err
             return val
 
         @callback
@@ -400,6 +425,8 @@ class ZWaveServices:
 
             return val
 
+        # Should be adjusted to register actions outside the ZWaveServices class
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self._hass.services.async_register(
             const.DOMAIN,
             const.SERVICE_SET_CONFIG_PARAMETER,
@@ -440,6 +467,7 @@ class ZWaveServices:
             ),
         )
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self._hass.services.async_register(
             const.DOMAIN,
             const.SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
@@ -472,6 +500,7 @@ class ZWaveServices:
             ),
         )
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self._hass.services.async_register(
             const.DOMAIN,
             const.SERVICE_REFRESH_VALUE,
@@ -489,6 +518,7 @@ class ZWaveServices:
             ),
         )
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self._hass.services.async_register(
             const.DOMAIN,
             const.SERVICE_SET_VALUE,
@@ -520,6 +550,7 @@ class ZWaveServices:
             ),
         )
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self._hass.services.async_register(
             const.DOMAIN,
             const.SERVICE_MULTICAST_SET_VALUE,
@@ -558,6 +589,7 @@ class ZWaveServices:
             ),
         )
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self._hass.services.async_register(
             const.DOMAIN,
             const.SERVICE_PING,
@@ -572,6 +604,7 @@ class ZWaveServices:
             ),
         )
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self._hass.services.async_register(
             const.DOMAIN,
             const.SERVICE_INVOKE_CC_API,
@@ -597,6 +630,7 @@ class ZWaveServices:
             },
         )
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         self._hass.services.async_register(
             const.DOMAIN,
             const.SERVICE_REFRESH_NOTIFICATIONS,
@@ -619,6 +653,7 @@ class ZWaveServices:
             ),
         )
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         async_register_platform_entity_service(
             self._hass,
             const.DOMAIN,
@@ -632,6 +667,7 @@ class ZWaveServices:
             supports_response=SupportsResponse.ONLY,
         )
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         async_register_platform_entity_service(
             self._hass,
             const.DOMAIN,
@@ -645,6 +681,7 @@ class ZWaveServices:
             func="async_set_lock_usercode",
         )
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         async_register_platform_entity_service(
             self._hass,
             const.DOMAIN,
@@ -657,6 +694,7 @@ class ZWaveServices:
             func="async_clear_lock_usercode",
         )
 
+        # pylint: disable-next=home-assistant-action-registered-outside-services-module
         async_register_platform_entity_service(
             self._hass,
             const.DOMAIN,

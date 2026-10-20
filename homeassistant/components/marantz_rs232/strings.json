@@ -1,0 +1,97 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "device": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "device": "Serial port path to connect to"
+        }
+      }
+    }
+  },
+  "entity": {
+    "media_player": {
+      "multi_room": {
+        "name": "Multi-room",
+        "state_attributes": {
+          "source": {
+            "state": {
+              "am": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::am%]",
+              "am2": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::am2%]",
+              "aux1": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::aux1%]",
+              "aux2": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::aux2%]",
+              "bd": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::bd%]",
+              "cd": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::cd%]",
+              "cd_cdr": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::cd_cdr%]",
+              "cd_r": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::cd_r%]",
+              "dss_vcr2": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::dss_vcr2%]",
+              "dvd": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::dvd%]",
+              "fm": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::fm%]",
+              "ld": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::ld%]",
+              "mxport": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::mxport%]",
+              "network": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::network%]",
+              "sirius": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::sirius%]",
+              "tape": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::tape%]",
+              "tuner": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::tuner%]",
+              "tv": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::tv%]",
+              "usb": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::usb%]",
+              "vcr1": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::vcr1%]",
+              "vcr2": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::vcr2%]",
+              "xm": "[%key:component::marantz_rs232::entity::media_player::receiver::state_attributes::source::state::xm%]"
+            }
+          }
+        }
+      },
+      "receiver": {
+        "state_attributes": {
+          "source": {
+            "state": {
+              "am": "AM",
+              "am2": "AM 2 / Phono",
+              "aux1": "Aux 1",
+              "aux2": "Aux 2",
+              "bd": "BD",
+              "cd": "CD",
+              "cd_cdr": "CD/CDR",
+              "cd_r": "CD-R",
+              "dss_vcr2": "DSS/VCR 2",
+              "dvd": "DVD",
+              "fm": "FM",
+              "ld": "LD",
+              "mxport": "M-XPort",
+              "network": "Network / USB",
+              "sirius": "Sirius / FM 2",
+              "tape": "Tape",
+              "tuner": "Tuner",
+              "tv": "TV Audio",
+              "usb": "USB",
+              "vcr1": "VCR 1",
+              "vcr2": "VCR 2 / DSS",
+              "xm": "XM / Tuner 2"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "Unable to communicate with the receiver"
+    },
+    "invalid_serial_port": {
+      "message": "The serial port configuration is invalid"
+    },
+    "invalid_source": {
+      "message": "Input source {source} is not supported"
+    }
+  }
+}

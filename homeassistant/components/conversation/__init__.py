@@ -14,7 +14,7 @@ from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .agent_manager import AgentInfo, async_converse, async_get_agent, get_agent_manager
+from .agent_manager import async_converse, async_get_agent, get_agent_manager
 from .chat_log import (
     AssistantContent,
     AssistantContentDeltaDict,
@@ -37,7 +37,12 @@ from .const import (
 from .default_agent import async_setup_default_agent
 from .entity import ConversationEntity
 from .http import async_setup as async_setup_conversation_http
-from .models import AbstractConversationAgent, ConversationInput, ConversationResult
+from .models import (
+    AbstractConversationAgent,
+    AgentInfo,
+    ConversationInput,
+    ConversationResult,
+)
 from .services import async_setup_services
 from .trace import ConversationTraceEventType, async_conversation_trace_append
 from .util import async_get_result_from_chat_log, get_config_intents
@@ -45,6 +50,8 @@ from .util import async_get_result_from_chat_log, get_config_intents
 __all__ = [
     "DOMAIN",
     "HOME_ASSISTANT_AGENT",
+    "AbstractConversationAgent",
+    "AgentInfo",
     "AssistantContent",
     "AssistantContentDeltaDict",
     "Attachment",
@@ -62,6 +69,7 @@ __all__ = [
     "UserContent",
     "async_conversation_trace_append",
     "async_converse",
+    "async_get_agent",
     "async_get_agent_info",
     "async_get_chat_log",
     "async_get_result_from_chat_log",
@@ -191,6 +199,14 @@ async def async_prepare_agent(
         raise ValueError("Invalid agent specified")
 
     await agent.async_prepare(language)
+
+
+async def async_prepare_intents(hass: HomeAssistant, language: str) -> None:
+    """Prepare sentence triggers and strict intent matching in a language."""
+    agent = get_agent_manager(hass).default_agent
+    assert agent is not None
+
+    await agent.async_prepare(language, strict_intents_only=True)
 
 
 async def async_handle_sentence_triggers(

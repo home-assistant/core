@@ -33,7 +33,7 @@ The following platforms have extra guidelines:
 
 ## Integration Quality Scale
 
-- When validating the quality scale rules, check them at https://developers.home-assistant.io/docs/core/integration-quality-scale/rules
+- When validating the quality scale rules, check them at https://contributors.home-assistant.io/core/quality-scale/rules/
 - When implementing or reviewing an integration, always consider the quality scale rules, since they promote best practices.
 
 Template scale file: `./script/scaffold/templates/integration/integration/quality_scale.yaml`
@@ -50,7 +50,7 @@ Template scale file: `./script/scaffold/templates/integration/integration/qualit
 
 ## Testing Requirements
 
-- Tests should avoid interacting or mocking internal integration details. For more info, see https://developers.home-assistant.io/docs/development_testing/#writing-tests-for-integrations
+- Tests should avoid interacting or mocking internal integration details. For more info, see https://contributors.home-assistant.io/core/development/tests/#test-through-home-assistant
 - Define shared mocks as fixtures in `conftest.py` so every platform test can reuse them, including a `mock_config_entry`. Give it a `unique_id` when the integration's config entries have one.
 - Load substantial or reused mock API data from JSON fixture files instead of building it inline with `json.dumps()`.
 - Do not manually assert values that a snapshot test already covers.

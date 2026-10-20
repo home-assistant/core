@@ -5,6 +5,7 @@ from itertools import chain
 from unittest.mock import AsyncMock, Mock, create_autospec, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import ring_doorbell
 
 from homeassistant.components.ring import DOMAIN
@@ -14,7 +15,6 @@ from homeassistant.core import HomeAssistant
 
 from .device_mocks import get_devices_data, get_mock_devices
 
-from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 MOCK_HARDWARE_ID = "foo-bar"

@@ -61,8 +61,10 @@ class SatelIntegraBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
 
     def setup(self) -> None:
         """Set up client callbacks for this coordinator."""
-        self.client.controller.add_connection_status_callback(
-            self._async_handle_connection_state_update
+        self.config_entry.async_on_unload(
+            self.client.controller.add_connection_status_callback(
+                self._async_handle_connection_state_update
+            )
         )
 
     @callback

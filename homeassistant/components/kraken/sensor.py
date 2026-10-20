@@ -220,7 +220,11 @@ class KrakenSensor(
             tracked_asset_pair
         ]
         self._target_asset = tracked_asset_pair.split("/")[1]
-        if "number_of" not in description.key:
+        if description.key in ("volume_today", "volume_last_24h"):
+            self._attr_native_unit_of_measurement = tracked_asset_pair.split(
+                "/", maxsplit=1
+            )[0]
+        elif "number_of" not in description.key:
             self._attr_native_unit_of_measurement = self._target_asset
         self._device_name = create_device_name(tracked_asset_pair)
         self._attr_unique_id = "_".join(

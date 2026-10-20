@@ -4,6 +4,7 @@ import dataclasses
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from python_overseerr import OverseerrConnectionError
 from python_overseerr.models import MediaType
 from syrupy.assertion import SnapshotAssertion
@@ -29,8 +30,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_service_get_requests(
