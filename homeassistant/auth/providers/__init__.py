@@ -151,7 +151,11 @@ class AuthProvider:
         """Initialize the auth provider."""
 
     async def async_will_remove_credentials(self, credentials: Credentials) -> None:
-        """Clean up provider owned data before credentials are removed."""
+        """Clean up provider owned data before credentials are removed.
+
+        Runs while the auth manager holds its credential removal lock, so it must
+        not remove credentials itself.
+        """
 
     @callback
     def async_validate_refresh_token(
