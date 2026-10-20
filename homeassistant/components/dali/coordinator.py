@@ -343,9 +343,11 @@ def _dali_level_to_brightness(
     # which would otherwise report level 254 as brightness 1 when min_level is 254.
     if level >= 254:
         return 255
-    if level <= min_level:
-        return 1
     if linear_dimming:
+        # The minimum level is the dimmest linear step; the logarithmic curve is
+        # continuous down to the minimum, so it keeps its own mapping there.
+        if level <= min_level:
+            return 1
         return round(1 + (level - min_level) * 254 / (254 - min_level))
     return max(1, round(255 * 10 ** (((level - 254) * 3) / 253)))
 
