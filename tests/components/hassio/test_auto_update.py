@@ -8,6 +8,7 @@ import os
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 from uuid import UUID, uuid4
+from zoneinfo import ZoneInfo
 
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import (
@@ -22,11 +23,14 @@ from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
 from pytest_homeassistant.common import (
+    CLIENT_ID,
     MockConfigEntry,
+    MockUser,
     async_capture_events,
     async_fire_time_changed,
     async_mock_service,
 )
+from pytest_homeassistant.typing import MockHAClientWebSocket, WebSocketGenerator
 
 from homeassistant.components.backup import (
     CreateBackupEvent,
@@ -500,9 +504,14 @@ async def test_skipped_version_after_rename(
 ENABLED = {"core_auto_update": True}
 
 
+# The time zone of the test instance. Fixed here, because parametrize builds
+# times before that instance exists.
+TEST_TIME_ZONE = ZoneInfo("US/Pacific")
+
+
 def _local(day: int, hour: int, minute: int = 0) -> datetime:
     """Return a local time in October 2026; the 19th is a Monday."""
-    return datetime(2026, 10, day, hour, minute, tzinfo=dt_util.get_default_time_zone())
+    return datetime(2026, 10, day, hour, minute, tzinfo=TEST_TIME_ZONE)
 
 
 async def _setup_scheduled(
@@ -2139,3 +2148,291 @@ async def test_updated_trigger_manual_update(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert [call.data["automatic"] for call in calls] == [False]
+
+
+async def test_websocket_settings(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the automatic update settings can be read and changed."""
+    config_entry = await _setup_hassio(hass)
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "hassio/update/config/update",
+            "core_auto_update": True,
+            "core_auto_update_delay": 7,
+            "core_auto_update_window_start": "23:00",
+            "core_auto_update_window_end": "01:00",
+            "core_auto_update_weekdays": ["sat", "sun"],
+        }
+    )
+    assert (await client.receive_json())["success"]
+
+    await client.send_json_auto_id({"type": "hassio/update/config/info"})
+    result = (await client.receive_json())["result"]
+
+    assert result == result | {
+        "core_auto_update": True,
+        "core_auto_update_delay": 7,
+        "core_auto_update_window_start": "23:00:00",
+        "core_auto_update_window_end": "01:00:00",
+        "core_auto_update_weekdays": ["sat", "sun"],
+    }
+    assert hass.data[DATA_AUTO_UPDATE].settings.window_start == time(23, 0)
+    assert config_entry.options["core_auto_update_window_start"] == "23:00:00"
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        pytest.param({"core_auto_update_delay": 2}, id="unknown_delay"),
+        pytest.param(
+            {"core_auto_update_window_start": "04:45"},
+            id="too_short_with_stored_end",
+        ),
+        pytest.param({"core_auto_update_weekdays": []}, id="no_weekdays"),
+    ],
+)
+async def test_websocket_settings_invalid(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    changes: dict[str, Any],
+) -> None:
+    """Test invalid settings are rejected and nothing is stored."""
+    config_entry = await _setup_hassio(hass, ENABLED)
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "hassio/update/config/update", **changes})
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_format"
+    assert config_entry.options == ENABLED
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        pytest.param(
+            {"type": "hassio/update/config/update", "core_auto_update": True},
+            id="update",
+        ),
+        pytest.param({"type": "hassio/update/automatic/status"}, id="status"),
+        pytest.param({"type": "hassio/update/automatic/subscribe"}, id="subscribe"),
+    ],
+)
+async def test_websocket_admin_only(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+    message: dict[str, Any],
+) -> None:
+    """Test only administrators can change settings or see the status."""
+    await _setup_hassio(hass)
+    hass_admin_user.groups = []
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(message)
+    response = await client.receive_json()
+
+    assert response["error"]["code"] == "unauthorized"
+
+
+async def _ws_client(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+) -> MockHAClientWebSocket:
+    """Connect with a fresh token; these tests move the clock past the fixture's."""
+    refresh_token = await hass.auth.async_create_refresh_token(
+        hass_admin_user, CLIENT_ID
+    )
+    return await hass_ws_client(
+        hass, access_token=hass.auth.async_create_access_token(refresh_token)
+    )
+
+
+async def _status(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+) -> Any:
+    """Return the automatic update status from the WebSocket API."""
+    client = await _ws_client(hass, hass_ws_client, hass_admin_user)
+    await client.send_json_auto_id({"type": "hassio/update/automatic/status"})
+    return (await client.receive_json())["result"]
+
+
+@pytest.mark.parametrize(
+    ("options", "window_offset", "earliest"),
+    [
+        pytest.param(ENABLED, 0.0, _local(25, 3), id="after_the_wait"),
+        pytest.param(
+            {**ENABLED, "core_auto_update_weekdays": ["mon"]},
+            0.0,
+            _local(26, 3),
+            id="allowed_weekday",
+        ),
+        pytest.param(
+            ENABLED,
+            0.5,
+            _local(25, 3, 57) + timedelta(seconds=30),
+            id="point_in_window",
+        ),
+    ],
+)
+async def test_status_next_update(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+    options: dict[str, Any],
+    window_offset: float,
+    earliest: datetime,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test the status shows the next update the way the checks install it."""
+    await _setup_scheduled(
+        hass,
+        hass_storage,
+        freezer,
+        _local(22, 2, 30),
+        first_seen={"2026.10.2": _local(22, 2)},
+        options=options,
+        window_offset=window_offset,
+    )
+
+    status = await _status(hass, hass_ws_client, hass_admin_user)
+
+    assert status["available"] is True
+    assert status["enabled"] is True
+    assert status["next_update"]["version"] == "2026.10.2"
+    assert dt_util.parse_datetime(status["next_update"]["earliest"]) == earliest
+
+    # The checks install it from that moment on
+    freezer.move_to(earliest)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert _installed(supervisor_client) == ["2026.10.2"]
+
+
+async def test_status_after_attempted_window(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test the next update moves to the next window after a failed attempt."""
+    supervisor_client.homeassistant.update.side_effect = SupervisorError("Boom")
+    await _setup_scheduled(
+        hass,
+        hass_storage,
+        freezer,
+        _local(22, 3, 30),
+        first_seen={"2026.10.2": _local(19, 2)},
+    )
+
+    status = await _status(hass, hass_ws_client, hass_admin_user)
+
+    assert dt_util.parse_datetime(status["next_update"]["earliest"]) == _local(23, 3)
+
+
+@pytest.mark.parametrize(
+    "options",
+    [
+        pytest.param({}, id="not_chosen"),
+        pytest.param({"core_auto_update": False}, id="off"),
+    ],
+)
+async def test_status_no_next_update_when_off(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    hass_ws_client: WebSocketGenerator,
+    options: dict[str, Any],
+    hass_admin_user: MockUser,
+) -> None:
+    """Test there is no next update when automatic updates are not on."""
+    await _setup_scheduled(
+        hass,
+        hass_storage,
+        freezer,
+        _local(22, 2, 30),
+        first_seen={"2026.10.2": _local(19, 2)},
+        options=options,
+    )
+
+    status = await _status(hass, hass_ws_client, hass_admin_user)
+
+    assert status["enabled"] is options.get("core_auto_update")
+    assert status["next_update"] is None
+
+
+async def test_status_unavailable(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_root_info: AsyncMock,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test the status says why automatic updates are not available."""
+    supervisor_root_info.return_value = replace(
+        supervisor_root_info.return_value, hassos=None
+    )
+    await _setup_hassio(hass, ENABLED)
+
+    status = await _status(hass, hass_ws_client, hass_admin_user)
+
+    assert status["available"] is False
+    assert status["unavailable_reason"] == "not_home_assistant_os"
+    assert status["next_update"] is None
+
+
+async def test_status_history(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test the status includes the recent automatic updates."""
+    await _setup_after_update(hass, hass_storage, "2026.10.2", PENDING)
+
+    status = await _status(hass, hass_ws_client, hass_admin_user)
+
+    assert [entry["result"] for entry in status["history"]] == ["success"]
+    assert status["history"][0]["to_version"] == "2026.10.2"
+
+
+async def test_subscribe(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test subscribers get the status, and again only when it changes."""
+    await _setup_scheduled(
+        hass,
+        hass_storage,
+        freezer,
+        _local(22, 2, 30),
+        first_seen={"2026.10.2": _local(22, 2)},
+    )
+    client = await _ws_client(hass, hass_ws_client, hass_admin_user)
+    await client.send_json_auto_id({"type": "hassio/update/automatic/subscribe"})
+    assert (await client.receive_json())["success"]
+    first = await client.receive_json()
+    assert first["event"]["next_update"]["version"] == "2026.10.2"
+
+    # Nothing changed, nothing is sent
+    await _refresh_main_coordinator(hass, freezer)
+
+    await _call_update_service(hass, "skip")
+    changed = await client.receive_json()
+
+    assert changed["id"] == first["id"]
+    assert changed["event"]["next_update"] is None

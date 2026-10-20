@@ -163,6 +163,18 @@ class AutoUpdateSettings:
             weekdays=frozenset(options.get(OPTION_CORE_AUTO_UPDATE_WEEKDAYS, WEEKDAYS)),
         )
 
+    def as_options(self) -> dict[str, Any]:
+        """Return the settings the way they are stored, defaults included."""
+        return {
+            OPTION_CORE_AUTO_UPDATE: self.enabled,
+            OPTION_CORE_AUTO_UPDATE_DELAY: self.delay.days,
+            OPTION_CORE_AUTO_UPDATE_WINDOW_START: self.window_start.isoformat(),
+            OPTION_CORE_AUTO_UPDATE_WINDOW_END: self.window_end.isoformat(),
+            OPTION_CORE_AUTO_UPDATE_WEEKDAYS: [
+                weekday for weekday in WEEKDAYS if weekday in self.weekdays
+            ],
+        }
+
 
 class AutoUpdateResult(StrEnum):
     """How an automatic update ended."""
@@ -190,6 +202,14 @@ class AutoUpdateHistoryEntry(TypedDict):
     started: str
     finished: str
     result: AutoUpdateResult
+
+
+@dataclass(frozen=True, kw_only=True)
+class NextUpdate:
+    """The patch release that installs next, and from when."""
+
+    version: str
+    earliest: datetime
 
 
 class AutoUpdateStoreData(TypedDict):
@@ -288,6 +308,7 @@ class AutoUpdateManager:
         self._restored_pending: PendingUpdate | None = None
         self._unsub_settling: CALLBACK_TYPE | None = None
         self._history: list[AutoUpdateHistoryEntry] = []
+        self._listeners: set[CALLBACK_TYPE] = set()
 
     async def async_setup(self) -> None:
         """Load the stored data and start tracking offered versions."""
@@ -321,6 +342,13 @@ class AutoUpdateManager:
         self._async_record_offered_version()
         self._entry.async_on_unload(
             self._coordinator.async_add_listener(self._async_record_offered_version)
+        )
+        # New versions, a changed channel and changed settings change the status
+        self._entry.async_on_unload(
+            self._coordinator.async_add_listener(self._async_notify)
+        )
+        self._entry.async_on_unload(
+            self._entry.add_update_listener(self._async_entry_updated)
         )
         self._entry.async_on_unload(
             async_at_started(self._hass, self._async_start_checking)
@@ -565,15 +593,14 @@ class AutoUpdateManager:
         self._async_save()
 
     @callback
-    def async_get_install_candidate(self, now: datetime) -> str | None:
-        """Return the patch release to install automatically, if any.
+    def _async_target_patch(self) -> str | None:
+        """Return the patch release automatic updates aim for, if any.
 
-        That is the newest known patch of the running major, once it waited
-        long enough since it was first seen. Never an older patch while a
-        newer one waits or is skipped; the newer one may fix a regression in
-        it, and the older one may have been pulled. Never newer than what
-        Supervisor offers now, so rolling back the version file stops a
-        pulled release.
+        That is the newest known patch of the running major. Never an older
+        patch while a newer one waits or is skipped; the newer one may fix a
+        regression in it, and the older one may have been pulled. Never newer
+        than what Supervisor offers now, so rolling back the version file
+        stops a pulled release.
         """
         core = self._coordinator.data.core
         if core.version is None or core.version_latest is None:
@@ -588,16 +615,98 @@ class AutoUpdateManager:
             and version not in self._withdrawn
             and running < AwesomeVersion(version) <= offered
         ]
-        if not patches:
-            return None
-
-        newest = str(max(patches))
-        if (
-            newest in self._skipped
-            or self._first_seen[newest] + self.settings.delay > now
-        ):
+        if not patches or (newest := str(max(patches))) in self._skipped:
             return None
         return newest
+
+    @callback
+    def async_get_install_candidate(self, now: datetime) -> str | None:
+        """Return the patch release to install automatically, if any.
+
+        The target patch, once it waited long enough since it was first seen.
+        """
+        if (target := self._async_target_patch()) is None or (
+            self._first_seen[target] + self.settings.delay > now
+        ):
+            return None
+        return target
+
+    @callback
+    def async_get_next_update(self, now: datetime) -> NextUpdate | None:
+        """Return the version that installs next, and from when, if any.
+
+        Follows the same rules as the checks that install it: the wait, the
+        window and its weekdays, this installation's point in the window,
+        and no second attempt in a window that already had one.
+        """
+        if (
+            self.settings.enabled is not True
+            or self.unavailable_reason is not None
+            or self._pending is not None
+            or (version := self._async_target_patch()) is None
+        ):
+            return None
+
+        settings = self.settings
+        earliest = max(now, self._first_seen[version] + settings.delay)
+        length = _window_length(settings.window_start, settings.window_end)
+        spread = max(length - CHECK_INTERVAL, timedelta(0))
+        earliest_local = dt_util.as_local(earliest)
+        # A window started the day before may still be open
+        for days in range(-1, 8):
+            start = datetime.combine(
+                earliest_local.date() + timedelta(days=days),
+                settings.window_start,
+                tzinfo=earliest_local.tzinfo,
+            )
+            if (
+                WEEKDAYS[start.weekday()] not in settings.weekdays
+                or dt_util.as_utc(start) == self._attempted_window
+                or start + length <= earliest
+            ):
+                continue
+            return NextUpdate(
+                version=version,
+                earliest=max(earliest, start + spread * self._window_offset),
+            )
+        return None
+
+    @callback
+    def async_get_status(self, now: datetime) -> dict[str, Any]:
+        """Return the state of automatic updates, for the settings page."""
+        unavailable_reason = self.unavailable_reason
+        next_update = self.async_get_next_update(now)
+        return {
+            "available": unavailable_reason is None,
+            "unavailable_reason": unavailable_reason,
+            "enabled": self.settings.enabled,
+            "next_update": (
+                {
+                    "version": next_update.version,
+                    "earliest": next_update.earliest.isoformat(),
+                }
+                if next_update is not None
+                else None
+            ),
+            "history": self.async_get_history(),
+        }
+
+    @callback
+    def async_add_listener(self, update_callback: CALLBACK_TYPE) -> CALLBACK_TYPE:
+        """Listen for changes that may change the status."""
+        self._listeners.add(update_callback)
+
+        @callback
+        def remove_listener() -> None:
+            self._listeners.discard(update_callback)
+
+        return remove_listener
+
+    @callback
+    def _async_notify(self) -> None:
+        """Tell the listeners the status may have changed."""
+        for update_callback in list(self._listeners):
+            update_callback()
 
     @callback
     def _async_install_time(self, now: datetime) -> datetime | None:
@@ -712,6 +821,7 @@ class AutoUpdateManager:
         # Stored before the update starts; Home Assistant restarts during it
         self._attempted_window = window
         await self._store.async_save(self._data_to_save())
+        self._async_notify()
 
         backup = async_get_update_options(self._hass, self._entry)[
             OPTION_CORE_BACKUP_BEFORE_UPDATE
@@ -734,6 +844,7 @@ class AutoUpdateManager:
                 started=dt_util.utcnow().isoformat(),
             )
             await self._store.async_save(self._data_to_save())
+            self._async_notify()
 
             # Checked again, with nothing awaited until the request: the saves
             # and the backup let the version be skipped or pulled, the data go
@@ -848,6 +959,13 @@ class AutoUpdateManager:
         self._entry.async_create_task(
             self._hass, self._store.async_save(self._data_to_save())
         )
+        self._async_notify()
+
+    async def _async_entry_updated(
+        self, hass: HomeAssistant, entry: ConfigEntry
+    ) -> None:
+        """Tell the listeners the settings changed."""
+        self._async_notify()
 
     @callback
     def _data_to_save(self) -> AutoUpdateStoreData:
