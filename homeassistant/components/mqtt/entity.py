@@ -1,6 +1,7 @@
 """MQTT (entity) component mixins and helpers."""
 
 from abc import ABC, abstractmethod
+import asyncio
 from collections.abc import Callable, Coroutine
 from functools import partial
 import logging
@@ -848,6 +849,10 @@ async def async_remove_entity_discovery_payload(
     device, also when the parent device has no components left.
     """
     discovery_payload: MQTTDiscoveryPayload = discovery_data[ATTR_DISCOVERY_PAYLOAD]
+    if discovery_payload.device_discovery:
+        # The device registry removes child devices before their parent device,
+        # let a removal of the parent device finish before checking it
+        await asyncio.sleep(0)
     if (
         discovery_payload.device_discovery
         and registry_entry is not None
