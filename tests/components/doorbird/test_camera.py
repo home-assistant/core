@@ -105,7 +105,7 @@ async def test_deprecated_camera_kept_and_flagged(
         suggested_object_id=f"mydoorbird_{camera_id}",
     )
 
-    await doorbird_mocker()
+    doorbird_entry = await doorbird_mocker()
 
     assert hass.states.get(entity_id).state == CameraState.IDLE
     issue = issue_registry.async_get_issue(
@@ -114,6 +114,7 @@ async def test_deprecated_camera_kept_and_flagged(
     assert issue is not None
     assert issue.translation_key == f"deprecated_camera_{camera_id}"
     assert issue.translation_placeholders["entity_id"] == entity_id
+    assert issue.config_entry_id == doorbird_entry.entry.entry_id
 
 
 async def test_deprecated_camera_issue_names_renamed_entity(
@@ -176,11 +177,45 @@ async def test_deprecated_camera_removed_when_disabled(
     ) not in issue_registry.issues
 
 
+async def test_deprecated_camera_kept_when_disabled_by_device(
+    hass: HomeAssistant,
+    doorbird_mocker: DoorbirdMockerType,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a camera disabled along with its device is neither removed nor flagged."""
+    entity_registry.async_get_or_create(
+        Platform.CAMERA,
+        DOMAIN,
+        "1234ABCD_last_ring",
+        suggested_object_id="mydoorbird_last_ring",
+        disabled_by=er.RegistryEntryDisabler.DEVICE,
+    )
+
+    await doorbird_mocker()
+
+    assert entity_registry.async_get(LAST_RING_CAMERA_ENTITY_ID) is not None
+    assert (DOMAIN, LAST_RING_ISSUE_ID) not in issue_registry.issues
+
+
+@pytest.mark.parametrize(
+    ("automation_id", "expected_item"),
+    [
+        pytest.param(
+            {"id": "test_automation"},
+            "[test_automation](/config/automation/edit/test_automation)",
+            id="registered",
+        ),
+        pytest.param({}, "`automation.test_automation`", id="yaml_without_id"),
+    ],
+)
 async def test_deprecated_camera_issue_lists_automations(
     hass: HomeAssistant,
     doorbird_mocker: DoorbirdMockerType,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
+    automation_id: dict[str, str],
+    expected_item: str,
 ) -> None:
     """Test the issue lists the automations still using the camera."""
     entity_registry.async_get_or_create(
@@ -194,7 +229,7 @@ async def test_deprecated_camera_issue_lists_automations(
         AUTOMATION_DOMAIN,
         {
             AUTOMATION_DOMAIN: {
-                "id": "test_automation",
+                **automation_id,
                 "alias": "test_automation",
                 "triggers": {
                     "trigger": "state",
@@ -210,4 +245,4 @@ async def test_deprecated_camera_issue_lists_automations(
     issue = issue_registry.async_get_issue(DOMAIN, LAST_RING_ISSUE_ID)
     assert issue is not None
     assert issue.translation_key == "deprecated_camera_last_ring_scripts"
-    assert "test_automation" in issue.translation_placeholders["items"]
+    assert issue.translation_placeholders["items"] == f"- {expected_item}"

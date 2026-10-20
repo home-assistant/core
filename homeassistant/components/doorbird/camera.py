@@ -13,7 +13,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .deprecation import deprecate_entity
+from .deprecation import async_should_create_deprecated_entity
 from .entity import DoorBirdEntity
 from .models import DoorBirdConfigEntry, DoorBirdData
 from .util import get_mac_address_from_door_station_info
@@ -50,9 +50,10 @@ async def async_setup_entry(
         ("last_ring", "doorbell", _LAST_VISITOR_INTERVAL),
         ("last_motion", "motionsensor", _LAST_MOTION_INTERVAL),
     ):
-        if deprecate_entity(
+        if async_should_create_deprecated_entity(
             hass,
             entity_registry,
+            config_entry_id=config_entry.entry_id,
             platform_domain=Platform.CAMERA,
             entity_unique_id=f"{mac_addr}_{camera_id}",
             issue_id=f"deprecated_camera_{mac_addr}_{camera_id}",
