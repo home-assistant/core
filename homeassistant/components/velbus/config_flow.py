@@ -209,7 +209,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
                     await self._validate_vlp_file(self._vlp_file)
                 except InvalidVlpFile as e:
                     step_errors[CONF_VLP_FILE] = str(e)
-            if self.source == SOURCE_RECONFIGURE:
+            if not step_errors and self.source == SOURCE_RECONFIGURE:
                 old_entry = self._get_reconfigure_entry()
                 data = {
                     **old_entry.data,
@@ -270,9 +270,9 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="advanced_mode",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(CONF_ADVANCED_MODE, default=default): bool,
+                    probatio.Optional(CONF_ADVANCED_MODE, default=default): bool,
                 }
             ),
         )

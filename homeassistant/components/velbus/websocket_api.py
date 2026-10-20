@@ -1,15 +1,16 @@
 """Velbus config panel websocket API."""
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from functools import wraps
 import inspect
 from typing import TYPE_CHECKING, Any, Final, cast, overload
 
+import probatio
 import velbus_frontend as velbus_panel
 from velbusaio.channels import Channel
 from velbusaio.exceptions import VelbusConfigError
 from velbusaio.panel_schema import get_module_instance_data, get_module_type_schema
-import voluptuous as vol
 
 from homeassistant.components import frontend, panel_custom, websocket_api
 from homeassistant.components.frontend import async_panel_exists
@@ -31,9 +32,17 @@ if TYPE_CHECKING:
 
 URL_BASE: Final = "/velbus_static"
 DATA_STATIC_REGISTERED: Final = "static_registered"
+DATA_STATIC_LOCK: Final = "static_lock"
+DATA_ACTION_LOCKS: Final = "action_locks"
 DATA_WS_REGISTERED: Final = "ws_registered"
 DATA_BUILD_ID: Final = "build_id"
 DATA_PANEL: HassKey[dict[str, Any]] = HassKey(f"{DOMAIN}_panel")
+
+_ADDRESS = probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=254))
+_RELAY_CHANNEL = probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=32))
+_SOURCE_CHANNEL = probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=8))
+_SLOT = probatio.All(probatio.Coerce(int), probatio.Range(min=0, max=255))
+_TIME_BYTE = probatio.All(probatio.Coerce(int), probatio.Range(min=0, max=255))
 
 type VelbusWebSocketHandler = Callable[
     [
@@ -76,18 +85,24 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
 
 
 def _any_advanced_mode_enabled(
-    hass: HomeAssistant, *, unloading_entry_id: str | None = None
+    hass: HomeAssistant,
+    *,
+    unloading_entry_id: str | None = None,
+    setting_up_entry_id: str | None = None,
 ) -> bool:
     """Return whether any Velbus entry has advanced mode enabled."""
     for entry in hass.config_entries.async_entries(DOMAIN):
         if entry.entry_id == unloading_entry_id:
             continue
-        # Include SETUP_IN_PROGRESS so the panel can register during setup,
-        # before the entry state becomes LOADED.
-        if entry.state not in (
-            ConfigEntryState.LOADED,
-            ConfigEntryState.SETUP_IN_PROGRESS,
-        ):
+        # The entry currently being set up is still SETUP_IN_PROGRESS. Other
+        # in-progress entries must not keep the panel registered if their
+        # setup later fails before the cleanup path runs.
+        entry_is_loading = (
+            setting_up_entry_id is not None
+            and entry.entry_id == setting_up_entry_id
+            and entry.state is ConfigEntryState.SETUP_IN_PROGRESS
+        )
+        if entry.state is not ConfigEntryState.LOADED and not entry_is_loading:
             continue
         if is_advanced_mode_enabled(entry):
             return True
@@ -95,25 +110,34 @@ def _any_advanced_mode_enabled(
 
 
 async def async_update_panel(
-    hass: HomeAssistant, *, unloading_entry_id: str | None = None
+    hass: HomeAssistant,
+    *,
+    unloading_entry_id: str | None = None,
+    setting_up_entry_id: str | None = None,
 ) -> None:
     """Register or remove the Velbus config panel based on advanced mode."""
-    if not _any_advanced_mode_enabled(hass, unloading_entry_id=unloading_entry_id):
+    if not _any_advanced_mode_enabled(
+        hass,
+        unloading_entry_id=unloading_entry_id,
+        setting_up_entry_id=setting_up_entry_id,
+    ):
         frontend.async_remove_panel(hass, DOMAIN, warn_if_unknown=False)
         return
 
     panel_data = hass.data.setdefault(DATA_PANEL, {})
-    if not panel_data.get(DATA_STATIC_REGISTERED):
-        await hass.http.async_register_static_paths(
-            [
-                StaticPathConfig(
-                    URL_BASE,
-                    path=velbus_panel.locate_dir(),
-                    cache_headers=velbus_panel.is_prod_build,
-                )
-            ]
-        )
-        panel_data[DATA_STATIC_REGISTERED] = True
+    static_lock: asyncio.Lock = panel_data.setdefault(DATA_STATIC_LOCK, asyncio.Lock())
+    async with static_lock:
+        if not panel_data.get(DATA_STATIC_REGISTERED):
+            await hass.http.async_register_static_paths(
+                [
+                    StaticPathConfig(
+                        URL_BASE,
+                        path=velbus_panel.locate_dir(),
+                        cache_headers=velbus_panel.is_prod_build,
+                    )
+                ]
+            )
+            panel_data[DATA_STATIC_REGISTERED] = True
 
     build_id = await hass.async_add_executor_job(velbus_panel.get_build_id)
     module_url = f"{URL_BASE}/{velbus_panel.entrypoint_js}?v={build_id}"
@@ -245,11 +269,72 @@ def _get_relay_channel(controller: Velbus, address: int, channel: int) -> Channe
     return cast(Channel, relay)
 
 
+def _coerce_config_value(param: Any, value: Any) -> Any:
+    """Return a value coerced to the parameter kind.
+
+    Values pass through when ``kind`` is not a string, so callers with
+    incomplete parameter objects keep their existing behavior.
+    """
+    kind = getattr(param, "kind", None)
+    if not isinstance(kind, str):
+        return value
+
+    if kind == "bool":
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str) and value.lower() in {"true", "false"}:
+            return value.lower() == "true"
+        raise ValueError(f"Invalid boolean value for '{param.key}': {value!r}")
+
+    if kind == "number":
+        try:
+            number = float(value)
+        except (TypeError, ValueError) as err:
+            raise ValueError(f"Invalid number for '{param.key}': {value!r}") from err
+        min_value = getattr(param, "min_value", None)
+        max_value = getattr(param, "max_value", None)
+        if isinstance(min_value, (int, float)) and not isinstance(min_value, bool):
+            if number < min_value:
+                raise ValueError(f"{param.key} below minimum {min_value}")
+        if isinstance(max_value, (int, float)) and not isinstance(max_value, bool):
+            if number > max_value:
+                raise ValueError(f"{param.key} above maximum {max_value}")
+        return number
+
+    if kind == "select":
+        selected = str(value)
+        options = getattr(param, "options", None)
+        if isinstance(options, list) and selected not in options:
+            raise ValueError(f"{param.key} must be one of {options}, got {selected!r}")
+        return selected
+
+    if kind == "text":
+        text = str(value)
+        max_length = getattr(param, "max_length", None)
+        if isinstance(max_length, int) and not isinstance(max_length, bool):
+            if len(text) > max_length:
+                raise ValueError(f"{param.key} exceeds max length {max_length}")
+        return text
+
+    raise ValueError(f"Unknown config kind {kind!r}")
+
+
+def _action_table_lock(
+    hass: HomeAssistant, entry_id: str, address: int, channel: int
+) -> asyncio.Lock:
+    """Return the lock that serializes action-table writes for one channel."""
+    panel_data = hass.data.setdefault(DATA_PANEL, {})
+    locks: dict[tuple[str, int, int], asyncio.Lock] = panel_data.setdefault(
+        DATA_ACTION_LOCKS, {}
+    )
+    return locks.setdefault((entry_id, address, channel), asyncio.Lock())
+
+
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "velbus/config_panel/get_base_data",
-        vol.Required(CONF_CONFIG_ENTRY): str,
+        probatio.Required("type"): "velbus/config_panel/get_base_data",
+        probatio.Required(CONF_CONFIG_ENTRY): str,
     }
 )
 @provide_velbus
@@ -275,8 +360,8 @@ def ws_get_base_data(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "velbus/config_panel/modules",
-        vol.Required(CONF_CONFIG_ENTRY): str,
+        probatio.Required("type"): "velbus/config_panel/modules",
+        probatio.Required(CONF_CONFIG_ENTRY): str,
     }
 )
 @provide_velbus
@@ -290,7 +375,13 @@ def ws_list_modules(
 ) -> None:
     """List modules for the config panel."""
     modules = []
+    seen_modules: set[int] = set()
     for module in controller.get_modules().values():
+        # The controller maps every occupied address to the same module object.
+        module_id = id(module)
+        if module_id in seen_modules:
+            continue
+        seen_modules.add(module_id)
         address = module.get_addresses()[0]
         channels = {
             str(channel_num): {"name": channel.get_name()}
@@ -314,9 +405,11 @@ def ws_list_modules(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "velbus/config_panel/module/schema",
-        vol.Required(CONF_CONFIG_ENTRY): str,
-        vol.Required("type_id"): vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
+        probatio.Required("type"): "velbus/config_panel/module/schema",
+        probatio.Required(CONF_CONFIG_ENTRY): str,
+        probatio.Required("type_id"): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=0, max=255)
+        ),
     }
 )
 @websocket_api.async_response
@@ -336,9 +429,9 @@ async def ws_get_module_schema(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "velbus/config_panel/module/get",
-        vol.Required(CONF_CONFIG_ENTRY): str,
-        vol.Required(CONF_ADDRESS): vol.All(vol.Coerce(int), vol.Range(min=1, max=254)),
+        probatio.Required("type"): "velbus/config_panel/module/get",
+        probatio.Required(CONF_CONFIG_ENTRY): str,
+        probatio.Required(CONF_ADDRESS): _ADDRESS,
     }
 )
 @websocket_api.async_response
@@ -370,13 +463,15 @@ async def ws_get_module(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "velbus/config_panel/module/config/set",
-        vol.Required(CONF_CONFIG_ENTRY): str,
-        vol.Required(CONF_ADDRESS): vol.All(vol.Coerce(int), vol.Range(min=1, max=254)),
+        probatio.Required("type"): "velbus/config_panel/module/config/set",
+        probatio.Required(CONF_CONFIG_ENTRY): str,
+        probatio.Required(CONF_ADDRESS): _ADDRESS,
         # Specs include editable channels above 32 (e.g. temperature name 33/34).
-        vol.Required(CONF_CHANNEL): vol.All(vol.Coerce(int), vol.Range(min=1, max=64)),
-        vol.Required("key"): str,
-        vol.Required("value"): vol.Any(str, bool, int, float),
+        probatio.Required(CONF_CHANNEL): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1, max=64)
+        ),
+        probatio.Required("key"): str,
+        probatio.Required("value"): probatio.Any(str, bool, int, float),
     }
 )
 @websocket_api.async_response
@@ -421,7 +516,17 @@ async def ws_set_module_config(
         return
 
     try:
-        await param.set_value(msg["value"])
+        value = _coerce_config_value(param, msg["value"])
+    except ValueError as err:
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_INVALID_FORMAT,
+            str(err),
+        )
+        return
+
+    try:
+        await param.set_value(value)
     except (OSError, RuntimeError, ValueError, VelbusConfigError) as err:
         connection.send_error(
             msg["id"],
@@ -436,11 +541,11 @@ async def ws_set_module_config(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "velbus/config_panel/module/actions/get",
-        vol.Required(CONF_CONFIG_ENTRY): str,
-        vol.Required(CONF_ADDRESS): vol.All(vol.Coerce(int), vol.Range(min=1, max=254)),
-        vol.Required(CONF_CHANNEL): vol.All(vol.Coerce(int), vol.Range(min=1, max=32)),
-        vol.Optional("refresh", default=False): bool,
+        probatio.Required("type"): "velbus/config_panel/module/actions/get",
+        probatio.Required(CONF_CONFIG_ENTRY): str,
+        probatio.Required(CONF_ADDRESS): _ADDRESS,
+        probatio.Required(CONF_CHANNEL): _RELAY_CHANNEL,
+        probatio.Optional("refresh", default=False): bool,
     }
 )
 @websocket_api.async_response
@@ -480,27 +585,17 @@ async def ws_get_channel_actions(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "velbus/config_panel/module/actions/set",
-        vol.Required(CONF_CONFIG_ENTRY): str,
-        vol.Required(CONF_ADDRESS): vol.All(vol.Coerce(int), vol.Range(min=1, max=254)),
-        vol.Required(CONF_CHANNEL): vol.All(vol.Coerce(int), vol.Range(min=1, max=32)),
-        vol.Required("source_address"): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=254)
-        ),
-        vol.Required("action"): vol.Any(str, int),
-        vol.Optional("source_channel"): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=32)
-        ),
-        vol.Optional("slot"): vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
-        vol.Optional("time1", default=0xFF): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=255)
-        ),
-        vol.Optional("time2", default=0xFF): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=255)
-        ),
-        vol.Optional("time3", default=0xFF): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=255)
-        ),
+        probatio.Required("type"): "velbus/config_panel/module/actions/set",
+        probatio.Required(CONF_CONFIG_ENTRY): str,
+        probatio.Required(CONF_ADDRESS): _ADDRESS,
+        probatio.Required(CONF_CHANNEL): _RELAY_CHANNEL,
+        probatio.Required("source_address"): _ADDRESS,
+        probatio.Required("action"): probatio.Any(str, int),
+        probatio.Optional("source_channel"): _SOURCE_CHANNEL,
+        probatio.Optional("slot"): _SLOT,
+        probatio.Optional("time1", default=0xFF): _TIME_BYTE,
+        probatio.Optional("time2", default=0xFF): _TIME_BYTE,
+        probatio.Optional("time3", default=0xFF): _TIME_BYTE,
     }
 )
 @websocket_api.async_response
@@ -520,23 +615,27 @@ async def ws_set_channel_action(
         connection.send_error(msg["id"], websocket_api.const.ERR_NOT_FOUND, str(err))
         return
 
-    try:
-        slot = await relay.set_action(
-            source_address=msg["source_address"],
-            action=msg["action"],
-            source_channel=msg.get("source_channel"),
-            slot=msg.get("slot"),
-            time1=msg["time1"],
-            time2=msg["time2"],
-            time3=msg["time3"],
-        )
-    except (OSError, RuntimeError, ValueError, VelbusConfigError) as err:
-        connection.send_error(
-            msg["id"],
-            websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
-            str(err),
-        )
-        return
+    lock = _action_table_lock(
+        hass, entry.entry_id, msg[CONF_ADDRESS], msg[CONF_CHANNEL]
+    )
+    async with lock:
+        try:
+            slot = await relay.set_action(
+                source_address=msg["source_address"],
+                action=msg["action"],
+                source_channel=msg.get("source_channel"),
+                slot=msg.get("slot"),
+                time1=msg["time1"],
+                time2=msg["time2"],
+                time3=msg["time3"],
+            )
+        except (OSError, RuntimeError, ValueError, VelbusConfigError) as err:
+            connection.send_error(
+                msg["id"],
+                websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
+                str(err),
+            )
+            return
 
     connection.send_result(msg["id"], {"slot": slot.to_dict()})
 
@@ -544,17 +643,13 @@ async def ws_set_channel_action(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "velbus/config_panel/module/actions/clear",
-        vol.Required(CONF_CONFIG_ENTRY): str,
-        vol.Required(CONF_ADDRESS): vol.All(vol.Coerce(int), vol.Range(min=1, max=254)),
-        vol.Required(CONF_CHANNEL): vol.All(vol.Coerce(int), vol.Range(min=1, max=32)),
-        vol.Optional("slot"): vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
-        vol.Optional("source_address"): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=254)
-        ),
-        vol.Optional("source_channel"): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=32)
-        ),
+        probatio.Required("type"): "velbus/config_panel/module/actions/clear",
+        probatio.Required(CONF_CONFIG_ENTRY): str,
+        probatio.Required(CONF_ADDRESS): _ADDRESS,
+        probatio.Required(CONF_CHANNEL): _RELAY_CHANNEL,
+        probatio.Optional("slot"): _SLOT,
+        probatio.Optional("source_address"): _ADDRESS,
+        probatio.Optional("source_channel"): _SOURCE_CHANNEL,
     }
 )
 @websocket_api.async_response
@@ -574,28 +669,33 @@ async def ws_clear_channel_action(
         connection.send_error(msg["id"], websocket_api.const.ERR_NOT_FOUND, str(err))
         return
 
-    try:
-        if msg.get("slot") is not None:
-            cleared = [await relay.clear_action(msg["slot"])]
-        elif msg.get("source_address") is not None:
-            cleared = await relay.clear_actions_for_source(
-                msg["source_address"],
-                source_channel=msg.get("source_channel"),
-            )
-        else:
-            connection.send_error(
-                msg["id"],
-                websocket_api.const.ERR_INVALID_FORMAT,
-                "Provide slot or source_address",
-            )
-            return
-    except (OSError, RuntimeError, ValueError, VelbusConfigError) as err:
+    if msg.get("slot") is None and msg.get("source_address") is None:
         connection.send_error(
             msg["id"],
-            websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
-            str(err),
+            websocket_api.const.ERR_INVALID_FORMAT,
+            "Provide slot or source_address",
         )
         return
+
+    lock = _action_table_lock(
+        hass, entry.entry_id, msg[CONF_ADDRESS], msg[CONF_CHANNEL]
+    )
+    async with lock:
+        try:
+            if msg.get("slot") is not None:
+                cleared = [await relay.clear_action(msg["slot"])]
+            else:
+                cleared = await relay.clear_actions_for_source(
+                    msg["source_address"],
+                    source_channel=msg.get("source_channel"),
+                )
+        except (OSError, RuntimeError, ValueError, VelbusConfigError) as err:
+            connection.send_error(
+                msg["id"],
+                websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
+                str(err),
+            )
+            return
 
     connection.send_result(
         msg["id"],

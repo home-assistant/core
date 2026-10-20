@@ -4,6 +4,8 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.velbus.const import (
     CONF_ADVANCED_MODE,
@@ -14,9 +16,6 @@ from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 
 from . import init_integration
-
-from tests.common import MockConfigEntry, MockUser
-from tests.typing import WebSocketGenerator
 
 
 async def _setup_entry(
@@ -108,7 +107,9 @@ async def test_list_modules_includes_channels(
 
     assert response["success"]
     modules = response["result"]["modules"]
-    assert modules
+    assert len(modules) == 2
+    addresses = [module["address"] for module in modules]
+    assert addresses.count(1) == 1
     kitchen = next(module for module in modules if module["address"] == 88)
     assert kitchen["name"] == "Kitchen"
     assert kitchen["channels"] == {
@@ -277,6 +278,37 @@ async def test_set_module_config(
     assert response["success"]
     assert response["result"] == {"success": True}
     param.set_value.assert_awaited_once_with("Temperature")
+
+
+async def test_set_module_config_bool_string(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_module_subdevices: AsyncMock,
+    mock_relay: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a boolean parameter written as the string false is stored as False."""
+    param = _mock_config_parameter(key="enabled")
+    param.kind = "bool"
+    mock_relay.get_config_parameters.return_value = [param]
+    mock_module_subdevices.get_channels.return_value = {1: mock_relay}
+    await _setup_entry(hass, config_entry, advanced_mode=True)
+    client = await hass_ws_client(hass)
+
+    response = await _ws_call(
+        client,
+        "velbus/config_panel/module/config/set",
+        {
+            CONF_CONFIG_ENTRY: config_entry.entry_id,
+            CONF_ADDRESS: 88,
+            CONF_CHANNEL: 1,
+            "key": "enabled",
+            "value": "false",
+        },
+    )
+
+    assert response["success"]
+    param.set_value.assert_awaited_once_with(False)
 
 
 async def test_set_module_config_requires_advanced_mode(
@@ -453,6 +485,40 @@ async def test_get_channel_actions_channel_out_of_range(
     assert response["error"]["code"] == "invalid_format"
 
 
+@pytest.mark.parametrize(
+    "command",
+    [
+        "velbus/config_panel/module/actions/set",
+        "velbus/config_panel/module/actions/clear",
+    ],
+)
+async def test_source_channel_above_eight_rejected(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+    command: str,
+) -> None:
+    """Test source_channel matches the library 1-8 contract."""
+    await _setup_entry(hass, config_entry, advanced_mode=True)
+    client = await hass_ws_client(hass)
+
+    response = await _ws_call(
+        client,
+        command,
+        {
+            CONF_CONFIG_ENTRY: config_entry.entry_id,
+            CONF_ADDRESS: 88,
+            CONF_CHANNEL: 1,
+            "source_address": 1,
+            "source_channel": 9,
+            "action": "on",
+        },
+    )
+
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_format"
+
+
 async def test_get_channel_actions_relay_not_found(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -566,6 +632,37 @@ async def test_clear_channel_action_by_slot(
     assert response["success"]
     assert response["result"]["slots"][0]["slot"] == 4
     mock_relay.clear_action.assert_awaited_once_with(4)
+
+
+async def test_clear_channel_action_by_source(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_module_subdevices: AsyncMock,
+    mock_relay: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test clearing programmed actions by source address and channel."""
+    slot = _mock_action_slot(slot=2)
+    mock_relay.clear_actions_for_source = AsyncMock(return_value=[slot])
+    mock_module_subdevices.get_channels.return_value = {1: mock_relay}
+    await _setup_entry(hass, config_entry, advanced_mode=True)
+    client = await hass_ws_client(hass)
+
+    response = await _ws_call(
+        client,
+        "velbus/config_panel/module/actions/clear",
+        {
+            CONF_CONFIG_ENTRY: config_entry.entry_id,
+            CONF_ADDRESS: 88,
+            CONF_CHANNEL: 1,
+            "source_address": 5,
+            "source_channel": 2,
+        },
+    )
+
+    assert response["success"]
+    assert response["result"]["slots"][0]["slot"] == 2
+    mock_relay.clear_actions_for_source.assert_awaited_once_with(5, source_channel=2)
 
 
 async def test_clear_channel_action_missing_selector(

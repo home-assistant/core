@@ -154,9 +154,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> No
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async_register_websocket_api(hass)
-    await async_update_panel(hass)
-
-    return True
+    await async_update_panel(hass, setting_up_entry_id=entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> None:
