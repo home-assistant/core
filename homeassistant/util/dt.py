@@ -101,7 +101,8 @@ def get_time_zone(time_zone_str: str) -> zoneinfo.ZoneInfo | None:
     """
     try:
         return zoneinfo.ZoneInfo(time_zone_str)
-    except zoneinfo.ZoneInfoNotFoundError:
+    # Malformed keys raise ValueError, overlong ones OSError
+    except zoneinfo.ZoneInfoNotFoundError, ValueError, OSError:
         return None
 
 
@@ -112,7 +113,8 @@ async def async_get_time_zone(time_zone_str: str) -> zoneinfo.ZoneInfo | None:
     """
     try:
         return await _async_get_time_zone(time_zone_str)
-    except zoneinfo.ZoneInfoNotFoundError:
+    # Malformed keys raise ValueError, overlong ones OSError
+    except zoneinfo.ZoneInfoNotFoundError, ValueError, OSError:
         return None
 
 

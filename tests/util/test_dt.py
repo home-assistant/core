@@ -29,14 +29,30 @@ async def test_async_get_time_zone_retrieves_valid_time_zone() -> None:
     assert await dt_util.async_get_time_zone(TEST_TIME_ZONE) is not None
 
 
-def test_get_time_zone_returns_none_for_garbage_time_zone() -> None:
-    """Test getting a non existing time zone."""
-    assert dt_util.get_time_zone("Non existing time zone") is None
+GARBAGE_TIME_ZONES = [
+    pytest.param("Non existing time zone", id="not_found"),
+    pytest.param("", id="empty"),
+    pytest.param("Europe/", id="trailing_slash"),
+    pytest.param("Europe//Berlin", id="double_slash"),
+    pytest.param("/UTC", id="absolute_path"),
+    pytest.param("../etc", id="parent_directory"),
+    pytest.param("UTC\x00", id="null_byte"),
+    pytest.param("a" * 300, id="name_too_long"),
+]
 
 
-async def test_async_get_time_zone_returns_none_for_garbage_time_zone() -> None:
+@pytest.mark.parametrize("time_zone_str", GARBAGE_TIME_ZONES)
+def test_get_time_zone_returns_none_for_garbage_time_zone(time_zone_str: str) -> None:
     """Test getting a non existing time zone."""
-    assert await dt_util.async_get_time_zone("Non existing time zone") is None
+    assert dt_util.get_time_zone(time_zone_str) is None
+
+
+@pytest.mark.parametrize("time_zone_str", GARBAGE_TIME_ZONES)
+async def test_async_get_time_zone_returns_none_for_garbage_time_zone(
+    time_zone_str: str,
+) -> None:
+    """Test getting a non existing time zone."""
+    assert await dt_util.async_get_time_zone(time_zone_str) is None
 
 
 def test_set_default_time_zone() -> None:
