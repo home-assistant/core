@@ -5,6 +5,7 @@ import math
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.icloud.const import DEFAULT_MAX_INTERVAL, DOMAIN
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, STATE_UNKNOWN
@@ -13,8 +14,6 @@ from homeassistant.util import dt as dt_util
 
 from . import MockAppleDevice
 from .const import MOCK_CONFIG, USERNAME
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = "device_tracker.iphone"
 
