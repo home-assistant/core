@@ -33,13 +33,28 @@ def coordinator(
 
 @pytest.mark.parametrize(
     ("level", "linear", "expected"),
-    [(255, False, None), (0, False, 0), (86, False, 1), (170, True, 128)],
+    [
+        (255, False, None),
+        (0, False, 0),
+        (86, False, 1),
+        (170, True, 128),
+        (254, False, 255),
+        (254, True, 255),
+    ],
 )
 def test_dali_level_to_brightness(
     level: object, linear: bool, expected: int | None
 ) -> None:
     """Test DALI readback conversion branches."""
     assert _dali_level_to_brightness(level, linear, 86) == expected
+
+
+@pytest.mark.parametrize("linear", [False, True])
+def test_dali_level_to_brightness_full_output_overrides_min_level(
+    linear: bool,
+) -> None:
+    """Test full arc power reports full brightness even when min_level is 254."""
+    assert _dali_level_to_brightness(254, linear, 254) == 255
 
 
 async def test_invalid_min_level_uses_default(

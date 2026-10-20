@@ -25,7 +25,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliConfigEntry) -> bool
         bus_power=entry.data.get(CONF_BUS_POWER, False),
     )
     try:
-        await driver.connect(scan_dev_inst=True)
+        # Only control gear is used, so skip the control-device instance scan
+        # that would broadcast quiescent mode and interrupt DALI-2 input devices.
+        await driver.connect(scan_dev_inst=False)
     except (TransmissionError, OSError, TimeoutError) as err:
         if transport := getattr(driver, "_transport", None):
             transport.close()
