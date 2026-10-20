@@ -28,6 +28,8 @@ from .const import (
     ValveDeviceClass,
     ValveEntityFeature,
     ValveEntityStateAttribute,
+    ValveService,
+    ValveServiceArgument,
     ValveState,
 )
 from .entity import (
@@ -68,6 +70,8 @@ __all__ = [
     "ValveEntityDescription",
     "ValveEntityFeature",
     "ValveEntityStateAttribute",
+    "ValveService",
+    "ValveServiceArgument",
     "ValveState",
 ]
 

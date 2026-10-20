@@ -75,6 +75,8 @@ from .const import (
     VALID_UNITS,
     WeatherEntityFeature,
     WeatherEntityStateAttribute,
+    WeatherService,
+    WeatherServiceArgument,
 )
 from .entity import (
     CoordinatorWeatherEntity,
@@ -167,6 +169,8 @@ __all__ = [
     "WeatherEntityDescription",
     "WeatherEntityFeature",
     "WeatherEntityStateAttribute",
+    "WeatherService",
+    "WeatherServiceArgument",
 ]
 
 # mypy: disallow-any-generics

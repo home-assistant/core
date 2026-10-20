@@ -16,7 +16,13 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_COMPONENT, DEVICE_CLASSES_SCHEMA, DOMAIN, SwitchDeviceClass
+from .const import (
+    DATA_COMPONENT,
+    DEVICE_CLASSES_SCHEMA,
+    DOMAIN,
+    SwitchDeviceClass,
+    SwitchService,
+)
 from .entity import SwitchEntity, SwitchEntityDescription
 from .services import async_setup_services
 
@@ -46,6 +52,7 @@ __all__ = [
     "SwitchDeviceClass",
     "SwitchEntity",
     "SwitchEntityDescription",
+    "SwitchService",
 ]
 
 # mypy: disallow-any-generics

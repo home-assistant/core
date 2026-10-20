@@ -62,6 +62,8 @@ from .const import (
     DOMAIN,
     MEDIA_SOURCE_STREAM_PATH,
     SERVICE_CLEAR_CACHE,
+    TextToSpeechService,
+    TextToSpeechServiceArgument,
     TtsAudioType,
 )
 from .entity import TextToSpeechEntity, TTSAudioRequest, TTSAudioResponse
@@ -91,6 +93,8 @@ __all__ = [
     "TTSAudioRequest",
     "TTSAudioResponse",
     "TextToSpeechEntity",
+    "TextToSpeechService",
+    "TextToSpeechServiceArgument",
     "TtsAudioType",
     "Voice",
     "async_default_engine",

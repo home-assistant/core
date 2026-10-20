@@ -25,6 +25,8 @@ from .const import (
     DOMAIN,
     SirenEntityCapabilityAttribute,
     SirenEntityFeature,
+    SirenService,
+    SirenServiceArgument,
 )
 from .entity import SirenEntity, SirenEntityDescription
 from .services import (
@@ -59,6 +61,8 @@ __all__ = [
     "SirenEntityCapabilityAttribute",
     "SirenEntityDescription",
     "SirenEntityFeature",
+    "SirenService",
+    "SirenServiceArgument",
     "SirenTurnOnServiceParameters",
     "process_turn_on_params",
 ]

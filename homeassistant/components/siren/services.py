@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING, TypedDict, cast
 
 import probatio
 
-from homeassistant.const import SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -17,15 +16,19 @@ from .const import (
     DATA_COMPONENT,
     DOMAIN,
     SirenEntityFeature,
+    SirenService,
+    SirenServiceArgument,
 )
 
 if TYPE_CHECKING:
     from .entity import SirenEntity
 
 TURN_ON_SCHEMA: VolDictType = {
-    probatio.Optional(ATTR_TONE): probatio.Any(probatio.Coerce(int), cv.string),
-    probatio.Optional(ATTR_DURATION): cv.positive_int,
-    probatio.Optional(ATTR_VOLUME_LEVEL): cv.small_float,
+    probatio.Optional(SirenServiceArgument.TONE): probatio.Any(
+        probatio.Coerce(int), cv.string
+    ),
+    probatio.Optional(SirenServiceArgument.DURATION): cv.positive_int,
+    probatio.Optional(SirenServiceArgument.VOLUME_LEVEL): cv.small_float,
 }
 
 
@@ -99,16 +102,16 @@ def async_setup_services(hass: HomeAssistant) -> None:
     component = hass.data[DATA_COMPONENT]
 
     component.async_register_entity_service(
-        SERVICE_TURN_ON,
+        SirenService.TURN_ON,
         TURN_ON_SCHEMA,
         _async_handle_turn_on_service,
         [SirenEntityFeature.TURN_ON],
     )
     component.async_register_entity_service(
-        SERVICE_TURN_OFF, None, "async_turn_off", [SirenEntityFeature.TURN_OFF]
+        SirenService.TURN_OFF, None, "async_turn_off", [SirenEntityFeature.TURN_OFF]
     )
     component.async_register_entity_service(
-        SERVICE_TOGGLE,
+        SirenService.TOGGLE,
         None,
         "async_toggle",
         [SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF],

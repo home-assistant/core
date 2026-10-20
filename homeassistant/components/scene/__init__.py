@@ -13,7 +13,7 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_COMPONENT, DOMAIN
+from .const import DATA_COMPONENT, DOMAIN, SceneService, SceneServiceArgument
 from .entity import BaseScene, Scene
 from .services import async_setup_services
 
@@ -63,6 +63,8 @@ __all__ = [
     "STATES",
     "BaseScene",
     "Scene",
+    "SceneService",
+    "SceneServiceArgument",
 ]
 
 # mypy: disallow-any-generics

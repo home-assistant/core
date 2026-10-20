@@ -34,6 +34,8 @@ from .const import (
     UpdateDeviceClass,
     UpdateEntityFeature,
     UpdateEntityStateAttribute,
+    UpdateService,
+    UpdateServiceArgument,
 )
 from .entity import UpdateEntity, UpdateEntityDescription
 from .services import async_setup_services
@@ -70,6 +72,8 @@ __all__ = [
     "UpdateEntityDescription",
     "UpdateEntityFeature",
     "UpdateEntityStateAttribute",
+    "UpdateService",
+    "UpdateServiceArgument",
 ]
 
 # mypy: disallow-any-generics

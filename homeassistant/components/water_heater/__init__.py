@@ -28,6 +28,8 @@ from .const import (
     SERVICE_SET_TEMPERATURE,
     WaterHeaterCapabilityAttribute,
     WaterHeaterEntityFeature,
+    WaterHeaterService,
+    WaterHeaterServiceArgument,
     WaterHeaterStateAttribute,
 )
 from .entity import WaterHeaterEntity, WaterHeaterEntityDescription
@@ -93,6 +95,8 @@ __all__ = [
     "WaterHeaterEntity",
     "WaterHeaterEntityDescription",
     "WaterHeaterEntityFeature",
+    "WaterHeaterService",
+    "WaterHeaterServiceArgument",
     "WaterHeaterStateAttribute",
 ]
 
