@@ -459,7 +459,7 @@ def learn_more_url(platform: str) -> str:
 
 @callback
 def _async_device_has_entities(
-    hass: HomeAssistant, device_id: str, include_disabled_entities: bool
+    hass: HomeAssistant, device_id: str, *, include_disabled_entities: bool
 ) -> bool:
     """Return if entities that keep the device remain.
 
@@ -489,6 +489,7 @@ async def async_cleanup_device_registry(
     hass: HomeAssistant,
     device_id: str | None,
     config_entry_id: str | None,
+    *,
     include_disabled_entities: bool = False,
 ) -> None:
     """Clean up the device registry after MQTT removal.
@@ -507,7 +508,9 @@ async def async_cleanup_device_registry(
         and (device := device_registry.async_get(device_id)) is not None
         # Only remove the device if it is owned by the MQTT config entry
         and device.config_entry_id == config_entry_id
-        and not _async_device_has_entities(hass, device_id, include_disabled_entities)
+        and not _async_device_has_entities(
+            hass, device_id, include_disabled_entities=include_disabled_entities
+        )
         and not await device_trigger.async_get_triggers(hass, device_id)
         and not tag.async_has_tags(hass, device_id)
     ):
