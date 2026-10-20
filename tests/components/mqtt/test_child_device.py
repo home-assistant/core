@@ -941,25 +941,32 @@ async def test_remove_last_child_device_keeps_parent_device(
     )
 
 
+@pytest.mark.parametrize(
+    "enabled_by_default",
+    [pytest.param(True, id="enabled"), pytest.param(False, id="disabled")],
+)
 async def test_remove_old_parent_device_keeps_moved_device_discovery_topic(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     hass_ws_client: WebSocketGenerator,
+    enabled_by_default: bool,
 ) -> None:
     """Test removing the old device of a kept topic after it moved to another device.
 
-    The old device is kept by an entity of another discovery topic.
+    The old device is kept by an entity of another discovery topic. A disabled
+    entity is not added, but is linked to its new device as well.
     """
     mqtt_mock = await mqtt_mock_entry()
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
     await _discover_switch(hass, "keeper", {"identifiers": ["parent"]}, name="Keeper")
+    component = {**DISCOVERY_SWITCH, "en": enabled_by_default}
     payload: dict[str, Any] = {
         "dev": {"ids": ["parent"], "name": "Parent"},
         "o": {"name": "Foo2Mqtt"},
-        "cdevs": [{"ids": ["sub"], "name": "Sub", "cmps": {"sw": DISCOVERY_SWITCH}}],
+        "cdevs": [{"ids": ["sub"], "name": "Sub", "cmps": {"sw": component}}],
     }
     async_fire_mqtt_message(hass, DEVICE_TOPIC, json.dumps(payload))
     await hass.async_block_till_done()

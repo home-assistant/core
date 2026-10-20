@@ -1431,6 +1431,9 @@ class MqttDiscoveryUpdateMixin(Entity):
                     ),
                     self._discovery_data,
                 )
+            if not self._added_to_hass:
+                # The aborted entity is linked to its device, like an added entity
+                self._async_forget_retained_discovery_topic()
             self._registry_hooks[discovery_hash] = (
                 async_track_entity_registry_updated_event(
                     self.hass,
