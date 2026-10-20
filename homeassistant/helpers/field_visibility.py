@@ -1,7 +1,8 @@
 """Conditions to show a form field based on the values of other fields."""
 
 from collections.abc import Mapping
-from typing import Any, Literal, NotRequired, TypedDict, get_args
+import typing
+from typing import Any, Literal, TypedDict, get_args
 
 import probatio
 
@@ -12,8 +13,8 @@ class FieldCondition(TypedDict):
     """Condition on the value of another field of the same form."""
 
     field: str
-    operator: NotRequired[ConditionOperator]
-    value: NotRequired[Any]
+    operator: typing.NotRequired[ConditionOperator]
+    value: typing.NotRequired[Any]
 
 
 CONDITION_SCHEMA = probatio.Schema(
