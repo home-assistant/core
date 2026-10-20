@@ -24,9 +24,9 @@ def _async_register_devices(hass: HomeAssistant, entry: NatureRemoConfigEntry) -
     device_registry = dr.async_get(hass)
     hub_ids: dict[str, str] = {}
     for device in coordinator.data.devices.values():
-        device_entry = device_registry.async_get_or_create(
+        device_entry = device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            **build_remo_device_info(device),
+            device_info=build_remo_device_info(device),
         )
         hub_ids[device.id] = device_entry.id
     for appliance in coordinator.data.appliances.values():
@@ -35,9 +35,9 @@ def _async_register_devices(hass: HomeAssistant, entry: NatureRemoConfigEntry) -
             or appliance.smart_meter is None
         ):
             continue
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            **build_appliance_device_info(
+            device_info=build_appliance_device_info(
                 appliance, hub_ids.get(appliance.device_id or "")
             ),
         )

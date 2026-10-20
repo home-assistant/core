@@ -13,6 +13,12 @@ from unittest.mock import Mock, patch
 from freezegun.api import FrozenDateTimeFactory
 import py
 import pytest
+from pytest_homeassistant.common import (
+    async_fire_time_changed,
+    async_fire_time_changed_exact,
+    async_test_home_assistant,
+    mock_storage,
+)
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_FINAL_WRITE,
@@ -32,13 +38,6 @@ from homeassistant.helpers.json import json_bytes, prepare_save_json
 from homeassistant.util import dt as dt_util
 from homeassistant.util.color import RGBColor
 from homeassistant.util.json import JsonValueType
-
-from tests.common import (
-    async_fire_time_changed,
-    async_fire_time_changed_exact,
-    async_test_home_assistant,
-    mock_storage,
-)
 
 MOCK_VERSION = 1
 MOCK_VERSION_2 = 2

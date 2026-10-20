@@ -4,12 +4,11 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from tiltpi import TiltColor, TiltHydrometerData
 
 from homeassistant.components.tilt_pi.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
-
-from tests.common import MockConfigEntry
 
 TEST_NAME = "Test Tilt Pi"
 TEST_HOST = "192.168.1.123"

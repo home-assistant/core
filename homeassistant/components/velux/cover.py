@@ -88,12 +88,6 @@ class VeluxCover(VeluxEntity, CoverEntity):
         Velocity.DEFAULT.name.lower(),
     ]
 
-    def _velocity_from_speed(self, speed: str | None) -> Velocity | None:
-        """Return pyvlx Velocity for the given speed string, or None for default."""
-        if speed in self._attr_supported_speeds:
-            return Velocity[speed.upper()]
-        return None
-
     def __init__(
         self, hass: HomeAssistant, node: OpeningDevice, config_entry_id: str
     ) -> None:
@@ -110,6 +104,12 @@ class VeluxCover(VeluxEntity, CoverEntity):
                 self._attr_device_class = CoverDeviceClass.GATE
             case RollerShutter():
                 self._attr_device_class = CoverDeviceClass.SHUTTER
+
+    def _velocity_from_speed(self, speed: str | None) -> Velocity | None:
+        """Return pyvlx Velocity for the given speed string, or None for default."""
+        if speed in self._attr_supported_speeds:
+            return Velocity[speed.upper()]
+        return None
 
     @property
     @override

@@ -25,6 +25,7 @@ from aioesphomeapi import (
     VoiceAssistantFeature,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from zeroconf import Zeroconf
 
 from homeassistant.components.esphome import dashboard
@@ -41,8 +42,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import DASHBOARD_HOST, DASHBOARD_PORT, DASHBOARD_SLUG
-
-from tests.common import MockConfigEntry
 
 if TYPE_CHECKING:
     from aioesphomeapi.api_pb2 import SubscribeLogsResponse

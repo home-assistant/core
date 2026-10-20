@@ -30,6 +30,8 @@ from .const import (
     IMAGE_TIMEOUT,
     SERVICE_SNAPSHOT,
     ImageEntityStateAttribute,
+    ImageService,
+    ImageServiceArgument,
 )
 from .entity import (
     Image,
@@ -72,6 +74,8 @@ __all__ = [
     "ImageEntity",
     "ImageEntityDescription",
     "ImageEntityStateAttribute",
+    "ImageService",
+    "ImageServiceArgument",
     "async_get_image",
     "infer_image_type",
     "valid_image_content_type",

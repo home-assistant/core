@@ -5,6 +5,7 @@ from unittest.mock import ANY, MagicMock, patch
 
 from boschshcpy import SHCIntrusionSystem
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_DOMAIN,
@@ -22,8 +23,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import intrusion_system_device, setup_integration
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "alarm_control_panel.alarm_system"
 NEW_ENTITY_ID = "alarm_control_panel.renamed_alarm_system"

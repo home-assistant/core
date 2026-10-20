@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from probatio import to_openapi
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import llm as llm_component
@@ -19,8 +20,6 @@ from homeassistant.helpers import (
     llm,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "light.kitchen"
 RENDER_TEMPLATE_TOOL = "homeassistant__render_template"
