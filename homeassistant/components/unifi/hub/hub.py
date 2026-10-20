@@ -115,8 +115,8 @@ class UnifiHub:
     def async_update_device_registry(self) -> DeviceEntry:
         """Update device registry."""
         device_registry = dr.async_get(self.hass)
-        return device_registry.async_get_or_create(
-            config_entry_id=self.config.entry.entry_id, **self.device_info
+        return device_registry.async_get_or_create_device(
+            config_entry_id=self.config.entry.entry_id, device_info=self.device_info
         )
 
     @staticmethod
