@@ -61,3 +61,30 @@ async def test_entity_filter_without_translation_key(
     lookup = _AutomationComponentLookupData.create("test.trigger", target)
 
     assert lookup.matches(hass, entry.entity_id, "sensor", "test", False)
+
+
+async def test_translation_key_only_filter(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test that a filter with only a translation key matches entities of any integration."""
+    entry = entity_registry.async_get_or_create(
+        "sensor",
+        "other_test",
+        "unique",
+        suggested_object_id="current_hour",
+        translation_key="epex_current_hour",
+    )
+    other_entry = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "other_unique",
+        suggested_object_id="next_hour",
+        translation_key="epex_next_hour",
+    )
+    target = TargetSelector.CONFIG_SCHEMA(
+        {"entity": [{"translation_key": "epex_current_hour"}]}
+    )
+    lookup = _AutomationComponentLookupData.create("test.trigger", target)
+
+    assert lookup.matches(hass, entry.entity_id, "sensor", "other_test", False)
+    assert not lookup.matches(hass, other_entry.entity_id, "sensor", "test", False)
