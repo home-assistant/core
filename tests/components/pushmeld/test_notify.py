@@ -119,7 +119,8 @@ async def test_registered_service_forwards_home_assistant_call(
     monkeypatch.setattr(notify, "API_URL", api_url)
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_MAXCODE: "test-maxcode", "name": "Test channel"},
+        title="Test channel",
+        data={CONF_MAXCODE: "test-maxcode"},
     )
     entry.add_to_hass(hass)
 
@@ -232,7 +233,8 @@ async def test_config_entry_registers_and_unloads_notification_service(
     """Register one local notify service per config entry and unload it cleanly."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_MAXCODE: "test-maxcode", "name": "Test channel"},
+        title="Test channel",
+        data={CONF_MAXCODE: "test-maxcode"},
     )
     entry.add_to_hass(hass)
 
@@ -276,7 +278,8 @@ async def test_unload_during_notification_setup_does_not_register_service(
     )
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_MAXCODE: "test-maxcode", "name": "Test channel"},
+        title="Test channel",
+        data={CONF_MAXCODE: "test-maxcode"},
     )
     entry.add_to_hass(hass)
 
@@ -326,7 +329,8 @@ async def test_reload_during_notification_setup_does_not_register_stale_service(
     )
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_MAXCODE: "test-maxcode", "name": "Test channel"},
+        title="Test channel",
+        data={CONF_MAXCODE: "test-maxcode"},
     )
     entry.add_to_hass(hass)
 
@@ -357,19 +361,21 @@ async def test_reload_during_notification_setup_does_not_register_stale_service(
     await hass.async_block_till_done()
 
 
-async def test_unload_does_not_remove_existing_notification_service(
+async def test_setup_does_not_remove_existing_notification_service(
     hass: HomeAssistant,
 ) -> None:
-    """Do not remove another integration's notify action during unload."""
+    """Do not remove another integration's notify action during setup failure."""
     hass.services.async_register(NOTIFY_DOMAIN, "test_channel", AsyncMock())
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_MAXCODE: "test-maxcode", "name": "Test channel"},
+        title="Test channel",
+        data={CONF_MAXCODE: "test-maxcode"},
     )
     entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert not await hass.config_entries.async_setup(entry.entry_id)
 
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.error_reason_translation_key == "config_entry_error_name_exists"
+    assert entry.error_reason_translation_placeholders == {"service_name": "test_channel"}
     assert hass.services.has_service(NOTIFY_DOMAIN, "test_channel")

@@ -7,14 +7,13 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
-from homeassistant.components.pushmeld.const import CONF_MAXCODE, DOMAIN
-from homeassistant.const import CONF_NAME
+from homeassistant.components.pushmeld.const import CONF_MAXCODE, DEFAULT_NAME, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
 async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
-    """Create one entry from a MaxCode and a local service name."""
+    """Create one entry from a MaxCode and a generated title."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
@@ -24,39 +23,13 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_MAXCODE: "test-maxcode", CONF_NAME: "Test channel"},
+        user_input={CONF_MAXCODE: "test-maxcode"},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test channel"
-    assert result["result"].unique_id == "test_channel"
-    assert result["data"] == {
-        CONF_MAXCODE: "test-maxcode",
-        CONF_NAME: "Test channel",
-    }
-
-
-async def test_user_flow_rejects_empty_name(hass: HomeAssistant) -> None:
-    """Require a local service name before creating an entry."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_MAXCODE: "test-maxcode", CONF_NAME: "   "},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_NAME: "invalid_name"}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_MAXCODE: "test-maxcode", CONF_NAME: "Test channel"},
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_NAME
+    assert result["result"].unique_id is None
+    assert result["data"] == {CONF_MAXCODE: "test-maxcode"}
 
 
 async def test_user_flow_rejects_empty_maxcode(hass: HomeAssistant) -> None:
@@ -68,7 +41,7 @@ async def test_user_flow_rejects_empty_maxcode(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_MAXCODE: "", CONF_NAME: "Test channel"},
+        user_input={CONF_MAXCODE: ""},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -76,21 +49,15 @@ async def test_user_flow_rejects_empty_maxcode(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_MAXCODE: "test-maxcode", CONF_NAME: "Test channel"},
+        user_input={CONF_MAXCODE: "test-maxcode"},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_rejects_duplicate_service_name(
-    hass: HomeAssistant,
-) -> None:
-    """Do not allow two entries to register the same local service."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_MAXCODE: "existing-maxcode", CONF_NAME: "Test channel"},
-    )
-    entry.add_to_hass(hass)
+async def test_user_flow_generates_an_available_title(hass: HomeAssistant) -> None:
+    """Generate the next title when the default title is already in use."""
+    hass.services.async_register(NOTIFY_DOMAIN, "pushmeld", AsyncMock())
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -98,53 +65,21 @@ async def test_user_flow_rejects_duplicate_service_name(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_MAXCODE: "new-maxcode", CONF_NAME: "test_channel"},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_NAME: "name_exists"}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_MAXCODE: "new-maxcode", CONF_NAME: "Other channel"},
+        user_input={CONF_MAXCODE: "new-maxcode"},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_user_flow_rejects_existing_notify_service(
-    hass: HomeAssistant,
-) -> None:
-    """Do not allow a local service name used by another integration."""
-    hass.services.async_register(NOTIFY_DOMAIN, "test_channel", AsyncMock())
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_MAXCODE: "new-maxcode", CONF_NAME: "Test channel"},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_NAME: "name_exists"}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_MAXCODE: "new-maxcode", CONF_NAME: "Other channel"},
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"{DEFAULT_NAME} 2"
 
 
 async def test_user_flow_rejects_duplicate_maxcode(
     hass: HomeAssistant,
 ) -> None:
-    """Do not allow the same MaxCode to be configured under another name."""
+    """Do not allow the same MaxCode to be configured more than once."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_MAXCODE: "existing-maxcode", CONF_NAME: "Existing channel"},
+        title="Existing channel",
+        data={CONF_MAXCODE: "existing-maxcode"},
     )
     entry.add_to_hass(hass)
 
@@ -154,32 +89,10 @@ async def test_user_flow_rejects_duplicate_maxcode(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_MAXCODE: "existing-maxcode", CONF_NAME: "Other channel"},
+        user_input={CONF_MAXCODE: "existing-maxcode"},
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-async def test_user_flow_rejects_duplicate_unique_id(
-    hass: HomeAssistant,
-) -> None:
-    """Use Home Assistant's unique-entry guard for existing entries."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="test_channel",
-        data={CONF_MAXCODE: "existing-maxcode", CONF_NAME: "Legacy channel"},
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_MAXCODE: "new-maxcode", CONF_NAME: "Test channel"},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"

@@ -4,6 +4,7 @@
 from typing import Final
 
 DOMAIN: Final = "pushmeld"
+DEFAULT_NAME: Final = "PushMeld"
 CONF_MAXCODE: Final = "maxcode"
 ATTR_DETAILS: Final = "details"
 API_URL: Final = "https://api.pushmeld.de/api/v1/notify/"

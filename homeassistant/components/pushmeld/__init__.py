@@ -4,11 +4,14 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import slugify
 
 from .const import CONF_MAXCODE, DATA_HASS_CONFIG, DOMAIN
 
@@ -39,6 +42,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: PushMeldConfigEntry) -> 
     """Set up a PushMeld notification service from a config entry."""
     entry.runtime_data = PushMeldRuntimeData()
 
+    service_name = slugify(entry.title)
+    if hass.services.has_service(NOTIFY_DOMAIN, service_name):
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="config_entry_error_name_exists",
+            translation_placeholders={"service_name": service_name},
+        )
+
     entry.async_create_task(
         hass,
         discovery.async_load_platform(
@@ -46,17 +57,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: PushMeldConfigEntry) -> 
             Platform.NOTIFY,
             DOMAIN,
             {
-                CONF_NAME: entry.data[CONF_NAME],
                 CONF_MAXCODE: entry.data[CONF_MAXCODE],
+                CONF_NAME: entry.title,
                 "entry_id": entry.entry_id,
             },
             hass.data[DATA_HASS_CONFIG],
         ),
         name="pushmeld notification service",
     )
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     return True
 
 
 async def async_unload_entry(_hass: HomeAssistant, _entry: PushMeldConfigEntry) -> bool:
     """Unload a PushMeld config entry."""
     return True
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: PushMeldConfigEntry) -> None:
+    """Reload the notification action when the entry title changes."""
+    hass.config_entries.async_schedule_reload(entry.entry_id)

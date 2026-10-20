@@ -18,7 +18,7 @@ from homeassistant.components.notify import (
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -69,7 +69,11 @@ async def async_get_service(
 
     service_name = slugify(name)
     if hass.services.has_service(NOTIFY_DOMAIN, service_name):
-        return None
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="config_entry_error_name_exists",
+            translation_placeholders={"service_name": service_name},
+        )
 
     service = PushMeldNotificationService(
         async_get_clientsession(hass),
@@ -144,7 +148,11 @@ class PushMeldNotificationService(BaseNotificationService):
             return
 
         if self.hass.services.has_service(NOTIFY_DOMAIN, self._service_name):
-            return
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="config_entry_error_name_exists",
+                translation_placeholders={"service_name": self._service_name},
+            )
 
         await super().async_register_services()
         self._service_registered = self.hass.services.has_service(
