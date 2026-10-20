@@ -83,7 +83,7 @@ async def test_usb_discovery(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
     }
     assert result["result"].unique_id
     assert len(mock_setup_entry.mock_calls) == 1
-    driver.return_value.connect.assert_awaited_once_with()
+    driver.return_value.connect.assert_awaited_once_with(apply_settings=False)
     driver.return_value._transport.close.assert_called_once_with()
 
 
