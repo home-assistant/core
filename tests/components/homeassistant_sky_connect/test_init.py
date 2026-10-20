@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.homeassistant_hardware.repair_helpers import (
     ISSUE_MULTI_PAN_MIGRATION,
@@ -33,7 +34,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.usb import async_request_scan, patch_scanned_serial_ports
 from tests.components.usb.conftest import force_usb_polling_watcher  # noqa: F401
 
@@ -716,7 +716,18 @@ async def test_multi_pan_migration_issue_created_for_addon(
         "hardware_name": "Home Assistant SkyConnect"
     }
     assert issue.data == {"entry_id": config_entry.entry_id}
+    assert issue.config_entry_id == config_entry.entry_id
     assert issue.is_fixable
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        issue_registry.async_get_issue(
+            domain=DOMAIN,
+            issue_id=f"{ISSUE_MULTI_PAN_MIGRATION}_{config_entry.entry_id}",
+        )
+        is None
+    )
 
 
 async def test_multi_pan_migration_issue_deleted_for_ezsp(

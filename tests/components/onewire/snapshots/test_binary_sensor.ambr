@@ -345,7 +345,6 @@
 # name: test_binary_sensors[binary_sensor.29_111111111111_sensed_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_file': '/29.111111111111/sensed.3',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '29.111111111111 Sensed 3',
     }),
     'context': <ANY>,
@@ -353,7 +352,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_binary_sensors[binary_sensor.29_111111111111_sensed_4-entry]

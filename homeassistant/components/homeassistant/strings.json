@@ -1,4 +1,14 @@
 {
+  "conditions": {
+    "host_reboot_required": {
+      "description": "Tests if the host needs a reboot to apply installed updates or changed settings.",
+      "name": "Host reboot required"
+    },
+    "restart_required": {
+      "description": "Tests if Home Assistant needs a restart to apply installed updates or changed settings.",
+      "name": "Restart required"
+    }
+  },
   "config": {
     "abort": {
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
@@ -139,6 +149,351 @@
     },
     "service_should_be_blocking": {
       "message": "A non-blocking action call with argument {non_blocking_argument} can't be used together with argument {return_response}."
+    },
+    "unload_platforms_failed": {
+      "message": "Failed to unload one or more platforms."
+    }
+  },
+  "integration_category": {
+    "ai_voice": {
+      "description": "AI models and agents, voice assistants, speech-to-text, text-to-speech and image recognition.",
+      "name": "AI & voice",
+      "subcategory": {
+        "ai_models": {
+          "name": "AI models"
+        },
+        "image_recognition": {
+          "name": "Image recognition"
+        },
+        "speech": {
+          "name": "Speech"
+        },
+        "voice_assistants": {
+          "name": "Voice assistants"
+        }
+      }
+    },
+    "appliances_cleaning": {
+      "description": "Cooking and kitchen appliances (ovens, coffee machines, sous vide, cooking thermometers, brewing), laundry, robot vacuums and mops, and fragrance diffusers.",
+      "name": "Appliances & cleaning",
+      "subcategory": {
+        "cleaning": {
+          "name": "Cleaning"
+        },
+        "cooking": {
+          "name": "Cooking"
+        },
+        "laundry": {
+          "name": "Laundry"
+        }
+      }
+    },
+    "blinds_curtains": {
+      "description": "Blinds, curtains, shutters, awnings, garage doors and gates.",
+      "name": "Blinds & curtains"
+    },
+    "buttons_remotes": {
+      "description": "Smart buttons, remote controls, and infrared or radio blasters that control other devices.",
+      "name": "Buttons & remotes"
+    },
+    "climate": {
+      "description": "Heating, cooling and ventilation: thermostats, heat pumps, air conditioners, fans, humidifiers, air purifiers and water heaters.",
+      "name": "Climate",
+      "subcategory": {
+        "air_purifiers_humidifiers": {
+          "name": "Air purifiers & humidifiers"
+        },
+        "fans_ventilation": {
+          "name": "Fans & ventilation"
+        },
+        "heat_pumps_air_conditioning": {
+          "name": "Heat pumps & air conditioning"
+        },
+        "thermostats_heating": {
+          "name": "Thermostats & heating"
+        },
+        "water_heaters": {
+          "name": "Water heaters"
+        }
+      }
+    },
+    "computers_network": {
+      "description": "Routers, NAS, servers, printers, 3D printers, cloud hosting, developer tools and uptime monitoring.",
+      "name": "Computers & network",
+      "subcategory": {
+        "cloud_developer_tools": {
+          "name": "Cloud & developer tools"
+        },
+        "monitoring": {
+          "name": "Monitoring"
+        },
+        "nas_servers": {
+          "name": "NAS & servers"
+        },
+        "printers": {
+          "name": "Printers"
+        },
+        "routers_network": {
+          "name": "Routers & network"
+        }
+      }
+    },
+    "diy_makers": {
+      "description": "Build your own: firmware, message brokers, and generic connectors for web APIs, databases, serial ports and Modbus.",
+      "name": "DIY & makers",
+      "subcategory": {
+        "boards_hardware": {
+          "name": "Boards & hardware interfaces"
+        },
+        "web_data_connectors": {
+          "name": "Web & data connectors"
+        }
+      }
+    },
+    "energy": {
+      "description": "Solar panels, home batteries, energy meters, EV chargers, generators, UPS, gas and propane tanks, and energy prices.",
+      "name": "Energy",
+      "subcategory": {
+        "backup_power": {
+          "name": "Backup power"
+        },
+        "energy_prices": {
+          "name": "Energy prices"
+        },
+        "ev_charging": {
+          "name": "EV charging"
+        },
+        "meters_monitoring": {
+          "name": "Meters & monitoring"
+        },
+        "solar_batteries": {
+          "name": "Solar & batteries"
+        }
+      }
+    },
+    "finance": {
+      "description": "Bank accounts, budgeting tools, stocks, currency exchange rates and cryptocurrency.",
+      "name": "Finance"
+    },
+    "garden_plants": {
+      "description": "Irrigation, lawn mowers, plant sensors, hydroponics and greenhouses.",
+      "name": "Garden & plants"
+    },
+    "health_wellbeing": {
+      "description": "Scales, toothbrushes, sleep and fitness tracking, glucose monitoring and baby care.",
+      "name": "Health & wellbeing"
+    },
+    "helpers": {
+      "description": "Entities you create yourself, without a device behind them: toggles, numbers, timers and schedules, and values calculated from other entities.",
+      "name": "Helpers",
+      "subcategory": {
+        "calculate_value": {
+          "name": "Calculate a value"
+        },
+        "store_value": {
+          "name": "Store a value"
+        }
+      }
+    },
+    "hubs_protocols": {
+      "description": "Smart home hubs and radio protocols that each bring in many kinds of devices.",
+      "name": "Hubs & protocols",
+      "subcategory": {
+        "building_automation": {
+          "name": "Building automation"
+        },
+        "smart_home_hubs": {
+          "name": "Smart home hubs"
+        },
+        "wireless_protocols": {
+          "name": "Wireless protocols"
+        }
+      }
+    },
+    "lighting": {
+      "description": "Smart bulbs, light strips, fixtures and lighting systems.",
+      "name": "Lighting",
+      "subcategory": {
+        "bulbs_lamps": {
+          "name": "Bulbs & lamps"
+        },
+        "led_strips_controllers": {
+          "name": "LED strips & controllers"
+        },
+        "lighting_systems": {
+          "name": "Lighting systems"
+        }
+      }
+    },
+    "local_services": {
+      "description": "Waste collection, power outages, parking, fuel prices and other city or utility information.",
+      "name": "Local services"
+    },
+    "media_entertainment": {
+      "description": "TVs, speakers, streaming, music services, receivers, game consoles, game servers and radio.",
+      "name": "Media & entertainment",
+      "subcategory": {
+        "gaming": {
+          "name": "Gaming"
+        },
+        "music_radio_services": {
+          "name": "Music & radio services"
+        },
+        "speakers_audio": {
+          "name": "Speakers & audio"
+        },
+        "tv_streaming": {
+          "name": "TV & streaming"
+        }
+      }
+    },
+    "messaging_notifications": {
+      "description": "Send and receive messages: push notifications, email, chat apps, SMS and phone calls.",
+      "name": "Messaging & notifications",
+      "subcategory": {
+        "chat_apps": {
+          "name": "Chat apps"
+        },
+        "email_sms_calls": {
+          "name": "Email, SMS & calls"
+        },
+        "push_notifications": {
+          "name": "Push notifications"
+        }
+      }
+    },
+    "news_social_media": {
+      "description": "Follow news and RSS feeds, and follow or post to social networks, blogs and video channels.",
+      "name": "News & social media"
+    },
+    "other_ecosystems": {
+      "description": "Use your Home Assistant devices in Apple Home, Alexa, Google Assistant and other platforms.",
+      "name": "Other ecosystems"
+    },
+    "pets": {
+      "description": "Feeders, litter boxes, pet doors, pet trackers and aquariums.",
+      "name": "Pets"
+    },
+    "plugs_switches": {
+      "description": "Smart plugs, light switches, dimmers and relays.",
+      "name": "Plugs & switches"
+    },
+    "presence_location": {
+      "description": "Know who is home and where devices are: phones, trackers and network presence.",
+      "name": "Presence & location",
+      "subcategory": {
+        "network_presence": {
+          "name": "Network presence"
+        },
+        "phones_companion_apps": {
+          "name": "Phones & companion apps"
+        },
+        "trackers": {
+          "name": "Trackers"
+        }
+      }
+    },
+    "productivity_information": {
+      "description": "Calendars, to-do and shopping lists, grocery delivery, package tracking, documents, photos and bookmarks.",
+      "name": "Productivity & information",
+      "subcategory": {
+        "calendars_todos": {
+          "name": "Calendars & to-dos"
+        },
+        "documents_photos": {
+          "name": "Documents & photos"
+        },
+        "shopping_groceries": {
+          "name": "Shopping & groceries"
+        }
+      }
+    },
+    "security_safety": {
+      "description": "Cameras, doorbells, locks, keypads, alarm systems, sirens, and smoke alarms.",
+      "name": "Security & safety",
+      "subcategory": {
+        "alarm_systems": {
+          "name": "Alarm systems"
+        },
+        "cameras": {
+          "name": "Cameras"
+        },
+        "doorbells_intercoms": {
+          "name": "Doorbells & intercoms"
+        },
+        "locks_access": {
+          "name": "Locks & access"
+        },
+        "smoke_co_alarms": {
+          "name": "Smoke & CO alarms"
+        }
+      }
+    },
+    "sensors": {
+      "description": "Motion, door and window, temperature, humidity and air quality sensors.",
+      "name": "Sensors",
+      "subcategory": {
+        "air_quality": {
+          "name": "Air quality"
+        },
+        "door_window": {
+          "name": "Door & window"
+        },
+        "motion_presence": {
+          "name": "Motion & presence"
+        },
+        "temperature_humidity": {
+          "name": "Temperature & humidity"
+        }
+      }
+    },
+    "vehicles_transport": {
+      "description": "Cars, EVs, e-bikes, public transport and flight tracking.",
+      "name": "Vehicles & transport",
+      "subcategory": {
+        "bikes_scooters": {
+          "name": "Bikes & scooters"
+        },
+        "cars_evs": {
+          "name": "Cars & EVs"
+        },
+        "flights": {
+          "name": "Flights"
+        },
+        "public_transport": {
+          "name": "Public transport"
+        }
+      }
+    },
+    "water": {
+      "description": "Water meters, leak detection, softeners and filters, tanks, pools and spas.",
+      "name": "Water",
+      "subcategory": {
+        "meters_leak_detection": {
+          "name": "Meters & leak detection"
+        },
+        "pools_spas": {
+          "name": "Pools & spas"
+        },
+        "water_treatment": {
+          "name": "Water treatment"
+        }
+      }
+    },
+    "weather_alerts": {
+      "description": "Forecasts, outdoor air quality, pollen, and public warnings for storms, floods, earthquakes or air raids.",
+      "name": "Weather & alerts",
+      "subcategory": {
+        "air_quality_pollen": {
+          "name": "Air quality & pollen"
+        },
+        "forecasts": {
+          "name": "Forecasts"
+        },
+        "public_warnings": {
+          "name": "Public warnings"
+        }
+      }
     }
   },
   "issues": {
@@ -388,6 +743,20 @@
       "user": "User",
       "version": "Version",
       "virtualenv": "Virtual environment"
+    }
+  },
+  "triggers": {
+    "host_reboot_required": {
+      "description": "Triggers when the host needs a reboot to apply installed updates or changed settings.",
+      "name": "Host reboot required"
+    },
+    "restart_required": {
+      "description": "Triggers when Home Assistant needs a restart to apply installed updates or changed settings.",
+      "name": "Restart required"
+    },
+    "updated": {
+      "description": "Triggers once after Home Assistant starts on a different version than it ran before.",
+      "name": "Home Assistant updated"
     }
   }
 }

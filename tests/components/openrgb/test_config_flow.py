@@ -4,14 +4,13 @@ import socket
 
 from openrgb.utils import OpenRGBDisconnected, SDKVersionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.openrgb.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_openrgb_client")

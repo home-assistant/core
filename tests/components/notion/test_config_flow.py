@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from aionotion.errors import InvalidCredentialsError, NotionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.notion.const import (
     CONF_REFRESH_TOKEN,
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_PASSWORD, TEST_REFRESH_TOKEN, TEST_USER_UUID, TEST_USERNAME
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

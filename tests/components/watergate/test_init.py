@@ -5,6 +5,13 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import (
+    ANY,
+    AsyncMock,
+    MockConfigEntry,
+    async_fire_time_changed,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from watergate_local_api import WatergateApiException
 
 from homeassistant.components.valve import ValveState
@@ -14,9 +21,6 @@ from homeassistant.core import HomeAssistant
 
 from . import init_integration
 from .const import DEFAULT_DEVICE_STATE_V2, MOCK_WEBHOOK_ID
-
-from tests.common import ANY, AsyncMock, MockConfigEntry, async_fire_time_changed
-from tests.typing import ClientSessionGenerator
 
 
 async def test_async_setup_entry(

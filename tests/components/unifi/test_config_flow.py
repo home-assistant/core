@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.unifi.config_flow import _async_discover_unifi
@@ -37,8 +38,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.device_registry import format_mac
-
-from tests.common import MockConfigEntry
 
 CLIENTS = [{"mac": "00:00:00:00:00:01"}]
 
@@ -311,6 +310,7 @@ async def test_reauth_flow_update_configuration(
             CONF_VERIFY_SSL: True,
         },
     )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -377,6 +377,7 @@ async def test_reconfigure_flow_update_configuration(
             CONF_VERIFY_SSL: True,
         },
     )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -437,6 +438,7 @@ async def test_reconfigure_flow_retains_user_input_on_error(
         result["flow_id"],
         user_input={**user_input, CONF_HOST: "1.2.3.4", CONF_PORT: 1234},
     )
+    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
 

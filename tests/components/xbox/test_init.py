@@ -14,6 +14,12 @@ from httpx2 import (
     Response,
 )
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from pythonxbox.api.provider.smartglass.models import SmartglassConsoleList
 from pythonxbox.common.exceptions import AuthenticationException
 import respx
@@ -38,13 +44,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-)
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.mark.usefixtures("xbox_live_client")
@@ -303,10 +302,12 @@ async def test_binary_sensor_deprecation_issue(
 ) -> None:
     """Test sensor deprecation issue."""
     assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
+    config_entry.add_to_hass(hass)
     entity_registry.async_get_or_create(
         BINARY_SENSOR_DOMAIN,
         DOMAIN,
         f"271958441785640_{XboxBinarySensor.HAS_GAME_PASS}",
+        config_entry=config_entry,
         suggested_object_id="gsr_ae_subscribed_to_xbox_game_pass",
         disabled_by=None,
     )
@@ -334,7 +335,6 @@ async def test_binary_sensor_deprecation_issue(
         },
     )
 
-    config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
 
     await hass.async_block_till_done()
@@ -353,6 +353,7 @@ async def test_binary_sensor_deprecation_issue(
             issue_id=f"deprecated_entity_271958441785640_{XboxBinarySensor.HAS_GAME_PASS}",
         )
     )
+    assert repair_issue.config_entry_id == config_entry.entry_id
 
     client = await hass_client()
 

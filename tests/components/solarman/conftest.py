@@ -4,11 +4,10 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.solarman.const import CONF_SN, DOMAIN, MODEL_NAME_MAP
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 TEST_HOST = "192.168.1.100"
 TEST_PORT = 8080

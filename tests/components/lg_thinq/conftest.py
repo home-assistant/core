@@ -4,14 +4,13 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from thinqconnect import ThinQAPIException
 
 from homeassistant.components.lg_thinq.const import CONF_CONNECT_CLIENT_ID, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_COUNTRY
 
 from .const import MOCK_CONNECT_CLIENT_ID, MOCK_COUNTRY, MOCK_PAT, MOCK_UUID
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 def mock_thinq_api_response(

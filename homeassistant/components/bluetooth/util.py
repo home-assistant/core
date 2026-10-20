@@ -14,12 +14,13 @@ from bluetooth_adapters import (
 )
 from bluetooth_data_tools import monotonic_time_coarse
 from habluetooth import BluetoothScanningMode, get_manager
+from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
+from homeassistant.const import CONF_MODE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import CONF_MODE, CONF_PASSIVE, DEFAULT_MODE
-from .models import BluetoothServiceInfoBleak
+from .const import CONF_PASSIVE, DEFAULT_MODE
 from .storage import BluetoothStorage
 
 _LOGGER = logging.getLogger(__name__)

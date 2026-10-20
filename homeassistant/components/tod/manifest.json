@@ -1,6 +1,7 @@
 {
   "domain": "tod",
   "name": "Times of the Day",
+  "categories": ["helpers.calculate_value"],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tod",

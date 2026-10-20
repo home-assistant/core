@@ -173,6 +173,20 @@ SWITCHES: list[MideaSwitchEntityDescription] = [
         entity_category=EntityCategory.CONFIG,
         models=[DeviceType.E2],
     ),
+    MideaSwitchEntityDescription(
+        key="eplus",
+        translation_key="megawater",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        models=[DeviceType.E2],
+    ),
+    MideaSwitchEntityDescription(
+        key="memory",
+        translation_key="memo_u",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        models=[DeviceType.E2],
+    ),
 ]
 
 
