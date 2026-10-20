@@ -2,6 +2,7 @@
   "domain": "abetterrouteplanner",
   "name": "A Better Routeplanner",
   "after_dependencies": ["cloud"],
+  "categories": ["vehicles_transport.cars_evs"],
   "codeowners": ["@mtandersson"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

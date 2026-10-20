@@ -14,6 +14,8 @@ from aioabrp import (
 )
 from aiohttp import ClientError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.abetterrouteplanner.const import (
     ABRP_APP_KEY,
@@ -39,9 +41,6 @@ from .conftest import (
     fire_connection,
     stream_auth,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.usefixtures("mock_abrp_client")

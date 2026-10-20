@@ -16,6 +16,7 @@ from aioabrp import (
     VehicleModelDisplay,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import abetterrouteplanner as abrp_module
@@ -39,8 +40,6 @@ from .conftest import (
     fire_connection,
     fire_frame,
 )
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 SOC_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_soc"
 POWER_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_power"

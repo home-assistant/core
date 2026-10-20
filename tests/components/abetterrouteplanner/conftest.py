@@ -21,6 +21,8 @@ from aioabrp import (
     VehicleModelDisplay,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.abetterrouteplanner.const import DOMAIN
 from homeassistant.components.application_credentials import (
@@ -31,9 +33,6 @@ from homeassistant.components.application_credentials import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
 
 CLIENT_ID = "client-id"
 CLIENT_SECRET = "client-secret"
