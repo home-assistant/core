@@ -112,6 +112,47 @@ async def test_setup_entry_refresh_failure(
     assert fake_dali_driver.closed
 
 
+async def test_single_gear_update_keeps_the_scan_schedule(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    fake_dali_driver: FakeDaliDriver,
+) -> None:
+    """Test frequent single-gear updates do not postpone the periodic scan.
+
+    Publishing a command update must not reschedule the coordinator's refresh,
+    or repeated commands to one light would indefinitely starve the discovery
+    and refresh of the other gear.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_DEVICE: "/dev/ttyACM0"}, title="USB-DALI2"
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.dali.DriverLubaRs232",
+        return_value=fake_dali_driver,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        coordinator = entry.runtime_data
+
+        with patch.object(
+            coordinator,
+            "_async_update_data",
+            wraps=coordinator._async_update_data,
+        ) as scan:
+            # A command two thirds into the interval must not push the next scan
+            # out; it still fires at the original deadline.
+            freezer.tick(SCAN_INTERVAL * 2 / 3)
+            await coordinator.async_update_gear(0)
+            assert scan.call_count == 0
+
+            freezer.tick(SCAN_INTERVAL / 3)
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+            assert scan.call_count == 1
+
+
 async def test_lost_interface_is_reconnected(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
