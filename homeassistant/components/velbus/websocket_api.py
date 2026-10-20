@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from functools import wraps
 import inspect
+from importlib.metadata import version
 from typing import TYPE_CHECKING, Any, Final, cast, overload
 
 import probatio
@@ -30,6 +31,7 @@ if TYPE_CHECKING:
     from velbusaio.controller import Velbus
     from velbusaio.module import Module
 
+FRONTEND_PACKAGE: Final = "velbus-frontend"
 URL_BASE: Final = "/velbus_static"
 DATA_STATIC_REGISTERED: Final = "static_registered"
 DATA_STATIC_LOCK: Final = "static_lock"
@@ -139,10 +141,10 @@ async def async_update_panel(
             )
             panel_data[DATA_STATIC_REGISTERED] = True
 
-    build_id = await hass.async_add_executor_job(velbus_panel.get_build_id)
-    module_url = f"{URL_BASE}/{velbus_panel.entrypoint_js}?v={build_id}"
+    panel_version = version(FRONTEND_PACKAGE)
+    module_url = f"{URL_BASE}/{velbus_panel.entrypoint_js}?v={panel_version}"
     if async_panel_exists(hass, DOMAIN):
-        if panel_data.get(DATA_BUILD_ID) == build_id:
+        if panel_data.get(DATA_BUILD_ID) == panel_version:
             return
         frontend.async_remove_panel(hass, DOMAIN, warn_if_unknown=False)
 
@@ -155,7 +157,7 @@ async def async_update_panel(
         embed_iframe=True,
         require_admin=True,
     )
-    panel_data[DATA_BUILD_ID] = build_id
+    panel_data[DATA_BUILD_ID] = panel_version
 
 
 def _get_entry(

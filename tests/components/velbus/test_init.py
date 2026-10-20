@@ -307,11 +307,11 @@ async def test_static_path_registered_once(
     assert calls == 1
 
 
-async def test_panel_refreshes_when_build_id_changes(
+async def test_panel_refreshes_when_frontend_version_changes(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test a new frontend build id replaces the registered panel."""
+    """Test a new frontend package version replaces the registered panel."""
     hass.config_entries.async_update_entry(
         config_entry,
         data={**config_entry.data, CONF_ADVANCED_MODE: True},
@@ -322,8 +322,8 @@ async def test_panel_refreshes_when_build_id_changes(
     original_url = panel.config["_panel_custom"]["module_url"]
 
     with patch(
-        "homeassistant.components.velbus.websocket_api.velbus_panel.get_build_id",
-        return_value="build-next",
+        "homeassistant.components.velbus.websocket_api.version",
+        return_value="2026.10.0",
     ):
         await async_update_panel(hass)
 
@@ -331,7 +331,7 @@ async def test_panel_refreshes_when_build_id_changes(
     assert panel.config is not None
     module_url = panel.config["_panel_custom"]["module_url"]
     assert module_url != original_url
-    assert module_url.endswith("?v=build-next")
+    assert module_url.endswith("?v=2026.10.0")
 
 
 async def test_api_call(
