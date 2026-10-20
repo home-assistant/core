@@ -52,12 +52,8 @@ from .const import (
     DOMAIN,
     DRAWABLES,
     REGION_AUTO,
-    REGION_CN,
     REGION_CUSTOM,
-    REGION_EU,
     REGION_OPTIONS,
-    REGION_RU,
-    REGION_US,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -100,36 +96,20 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
             if not errors:
                 return await self.async_step_code()
 
-        data_schema = probatio.Schema(
-            {
-                probatio.Required(CONF_USERNAME): str,
-                probatio.Required(CONF_REGION, default=REGION_AUTO): SelectSelector(
-                    SelectSelectorConfig(
-                        options=REGION_OPTIONS,
-                        mode=SelectSelectorMode.DROPDOWN,
-                        translation_key="region",
-                    )
-                ),
-            }
-        )
-        if self.source == SOURCE_RECONFIGURE:
-            entry = self._get_reconfigure_entry()
-            stored_url = entry.data.get(CONF_BASE_URL)
-            region = REGION_AUTO
-            if stored_url:
-                for r in (REGION_US, REGION_EU, REGION_RU, REGION_CN):
-                    if stored_url == f"https://{r}iot.roborock.com":
-                        region = r
-                        break
-                else:
-                    region = REGION_CUSTOM
-            data_schema = self.add_suggested_values_to_schema(
-                data_schema,
-                {CONF_USERNAME: entry.data[CONF_USERNAME], CONF_REGION: region},
-            )
         return self.async_show_form(
             step_id="user",
-            data_schema=data_schema,
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_USERNAME): str,
+                    probatio.Required(CONF_REGION, default=REGION_AUTO): SelectSelector(
+                        SelectSelectorConfig(
+                            options=REGION_OPTIONS,
+                            mode=SelectSelectorMode.DROPDOWN,
+                            translation_key="region",
+                        )
+                    ),
+                }
+            ),
             errors=errors,
         )
 
@@ -137,7 +117,26 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow."""
-        return await self.async_step_user(user_input)
+        errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            self._username = user_input[CONF_USERNAME]
+            self._client = RoborockApiClient(
+                self._username,
+                base_url=entry.data.get(CONF_BASE_URL),
+                session=async_get_clientsession(self.hass),
+            )
+            errors = await self._request_code()
+            if not errors:
+                return await self.async_step_code()
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema({probatio.Required(CONF_USERNAME): str}),
+                {CONF_USERNAME: entry.data[CONF_USERNAME]},
+            ),
+            errors=errors,
+        )
 
     async def async_step_custom_url(
         self, user_input: dict[str, Any] | None = None
