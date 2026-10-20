@@ -1,0 +1,2953 @@
+# serializer version: 1
+# name: test_interrupted_add_and_between_groups[1][interrupted]
+  dict({
+    'devices': list([
+      dict({
+        'area_id': 'device-area',
+        'connections': list([
+          list([
+            'mac',
+            'aa:bb:cc:00:00:02',
+          ]),
+        ]),
+        'disabled_by': 'user',
+        'identifiers': list([
+          list([
+            'gree',
+            'AA-BB-CC-00-00-02',
+          ]),
+        ]),
+        'labels': list([
+          'device-label',
+        ]),
+        'model': 'Legacy model',
+        'name': 'Unit AA-BB-CC-00-00-02',
+        'name_by_user': 'Custom AA-BB-CC-00-00-02',
+        'owner': 'aabbcc000002',
+        'sw_version': 'V1.7',
+      }),
+      dict({
+        'area_id': 'device-area',
+        'connections': list([
+          list([
+            'mac',
+            'aa:bb:cc:00:00:01',
+          ]),
+        ]),
+        'disabled_by': 'user',
+        'identifiers': list([
+          list([
+            'gree',
+            'AA:BB:CC:00:00:01',
+          ]),
+        ]),
+        'labels': list([
+          'device-label',
+        ]),
+        'model': 'Legacy model',
+        'name': 'Unit AA:BB:CC:00:00:01',
+        'name_by_user': 'Custom AA:BB:CC:00:00:01',
+        'owner': 'gree',
+        'sw_version': 'V1.7',
+      }),
+      dict({
+        'area_id': 'device-area',
+        'connections': list([
+          list([
+            'mac',
+            'aa:bb:cc:00:00:03',
+          ]),
+        ]),
+        'disabled_by': 'user',
+        'identifiers': list([
+          list([
+            'gree',
+            'AABB.CC00.0003',
+          ]),
+        ]),
+        'labels': list([
+          'device-label',
+        ]),
+        'model': 'Legacy model',
+        'name': 'Unit AABB.CC00.0003',
+        'name_by_user': 'Custom AABB.CC00.0003',
+        'owner': 'gree',
+        'sw_version': 'V1.7',
+      }),
+    ]),
+    'entities': list([
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'climate.custom_aa_bb_cc_00_00_01',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom climate.custom_aa_bb_cc_00_00_01',
+        'options': dict({
+          'sensor': dict({
+            'precision': 2,
+          }),
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA:BB:CC:00:00:01',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'climate.custom_aa_bb_cc_00_00_02',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom climate.custom_aa_bb_cc_00_00_02',
+        'options': dict({
+          'sensor': dict({
+            'precision': 2,
+          }),
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AABB.CC00.0003',
+        'disabled_by': 'user',
+        'entity_id': 'climate.custom_aabb_cc00_0003',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom climate.custom_aabb_cc00_0003',
+        'options': dict({
+          'sensor': dict({
+            'precision': 2,
+          }),
+        }),
+        'owner': 'gree',
+        'unique_id': 'AABB.CC00.0003',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA:BB:CC:00:00:01_Panel Light',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_2',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_2',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA:BB:CC:00:00:01_Quiet',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_3',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_3',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA:BB:CC:00:00:01_Fresh Air',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_4',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_4',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA:BB:CC:00:00:01_XFan',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_5',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_5',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA:BB:CC:00:00:01_Health mode',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_Panel Light',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_2',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_2',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_Quiet',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_3',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_3',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_Fresh Air',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_4',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_4',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_XFan',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_5',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_5',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_Health mode',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AABB.CC00.0003',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aabb_cc00_0003',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aabb_cc00_0003',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AABB.CC00.0003_Panel Light',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AABB.CC00.0003',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aabb_cc00_0003_2',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aabb_cc00_0003_2',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AABB.CC00.0003_Quiet',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AABB.CC00.0003',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aabb_cc00_0003_3',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aabb_cc00_0003_3',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AABB.CC00.0003_Fresh Air',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AABB.CC00.0003',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aabb_cc00_0003_4',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aabb_cc00_0003_4',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AABB.CC00.0003_XFan',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AABB.CC00.0003',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aabb_cc00_0003_5',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aabb_cc00_0003_5',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AABB.CC00.0003_Health mode',
+      }),
+    ]),
+    'entries': list([
+      dict({
+        'data': dict({
+          '_migration_source_entry_id': 'gree',
+          'brand': None,
+          'host': None,
+          'identifier': 'AA-BB-CC-00-00-02',
+          'mid': None,
+          'model': 'Legacy model',
+          'name': 'Unit AA-BB-CC-00-00-02',
+          'port': 7000,
+          'version': 'V1.7',
+        }),
+        'disabled_by': None,
+        'minor_version': 1,
+        'options': dict({
+          'retained': 'option',
+        }),
+        'pref_disable_new_entities': True,
+        'pref_disable_polling': True,
+        'source': 'import',
+        'title': 'Custom AA-BB-CC-00-00-02',
+        'unique_id': 'aabbcc000002',
+        'version': 2,
+      }),
+      dict({
+        'data': dict({
+        }),
+        'disabled_by': None,
+        'minor_version': 1,
+        'options': dict({
+          'retained': 'option',
+        }),
+        'pref_disable_new_entities': True,
+        'pref_disable_polling': True,
+        'source': 'user',
+        'title': 'My original Gree entry',
+        'unique_id': 'gree',
+        'version': 1,
+      }),
+    ]),
+  })
+# ---
+# name: test_interrupted_add_and_between_groups[1][recovered]
+  dict({
+    'devices': list([
+      dict({
+        'area_id': 'device-area',
+        'connections': list([
+          list([
+            'mac',
+            'aa:bb:cc:00:00:02',
+          ]),
+        ]),
+        'disabled_by': 'user',
+        'identifiers': list([
+          list([
+            'gree',
+            'AA-BB-CC-00-00-02',
+          ]),
+        ]),
+        'labels': list([
+          'device-label',
+        ]),
+        'model': 'Legacy model',
+        'name': 'Unit AA-BB-CC-00-00-02',
+        'name_by_user': 'Custom AA-BB-CC-00-00-02',
+        'owner': 'aabbcc000002',
+        'sw_version': 'V1.7',
+      }),
+      dict({
+        'area_id': 'device-area',
+        'connections': list([
+          list([
+            'mac',
+            'aa:bb:cc:00:00:01',
+          ]),
+        ]),
+        'disabled_by': 'user',
+        'identifiers': list([
+          list([
+            'gree',
+            'AA:BB:CC:00:00:01',
+          ]),
+        ]),
+        'labels': list([
+          'device-label',
+        ]),
+        'model': 'Legacy model',
+        'name': 'Unit AA:BB:CC:00:00:01',
+        'name_by_user': 'Custom AA:BB:CC:00:00:01',
+        'owner': 'aabbcc000001',
+        'sw_version': 'V1.7',
+      }),
+      dict({
+        'area_id': 'device-area',
+        'connections': list([
+          list([
+            'mac',
+            'aa:bb:cc:00:00:03',
+          ]),
+        ]),
+        'disabled_by': 'user',
+        'identifiers': list([
+          list([
+            'gree',
+            'AABB.CC00.0003',
+          ]),
+        ]),
+        'labels': list([
+          'device-label',
+        ]),
+        'model': 'Legacy model',
+        'name': 'Unit AABB.CC00.0003',
+        'name_by_user': 'Custom AABB.CC00.0003',
+        'owner': 'aabbcc000003',
+        'sw_version': 'V1.7',
+      }),
+    ]),
+    'entities': list([
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'climate.custom_aa_bb_cc_00_00_01',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom climate.custom_aa_bb_cc_00_00_01',
+        'options': dict({
+          'sensor': dict({
+            'precision': 2,
+          }),
+        }),
+        'owner': 'aabbcc000001',
+        'unique_id': 'AA:BB:CC:00:00:01',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'climate.custom_aa_bb_cc_00_00_02',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom climate.custom_aa_bb_cc_00_00_02',
+        'options': dict({
+          'sensor': dict({
+            'precision': 2,
+          }),
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AABB.CC00.0003',
+        'disabled_by': 'user',
+        'entity_id': 'climate.custom_aabb_cc00_0003',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom climate.custom_aabb_cc00_0003',
+        'options': dict({
+          'sensor': dict({
+            'precision': 2,
+          }),
+        }),
+        'owner': 'aabbcc000003',
+        'unique_id': 'AABB.CC00.0003',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000001',
+        'unique_id': 'AA:BB:CC:00:00:01_Panel Light',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_2',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_2',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000001',
+        'unique_id': 'AA:BB:CC:00:00:01_Quiet',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_3',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_3',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000001',
+        'unique_id': 'AA:BB:CC:00:00:01_Fresh Air',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_4',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_4',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000001',
+        'unique_id': 'AA:BB:CC:00:00:01_XFan',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_5',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_5',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000001',
+        'unique_id': 'AA:BB:CC:00:00:01_Health mode',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_Panel Light',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_2',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_2',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_Quiet',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_3',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_3',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_Fresh Air',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_4',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_4',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_XFan',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_5',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_5',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_Health mode',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AABB.CC00.0003',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aabb_cc00_0003',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aabb_cc00_0003',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000003',
+        'unique_id': 'AABB.CC00.0003_Panel Light',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AABB.CC00.0003',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aabb_cc00_0003_2',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aabb_cc00_0003_2',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000003',
+        'unique_id': 'AABB.CC00.0003_Quiet',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AABB.CC00.0003',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aabb_cc00_0003_3',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aabb_cc00_0003_3',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000003',
+        'unique_id': 'AABB.CC00.0003_Fresh Air',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AABB.CC00.0003',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aabb_cc00_0003_4',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aabb_cc00_0003_4',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000003',
+        'unique_id': 'AABB.CC00.0003_XFan',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AABB.CC00.0003',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aabb_cc00_0003_5',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aabb_cc00_0003_5',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000003',
+        'unique_id': 'AABB.CC00.0003_Health mode',
+      }),
+    ]),
+    'entries': list([
+      dict({
+        'data': dict({
+          'brand': None,
+          'host': None,
+          'identifier': 'AA:BB:CC:00:00:01',
+          'mid': None,
+          'model': 'Legacy model',
+          'name': 'Unit AA:BB:CC:00:00:01',
+          'port': 7000,
+          'version': 'V1.7',
+        }),
+        'disabled_by': None,
+        'minor_version': 1,
+        'options': dict({
+          'retained': 'option',
+        }),
+        'pref_disable_new_entities': True,
+        'pref_disable_polling': True,
+        'source': 'user',
+        'title': 'My original Gree entry',
+        'unique_id': 'aabbcc000001',
+        'version': 2,
+      }),
+      dict({
+        'data': dict({
+          '_migration_source_entry_id': 'aabbcc000001',
+          'brand': None,
+          'host': None,
+          'identifier': 'AA-BB-CC-00-00-02',
+          'mid': None,
+          'model': 'Legacy model',
+          'name': 'Unit AA-BB-CC-00-00-02',
+          'port': 7000,
+          'version': 'V1.7',
+        }),
+        'disabled_by': None,
+        'minor_version': 1,
+        'options': dict({
+          'retained': 'option',
+        }),
+        'pref_disable_new_entities': True,
+        'pref_disable_polling': True,
+        'source': 'import',
+        'title': 'Custom AA-BB-CC-00-00-02',
+        'unique_id': 'aabbcc000002',
+        'version': 2,
+      }),
+      dict({
+        'data': dict({
+          '_migration_source_entry_id': 'aabbcc000001',
+          'brand': None,
+          'host': None,
+          'identifier': 'AABB.CC00.0003',
+          'mid': None,
+          'model': 'Legacy model',
+          'name': 'Unit AABB.CC00.0003',
+          'port': 7000,
+          'version': 'V1.7',
+        }),
+        'disabled_by': None,
+        'minor_version': 1,
+        'options': dict({
+          'retained': 'option',
+        }),
+        'pref_disable_new_entities': True,
+        'pref_disable_polling': True,
+        'source': 'import',
+        'title': 'Custom AABB.CC00.0003',
+        'unique_id': 'aabbcc000003',
+        'version': 2,
+      }),
+    ]),
+  })
+# ---
+# name: test_interrupted_add_and_between_groups[2][interrupted]
+  dict({
+    'devices': list([
+      dict({
+        'area_id': 'device-area',
+        'connections': list([
+          list([
+            'mac',
+            'aa:bb:cc:00:00:02',
+          ]),
+        ]),
+        'disabled_by': 'user',
+        'identifiers': list([
+          list([
+            'gree',
+            'AA-BB-CC-00-00-02',
+          ]),
+        ]),
+        'labels': list([
+          'device-label',
+        ]),
+        'model': 'Legacy model',
+        'name': 'Unit AA-BB-CC-00-00-02',
+        'name_by_user': 'Custom AA-BB-CC-00-00-02',
+        'owner': 'aabbcc000002',
+        'sw_version': 'V1.7',
+      }),
+      dict({
+        'area_id': 'device-area',
+        'connections': list([
+          list([
+            'mac',
+            'aa:bb:cc:00:00:01',
+          ]),
+        ]),
+        'disabled_by': 'user',
+        'identifiers': list([
+          list([
+            'gree',
+            'AA:BB:CC:00:00:01',
+          ]),
+        ]),
+        'labels': list([
+          'device-label',
+        ]),
+        'model': 'Legacy model',
+        'name': 'Unit AA:BB:CC:00:00:01',
+        'name_by_user': 'Custom AA:BB:CC:00:00:01',
+        'owner': 'gree',
+        'sw_version': 'V1.7',
+      }),
+      dict({
+        'area_id': 'device-area',
+        'connections': list([
+          list([
+            'mac',
+            'aa:bb:cc:00:00:03',
+          ]),
+        ]),
+        'disabled_by': 'user',
+        'identifiers': list([
+          list([
+            'gree',
+            'AABB.CC00.0003',
+          ]),
+        ]),
+        'labels': list([
+          'device-label',
+        ]),
+        'model': 'Legacy model',
+        'name': 'Unit AABB.CC00.0003',
+        'name_by_user': 'Custom AABB.CC00.0003',
+        'owner': 'aabbcc000003',
+        'sw_version': 'V1.7',
+      }),
+    ]),
+    'entities': list([
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'climate.custom_aa_bb_cc_00_00_01',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom climate.custom_aa_bb_cc_00_00_01',
+        'options': dict({
+          'sensor': dict({
+            'precision': 2,
+          }),
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA:BB:CC:00:00:01',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'climate.custom_aa_bb_cc_00_00_02',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom climate.custom_aa_bb_cc_00_00_02',
+        'options': dict({
+          'sensor': dict({
+            'precision': 2,
+          }),
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AABB.CC00.0003',
+        'disabled_by': 'user',
+        'entity_id': 'climate.custom_aabb_cc00_0003',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom climate.custom_aabb_cc00_0003',
+        'options': dict({
+          'sensor': dict({
+            'precision': 2,
+          }),
+        }),
+        'owner': 'aabbcc000003',
+        'unique_id': 'AABB.CC00.0003',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA:BB:CC:00:00:01_Panel Light',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_2',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_2',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA:BB:CC:00:00:01_Quiet',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_3',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_3',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA:BB:CC:00:00:01_Fresh Air',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_4',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_4',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA:BB:CC:00:00:01_XFan',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_5',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_5',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA:BB:CC:00:00:01_Health mode',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_Panel Light',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_2',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_2',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_Quiet',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_3',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_3',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_Fresh Air',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_4',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_4',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_XFan',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_5',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_5',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_Health mode',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AABB.CC00.0003',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aabb_cc00_0003',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aabb_cc00_0003',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000003',
+        'unique_id': 'AABB.CC00.0003_Panel Light',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AABB.CC00.0003',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aabb_cc00_0003_2',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aabb_cc00_0003_2',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000003',
+        'unique_id': 'AABB.CC00.0003_Quiet',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AABB.CC00.0003',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aabb_cc00_0003_3',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aabb_cc00_0003_3',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000003',
+        'unique_id': 'AABB.CC00.0003_Fresh Air',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AABB.CC00.0003',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aabb_cc00_0003_4',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aabb_cc00_0003_4',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000003',
+        'unique_id': 'AABB.CC00.0003_XFan',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AABB.CC00.0003',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aabb_cc00_0003_5',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aabb_cc00_0003_5',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000003',
+        'unique_id': 'AABB.CC00.0003_Health mode',
+      }),
+    ]),
+    'entries': list([
+      dict({
+        'data': dict({
+          '_migration_source_entry_id': 'gree',
+          'brand': None,
+          'host': None,
+          'identifier': 'AA-BB-CC-00-00-02',
+          'mid': None,
+          'model': 'Legacy model',
+          'name': 'Unit AA-BB-CC-00-00-02',
+          'port': 7000,
+          'version': 'V1.7',
+        }),
+        'disabled_by': None,
+        'minor_version': 1,
+        'options': dict({
+          'retained': 'option',
+        }),
+        'pref_disable_new_entities': True,
+        'pref_disable_polling': True,
+        'source': 'import',
+        'title': 'Custom AA-BB-CC-00-00-02',
+        'unique_id': 'aabbcc000002',
+        'version': 2,
+      }),
+      dict({
+        'data': dict({
+          '_migration_source_entry_id': 'gree',
+          'brand': None,
+          'host': None,
+          'identifier': 'AABB.CC00.0003',
+          'mid': None,
+          'model': 'Legacy model',
+          'name': 'Unit AABB.CC00.0003',
+          'port': 7000,
+          'version': 'V1.7',
+        }),
+        'disabled_by': None,
+        'minor_version': 1,
+        'options': dict({
+          'retained': 'option',
+        }),
+        'pref_disable_new_entities': True,
+        'pref_disable_polling': True,
+        'source': 'import',
+        'title': 'Custom AABB.CC00.0003',
+        'unique_id': 'aabbcc000003',
+        'version': 2,
+      }),
+      dict({
+        'data': dict({
+        }),
+        'disabled_by': None,
+        'minor_version': 1,
+        'options': dict({
+          'retained': 'option',
+        }),
+        'pref_disable_new_entities': True,
+        'pref_disable_polling': True,
+        'source': 'user',
+        'title': 'My original Gree entry',
+        'unique_id': 'gree',
+        'version': 1,
+      }),
+    ]),
+  })
+# ---
+# name: test_interrupted_add_and_between_groups[2][recovered]
+  dict({
+    'devices': list([
+      dict({
+        'area_id': 'device-area',
+        'connections': list([
+          list([
+            'mac',
+            'aa:bb:cc:00:00:02',
+          ]),
+        ]),
+        'disabled_by': 'user',
+        'identifiers': list([
+          list([
+            'gree',
+            'AA-BB-CC-00-00-02',
+          ]),
+        ]),
+        'labels': list([
+          'device-label',
+        ]),
+        'model': 'Legacy model',
+        'name': 'Unit AA-BB-CC-00-00-02',
+        'name_by_user': 'Custom AA-BB-CC-00-00-02',
+        'owner': 'aabbcc000002',
+        'sw_version': 'V1.7',
+      }),
+      dict({
+        'area_id': 'device-area',
+        'connections': list([
+          list([
+            'mac',
+            'aa:bb:cc:00:00:01',
+          ]),
+        ]),
+        'disabled_by': 'user',
+        'identifiers': list([
+          list([
+            'gree',
+            'AA:BB:CC:00:00:01',
+          ]),
+        ]),
+        'labels': list([
+          'device-label',
+        ]),
+        'model': 'Legacy model',
+        'name': 'Unit AA:BB:CC:00:00:01',
+        'name_by_user': 'Custom AA:BB:CC:00:00:01',
+        'owner': 'aabbcc000001',
+        'sw_version': 'V1.7',
+      }),
+      dict({
+        'area_id': 'device-area',
+        'connections': list([
+          list([
+            'mac',
+            'aa:bb:cc:00:00:03',
+          ]),
+        ]),
+        'disabled_by': 'user',
+        'identifiers': list([
+          list([
+            'gree',
+            'AABB.CC00.0003',
+          ]),
+        ]),
+        'labels': list([
+          'device-label',
+        ]),
+        'model': 'Legacy model',
+        'name': 'Unit AABB.CC00.0003',
+        'name_by_user': 'Custom AABB.CC00.0003',
+        'owner': 'aabbcc000003',
+        'sw_version': 'V1.7',
+      }),
+    ]),
+    'entities': list([
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'climate.custom_aa_bb_cc_00_00_01',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom climate.custom_aa_bb_cc_00_00_01',
+        'options': dict({
+          'sensor': dict({
+            'precision': 2,
+          }),
+        }),
+        'owner': 'aabbcc000001',
+        'unique_id': 'AA:BB:CC:00:00:01',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'climate.custom_aa_bb_cc_00_00_02',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom climate.custom_aa_bb_cc_00_00_02',
+        'options': dict({
+          'sensor': dict({
+            'precision': 2,
+          }),
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AABB.CC00.0003',
+        'disabled_by': 'user',
+        'entity_id': 'climate.custom_aabb_cc00_0003',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom climate.custom_aabb_cc00_0003',
+        'options': dict({
+          'sensor': dict({
+            'precision': 2,
+          }),
+        }),
+        'owner': 'aabbcc000003',
+        'unique_id': 'AABB.CC00.0003',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000001',
+        'unique_id': 'AA:BB:CC:00:00:01_Panel Light',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_2',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_2',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000001',
+        'unique_id': 'AA:BB:CC:00:00:01_Quiet',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_3',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_3',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000001',
+        'unique_id': 'AA:BB:CC:00:00:01_Fresh Air',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_4',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_4',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000001',
+        'unique_id': 'AA:BB:CC:00:00:01_XFan',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_5',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_5',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000001',
+        'unique_id': 'AA:BB:CC:00:00:01_Health mode',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_Panel Light',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_2',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_2',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_Quiet',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_3',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_3',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_Fresh Air',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_4',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_4',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_XFan',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_5',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_5',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_Health mode',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AABB.CC00.0003',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aabb_cc00_0003',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aabb_cc00_0003',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000003',
+        'unique_id': 'AABB.CC00.0003_Panel Light',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AABB.CC00.0003',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aabb_cc00_0003_2',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aabb_cc00_0003_2',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000003',
+        'unique_id': 'AABB.CC00.0003_Quiet',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AABB.CC00.0003',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aabb_cc00_0003_3',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aabb_cc00_0003_3',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000003',
+        'unique_id': 'AABB.CC00.0003_Fresh Air',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AABB.CC00.0003',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aabb_cc00_0003_4',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aabb_cc00_0003_4',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000003',
+        'unique_id': 'AABB.CC00.0003_XFan',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AABB.CC00.0003',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aabb_cc00_0003_5',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aabb_cc00_0003_5',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000003',
+        'unique_id': 'AABB.CC00.0003_Health mode',
+      }),
+    ]),
+    'entries': list([
+      dict({
+        'data': dict({
+          'brand': None,
+          'host': None,
+          'identifier': 'AA:BB:CC:00:00:01',
+          'mid': None,
+          'model': 'Legacy model',
+          'name': 'Unit AA:BB:CC:00:00:01',
+          'port': 7000,
+          'version': 'V1.7',
+        }),
+        'disabled_by': None,
+        'minor_version': 1,
+        'options': dict({
+          'retained': 'option',
+        }),
+        'pref_disable_new_entities': True,
+        'pref_disable_polling': True,
+        'source': 'user',
+        'title': 'My original Gree entry',
+        'unique_id': 'aabbcc000001',
+        'version': 2,
+      }),
+      dict({
+        'data': dict({
+          '_migration_source_entry_id': 'aabbcc000001',
+          'brand': None,
+          'host': None,
+          'identifier': 'AA-BB-CC-00-00-02',
+          'mid': None,
+          'model': 'Legacy model',
+          'name': 'Unit AA-BB-CC-00-00-02',
+          'port': 7000,
+          'version': 'V1.7',
+        }),
+        'disabled_by': None,
+        'minor_version': 1,
+        'options': dict({
+          'retained': 'option',
+        }),
+        'pref_disable_new_entities': True,
+        'pref_disable_polling': True,
+        'source': 'import',
+        'title': 'Custom AA-BB-CC-00-00-02',
+        'unique_id': 'aabbcc000002',
+        'version': 2,
+      }),
+      dict({
+        'data': dict({
+          '_migration_source_entry_id': 'aabbcc000001',
+          'brand': None,
+          'host': None,
+          'identifier': 'AABB.CC00.0003',
+          'mid': None,
+          'model': 'Legacy model',
+          'name': 'Unit AABB.CC00.0003',
+          'port': 7000,
+          'version': 'V1.7',
+        }),
+        'disabled_by': None,
+        'minor_version': 1,
+        'options': dict({
+          'retained': 'option',
+        }),
+        'pref_disable_new_entities': True,
+        'pref_disable_polling': True,
+        'source': 'import',
+        'title': 'Custom AABB.CC00.0003',
+        'unique_id': 'aabbcc000003',
+        'version': 2,
+      }),
+    ]),
+  })
+# ---
+# name: test_reconcile_both_partial_ownership_directions[device-owned-by-child][interrupted]
+  dict({
+    'devices': list([
+      dict({
+        'area_id': 'device-area',
+        'connections': list([
+          list([
+            'mac',
+            'aa:bb:cc:00:00:02',
+          ]),
+        ]),
+        'disabled_by': 'user',
+        'identifiers': list([
+          list([
+            'gree',
+            'AA-BB-CC-00-00-02',
+          ]),
+        ]),
+        'labels': list([
+          'device-label',
+        ]),
+        'model': 'Legacy model',
+        'name': 'Unit AA-BB-CC-00-00-02',
+        'name_by_user': 'Custom AA-BB-CC-00-00-02',
+        'owner': 'aabbcc000002',
+        'sw_version': 'V1.7',
+      }),
+      dict({
+        'area_id': 'device-area',
+        'connections': list([
+          list([
+            'mac',
+            'aa:bb:cc:00:00:01',
+          ]),
+        ]),
+        'disabled_by': 'user',
+        'identifiers': list([
+          list([
+            'gree',
+            'AA:BB:CC:00:00:01',
+          ]),
+        ]),
+        'labels': list([
+          'device-label',
+        ]),
+        'model': 'Legacy model',
+        'name': 'Unit AA:BB:CC:00:00:01',
+        'name_by_user': 'Custom AA:BB:CC:00:00:01',
+        'owner': 'gree',
+        'sw_version': 'V1.7',
+      }),
+    ]),
+    'entities': list([
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'climate.custom_aa_bb_cc_00_00_01',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom climate.custom_aa_bb_cc_00_00_01',
+        'options': dict({
+          'sensor': dict({
+            'precision': 2,
+          }),
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA:BB:CC:00:00:01',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'climate.custom_aa_bb_cc_00_00_02',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom climate.custom_aa_bb_cc_00_00_02',
+        'options': dict({
+          'sensor': dict({
+            'precision': 2,
+          }),
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA-BB-CC-00-00-02',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA:BB:CC:00:00:01_Panel Light',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_2',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_2',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA:BB:CC:00:00:01_Quiet',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_3',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_3',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA:BB:CC:00:00:01_Fresh Air',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_4',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_4',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA:BB:CC:00:00:01_XFan',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_5',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_5',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA:BB:CC:00:00:01_Health mode',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA-BB-CC-00-00-02_Panel Light',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_2',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_2',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA-BB-CC-00-00-02_Quiet',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_3',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_3',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA-BB-CC-00-00-02_Fresh Air',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_4',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_4',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA-BB-CC-00-00-02_XFan',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_5',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_5',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA-BB-CC-00-00-02_Health mode',
+      }),
+    ]),
+    'entries': list([
+      dict({
+        'data': dict({
+          '_migration_source_entry_id': 'gree',
+          'brand': None,
+          'host': None,
+          'identifier': 'AA-BB-CC-00-00-02',
+          'mid': None,
+          'model': None,
+          'name': None,
+          'port': 7000,
+          'version': None,
+        }),
+        'disabled_by': None,
+        'minor_version': 1,
+        'options': dict({
+        }),
+        'pref_disable_new_entities': False,
+        'pref_disable_polling': False,
+        'source': 'import',
+        'title': 'Already split',
+        'unique_id': 'aabbcc000002',
+        'version': 2,
+      }),
+      dict({
+        'data': dict({
+        }),
+        'disabled_by': 'user',
+        'minor_version': 1,
+        'options': dict({
+          'retained': 'option',
+        }),
+        'pref_disable_new_entities': True,
+        'pref_disable_polling': True,
+        'source': 'user',
+        'title': 'My original Gree entry',
+        'unique_id': 'gree',
+        'version': 1,
+      }),
+    ]),
+  })
+# ---
+# name: test_reconcile_both_partial_ownership_directions[device-owned-by-child][recovered]
+  dict({
+    'devices': list([
+      dict({
+        'area_id': 'device-area',
+        'connections': list([
+          list([
+            'mac',
+            'aa:bb:cc:00:00:02',
+          ]),
+        ]),
+        'disabled_by': 'user',
+        'identifiers': list([
+          list([
+            'gree',
+            'AA-BB-CC-00-00-02',
+          ]),
+        ]),
+        'labels': list([
+          'device-label',
+        ]),
+        'model': 'Legacy model',
+        'name': 'Unit AA-BB-CC-00-00-02',
+        'name_by_user': 'Custom AA-BB-CC-00-00-02',
+        'owner': 'aabbcc000002',
+        'sw_version': 'V1.7',
+      }),
+      dict({
+        'area_id': 'device-area',
+        'connections': list([
+          list([
+            'mac',
+            'aa:bb:cc:00:00:01',
+          ]),
+        ]),
+        'disabled_by': 'user',
+        'identifiers': list([
+          list([
+            'gree',
+            'AA:BB:CC:00:00:01',
+          ]),
+        ]),
+        'labels': list([
+          'device-label',
+        ]),
+        'model': 'Legacy model',
+        'name': 'Unit AA:BB:CC:00:00:01',
+        'name_by_user': 'Custom AA:BB:CC:00:00:01',
+        'owner': 'aabbcc000001',
+        'sw_version': 'V1.7',
+      }),
+    ]),
+    'entities': list([
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'climate.custom_aa_bb_cc_00_00_01',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom climate.custom_aa_bb_cc_00_00_01',
+        'options': dict({
+          'sensor': dict({
+            'precision': 2,
+          }),
+        }),
+        'owner': 'aabbcc000001',
+        'unique_id': 'AA:BB:CC:00:00:01',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'climate.custom_aa_bb_cc_00_00_02',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom climate.custom_aa_bb_cc_00_00_02',
+        'options': dict({
+          'sensor': dict({
+            'precision': 2,
+          }),
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000001',
+        'unique_id': 'AA:BB:CC:00:00:01_Panel Light',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_2',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_2',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000001',
+        'unique_id': 'AA:BB:CC:00:00:01_Quiet',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_3',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_3',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000001',
+        'unique_id': 'AA:BB:CC:00:00:01_Fresh Air',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_4',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_4',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000001',
+        'unique_id': 'AA:BB:CC:00:00:01_XFan',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_5',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_5',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000001',
+        'unique_id': 'AA:BB:CC:00:00:01_Health mode',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_Panel Light',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_2',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_2',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_Quiet',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_3',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_3',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_Fresh Air',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_4',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_4',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_XFan',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_5',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_5',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_Health mode',
+      }),
+    ]),
+    'entries': list([
+      dict({
+        'data': dict({
+          'brand': None,
+          'host': None,
+          'identifier': 'AA:BB:CC:00:00:01',
+          'mid': None,
+          'model': 'Legacy model',
+          'name': 'Unit AA:BB:CC:00:00:01',
+          'port': 7000,
+          'version': 'V1.7',
+        }),
+        'disabled_by': None,
+        'minor_version': 1,
+        'options': dict({
+          'retained': 'option',
+        }),
+        'pref_disable_new_entities': True,
+        'pref_disable_polling': True,
+        'source': 'user',
+        'title': 'My original Gree entry',
+        'unique_id': 'aabbcc000001',
+        'version': 2,
+      }),
+      dict({
+        'data': dict({
+          '_migration_source_entry_id': 'aabbcc000001',
+          'brand': None,
+          'host': None,
+          'identifier': 'AA-BB-CC-00-00-02',
+          'mid': None,
+          'model': None,
+          'name': None,
+          'port': 7000,
+          'version': None,
+        }),
+        'disabled_by': None,
+        'minor_version': 1,
+        'options': dict({
+        }),
+        'pref_disable_new_entities': False,
+        'pref_disable_polling': False,
+        'source': 'import',
+        'title': 'Already split',
+        'unique_id': 'aabbcc000002',
+        'version': 2,
+      }),
+    ]),
+  })
+# ---
+# name: test_reconcile_both_partial_ownership_directions[entities-owned-by-child][interrupted]
+  dict({
+    'devices': list([
+      dict({
+        'area_id': 'device-area',
+        'connections': list([
+          list([
+            'mac',
+            'aa:bb:cc:00:00:02',
+          ]),
+        ]),
+        'disabled_by': 'user',
+        'identifiers': list([
+          list([
+            'gree',
+            'AA-BB-CC-00-00-02',
+          ]),
+        ]),
+        'labels': list([
+          'device-label',
+        ]),
+        'model': 'Legacy model',
+        'name': 'Unit AA-BB-CC-00-00-02',
+        'name_by_user': 'Custom AA-BB-CC-00-00-02',
+        'owner': 'gree',
+        'sw_version': 'V1.7',
+      }),
+      dict({
+        'area_id': 'device-area',
+        'connections': list([
+          list([
+            'mac',
+            'aa:bb:cc:00:00:01',
+          ]),
+        ]),
+        'disabled_by': 'user',
+        'identifiers': list([
+          list([
+            'gree',
+            'AA:BB:CC:00:00:01',
+          ]),
+        ]),
+        'labels': list([
+          'device-label',
+        ]),
+        'model': 'Legacy model',
+        'name': 'Unit AA:BB:CC:00:00:01',
+        'name_by_user': 'Custom AA:BB:CC:00:00:01',
+        'owner': 'gree',
+        'sw_version': 'V1.7',
+      }),
+    ]),
+    'entities': list([
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'climate.custom_aa_bb_cc_00_00_01',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom climate.custom_aa_bb_cc_00_00_01',
+        'options': dict({
+          'sensor': dict({
+            'precision': 2,
+          }),
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA:BB:CC:00:00:01',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'climate.custom_aa_bb_cc_00_00_02',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom climate.custom_aa_bb_cc_00_00_02',
+        'options': dict({
+          'sensor': dict({
+            'precision': 2,
+          }),
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA:BB:CC:00:00:01_Panel Light',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_2',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_2',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA:BB:CC:00:00:01_Quiet',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_3',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_3',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA:BB:CC:00:00:01_Fresh Air',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_4',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_4',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA:BB:CC:00:00:01_XFan',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_5',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_5',
+        'options': dict({
+        }),
+        'owner': 'gree',
+        'unique_id': 'AA:BB:CC:00:00:01_Health mode',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_Panel Light',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_2',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_2',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_Quiet',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_3',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_3',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_Fresh Air',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_4',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_4',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_XFan',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_5',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_5',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_Health mode',
+      }),
+    ]),
+    'entries': list([
+      dict({
+        'data': dict({
+          '_migration_source_entry_id': 'gree',
+          'brand': None,
+          'host': None,
+          'identifier': 'AA-BB-CC-00-00-02',
+          'mid': None,
+          'model': None,
+          'name': None,
+          'port': 7000,
+          'version': None,
+        }),
+        'disabled_by': None,
+        'minor_version': 1,
+        'options': dict({
+        }),
+        'pref_disable_new_entities': False,
+        'pref_disable_polling': False,
+        'source': 'import',
+        'title': 'Already split',
+        'unique_id': 'aabbcc000002',
+        'version': 2,
+      }),
+      dict({
+        'data': dict({
+        }),
+        'disabled_by': 'user',
+        'minor_version': 1,
+        'options': dict({
+          'retained': 'option',
+        }),
+        'pref_disable_new_entities': True,
+        'pref_disable_polling': True,
+        'source': 'user',
+        'title': 'My original Gree entry',
+        'unique_id': 'gree',
+        'version': 1,
+      }),
+    ]),
+  })
+# ---
+# name: test_reconcile_both_partial_ownership_directions[entities-owned-by-child][recovered]
+  dict({
+    'devices': list([
+      dict({
+        'area_id': 'device-area',
+        'connections': list([
+          list([
+            'mac',
+            'aa:bb:cc:00:00:02',
+          ]),
+        ]),
+        'disabled_by': 'user',
+        'identifiers': list([
+          list([
+            'gree',
+            'AA-BB-CC-00-00-02',
+          ]),
+        ]),
+        'labels': list([
+          'device-label',
+        ]),
+        'model': 'Legacy model',
+        'name': 'Unit AA-BB-CC-00-00-02',
+        'name_by_user': 'Custom AA-BB-CC-00-00-02',
+        'owner': 'aabbcc000002',
+        'sw_version': 'V1.7',
+      }),
+      dict({
+        'area_id': 'device-area',
+        'connections': list([
+          list([
+            'mac',
+            'aa:bb:cc:00:00:01',
+          ]),
+        ]),
+        'disabled_by': 'user',
+        'identifiers': list([
+          list([
+            'gree',
+            'AA:BB:CC:00:00:01',
+          ]),
+        ]),
+        'labels': list([
+          'device-label',
+        ]),
+        'model': 'Legacy model',
+        'name': 'Unit AA:BB:CC:00:00:01',
+        'name_by_user': 'Custom AA:BB:CC:00:00:01',
+        'owner': 'aabbcc000001',
+        'sw_version': 'V1.7',
+      }),
+    ]),
+    'entities': list([
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'climate.custom_aa_bb_cc_00_00_01',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom climate.custom_aa_bb_cc_00_00_01',
+        'options': dict({
+          'sensor': dict({
+            'precision': 2,
+          }),
+        }),
+        'owner': 'aabbcc000001',
+        'unique_id': 'AA:BB:CC:00:00:01',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'climate.custom_aa_bb_cc_00_00_02',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom climate.custom_aa_bb_cc_00_00_02',
+        'options': dict({
+          'sensor': dict({
+            'precision': 2,
+          }),
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000001',
+        'unique_id': 'AA:BB:CC:00:00:01_Panel Light',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_2',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_2',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000001',
+        'unique_id': 'AA:BB:CC:00:00:01_Quiet',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_3',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_3',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000001',
+        'unique_id': 'AA:BB:CC:00:00:01_Fresh Air',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_4',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_4',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000001',
+        'unique_id': 'AA:BB:CC:00:00:01_XFan',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA:BB:CC:00:00:01',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_01_5',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_01_5',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000001',
+        'unique_id': 'AA:BB:CC:00:00:01_Health mode',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_Panel Light',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_2',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_2',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_Quiet',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_3',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_3',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_Fresh Air',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_4',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_4',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_XFan',
+      }),
+      dict({
+        'area_id': 'entity-area',
+        'device': 'AA-BB-CC-00-00-02',
+        'disabled_by': 'user',
+        'entity_id': 'switch.custom_aa_bb_cc_00_00_02_5',
+        'hidden_by': 'user',
+        'icon': 'mdi:air-conditioner',
+        'labels': list([
+          'entity-label',
+        ]),
+        'name': 'Custom switch.custom_aa_bb_cc_00_00_02_5',
+        'options': dict({
+        }),
+        'owner': 'aabbcc000002',
+        'unique_id': 'AA-BB-CC-00-00-02_Health mode',
+      }),
+    ]),
+    'entries': list([
+      dict({
+        'data': dict({
+          'brand': None,
+          'host': None,
+          'identifier': 'AA:BB:CC:00:00:01',
+          'mid': None,
+          'model': 'Legacy model',
+          'name': 'Unit AA:BB:CC:00:00:01',
+          'port': 7000,
+          'version': 'V1.7',
+        }),
+        'disabled_by': None,
+        'minor_version': 1,
+        'options': dict({
+          'retained': 'option',
+        }),
+        'pref_disable_new_entities': True,
+        'pref_disable_polling': True,
+        'source': 'user',
+        'title': 'My original Gree entry',
+        'unique_id': 'aabbcc000001',
+        'version': 2,
+      }),
+      dict({
+        'data': dict({
+          '_migration_source_entry_id': 'aabbcc000001',
+          'brand': None,
+          'host': None,
+          'identifier': 'AA-BB-CC-00-00-02',
+          'mid': None,
+          'model': None,
+          'name': None,
+          'port': 7000,
+          'version': None,
+        }),
+        'disabled_by': None,
+        'minor_version': 1,
+        'options': dict({
+        }),
+        'pref_disable_new_entities': False,
+        'pref_disable_polling': False,
+        'source': 'import',
+        'title': 'Already split',
+        'unique_id': 'aabbcc000002',
+        'version': 2,
+      }),
+    ]),
+  })
+# ---
