@@ -5767,6 +5767,132 @@
     'state': 'previous',
   })
 # ---
+# name: test_selects[tapo_smart_wi_fi_outlet][select.tapo_smart_wi_fi_outlet_power_on_behavior_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.tapo_smart_wi_fi_outlet_power_on_behavior_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior (1)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior (1)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-000000000000008A-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[tapo_smart_wi_fi_outlet][select.tapo_smart_wi_fi_outlet_power_on_behavior_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Tapo Smart Wi-Fi Outlet Power-on behavior (1)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.tapo_smart_wi_fi_outlet_power_on_behavior_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_selects[tapo_smart_wi_fi_outlet][select.tapo_smart_wi_fi_outlet_power_on_behavior_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.tapo_smart_wi_fi_outlet_power_on_behavior_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior (2)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior (2)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-000000000000008A-MatterNodeDevice-2-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[tapo_smart_wi_fi_outlet][select.tapo_smart_wi_fi_outlet_power_on_behavior_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Tapo Smart Wi-Fi Outlet Power-on behavior (2)',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.tapo_smart_wi_fi_outlet_power_on_behavior_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_selects[wago_home_blind_control][select.home_blind_wi_fi_connection_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
