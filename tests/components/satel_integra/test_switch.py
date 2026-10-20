@@ -173,14 +173,19 @@ async def test_switch_change_state(
 
 
 @pytest.mark.parametrize(
-    ("result_code", "translation_key"),
+    ("result_code", "translation_key", "error_type"),
     [
         (
             SatelResultCode.USER_CODE_NOT_FOUND,
             "command_invalid_access_code",
+            ServiceValidationError,
         ),
-        (SatelResultCode.NO_ACCESS, "command_no_access"),
-        (0x8A, "command_rejected"),
+        (
+            SatelResultCode.NO_ACCESS,
+            "command_no_access",
+            ServiceValidationError,
+        ),
+        (0x8A, "command_rejected", HomeAssistantError),
     ],
 )
 async def test_switch_command_rejected(
@@ -189,6 +194,7 @@ async def test_switch_command_rejected(
     mock_config_entry_with_subentries: MockConfigEntry,
     result_code: SatelResultCode | int,
     translation_key: str,
+    error_type: type[HomeAssistantError],
 ) -> None:
     """Test switch actions report a command rejected by the panel."""
     await setup_integration(hass, mock_config_entry_with_subentries)
@@ -198,7 +204,7 @@ async def test_switch_command_rejected(
         SatelCommandResult(result_code),
     )
 
-    with pytest.raises(HomeAssistantError) as err:
+    with pytest.raises(error_type) as err:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
@@ -208,6 +214,7 @@ async def test_switch_command_rejected(
 
     assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == translation_key
+    assert type(err.value) is error_type
     if translation_key == "command_rejected":
         assert err.value.translation_placeholders == {"result_code": "0x8A"}
     else:

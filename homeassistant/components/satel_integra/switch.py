@@ -105,12 +105,12 @@ class SatelIntegraSwitch(
             )
         except SatelCommandRejectedError as err:
             if err.result.code is SatelResultCode.USER_CODE_NOT_FOUND:
-                raise HomeAssistantError(
+                raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="command_invalid_access_code",
                 ) from err
             if err.result.code is SatelResultCode.NO_ACCESS:
-                raise HomeAssistantError(
+                raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="command_no_access",
                 ) from err
