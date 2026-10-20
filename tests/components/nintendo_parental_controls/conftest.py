@@ -14,12 +14,11 @@ from pynintendoparental.device import Device
 from pynintendoparental.enum import DeviceTimerMode, SafeLaunchSetting
 from pynintendoparental.player import Player, PlayerRegistry
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nintendo_parental_controls.const import DOMAIN
 
 from .const import ACCOUNT_ID, API_TOKEN, LOGIN_URL
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

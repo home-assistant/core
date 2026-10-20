@@ -11,10 +11,8 @@ from .services import async_setup_services
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up Media Extractor from a config entry."""
-
-    return True
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

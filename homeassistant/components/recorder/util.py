@@ -33,6 +33,7 @@ from homeassistant.generated.recorder_database_versions import (
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.recorder import (  # noqa: F401
     DATA_INSTANCE,
+    SESSION_INFO_READ_ONLY,
     get_instance,
     session_scope,
 )
@@ -152,6 +153,22 @@ SUNDAY_WEEKDAY = 6
 DAYS_IN_WEEK = 7
 
 
+def _rollback_read_only_session(session: Session) -> None:
+    """Roll back a read-only session so a retried query can reconnect.
+
+    A query after a lost connection otherwise raises PendingRollbackError. Only a
+    read-only session is rolled back: it is never committed, so nothing is lost. A
+    session holding writes is left alone, a rollback would discard them while the
+    retry succeeds and the caller commits what is left of its unit of work.
+    """
+    if not session.info.get(SESSION_INFO_READ_ONLY):
+        return
+    try:
+        session.rollback()
+    except SQLAlchemyError as err:
+        _LOGGER.error("Error rolling back the session: %s", err)
+
+
 def execute(qry: Query) -> list[Row]:
     """Query the database and convert the objects to HA native form.
 
@@ -177,6 +194,7 @@ def execute(qry: Query) -> list[Row]:
 
             if tryno == RETRIES - 1:
                 raise
+            _rollback_read_only_session(qry.session)
             time.sleep(QUERY_RETRY_WAIT)
         else:
             return result
@@ -218,6 +236,7 @@ def execute_stmt_lambda_element(
             _LOGGER.error("Error executing query: %s", err)
             if tryno == RETRIES - 1:
                 raise
+            _rollback_read_only_session(session)
             time.sleep(QUERY_RETRY_WAIT)
 
     # Unreachable

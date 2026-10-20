@@ -3,7 +3,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unique_id_mismatch": "The API key belongs to a different Fish Audio account than the one originally configured."
     },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -12,6 +13,16 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::fish_audio::config::step::user::data_description::api_key%]"
+        },
+        "description": "The API key for your Fish Audio account is no longer valid. Enter a new API key, which you can create on the [Fish Audio API Keys]({api_keys_url}) page.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"

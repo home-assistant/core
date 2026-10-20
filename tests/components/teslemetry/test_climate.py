@@ -4,6 +4,7 @@ from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import mock_restore_cache_with_extra_data
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.const import CabinOverheatProtectionTemp
 from tesla_fleet_api.exceptions import InvalidCommand
@@ -49,8 +50,6 @@ from .const import (
     METADATA_NOSCOPE,
     VEHICLE_DATA_ALT,
 )
-
-from tests.common import mock_restore_cache
 
 VIN = "LRW3F7EK4NC700000"
 
@@ -456,8 +455,31 @@ async def test_select_streaming(
         assert hass.states.get(entity_id) == snapshot(name=entity_id)
 
 
+STORED_CLIMATE = {
+    "native_current_temperature": 21.0,
+    "native_target_temperature": 22.0,
+    "native_target_temperature_high": None,
+    "native_target_temperature_low": None,
+    "native_temperature_unit": UnitOfTemperature.CELSIUS,
+}
+STORED_COP = {
+    "native_current_temperature": 21.0,
+    "native_target_temperature": 35.0,
+    "native_target_temperature_high": None,
+    "native_target_temperature_low": None,
+    "native_temperature_unit": UnitOfTemperature.CELSIUS,
+}
+
+
 @pytest.mark.parametrize(
-    ("entity_id", "units", "attributes", "expected_native", "expected_display"),
+    (
+        "entity_id",
+        "units",
+        "attributes",
+        "extra_data",
+        "expected_native",
+        "expected_display",
+    ),
     [
         pytest.param(
             "climate.test_climate",
@@ -469,6 +491,7 @@ async def test_select_streaming(
                     UnitOfTemperature.FAHRENHEIT
                 ),
             },
+            None,
             (21.111, 22.222),
             (70.0, 72.0),
             id="climate_fahrenheit_on_us_customary",
@@ -483,6 +506,7 @@ async def test_select_streaming(
                     UnitOfTemperature.FAHRENHEIT
                 ),
             },
+            None,
             (21.111, 22.222),
             (21.0, 22.0),
             id="climate_fahrenheit_on_metric",
@@ -497,6 +521,7 @@ async def test_select_streaming(
                     UnitOfTemperature.CELSIUS
                 ),
             },
+            None,
             (21.0, 22.0),
             (70.0, 71.5),
             id="climate_celsius_on_us_customary",
@@ -508,6 +533,7 @@ async def test_select_streaming(
                 ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 70,
                 ClimateEntityStateAttribute.TARGET_TEMPERATURE: 72,
             },
+            None,
             (21.111, 22.222),
             (70.0, 72.0),
             id="climate_legacy_on_us_customary",
@@ -520,6 +546,7 @@ async def test_select_streaming(
                 ClimateEntityStateAttribute.TARGET_TEMPERATURE: 72,
                 ClimateEntityStateAttribute.TEMPERATURE_UNIT: "invalid",
             },
+            None,
             (None, None),
             (None, None),
             id="climate_invalid_unit",
@@ -534,9 +561,22 @@ async def test_select_streaming(
                     UnitOfTemperature.FAHRENHEIT
                 ),
             },
+            None,
             (None, None),
             (None, None),
             id="climate_none_values",
+        ),
+        pytest.param(
+            "climate.test_climate",
+            US_CUSTOMARY_SYSTEM,
+            {
+                ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 100,
+                ClimateEntityStateAttribute.TARGET_TEMPERATURE: 100,
+            },
+            STORED_CLIMATE,
+            (21.0, 22.0),
+            (70.0, 71.5),
+            id="climate_extra_data_on_us_customary",
         ),
         pytest.param(
             "climate.test_cabin_overheat_protection",
@@ -548,6 +588,7 @@ async def test_select_streaming(
                     UnitOfTemperature.FAHRENHEIT
                 ),
             },
+            None,
             (22.222, 35.0),
             (72, 95),
             id="cop_fahrenheit_on_us_customary",
@@ -562,6 +603,7 @@ async def test_select_streaming(
                     UnitOfTemperature.FAHRENHEIT
                 ),
             },
+            None,
             (22.222, 35.0),
             (22, 35),
             id="cop_fahrenheit_on_metric",
@@ -573,9 +615,22 @@ async def test_select_streaming(
                 ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 72,
                 ClimateEntityStateAttribute.TARGET_TEMPERATURE: 95,
             },
+            None,
             (22.222, 35.0),
             (72, 95),
             id="cop_legacy_on_us_customary",
+        ),
+        pytest.param(
+            "climate.test_cabin_overheat_protection",
+            US_CUSTOMARY_SYSTEM,
+            {
+                ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 100,
+                ClimateEntityStateAttribute.TARGET_TEMPERATURE: 100,
+            },
+            STORED_COP,
+            (21.0, 35.0),
+            (70, 95),
+            id="cop_extra_data_on_us_customary",
         ),
     ],
 )
@@ -586,15 +641,18 @@ async def test_streaming_restore_temperature_unit(
     entity_id: str,
     units: UnitSystem,
     attributes: dict[str, float | str | None],
+    extra_data: dict[str, float | str | None] | None,
     expected_native: tuple[float | None, float | None],
     expected_display: tuple[float | None, float | None],
 ) -> None:
-    """Tests restored display-unit temperatures are converted to native Celsius."""
+    """Test restored temperatures are converted to native Celsius."""
     metadata = deepcopy(METADATA)
     metadata["vehicles"][VIN]["config"] = {"cop_user_set_temp_supported": True}
     mock_metadata.return_value = metadata
     hass.config.units = units
-    mock_restore_cache(hass, (State(entity_id, HVACMode.OFF, attributes),))
+    mock_restore_cache_with_extra_data(
+        hass, ((State(entity_id, HVACMode.OFF, attributes), extra_data),)
+    )
 
     await setup_platform(hass, [Platform.CLIMATE])
 

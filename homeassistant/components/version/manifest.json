@@ -1,6 +1,7 @@
 {
   "domain": "version",
   "name": "Version",
+  "categories": ["computers_network.monitoring"],
   "codeowners": ["@ludeeus"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/version",
