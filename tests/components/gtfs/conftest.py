@@ -13,15 +13,14 @@ from homeassistant.components.gtfs.const import (
     CONF_DATABASE,
     CONF_DESTINATION,
     CONF_ORIGIN,
-    CONF_TOMORROW,
     DOMAIN,
     SUBENTRY_TYPE_ROUTE,
 )
 from homeassistant.config_entries import ConfigSubentryDataWithId
-from homeassistant.const import CONF_OFFSET, CONF_URL
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 
-from . import FEED_URL, ROUTE_SUBENTRY_ID, TEST_DATABASE, ZERO_OFFSET, build_feed_zip
+from . import FEED_URL, ROUTE_SUBENTRY_ID, TEST_DATABASE, build_feed_zip
 
 
 @pytest.fixture
@@ -80,12 +79,7 @@ def mock_config_entry() -> MockConfigEntry:
         data={CONF_URL: FEED_URL, CONF_DATABASE: TEST_DATABASE},
         subentries_data=[
             ConfigSubentryDataWithId(
-                data={
-                    CONF_ORIGIN: "S1",
-                    CONF_DESTINATION: "S3",
-                    CONF_OFFSET: ZERO_OFFSET,
-                    CONF_TOMORROW: False,
-                },
+                data={CONF_ORIGIN: "S1", CONF_DESTINATION: "S3"},
                 subentry_id=ROUTE_SUBENTRY_ID,
                 subentry_type=SUBENTRY_TYPE_ROUTE,
                 title="First Street to Third Street",

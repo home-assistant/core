@@ -18,24 +18,17 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.gtfs.const import (
     CONF_DESTINATION,
     CONF_ORIGIN,
-    CONF_TOMORROW,
     DOMAIN,
     SUBENTRY_TYPE_ROUTE,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigSubentry
-from homeassistant.const import CONF_OFFSET, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import (
-    ROUTE_ENTITY_ID,
-    ROUTE_SUBENTRY_ID,
-    ZERO_OFFSET,
-    setup_integration,
-    setup_yaml_sensor,
-)
+from . import ROUTE_ENTITY_ID, ROUTE_SUBENTRY_ID, setup_integration, setup_yaml_sensor
 
 DAY_ROUTE = {"origin": "S1", "destination": "S3"}
 NIGHT_ROUTE = {"origin": "N1", "destination": "N2"}
@@ -367,6 +360,19 @@ async def test_config_entry_sensor(
     assert device.config_subentry_id == ROUTE_SUBENTRY_ID
 
 
+@pytest.mark.freeze_time("2026-10-19 18:00:00-04:00")
+@pytest.mark.usefixtures("mock_feed_download")
+async def test_config_entry_sensor_looks_ahead_to_tomorrow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test a route shows tomorrow's first departure once today's have ended."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get(ROUTE_ENTITY_ID)) is not None
+    assert state.state == "2026-10-20T12:00:00+00:00"
+    assert state.attributes["day"] == "tomorrow"
+
+
 @pytest.mark.freeze_time("2026-10-19 07:30:00-04:00")
 @pytest.mark.usefixtures("mock_feed_download")
 async def test_config_entry_multiple_routes(
@@ -379,14 +385,7 @@ async def test_config_entry_multiple_routes(
     hass.config_entries.async_add_subentry(
         mock_config_entry,
         ConfigSubentry(
-            data=MappingProxyType(
-                {
-                    CONF_ORIGIN: "S2",
-                    CONF_DESTINATION: "S3",
-                    CONF_OFFSET: ZERO_OFFSET,
-                    CONF_TOMORROW: False,
-                }
-            ),
+            data=MappingProxyType({CONF_ORIGIN: "S2", CONF_DESTINATION: "S3"}),
             subentry_type=SUBENTRY_TYPE_ROUTE,
             title="Second Street to Third Street",
             unique_id=json.dumps(["S2", "S3"]),

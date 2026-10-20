@@ -19,7 +19,6 @@ FEED_URL = "https://example.com/gtfs.zip"
 TEST_DATABASE = "test_feed.sqlite"
 ROUTE_SUBENTRY_ID = "route_s1_s3"
 ROUTE_ENTITY_ID = "sensor.first_street_to_third_street"
-ZERO_OFFSET = {"hours": 0, "minutes": 0, "seconds": 0}
 
 
 def build_feed_zip(
