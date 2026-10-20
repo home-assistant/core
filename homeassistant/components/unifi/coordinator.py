@@ -74,9 +74,11 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
                     type(self._handler).__name__,
                 )
             raise UpdateFailed(str(err)) from err
-        except (TimeoutError, aiounifi.AiounifiException) as err:
+        except (TimeoutError, aiounifi.RequestError) as err:
             self._connection.report_failure(err)
             return
+        except aiounifi.AiounifiException as err:
+            raise UpdateFailed(str(err)) from err
 
         if self.update_interval is not None:
             self.update_interval = (

@@ -236,11 +236,7 @@ async def test_entity_unavailable_on_polling_coordinator_failure(
 @pytest.mark.parametrize(
     "exception",
     [
-        aiounifi.LoginRequired,
-        aiounifi.Unauthorized,
-        aiounifi.Forbidden,
         aiounifi.RequestError,
-        aiounifi.ResponseError,
         aiounifi.BadGateway,
         aiounifi.ServiceUnavailable,
         TimeoutError,
@@ -277,6 +273,49 @@ async def test_polling_connection_failure_reports_connection_failure(
     report_failure.assert_called_once()
     assert not hub.available
     assert coordinator.last_update_success is True
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        aiounifi.LoginRequired,
+        aiounifi.Unauthorized,
+        aiounifi.Forbidden,
+        aiounifi.NoPermission,
+        aiounifi.ResponseError,
+    ],
+)
+async def test_polling_request_rejection_does_not_report_connection_failure(
+    config_entry_setup: MockConfigEntry,
+    exception: type[Exception],
+) -> None:
+    """Ensure rejected polling requests only fail the coordinator."""
+    hub = config_entry_setup.runtime_data
+    coordinator = hub.entity_loader.get_data_update_coordinator(
+        hub.api.object_oriented_network_configs
+    )
+
+    with (
+        patch.object(
+            coordinator.handler,
+            "update",
+            side_effect=exception,
+        ),
+        patch.object(
+            hub.connection,
+            "report_failure",
+            wraps=hub.connection.report_failure,
+        ) as report_failure,
+    ):
+        assert coordinator.update_interval is not None
+        async_fire_time_changed(
+            hub.hass, dt_util.utcnow() + coordinator.update_interval
+        )
+        await hub.hass.async_block_till_done()
+
+    report_failure.assert_not_called()
+    assert hub.available
+    assert coordinator.last_update_success is False
 
 
 async def test_startup_network_information_failure_reports_connection_failure(
@@ -387,10 +426,15 @@ async def test_connection_recovery_does_not_restart_running_websocket(
     assert websocket.ws_task is active_task
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [aiounifi.ServiceUnavailable, aiounifi.Unauthorized, aiounifi.LoginRequired],
+)
 async def test_connection_waits_for_network_application_after_login(
     hass: HomeAssistant,
     config_entry_setup: MockConfigEntry,
     mock_websocket_state: WebsocketStateManager,
+    exception: type[Exception],
 ) -> None:
     """Keep the hub unavailable until the Network application answers."""
     hub = config_entry_setup.runtime_data
@@ -401,7 +445,7 @@ async def test_connection_waits_for_network_application_after_login(
         patch.object(
             hub.api.system_information,
             "update",
-            side_effect=aiounifi.ServiceUnavailable,
+            side_effect=exception,
         ),
         patch.object(config_entry_setup, "async_start_reauth") as start_reauth,
     ):
@@ -419,28 +463,17 @@ async def test_connection_waits_for_network_application_after_login(
 
 
 @pytest.mark.parametrize("exception", [aiounifi.LoginRequired, aiounifi.Unauthorized])
-@pytest.mark.parametrize(
-    "target",
-    [
-        pytest.param("aiounifi.Controller.login", id="login"),
-        pytest.param(
-            "aiounifi.interfaces.system_information.SystemInformationHandler.update",
-            id="readiness_probe",
-        ),
-    ],
-)
 async def test_reconnect_auth_failure_starts_reauth(
     config_entry_setup: MockConfigEntry,
     mock_websocket_state: WebsocketStateManager,
-    target: str,
     exception: type[Exception],
 ) -> None:
-    """Stop retrying and start reauthentication when credentials are rejected."""
+    """Stop retrying and start reauthentication when login rejects credentials."""
     hub = config_entry_setup.runtime_data
     await mock_websocket_state.disconnect()
 
     with (
-        patch(target, side_effect=exception),
+        patch.object(hub.api, "login", side_effect=exception),
         patch.object(config_entry_setup, "async_start_reauth") as start_reauth,
     ):
         await mock_websocket_state.reconnect()

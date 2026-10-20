@@ -103,24 +103,35 @@ class UnifiConnectionManager:
             try:
                 async with asyncio.timeout(5):
                     await self.api.login()
-                async with asyncio.timeout(5):
-                    await self.api.system_information.update()
             except aiounifi.LoginRequired, aiounifi.Unauthorized:
                 self._reconnect_task = None
                 self._reauth_required = True
                 self.config_entry.async_start_reauth(self.hass)
+                return
             except (TimeoutError, aiounifi.AiounifiException) as err:
-                self._reconnect_task = None
-                LOGGER.debug("UniFi Network is not ready after login: %s", err)
-                self._schedule_retry()
-            else:
-                self._reconnect_task = None
-                self._attempt = 0
-                self._set_available(True)
-                if self._recovery_callback is not None:
-                    self._recovery_callback()
+                self._retry_after_failure(err)
+                return
+
+            try:
+                async with asyncio.timeout(5):
+                    await self.api.system_information.update()
+            except (TimeoutError, aiounifi.AiounifiException) as err:
+                self._retry_after_failure(err)
+                return
+
+            self._reconnect_task = None
+            self._attempt = 0
+            self._set_available(True)
+            if self._recovery_callback is not None:
+                self._recovery_callback()
 
         self._reconnect_task = self.hass.async_create_task(_reconnect())
+
+    def _retry_after_failure(self, err: Exception) -> None:
+        """Schedule another attempt after login or the readiness probe failed."""
+        self._reconnect_task = None
+        LOGGER.debug("UniFi Network is not ready after login: %s", err)
+        self._schedule_retry()
 
     @callback
     def _set_available(self, available: bool) -> None:
