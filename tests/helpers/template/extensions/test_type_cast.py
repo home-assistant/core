@@ -25,6 +25,7 @@ def test_float_function(hass: HomeAssistant) -> None:
     # Test handling of default return value
     assert render(hass, "{{ float('bad', 1) }}") == 1
     assert render(hass, "{{ float('bad', default=1) }}") == 1
+    assert render(hass, "{{ float(value, default=1) }}", {"value": 10**400}) == 1
 
 
 def test_float_filter(hass: HomeAssistant) -> None:
@@ -126,6 +127,7 @@ def test_bool_filter(hass: HomeAssistant) -> None:
         (math.inf, False),
         ("nan", False),
         ("inf", False),
+        pytest.param(10**400, False, id="int_out_of_float_range"),
     ],
 )
 def test_isnumber(hass: HomeAssistant, value: object, expected: bool) -> None:
