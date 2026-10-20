@@ -1,7 +1,7 @@
 """Tests for Fritz!Tools switch platform."""
 
 from copy import deepcopy
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from fritzconnection.core.exceptions import FritzActionError
@@ -1072,28 +1072,27 @@ async def test_migrate_to_existing_unique_id(
 
 async def test_wifi_naming_internal_comm_and_skipped() -> None:
     """Test skip internal Wi-Fi network."""
-    # Prepare AvmWrapper mock with 4 Wi-Fi networks
     avm_wrapper = MagicMock()
     avm_wrapper.connection.services = [
         "WLANConfiguration1",
         "WLANConfiguration2",
         "WLANConfiguration3",
         "WLANConfiguration4",
+        "WLANConfiguration5",
     ]
-    # The 3rd network (index 2) should be skipped
     wifi_configs = [
         {"NewSSID": "wifi1"},
         {"NewSSID": "wifi2"},
         {"NewSSID": "wifi3"},
         {"NewSSID": "wifi4"},
+        {"NewSSID": "wifi5"},
     ]
     avm_wrapper.async_get_wlan_configuration = AsyncMock(side_effect=wifi_configs)
 
     networks = await fritz_switch._get_wifi_networks_list(avm_wrapper)
-    # The 3rd network (index 2) should be skipped
-    assert 3 not in networks  # 1-based index, so 3 is the 3rd
-    # The rest should be present
-    assert set(networks.keys()) == {1, 2, 4}
+
+    assert set(networks) == {1, 2, 3, 5}
+    assert networks[5]["switch_name"] == "guest"
 
 
 @pytest.mark.parametrize(
