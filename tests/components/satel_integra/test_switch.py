@@ -177,10 +177,10 @@ async def test_switch_change_state(
     [
         (
             SatelResultCode.USER_CODE_NOT_FOUND,
-            "output_command_invalid_access_code",
+            "command_invalid_access_code",
         ),
-        (SatelResultCode.NO_ACCESS, "output_command_no_access"),
-        (0x8A, "output_command_rejected"),
+        (SatelResultCode.NO_ACCESS, "command_no_access"),
+        (0x8A, "command_rejected"),
     ],
 )
 async def test_switch_command_rejected(
@@ -208,7 +208,7 @@ async def test_switch_command_rejected(
 
     assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == translation_key
-    if translation_key == "output_command_rejected":
+    if translation_key == "command_rejected":
         assert err.value.translation_placeholders == {"result_code": "0x8A"}
     else:
         assert err.value.translation_placeholders is None
@@ -236,7 +236,7 @@ async def test_switch_command_outcome_unknown(
         )
 
     assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == "output_command_outcome_unknown"
+    assert err.value.translation_key == "command_outcome_unknown"
     state = hass.states.get("switch.switchable_output")
     assert state is not None
     assert state.state == STATE_OFF

@@ -107,16 +107,16 @@ class SatelIntegraSwitch(
             if err.result.code is SatelResultCode.USER_CODE_NOT_FOUND:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
-                    translation_key="output_command_invalid_access_code",
+                    translation_key="command_invalid_access_code",
                 ) from err
             if err.result.code is SatelResultCode.NO_ACCESS:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
-                    translation_key="output_command_no_access",
+                    translation_key="command_no_access",
                 ) from err
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="output_command_rejected",
+                translation_key="command_rejected",
                 translation_placeholders={
                     "result_code": f"0x{int(err.result.code):02X}"
                 },
@@ -124,7 +124,7 @@ class SatelIntegraSwitch(
         except SatelNoResponseError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="output_command_outcome_unknown",
+                translation_key="command_outcome_unknown",
             ) from err
 
     @override
