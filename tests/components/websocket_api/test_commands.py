@@ -4604,6 +4604,7 @@ async def test_get_triggers_conditions_for_target(
                         "light_message": Mock,
                         "light_flash": Mock,
                         "light_dance": Mock,
+                        "sensor_translation_key": Mock,
                     }
                 )
             }
@@ -4619,10 +4620,32 @@ async def test_get_triggers_conditions_for_target(
                         "match_all": Mock,
                         "other_integration_lights": Mock,
                         "non_primary_sensor": Mock,
+                        "translation_key_only": Mock,
                     }
                 )
             }
         ),
+    )
+
+    price_config_entry = MockConfigEntry(domain="test")
+    price_config_entry.add_to_hass(hass)
+    component1_price_platform = MockEntityPlatform(
+        hass, domain="sensor", platform_name="component1"
+    )
+    component1_price_platform.config_entry = price_config_entry
+    await component1_price_platform.async_add_entities(
+        [
+            MockEntity(
+                entity_id="sensor.component1_current_price",
+                unique_id="component1_current_price",
+                translation_key="current_price",
+            ),
+            MockEntity(
+                entity_id="sensor.component1_other_price",
+                unique_id="component1_other_price",
+                translation_key="other_price",
+            ),
+        ]
     )
 
     def get_common_descriptions(domain: str):
@@ -4683,6 +4706,12 @@ async def test_get_triggers_conditions_for_target(
               supported_features: # both required features
                 - - light.LightEntityFeature.FLASH
                   - light.LightEntityFeature.TRANSITION
+        sensor_translation_key:
+          target:
+            entity:
+              integration: component1
+              domain: sensor
+              translation_key: current_price
     """
 
     component2_descriptions = """
@@ -4703,6 +4732,10 @@ async def test_get_triggers_conditions_for_target(
             entity:
               domain: sensor
             primary_entities_only: false
+        translation_key_only:
+          target:
+            entity:
+              translation_key: current_price
     """
 
     def _load_yaml(fname, secrets=None):
@@ -4846,6 +4879,28 @@ async def test_get_triggers_conditions_for_target(
         await assert_command(
             {"entity_id": ["sensor.test7"]},
             [
+                "component2.match_all",
+                "component2.non_primary_sensor",
+                "sensor.turned_on",
+            ],
+        )
+
+        # Test entity targets filtered by translation key
+        await assert_command(
+            {"entity_id": ["sensor.component1_current_price"]},
+            [
+                "component1",
+                "component1.sensor_translation_key",
+                "component2.match_all",
+                "component2.non_primary_sensor",
+                "component2.translation_key_only",
+                "sensor.turned_on",
+            ],
+        )
+        await assert_command(
+            {"entity_id": ["sensor.component1_other_price"]},
+            [
+                "component1",
                 "component2.match_all",
                 "component2.non_primary_sensor",
                 "sensor.turned_on",
