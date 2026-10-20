@@ -5,14 +5,13 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from skyfield.units import Angle
 
 from homeassistant.components import automation
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 _PHASE = "homeassistant.components.moon.helpers.almanac.moon_phase"
 

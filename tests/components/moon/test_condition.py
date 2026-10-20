@@ -4,13 +4,12 @@ from unittest.mock import patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from skyfield.units import Angle
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import condition
 from homeassistant.helpers.typing import ConfigType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

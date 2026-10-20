@@ -5,14 +5,13 @@ from typing import cast
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from skyfield.jpllib import SpiceKernel
 from skyfield.timelib import Timescale
 from skyfield.units import Angle
 
 from homeassistant.components.moon.const import DOMAIN
 from homeassistant.components.moon.helpers import MoonData
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

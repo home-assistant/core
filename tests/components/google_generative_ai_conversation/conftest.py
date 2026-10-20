@@ -1,9 +1,13 @@
 """Tests helpers."""
 
 from collections.abc import AsyncGenerator, Generator
+import json
 from unittest.mock import AsyncMock, Mock, patch
 
+from google.genai._api_client import HttpRequest, HttpResponse
+from google.genai.types import HttpOptionsOrDict
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_USE_GOOGLE_SEARCH_TOOL,
@@ -22,8 +26,6 @@ from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -155,4 +157,31 @@ def mock_generate_content() -> Generator[AsyncMock]:
     with patch(
         "google.genai.models.AsyncModels.generate_content",
     ) as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_genai_transport() -> Generator[AsyncMock]:
+    """Capture real SDK request construction, without making HTTP requests."""
+    mock = AsyncMock()
+    mock.return_value = [
+        {
+            "candidates": [
+                {
+                    "content": {"role": "model", "parts": [{"text": "Done"}]},
+                    "finishReason": "STOP",
+                }
+            ]
+        }
+    ]
+
+    async def request(
+        http_request: HttpRequest,
+        http_options: HttpOptionsOrDict | None = None,
+        stream: bool = False,
+    ) -> HttpResponse:
+        return HttpResponse({}, [json.dumps(mock.return_value.pop(0))])
+
+    mock.side_effect = request
+    with patch("google.genai._api_client.BaseApiClient._async_request", mock):
         yield mock

@@ -307,14 +307,6 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         self.async_write_ha_state()
 
     @override
-    # pylint: disable-next=home-assistant-missing-super-call
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self._async_update_shade_from_group)
-        )
-
-    @override
     async def async_will_remove_from_hass(self) -> None:
         """Cancel any pending refreshes."""
         self._async_cancel_scheduled_transition_update()
@@ -325,7 +317,8 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         return bool(self._scheduled_transition_update or self._forced_resync)
 
     @callback
-    def _async_update_shade_from_group(self) -> None:
+    @override
+    def _handle_coordinator_update(self) -> None:
         """Update with new data from the coordinator."""
         if self._update_in_progress:
             # If a transition is in progress the data will be wrong

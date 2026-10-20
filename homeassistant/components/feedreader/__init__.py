@@ -10,7 +10,7 @@ from .coordinator import FeedReaderConfigEntry, FeedReaderCoordinator, StoredDat
 FEEDREADER_KEY: HassKey[StoredData] = HassKey(DOMAIN)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FeedReaderConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FeedReaderConfigEntry) -> None:
     """Set up Feedreader from a config entry."""
     storage = hass.data.setdefault(FEEDREADER_KEY, StoredData(hass))
     if not storage.is_initialized:
@@ -28,10 +28,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: FeedReaderConfigEntry) -
 
     await coordinator.async_config_entry_first_refresh()
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: FeedReaderConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FeedReaderConfigEntry) -> None:
     """Unload a config entry."""
     entries = hass.config_entries.async_entries(
         DOMAIN, include_disabled=False, include_ignore=False
@@ -39,4 +37,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: FeedReaderConfigEntry) 
     # if this is the last entry, remove the storage
     if len(entries) == 1:
         hass.data.pop(FEEDREADER_KEY)
-    return await hass.config_entries.async_unload_platforms(entry, [Platform.EVENT])
+    await hass.config_entries.async_unload_platforms_or_raise(entry, [Platform.EVENT])

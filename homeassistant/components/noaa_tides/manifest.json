@@ -1,6 +1,7 @@
 {
   "domain": "noaa_tides",
   "name": "NOAA Tides",
+  "categories": ["weather_alerts.forecasts"],
   "codeowners": ["@jdelaney72"],
   "documentation": "https://www.home-assistant.io/integrations/noaa_tides",
   "iot_class": "cloud_polling",

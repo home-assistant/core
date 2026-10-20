@@ -2,10 +2,10 @@
 
 from unittest.mock import patch
 
-import broadlink.exceptions as blke
+import broadlink_async.exceptions as blke
 import pytest
 
-from homeassistant.components.broadlink.const import DOMAIN
+from homeassistant.components.broadlink.const import BROADLINK_DATA, DOMAIN
 from homeassistant.components.broadlink.device import get_domains
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_FRIENDLY_NAME, Platform
@@ -76,10 +76,7 @@ async def test_device_setup_authentication_error(hass: HomeAssistant) -> None:
     assert mock_forward.call_count == 0
     assert mock_init.call_count == 1
     assert mock_init.mock_calls[0][2]["context"]["source"] == "reauth"
-    assert mock_init.mock_calls[0][2]["data"] == {
-        "name": device.name,
-        **device.get_entry_data(),
-    }
+    assert mock_init.mock_calls[0][2]["data"] == device.get_entry_data()
 
 
 async def test_device_setup_network_timeout(hass: HomeAssistant) -> None:
@@ -178,7 +175,7 @@ async def test_device_request_endpoint_closed(hass: HomeAssistant) -> None:
     mock_api.auth.reset_mock()
     mock_api.check_sensors.reset_mock()
 
-    broadlink_device = hass.data[DOMAIN].devices[mock_setup.entry.entry_id]
+    broadlink_device = hass.data[BROADLINK_DATA].devices[mock_setup.entry.entry_id]
     with pytest.raises(blke.EndpointClosedError):
         await broadlink_device.async_request(mock_api.check_sensors)
 
@@ -232,10 +229,7 @@ async def test_device_setup_update_authentication_error(hass: HomeAssistant) -> 
     assert mock_forward.call_count == 0
     assert mock_init.call_count == 1
     assert mock_init.mock_calls[0][2]["context"]["source"] == "reauth"
-    assert mock_init.mock_calls[0][2]["data"] == {
-        "name": device.name,
-        **device.get_entry_data(),
-    }
+    assert mock_init.mock_calls[0][2]["data"] == device.get_entry_data()
 
 
 async def test_device_setup_update_broadlink_exception(hass: HomeAssistant) -> None:
@@ -344,6 +338,23 @@ async def test_device_unload_works(hass: HomeAssistant) -> None:
     domains = get_domains(mock_setup.api.type)
     assert mock_forward.call_count == len(domains)
     assert forward_entries == domains
+
+
+async def test_device_unload_failed(hass: HomeAssistant) -> None:
+    """Test unloading fails when the device platforms cannot be unloaded."""
+    device = get_device("Office")
+
+    with patch.object(hass.config_entries, "async_forward_entry_setups"):
+        mock_setup = await device.setup_entry(hass)
+
+    with patch.object(
+        hass.config_entries, "async_forward_entry_unload", return_value=False
+    ):
+        await hass.config_entries.async_unload(mock_setup.entry.entry_id)
+
+    assert mock_setup.entry.state is ConfigEntryState.FAILED_UNLOAD
+    assert mock_setup.entry.reason == "Failed to unload the device"
+    assert mock_setup.api.aclose.await_count == 0
 
 
 async def test_device_unload_authentication_error(hass: HomeAssistant) -> None:

@@ -2,9 +2,9 @@
 
 from typing import Any
 
-from homeassistant.core import HomeAssistant
+from pytest_homeassistant.common import load_json_value_fixture
 
-from tests.common import load_json_value_fixture
+from homeassistant.core import HomeAssistant
 
 
 def load_json_fixture(filename: str) -> Any:

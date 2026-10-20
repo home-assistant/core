@@ -8,7 +8,7 @@ from .const import PLATFORMS
 from .helpers import MoonConfigEntry, load_moon_data
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MoonConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MoonConfigEntry) -> None:
     """Set up from a config entry."""
     try:
         entry.runtime_data = await hass.async_add_executor_job(
@@ -19,9 +19,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MoonConfigEntry) -> bool
 
     entry.async_on_unload(entry.runtime_data.ephemeris.close)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
