@@ -435,15 +435,17 @@ async def async_setup_gateway_entry(
     gateway_info = gateway.gateway_info
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, gateway_info.mac_address)},
-        identifiers={(DOMAIN, gateway_id)},
-        manufacturer="Xiaomi",
-        name=name,
-        model=gateway_info.model,
-        sw_version=gateway_info.firmware_version,
-        hw_version=gateway_info.hardware_version,
+        device_info=dr.DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, gateway_info.mac_address)},
+            identifiers={(DOMAIN, gateway_id)},
+            manufacturer="Xiaomi",
+            name=name,
+            model=gateway_info.model,
+            sw_version=gateway_info.firmware_version,
+            hw_version=gateway_info.hardware_version,
+        ),
     )
 
     coordinator_dict: dict[str, GatewayDeviceCoordinator] = {}
