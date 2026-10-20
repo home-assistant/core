@@ -3,14 +3,13 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import requests
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .conftest import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_concord232_client")

@@ -675,6 +675,7 @@ class BlockSleepingClimate(CoordinatorEntity[ShellyBlockCoordinator], RestoreCli
                     "device_name": self.coordinator.name,
                     "ip_address": self.coordinator.device.ip_address,
                 },
+                config_entry_id=self.coordinator.config_entry.entry_id,
             )
         else:
             ir.async_delete_issue(

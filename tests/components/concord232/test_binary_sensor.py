@@ -1,10 +1,11 @@
 """Tests for the Concord232 binary sensor platform."""
 
-from datetime import timedelta
+import datetime as dt
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.concord232.binary_sensor import SCAN_INTERVAL
@@ -16,8 +17,6 @@ from homeassistant.const import ATTR_DEVICE_CLASS, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
 from .conftest import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_zone_sensors_created(
@@ -80,7 +79,7 @@ async def test_zone_state_updates(
         {"number": 1, "name": "FRONT DOOR", "state": "Tripped"},
         {"number": 2, "name": "HALL MOTION", "state": "Normal"},
     ]
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
+    freezer.tick(SCAN_INTERVAL + dt.timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

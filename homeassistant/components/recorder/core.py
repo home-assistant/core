@@ -555,10 +555,23 @@ class Recorder(threading.Thread):
 
     @callback
     def async_clear_statistics(
-        self, statistic_ids: list[str], *, on_done: Callable[[], None] | None = None
+        self,
+        statistic_ids: list[str],
+        *,
+        start_time: datetime | None = None,
+        end_time: datetime | None = None,
+        on_done: Callable[[], None] | None = None,
     ) -> None:
-        """Clear statistics for a list of statistic_ids."""
-        self.queue_task(ClearStatisticsTask(on_done, statistic_ids))
+        """Clear statistics for a list of statistic_ids.
+
+        With a time range, only the statistics which overlap the range are cleared.
+        """
+        # A one-sided range would otherwise clear the complete statistics.
+        if (start_time is None) != (end_time is None):
+            raise ValueError("start_time and end_time must be provided together")
+        self.queue_task(
+            ClearStatisticsTask(on_done, statistic_ids, start_time, end_time)
+        )
 
     @callback
     def async_update_statistics_metadata(

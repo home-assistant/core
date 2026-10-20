@@ -7,6 +7,11 @@ from freezegun.api import FrozenDateTimeFactory
 from pizone import Controller, ControllerCommandError, Zone
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -36,8 +41,6 @@ import homeassistant.helpers.entity_registry as er
 
 from . import setup_integration
 from .conftest import create_mock_controller, create_mock_zone
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 CONTROLLER_ENTITY = "climate.izone_controller_000000001"
 ZONE_ENTITY = "climate.living_room"

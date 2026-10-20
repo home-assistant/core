@@ -14,6 +14,12 @@ from onedrive_personal_sdk.exceptions import (
 )
 from onedrive_personal_sdk.models.items import File
 import pytest
+from pytest_homeassistant.common import AsyncMock, MockConfigEntry
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MagicMock,
+    WebSocketGenerator,
+)
 
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
 from homeassistant.components.onedrive.backup import (
@@ -27,9 +33,6 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .const import BACKUP_METADATA
-
-from tests.common import AsyncMock, MockConfigEntry
-from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)

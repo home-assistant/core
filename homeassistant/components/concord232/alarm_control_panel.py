@@ -1,6 +1,6 @@
 """Support for Concord232 alarm control panels."""
 
-import datetime
+import datetime as dt
 import logging
 from typing import override
 
@@ -32,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "CONCORD232"
 
-SCAN_INTERVAL = datetime.timedelta(seconds=10)
+SCAN_INTERVAL = dt.timedelta(seconds=10)
 
 PLATFORM_SCHEMA = ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
     {

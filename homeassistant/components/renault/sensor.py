@@ -32,7 +32,7 @@ from homeassistant.const import (
     UnitOfTime,
     UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import as_utc, parse_datetime
@@ -62,15 +62,22 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Renault entities from config entry."""
-    entities: list[RenaultSensor[Any]] = [
-        RenaultSensor(vehicle, description)
-        for vehicle in config_entry.runtime_data.vehicles.values()
-        for description in SENSOR_TYPES
-        if description.coordinator in vehicle.coordinators
-        and (not description.requires_fuel or vehicle.details.uses_fuel())
-        and (not description.condition_lambda or description.condition_lambda(vehicle))
-    ]
-    async_add_entities(entities)
+
+    @callback
+    def _async_add_vehicle(vehicle: RenaultVehicleProxy) -> None:
+        async_add_entities(
+            RenaultSensor(vehicle, description)
+            for description in SENSOR_TYPES
+            if description.coordinator in vehicle.coordinators
+            and (not description.requires_fuel or vehicle.details.uses_fuel())
+            and (
+                not description.condition_lambda
+                or description.condition_lambda(vehicle)
+            )
+        )
+
+    for vehicle in config_entry.runtime_data.vehicles.values():
+        _async_add_vehicle(vehicle)
 
 
 class RenaultSensor[T: KamereonVehicleDataAttributes](

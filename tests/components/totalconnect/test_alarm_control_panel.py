@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from total_connect_client import ArmingState, ArmType
 from total_connect_client.exceptions import BadResultCodeError, UsercodeInvalid
@@ -33,8 +38,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .const import CODE
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "alarm_control_panel.test"
 ENTITY_ID_2 = "alarm_control_panel.test_partition_2"

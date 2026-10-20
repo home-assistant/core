@@ -12,11 +12,10 @@ from hyponcloud import (
     PlantMonitorData,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.hypontech.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture

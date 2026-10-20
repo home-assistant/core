@@ -1,10 +1,11 @@
 """Tests for the Concord232 alarm control panel platform."""
 
-from datetime import timedelta
+import datetime as dt
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 import requests
 
 from homeassistant.components.alarm_control_panel import (
@@ -25,8 +26,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .conftest import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = "alarm_control_panel.localhost"
 
@@ -68,7 +67,7 @@ async def test_state_updates_on_poll(
     assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.DISARMED
 
     mock_concord232_client.list_partitions.return_value = [{"arming_level": "Away"}]
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
+    freezer.tick(SCAN_INTERVAL + dt.timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -89,7 +88,7 @@ async def test_connection_error_keeps_last_state(
     mock_concord232_client.list_partitions.side_effect = (
         requests.exceptions.ConnectionError("boom")
     )
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
+    freezer.tick(SCAN_INTERVAL + dt.timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

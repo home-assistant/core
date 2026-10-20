@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import requests
 
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
@@ -29,8 +30,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .conftest import setup_integration
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {CONF_HOST: "localhost", CONF_PORT: 5007, CONF_SSL: False}
 
