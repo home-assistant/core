@@ -251,6 +251,10 @@ WHEELCHAIR_ACCESS_OPTIONS = {1: True, 2: False}
 WHEELCHAIR_BOARDING_DEFAULT = STATE_UNKNOWN
 WHEELCHAIR_BOARDING_OPTIONS = {1: True, 2: False}
 
+# SQLite stores pygtfs Intervals as offsets from 1970-01-01, so
+# date(departure_time) is later for times >= 24:00:00.
+INTERVAL_EPOCH_DATE = "1970-01-01"
+
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_ORIGIN): cv.string,
@@ -354,16 +358,14 @@ def get_next_departure(
     # account any departures from yesterday scheduled after midnight,
     # as long as all departures are within the calendar date range.
     timetable = {}
-    yesterday_start = today_start = tomorrow_start = None
+    today_start = tomorrow_start = None
     yesterday_last = today_last = ""
 
     for row_cursor in result:
         row = row_cursor._asdict()
         if row["yesterday"] == 1 and yesterday_date >= row["start_date"]:
             extras = {"day": "yesterday", "first": None, "last": False}
-            if yesterday_start is None:
-                yesterday_start = row["origin_depart_date"]
-            if yesterday_start != row["origin_depart_date"]:
+            if row["origin_depart_date"] != INTERVAL_EPOCH_DATE:
                 idx = f"{now_date} {row['origin_depart_time']}"
                 timetable[idx] = {**row, **extras}
                 yesterday_last = idx
@@ -373,7 +375,7 @@ def get_next_departure(
             if today_start is None:
                 today_start = row["origin_depart_date"]
                 extras["first"] = True
-            if today_start == row["origin_depart_date"]:
+            if row["origin_depart_date"] == INTERVAL_EPOCH_DATE:
                 idx_prefix = now_date
             else:
                 idx_prefix = tomorrow_date
@@ -390,7 +392,7 @@ def get_next_departure(
             if tomorrow_start is None:
                 tomorrow_start = row["origin_depart_date"]
                 extras["first"] = True
-            if tomorrow_start == row["origin_depart_date"]:
+            if row["origin_depart_date"] == INTERVAL_EPOCH_DATE:
                 idx = f"{tomorrow_date} {row['origin_depart_time']}"
                 timetable[idx] = {**row, **extras}
 
