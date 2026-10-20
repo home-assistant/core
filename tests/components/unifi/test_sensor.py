@@ -965,7 +965,7 @@ async def test_wlan_client_sensors(
 
     # Controller reconnects
     await mock_websocket_state.reconnect()
-    assert hass.states.get("sensor.ssid_1_clients").state == "0"
+    assert hass.states.get("sensor.ssid_1_clients").state == "1"
 
     # WLAN gets disabled
     wlan_1 = deepcopy(WLAN)
@@ -978,7 +978,7 @@ async def test_wlan_client_sensors(
     wlan_1["enabled"] = True
     mock_websocket_message(message=MessageKey.WLAN_CONF_UPDATED, data=wlan_1)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.ssid_1_clients").state == "0"
+    assert hass.states.get("sensor.ssid_1_clients").state == "1"
 
 
 @pytest.mark.parametrize(

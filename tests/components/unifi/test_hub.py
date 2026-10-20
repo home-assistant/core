@@ -16,6 +16,7 @@ from homeassistant.components.unifi.const import CONF_BLOCK_CLIENT, DOMAIN
 from homeassistant.components.unifi.coordinator import IDLE_POLL_INTERVAL, POLL_INTERVAL
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.components.unifi.hub import get_unifi_api
+from homeassistant.components.unifi.hub.connection import CONNECTION_STABLE_PERIOD
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, EVENT_STATE_REPORTED, Platform
 from homeassistant.core import Event, EventStateReportedData, HomeAssistant, callback
@@ -272,7 +273,7 @@ async def test_polling_connection_failure_reports_connection_failure(
 
     report_failure.assert_called_once()
     assert not hub.available
-    assert coordinator.last_update_success is True
+    assert coordinator.last_update_success is False
 
 
 @pytest.mark.parametrize(
@@ -459,7 +460,55 @@ async def test_connection_waits_for_network_application_after_login(
     await hass.async_block_till_done()
 
     assert hub.available
+    assert hub.connection._attempt == 2
+
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=CONNECTION_STABLE_PERIOD + 30)
+    )
+    await hass.async_block_till_done()
+
     assert hub.connection._attempt == 0
+
+
+async def test_backoff_grows_when_websocket_fails_after_login(
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_state: WebsocketStateManager,
+) -> None:
+    """Keep backing off while a successful login is followed by a failing transport."""
+    connection = config_entry_setup.runtime_data.connection
+
+    await mock_websocket_state.disconnect()
+    assert connection._attempt == 1
+
+    await mock_websocket_state.reconnect(fail=True)
+    assert connection._attempt == 2
+
+    await mock_websocket_state.reconnect(fail=True)
+    assert connection._attempt == 3
+
+
+@pytest.mark.parametrize("request_suffix", ["/stat/sta", "/stat/device"])
+async def test_recovery_refetches_websocket_backed_handlers(
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_state: WebsocketStateManager,
+    request_suffix: str,
+) -> None:
+    """Resync handlers fed by the websocket after the connection is restored."""
+
+    def request_count() -> int:
+        return sum(
+            1
+            for call in aioclient_mock.mock_calls
+            if str(call[1]).endswith(request_suffix)
+        )
+
+    requests_before = request_count()
+
+    await mock_websocket_state.disconnect()
+    await mock_websocket_state.reconnect()
+
+    assert request_count() == requests_before + 1
 
 
 @pytest.mark.parametrize("exception", [aiounifi.LoginRequired, aiounifi.Unauthorized])

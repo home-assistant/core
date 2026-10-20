@@ -1,7 +1,7 @@
 """Manage the UniFi Network API session and reconnect policy."""
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -14,6 +14,8 @@ from ..const import LOGGER
 
 if TYPE_CHECKING:
     from .. import UnifiConfigEntry
+
+CONNECTION_STABLE_PERIOD = 60
 
 
 @dataclass
@@ -55,14 +57,27 @@ class UnifiConnectionManager:
         self._attempt = 0
         self._retry_handle: asyncio.TimerHandle | None = None
         self._reconnect_task: asyncio.Task[None] | None = None
-        self._recovery_callback: Callable[[], None] | None = None
+        self._stable_handle: asyncio.TimerHandle | None = None
+        self._recovering = False
+        self._recovery_callback: Callable[[], Awaitable[None]] | None = None
         self._reauth_required = False
         self._stopped = False
 
     @callback
-    def set_recovery_callback(self, callback_fn: Callable[[], None] | None) -> None:
-        """Set the callback run after the Network application is ready."""
+    def set_recovery_callback(
+        self, callback_fn: Callable[[], Awaitable[None]] | None
+    ) -> None:
+        """Set the coroutine run after the Network application is ready."""
         self._recovery_callback = callback_fn
+
+    @property
+    def _reconnect_in_flight(self) -> bool:
+        """Return if a login attempt is running."""
+        return (
+            not self._recovering
+            and self._reconnect_task is not None
+            and not self._reconnect_task.done()
+        )
 
     @callback
     def report_failure(
@@ -71,16 +86,27 @@ class UnifiConnectionManager:
         """Mark the shared session unavailable and schedule one retry."""
         if self._stopped or self._reauth_required:
             return
-        if self._retry_handle is not None or (
-            self._reconnect_task is not None and not self._reconnect_task.done()
-        ):
+        if self._retry_handle is not None or self._reconnect_in_flight:
             return
 
+        self._cancel_stable_timer()
         self._set_available(False)
 
         self._schedule_retry(log=log)
         if err is not None:
             LOGGER.debug("Schedule reconnect to UniFi Network '%s'", err)
+
+    def _cancel_stable_timer(self) -> None:
+        """Cancel the pending reset of the retry backoff."""
+        if self._stable_handle is not None:
+            self._stable_handle.cancel()
+            self._stable_handle = None
+
+    @callback
+    def _async_connection_stable(self) -> None:
+        """Reset the retry backoff once the connection has stayed up."""
+        self._stable_handle = None
+        self._attempt = 0
 
     def _schedule_retry(self, *, log: bool = False) -> None:
         """Schedule the next session login attempt."""
@@ -119,11 +145,19 @@ class UnifiConnectionManager:
                 self._retry_after_failure(err)
                 return
 
-            self._reconnect_task = None
-            self._attempt = 0
+            self._recovering = True
             self._set_available(True)
-            if self._recovery_callback is not None:
-                self._recovery_callback()
+            try:
+                if self._recovery_callback is not None:
+                    await self._recovery_callback()
+            finally:
+                self._recovering = False
+                self._reconnect_task = None
+
+            if self.available and not self._stopped:
+                self._stable_handle = self.hass.loop.call_later(
+                    CONNECTION_STABLE_PERIOD, self._async_connection_stable
+                )
 
         self._reconnect_task = self.hass.async_create_task(_reconnect())
 
@@ -149,6 +183,7 @@ class UnifiConnectionManager:
     def stop(self) -> None:
         """Cancel pending reconnect work."""
         self._stopped = True
+        self._cancel_stable_timer()
         if self._retry_handle is not None:
             self._retry_handle.cancel()
             self._retry_handle = None

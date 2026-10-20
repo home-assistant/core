@@ -63,12 +63,11 @@ class UnifiHub:
         """Shared UniFi session state."""
         return self.connection.available
 
-    @callback
-    def _async_connection_recovered(self) -> None:
-        """Restart push updates and refresh polled data after app recovery."""
-        if self.websocket.running:
+    async def _async_connection_recovered(self) -> None:
+        """Resync data before push updates resume after app recovery."""
+        await self.entity_loader.async_refresh_coordinators()
+        if self.available and self.websocket.running:
             self.websocket.start_websocket()
-        self.entity_loader.refresh_coordinators()
 
     @property
     def signal_heartbeat_missed(self) -> str:

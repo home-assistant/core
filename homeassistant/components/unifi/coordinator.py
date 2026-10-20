@@ -58,7 +58,7 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
     async def _async_update_data(self) -> None:
         """Update data from the API handler."""
         if not self._connection.available:
-            return
+            raise UpdateFailed("UniFi Network connection is unavailable")
 
         try:
             await self._handler.update()
@@ -76,7 +76,7 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
             raise UpdateFailed(str(err)) from err
         except (TimeoutError, aiounifi.RequestError) as err:
             self._connection.report_failure(err)
-            return
+            raise UpdateFailed(str(err)) from err
         except aiounifi.AiounifiException as err:
             raise UpdateFailed(str(err)) from err
 

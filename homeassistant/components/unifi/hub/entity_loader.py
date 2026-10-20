@@ -104,12 +104,14 @@ class UnifiEntityLoader:
         self._restore_inactive_clients()
         self.wireless_clients.update_clients(set(self.hub.api.clients.values()))
 
-    @callback
-    def refresh_coordinators(self) -> None:
-        """Refresh registered coordinators after a connection is restored."""
-        for coordinator in self._data_coordinators.values():
-            if coordinator.update_interval is not None:
-                self.hub.hass.async_create_task(coordinator.async_refresh())
+    async def async_refresh_coordinators(self) -> None:
+        """Refetch all handler data after a connection is restored."""
+        await asyncio.gather(
+            *(
+                coordinator.async_refresh()
+                for coordinator in self._data_coordinators.values()
+            )
+        )
 
     async def _refresh_data(
         self, updaters: Sequence[Callable[[], Coroutine[Any, Any, None]]]

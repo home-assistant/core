@@ -375,11 +375,15 @@ class WebsocketStateManager(asyncio.Event):
     """
 
     def __init__(
-        self, hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+        self,
+        hass: HomeAssistant,
+        aioclient_mock: AiohttpClientMocker,
+        mock_requests: Callable[[str, str], None],
     ) -> None:
         """Store hass object and initialize asyncio.Event."""
         self.hass = hass
         self.aioclient_mock = aioclient_mock
+        self.mock_requests = mock_requests
         self._backoff = BackoffPolicy()
         self._attempt = 0
         super().__init__()
@@ -411,6 +415,8 @@ class WebsocketStateManager(asyncio.Event):
             json={"meta": {"rc": "OK"}, "data": [{"version": "7.4.162"}]},
             headers={"content-type": CONTENT_TYPE_JSON},
         )
+        # Recovery refetches every handler
+        self.mock_requests(DEFAULT_HOST, DEFAULT_SITE)
 
         if not fail:
             self.clear()
@@ -430,10 +436,13 @@ def fixture_aiounifi_websocket_method() -> Generator[AsyncMock]:
 
 @pytest.fixture(autouse=True, name="mock_websocket_state")
 def fixture_aiounifi_websocket_state(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, _mock_websocket: AsyncMock
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_requests: Callable[[str, str], None],
+    _mock_websocket: AsyncMock,
 ) -> WebsocketStateManager:
     """Provide a state manager for UniFi websocket."""
-    websocket_state_manager = WebsocketStateManager(hass, aioclient_mock)
+    websocket_state_manager = WebsocketStateManager(hass, aioclient_mock, mock_requests)
     _mock_websocket.side_effect = websocket_state_manager.waiter
     return websocket_state_manager
 
