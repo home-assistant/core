@@ -48,13 +48,7 @@ async def async_get_service(
     maxcode = discovery_info.get(CONF_MAXCODE)
     name = discovery_info.get(CONF_NAME)
     entry_id = discovery_info.get("entry_id")
-    if (
-        not isinstance(maxcode, str)
-        or not maxcode
-        or not isinstance(name, str)
-        or not name.strip()
-        or not isinstance(entry_id, str)
-    ):
+    if not isinstance(entry_id, str):
         return None
 
     entry = hass.config_entries.async_get_entry(entry_id)
@@ -67,16 +61,26 @@ async def async_get_service(
     if not hasattr(entry, "runtime_data"):
         return None
 
-    service_name = slugify(name)
-    if hass.services.has_service(NOTIFY_DOMAIN, service_name):
+    if not isinstance(maxcode, str) or not maxcode:
         error = ConfigEntryError(
             translation_domain=DOMAIN,
-            translation_key="config_entry_error_name_exists",
-            translation_placeholders={"service_name": service_name},
+            translation_key="config_entry_error_invalid_maxcode",
         )
-        setup_future = entry.runtime_data.notify_service_ready
-        if not setup_future.done():
-            setup_future.set_exception(error)
+        _signal_setup_error(entry, error)
+        raise error
+
+    if not isinstance(name, str) or not (name := name.strip()):
+        error = ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="config_entry_error_invalid_name",
+        )
+        _signal_setup_error(entry, error)
+        raise error
+
+    service_name = slugify(name)
+    if hass.services.has_service(NOTIFY_DOMAIN, service_name):
+        error = _name_exists_error(service_name)
+        _signal_setup_error(entry, error)
         raise error
 
     service = PushMeldNotificationService(
@@ -86,9 +90,6 @@ async def async_get_service(
     )
     entry.runtime_data.notify_service = service
     entry.async_on_unload(service.async_unregister_services)
-    setup_future = entry.runtime_data.notify_service_ready
-    if not setup_future.done():
-        setup_future.set_result(None)
     return service
 
 
@@ -145,6 +146,43 @@ class PushMeldNotificationService(BaseNotificationService):
             if not services:
                 del notify_services[DOMAIN]
 
+    def _signal_setup_error(self, error: BaseException) -> None:
+        """Make config-entry setup report an error from the legacy loader."""
+        if self._entry is None or not hasattr(self._entry, "runtime_data"):
+            return
+
+        _signal_setup_error(self._entry, error)
+
+    def _signal_setup_ready(self) -> None:
+        """Mark setup ready after the notify action is registered."""
+        if self._entry is None or not hasattr(self._entry, "runtime_data"):
+            return
+
+        setup_future = self._entry.runtime_data.notify_service_ready
+        if not setup_future.done():
+            setup_future.set_result(None)
+
+    def _service_is_owned(self) -> bool:
+        """Return whether this service owns the registered notify action."""
+        service = self.hass.services.async_services_for_domain(NOTIFY_DOMAIN).get(
+            self._service_name
+        )
+        return service is not None and getattr(service.job.target, "__self__", None) is self
+
+    @override
+    async def async_setup(
+        self,
+        hass: HomeAssistant,
+        service_name: str,
+        target_service_name_prefix: str,
+    ) -> None:
+        """Prepare the service and propagate setup errors to the entry."""
+        try:
+            await super().async_setup(hass, service_name, target_service_name_prefix)
+        except BaseException as err:
+            self._signal_setup_error(err)
+            raise
+
     @override
     async def async_register_services(self) -> None:
         """Register the notify action only while the config entry is active."""
@@ -152,19 +190,27 @@ class PushMeldNotificationService(BaseNotificationService):
             # The legacy notify loader appends the service to its registry after
             # this method returns, so clean up on the next loop iteration.
             self.hass.loop.call_soon(self._remove_from_legacy_registry)
+            self._signal_setup_error(
+                ConfigEntryError(
+                    translation_domain=DOMAIN,
+                    translation_key="config_entry_error_not_active",
+                )
+            )
             return
 
-        if self.hass.services.has_service(NOTIFY_DOMAIN, self._service_name):
-            raise ConfigEntryError(
-                translation_domain=DOMAIN,
-                translation_key="config_entry_error_name_exists",
-                translation_placeholders={"service_name": self._service_name},
-            )
+        try:
+            if self.hass.services.has_service(NOTIFY_DOMAIN, self._service_name):
+                raise _name_exists_error(self._service_name)
 
-        await super().async_register_services()
-        self._service_registered = self.hass.services.has_service(
-            NOTIFY_DOMAIN, self._service_name
-        )
+            await super().async_register_services()
+            if not self._service_is_owned():
+                raise _name_exists_error(self._service_name)
+
+            self._service_registered = True
+            self._signal_setup_ready()
+        except BaseException as err:
+            self._signal_setup_error(err)
+            raise
 
     @override
     async def async_unregister_services(self) -> None:
@@ -219,3 +265,22 @@ def _request_failed(response: ClientResponse) -> HomeAssistantError:
         translation_key="request_failed",
         translation_placeholders={"status_code": str(response.status)},
     )
+
+
+def _name_exists_error(service_name: str) -> ConfigEntryError:
+    """Build the error for an occupied notification action name."""
+    return ConfigEntryError(
+        translation_domain=DOMAIN,
+        translation_key="config_entry_error_name_exists",
+        translation_placeholders={"service_name": service_name},
+    )
+
+
+def _signal_setup_error(entry: ConfigEntry[Any], error: BaseException) -> None:
+    """Propagate a legacy notify setup error to the config entry."""
+    if not hasattr(entry, "runtime_data"):
+        return
+
+    setup_future = entry.runtime_data.notify_service_ready
+    if not setup_future.done():
+        setup_future.set_exception(error)
