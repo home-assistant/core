@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntryState, ConfigFlowResult
@@ -35,9 +35,9 @@ DOCS_URL = (
 
 ROLE_OPTIONS = [ROLE_HOUSENET, ROLE_SOLAR, ROLE_WATER, ROLE_APPLIANCE, ROLE_UNKNOWN]
 
-SENSOR_ROLE_SCHEMA = vol.Schema(
+SENSOR_ROLE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_ROLE): SelectSelector(
+        probatio.Required(CONF_ROLE): SelectSelector(
             SelectSelectorConfig(
                 options=ROLE_OPTIONS,
                 mode=SelectSelectorMode.DROPDOWN,

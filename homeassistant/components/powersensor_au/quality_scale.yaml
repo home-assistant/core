@@ -34,9 +34,8 @@ rules:
   test-before-configure:
     status: exempt
     comment: |
-      The config flow only confirms user intent; no connection is made until
-      after the entry is created.  A pre-configure connection test is not
-      possible without hardware present.
+      Devices are discovered at runtime via mDNS, so there is nothing to
+      connect to during the config flow.
   test-before-setup: done
   unique-config-entry: done
 

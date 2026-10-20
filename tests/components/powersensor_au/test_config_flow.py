@@ -77,6 +77,7 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
         result["flow_id"], user_input={}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DOMAIN
     assert isinstance(result["data"]["roles"], dict)
 
 
@@ -125,6 +126,7 @@ async def test_zeroconf_flow_creates_entry(hass: HomeAssistant) -> None:
         result["flow_id"], user_input={}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DOMAIN
     assert isinstance(result["data"]["roles"], dict)
 
 
@@ -170,6 +172,7 @@ async def test_zeroconf_simultaneous_discoveries_deduplicate(
         result1["flow_id"], user_input={}
     )
     assert result1["type"] is FlowResultType.CREATE_ENTRY
+    assert result1["result"].unique_id == DOMAIN
 
 
 @pytest.mark.usefixtures("bypass_setup")
