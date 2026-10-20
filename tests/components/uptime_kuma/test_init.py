@@ -9,6 +9,7 @@ from pythonkuma import (
     UptimeKumaAuthenticationException,
     UptimeKumaException,
     UptimeKumaParseException,
+    UptimeKumaVersion,
 )
 
 from homeassistant.components.uptime_kuma.const import DOMAIN
@@ -58,6 +59,23 @@ async def test_config_entry_not_ready(
     await hass.async_block_till_done()
 
     assert config_entry.state is state
+
+
+async def test_config_entry_error(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_pythonkuma: AsyncMock,
+) -> None:
+    """Test config entry not ready."""
+
+    mock_pythonkuma.version = UptimeKumaVersion(
+        version="1.23.16", major="1", minor="23", patch="16"
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_config_reauth_flow(
