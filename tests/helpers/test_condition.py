@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import io
 import logging
+import threading
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -5993,6 +5994,20 @@ async def test_state_condition_attr_duration_primes_before_recorder_started(
         assert_condition_trace({"": [{"result": {"result": True}}]})
 
 
+def _read_attr_history(
+    hass: HomeAssistant, start_time: datetime, entity_id: str
+) -> dict[str, list[State | dict[str, Any]]]:
+    """Read history the way condition priming does."""
+    return history.get_significant_states(
+        hass,
+        start_time,
+        entity_ids=[entity_id],
+        include_start_time_state=True,
+        significant_changes_only=False,
+        minimal_response=False,
+    )
+
+
 async def test_state_condition_attr_duration_incomplete_history_reprimed(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
@@ -6004,20 +6019,6 @@ async def test_state_condition_attr_duration_incomplete_history_reprimed(
     the recorder is ready the condition is primed again, and the complete history
     replaces the too generous anchor rather than only moving it earlier.
     """
-
-    def _read_attr_history(
-        hass: HomeAssistant, start_time: datetime, entity_id: str
-    ) -> dict[str, list[State | dict[str, Any]]]:
-        """Read history the way condition priming does."""
-        return history.get_significant_states(
-            hass,
-            start_time,
-            entity_ids=[entity_id],
-            include_start_time_state=True,
-            significant_changes_only=False,
-            minimal_response=False,
-        )
-
     entity_id = "test.entity_1"
     instance = get_instance(hass)
     start = dt_util.utcnow()
@@ -6150,6 +6151,144 @@ async def test_state_condition_attr_duration_unload_before_recorder_ready(
         instance.async_recorder_ready.set()
         await hass.async_block_till_done(wait_background_tasks=True)
     get_significant_states.assert_not_called()
+
+
+async def test_state_condition_attr_duration_unload_cancels_reprime(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Unloading a condition cancels its in-flight re-prime."""
+    entity_id = "test.entity_1"
+    instance = get_instance(hass)
+    hass.states.async_set(entity_id, STATE_ON, {"test_attr": True})
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
+
+    instance.async_recorder_ready.clear()
+    test = await _setup_attr_state_condition(
+        hass,
+        entity_ids=entity_id,
+        states={True},
+        condition_options={CONF_FOR: {"seconds": 5}},
+    )
+
+    gate: asyncio.Future[None] = hass.loop.create_future()
+    with (
+        # Shielded, so cancelling the waiting re-prime leaves the gate releasable.
+        patch.object(
+            instance,
+            "async_get_commit_future",
+            side_effect=lambda: asyncio.shield(gate),
+        ) as commit_future,
+        patch(
+            "homeassistant.components.recorder.history.get_significant_states",
+            return_value={},
+        ) as get_significant_states,
+    ):
+        instance.async_recorder_ready.set()
+        # The re-prime blocks on the held flush.
+        await _advance_until(lambda: commit_future.called)
+        test.async_unload()
+
+        gate.set_result(None)
+        await hass.async_block_till_done(wait_background_tasks=True)
+    get_significant_states.assert_not_called()
+
+
+async def test_state_condition_attr_duration_reprimed_when_ready_during_read(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Conditions whose read spans the recorder becoming ready are primed again.
+
+    They read without a flush, so the result is incomplete, but they only
+    register to be primed again once the recorder is already ready. Each of them
+    must still be primed again, not just the first.
+    """
+    entity_id = "test.entity_1"
+    instance = get_instance(hass)
+    start = dt_util.utcnow()
+    with freeze_time(start) as freezer:
+        hass.states.async_set(entity_id, STATE_ON, {"test_attr": True})
+        await hass.async_block_till_done()
+        await async_wait_recording_done(hass)
+        # History as committed before the dip.
+        stale_history = await instance.async_add_executor_job(
+            _read_attr_history, hass, start - timedelta(minutes=1), entity_id
+        )
+
+        # Invalid at t=6, valid again at t=7.
+        freezer.move_to(start + timedelta(seconds=6))
+        hass.states.async_set(entity_id, STATE_ON, {"test_attr": False})
+        freezer.move_to(start + timedelta(seconds=7))
+        hass.states.async_set(entity_id, STATE_ON, {"test_attr": True})
+        await hass.async_block_till_done()
+        await async_wait_recording_done(hass)
+
+        freezer.move_to(start + timedelta(seconds=10))
+        real_query = history.get_significant_states
+        stale_reads = 2
+        read_started = threading.Event()
+        release_read = threading.Event()
+
+        def _read(*args: Any, **kwargs: Any) -> Any:
+            # The reads are serialized by the priming manager.
+            nonlocal stale_reads
+            if not stale_reads:
+                return real_query(*args, **kwargs)
+            stale_reads -= 1
+            read_started.set()
+            release_read.wait(10)
+            return stale_history
+
+        instance.async_recorder_ready.clear()
+        with patch(
+            "homeassistant.components.recorder.history.get_significant_states",
+            side_effect=_read,
+        ):
+            setups = [
+                hass.async_create_task(
+                    _setup_attr_state_condition(
+                        hass,
+                        entity_ids=entity_id,
+                        states={True},
+                        condition_options={CONF_FOR: {"seconds": 5}},
+                    )
+                )
+                for _ in range(2)
+            ]
+            # The second read waits for the first, which the recorder becoming
+            # ready interrupts.
+            assert await hass.async_add_executor_job(read_started.wait, 10)
+            instance.async_recorder_ready.set()
+            release_read.set()
+            tests = await asyncio.gather(*setups)
+            await hass.async_block_till_done(wait_background_tasks=True)
+
+        # Both were primed again with complete history: valid only since t=7.
+        for test in tests:
+            assert test.async_check() is False
+            assert_condition_trace({"": [{"result": {"result": False}}]})
+
+
+async def test_history_priming_manager_recorder_ready_jobs(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Jobs are called once the recorder is ready, never before registering returns.
+
+    Callers store the returned callback before their job may clear it, also when
+    the recorder is already ready; and every registration is served.
+    """
+    manager = HistoryPrimingManager(hass)
+    calls: list[int] = []
+
+    manager.async_on_recorder_ready(lambda: calls.append(1))
+    assert calls == []
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert calls == [1]
+
+    manager.async_on_recorder_ready(lambda: calls.append(2))
+    assert calls == [1]
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert calls == [1, 2]
 
 
 async def test_async_setup_creates_history_priming_manager(

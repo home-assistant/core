@@ -145,6 +145,7 @@ class EntityConditionBase(Condition):
         # the recorder processes its queue if that is what was missing.
         self._incomplete_history: set[str] = set()
         self._unsub_recorder_ready: CALLBACK_TYPE | None = None
+        self._prime_tasks: set[asyncio.Task[None]] = set()
 
     def entity_filter(self, entities: set[str]) -> set[str]:
         """Filter entities matching any of the domain specs."""
@@ -367,10 +368,17 @@ class EntityConditionBase(Condition):
                 self._async_prime_incomplete_history
             )
 
-    async def _async_prime_incomplete_history(self) -> None:
+    @callback
+    def _async_prime_incomplete_history(self) -> None:
         """Prime entities again now that the recorder processes its queue."""
         self._unsub_recorder_ready = None
-        await self._async_prime_valid_since(set(self._incomplete_history))
+        # Tracked so it can be cancelled on unload.
+        task = self._hass.async_create_background_task(
+            self._async_prime_valid_since(set(self._incomplete_history)),
+            "condition history priming",
+        )
+        self._prime_tasks.add(task)
+        task.add_done_callback(self._prime_tasks.discard)
 
     async def _async_refine_anchors_from_history(
         self, anchors: dict[str, datetime]
@@ -470,6 +478,8 @@ class EntityConditionBase(Condition):
         if self._unsub_recorder_ready is not None:
             self._unsub_recorder_ready()
             self._unsub_recorder_ready = None
+        for task in self._prime_tasks:
+            task.cancel()
 
     def _should_include(self, _state: State) -> bool:
         """Check if an entity should participate in any/all checks.
@@ -901,7 +911,7 @@ class HistoryPrimingManager:
         self._flushing = False
         self._flush_ok = False
         self._query_lock = asyncio.Lock()
-        self._recorder_ready_jobs: set[Callable[[], Coroutine[Any, Any, None]]] = set()
+        self._recorder_ready_jobs: set[Callable[[], None]] = set()
         self._recorder_ready_task: asyncio.Task[None] | None = None
 
     async def async_prime[_T](
@@ -914,15 +924,16 @@ class HistoryPrimingManager:
             return await job(get_instance(self._hass))
 
     @callback
-    def async_on_recorder_ready(
-        self, job: Callable[[], Coroutine[Any, Any, None]]
-    ) -> CALLBACK_TYPE:
-        """Run `job` in a background task once the recorder processes its queue."""
+    def async_on_recorder_ready(self, job: Callable[[], None]) -> CALLBACK_TYPE:
+        """Call `job` once the recorder processes its queue."""
         self._recorder_ready_jobs.add(job)
         if self._recorder_ready_task is None:
+            # Not eager: if the recorder is already ready, an eager task would
+            # finish, and reset the attribute, before it is assigned here.
             self._recorder_ready_task = self._hass.async_create_background_task(
                 self._async_run_recorder_ready_jobs(),
                 "condition history priming recorder ready",
+                eager_start=False,
             )
 
         @callback
@@ -932,13 +943,13 @@ class HistoryPrimingManager:
         return _unsub
 
     async def _async_run_recorder_ready_jobs(self) -> None:
-        """Wait for the recorder to be ready, then start the registered jobs."""
+        """Wait for the recorder to be ready, then call the registered jobs."""
         await get_instance(self._hass).async_recorder_ready.wait()
         jobs = self._recorder_ready_jobs
         self._recorder_ready_jobs = set()
         self._recorder_ready_task = None
         for job in jobs:
-            self._hass.async_create_background_task(job(), "condition history priming")
+            job()
 
     async def _async_flush(self) -> None:
         """Return once a recorder flush that began no earlier than this call ends.
