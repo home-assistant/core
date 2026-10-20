@@ -42,6 +42,7 @@ from homeassistant.components.media_player import (
     SERVICE_SELECT_SOURCE,
     MediaPlayerEnqueue,
     MediaPlayerEntityFeature,
+    MediaPlayerState,
     RepeatMode,
 )
 from homeassistant.components.sonos.const import (
@@ -1456,6 +1457,39 @@ async def test_release_stale_hass_media_on_startup(
     await async_setup_sonos()
 
     assert soco.avTransport.SetAVTransportURI.call_args_list == expected_calls
+
+
+@pytest.mark.usefixtures("async_autosetup_sonos")
+async def test_release_hass_media_retried_after_failure(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    no_media_event: SonosMockEvent,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a failed release is retried on the next stopped update."""
+    hass.config.internal_url = "http://10.0.0.1:8123"
+    soco.avTransport.SetAVTransportURI.side_effect = [
+        SoCoUPnPException("UPnP Error 701 received", "701", ""),
+        None,
+    ]
+    variables = no_media_event.variables | {"current_track_uri": HASS_MEDIA_URI}
+    events = [
+        variables | {"transport_state": "PLAYING", "av_transport_uri": HASS_MEDIA_URI},
+        variables | {"transport_state": "STOPPED"},
+        # Identical events are dropped as duplicates
+        variables | {"transport_state": "STOPPED", "number_of_tracks": "1"},
+    ]
+    for event_vars in events:
+        event = SonosMockEvent(soco, soco.avTransport, event_vars)
+        soco.avTransport.subscribe.return_value.callback(event)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert soco.avTransport.SetAVTransportURI.call_args_list == [
+        RELEASE_CALL,
+        RELEASE_CALL,
+    ]
+    assert "Failed to release finished media" in caplog.text
+    assert hass.states.get("media_player.zone_a").state == MediaPlayerState.IDLE
 
 
 async def test_play_media_announce(

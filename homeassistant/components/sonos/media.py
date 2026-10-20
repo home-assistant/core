@@ -13,6 +13,7 @@ from soco.core import (
     SoCo,
 )
 from soco.data_structures import DidlAudioBroadcast, DidlPlaylistContainer
+from soco.exceptions import SoCoException
 from soco.music_library import MusicLibrary
 import yarl
 
@@ -221,7 +222,6 @@ class SonosMedia:
         """Return if the URI is Home Assistant media with an expiring signature."""
         return "authSig" in yarl.URL(uri).query and is_hass_url(self.hass, uri)
 
-    @soco_error()
     def release_finished_hass_media(self, new_status: str, first_update: bool) -> None:
         """Switch to the queue once signed Home Assistant media has finished.
 
@@ -244,14 +244,24 @@ class SonosMedia:
             return
 
         _LOGGER.debug("Releasing finished media on %s", self.soco.ip_address)
+        try:
+            self.soco.avTransport.SetAVTransportURI(
+                [
+                    ("InstanceID", 0),
+                    ("CurrentURI", f"x-rincon-queue:{self.soco.uid}#0"),
+                    ("CurrentURIMetaData", ""),
+                ]
+            )
+        except (OSError, SoCoException) as err:
+            # Retried on the next stopped update
+            self.played_hass_media_uri = transport_uri
+            _LOGGER.warning(
+                "Failed to release finished media on %s: %s",
+                self.soco.ip_address,
+                err,
+            )
+            return
         self.played_hass_media_uri = None
-        self.soco.avTransport.SetAVTransportURI(
-            [
-                ("InstanceID", 0),
-                ("CurrentURI", f"x-rincon-queue:{self.soco.uid}#0"),
-                ("CurrentURIMetaData", ""),
-            ]
-        )
 
     def update_media_position(
         self, position_info: dict[str, int], force_update: bool = False
