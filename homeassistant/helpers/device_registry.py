@@ -374,7 +374,7 @@ class DeviceInfoError(HomeAssistantError):
     def __init__(
         self,
         domain: str,
-        device_info: ChildDeviceInfo | Mapping[str, Any],
+        device_info: DeviceInfo | ChildDeviceInfo,
         message: str,
     ) -> None:
         """Initialize error."""
@@ -414,19 +414,26 @@ class DeviceConnectionCollisionError(DeviceCollisionError):
         )
 
 
-def _validate_device_info(
-    config_entry: ConfigEntry,
-    device_info: Mapping[str, Any],
-) -> None:
+def _validate_device_info(config_entry: ConfigEntry, device_info: DeviceInfo) -> None:
     """Validate that a device info has enough information to match up a device."""
-    if not device_info.get("connections") and not device_info.get("identifiers"):
+    if (device_info.connections is UNDEFINED or not device_info.connections) and (
+        device_info.identifiers is UNDEFINED or not device_info.identifiers
+    ):
         raise DeviceInfoError(
             config_entry.domain,
             device_info,
             "device info must include at least one of identifiers or connections",
         )
     for field in ("manufacturer", "model", "name"):
-        if field in device_info and f"default_{field}" in device_info:
+        # The deprecated default_ fields are hidden from type checkers
+        if getattr(device_info, f"default_{field}") is UNDEFINED:
+            continue
+        # A translation key supplies the name
+        if getattr(device_info, field) is not UNDEFINED or (
+            field == "name"
+            and isinstance(device_info.translation_key, str)
+            and device_info.translation_key
+        ):
             raise DeviceInfoError(
                 config_entry.domain,
                 device_info,
@@ -2455,7 +2462,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             return name
 
     @callback
-    def async_get_or_create(  # noqa: C901
+    def async_get_or_create(
         self,
         *,
         config_entry_id: str,
@@ -2487,30 +2494,78 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """
         # Extract deprecated parameters, and reject any other unexpected keyword
         # argument.
-        created_at = kwargs.pop("created_at", UNDEFINED)
-        default_manufacturer = kwargs.pop("default_manufacturer", UNDEFINED)
-        default_model = kwargs.pop("default_model", UNDEFINED)
-        default_name = kwargs.pop("default_name", UNDEFINED)
-        modified_at = kwargs.pop("modified_at", UNDEFINED)
-        via_device = kwargs.pop("via_device", UNDEFINED)
+        deprecated = {
+            parameter: kwargs.pop(parameter)
+            for parameter in _DEPRECATED_DEVICE_INFO_PARAMETERS
+            if parameter in kwargs
+        }
         if kwargs:
             raise TypeError(
                 "async_get_or_create() got unexpected keyword arguments "
                 f"{', '.join(map(repr, kwargs))}"
             )
-
-        default_manufacturer = _validate_str(
-            "default_manufacturer", default_manufacturer
+        return self.async_get_or_create_device(
+            config_entry_id=config_entry_id,
+            config_subentry_id=config_subentry_id,
+            disabled_by=disabled_by,
+            device_info=DeviceInfo(
+                configuration_url=configuration_url,
+                # None and UNDEFINED both mean no connections or identifiers
+                connections=UNDEFINED if connections is None else connections,
+                entry_type=entry_type,
+                hw_version=hw_version,
+                identifiers=UNDEFINED if identifiers is None else identifiers,
+                manufacturer=manufacturer,
+                model=model,
+                model_id=model_id,
+                name=name,
+                serial_number=serial_number,
+                suggested_area=suggested_area,
+                sw_version=sw_version,
+                translation_key=translation_key,
+                translation_placeholders=translation_placeholders,
+                via_device_id=via_device_id,
+                **deprecated,
+            ),
         )
-        default_model = _validate_str("default_model", default_model)
+
+    @callback
+    def async_get_or_create_device(  # noqa: C901
+        self,
+        *,
+        config_entry_id: str,
+        config_subentry_id: str | UndefinedType | None = UNDEFINED,
+        # To disable a device if it gets created, does not affect existing devices
+        disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
+        device_info: DeviceInfo,
+    ) -> DeviceEntry:
+        """Get device. Create if it doesn't exist.
+
+        To create or update a child device, use async_get_or_create_child_device.
+
+        If identifiers overlap with a child device, the method raises.
+        """
+        # The deprecated fields are hidden from type checkers
+        deprecated_values = {
+            parameter: getattr(device_info, parameter)
+            for parameter in _DEPRECATED_DEVICE_INFO_PARAMETERS
+        }
+        default_manufacturer = _validate_str(
+            "default_manufacturer", deprecated_values["default_manufacturer"]
+        )
+        default_model = _validate_str(
+            "default_model", deprecated_values["default_model"]
+        )
+        default_name = deprecated_values["default_name"]
+        via_device = deprecated_values["via_device"]
         validated_fields = _validate_device_info_fields(
-            configuration_url=configuration_url,
-            hw_version=hw_version,
-            manufacturer=manufacturer,
-            model=model,
-            model_id=model_id,
-            serial_number=serial_number,
-            sw_version=sw_version,
+            configuration_url=device_info.configuration_url,
+            hw_version=device_info.hw_version,
+            manufacturer=device_info.manufacturer,
+            model=device_info.model,
+            model_id=device_info.model_id,
+            serial_number=device_info.serial_number,
+            sw_version=device_info.sw_version,
         )
 
         if disabled_by is DeviceEntryDisabler.DEVICE:
@@ -2527,20 +2582,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         # Validate before mutating the registry below. `via_device=None` (an explicit
         # "no via device") alongside a via_device_id is contradictory, so reject it too.
+        via_device_id = device_info.via_device_id
         if via_device is not UNDEFINED and via_device_id is not UNDEFINED:
             raise HomeAssistantError(
                 "Passing both `via_device` and `via_device_id` is not allowed; "
                 "`via_device` is deprecated, pass `via_device_id` only"
             )
         # Report the deprecated parameters here, before any registry mutation.
-        deprecated_values = {
-            "created_at": created_at,
-            "default_manufacturer": default_manufacturer,
-            "default_model": default_model,
-            "default_name": default_name,
-            "modified_at": modified_at,
-            "via_device": via_device,
-        }
         for parameter, deprecation in _DEPRECATED_DEVICE_INFO_PARAMETERS.items():
             if deprecated_values[parameter] is UNDEFINED:
                 continue
@@ -2565,37 +2613,18 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 f"Config entry {config_entry_id} has no subentry {config_subentry_id}"
             )
 
-        if translation_key:
-            name = self._resolve_translated_name(
-                config_entry, translation_key, translation_placeholders
-            )
-
-        # Reconstruct a device info dict from the arguments, used for error
-        # reporting. It can hold deprecated keys, so it's not a DeviceInfo.
-        device_info: dict[str, Any] = {
-            key: val
-            for key, val in (
-                ("connections", connections),
-                ("default_manufacturer", default_manufacturer),
-                ("default_model", default_model),
-                ("default_name", default_name),
-                ("entry_type", entry_type),
-                ("identifiers", identifiers),
-                ("name", name),
-                ("suggested_area", suggested_area),
-                ("via_device", via_device),
-                ("via_device_id", via_device_id),
-                *validated_fields.items(),
-            )
-            if val is not UNDEFINED
-        }
+        name = self._resolve_device_info_name(config_entry, device_info)
+        entry_type = device_info.entry_type
+        suggested_area = device_info.suggested_area
 
         _validate_device_info(config_entry, device_info)
 
-        if identifiers is None or identifiers is UNDEFINED:
+        identifiers = device_info.identifiers
+        if identifiers is UNDEFINED:
             identifiers = set()
 
-        if connections is None or connections is UNDEFINED:
+        connections = device_info.connections
+        if connections is UNDEFINED:
             connections = set()
         else:
             connections = _normalize_connections(connections)
@@ -2829,7 +2858,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
     @callback
     def _resolve_device_info_name(
-        self, config_entry: ConfigEntry, device_info: ChildDeviceInfo
+        self, config_entry: ConfigEntry, device_info: DeviceInfo | ChildDeviceInfo
     ) -> str | UndefinedType | None:
         """Return the name of a device info, translated if it has a translation key."""
         if isinstance(translation_key := device_info.translation_key, str) and (
@@ -4135,7 +4164,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self,
         matched_device: DeviceEntry | None,
         config_entry: ConfigEntry,
-        device_info: ChildDeviceInfo | Mapping[str, Any],
+        device_info: DeviceInfo | ChildDeviceInfo,
         identifiers: set[tuple[str, str]],
         connections: set[tuple[str, str]],
     ) -> None:
