@@ -19,11 +19,9 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_NAME, CONF_OFFSET, CONF_URL
+from homeassistant.const import CONF_URL
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
-    BooleanSelector,
-    DurationSelector,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
@@ -37,7 +35,6 @@ from .const import (
     CONF_DATABASE,
     CONF_DESTINATION,
     CONF_ORIGIN,
-    CONF_TOMORROW,
     DOMAIN,
     FLOW_DATABASES,
     SUBENTRY_TYPE_ROUTE,
@@ -209,14 +206,8 @@ class RouteSubentryFlowHandler(ConfigSubentryFlow):
                 errors["base"] = "same_stop"
             else:
                 return self.async_create_entry(
-                    title=(user_input.get(CONF_NAME) or "").strip()
-                    or f"{stops[origin]} to {stops[destination]}",
-                    data={
-                        CONF_ORIGIN: origin,
-                        CONF_DESTINATION: destination,
-                        CONF_OFFSET: user_input[CONF_OFFSET],
-                        CONF_TOMORROW: user_input[CONF_TOMORROW],
-                    },
+                    title=f"{stops[origin]} to {stops[destination]}",
+                    data={CONF_ORIGIN: origin, CONF_DESTINATION: destination},
                     unique_id=json.dumps([origin, destination]),
                 )
         stop_selector = SelectSelector(
@@ -232,11 +223,6 @@ class RouteSubentryFlowHandler(ConfigSubentryFlow):
             {
                 probatio.Required(CONF_ORIGIN): stop_selector,
                 probatio.Required(CONF_DESTINATION): stop_selector,
-                probatio.Optional(CONF_NAME): TextSelector(),
-                probatio.Required(
-                    CONF_OFFSET, default={"hours": 0, "minutes": 0, "seconds": 0}
-                ): DurationSelector(),
-                probatio.Required(CONF_TOMORROW, default=False): BooleanSelector(),
             }
         )
         return self.async_show_form(

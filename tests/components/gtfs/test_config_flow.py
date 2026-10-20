@@ -20,7 +20,6 @@ from homeassistant.components.gtfs.const import (
     CONF_DATABASE,
     CONF_DESTINATION,
     CONF_ORIGIN,
-    CONF_TOMORROW,
     DOMAIN,
     SUBENTRY_TYPE_ROUTE,
 )
@@ -30,11 +29,11 @@ from homeassistant.components.gtfs.feed import (
     import_feed,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
-from homeassistant.const import CONF_NAME, CONF_OFFSET, CONF_URL
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import FEED_URL, ZERO_OFFSET, build_feed_zip, gtfs_files, setup_integration
+from . import FEED_URL, build_feed_zip, gtfs_files, setup_integration
 
 AGENCY_HEADER = "agency_id,agency_name,agency_url,agency_timezone\n"
 STOP_TIMES_HEADER = "trip_id,arrival_time,departure_time,stop_id,stop_sequence\n"
@@ -422,14 +421,8 @@ async def _start_route_flow(hass: HomeAssistant, entry: MockConfigEntry) -> str:
     return result["flow_id"]
 
 
-def _route_input(origin: str, destination: str, **extra: Any) -> dict[str, Any]:
-    return {
-        CONF_ORIGIN: origin,
-        CONF_DESTINATION: destination,
-        CONF_OFFSET: ZERO_OFFSET,
-        CONF_TOMORROW: True,
-        **extra,
-    }
+def _route_input(origin: str, destination: str) -> dict[str, str]:
+    return {CONF_ORIGIN: origin, CONF_DESTINATION: destination}
 
 
 @pytest.mark.usefixtures("mock_feed_download")
@@ -454,57 +447,12 @@ async def test_add_route(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Second Street to Third Street"
-    assert result["data"] == {
-        CONF_ORIGIN: "S2",
-        CONF_DESTINATION: "S3",
-        CONF_OFFSET: ZERO_OFFSET,
-        CONF_TOMORROW: True,
-    }
+    assert result["data"] == {CONF_ORIGIN: "S2", CONF_DESTINATION: "S3"}
     assert result["unique_id"] == json.dumps(["S2", "S3"])
 
     await hass.async_block_till_done()
     assert len(mock_config_entry.subentries) == 2
     assert hass.states.get("sensor.second_street_to_third_street") is not None
-
-
-@pytest.mark.usefixtures("mock_feed_download")
-@pytest.mark.parametrize(
-    ("name", "title", "entity_id"),
-    [
-        pytest.param("Home", "Home", "sensor.home", id="custom_name"),
-        pytest.param(
-            "   ",
-            "Third Street to First Street",
-            "sensor.third_street_to_first_street",
-            id="blank_name",
-        ),
-    ],
-)
-async def test_add_route_named(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    name: str,
-    title: str,
-    entity_id: str,
-) -> None:
-    """Test a name sets the route's title but is not stored, unless blank."""
-    await setup_integration(hass, mock_config_entry)
-    flow_id = await _start_route_flow(hass, mock_config_entry)
-
-    result = await hass.config_entries.subentries.async_configure(
-        flow_id, _route_input("S3", "S1", **{CONF_NAME: name})
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == title
-    assert result["data"] == {
-        CONF_ORIGIN: "S3",
-        CONF_DESTINATION: "S1",
-        CONF_OFFSET: ZERO_OFFSET,
-        CONF_TOMORROW: True,
-    }
-
-    await hass.async_block_till_done()
-    assert hass.states.get(entity_id) is not None
 
 
 @pytest.mark.usefixtures("mock_feed_download")

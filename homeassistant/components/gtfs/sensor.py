@@ -506,8 +506,8 @@ async def async_setup_entry(
                     name=None,
                     origin=subentry.data[CONF_ORIGIN],
                     destination=subentry.data[CONF_DESTINATION],
-                    offset=cv.time_period(subentry.data[CONF_OFFSET]),
-                    include_tomorrow=subentry.data[CONF_TOMORROW],
+                    offset=dt.timedelta(),
+                    include_tomorrow=True,
                     lock=feed.lock,
                     unique_id=subentry_id,
                     device_info=DeviceInfo(

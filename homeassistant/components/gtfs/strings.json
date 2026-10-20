@@ -40,16 +40,10 @@
         "user": {
           "data": {
             "destination": "Destination stop",
-            "include_tomorrow": "Include tomorrow",
-            "name": "[%key:common::config_flow::data::name%]",
-            "offset": "Offset",
             "origin": "Origin stop"
           },
           "data_description": {
             "destination": "The stop to travel to.",
-            "include_tomorrow": "Show tomorrow's first departure once today's have ended.",
-            "name": "Optional name for the route. Defaults to the origin and destination stop names.",
-            "offset": "Only show departures at least this far in the future.",
             "origin": "The stop to depart from."
           }
         }
