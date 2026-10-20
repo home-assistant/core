@@ -306,8 +306,9 @@ def parse_time(time_str: str) -> dt.time | None:
         minute = int(parts[1])
         second = int(parts[2]) if len(parts) > 2 else 0
         return dt.time(hour, minute, second)
-    except ValueError:
-        # ValueError if value cannot be converted to an int or not in range
+    except ValueError, OverflowError:
+        # ValueError if value cannot be converted to an int or not in range,
+        # OverflowError if it does not even fit in a C int
         return None
 
 
