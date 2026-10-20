@@ -63,7 +63,9 @@ class DaliConfigFlow(ConfigFlow, domain=DOMAIN):
         """
         driver = DriverLubaRs232(uri=f"luba232:{device}")
         try:
-            await driver.connect()
+            # Probe read-only: do not write the interface's settings, so a bus
+            # already powered by the integrated supply is not depowered.
+            await driver.connect(apply_settings=False)
             descriptor = await driver.query_device_descriptor()
         finally:
             if transport := getattr(driver, "_transport", None):
