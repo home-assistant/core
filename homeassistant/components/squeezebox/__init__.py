@@ -33,7 +33,7 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (
@@ -173,20 +173,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
     mac_connect = (
         {(CONNECTION_NETWORK_MAC, status[STATUS_QUERY_MAC])}
         if STATUS_QUERY_MAC in status
-        else None
+        else UNDEFINED
     )
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_or_create(
+    device = device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, lms.uuid)},
-        name=lms.name,
-        manufacturer=SERVER_MANUFACTURER,
-        model=SERVER_MODEL,
-        model_id=SERVER_MODEL_ID,
-        sw_version=version,
-        entry_type=DeviceEntryType.SERVICE,
-        connections=mac_connect,
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, lms.uuid)},
+            name=lms.name,
+            manufacturer=SERVER_MANUFACTURER,
+            model=SERVER_MODEL,
+            model_id=SERVER_MODEL_ID,
+            sw_version=version,
+            entry_type=DeviceEntryType.SERVICE,
+            connections=mac_connect,
+        ),
     )
     _LOGGER.debug("LMS Device %s", device)
 
