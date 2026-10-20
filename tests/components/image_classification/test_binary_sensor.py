@@ -144,7 +144,7 @@ async def test_classification_task(
     assert task.image.media_content_id == f"media-source://camera/{CAMERA}"
     assert task.region == ai_task.Region(left=0.25, top=0.2, right=0.75, bottom=0.9)
     folder = config_dir / DOMAIN / mock_config_entry.entry_id
-    prefix = f"media-source://{DOMAIN}/{mock_config_entry.entry_id}"
+    prefix = f"{DOMAIN}/{mock_config_entry.entry_id}"
     assert {
         label: [
             (example.media_content_id, example.path, example.mime_type)
@@ -154,7 +154,7 @@ async def test_classification_task(
     } == {
         item["label"]: [
             (
-                f"{prefix}/{item['id']}.jpg",
+                f"{prefix}/{item['id']}",
                 folder / f"{item['id']}.jpg",
                 "image/jpeg",
             )
@@ -225,3 +225,18 @@ async def test_unavailable_on_errors(
     classifier.error = None
     await _poll(hass, freezer)
     assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+
+async def test_unusable_image_is_unknown(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    camera: FakeCamera,
+    classifier: FakeClassifier,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """An image that shows nothing, like a dark night, is unknown, not an error."""
+    await setup_integration(hass, mock_config_entry)
+    await teach_both(hass, mock_config_entry, camera)
+    classifier.error = ai_task.ImageUnusableError("blank")
+    await _poll(hass, freezer)
+    assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN

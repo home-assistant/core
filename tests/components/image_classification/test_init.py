@@ -2,12 +2,16 @@
 
 from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 
 from PIL import Image
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.image_classification.const import DOMAIN
+from homeassistant.components.image_classification.const import (
+    CONF_AI_TASK_ENTITY_ID,
+    DOMAIN,
+)
 from homeassistant.components.image_classification.frame_source import FRAME_SIDE
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -22,6 +26,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import (
     CAMERA,
+    CLASSIFIER,
     CONFIDENT_OFF,
     ENTITY_ID,
     FakeCamera,
@@ -260,6 +265,93 @@ async def test_unknown_stored_fields_survive(
 
     assert hass_storage[key]["data"]["frames"][0]["source"] == "history"
     assert hass_storage[key]["data"]["burst"] == {"frames": 3}
+
+
+async def test_cap_drops_oldest_frames(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    camera: FakeCamera,
+    mock_config_entry: MockConfigEntry,
+    config_dir: Path,
+) -> None:
+    """Teaching beyond the cap of a state drops its oldest frame and file."""
+    with patch(
+        "homeassistant.components.image_classification.taught_frames.MAX_FRAMES_PER_STATE",
+        2,
+    ):
+        await setup_integration(hass, mock_config_entry)
+        await teach_both(hass, mock_config_entry, camera)
+        await teach(hass, mock_config_entry, "on")
+        _, off, second = stored_frames(hass_storage, mock_config_entry)
+        await teach(hass, mock_config_entry, "on")
+
+    stored = stored_frames(hass_storage, mock_config_entry)
+    assert stored[:2] == [off, second]
+    assert [item["label"] for item in stored] == ["off", "on", "on"]
+    assert frame_files(config_dir, mock_config_entry) == {item["id"] for item in stored}
+
+
+async def test_cap_applies_on_load(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    camera: FakeCamera,
+    mock_config_entry: MockConfigEntry,
+    config_dir: Path,
+) -> None:
+    """Frames stored beyond a lower cap are dropped when the entry loads."""
+    await setup_integration(hass, mock_config_entry)
+    await teach_both(hass, mock_config_entry, camera)
+    await teach(hass, mock_config_entry, "on")
+    _, off, second = stored_frames(hass_storage, mock_config_entry)
+
+    with patch(
+        "homeassistant.components.image_classification.taught_frames.MAX_FRAMES_PER_STATE",
+        1,
+    ):
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert stored_frames(hass_storage, mock_config_entry) == [off, second]
+    assert frame_files(config_dir, mock_config_entry) == {off["id"], second["id"]}
+
+
+@pytest.mark.usefixtures("camera")
+async def test_follows_renamed_ai_task_entity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """A renamed AI Task entity is followed and the entry reloads."""
+    await setup_integration(hass, mock_config_entry)
+
+    entity_registry.async_update_entity(CLASSIFIER, name="Garage classifier")
+    await hass.async_block_till_done()
+    assert mock_config_entry.options[CONF_AI_TASK_ENTITY_ID] == CLASSIFIER
+
+    entity_registry.async_update_entity(CLASSIFIER, new_entity_id="ai_task.garage")
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.options[CONF_AI_TASK_ENTITY_ID] == "ai_task.garage"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_removed_ai_task_entity_stays_configured(
+    hass: HomeAssistant,
+    camera: FakeCamera,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Without its AI Task entity the sensor is unavailable, the option stays."""
+    await setup_integration(hass, mock_config_entry)
+    await teach_both(hass, mock_config_entry, camera)
+
+    entity_registry.async_remove(CLASSIFIER)
+    await hass.async_block_till_done()
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.options[CONF_AI_TASK_ENTITY_ID] == CLASSIFIER
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("camera")

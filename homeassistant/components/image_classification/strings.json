@@ -61,9 +61,6 @@
     },
     "classification_failed": {
       "message": "Could not classify the frame: {error}"
-    },
-    "unknown_frame": {
-      "message": "There is no taught frame {identifier}."
     }
   },
   "options": {

@@ -4,7 +4,7 @@
   "categories": ["ai_voice.image_recognition", "helpers.calculate_value"],
   "codeowners": ["@RaHehl"],
   "config_flow": true,
-  "dependencies": ["ai_task", "camera", "http", "media_source"],
+  "dependencies": ["ai_task", "camera", "http"],
   "documentation": "https://www.home-assistant.io/integrations/image_classification",
   "integration_type": "helper",
   "iot_class": "calculated",

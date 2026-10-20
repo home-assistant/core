@@ -1,27 +1,18 @@
 """The Image classification integration."""
 
 from homeassistant.const import CONF_ENTITY_ID, Platform
-from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import CoreState, Event, HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device import async_entity_id_to_device_id
+from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.helpers.helper_integration import async_handle_source_entity_changes
 from homeassistant.helpers.start import async_at_started
-from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import CONF_AI_TASK_ENTITY_ID
 from .coordinator import ImageClassificationConfigEntry, ImageClassificationCoordinator
-from .media_source import TaughtFrameView
 from .taught_frames import TaughtFrames, async_remove_taught_frames
 
 PLATFORMS = [Platform.BINARY_SENSOR]
-
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Image classification."""
-    hass.http.register_view(TaughtFrameView)
-    return True
 
 
 async def async_setup_entry(
@@ -44,6 +35,23 @@ async def async_setup_entry(
                 hass, entry.options[CONF_ENTITY_ID]
             ),
             source_entity_id_or_uuid=entry.options[CONF_ENTITY_ID],
+        )
+    )
+
+    @callback
+    def follow_ai_task_entity(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
+        # A removed entity stays configured, the sensor is unavailable meanwhile.
+        if event.data["action"] != "update" or "old_entity_id" not in event.data:
+            return
+        hass.config_entries.async_update_entry(
+            entry,
+            options={**entry.options, CONF_AI_TASK_ENTITY_ID: event.data["entity_id"]},
+        )
+        hass.config_entries.async_schedule_reload(entry.entry_id)
+
+    entry.async_on_unload(
+        async_track_entity_registry_updated_event(
+            hass, entry.options[CONF_AI_TASK_ENTITY_ID], follow_ai_task_entity
         )
     )
 

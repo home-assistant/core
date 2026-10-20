@@ -41,7 +41,7 @@ class ImageClassificationCoordinator(
 
     @override
     async def _async_update_data(self) -> ai_task.ChoiceAnswer | None:
-        """Return the answer, None while there is nothing to compare with."""
+        """Return the answer, None while not taught or unsure."""
         if not self.taught_frames.ready:
             # Nothing to compare with yet; spare the camera and the model.
             return None
@@ -65,6 +65,9 @@ class ImageClassificationCoordinator(
                 region=region_to_fractions(options[CONF_REGION]),
                 entity_id=options[CONF_AI_TASK_ENTITY_ID],
             )
+        except ai_task.ImageUnusableError:
+            # A dark night can look the same as a camera showing nothing.
+            return None
         except HomeAssistantError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

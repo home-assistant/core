@@ -80,6 +80,7 @@ class FakeClassifier(ai_task.AITaskEntity):
     """An AI Task entity whose next answer the test sets."""
 
     _attr_name = "Classifier"
+    _attr_unique_id = "classifier"
     _attr_supported_features = ai_task.AITaskEntityFeature.CLASSIFY_IMAGE
 
     def __init__(self) -> None:

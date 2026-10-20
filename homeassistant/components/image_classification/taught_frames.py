@@ -14,6 +14,7 @@ import uuid
 
 from PIL import Image
 
+from homeassistant.components.conversation import Attachment
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
@@ -24,6 +25,8 @@ from .const import DOMAIN, LOGGER, STATES
 STORAGE_VERSION = 1
 FRAME_ID = re.compile(r"[0-9a-f]{32}")
 FRAME_MIME_TYPE = "image/jpeg"
+# Hosted models receive every example on every call.
+MAX_FRAMES_PER_STATE = 20
 # One lock per entry, shared by the instances of a reload and by removal.
 DATA_LOCKS: HassKey[dict[str, asyncio.Lock]] = HassKey(f"{DOMAIN}_locks")
 
@@ -39,16 +42,6 @@ class TaughtFrame:
 
 class EntryClosed(Exception):
     """The entry was unloaded while a change waited for it."""
-
-
-def frame_path(hass: HomeAssistant, entry_id: str, frame_id: str) -> Path:
-    """Return the file of a taught frame."""
-    return _folder(hass, entry_id) / f"{frame_id}.jpg"
-
-
-def media_content_id(entry_id: str, frame_id: str) -> str:
-    """Return the media source ID of a taught frame."""
-    return f"media-source://{DOMAIN}/{entry_id}/{frame_id}.jpg"
 
 
 def _folder(hass: HomeAssistant, entry_id: str) -> Path:
@@ -101,16 +94,28 @@ class TaughtFrames:
         return {
             state: {
                 "examples": [
-                    {
-                        "media_content_id": media_content_id(self._entry_id, frame_id),
-                        "media_content_type": FRAME_MIME_TYPE,
-                    }
+                    Attachment(
+                        media_content_id=f"{DOMAIN}/{self._entry_id}/{frame_id}",
+                        mime_type=FRAME_MIME_TYPE,
+                        path=self._path(frame_id),
+                    )
                     for frame_id, item in self._items.items()
                     if item["label"] == state
                 ]
             }
             for state in STATES
         }
+
+    def _excess(self) -> list[str]:
+        """Return the oldest frames beyond the cap of each state."""
+        frame_ids: dict[str, list[str]] = {state: [] for state in STATES}
+        for frame_id, item in self._items.items():
+            frame_ids[item["label"]].append(frame_id)
+        return [
+            frame_id
+            for ids in frame_ids.values()
+            for frame_id in ids[: max(0, len(ids) - MAX_FRAMES_PER_STATE)]
+        ]
 
     def close(self) -> None:
         """Refuse further changes, the entry is unloaded."""
@@ -134,6 +139,10 @@ class TaughtFrames:
             for frame_id, reason in dropped.items():
                 LOGGER.warning("Dropping taught frame %s: %s", frame_id, reason)
                 del self._items[frame_id]
+            if excess := self._excess():
+                await self._hass.async_add_executor_job(self._delete_files, excess)
+                for frame_id in excess:
+                    del self._items[frame_id]
             if self._data and len(self._items) != len(self._data["frames"]):
                 await self._async_save()
 
@@ -170,18 +179,24 @@ class TaughtFrames:
         async with self._lock:
             self._check_open()
             frame_id = uuid.uuid4().hex
-            await self._hass.async_add_executor_job(self._write, frame_id, frame)
             self._items[frame_id] = {
                 "id": frame_id,
                 "label": state,
                 "created": dt_util.utcnow().isoformat(),
             }
+            excess = self._excess()
+            for evicted_id in excess:
+                del self._items[evicted_id]
+            await self._hass.async_add_executor_job(
+                self._write, frame_id, frame, excess
+            )
             await self._async_save()
 
-    def _write(self, frame_id: str, frame: bytes) -> None:
+    def _write(self, frame_id: str, frame: bytes, evicted: list[str]) -> None:
         path = self._path(frame_id)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(frame)
+        self._delete_files(evicted)
 
     async def async_remove(self, frame_ids: Iterable[str]) -> None:
         """Remove taught frames; raise EntryClosed when the entry was unloaded."""
@@ -207,7 +222,7 @@ class TaughtFrames:
             raise EntryClosed
 
     def _path(self, frame_id: str) -> Path:
-        return frame_path(self._hass, self._entry_id, frame_id)
+        return _folder(self._hass, self._entry_id) / f"{frame_id}.jpg"
 
     def _delete_files(self, frame_ids: Iterable[str]) -> None:
         for frame_id in frame_ids:
