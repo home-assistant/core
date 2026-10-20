@@ -48,10 +48,10 @@ class InvalidFeed(Exception):
 
 @dataclass
 class GtfsFeed:
-    """An imported GTFS schedule shared by an entry's sensors."""
+    """An imported GTFS schedule shared by an entry's calendars."""
 
     schedule: pygtfs.Schedule
-    # The schedule's SQLAlchemy session is not thread-safe and sensors update
+    # The schedule's SQLAlchemy session is not thread-safe and calendars read
     # from executor threads.
     lock: threading.Lock = field(default_factory=threading.Lock)
 
@@ -219,7 +219,7 @@ def import_feed(zip_path: Path, db_path: Path, cancelled: threading.Event) -> No
 
 
 def open_feed(db_path: Path) -> GtfsFeed:
-    """Open an imported feed for sensors updating from executor threads."""
+    """Open an imported feed for calendars reading from executor threads."""
     return GtfsFeed(pygtfs.Schedule(f"{db_path}?check_same_thread=False"))
 
 

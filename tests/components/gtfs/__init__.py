@@ -18,7 +18,7 @@ FIXTURE_DIR = Path(__file__).parent / "fixtures" / "feed"
 FEED_URL = "https://example.com/gtfs.zip"
 TEST_DATABASE = "test_feed.sqlite"
 ROUTE_SUBENTRY_ID = "route_s1_s3"
-ROUTE_ENTITY_ID = "sensor.first_street_to_third_street"
+ROUTE_ENTITY_ID = "calendar.first_street_to_third_street"
 
 
 def build_feed_zip(

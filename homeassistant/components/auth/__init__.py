@@ -149,14 +149,11 @@ from homeassistant.auth.models import (
     User,
 )
 from homeassistant.components import websocket_api
-from homeassistant.components.http import KEY_HASS
-from homeassistant.components.http.auth import (
-    async_sign_path,
-    async_user_not_allowed_do_auth,
-)
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.components.http.auth import async_sign_path
+from homeassistant.components.http.auth_util import async_user_not_allowed_do_auth
 from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2AuthorizeCallbackView
