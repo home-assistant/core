@@ -79,6 +79,36 @@
         }
       }
     },
+    "event": {
+      "achievement_unlocked": {
+        "name": "Achievement unlocked",
+        "state_attributes": {
+          "description": { "name": "Description" },
+          "event_type": {
+            "state": {
+              "achievement_unlocked": "[%key:component::xbox::entity::event::achievement_unlocked::name%]"
+            }
+          },
+          "game": { "name": "Game" },
+          "gamerscore": {
+            "name": "[%key:component::xbox::entity::sensor::gamer_score::name%]"
+          },
+          "image": { "name": "Image" },
+          "name": { "name": "Name" },
+          "rarity": {
+            "name": "Rarity",
+            "state": {
+              "common": "Common",
+              "rare": "Rare",
+              "unset": "Unset"
+            }
+          },
+          "rarity_percentage": { "name": "Rarity percentage" },
+          "time_unlocked": { "name": "Time unlocked" },
+          "title_id": { "name": "Title ID" }
+        }
+      }
+    },
     "image": {
       "avatar": {
         "name": "Avatar"
