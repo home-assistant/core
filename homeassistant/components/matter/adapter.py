@@ -174,6 +174,7 @@ class MatterAdapter:
         endpoint = get_device_endpoint(endpoint)
 
         basic_info = endpoint.device_info
+        node_info = endpoint.node.device_info
         # use (first) DeviceType of the endpoint as fallback product name
         device_type = next(
             (
@@ -184,9 +185,9 @@ class MatterAdapter:
             None,
         )
         name = (
-            get_clean_name(basic_info.nodeLabel)
-            or get_clean_name(basic_info.productLabel)
-            or get_clean_name(basic_info.productName)
+            (basic_info and get_clean_name(basic_info.nodeLabel))
+            or (basic_info and get_clean_name(basic_info.productLabel))
+            or (basic_info and get_clean_name(basic_info.productName))
             or (device_type.__name__ if device_type else None)
         )
 
@@ -214,13 +215,15 @@ class MatterAdapter:
         serial_number: str | None = None
         # if available, we also add the serial number as identifier
         if (
-            (basic_info_serial_number := basic_info.serialNumber)
+            basic_info
+            and (basic_info_serial_number := basic_info.serialNumber)
             and "test" not in basic_info_serial_number.lower()
             # some bridges report their own serial number for the devices they bridge,
             # which would make the identifier resolve to the bridge's device
             and not (
                 isinstance(basic_info, clusters.BridgedDeviceBasicInformation)
-                and basic_info_serial_number == endpoint.node.device_info.serialNumber
+                and node_info
+                and basic_info_serial_number == node_info.serialNumber
             )
         ):
             # prefix identifier with 'serial_' to be able to filter it
@@ -242,15 +245,17 @@ class MatterAdapter:
         # Model name is the human readable name of the model/product name
         model_name = (
             # productLabel is optional but preferred (e.g. Hue Bloom)
-            get_clean_name(basic_info.productLabel)
+            (basic_info and get_clean_name(basic_info.productLabel))
             # alternative is the productName (e.g. LCT001)
-            or get_clean_name(basic_info.productName)
+            or (basic_info and get_clean_name(basic_info.productName))
             # if no product name, use the device type name
             or (device_type.__name__ if device_type else None)
         )
         # Model ID is the non-human readable product ID
         # we prefer the matter product ID so we can look it up in Matter DCL
-        if isinstance(basic_info, clusters.BridgedDeviceBasicInformation):
+        if basic_info is None or isinstance(
+            basic_info, clusters.BridgedDeviceBasicInformation
+        ):
             # On bridged devices, the productID is not available
             model_id = None
         else:
@@ -260,9 +265,10 @@ class MatterAdapter:
             name=name,
             config_entry_id=self.config_entry.entry_id,
             identifiers=identifiers,
-            hw_version=basic_info.hardwareVersionString,
-            sw_version=basic_info.softwareVersionString,
-            manufacturer=basic_info.vendorName or endpoint.node.device_info.vendorName,
+            hw_version=basic_info.hardwareVersionString if basic_info else None,
+            sw_version=basic_info.softwareVersionString if basic_info else None,
+            manufacturer=(basic_info and basic_info.vendorName)
+            or (node_info and node_info.vendorName),
             model=model_name,
             model_id=model_id,
             serial_number=serial_number,
