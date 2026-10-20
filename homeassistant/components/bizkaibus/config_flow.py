@@ -334,7 +334,10 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         if existing_entry:
             existing_line_ids = existing_entry.options.get(CONF_LINE_IDS, [])
-            if any(route_id in existing_line_ids for route_id in route_ids):
+            route_ids = [
+                route_id for route_id in route_ids if route_id not in existing_line_ids
+            ]
+            if not route_ids:
                 return self.async_abort(reason="already_configured")
 
             return self.async_update_reload_and_abort(

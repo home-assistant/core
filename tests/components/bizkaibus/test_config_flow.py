@@ -3,7 +3,12 @@
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
-from bizkaibus import BizkaibusConnectionError, BizkaibusLanguages, BizkaibusParseError
+from bizkaibus import (
+    BizkaibusConnectionError,
+    BizkaibusLanguages,
+    BizkaibusParseError,
+    BizkaibusStopNotFoundError,
+)
 from probatio import to_field_list
 import pytest
 
@@ -134,6 +139,41 @@ async def test_user_flow_with_parse_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "api_parse_error"}
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_errors"),
+    [
+        pytest.param(
+            BizkaibusStopNotFoundError("1234"),
+            {CONF_STOP_ID: "stop_not_found"},
+            id="stop-not-found",
+        ),
+        pytest.param(
+            BizkaibusConnectionError(),
+            {"base": "cannot_connect"},
+            id="connection",
+        ),
+    ],
+)
+async def test_user_flow_with_api_factory_error(
+    hass: HomeAssistant, exception: Exception, expected_errors: dict[str, str]
+) -> None:
+    """Test the user flow handles API factory errors."""
+    with patch(
+        "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+    ) as mock_api_class:
+        mock_api_class.create = AsyncMock(side_effect=exception)
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_STOP_ID: "1234"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == expected_errors
 
 
 async def test_user_flow_with_invalid_stop_id(hass: HomeAssistant) -> None:
@@ -781,7 +821,7 @@ async def test_import_flow_adds_line_to_existing_stop(hass: HomeAssistant) -> No
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data={CONF_STOP_ID: "1234", CONF_LINE_IDS: ["B"]},
+            data={CONF_STOP_ID: "1234", CONF_LINE_IDS: ["A", "B"]},
         )
 
     assert result["type"] is FlowResultType.ABORT
