@@ -23,6 +23,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -44,6 +45,14 @@ from .const import (
     MINIMUM_PARSER_CONFIDENCE,
 )
 from .coordinator import MealieConfigEntry
+
+SERVICE_ADD_INGREDIENT = "add_ingredient"
+SERVICE_ADD_INGREDIENT_SCHEMA: VolDictType = {
+    probatio.Optional("food_id"): str,
+    probatio.Optional("note"): str,
+    probatio.Optional("unit_id"): str,
+    probatio.Optional("quantity"): cv.positive_float,
+}
 
 SERVICE_GET_MEALPLAN = "get_mealplan"
 SERVICE_GET_MEALPLAN_SCHEMA = probatio.Schema(
@@ -485,6 +494,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
         _async_parse_ingredient,
         schema=SERVICE_PARSE_INGREDIENT_SCHEMA,
         supports_response=SupportsResponse.ONLY,
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_ADD_INGREDIENT,
+        entity_domain=TODO_DOMAIN,
+        schema=SERVICE_ADD_INGREDIENT_SCHEMA,
+        func="async_add_ingredient",
     )
     service.async_register_platform_entity_service(
         hass,

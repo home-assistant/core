@@ -6992,7 +6992,7 @@
         "melcloud_home": {
           "integration_type": "hub",
           "config_flow": true,
-          "iot_class": "cloud_polling",
+          "iot_class": "cloud_push",
           "categories": [
             "climate.heat_pumps_air_conditioning"
           ],
@@ -10744,6 +10744,15 @@
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "spin_ble": {
+      "name": "Spin EV Charger",
+      "integration_type": "device",
+      "categories": [
+        "energy.ev_charging"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "splunk": {
       "name": "Splunk",

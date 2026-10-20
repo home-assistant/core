@@ -1596,7 +1596,7 @@ lorawan-connection==1.2.0
 luftdaten==0.7.4
 
 # homeassistant.components.lunatone
-lunatone-rest-api-client==0.11.0
+lunatone-rest-api-client==0.11.2
 
 # homeassistant.components.lupusec
 lupupy==0.3.2
@@ -1771,7 +1771,7 @@ nextcloudmonitor==1.5.1
 nextcord==3.1.0
 
 # homeassistant.components.nextdns
-nextdns==5.1.0
+nextdns==5.2.0
 
 # homeassistant.components.niko_home_control
 nhc==0.8.1
@@ -3077,7 +3077,7 @@ samsungtvws[async,encrypted]==3.0.6
 sanix==1.0.6
 
 # homeassistant.components.satel_integra
-satel-integra==1.5.0
+satel-integra==1.6.0
 
 # homeassistant.components.screenlogic
 screenlogicpy==0.10.2
@@ -3200,6 +3200,9 @@ specialized-turbo[cloud]==0.8.4
 
 # homeassistant.components.speedtestdotnet
 speedtest-cli==2.1.3
+
+# homeassistant.components.spin_ble
+spinev-ble[bleak]==0.5.0
 
 # homeassistant.components.spotify
 spotifyaio==2.0.2
