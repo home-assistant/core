@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, call
 from chip.clusters import Objects as clusters
 from freezegun.api import FrozenDateTimeFactory
 from matter_server.client.models.node import MatterNode
+from matter_server.common.helpers.util import create_attribute_path
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
