@@ -35,7 +35,6 @@ class SenseCapConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: LoRaWANDiscoveryInfo | dict[str, Any]
     ) -> ConfigFlowResult:
         """Discover the vendor once across all servers."""
-        self.context["title_placeholders"] = {"name": ""}
         return await self.async_step_user()
 
     async def async_step_confirm(
