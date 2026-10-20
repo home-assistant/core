@@ -173,7 +173,11 @@ class DaliCoordinator(DataUpdateCoordinator[dict[int, DaliGearData]]):
                 await self.driver.send(QueryMinLevel(gear_address))
             )
             if min_level is None or not 1 <= min_level <= 254:
-                min_level = 1
+                # A dropped minimum-level reply would otherwise reset a known
+                # minimum to 1 and skew the conversion; keep the cached minimum
+                # for gear already seen, defaulting only for newly found gear.
+                cached = self.data.get(address) if self.data else None
+                min_level = cached.min_level if cached is not None else 1
             max_level = _response_value(
                 await self.driver.send(QueryMaxLevel(gear_address))
             )
@@ -182,10 +186,11 @@ class DaliCoordinator(DataUpdateCoordinator[dict[int, DaliGearData]]):
             linear_dimming = False
             if DEVICE_TYPE_LED in device_types:
                 curve = await self.driver.send(QueryDimmingCurve(gear_address))
-                if curve is None or curve.raw_value is None:
-                    # A dropped dimming-curve reply would otherwise default to
-                    # the logarithmic curve and flip a linear gear's brightness;
-                    # treat it as a miss so the known-gear retry re-reads it.
+                if curve is None or curve.raw_value is None or curve.raw_value.error:
+                    # A dropped or framing-error dimming-curve reply would
+                    # otherwise default to, or wrongly decode as, the logarithmic
+                    # curve and flip a linear gear's brightness; treat it as a
+                    # miss so the known-gear retry re-reads it.
                     return None
                 linear_dimming = curve.raw_value.as_integer == 1
         except (OSError, TimeoutError) as err:
