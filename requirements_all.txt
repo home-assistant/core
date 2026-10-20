@@ -2607,7 +2607,7 @@ pyrail==0.4.1
 pyrainbird==6.6.0
 
 # homeassistant.components.playstation_network
-pyrate-limiter==4.5.0
+pyrate-limiter==4.5.1
 
 # homeassistant.components.recswitch
 pyrecswitch==1.0.2
