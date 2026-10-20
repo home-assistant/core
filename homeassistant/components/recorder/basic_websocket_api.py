@@ -7,9 +7,9 @@ import probatio
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import recorder as recorder_helper
+from homeassistant.helpers.recorder import get_instance
 
 from . import get_default_url
-from .util import get_instance
 
 
 @callback
