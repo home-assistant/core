@@ -176,6 +176,33 @@ async def test_a_held_link_that_drops_is_rebuilt(
     assert hass.states.get(STATE_SENSOR).state == "charging"
 
 
+async def test_a_held_link_recovers_from_a_failed_poll(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_charger: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """In persistent mode a failed read drops the link, and the next poll reconnects."""
+    await setup_persistent(hass, mock_config_entry)
+
+    mock_charger.async_get_status.side_effect = SpinEvError("gone")
+    freezer.tick(CHARGING_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_charger.async_disconnect.assert_awaited_once()
+    assert hass.states.get(STATE_SENSOR).state == STATE_UNAVAILABLE
+
+    mock_charger.async_get_status.side_effect = None
+    mock_charger.async_connect.reset_mock()
+    freezer.tick(CHARGING_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_charger.async_connect.assert_awaited_once()
+    assert hass.states.get(STATE_SENSOR).state == "charging"
+
+
 async def test_a_changed_connection_mode_takes_effect(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
