@@ -18,9 +18,9 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import BAN, setup_dynamic_entry
+from .conftest import BAN, automation_calls, engie_entity_id, setup_dynamic_entry
 
-_THRESHOLD_OPTIONS = {"threshold": {"type": "below", "value": {"number": 0.1}}}
+_BELOW_THRESHOLD_OPTIONS = {"threshold": {"type": "below", "value": {"number": 0.1}}}
 
 _CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = dict.fromkeys(
     CONDITIONS, TargetSupport.STANDARD
@@ -30,18 +30,6 @@ _CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = dict.fromkeys(
 def test_condition_target_support() -> None:
     """Certify the condition registry matches its declared target support."""
     assert_conditions_target_support(CONDITIONS, _CONDITION_TARGET_SUPPORT)
-
-
-def _automation_calls(service_calls: list[ServiceCall]) -> list[ServiceCall]:
-    """Return the recorded calls of the test automation action."""
-    return [call for call in service_calls if call.domain == "test"]
-
-
-def _entity_id(entity_registry: er.EntityRegistry, domain: str, unique_id: str) -> str:
-    """Return the entity id of an ENGIE entity."""
-    entity_id = entity_registry.async_get_entity_id(domain, DOMAIN, unique_id)
-    assert entity_id is not None
-    return entity_id
 
 
 async def _async_setup_condition_automation(
@@ -77,22 +65,22 @@ async def _async_setup_condition_automation(
         ),
         pytest.param(
             f"{DOMAIN}.epex_hour_price_is_above_threshold",
-            _THRESHOLD_OPTIONS,
+            _BELOW_THRESHOLD_OPTIONS,
             id="hour_above",
         ),
         pytest.param(
             f"{DOMAIN}.epex_hour_price_is_below_threshold",
-            _THRESHOLD_OPTIONS,
+            _BELOW_THRESHOLD_OPTIONS,
             id="hour_below",
         ),
         pytest.param(
             f"{DOMAIN}.epex_quarter_hour_price_is_above_threshold",
-            _THRESHOLD_OPTIONS,
+            _BELOW_THRESHOLD_OPTIONS,
             id="quarter_hour_above",
         ),
         pytest.param(
             f"{DOMAIN}.epex_quarter_hour_price_is_below_threshold",
-            _THRESHOLD_OPTIONS,
+            _BELOW_THRESHOLD_OPTIONS,
             id="quarter_hour_below",
         ),
     ],
@@ -135,8 +123,8 @@ async def test_negative_condition(
 ) -> None:
     """Test the negative conditions pass only for their own entity."""
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
-    entity_id = _entity_id(entity_registry, "binary_sensor", unique_id)
-    other_entity_id = _entity_id(entity_registry, "binary_sensor", other_unique_id)
+    entity_id = engie_entity_id(entity_registry, "binary_sensor", unique_id)
+    other_entity_id = engie_entity_id(entity_registry, "binary_sensor", other_unique_id)
     hass.states.async_set("input_boolean.test", "off")
     await _async_setup_condition_automation(
         hass,
@@ -151,22 +139,30 @@ async def test_negative_condition(
     await hass.async_block_till_done()
     hass.states.async_set("input_boolean.test", "on")
     await hass.async_block_till_done()
-    assert len(_automation_calls(service_calls)) == 0
+    assert len(automation_calls(service_calls)) == 0
 
     hass.states.async_set("input_boolean.test", "off")
     hass.states.async_set(entity_id, "on")
     await hass.async_block_till_done()
     hass.states.async_set("input_boolean.test", "on")
     await hass.async_block_till_done()
-    assert len(_automation_calls(service_calls)) == 1
+    assert len(automation_calls(service_calls)) == 1
 
 
 @pytest.mark.parametrize(
-    ("condition_key", "unique_id", "threshold", "passing_value", "failing_value"),
+    (
+        "condition_key",
+        "unique_id",
+        "other_unique_id",
+        "threshold",
+        "passing_value",
+        "failing_value",
+    ),
     [
         pytest.param(
             "epex_hour_price_is_below_threshold",
             f"{BAN}_epex_current_hour",
+            f"{BAN}_epex_next_hour",
             {"type": "below", "value": {"number": 0.1}},
             "0.05",
             "0.15",
@@ -175,6 +171,7 @@ async def test_negative_condition(
         pytest.param(
             "epex_hour_price_is_above_threshold",
             f"{BAN}_epex_current_hour",
+            f"{BAN}_epex_next_hour",
             {"type": "above", "value": {"number": 0.1}},
             "0.15",
             "0.05",
@@ -183,6 +180,7 @@ async def test_negative_condition(
         pytest.param(
             "epex_quarter_hour_price_is_below_threshold",
             f"{BAN}_epex_current_quarter_hour",
+            f"{BAN}_epex_next_quarter_hour",
             {"type": "below", "value": {"number": 0.1}},
             "0.05",
             "0.15",
@@ -191,6 +189,7 @@ async def test_negative_condition(
         pytest.param(
             "epex_quarter_hour_price_is_above_threshold",
             f"{BAN}_epex_current_quarter_hour",
+            f"{BAN}_epex_next_quarter_hour",
             {"type": "above", "value": {"number": 0.1}},
             "0.15",
             "0.05",
@@ -206,13 +205,15 @@ async def test_threshold_condition(
     service_calls: list[ServiceCall],
     condition_key: str,
     unique_id: str,
+    other_unique_id: str,
     threshold: dict[str, Any],
     passing_value: str,
     failing_value: str,
 ) -> None:
-    """Test the threshold conditions pass for prices inside the threshold."""
+    """Test the threshold conditions pass only for their own entity."""
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
-    entity_id = _entity_id(entity_registry, "sensor", unique_id)
+    entity_id = engie_entity_id(entity_registry, "sensor", unique_id)
+    other_entity_id = engie_entity_id(entity_registry, "sensor", other_unique_id)
     hass.states.async_set("input_boolean.test", "off")
     await _async_setup_condition_automation(
         hass,
@@ -224,14 +225,15 @@ async def test_threshold_condition(
     )
 
     hass.states.async_set(entity_id, failing_value)
+    hass.states.async_set(other_entity_id, passing_value)
     await hass.async_block_till_done()
     hass.states.async_set("input_boolean.test", "on")
     await hass.async_block_till_done()
-    assert len(_automation_calls(service_calls)) == 0
+    assert len(automation_calls(service_calls)) == 0
 
     hass.states.async_set("input_boolean.test", "off")
     hass.states.async_set(entity_id, passing_value)
     await hass.async_block_till_done()
     hass.states.async_set("input_boolean.test", "on")
     await hass.async_block_till_done()
-    assert len(_automation_calls(service_calls)) == 1
+    assert len(automation_calls(service_calls)) == 1

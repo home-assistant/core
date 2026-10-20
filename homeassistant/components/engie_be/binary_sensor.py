@@ -103,7 +103,7 @@ class EngieBeEpexTomorrowAvailableSensor(
     @property
     @override
     def is_on(self) -> bool:
-        """Return True when both granularities have slots for tomorrow."""
+        """Return True when both granularities fully cover tomorrow."""
         tomorrow = dt_util.now(BRUSSELS_TIME_ZONE).date() + timedelta(days=1)
         return epex_day_available(self.coordinator.data, tomorrow)
 

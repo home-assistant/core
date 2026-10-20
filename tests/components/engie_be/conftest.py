@@ -36,7 +36,8 @@ from homeassistant.components.engie_be.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 BRUSSELS_TIME_ZONE = ZoneInfo("Europe/Brussels")
@@ -352,3 +353,17 @@ async def setup_dynamic_entry(
         build_contracts(dynamic=True)
     )
     await setup_entry(hass, mock_config_entry)
+
+
+def automation_calls(service_calls: list[ServiceCall]) -> list[ServiceCall]:
+    """Return the recorded calls of the test automation action."""
+    return [call for call in service_calls if call.domain == "test"]
+
+
+def engie_entity_id(
+    entity_registry: er.EntityRegistry, domain: str, unique_id: str
+) -> str:
+    """Return the entity id of an ENGIE entity."""
+    entity_id = entity_registry.async_get_entity_id(domain, DOMAIN, unique_id)
+    assert entity_id is not None
+    return entity_id

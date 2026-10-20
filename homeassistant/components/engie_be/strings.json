@@ -2,9 +2,11 @@
   "common": {
     "condition_behavior_name": "Condition passes if",
     "condition_for_name": "For at least",
+    "condition_threshold_description": "Price threshold in EUR/kWh.",
     "condition_threshold_name": "Threshold",
     "trigger_behavior_name": "Trigger when",
     "trigger_for_name": "For at least",
+    "trigger_threshold_description": "Price threshold in EUR/kWh.",
     "trigger_threshold_name": "Threshold"
   },
   "conditions": {
@@ -18,7 +20,7 @@
           "name": "[%key:component::engie_be::common::condition_for_name%]"
         },
         "threshold": {
-          "description": "Price threshold in EUR/kWh.",
+          "description": "[%key:component::engie_be::common::condition_threshold_description%]",
           "name": "[%key:component::engie_be::common::condition_threshold_name%]"
         }
       },
@@ -34,7 +36,7 @@
           "name": "[%key:component::engie_be::common::condition_for_name%]"
         },
         "threshold": {
-          "description": "Price threshold in EUR/kWh.",
+          "description": "[%key:component::engie_be::common::condition_threshold_description%]",
           "name": "[%key:component::engie_be::common::condition_threshold_name%]"
         }
       },
@@ -62,7 +64,7 @@
           "name": "[%key:component::engie_be::common::condition_for_name%]"
         },
         "threshold": {
-          "description": "Price threshold in EUR/kWh.",
+          "description": "[%key:component::engie_be::common::condition_threshold_description%]",
           "name": "[%key:component::engie_be::common::condition_threshold_name%]"
         }
       },
@@ -78,7 +80,7 @@
           "name": "[%key:component::engie_be::common::condition_for_name%]"
         },
         "threshold": {
-          "description": "Price threshold in EUR/kWh.",
+          "description": "[%key:component::engie_be::common::condition_threshold_description%]",
           "name": "[%key:component::engie_be::common::condition_threshold_name%]"
         }
       },
@@ -509,7 +511,7 @@
           "name": "[%key:component::engie_be::common::trigger_for_name%]"
         },
         "threshold": {
-          "description": "Price threshold in EUR/kWh.",
+          "description": "[%key:component::engie_be::common::trigger_threshold_description%]",
           "name": "[%key:component::engie_be::common::trigger_threshold_name%]"
         }
       },
@@ -525,7 +527,7 @@
           "name": "[%key:component::engie_be::common::trigger_for_name%]"
         },
         "threshold": {
-          "description": "Price threshold in EUR/kWh.",
+          "description": "[%key:component::engie_be::common::trigger_threshold_description%]",
           "name": "[%key:component::engie_be::common::trigger_threshold_name%]"
         }
       },
@@ -581,7 +583,7 @@
           "name": "[%key:component::engie_be::common::trigger_for_name%]"
         },
         "threshold": {
-          "description": "Price threshold in EUR/kWh.",
+          "description": "[%key:component::engie_be::common::trigger_threshold_description%]",
           "name": "[%key:component::engie_be::common::trigger_threshold_name%]"
         }
       },
@@ -597,7 +599,7 @@
           "name": "[%key:component::engie_be::common::trigger_for_name%]"
         },
         "threshold": {
-          "description": "Price threshold in EUR/kWh.",
+          "description": "[%key:component::engie_be::common::trigger_threshold_description%]",
           "name": "[%key:component::engie_be::common::trigger_threshold_name%]"
         }
       },

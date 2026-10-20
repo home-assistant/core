@@ -22,12 +22,14 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import (
     BAN,
+    automation_calls,
     build_epex_payload,
     build_epex_payload_without_tomorrow,
+    engie_entity_id,
     setup_dynamic_entry,
 )
 
-_THRESHOLD_OPTIONS = {"threshold": {"type": "above", "value": {"number": 0.2}}}
+_CROSSED_THRESHOLD_OPTIONS = {"threshold": {"type": "above", "value": {"number": 0.2}}}
 
 _TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = dict.fromkeys(
     TRIGGERS, TargetSupport.STANDARD
@@ -37,18 +39,6 @@ _TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = dict.fromkeys(
 def test_trigger_target_support() -> None:
     """Certify the trigger registry matches its declared target support."""
     assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
-
-
-def _automation_calls(service_calls: list[ServiceCall]) -> list[ServiceCall]:
-    """Return the recorded calls of the test automation action."""
-    return [call for call in service_calls if call.domain == "test"]
-
-
-def _entity_id(entity_registry: er.EntityRegistry, domain: str, unique_id: str) -> str:
-    """Return the entity id of an ENGIE entity."""
-    entity_id = entity_registry.async_get_entity_id(domain, DOMAIN, unique_id)
-    assert entity_id is not None
-    return entity_id
 
 
 async def _async_setup_trigger_automation(
@@ -82,7 +72,9 @@ async def _async_setup_trigger_automation(
             )
         ),
         *(
-            pytest.param(f"{DOMAIN}.{key}", _THRESHOLD_OPTIONS, True, True, id=key)
+            pytest.param(
+                f"{DOMAIN}.{key}", _CROSSED_THRESHOLD_OPTIONS, True, True, id=key
+            )
             for key in (
                 "epex_current_hour_crossed_threshold",
                 "epex_next_hour_crossed_threshold",
@@ -169,8 +161,8 @@ async def test_binary_edge_trigger(
 ) -> None:
     """Test the binary edge triggers fire only for their own entity and edge."""
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
-    entity_id = _entity_id(entity_registry, "binary_sensor", unique_id)
-    other_entity_id = _entity_id(entity_registry, "binary_sensor", other_unique_id)
+    entity_id = engie_entity_id(entity_registry, "binary_sensor", unique_id)
+    other_entity_id = engie_entity_id(entity_registry, "binary_sensor", other_unique_id)
     await _async_setup_trigger_automation(
         hass,
         {"trigger": f"{DOMAIN}.{trigger_key}", "target": {"entity_id": entity_id}},
@@ -178,19 +170,19 @@ async def test_binary_edge_trigger(
 
     hass.states.async_set(other_entity_id, fire_state)
     await hass.async_block_till_done()
-    assert len(_automation_calls(service_calls)) == 0
+    assert len(automation_calls(service_calls)) == 0
 
     hass.states.async_set(entity_id, hold_state)
     await hass.async_block_till_done()
-    assert len(_automation_calls(service_calls)) == 0
+    assert len(automation_calls(service_calls)) == 0
 
     hass.states.async_set(entity_id, fire_state)
     await hass.async_block_till_done()
-    assert len(_automation_calls(service_calls)) == 1
+    assert len(automation_calls(service_calls)) == 1
 
     hass.states.async_set(entity_id, fire_state)
     await hass.async_block_till_done()
-    assert len(_automation_calls(service_calls)) == 1
+    assert len(automation_calls(service_calls)) == 1
 
 
 @pytest.mark.parametrize(
@@ -234,63 +226,67 @@ async def test_crossed_threshold_trigger(
 ) -> None:
     """Test the threshold triggers fire only when their own entity crosses."""
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
-    entity_id = _entity_id(entity_registry, "sensor", unique_id)
-    other_entity_id = _entity_id(entity_registry, "sensor", other_unique_id)
+    entity_id = engie_entity_id(entity_registry, "sensor", unique_id)
+    other_entity_id = engie_entity_id(entity_registry, "sensor", other_unique_id)
     await _async_setup_trigger_automation(
         hass,
         {
             "trigger": f"{DOMAIN}.{trigger_key}",
             "target": {"entity_id": entity_id},
-            "options": _THRESHOLD_OPTIONS,
+            "options": _CROSSED_THRESHOLD_OPTIONS,
         },
     )
 
     hass.states.async_set(other_entity_id, "0.25")
     await hass.async_block_till_done()
-    assert len(_automation_calls(service_calls)) == 0
+    assert len(automation_calls(service_calls)) == 0
 
     hass.states.async_set(entity_id, "0.15")
     await hass.async_block_till_done()
-    assert len(_automation_calls(service_calls)) == 0
+    assert len(automation_calls(service_calls)) == 0
 
     hass.states.async_set(entity_id, "0.25")
     await hass.async_block_till_done()
-    assert len(_automation_calls(service_calls)) == 1
+    assert len(automation_calls(service_calls)) == 1
 
     hass.states.async_set(entity_id, "0.3")
     await hass.async_block_till_done()
-    assert len(_automation_calls(service_calls)) == 1
+    assert len(automation_calls(service_calls)) == 1
 
     hass.states.async_set(entity_id, "0.15")
     await hass.async_block_till_done()
-    assert len(_automation_calls(service_calls)) == 1
+    assert len(automation_calls(service_calls)) == 1
 
     hass.states.async_set(entity_id, "0.25")
     await hass.async_block_till_done()
-    assert len(_automation_calls(service_calls)) == 2
+    assert len(automation_calls(service_calls)) == 2
 
 
 @pytest.mark.parametrize(
-    ("trigger_key", "unique_id"),
+    ("trigger_key", "unique_id", "other_unique_id"),
     [
         pytest.param(
             "epex_high_today_hour_updated",
             f"{BAN}_epex_high_today_hour",
+            f"{BAN}_epex_low_today_hour",
             id="high_hour",
         ),
         pytest.param(
             "epex_low_today_hour_updated",
             f"{BAN}_epex_low_today_hour",
+            f"{BAN}_epex_high_today_hour",
             id="low_hour",
         ),
         pytest.param(
             "epex_high_today_quarter_hour_updated",
             f"{BAN}_epex_high_today_quarter_hour",
+            f"{BAN}_epex_low_today_quarter_hour",
             id="high_quarter_hour",
         ),
         pytest.param(
             "epex_low_today_quarter_hour_updated",
             f"{BAN}_epex_low_today_quarter_hour",
+            f"{BAN}_epex_high_today_quarter_hour",
             id="low_quarter_hour",
         ),
     ],
@@ -303,10 +299,12 @@ async def test_updated_trigger(
     service_calls: list[ServiceCall],
     trigger_key: str,
     unique_id: str,
+    other_unique_id: str,
 ) -> None:
     """Test the updated triggers fire on every state change of their entity."""
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
-    entity_id = _entity_id(entity_registry, "sensor", unique_id)
+    entity_id = engie_entity_id(entity_registry, "sensor", unique_id)
+    other_entity_id = engie_entity_id(entity_registry, "sensor", other_unique_id)
     state = hass.states.get(entity_id)
     assert state is not None
     value = float(state.state)
@@ -315,17 +313,21 @@ async def test_updated_trigger(
         {"trigger": f"{DOMAIN}.{trigger_key}", "target": {"entity_id": entity_id}},
     )
 
-    hass.states.async_set(entity_id, str(value + 1))
+    hass.states.async_set(other_entity_id, str(value + 5))
     await hass.async_block_till_done()
-    assert len(_automation_calls(service_calls)) == 1
+    assert len(automation_calls(service_calls)) == 0
 
     hass.states.async_set(entity_id, str(value + 1))
     await hass.async_block_till_done()
-    assert len(_automation_calls(service_calls)) == 1
+    assert len(automation_calls(service_calls)) == 1
+
+    hass.states.async_set(entity_id, str(value + 1))
+    await hass.async_block_till_done()
+    assert len(automation_calls(service_calls)) == 1
 
     hass.states.async_set(entity_id, str(value + 2))
     await hass.async_block_till_done()
-    assert len(_automation_calls(service_calls)) == 2
+    assert len(automation_calls(service_calls)) == 2
 
 
 @pytest.mark.usefixtures("frozen_afternoon")
@@ -342,7 +344,7 @@ async def test_tomorrow_prices_published_trigger(
         build_epex_payload_without_tomorrow
     )
     await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
-    entity_id = _entity_id(
+    entity_id = engie_entity_id(
         entity_registry, "binary_sensor", f"{BAN}_epex_tomorrow_available"
     )
     await _async_setup_trigger_automation(
@@ -359,4 +361,26 @@ async def test_tomorrow_prices_published_trigger(
     freezer.tick(EPEX_SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert len(_automation_calls(service_calls)) == 1
+    assert len(automation_calls(service_calls)) == 1
+
+
+async def test_trigger_ignores_foreign_entity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test a trigger targeting a non-ENGIE entity never fires."""
+    await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
+    hass.states.async_set("sensor.foreign_price", "off")
+    await _async_setup_trigger_automation(
+        hass,
+        {
+            "trigger": f"{DOMAIN}.epex_hour_became_negative",
+            "target": {"entity_id": "sensor.foreign_price"},
+        },
+    )
+
+    hass.states.async_set("sensor.foreign_price", "on")
+    await hass.async_block_till_done()
+    assert len(automation_calls(service_calls)) == 0
