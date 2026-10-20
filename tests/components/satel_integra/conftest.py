@@ -58,6 +58,9 @@ def mock_satel() -> Generator[AsyncMock]:
         ),
     ):
         client = mock_client.return_value
+        client.add_connection_status_callback.return_value = MagicMock(
+            return_value=None
+        )
 
         client.partition_states = {}
         client.violated_outputs = []

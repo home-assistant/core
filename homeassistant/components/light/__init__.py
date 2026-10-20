@@ -73,6 +73,8 @@ from .const import (
     LightEntityCapabilityAttribute,
     LightEntityFeature,
     LightEntityStateAttribute,
+    LightService,
+    LightServiceArgument,
 )
 from .entity import LightEntity, LightEntityDescription
 from .helper import (
@@ -152,6 +154,8 @@ __all__ = [
     "LightEntityDescription",
     "LightEntityFeature",
     "LightEntityStateAttribute",
+    "LightService",
+    "LightServiceArgument",
     "Profiles",
     "brightness_supported",
     "color_supported",
