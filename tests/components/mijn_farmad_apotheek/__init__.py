@@ -13,6 +13,7 @@ from aiofarmad import (
     FarmadAccount,
     Pharmacy,
 )
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.mijn_farmad_apotheek.const import (
     CONF_REFRESH_TOKEN,
@@ -21,8 +22,6 @@ from homeassistant.components.mijn_farmad_apotheek.const import (
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
-
-from tests.common import MockConfigEntry
 
 API_ACCOUNT_ID = "auth0|farmad-account"
 API_ACCOUNT_EMAIL = "test@example.com"

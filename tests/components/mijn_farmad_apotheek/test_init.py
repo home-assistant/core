@@ -16,6 +16,7 @@ from aiofarmad import (
 )
 import probatio
 import pytest
+from pytest_homeassistant.common import MockUser
 
 from homeassistant.components.mijn_farmad_apotheek.const import (
     ATTR_BASKET_ID,
@@ -53,8 +54,6 @@ from . import (
     get_mock_baskets,
     init_integration,
 )
-
-from tests.common import MockUser
 
 ORDER_DATA = {
     "product": API_PRODUCT_CNK,

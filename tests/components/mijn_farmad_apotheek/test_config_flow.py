@@ -8,6 +8,7 @@ from aiofarmad import (
     FarmadMfaRequiredError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.mijn_farmad_apotheek.const import (
@@ -25,8 +26,6 @@ from . import (
     API_REFRESH_TOKEN,
     USER_INPUT,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
