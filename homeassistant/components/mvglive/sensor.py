@@ -206,7 +206,7 @@ class MVGSensor(SensorEntity):
         )
         self._timeoffset: int = options.get(CONF_TIMEOFFSET, DEFAULT_TIMEOFFSET)
         self._number: int = options.get(CONF_NUMBER, DEFAULT_NUMBER)
-        self._attr_unique_id = entry.unique_id
+        self._attr_unique_id = entry.unique_id or entry.entry_id
         self._attr_name = entry.title
         self._departures: list[dict[str, Any]] = []
 

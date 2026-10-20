@@ -233,6 +233,7 @@ async def test_sensor_availability(
 @pytest.mark.usefixtures("mvg_api")
 async def test_yaml_import(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
     station_config: dict[str, str],
     entity_id: str,
@@ -249,6 +250,9 @@ async def test_yaml_import(
     assert state is not None
     assert state.attributes["friendly_name"] == expected_name
     assert entries[0].title == expected_name
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.unique_id == entries[0].entry_id
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml")
     assert issue is not None
     assert issue.breaks_in_ha_version == "2027.5.0"

@@ -1,7 +1,5 @@
 """Config flow for the MVG integration."""
 
-import hashlib
-import json
 from typing import Any, override
 
 from mvg import MvgApi, MvgApiError, TransportType
@@ -24,6 +22,7 @@ from homeassistant.helpers.selector import (
 from .const import (
     CONF_DESTINATIONS,
     CONF_DIRECTIONS,
+    CONF_IMPORTED,
     CONF_LINES,
     CONF_NUMBER,
     CONF_PRODUCTS,
@@ -46,7 +45,8 @@ LEGACY_PRODUCTS = {
 }
 LEGACY_DEFAULT_PRODUCTS = ["U-Bahn", "Tram", "Bus", "ExpressBus", "S-Bahn", "Nachteule"]
 
-IMPORT_FILTER_KEYS = (
+IMPORT_KEYS = (
+    CONF_NAME,
     CONF_DESTINATIONS,
     CONF_DIRECTIONS,
     CONF_LINES,
@@ -81,13 +81,6 @@ OPTIONS_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_NUMBER, default=DEFAULT_NUMBER): cv.positive_int,
     }
 )
-
-
-def _filter_digest(import_data: dict[str, Any]) -> str:
-    """Return a stable digest of the filters of one legacy YAML entry."""
-    filters = {key: import_data.get(key) for key in IMPORT_FILTER_KEYS}
-    payload = json.dumps(filters, sort_keys=True)
-    return hashlib.sha256(payload.encode()).hexdigest()[:8]
 
 
 def _migrate_products(products: list[str] | None) -> list[str]:
@@ -198,16 +191,17 @@ class MvgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Legacy YAML allows several entries per station with any name.
         name = import_data.get(CONF_NAME)
-        digest = _filter_digest(import_data)
-        suffix = f"{name}_{digest}" if name else digest
-        await self.async_set_unique_id(f"{station['id']}_{suffix}")
-        self._abort_if_unique_id_configured()
+        imported = {key: import_data.get(key) for key in IMPORT_KEYS}
+        self._async_abort_entries_match(
+            {CONF_STATION_ID: station["id"], CONF_IMPORTED: imported}
+        )
 
         return self.async_create_entry(
             title=name or import_data[CONF_STATION],
             data={
                 CONF_STATION_ID: station["id"],
                 CONF_STATION_NAME: station["name"],
+                CONF_IMPORTED: imported,
             },
             options={
                 CONF_DESTINATIONS: import_data.get(
