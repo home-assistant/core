@@ -1164,11 +1164,6 @@ class EntityPlatform:
                 entity.add_to_platform_abort()
                 return None
 
-            if device and device.disabled and not entry.disabled:
-                entry = entity_registry.async_update_entity(
-                    entry.entity_id, disabled_by=RegistryEntryDisabler.DEVICE
-                )
-
             entity.registry_entry = entry
             entity.entity_id = entry.entity_id
 
