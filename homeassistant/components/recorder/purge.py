@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy.orm.session import Session
 
+from homeassistant.helpers.recorder import session_scope
 from homeassistant.util.collection import chunked_or_all
 
 from .db_schema import Events, States, StatesMeta
@@ -39,7 +40,7 @@ from .queries import (
     find_statistics_runs_to_purge,
 )
 from .repack import repack_database
-from .util import retryable_database_job, session_scope
+from .util import retryable_database_job
 
 if TYPE_CHECKING:
     from . import Recorder
