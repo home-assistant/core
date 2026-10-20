@@ -2,21 +2,51 @@
 
 from http import HTTPStatus
 import json
+from unittest.mock import MagicMock
 
 from aiohttp.test_utils import TestClient
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_array_fixture,
+    snapshot_platform,
+)
 from pytest_homeassistant.typing import ClientSessionGenerator
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import device_tracker
 from homeassistant.components.device_tracker import legacy
+from homeassistant.components.meraki.const import DOMAIN
+from homeassistant.components.meraki.coordinator import UPDATE_INTERVAL
 from homeassistant.components.meraki.device_tracker import (
+    BLUETOOTH_CONSIDER_HOME,
     CONF_SECRET,
     CONF_VALIDATOR,
     URL,
 )
-from homeassistant.const import CONF_PLATFORM
+from homeassistant.const import (
+    CONF_PLATFORM,
+    STATE_HOME,
+    STATE_NOT_HOME,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
+
+from . import api_error, setup_integration
+
+PHONE = "device_tracker.pixel_9"
+KEYS = "device_tracker.keys"
+
+
+async def _async_poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Let the coordinator poll the API again."""
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 @pytest.fixture
@@ -139,3 +169,164 @@ async def test_data_will_be_saved(
 
     state_name = hass.states.get("device_tracker.00_26_ab_b8_a9_a5").state
     assert state_name == "home"
+
+
+@pytest.mark.freeze_time("2026-10-20 21:00:00+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_meraki_client")
+async def test_trackers(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the trackers of the clients and Bluetooth devices."""
+    await setup_integration(hass, mock_config_entry)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.freeze_time("2026-10-20 21:00:00+00:00")
+@pytest.mark.usefixtures("mock_meraki_client")
+async def test_trackers_disabled_by_default(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test only clients known to another integration are tracked by default."""
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:00:00:01")},
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(PHONE).state == STATE_HOME
+    for entity_id in ("device_tracker.nas", KEYS):
+        entry = entity_registry.async_get(entity_id)
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.freeze_time("2026-10-20 21:00:00+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_client_leaves(
+    hass: HomeAssistant,
+    mock_meraki_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test clients are away when offline or no longer listed."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(PHONE).state == STATE_HOME
+
+    clients = await async_load_json_array_fixture(hass, "clients.json", DOMAIN)
+    clients[0]["status"] = "Offline"
+    mock_meraki_client.networks.getNetworkClients.return_value = clients
+    await _async_poll(hass, freezer)
+    assert hass.states.get(PHONE).state == STATE_NOT_HOME
+
+    # After an hour without connecting, the API stops listing a client.
+    mock_meraki_client.networks.getNetworkClients.return_value = clients[1:]
+    await _async_poll(hass, freezer)
+    assert hass.states.get(PHONE).state == STATE_NOT_HOME
+
+
+@pytest.mark.freeze_time("2026-10-20 21:00:00+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_meraki_client")
+async def test_bluetooth_device_leaves(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test Bluetooth devices are away once access points stop hearing them."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(KEYS).state == STATE_HOME
+
+    # The fixture's keys were last heard at 20:58.
+    freezer.move_to("2026-10-20 20:58:00+00:00")
+    freezer.tick(BLUETOOTH_CONSIDER_HOME)
+    await _async_poll(hass, freezer)
+    assert hass.states.get(KEYS).state == STATE_NOT_HOME
+
+
+@pytest.mark.freeze_time("2026-10-20 21:00:00+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_new_client(
+    hass: HomeAssistant,
+    mock_meraki_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test clients that connect later get a tracker."""
+    await setup_integration(hass, mock_config_entry)
+    clients = await async_load_json_array_fixture(hass, "clients.json", DOMAIN)
+    new_client = {**clients[0], "mac": "aa:bb:cc:00:00:04", "description": "Tablet"}
+    mock_meraki_client.networks.getNetworkClients.return_value = [*clients, new_client]
+    await _async_poll(hass, freezer)
+    assert hass.states.get("device_tracker.tablet").state == STATE_HOME
+
+
+@pytest.mark.freeze_time("2026-10-20 21:00:00+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_restore_unlisted_clients(
+    hass: HomeAssistant,
+    mock_meraki_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test trackers of clients the API no longer lists are away after a restart."""
+    await setup_integration(hass, mock_config_entry)
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    mock_meraki_client.networks.getNetworkClients.return_value = []
+    mock_meraki_client.networks.getNetworkBluetoothClients.return_value = []
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(PHONE).state == STATE_NOT_HOME
+    assert hass.states.get(KEYS).state == STATE_NOT_HOME
+
+
+@pytest.mark.freeze_time("2026-10-20 21:00:00+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_client_in_several_networks(
+    hass: HomeAssistant,
+    mock_meraki_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a client listed in two networks is home where it is online."""
+    networks = await async_load_json_array_fixture(hass, "networks.json", DOMAIN)
+    networks[1]["productTypes"] = ["wireless"]
+    mock_meraki_client.organizations.getOrganizationNetworks.return_value = networks
+    clients = await async_load_json_array_fixture(hass, "clients.json", DOMAIN)
+    elsewhere = [
+        {
+            **client,
+            "status": "Offline",
+            "ip": "10.0.0.1",
+            "lastSeen": "2026-10-20T20:00:00Z",
+        }
+        for client in clients
+    ]
+    mock_meraki_client.networks.getNetworkClients.side_effect = [clients, elsewhere]
+    await setup_integration(hass, mock_config_entry)
+
+    phone = hass.states.get(PHONE)
+    assert phone.state == STATE_HOME
+    assert phone.attributes["ip"] == "192.168.1.20"
+    # Offline in both, the more recent sighting wins.
+    laptop = hass.states.get("device_tracker.aa_bb_cc_00_00_03")
+    assert laptop.attributes["ip"] == "192.168.1.40"
+
+
+@pytest.mark.freeze_time("2026-10-20 21:00:00+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_update_failed(
+    hass: HomeAssistant,
+    mock_meraki_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test trackers become unavailable when the API fails."""
+    await setup_integration(hass, mock_config_entry)
+    mock_meraki_client.networks.getNetworkClients.side_effect = api_error(503)
+    await _async_poll(hass, freezer)
+    assert hass.states.get(PHONE).state == STATE_UNAVAILABLE

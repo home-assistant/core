@@ -1,20 +1,36 @@
-"""Support for the Meraki CMX location service."""
+"""Device trackers for the clients of Meraki networks."""
 
+from datetime import timedelta
 from http import HTTPStatus
 import json
 import logging
+from typing import override
 
 import probatio
 
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     AsyncSeeCallback,
+    BaseScannerEntity,
+    ScannerEntity,
     SourceType,
 )
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import dt as dt_util
+
+from .coordinator import MerakiConfigEntry, MerakiDataUpdateCoordinator
+from .entity import MerakiEntity
+
+PARALLEL_UPDATES = 0
+
+# Access points report Bluetooth devices they hear; one not heard for this long is
+# away.
+BLUETOOTH_CONSIDER_HOME = timedelta(minutes=5)
+BLUETOOTH_UNIQUE_ID_PREFIX = "bluetooth_"
 
 CONF_VALIDATOR = "validator"
 CONF_SECRET = "secret"
@@ -135,3 +151,114 @@ class MerakiView(HomeAssistantView):
                     attributes=attrs,
                 )
             )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: MerakiConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up trackers for the clients of the organization's networks."""
+    coordinator = entry.runtime_data
+    tracked: set[str] = set()
+
+    # The API forgets clients after an hour; their trackers stay, as away.
+    restored: list[MerakiClientTracker | MerakiBluetoothTracker] = []
+    for registry_entry in er.async_entries_for_config_entry(
+        er.async_get(hass), entry.entry_id
+    ):
+        unique_id = registry_entry.unique_id
+        name = registry_entry.original_name
+        if unique_id.startswith(BLUETOOTH_UNIQUE_ID_PREFIX):
+            mac = unique_id.removeprefix(BLUETOOTH_UNIQUE_ID_PREFIX)
+            restored.append(MerakiBluetoothTracker(coordinator, mac, name))
+        else:
+            restored.append(MerakiClientTracker(coordinator, unique_id, name))
+        tracked.add(unique_id)
+    async_add_entities(restored)
+
+    @callback
+    def _async_add_new_clients() -> None:
+        new: list[MerakiClientTracker | MerakiBluetoothTracker] = []
+        for mac, client in coordinator.data.clients.items():
+            if mac not in tracked:
+                tracked.add(mac)
+                new.append(MerakiClientTracker(coordinator, mac, client.description))
+        for mac, bluetooth_client in coordinator.data.bluetooth_clients.items():
+            unique_id = f"{BLUETOOTH_UNIQUE_ID_PREFIX}{mac}"
+            if unique_id not in tracked and not _is_rotating_address(mac):
+                tracked.add(unique_id)
+                new.append(
+                    MerakiBluetoothTracker(coordinator, mac, bluetooth_client.name)
+                )
+        async_add_entities(new)
+
+    _async_add_new_clients()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_clients))
+
+
+def _is_rotating_address(mac: str) -> bool:
+    """Return True for a resolvable private Bluetooth address.
+
+    Phones and the like change these every few minutes, so they cannot be tracked.
+    """
+    return int(mac[:2], 16) & 0xC0 == 0x40
+
+
+class MerakiClientTracker(MerakiEntity, ScannerEntity):
+    """A Wi-Fi or wired client, home while it is connected to the network."""
+
+    def __init__(
+        self, coordinator: MerakiDataUpdateCoordinator, mac: str, name: str | None
+    ) -> None:
+        """Initialize the tracker."""
+        super().__init__(coordinator)
+        self.mac = mac
+        self._attr_mac_address = mac
+        self._attr_name = name or mac
+        self._async_update_attrs()
+
+    @property
+    @override
+    def is_connected(self) -> bool:
+        """Return True if Meraki reports the client as online."""
+        client = self.coordinator.data.clients.get(self.mac)
+        return client is not None and client.online
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        self._async_update_attrs()
+        super()._handle_coordinator_update()
+
+    @callback
+    def _async_update_attrs(self) -> None:
+        if client := self.coordinator.data.clients.get(self.mac):
+            self._attr_hostname = client.description
+            self._attr_ip_address = client.ip
+
+
+class MerakiBluetoothTracker(MerakiEntity, BaseScannerEntity):
+    """A Bluetooth device, home while access points hear it."""
+
+    _attr_entity_registry_enabled_default = False
+    _attr_source_type = SourceType.BLUETOOTH_LE
+
+    def __init__(
+        self, coordinator: MerakiDataUpdateCoordinator, mac: str, name: str | None
+    ) -> None:
+        """Initialize the tracker."""
+        super().__init__(coordinator)
+        self.mac = mac
+        self._attr_unique_id = f"{BLUETOOTH_UNIQUE_ID_PREFIX}{mac}"
+        self._attr_name = name or mac
+
+    @property
+    @override
+    def is_connected(self) -> bool:
+        """Return True if an access point heard the device recently."""
+        client = self.coordinator.data.bluetooth_clients.get(self.mac)
+        return (
+            client is not None
+            and dt_util.utcnow() - client.last_seen < BLUETOOTH_CONSIDER_HOME
+        )

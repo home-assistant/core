@@ -1,0 +1,41 @@
+[
+  {
+    "id": "619244949335200001",
+    "mac": "c4:00:00:00:00:01",
+    "networkId": "L_111",
+    "name": "Keys",
+    "deviceName": "Tile",
+    "manufacturer": "Tile",
+    "lastSeen": 1792529880,
+    "seenByDeviceMac": "98:18:88:00:00:01",
+    "inSightAlert": false,
+    "outOfSightAlert": false,
+    "tags": []
+  },
+  {
+    "id": "619244949335200002",
+    "mac": "c4:00:00:00:00:02",
+    "networkId": "L_111",
+    "name": null,
+    "deviceName": "unknown",
+    "manufacturer": "Unknown",
+    "lastSeen": 1792528200,
+    "seenByDeviceMac": "98:18:88:00:00:01",
+    "inSightAlert": false,
+    "outOfSightAlert": false,
+    "tags": []
+  },
+  {
+    "id": "619244949335200003",
+    "mac": "4f:55:e7:7b:58:1d",
+    "networkId": "L_111",
+    "name": null,
+    "deviceName": "unknown",
+    "manufacturer": "Unknown",
+    "lastSeen": 1792529880,
+    "seenByDeviceMac": "98:18:88:00:00:01",
+    "inSightAlert": false,
+    "outOfSightAlert": false,
+    "tags": []
+  }
+]
