@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.data_entry_flow import SectionConfig, section
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -144,6 +145,17 @@ async def validate_options(
     return user_input
 
 
+async def validate_setup(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    """Validate setup input."""
+    # The attribute selector in the options step needs an entity ID, not a UUID
+    user_input[CONF_ENTITY_ID] = er.async_validate_entity_id(
+        er.async_get(handler.parent_handler.hass), user_input[CONF_ENTITY_ID]
+    )
+    return user_input
+
+
 DATA_SCHEMA_SETUP = probatio.Schema(
     {
         probatio.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
@@ -154,6 +166,7 @@ DATA_SCHEMA_SETUP = probatio.Schema(
 CONFIG_FLOW = {
     "user": SchemaFlowFormStep(
         schema=DATA_SCHEMA_SETUP,
+        validate_user_input=validate_setup,
         next_step="options",
     ),
     "options": SchemaFlowFormStep(

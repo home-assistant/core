@@ -1,5 +1,6 @@
 """Test for compensation config flow."""
 
+from collections.abc import Callable
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -22,13 +23,27 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry as er
 
 
+@pytest.mark.parametrize(
+    "source",
+    [
+        pytest.param(lambda entry: entry.entity_id, id="entity_id"),
+        pytest.param(lambda entry: entry.id, id="uuid"),
+    ],
+)
 async def test_user_flow(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    source: Callable[[er.RegistryEntry], str],
 ) -> None:
     """Test full flow."""
+    source_entry = entity_registry.async_get_or_create(
+        "sensor", "test", "unique", suggested_object_id="test_sensor"
+    )
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -39,7 +54,7 @@ async def test_user_flow(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_NAME: DEFAULT_NAME, CONF_ENTITY_ID: "sensor.test_sensor"},
+        {CONF_NAME: DEFAULT_NAME, CONF_ENTITY_ID: source(source_entry)},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "options"
