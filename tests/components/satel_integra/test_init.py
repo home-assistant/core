@@ -268,6 +268,23 @@ async def test_unload_unsubscribes_connection_status_callbacks(
     mock_satel.close.assert_awaited_once_with()
 
 
+async def test_setup_failure_unsubscribes_connection_status_callbacks(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a setup failure unsubscribes connection status callbacks."""
+    unsubscribe_callbacks = [MagicMock(return_value=None) for _ in range(5)]
+    mock_satel.add_connection_status_callback.side_effect = unsubscribe_callbacks
+    mock_satel.read_panel_info.side_effect = RuntimeError
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    for unsubscribe_callback in unsubscribe_callbacks:
+        unsubscribe_callback.assert_called_once_with()
+
+
 @pytest.mark.parametrize(
     ("exception", "expected_state"),
     [
