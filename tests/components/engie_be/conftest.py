@@ -249,6 +249,29 @@ def build_epex_payload_with_partial_tomorrow(
     return build_epex_payload(start, end, granularity)
 
 
+def build_epex_payload_with_negative_current(
+    start: datetime,
+    end: datetime,
+    granularity: EpexGranularity = EpexGranularity.HOURLY,
+) -> EpexPayload:
+    """Build a payload whose slot covering the frozen afternoon is negative."""
+    payload = build_epex_payload(start, end, granularity)
+    afternoon = datetime(2026, 10, 3, 12, 0, tzinfo=UTC)
+    return EpexPayload(
+        slots=tuple(
+            EpexSlot(
+                start=slot.start,
+                end=slot.end,
+                value_eur_per_kwh=-0.05
+                if slot.start <= afternoon < slot.end
+                else slot.value_eur_per_kwh,
+            )
+            for slot in payload.slots
+        ),
+        slot_duration=payload.slot_duration,
+    )
+
+
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""

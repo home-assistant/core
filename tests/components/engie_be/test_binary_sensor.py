@@ -21,7 +21,13 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.engie_be.const import DOMAIN, EPEX_SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -29,6 +35,8 @@ from .conftest import (
     BAN,
     BRUSSELS_TIME_ZONE,
     build_epex_payload,
+    build_epex_payload_with_gap,
+    build_epex_payload_with_negative_current,
     build_epex_payload_with_partial_tomorrow,
     build_epex_payload_without_tomorrow,
     setup_dynamic_entry,
@@ -164,6 +172,86 @@ async def test_tomorrow_prices_with_stretched_slot(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_OFF
+
+
+@pytest.mark.usefixtures("frozen_afternoon")
+@pytest.mark.parametrize(
+    "unique_id",
+    [f"{BAN}_epex_negative", f"{BAN}_epex_negative_quarter_hour"],
+    ids=["hour", "quarter_hour"],
+)
+async def test_negative_price_off(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    unique_id: str,
+) -> None:
+    """Test the negative binary sensor is off while every price is positive."""
+    await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
+    entity_id = entity_registry.async_get_entity_id("binary_sensor", DOMAIN, unique_id)
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
+
+
+@pytest.mark.usefixtures("frozen_afternoon")
+@pytest.mark.parametrize(
+    "unique_id",
+    [f"{BAN}_epex_negative", f"{BAN}_epex_negative_quarter_hour"],
+    ids=["hour", "quarter_hour"],
+)
+async def test_negative_price_on(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    unique_id: str,
+) -> None:
+    """Test the negative binary sensor turns on for a negative current slot."""
+    mock_engie_client.return_value.async_get_epex_prices.side_effect = (
+        build_epex_payload_with_negative_current
+    )
+    await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
+    entity_id = entity_registry.async_get_entity_id("binary_sensor", DOMAIN, unique_id)
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+
+
+@pytest.mark.usefixtures("frozen_afternoon")
+async def test_negative_price_unknown_without_covering_slot(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_engie_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the hourly negative sensor is unknown when no slot covers now."""
+    mock_engie_client.return_value.async_get_epex_prices.side_effect = (
+        build_epex_payload_with_gap
+    )
+    await setup_dynamic_entry(hass, mock_config_entry, mock_engie_client)
+    hourly_entity_id = entity_registry.async_get_entity_id(
+        "binary_sensor", DOMAIN, f"{BAN}_epex_negative"
+    )
+    assert hourly_entity_id is not None
+
+    state = hass.states.get(hourly_entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    quarter_hour_entity_id = entity_registry.async_get_entity_id(
+        "binary_sensor", DOMAIN, f"{BAN}_epex_negative_quarter_hour"
+    )
+    assert quarter_hour_entity_id is not None
+
+    quarter_hour_state = hass.states.get(quarter_hour_entity_id)
+    assert quarter_hour_state is not None
+    assert quarter_hour_state.state == STATE_OFF
 
 
 @pytest.mark.usefixtures("frozen_afternoon")

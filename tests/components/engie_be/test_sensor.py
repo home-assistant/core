@@ -1024,7 +1024,7 @@ async def test_epex_entities_on_household_device(
         )
         if entity_entry.unique_id.startswith(f"{BAN}_epex_")
     ]
-    assert len(epex_entries) == 9
+    assert len(epex_entries) == 11
     assert {entity_entry.device_id for entity_entry in epex_entries} == {
         household_device.id
     }
