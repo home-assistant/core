@@ -219,6 +219,25 @@ async def test_async_update_gear_touches_single_entry(
     )
 
 
+async def test_async_update_gear_optimistic_level_overrides_readback(
+    coordinator: DaliCoordinator, fake_dali_driver: FakeDaliDriver
+) -> None:
+    """Test a just-sent level is shown at once, then reconciled by a later scan.
+
+    A gear fades to a commanded level, so an immediate read returns a mid-fade
+    value. ``optimistic_level`` publishes the target straight away; a later plain
+    refresh publishes the device's actual readback.
+    """
+    # The fake gear reports actual level 128; the override wins over that read.
+    await coordinator.async_update_gear(0, optimistic_level=50)
+    assert coordinator.data[0].level == 50
+
+    # A refresh without an override reconciles to the device readback (raw level
+    # 128 on the linear curve reads back as brightness 129).
+    await coordinator.async_update_gear(0)
+    assert coordinator.data[0].level == 129
+
+
 async def test_async_update_gear_drops_absent_gear(
     coordinator: DaliCoordinator,
 ) -> None:

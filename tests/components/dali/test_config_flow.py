@@ -26,13 +26,17 @@ def _mock_driver(
     *,
     connect_side_effect: type[Exception] | None = None,
     has_bus_power_supply: bool = False,
+    descriptor_unavailable: bool = False,
 ) -> None:
     """Configure a patched DriverLubaRs232 mock for the config flow."""
     driver.return_value.connect = AsyncMock(side_effect=connect_side_effect)
     driver.return_value._transport = MagicMock()
-    driver.return_value.query_device_descriptor = AsyncMock(
-        return_value=SimpleNamespace(has_bus_power_supply=has_bus_power_supply)
+    descriptor = (
+        None
+        if descriptor_unavailable
+        else SimpleNamespace(has_bus_power_supply=has_bus_power_supply)
     )
+    driver.return_value.query_device_descriptor = AsyncMock(return_value=descriptor)
 
 
 DISCOVERY_INFO = UsbServiceInfo(
@@ -117,6 +121,65 @@ async def test_usb_discovery_cannot_connect(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
     driver.return_value._transport.close.assert_called_once_with()
+
+
+async def test_usb_discovery_descriptor_unavailable(hass: HomeAssistant) -> None:
+    """Test USB discovery aborts when the interface descriptor cannot be read."""
+    with (
+        patch(
+            "homeassistant.components.dali.config_flow.usb.get_serial_by_id",
+            return_value="/dev/serial/by-id/usb-Lunatone_USB-DALI2",
+        ),
+        patch("homeassistant.components.dali.config_flow.DriverLubaRs232") as driver,
+    ):
+        _mock_driver(driver, descriptor_unavailable=True)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={CONF_SOURCE: SOURCE_USB},
+            data=DISCOVERY_INFO,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+    driver.return_value._transport.close.assert_called_once_with()
+
+
+async def test_user_flow_descriptor_unavailable(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test the manual flow recovers when the descriptor is unreadable then readable."""
+    with (
+        patch(
+            "homeassistant.components.dali.config_flow.async_scan_serial_ports",
+            return_value=[USB_PORT],
+        ),
+        patch(
+            "homeassistant.components.dali.config_flow.usb.get_serial_by_id",
+            return_value="/dev/serial/by-id/usb-Lunatone_USB-DALI2",
+        ),
+        patch("homeassistant.components.dali.config_flow.DriverLubaRs232") as driver,
+    ):
+        _mock_driver(driver, descriptor_unavailable=True)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_DEVICE: "/dev/ttyACM0"}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": "cannot_connect"}
+
+        driver.return_value.query_device_descriptor = AsyncMock(
+            return_value=SimpleNamespace(has_bus_power_supply=False)
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_DEVICE: "/dev/ttyACM0"}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_usb_discovery_already_configured(hass: HomeAssistant) -> None:
