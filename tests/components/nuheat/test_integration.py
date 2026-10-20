@@ -883,7 +883,7 @@ async def test_successful_control_command_clears_optimistic_off(
     else:
         await entity.async_set_preset_mode(PRESET_TEMPORARY_HOLD)
 
-    assert entity.assumed_state is False
+    assert entity.assumed_state is (exit_command == "target")
     assert entity.hvac_mode is not HVACMode.OFF
     # The coordinator debounces the two immediate post-command refreshes.
     assert api.list_thermostats.await_count == 2

@@ -1,5 +1,6 @@
 """Climate entities for NuHeat thermostats."""
 
+from asyncio import Lock
 from typing import Any, override
 
 from chemelex_nuheat import ScheduleMode, Thermostat, ThermostatState
@@ -78,6 +79,7 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
         # Preserve OFF immediately after a successful write until the first
         # coordinator refresh confirms the corrected Standby GET response.
         self._optimistic_standby = False
+        self._setpoint_lock = Lock()
         self._attr_unique_id = serial_number
         self._attr_native_temperature_unit = (
             coordinator.hass.config.units.temperature_unit
@@ -120,6 +122,10 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
     @property
     @override
     def native_target_temperature(self) -> float | None:
+        if (
+            pending := self.coordinator.pending_setpoint(self._serial_number)
+        ) is not None:
+            return self._from_celsius(pending)
         if self._optimistic_standby or self.thermostat.state is ThermostatState.STANDBY:
             return None
         if (temperature := self.thermostat.target_temperature) is None:
@@ -155,8 +161,11 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
     @property
     @override
     def assumed_state(self) -> bool:
-        """Return whether OFF is awaiting authoritative GET confirmation."""
-        return self._optimistic_standby
+        """Return whether a successful command is awaiting cloud confirmation."""
+        return (
+            self._optimistic_standby
+            or self.coordinator.pending_setpoint(self._serial_number) is not None
+        )
 
     @property
     @override
@@ -165,6 +174,12 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
+        # Serialize setpoints so a slow earlier command cannot replace a newer
+        # request with its completion. Keep vendor mode/hold selection unchanged.
+        async with self._setpoint_lock:
+            await self._async_set_temperature(**kwargs)
+
+    async def _async_set_temperature(self, **kwargs: Any) -> None:
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
@@ -181,24 +196,31 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
                 translation_placeholders={"state": self.thermostat.state},
             ) from err
         temperature_celsius = self._to_celsius(float(temperature))
+        hold_until = None
         if (
             mode is ScheduleMode.HOLD_UNTIL_NEXT_SCHEDULE
             and self.thermostat.state is ThermostatState.TIMED_HOLD
             and self.thermostat.hold_until is not None
         ):
+            hold_until = self.thermostat.hold_until
+        command_kwargs: dict[str, Any] = {"mode": mode}
+        if hold_until is not None:
+            command_kwargs["hold_until"] = hold_until
+        try:
             await self.coordinator.api.set_target_temperature(
                 self._serial_number,
                 temperature_celsius,
-                mode=mode,
-                hold_until=self.thermostat.hold_until,
+                **command_kwargs,
             )
-        else:
-            await self.coordinator.api.set_target_temperature(
-                self._serial_number,
-                temperature_celsius,
-                mode=mode,
-            )
+        except Exception:
+            # The library also GETs after PUT: an exception need not mean that
+            # the write failed. Read later, without retrying or assuming success.
+            self.coordinator.async_schedule_reconciliation()
+            raise
         self._optimistic_standby = False
+        self.coordinator.async_set_pending_setpoint(
+            self._serial_number, temperature_celsius
+        )
         await self.coordinator.async_request_refresh()
 
     @override
@@ -216,12 +238,14 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
                 temperature=self.thermostat.target_temperature,
             )
         self._optimistic_standby = False
+        self.coordinator.async_clear_pending_setpoint(self._serial_number)
         await self.coordinator.async_request_refresh()
 
     @override
     async def async_turn_off(self) -> None:
         """Enter NuHeat's frost-protected Standby state."""
         await self.coordinator.api.set_standby(self._serial_number)
+        self.coordinator.async_clear_pending_setpoint(self._serial_number)
         self._optimistic_standby = True
         await self.coordinator.async_request_refresh()
         if self.thermostat.state is ThermostatState.STANDBY:
@@ -253,6 +277,7 @@ class NuHeatClimateEntity(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
                 temperature=self.thermostat.target_temperature,
             )
         self._optimistic_standby = False
+        self.coordinator.async_clear_pending_setpoint(self._serial_number)
         await self.coordinator.async_request_refresh()
 
     @property

@@ -195,6 +195,7 @@ def test_entity_missing_temperatures_and_empty_write(hass: HomeAssistant) -> Non
     coordinator = MagicMock()
     coordinator.hass = hass
     coordinator.data = {"SERIAL": _thermostat(current=None, target=None)}
+    coordinator.pending_setpoint.return_value = None
     entity = NuHeatClimateEntity(coordinator, "SERIAL")
     assert entity.current_temperature is None
     assert entity.target_temperature is None
