@@ -5,13 +5,15 @@ from collections.abc import Mapping
 import copy
 from dataclasses import dataclass
 import logging
-from typing import Any, Final, Literal, cast, override
+from typing import Any, Final, Literal, Self, cast, override
 
 from homeassistant.components.sensor import (
+    RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityCapabilityAttribute,
     SensorEntityStateAttribute,
+    SensorExtraStoredData,
     SensorStateClass,
 )
 from homeassistant.components.sensor.recorder import reset_detected  # pylint: disable=home-assistant-component-root-import
@@ -359,7 +361,39 @@ def _set_result_unless_done(future: asyncio.Future[None]) -> None:
         future.set_result(None)
 
 
-class EnergyCostSensor(SensorEntity):
+@dataclass
+class EnergyCostSensorExtraStoredData(SensorExtraStoredData):
+    """Data to price the energy used while Home Assistant was stopped."""
+
+    last_energy_sensor_state: State
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the data."""
+        data = super().as_dict()
+        data["last_energy_sensor_state"] = self.last_energy_sensor_state.as_dict()
+        return data
+
+    @classmethod
+    @override
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
+        """Initialize the data from a dict, if it has the last energy state."""
+        if (
+            (extra := SensorExtraStoredData.from_dict(restored)) is None
+            or not isinstance(
+                energy_state_dict := restored.get("last_energy_sensor_state"), dict
+            )
+            or (last_energy_sensor_state := State.from_dict(energy_state_dict)) is None
+        ):
+            return None
+        return cls(
+            extra.native_value,
+            extra.native_unit_of_measurement,
+            last_energy_sensor_state,
+        )
+
+
+class EnergyCostSensor(RestoreSensor):
     """Calculate costs incurred by consuming energy.
 
     This is intended as a fallback for when no specific cost sensor is available for the
@@ -517,22 +551,26 @@ class EnergyCostSensor(SensorEntity):
                 )
             return
 
-        if (
-            state_class != SensorStateClass.TOTAL_INCREASING
-            and energy_state.attributes.get(SensorEntityStateAttribute.LAST_RESET)
-            != self._last_energy_sensor_state.attributes.get(
+        if state_class == SensorStateClass.TOTAL_INCREASING:
+            try:
+                meter_reset = reset_detected(
+                    self.hass,
+                    cast(str, self._config[self._adapter.stat_energy_key]),
+                    energy,
+                    float(self._last_energy_sensor_state.state),
+                    self._last_energy_sensor_state,
+                )
+            except HomeAssistantError:
+                # Negative reading, already logged by reset_detected
+                return
+        else:
+            meter_reset = energy_state.attributes.get(
+                SensorEntityStateAttribute.LAST_RESET
+            ) != self._last_energy_sensor_state.attributes.get(
                 SensorEntityStateAttribute.LAST_RESET
             )
-        ) or (
-            state_class == SensorStateClass.TOTAL_INCREASING
-            and reset_detected(
-                self.hass,
-                cast(str, self._config[self._adapter.stat_energy_key]),
-                energy,
-                float(self._last_energy_sensor_state.state),
-                self._last_energy_sensor_state,
-            )
-        ):
+
+        if meter_reset:
             # Energy meter was reset, reset cost sensor too
             energy_state_copy = copy.copy(energy_state)
             energy_state_copy.state = "0.0"
@@ -616,6 +654,11 @@ class EnergyCostSensor(SensorEntity):
 
         self._attr_name = f"{name} {self._adapter.name_suffix}"
 
+        # Start a new cycle from the last priced reading, so the energy used
+        # while stopped is priced too
+        if (restored := await self.async_get_last_sensor_data()) is not None:
+            self._reset(restored.last_energy_sensor_state)
+
         self._update_cost()
 
         # Store stat ID in hass.data so frontend can look it up
@@ -635,6 +678,9 @@ class EnergyCostSensor(SensorEntity):
     @callback
     def _async_state_changed_listener(self, *_: Any) -> None:
         """Handle child updates."""
+        # Leave readings after the shutdown save to the next start
+        if self.hass.is_stopping:
+            return
         self._update_cost()
         self.async_write_ha_state()
 
@@ -659,6 +705,34 @@ class EnergyCostSensor(SensorEntity):
     def update_config(self, config: Mapping[str, Any]) -> None:
         """Update the config."""
         self._config = config
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> SensorExtraStoredData:
+        """Return the data needed to price the energy used while stopped."""
+        # Only the save made while stopping stores the last priced reading.
+        # Restore state is also saved every 15 minutes while running. After a
+        # crash, the last of those saves holds an older reading, and restoring
+        # it would price the energy used since then a second time. A sensor
+        # removed by a config change must not price the time it was gone either.
+        if self._last_energy_sensor_state is None or not self.hass.is_stopping:
+            return super().extra_restore_state_data
+        return EnergyCostSensorExtraStoredData(
+            self.native_value,
+            self.native_unit_of_measurement,
+            self._last_energy_sensor_state,
+        )
+
+    @override
+    async def async_get_last_sensor_data(
+        self,
+    ) -> EnergyCostSensorExtraStoredData | None:
+        """Return the restored data, if it is complete."""
+        if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
+            return None
+        return EnergyCostSensorExtraStoredData.from_dict(
+            restored_last_extra_data.as_dict()
+        )
 
     @property
     @override
