@@ -344,3 +344,25 @@ async def test_remove_config_entry_device(
     )
 
     entry.runtime_data.close()
+
+
+async def test_remove_device_allowed_when_setup_failed(
+    hass: HomeAssistant, fake_dali_driver: FakeDaliDriver
+) -> None:
+    """Test a stale device can be removed when setup left no runtime data."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_DEVICE: "/dev/ttyACM0"}, entry_id="ENTRY"
+    )
+    entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.dali.DriverLubaRs232",
+            return_value=fake_dali_driver,
+        ),
+        patch.object(fake_dali_driver, "connect", side_effect=OSError("offline")),
+    ):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+
+    assert not hasattr(entry, "runtime_data")
+    device_entry = SimpleNamespace(identifiers={(DOMAIN, "ENTRY_gear_0")})
+    assert await async_remove_config_entry_device(hass, entry, device_entry) is True

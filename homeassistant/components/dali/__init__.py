@@ -60,6 +60,11 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, entry: DaliConfigEntry, device_entry: AnyDeviceEntry
 ) -> bool:
     """Allow removing a device only when its address no longer responds."""
+    # A failed setup (e.g. the interface unplugged on restart) leaves the entry
+    # without runtime data, yet the device-removal API still calls this; allow
+    # removal then, since there is no live bus state to check against.
+    if not hasattr(entry, "runtime_data"):
+        return True
     coordinator = entry.runtime_data
     gear_addresses = set(coordinator.data)
     gear_prefix = f"{entry.entry_id}_{GEAR_ID_INFIX}_"
