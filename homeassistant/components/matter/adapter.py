@@ -14,7 +14,12 @@ from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .const import DOMAIN, ID_TYPE_DEVICE_ID, ID_TYPE_SERIAL, LOGGER
 from .discovery import async_discover_entities
-from .helpers import MatterConfigEntry, get_device_endpoint, get_device_id
+from .helpers import (
+    MatterConfigEntry,
+    get_device_endpoint,
+    get_device_id,
+    get_discovery_key,
+)
 
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
@@ -173,7 +178,8 @@ class MatterAdapter:
         # so derive that entry from the compose parent for every one of them.
         endpoint = get_device_endpoint(endpoint)
 
-        basic_info = endpoint.device_info
+        # a Bridged Node without BridgedDeviceBasicInformation gets a device without its info
+        basic_info = endpoint.device_info or clusters.BridgedDeviceBasicInformation()
         node_info = endpoint.node.device_info
         # use (first) DeviceType of the endpoint as fallback product name
         device_type = next(
@@ -185,9 +191,9 @@ class MatterAdapter:
             None,
         )
         name = (
-            (basic_info and get_clean_name(basic_info.nodeLabel))
-            or (basic_info and get_clean_name(basic_info.productLabel))
-            or (basic_info and get_clean_name(basic_info.productName))
+            get_clean_name(basic_info.nodeLabel)
+            or get_clean_name(basic_info.productLabel)
+            or get_clean_name(basic_info.productName)
             or (device_type.__name__ if device_type else None)
         )
 
@@ -215,14 +221,13 @@ class MatterAdapter:
         serial_number: str | None = None
         # if available, we also add the serial number as identifier
         if (
-            basic_info
-            and (basic_info_serial_number := basic_info.serialNumber)
+            (basic_info_serial_number := basic_info.serialNumber)
             and "test" not in basic_info_serial_number.lower()
             # some bridges report their own serial number for the devices they bridge,
             # which would make the identifier resolve to the bridge's device
             and not (
                 isinstance(basic_info, clusters.BridgedDeviceBasicInformation)
-                and node_info
+                and node_info is not None
                 and basic_info_serial_number == node_info.serialNumber
             )
         ):
@@ -245,17 +250,15 @@ class MatterAdapter:
         # Model name is the human readable name of the model/product name
         model_name = (
             # productLabel is optional but preferred (e.g. Hue Bloom)
-            (basic_info and get_clean_name(basic_info.productLabel))
+            get_clean_name(basic_info.productLabel)
             # alternative is the productName (e.g. LCT001)
-            or (basic_info and get_clean_name(basic_info.productName))
+            or get_clean_name(basic_info.productName)
             # if no product name, use the device type name
             or (device_type.__name__ if device_type else None)
         )
         # Model ID is the non-human readable product ID
         # we prefer the matter product ID so we can look it up in Matter DCL
-        if basic_info is None or isinstance(
-            basic_info, clusters.BridgedDeviceBasicInformation
-        ):
+        if isinstance(basic_info, clusters.BridgedDeviceBasicInformation):
             # On bridged devices, the productID is not available
             model_id = None
         else:
@@ -266,10 +269,10 @@ class MatterAdapter:
             device_info=dr.DeviceInfo(
                 name=name,
                 identifiers=identifiers,
-                hw_version=basic_info.hardwareVersionString if basic_info else None,
-                sw_version=basic_info.softwareVersionString if basic_info else None,
-                manufacturer=(basic_info and basic_info.vendorName)
-                or (node_info and node_info.vendorName),
+                hw_version=basic_info.hardwareVersionString,
+                sw_version=basic_info.softwareVersionString,
+                manufacturer=basic_info.vendorName
+                or (node_info.vendorName if node_info is not None else None),
                 model=model_name,
                 model_id=model_id,
                 serial_number=serial_number,
@@ -283,12 +286,7 @@ class MatterAdapter:
         self._create_device_registry(endpoint)
         # run platform discovery from device type instances
         for entity_info in async_discover_entities(endpoint):
-            discovery_key = (
-                f"{entity_info.platform}_{endpoint.node.node_id}_{endpoint.endpoint_id}_"
-                f"{entity_info.primary_attribute.cluster_id}_"
-                f"{entity_info.primary_attribute.attribute_id}_"
-                f"{entity_info.entity_description.key}"
-            )
+            discovery_key = get_discovery_key(endpoint, entity_info)
             if discovery_key in self.discovered_entities:
                 continue
             LOGGER.debug(

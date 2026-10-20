@@ -200,7 +200,7 @@ class MatterLight(MatterEntity, LightEntity):
             )
         )
 
-    def _get_xy_color(self) -> tuple[float, float]:
+    def _get_xy_color(self) -> tuple[float, float] | None:
         """Get xy color from matter."""
 
         x_color = self.get_matter_attribute_value(
@@ -210,8 +210,8 @@ class MatterLight(MatterEntity, LightEntity):
             clusters.ColorControl.Attributes.CurrentY
         )
 
-        assert x_color is not None
-        assert y_color is not None
+        if x_color is None or y_color is None:
+            return None
 
         xy_color = convert_to_hass_xy((x_color, y_color))
         LOGGER.debug(
@@ -222,7 +222,7 @@ class MatterLight(MatterEntity, LightEntity):
 
         return xy_color
 
-    def _get_hs_color(self) -> tuple[float, float]:
+    def _get_hs_color(self) -> tuple[float, float] | None:
         """Get hs color from matter."""
 
         hue = self.get_matter_attribute_value(
@@ -233,8 +233,8 @@ class MatterLight(MatterEntity, LightEntity):
             clusters.ColorControl.Attributes.CurrentSaturation
         )
 
-        assert hue is not None
-        assert saturation is not None
+        if hue is None or saturation is None:
+            return None
 
         hs_color = convert_to_hass_hs((hue, saturation))
 
@@ -466,7 +466,9 @@ class MatterLight(MatterEntity, LightEntity):
     def _check_transition_blocklist(self) -> None:
         """Check if this device is reported to have non working transitions."""
         device_info = self._endpoint.device_info
-        if isinstance(device_info, clusters.BridgedDeviceBasicInformation):
+        if device_info is None or isinstance(
+            device_info, clusters.BridgedDeviceBasicInformation
+        ):
             return
         if (
             device_info.vendorID,

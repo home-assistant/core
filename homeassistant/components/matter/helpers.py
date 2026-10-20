@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from matter_server.common.models import ServerInfoMessage
 
     from .adapter import MatterAdapter
+    from .models import MatterEntityInfo
 
 
 class MissingNode(HomeAssistantError):
@@ -43,6 +44,16 @@ def get_matter(hass: HomeAssistant) -> MatterAdapter:
     # config entries? In case of the config entry we need to fix this.
     entries: list[MatterConfigEntry] = hass.config_entries.async_loaded_entries(DOMAIN)
     return entries[0].runtime_data.adapter
+
+
+def get_discovery_key(endpoint: MatterEndpoint, entity_info: MatterEntityInfo) -> str:
+    """Return the key under which the adapter tracks a discovered entity."""
+    return (
+        f"{entity_info.platform}_{endpoint.node.node_id}_{endpoint.endpoint_id}_"
+        f"{entity_info.primary_attribute.cluster_id}_"
+        f"{entity_info.primary_attribute.attribute_id}_"
+        f"{entity_info.entity_description.key}"
+    )
 
 
 def get_operational_instance_id(

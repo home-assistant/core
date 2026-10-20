@@ -125,7 +125,9 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
         # get the value from the primary attribute and convert
         # it to the HA value if needed
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
-        if value_convert := self.entity_description.device_to_ha:
+        if value is not None and (
+            value_convert := self.entity_description.device_to_ha
+        ):
             value = value_convert(value)
         self._attr_native_value = value
 
@@ -134,8 +136,9 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
             min_value = self.get_matter_attribute_value(
                 self.entity_description.min_attribute
             )
-            min_convert = self.entity_description.format_min_value
-            self._attr_native_min_value = min_convert(min_value)
+            if min_value is not None:
+                min_convert = self.entity_description.format_min_value
+                self._attr_native_min_value = min_convert(min_value)
         # min case 2: get the min from entity_description
         elif self.entity_description.native_min_value is not None:
             self._attr_native_min_value = self.entity_description.native_min_value
@@ -144,8 +147,9 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
         max_value = self.get_matter_attribute_value(
             self.entity_description.max_attribute
         )
-        max_convert = self.entity_description.format_max_value
-        self._attr_native_max_value = max_convert(max_value)
+        if max_value is not None:
+            max_convert = self.entity_description.format_max_value
+            self._attr_native_max_value = max_convert(max_value)
 
 
 class MatterLevelControlNumber(MatterEntity, NumberEntity):
