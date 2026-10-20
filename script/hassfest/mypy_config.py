@@ -9,7 +9,7 @@ from typing import Final
 
 from homeassistant.const import REQUIRED_PYTHON_VER
 
-from .core_files import MISSING_ALL, get_core_integrations
+from .core_files import get_core_integrations
 from .model import Config, Integration
 
 # Component modules which should set no_implicit_reexport = true.
@@ -168,7 +168,7 @@ def _generate_and_validate_mypy_config(config: Config) -> str:
     # Core integrations do not re-export imported names implicitly, in any module
     reexport_modules = NO_IMPLICIT_REEXPORT_MODULES | {
         f"homeassistant.components.{domain}.*"
-        for domain in get_core_integrations(config.root) - MISSING_ALL
+        for domain in get_core_integrations(config.root)
         if (config.root / "homeassistant" / "components" / domain).is_dir()
     }
 
