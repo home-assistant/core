@@ -13,6 +13,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
+    async_capture_events,
     async_fire_time_changed,
     async_load_json_object_fixture,
 )
@@ -24,7 +25,12 @@ from homeassistant.components.melcloud_home.coordinator import (
     UPDATE_INTERVAL,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_TEMPERATURE, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    EVENT_STATE_CHANGED,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -504,6 +510,82 @@ async def test_websocket_delta_restores_availability(
     await hass.async_block_till_done()
 
     assert hass.states.get(ATA_ENTITY_ID).state == HVACMode.OFF
+
+
+async def test_websocket_delta_during_failed_fetch_keeps_unavailable(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a delta during a failing retry does not mark entities available."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_melcloud_client.get_context.side_effect = MelCloudHomeConnectionError
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(ATA_ENTITY_ID).state == STATE_UNAVAILABLE
+
+    async def _get_context_with_delta() -> UserContext:
+        _send_delta(
+            mock_websocket,
+            UnitStateDelta(
+                unit_id="ata-unit-uuid-1", unit_type="ata", changes={"Power": False}
+            ),
+        )
+        raise MelCloudHomeConnectionError
+
+    mock_melcloud_client.get_context.side_effect = _get_context_with_delta
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_melcloud_client.get_context.call_count == 3
+    assert hass.states.get(ATA_ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+async def test_new_unit_gets_delta_received_during_fetch(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a unit discovered by a fetch starts with deltas received during it."""
+    fixture = await async_load_json_object_fixture(hass, "context.json", DOMAIN)
+    mock_melcloud_client.get_context.return_value = UserContext.model_validate(
+        {
+            **fixture,
+            "buildings": [
+                {**building, "airToAirUnits": []} for building in fixture["buildings"]
+            ],
+        }
+    )
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(ATA_ENTITY_ID) is None
+
+    async def _get_context_with_delta() -> UserContext:
+        _send_delta(
+            mock_websocket,
+            UnitStateDelta(
+                unit_id="ata-unit-uuid-1", unit_type="ata", changes={"Power": False}
+            ),
+        )
+        return UserContext.model_validate(fixture)
+
+    mock_melcloud_client.get_context.side_effect = _get_context_with_delta
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert [
+        event.data["new_state"].state
+        for event in events
+        if event.data["entity_id"] == ATA_ENTITY_ID
+    ] == [HVACMode.OFF]
 
 
 async def test_live_updates_slow_down_polling(

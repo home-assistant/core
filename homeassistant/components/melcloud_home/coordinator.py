@@ -75,14 +75,10 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
         self.new_atw_callbacks: list[Callable[[list[ATWUnit]], None]] = []
         self._deltas_during_fetch: list[UnitStateDelta] | None = None
 
-    def _async_sync_units(self, data: UserContext) -> None:
+    def _async_sync_units(self) -> None:
         """Add entities for new units and remove devices of units that are gone."""
-        current_ata = [
-            unit for building in data.buildings for unit in building.air_to_air_units
-        ]
-        current_atw_units = [
-            unit for building in data.buildings for unit in building.air_to_water_units
-        ]
+        current_ata = list(self.ata_units.values())
+        current_atw_units = list(self.atw_units.values())
         if not current_ata and not current_atw_units:
             # An empty context is more likely an API glitch than every unit removed
             _LOGGER.debug("No units in the account, skipping stale device removal")
@@ -175,7 +171,7 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
     def _async_refresh_finished(self) -> None:
         """Notify entity callbacks after coordinator data has been updated."""
         if self.data is not None:
-            self._async_sync_units(self.data)
+            self._async_sync_units()
 
     @callback
     def async_start_live_updates(self) -> None:
@@ -206,9 +202,12 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
         _LOGGER.debug("Received websocket delta: %s", delta)
         if self._deltas_during_fetch is not None:
             self._deltas_during_fetch.append(delta)
-        if self._apply_delta(delta):
+        if not self._apply_delta(delta):
+            return
+        # An in-flight fetch decides availability when it finishes
+        if self._deltas_during_fetch is None:
             self.last_update_success = True
-            self.async_update_listeners()
+        self.async_update_listeners()
 
     def _apply_delta(self, delta: UnitStateDelta) -> bool:
         """Apply a delta to the cached unit of its type; return whether it changed."""
