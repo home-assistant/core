@@ -1,7 +1,10 @@
 """Coordinator for the Bosch Smart Home Camera integration."""
 
+import asyncio
+from collections import defaultdict
 from datetime import timedelta
 import logging
+import time
 from typing import override
 
 from bosch_shc_camera_client.cameras import (
@@ -9,13 +12,14 @@ from bosch_shc_camera_client.cameras import (
     BoschCameraConnectionError,
     BoschCameraInvalidResponseError,
     Camera,
+    get_latest_event_image,
     list_cameras,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -30,6 +34,9 @@ _LOGGER = logging.getLogger(__name__)
 
 # The camera list only changes when the user adds or removes a camera.
 SCAN_INTERVAL = timedelta(minutes=5)
+
+# Dashboards request the image often, but the latest event rarely changes.
+SNAPSHOT_TTL = 60
 
 type BoschCameraConfigEntry = ConfigEntry[BoschCameraCoordinator]
 
@@ -51,6 +58,8 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
+        self._snapshots: dict[str, tuple[float, bytes | None]] = {}
+        self._snapshot_locks: defaultdict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 
     @override
     async def _async_setup(self) -> None:
@@ -80,8 +89,35 @@ class BoschCameraCoordinator(DataUpdateCoordinator[dict[str, Camera]]):
                 translation_domain=DOMAIN, translation_key="cannot_connect"
             ) from err
         data = {camera.id: camera for camera in cameras}
+        for camera_id in self._snapshots.keys() - data.keys():
+            del self._snapshots[camera_id]
+            self._snapshot_locks.pop(camera_id, None)
         self._sync_devices(data)
         return data
+
+    async def async_get_snapshot(self, camera_id: str) -> bytes | None:
+        """Return the image of the camera's latest event, cached briefly."""
+        async with self._snapshot_locks[camera_id]:
+            cached = self._snapshots.get(camera_id)
+            if cached and time.monotonic() - cached[0] < SNAPSHOT_TTL:
+                return cached[1]
+            await self._oauth_session.async_ensure_token_valid()
+            try:
+                image = await get_latest_event_image(
+                    async_get_clientsession(self.hass),
+                    str(self._oauth_session.token[CONF_ACCESS_TOKEN]),
+                    camera_id,
+                )
+            except (
+                BoschCameraAuthError,
+                BoschCameraConnectionError,
+                BoschCameraInvalidResponseError,
+            ) as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="snapshot_failed"
+                ) from err
+            self._snapshots[camera_id] = (time.monotonic(), image)
+            return image
 
     def _sync_devices(self, cameras: dict[str, Camera]) -> None:
         """Remove devices of cameras no longer in the account, refresh the rest."""

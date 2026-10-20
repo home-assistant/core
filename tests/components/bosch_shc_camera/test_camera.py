@@ -1,8 +1,10 @@
 """Test the Bosch Smart Home Camera setup, coordinator and camera platform."""
 
+import asyncio
+from collections.abc import Generator
 from dataclasses import replace
 from datetime import timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from bosch_shc_camera_client.cameras import (
     BoschCameraAuthError,
@@ -16,9 +18,15 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.bosch_shc_camera.const import DOMAIN
+from homeassistant.components.bosch_shc_camera.coordinator import SNAPSHOT_TTL
+from homeassistant.components.camera import async_get_image
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    OAuth2TokenRequestConnectionError,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
@@ -67,6 +75,163 @@ async def test_unknown_model_uses_hardware_version(
     )
     assert device.model == "SOMETHING_NEW"
     assert device.sw_version is None
+
+
+@pytest.fixture
+def mock_latest_image() -> Generator[AsyncMock]:
+    """Mock the latest event image of the library."""
+    with patch(
+        "homeassistant.components.bosch_shc_camera.coordinator.get_latest_event_image",
+        autospec=True,
+        return_value=b"jpeg-1",
+    ) as mock:
+        yield mock
+
+
+async def test_camera_image_is_the_latest_event_image(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_latest_image: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the image is cached briefly and fetched again afterwards."""
+    await setup_integration(hass, mock_config_entry)
+
+    image = await async_get_image(hass, ENTITY_ID)
+    assert image.content == b"jpeg-1"
+    assert mock_latest_image.await_args.args[1:] == ("fake-access-token", CAMERAS[0].id)
+
+    mock_latest_image.return_value = b"jpeg-2"
+    assert (await async_get_image(hass, ENTITY_ID)).content == b"jpeg-1"
+    assert mock_latest_image.await_count == 1
+
+    freezer.tick(timedelta(seconds=SNAPSHOT_TTL + 1))
+    assert (await async_get_image(hass, ENTITY_ID)).content == b"jpeg-2"
+
+
+async def test_camera_image_missing(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_latest_image: AsyncMock,
+) -> None:
+    """Test a camera without any event image has no image."""
+    mock_latest_image.return_value = None
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(HomeAssistantError):
+        await async_get_image(hass, ENTITY_ID)
+
+
+async def test_missing_image_is_cached_briefly(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_latest_image: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a camera without an event image is not asked again within the TTL."""
+    mock_latest_image.return_value = None
+    await setup_integration(hass, mock_config_entry)
+
+    for _ in range(2):
+        with pytest.raises(HomeAssistantError):
+            await async_get_image(hass, ENTITY_ID)
+    assert mock_latest_image.await_count == 1
+
+    freezer.tick(timedelta(seconds=SNAPSHOT_TTL + 1))
+    mock_latest_image.return_value = b"jpeg-1"
+    assert (await async_get_image(hass, ENTITY_ID)).content == b"jpeg-1"
+
+
+async def test_slow_download_does_not_block_other_cameras(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_list_cameras: AsyncMock,
+    mock_latest_image: AsyncMock,
+) -> None:
+    """Test one camera's slow image request does not hold up another camera."""
+    mock_list_cameras.return_value = [*CAMERAS, OTHER]
+    release = asyncio.Event()
+
+    async def fetch(session, token, camera_id):
+        if camera_id == CAMERA_ID:
+            await release.wait()
+        return camera_id.encode()
+
+    mock_latest_image.side_effect = fetch
+    await setup_integration(hass, mock_config_entry)
+
+    slow = hass.async_create_task(async_get_image(hass, ENTITY_ID))
+    await asyncio.sleep(0)
+    assert (await async_get_image(hass, "camera.hall")).content == OTHER_ID.encode()
+    assert not slow.done()
+    release.set()
+    assert (await slow).content == CAMERA_ID.encode()
+
+
+async def test_token_refresh_failure_surfaces_translated_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_latest_image: AsyncMock,
+) -> None:
+    """Test a failing token refresh makes the image request fail cleanly."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+
+    with (
+        patch.object(
+            coordinator._oauth_session,
+            "async_ensure_token_valid",
+            side_effect=OAuth2TokenRequestConnectionError(domain=DOMAIN),
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await async_get_image(hass, ENTITY_ID)
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        BoschCameraAuthError,
+        BoschCameraConnectionError,
+        BoschCameraInvalidResponseError,
+    ],
+)
+async def test_camera_image_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_latest_image: AsyncMock,
+    error: type[Exception],
+) -> None:
+    """Test library errors surface as a translated error and are not cached."""
+    mock_latest_image.side_effect = error
+    await setup_integration(hass, mock_config_entry)
+
+    for _ in range(2):
+        with pytest.raises(HomeAssistantError) as err:
+            await async_get_image(hass, ENTITY_ID)
+        assert err.value.translation_key == "snapshot_failed"
+    assert mock_latest_image.await_count == 2
+
+
+async def test_removed_camera_forgets_its_image(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_list_cameras: AsyncMock,
+    mock_latest_image: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the cached image of a camera that left the account is dropped."""
+    mock_list_cameras.return_value = [*CAMERAS, OTHER]
+    await setup_integration(hass, mock_config_entry)
+    await async_get_image(hass, "camera.hall")
+    coordinator = mock_config_entry.runtime_data
+    assert OTHER_ID in coordinator._snapshots
+
+    mock_list_cameras.return_value = list(CAMERAS)
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert OTHER_ID not in coordinator._snapshots
 
 
 async def test_unload(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:

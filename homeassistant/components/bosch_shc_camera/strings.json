@@ -22,6 +22,9 @@
     },
     "cannot_connect": {
       "message": "Unable to fetch the cameras from Bosch."
+    },
+    "snapshot_failed": {
+      "message": "Unable to fetch the camera image from Bosch."
     }
   }
 }

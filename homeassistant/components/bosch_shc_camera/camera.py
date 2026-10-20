@@ -45,7 +45,7 @@ async def async_setup_entry(
 
 
 class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
-    """A camera of the account, without stream or snapshot support yet."""
+    """A camera of the account, showing the image of its latest event."""
 
     _attr_has_entity_name = True
     _attr_name = None
@@ -69,6 +69,13 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
     def _camera_data(self) -> CameraData:
         """Return the latest data of this camera."""
         return self.coordinator.data[self._camera_id]
+
+    @override
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
+        """Return the image of the latest event."""
+        return await self.coordinator.async_get_snapshot(self._camera_id)
 
     @property
     @override
