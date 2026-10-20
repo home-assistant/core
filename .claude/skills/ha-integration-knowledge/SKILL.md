@@ -17,8 +17,8 @@ description: Everything you need to know to build, test and review Home Assistan
 - Integrations should be thin wrappers. Protocol parsing, device state machines, or other domain logic belong in a separate PyPI library, not in the integration itself. If unsure, ask before inlining.
 - Integrations should not implement fixes or workarounds for limitations in libraries. Instead, the library should be updated to fix the issue.
 - Do not add entities for data that Home Assistant intentionally only exposes through an action, for example weather forecasts (`weather.get_forecasts`).
-- In config flows, map known failures to the matching standard error (for example `invalid_auth`, `cannot_connect`). Do not mix translated and untranslated text in an error shown to the user, and only log errors that are unexpected.
-- Dependency bumps go in their own PR, separate from feature changes.
+- In config flows, map known failures to the matching standard error (for example `invalid_auth`, `cannot_connect`) without logging them. If unexpected exceptions are caught, log them with `_LOGGER.exception()` and map them to `unknown`. Do not mix translated and untranslated text in an error shown to the user.
+- Bump dependencies in a standalone PR that contains only the compatibility adjustments the bump requires. Features that need the new version go in a follow-up PR.
 
 The following platforms have extra guidelines:
 - **Diagnostics**: [`platform-diagnostics.md`](platform-diagnostics.md) for diagnostic data collection
@@ -52,7 +52,7 @@ Template scale file: `./script/scaffold/templates/integration/integration/qualit
 
 - Tests should avoid interacting or mocking internal integration details. For more info, see https://contributors.home-assistant.io/core/development/tests/#test-through-home-assistant
 - Define shared mocks as fixtures in `conftest.py` so every platform test can reuse them, including a `mock_config_entry`. Give it a `unique_id` when the integration's config entries have one.
-- Load substantial or reused mock API data from JSON fixture files instead of building it inline with `json.dumps()`.
+- Load substantial or reused mock API data from JSON fixture files with `load_json_object_fixture` or `load_json_array_fixture` from `pytest_homeassistant.common` (or their `async_` variants) instead of building it inline with `json.dumps()`.
 - Do not manually assert values that a snapshot test already covers.
 - When a `Platform` member or an `ATTR_*` constant exists for a value, use it instead of a string literal.
 - Patch objects where they are used, not where they are defined.
