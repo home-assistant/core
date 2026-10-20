@@ -134,7 +134,7 @@ async def test_light_turn_on_transmission_error_raises_home_assistant_error(
         await light.async_turn_on(brightness=255)
 
 
-@pytest.mark.parametrize("min_level", [1, 86, 96, 128])
+@pytest.mark.parametrize("min_level", [1, 86, 96, 128, 200])
 def test_dali_level_to_brightness_never_rounds_on_level_to_zero(min_level: int) -> None:
     """Test a nonzero on-level never maps to a brightness of 0.
 
@@ -184,7 +184,7 @@ async def test_light_setup_adds_new_entities(
     } == {"0", "2"}
 
 
-@pytest.mark.parametrize("min_level", [1, 86, 96, 128])
+@pytest.mark.parametrize("min_level", [1, 86, 96, 128, 200])
 @pytest.mark.parametrize("linear_dimming", [False, True])
 def test_brightness_level_round_trip_is_stable(
     min_level: int, linear_dimming: bool
@@ -201,7 +201,7 @@ def test_brightness_level_round_trip_is_stable(
         assert _brightness_to_dali_level(read_back, linear_dimming, min_level) == level
 
 
-@pytest.mark.parametrize("min_level", [1, 86, 96, 128])
+@pytest.mark.parametrize("min_level", [1, 86, 96, 128, 200])
 @pytest.mark.parametrize("linear_dimming", [False, True])
 def test_brightness_to_level_snaps_to_closest_readback(
     min_level: int, linear_dimming: bool
