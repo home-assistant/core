@@ -39,7 +39,6 @@ def _power_state(coordinator: SteamVRBaseStationCoordinator) -> str | None:
 
 
 def _rssi(coordinator: SteamVRBaseStationCoordinator) -> int | None:
-    # The manager also records advertisements the coordinator skips as unchanged.
     if service_info := async_last_service_info(
         coordinator.hass, coordinator.address, connectable=True
     ):
