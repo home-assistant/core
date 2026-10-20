@@ -87,17 +87,16 @@ async def async_setup_entry(
     """Set up the Sofar binary sensor platform."""
     runtime_data = entry.runtime_data
     served = runtime_data.served_components
-    entities: list[SofarFaultBinarySensor | SofarFlagBinarySensor] = [
+    async_add_entities(
         SofarFaultBinarySensor(runtime_data, description)
         for description in FAULT_SENSOR_DESCRIPTIONS
         if description.component in served
-    ]
-    entities.extend(
+    )
+    async_add_entities(
         SofarFlagBinarySensor(runtime_data, description)
         for description in FLAG_SENSOR_DESCRIPTIONS
         if description.component in served
     )
-    async_add_entities(entities)
 
 
 class SofarFaultBinarySensor(SofarEntity, BinarySensorEntity):

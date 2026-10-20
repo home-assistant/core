@@ -21,7 +21,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .coordinator import MelnorConfigEntry, MelnorDataUpdateCoordinator
@@ -109,16 +108,16 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     # Device-level sensors
-    entities: list[CoordinatorEntity[MelnorDataUpdateCoordinator]] = [
+    async_add_entities(
         MelnorSensorEntity(
             coordinator,
             description,
         )
         for description in DEVICE_ENTITY_DESCRIPTIONS
-    ]
+    )
 
     # Valve/Zone-level sensors
-    entities.extend(
+    async_add_entities(
         get_entities_for_valves(
             coordinator,
             ZONE_ENTITY_DESCRIPTIONS,
@@ -127,8 +126,6 @@ async def async_setup_entry(
             ),
         )
     )
-
-    async_add_entities(entities)
 
 
 class MelnorSensorEntity(MelnorBluetoothEntity, SensorEntity):

@@ -32,7 +32,7 @@ async def async_setup_entry(
     if TYPE_CHECKING:
         assert shc_info is not None and shc_info.unique_id is not None
 
-    entities: list[ShutterControlCover | BlindsControlCover] = [
+    async_add_entities(
         ShutterControlCover(
             hass=hass,
             device=cover,
@@ -43,8 +43,8 @@ async def async_setup_entry(
             *session.device_helper.shutter_controls,
             *session.device_helper.micromodule_shutter_controls,
         )
-    ]
-    entities.extend(
+    )
+    async_add_entities(
         BlindsControlCover(
             hass=hass,
             device=blind,
@@ -53,7 +53,6 @@ async def async_setup_entry(
         )
         for blind in session.device_helper.micromodule_blinds
     )
-    async_add_entities(entities)
 
 
 class ShutterControlCover(SHCEntity, CoverEntity):

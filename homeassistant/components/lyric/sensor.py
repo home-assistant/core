@@ -187,7 +187,7 @@ async def async_setup_entry(
     """Set up the Honeywell Lyric sensor platform based on a config entry."""
     coordinator = entry.runtime_data
 
-    entities: list[SensorEntity] = [
+    async_add_entities(
         LyricSensor(
             coordinator,
             device_sensor,
@@ -198,9 +198,9 @@ async def async_setup_entry(
         for device in location.devices
         for device_sensor in DEVICE_SENSORS
         if device_sensor.suitable_fn(device)
-    ]
+    )
 
-    entities.extend(
+    async_add_entities(
         LyricAccessorySensor(
             coordinator, accessory_sensor, location, device, room, accessory
         )
@@ -212,15 +212,13 @@ async def async_setup_entry(
         if accessory_sensor.suitable_fn(room, accessory)
     )
 
-    entities.extend(
+    async_add_entities(
         LyricPriorityStatusSensor(coordinator, location, device)
         for location in coordinator.data.locations
         for device in location.devices
         if device.device_class == "Thermostat"
         and coordinator.data.rooms_dict.get(device.mac_id)
     )
-
-    async_add_entities(entities)
 
 
 class LyricSensor(LyricDeviceEntity, SensorEntity):

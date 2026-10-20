@@ -87,19 +87,17 @@ async def async_setup_entry(
     """Set up switches."""
     coordinator = config_entry.runtime_data.device_info_coordinator
 
-    entities: list[OhmeConfigSwitch | OhmeSwitch] = [
+    async_add_entities(
         OhmeConfigSwitch(coordinator, description)
         for description in SWITCH_CONFIG
         if description.is_supported_fn(coordinator.client)
-    ]
+    )
 
-    entities.extend(
+    async_add_entities(
         OhmeSwitch(coordinator, description)
         for description in SWITCH_DESCRIPTION
         if description.is_supported_fn(coordinator.client)
     )
-
-    async_add_entities(entities)
 
 
 class OhmeSwitch(OhmeEntity, SwitchEntity):
