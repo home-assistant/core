@@ -33,7 +33,7 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.typing import UNDEFINED, ConfigType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (
@@ -169,26 +169,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
         and status[STATUS_QUERY_LIBRARYNAME]
     ) or host
     version = (STATUS_QUERY_VERSION in status and status[STATUS_QUERY_VERSION]) or None
-    # mac can be missing
-    mac_connect = (
-        {(CONNECTION_NETWORK_MAC, status[STATUS_QUERY_MAC])}
-        if STATUS_QUERY_MAC in status
-        else UNDEFINED
+    device_info = dr.DeviceInfo(
+        identifiers={(DOMAIN, lms.uuid)},
+        name=lms.name,
+        manufacturer=SERVER_MANUFACTURER,
+        model=SERVER_MODEL,
+        model_id=SERVER_MODEL_ID,
+        sw_version=version,
+        entry_type=DeviceEntryType.SERVICE,
     )
+    # mac can be missing
+    if STATUS_QUERY_MAC in status:
+        device_info.connections = {(CONNECTION_NETWORK_MAC, status[STATUS_QUERY_MAC])}
 
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create_device(
-        config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, lms.uuid)},
-            name=lms.name,
-            manufacturer=SERVER_MANUFACTURER,
-            model=SERVER_MODEL,
-            model_id=SERVER_MODEL_ID,
-            sw_version=version,
-            entry_type=DeviceEntryType.SERVICE,
-            connections=mac_connect,
-        ),
+        config_entry_id=entry.entry_id, device_info=device_info
     )
     _LOGGER.debug("LMS Device %s", device)
 
