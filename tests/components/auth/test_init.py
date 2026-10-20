@@ -575,7 +575,9 @@ async def test_ws_delete_all_refresh_tokens_error(
 
     tokens = result["result"]
 
-    with patch("homeassistant.components.auth.DELETE_CURRENT_TOKEN_DELAY", 0.001):
+    with patch(
+        "homeassistant.components.websocket_api.connection.AUTH_CLOSE_DELAY", 0.001
+    ):
         await ws_client.send_json(
             {
                 "id": 6,
@@ -660,7 +662,9 @@ async def test_ws_delete_all_refresh_tokens(
     result = await ws_client.receive_json()
     assert result["success"], result
 
-    with patch("homeassistant.components.auth.DELETE_CURRENT_TOKEN_DELAY", 0.001):
+    with patch(
+        "homeassistant.components.websocket_api.connection.AUTH_CLOSE_DELAY", 0.001
+    ):
         await ws_client.send_json(
             {
                 "id": 6,
@@ -691,6 +695,27 @@ async def test_ws_delete_all_refresh_tokens(
     assert (
         remaining_tokens_by_type[TOKEN_TYPE_NORMAL] == expected_remaining_normal_tokens
     )
+
+
+async def test_ws_delete_current_token_before_closing(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_access_token: str
+) -> None:
+    """Test the current token is gone once the result arrives, before the close."""
+    assert await async_setup_component(hass, DOMAIN, {"http": {}})
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
+    assert refresh_token is not None
+    ws_client = await hass_ws_client(hass, hass_access_token)
+
+    with patch(
+        "homeassistant.components.websocket_api.connection.AUTH_CLOSE_DELAY", 3600
+    ):
+        await ws_client.send_json({"id": 5, "type": "auth/delete_all_refresh_tokens"})
+        result = await ws_client.receive_json()
+
+        assert result["success"], result
+        assert not ws_client.closed
+        assert hass.auth.async_get_refresh_token(refresh_token.id) is None
+        assert hass.auth.async_validate_access_token(hass_access_token) is None
 
 
 async def test_ws_sign_path(
