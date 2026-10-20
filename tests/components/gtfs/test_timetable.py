@@ -185,6 +185,20 @@ def test_departures_trip_visiting_origin_twice(tmp_path: Path) -> None:
         ]
 
 
+def test_departures_trip_visiting_destination_twice(tmp_path: Path) -> None:
+    """Test that a trip visiting the destination twice arrives on its first visit."""
+    replace = {
+        "trips.txt": _fixture("trips.txt") + "R1,DAILY,T9\n",
+        "stop_times.txt": _fixture("stop_times.txt")
+        + "T9,10:00:00,10:00:00,S1,1\nT9,10:20:00,10:20:00,S3,2\n"
+        + "T9,10:30:00,10:30:00,S2,3\nT9,10:50:00,10:50:00,S3,4\n",
+    }
+    with _schedule(tmp_path, replace) as schedule:
+        assert _summary(schedule, "S1", "S3", _ny(19, 9), _ny(19, 12)) == [
+            ("2026-10-19T14:00:00+00:00", "2026-10-19T14:20:00+00:00", "T9")
+        ]
+
+
 def test_departures_pickup_and_drop_off_restrictions(tmp_path: Path) -> None:
     """Test trips that can't be boarded at the origin or left at the destination."""
     stop_times = (
