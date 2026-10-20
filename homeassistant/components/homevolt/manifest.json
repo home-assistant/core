@@ -1,6 +1,7 @@
 {
   "domain": "homevolt",
   "name": "Homevolt",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@danielhiversen", "@liudger"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/homevolt",

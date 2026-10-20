@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "pylint-home-assistant"
 version = "1.0.0"
 license = "Apache-2.0"
+license-files = ["LICENSE.md"]
 description = "Pylint plugin for Home Assistant integration development."
 readme = "README.md"
 authors = [
@@ -23,7 +24,9 @@ classifiers = [
 requires-python = ">=3.14.0"
 dependencies = [
   "astroid>=4.0",
+  "orjson",
   "pylint>=4.0",
+  "PyYAML",
 ]
 
 [project.urls]

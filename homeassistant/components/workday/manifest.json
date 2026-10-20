@@ -1,6 +1,10 @@
 {
   "domain": "workday",
   "name": "Workday",
+  "categories": [
+    "productivity_information.calendars_todos",
+    "helpers.calculate_value"
+  ],
   "codeowners": ["@fabaff", "@gjohansson-ST"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/workday",

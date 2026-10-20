@@ -1,6 +1,7 @@
 {
   "domain": "seventeentrack",
   "name": "17TRACK",
+  "categories": ["productivity_information"],
   "codeowners": ["@shaiu"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/seventeentrack",

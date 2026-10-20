@@ -1,5 +1,5 @@
-# This extend our general Ruff rules specifically for tests
-extend = "../pyproject.toml"
+# Extend the Core Ruff rules for the Pylint plugin.
+extend = "../../pyproject.toml"
 
 [lint]
 extend-ignore = [
