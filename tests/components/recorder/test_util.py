@@ -1624,3 +1624,56 @@ def test_retryable_database_job_method(
         assert test.job(instance) == retval
 
     assert len(mock_job.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("now", "offset", "expected_start", "expected_end"),
+    [
+        pytest.param(
+            # 01:30 PDT, before the fall-back
+            datetime(2022, 11, 6, 8, 30, tzinfo=UTC),
+            0,
+            "2022-11-06T08:00:00+00:00",
+            "2022-11-06T09:00:00+00:00",
+            id="fall_back_first_occurrence",
+        ),
+        pytest.param(
+            # 01:30 PST, the repeated hour after the fall-back
+            datetime(2022, 11, 6, 9, 30, tzinfo=UTC),
+            0,
+            "2022-11-06T09:00:00+00:00",
+            "2022-11-06T10:00:00+00:00",
+            id="fall_back_repeated_occurrence",
+        ),
+        pytest.param(
+            datetime(2022, 11, 6, 9, 30, tzinfo=UTC),
+            -1,
+            "2022-11-06T08:00:00+00:00",
+            "2022-11-06T09:00:00+00:00",
+            id="fall_back_repeated_occurrence_previous_hour",
+        ),
+        pytest.param(
+            # 03:30 PDT, right after the spring-forward
+            datetime(2022, 3, 13, 10, 30, tzinfo=UTC),
+            -1,
+            "2022-03-13T09:00:00+00:00",
+            "2022-03-13T10:00:00+00:00",
+            id="spring_forward_previous_hour",
+        ),
+    ],
+)
+async def test_resolve_period_hour_dst(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    now: datetime,
+    offset: int,
+    expected_start: str,
+    expected_end: str,
+) -> None:
+    """Test a calendar hour is one hour long around DST changes."""
+    assert hass.config.time_zone == "US/Pacific"
+    freezer.move_to(now)
+
+    start_t, end_t = resolve_period({"calendar": {"period": "hour", "offset": offset}})
+    assert start_t.isoformat() == expected_start
+    assert end_t.isoformat() == expected_end

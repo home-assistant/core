@@ -1015,7 +1015,11 @@ def resolve_period(
         start_of_day = dt_util.start_of_local_day()
         cal_offset = period_def["calendar"].get("offset", 0)
         if calendar_period == "hour":
-            start_time = dt_util.now().replace(minute=0, second=0, microsecond=0)
+            now = dt_util.now()
+            # Use absolute time, wall clock hours are ambiguous around DST changes
+            start_time = dt_util.as_utc(now) - timedelta(
+                minutes=now.minute, seconds=now.second, microseconds=now.microsecond
+            )
             start_time += timedelta(hours=cal_offset)
             end_time = start_time + timedelta(hours=1)
         elif calendar_period == "day":
