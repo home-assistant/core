@@ -973,97 +973,106 @@ async def test_aqara_thermostat_w500_entity_exists_and_unknown(
 
 
 @pytest.mark.parametrize("node_fixture", ["aqara_thermostat_w500_presets"])
-async def test_aqara_thermostat_w500_setpoint_change_source(
+async def test_aqara_thermostat_w500_setpoint_change_source_options(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test Aqara Thermostat W500 SetpointChangeSource sensor."""
-    entity_id = "sensor.floor_heating_thermostat_last_change_source"
-
-    # Initial state and options
-    state = hass.states.get(entity_id)
+    """Test Aqara Thermostat W500 SetpointChangeSource sensor options."""
+    state = hass.states.get("sensor.floor_heating_thermostat_setpoint_change_source")
     assert state
-    assert state.state == "manual"
     assert state.attributes["options"] == ["manual", "schedule", "external"]
-
-    # Change to schedule
-    set_node_attribute(matter_node, 1, 513, 48, 1)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "schedule"
-
-    # Change to external
-    set_node_attribute(matter_node, 1, 513, 48, 2)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "external"
 
 
 @pytest.mark.parametrize("node_fixture", ["aqara_thermostat_w500_presets"])
+@pytest.mark.parametrize(
+    ("entity_id", "attribute_id", "initial_state", "updates"),
+    [
+        pytest.param(
+            "sensor.floor_heating_thermostat_setpoint_change_source",
+            48,
+            "manual",
+            [(1, "schedule"), (2, "external")],
+            id="setpoint_change_source",
+        ),
+        pytest.param(
+            "sensor.floor_heating_thermostat_last_setpoint_change",
+            50,
+            "2026-10-11T22:28:52+00:00",
+            [(757382400, "2024-01-01T00:00:00+00:00"), (0, "unknown")],
+            id="setpoint_change_source_timestamp",
+        ),
+        pytest.param(
+            "sensor.floor_heating_thermostat_setpoint_change_amount",
+            49,
+            "-0.5",
+            [(200, "2.0"), (-50, "-0.5")],
+            id="setpoint_change_amount",
+        ),
+    ],
+)
 async def test_aqara_thermostat_w500_setpoint_change(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
+    entity_id: str,
+    attribute_id: int,
+    initial_state: str,
+    updates: list[tuple[int, str]],
 ) -> None:
-    """Test Aqara Thermostat W500 SetpointChangeSourceTimestamp sensor."""
-    entity_id = "sensor.floor_heating_thermostat_last_change"
-
-    # Initial is unknown per snapshot
+    """Test Aqara Thermostat W500 setpoint change sensors."""
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "2026-10-11T22:28:52+00:00"
+    assert state.state == initial_state
 
-    # Update to 2024-01-01 00:00:00+00:00 (Matter epoch seconds since 2000)
-    set_node_attribute(matter_node, 1, 513, 50, 757382400)
-    await trigger_subscription_callback(hass, matter_client)
+    for value, expected_state in updates:
+        set_node_attribute(matter_node, 1, 513, attribute_id, value)
+        await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "2024-01-01T00:00:00+00:00"
-
-    # Set to zero should yield unknown
-    set_node_attribute(matter_node, 1, 513, 50, 0)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "unknown"
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == expected_state
 
 
 @pytest.mark.parametrize("node_fixture", ["aqara_thermostat_w500_presets"])
-async def test_aqara_thermostat_w500_setpoint_change_amount(
+@pytest.mark.parametrize("attributes", [{"1/513/49": None}])
+async def test_aqara_thermostat_w500_setpoint_change_amount_null_at_startup(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test Aqara Thermostat W500 SetpointChangeAmount sensor."""
-    entity_id = "sensor.floor_heating_thermostat_last_change_amount"
+    """Test SetpointChangeAmount sensor is discovered when its value is null at startup.
 
-    # Initial per snapshot
-    state = hass.states.get(entity_id)
+    This test helps prevent regressions if allow_none_value=True is removed
+    from the ThermostatSetpointChangeAmount discovery schema.
+    """
+    state = hass.states.get("sensor.floor_heating_thermostat_setpoint_change_amount")
     assert state
-    assert state.state == "-0.5"
+    assert state.state == "unknown"
 
-    # Update to 2.0°C (200 in Matter units)
     set_node_attribute(matter_node, 1, 513, 49, 200)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get(entity_id)
+    state = hass.states.get("sensor.floor_heating_thermostat_setpoint_change_amount")
     assert state
     assert state.state == "2.0"
 
-    # Update to -0.5°C (-50 in Matter units)
-    set_node_attribute(matter_node, 1, 513, 49, -50)
-    await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "-0.5"
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v5"])
+async def test_eve_thermo_v5_setpoint_change_not_discovered(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test the setpoint change sensors are not discovered when never recorded.
+
+    The Eve Thermo v5 fixture reports SetpointChangeSourceTimestamp as 0
+    (never recorded), so the sensors should not be created until the
+    device actually reports a setpoint change.
+    """
+    assert hass.states.get("sensor.eve_thermo_20ecd1701_setpoint_change_source") is None
+    assert hass.states.get("sensor.eve_thermo_20ecd1701_last_setpoint_change") is None
+    assert hass.states.get("sensor.eve_thermo_20ecd1701_setpoint_change_amount") is None
 
 
 @pytest.mark.parametrize("node_fixture", ["atios_knx_bridge"])

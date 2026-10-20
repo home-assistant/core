@@ -635,10 +635,10 @@
         "name": "Effective voltage"
       },
       "setpoint_change_amount": {
-        "name": "Last change amount"
+        "name": "Setpoint change amount"
       },
       "setpoint_change_source": {
-        "name": "Last change source",
+        "name": "Setpoint change source",
         "state": {
           "external": "External",
           "manual": "Manual",
@@ -646,7 +646,7 @@
         }
       },
       "setpoint_change_timestamp": {
-        "name": "Last change"
+        "name": "Last setpoint change"
       },
       "switch_current_position": {
         "name": "Current switch position"

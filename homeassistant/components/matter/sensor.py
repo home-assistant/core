@@ -1448,22 +1448,30 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
-            key="SetpointChangeSource",
+            key="ThermostatSetpointChangeSource",
             translation_key="setpoint_change_source",
             device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
             options=[x for x in SETPOINT_CHANGE_SOURCE_MAP.values() if x is not None],
             device_to_ha=SETPOINT_CHANGE_SOURCE_MAP.get,
         ),
         entity_class=MatterSensor,
-        required_attributes=(clusters.Thermostat.Attributes.SetpointChangeSource,),
+        required_attributes=(
+            clusters.Thermostat.Attributes.SetpointChangeSource,
+            clusters.Thermostat.Attributes.SetpointChangeSourceTimestamp,
+        ),
         device_type=(device_types.Thermostat, device_types.RoomAirConditioner),
+        allow_multi=True,  # also required by the other SetpointChange* schemas
+        # skip until a setpoint change has actually been recorded (0 = never)
+        secondary_value_is_not=0,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
-            key="SetpointChangeSourceTimestamp",
+            key="ThermostatSetpointChangeSourceTimestamp",
             translation_key="setpoint_change_timestamp",
             device_class=SensorDeviceClass.TIMESTAMP,
+            entity_category=EntityCategory.DIAGNOSTIC,
             device_to_ha=matter_epoch_seconds_to_utc,
         ),
         entity_class=MatterSensor,
@@ -1471,6 +1479,9 @@ DISCOVERY_SCHEMAS = [
             clusters.Thermostat.Attributes.SetpointChangeSourceTimestamp,
         ),
         device_type=(device_types.Thermostat, device_types.RoomAirConditioner),
+        allow_multi=True,  # also required by the other SetpointChange* schemas
+        # skip until a setpoint change has actually been recorded (0 = never)
+        value_is_not=0,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -1479,13 +1490,22 @@ DISCOVERY_SCHEMAS = [
             translation_key="setpoint_change_amount",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             suggested_display_precision=1,
-            device_class=SensorDeviceClass.TEMPERATURE,
+            device_class=SensorDeviceClass.TEMPERATURE_DELTA,
+            entity_category=EntityCategory.DIAGNOSTIC,
             device_to_ha=lambda x: x / TEMPERATURE_SCALING_FACTOR,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
-        required_attributes=(clusters.Thermostat.Attributes.SetpointChangeAmount,),
+        required_attributes=(
+            clusters.Thermostat.Attributes.SetpointChangeAmount,
+            clusters.Thermostat.Attributes.SetpointChangeSourceTimestamp,
+        ),
         device_type=(device_types.Thermostat, device_types.RoomAirConditioner),
+        allow_multi=True,  # also required by the other SetpointChange* schemas
+        # the attribute's spec fallback value is null (previous setpoint unknown)
+        allow_none_value=True,
+        # skip until a setpoint change has actually been recorded (0 = never)
+        secondary_value_is_not=0,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
