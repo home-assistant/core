@@ -307,6 +307,33 @@ async def test_static_path_registered_once(
     assert calls == 1
 
 
+async def test_panel_refreshes_when_build_id_changes(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test a new frontend build id replaces the registered panel."""
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={**config_entry.data, CONF_ADVANCED_MODE: True},
+    )
+    await init_integration(hass, config_entry)
+    panel = hass.data[DATA_PANELS][DOMAIN]
+    assert panel.config is not None
+    original_url = panel.config["_panel_custom"]["module_url"]
+
+    with patch(
+        "homeassistant.components.velbus.websocket_api.velbus_panel.get_build_id",
+        return_value="build-next",
+    ):
+        await async_update_panel(hass)
+
+    panel = hass.data[DATA_PANELS][DOMAIN]
+    assert panel.config is not None
+    module_url = panel.config["_panel_custom"]["module_url"]
+    assert module_url != original_url
+    assert module_url.endswith("?v=build-next")
+
+
 async def test_api_call(
     hass: HomeAssistant,
     mock_relay: AsyncMock,

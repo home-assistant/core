@@ -12,6 +12,7 @@ from homeassistant.components.velbus.const import (
     CONF_CHANNEL,
     CONF_CONFIG_ENTRY,
 )
+from homeassistant.components.velbus.websocket_api import _get_entry
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 
@@ -716,3 +717,360 @@ async def test_clear_channel_action_requires_advanced_mode(
 
     assert not response["success"]
     assert response["error"]["translation_key"] == "advanced_mode_required"
+
+
+async def test_get_entry_rejects_missing_config_entry_field(
+    hass: HomeAssistant,
+) -> None:
+    """Test the entry lookup reports a message that omitted config_entry."""
+    connection = MagicMock()
+
+    assert _get_entry(hass, connection, {"id": 7}) is None
+
+    connection.send_error.assert_called_once_with(
+        7, "invalid_format", "Missing config_entry"
+    )
+
+
+async def test_unloaded_config_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test websocket commands fail when the config entry is not loaded."""
+    await _setup_entry(hass, config_entry, advanced_mode=True)
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    client = await hass_ws_client(hass)
+
+    response = await _ws_call(
+        client,
+        "velbus/config_panel/module/schema",
+        {CONF_CONFIG_ENTRY: config_entry.entry_id, "type_id": 40},
+    )
+
+    assert not response["success"]
+    assert response["error"]["code"] == "home_assistant_error"
+    assert "not loaded" in response["error"]["message"]
+
+
+async def test_list_modules_device_id_missing(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a module scanned after startup has no device registry id."""
+    await _setup_entry(hass, config_entry, advanced_mode=True)
+    orphan = MagicMock()
+    orphan.get_addresses.return_value = [50]
+    orphan.get_channels.return_value = {}
+    orphan.get_name.return_value = "Orphan"
+    orphan.get_type.return_value = 7
+    orphan.get_type_name.return_value = "VMB1RY"
+    orphan.get_serial.return_value = "orphan"
+    controller.return_value.get_modules.return_value = {50: orphan}
+    client = await hass_ws_client(hass)
+
+    response = await _ws_call(
+        client,
+        "velbus/config_panel/modules",
+        {CONF_CONFIG_ENTRY: config_entry.entry_id},
+    )
+
+    assert response["success"]
+    assert response["result"]["modules"] == [
+        {
+            "address": 50,
+            "name": "Orphan",
+            "type_id": 7,
+            "type_name": "VMB1RY",
+            "serial": "orphan",
+            "device_id": None,
+            "channels": {},
+        }
+    ]
+
+
+async def test_set_module_config_module_not_found(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test config writes fail when the module address is unknown."""
+    controller.return_value.get_module.return_value = None
+    await _setup_entry(hass, config_entry, advanced_mode=True)
+    client = await hass_ws_client(hass)
+
+    response = await _ws_call(
+        client,
+        "velbus/config_panel/module/config/set",
+        {
+            CONF_CONFIG_ENTRY: config_entry.entry_id,
+            CONF_ADDRESS: 42,
+            CONF_CHANNEL: 1,
+            "key": "name",
+            "value": "Relay",
+        },
+    )
+
+    assert not response["success"]
+    assert response["error"]["code"] == "not_found"
+    assert "Module 42 not found" in response["error"]["message"]
+
+
+@pytest.mark.parametrize(
+    ("kind", "value", "param_attrs", "expected"),
+    [
+        pytest.param("bool", True, {}, True, id="bool"),
+        pytest.param(
+            "number",
+            "3.5",
+            {"min_value": 0, "max_value": 10},
+            3.5,
+            id="number",
+        ),
+        pytest.param(
+            "select",
+            "summer",
+            {"options": ["summer", "winter"]},
+            "summer",
+            id="select",
+        ),
+        pytest.param("text", "hi", {"max_length": 4}, "hi", id="text"),
+    ],
+)
+async def test_set_module_config_coerces_value(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_module_subdevices: AsyncMock,
+    mock_relay: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+    kind: str,
+    value: Any,
+    param_attrs: dict[str, Any],
+    expected: Any,
+) -> None:
+    """Test config values are coerced to the parameter kind before writing."""
+    param = _mock_config_parameter(key="setting")
+    param.kind = kind
+    for attr, attr_value in param_attrs.items():
+        setattr(param, attr, attr_value)
+    mock_relay.get_config_parameters.return_value = [param]
+    mock_module_subdevices.get_channels.return_value = {1: mock_relay}
+    await _setup_entry(hass, config_entry, advanced_mode=True)
+    client = await hass_ws_client(hass)
+
+    response = await _ws_call(
+        client,
+        "velbus/config_panel/module/config/set",
+        {
+            CONF_CONFIG_ENTRY: config_entry.entry_id,
+            CONF_ADDRESS: 88,
+            CONF_CHANNEL: 1,
+            "key": "setting",
+            "value": value,
+        },
+    )
+
+    assert response["success"]
+    param.set_value.assert_awaited_once_with(expected)
+
+
+@pytest.mark.parametrize(
+    ("kind", "value", "param_attrs", "message"),
+    [
+        pytest.param("bool", "yes", {}, "Invalid boolean", id="bool"),
+        pytest.param("number", "nope", {}, "Invalid number", id="number"),
+        pytest.param("number", 0, {"min_value": 1}, "below minimum", id="number_min"),
+        pytest.param("number", 9, {"max_value": 5}, "above maximum", id="number_max"),
+        pytest.param(
+            "select",
+            "autumn",
+            {"options": ["summer", "winter"]},
+            "must be one of",
+            id="select",
+        ),
+        pytest.param(
+            "text", "toolong", {"max_length": 3}, "exceeds max length", id="text"
+        ),
+        pytest.param("color", "red", {}, "Unknown config kind", id="unknown_kind"),
+    ],
+)
+async def test_set_module_config_rejects_invalid_value(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_module_subdevices: AsyncMock,
+    mock_relay: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+    kind: str,
+    value: Any,
+    param_attrs: dict[str, Any],
+    message: str,
+) -> None:
+    """Test config values that do not match the parameter kind are rejected."""
+    param = _mock_config_parameter(key="setting")
+    param.kind = kind
+    for attr, attr_value in param_attrs.items():
+        setattr(param, attr, attr_value)
+    mock_relay.get_config_parameters.return_value = [param]
+    mock_module_subdevices.get_channels.return_value = {1: mock_relay}
+    await _setup_entry(hass, config_entry, advanced_mode=True)
+    client = await hass_ws_client(hass)
+
+    response = await _ws_call(
+        client,
+        "velbus/config_panel/module/config/set",
+        {
+            CONF_CONFIG_ENTRY: config_entry.entry_id,
+            CONF_ADDRESS: 88,
+            CONF_CHANNEL: 1,
+            "key": "setting",
+            "value": value,
+        },
+    )
+
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_format"
+    assert message in response["error"]["message"]
+    param.set_value.assert_not_awaited()
+
+
+async def test_get_channel_actions_unsupported(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_module_subdevices: AsyncMock,
+    mock_relay: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test action reads fail when the relay has no action table."""
+    mock_module_subdevices.get_action_table.return_value = None
+    mock_module_subdevices.get_channels.return_value = {1: mock_relay}
+    await _setup_entry(hass, config_entry, advanced_mode=True)
+    client = await hass_ws_client(hass)
+
+    response = await _ws_call(
+        client,
+        "velbus/config_panel/module/actions/get",
+        {
+            CONF_CONFIG_ENTRY: config_entry.entry_id,
+            CONF_ADDRESS: 88,
+            CONF_CHANNEL: 1,
+        },
+    )
+
+    assert not response["success"]
+    assert response["error"]["code"] == "home_assistant_error"
+    assert "does not support action-table programming" in response["error"]["message"]
+
+
+async def test_set_channel_action_relay_not_found(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test programming an action fails when the module is unknown."""
+    controller.return_value.get_module.return_value = None
+    await _setup_entry(hass, config_entry, advanced_mode=True)
+    client = await hass_ws_client(hass)
+
+    response = await _ws_call(
+        client,
+        "velbus/config_panel/module/actions/set",
+        {
+            CONF_CONFIG_ENTRY: config_entry.entry_id,
+            CONF_ADDRESS: 42,
+            CONF_CHANNEL: 1,
+            "source_address": 1,
+            "action": "on",
+        },
+    )
+
+    assert not response["success"]
+    assert response["error"]["code"] == "not_found"
+
+
+async def test_set_channel_action_write_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_module_subdevices: AsyncMock,
+    mock_relay: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test action programming failures from the library are returned as errors."""
+    mock_relay.set_action = AsyncMock(side_effect=OSError("eeprom write failed"))
+    mock_module_subdevices.get_channels.return_value = {1: mock_relay}
+    await _setup_entry(hass, config_entry, advanced_mode=True)
+    client = await hass_ws_client(hass)
+
+    response = await _ws_call(
+        client,
+        "velbus/config_panel/module/actions/set",
+        {
+            CONF_CONFIG_ENTRY: config_entry.entry_id,
+            CONF_ADDRESS: 88,
+            CONF_CHANNEL: 1,
+            "source_address": 1,
+            "action": "on",
+        },
+    )
+
+    assert not response["success"]
+    assert response["error"]["code"] == "home_assistant_error"
+    assert "eeprom write failed" in response["error"]["message"]
+
+
+async def test_clear_channel_action_relay_not_found(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_module_subdevices: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test clearing an action fails when the channel has no action table."""
+    mock_module_subdevices.get_channels.return_value = {}
+    await _setup_entry(hass, config_entry, advanced_mode=True)
+    client = await hass_ws_client(hass)
+
+    response = await _ws_call(
+        client,
+        "velbus/config_panel/module/actions/clear",
+        {
+            CONF_CONFIG_ENTRY: config_entry.entry_id,
+            CONF_ADDRESS: 88,
+            CONF_CHANNEL: 1,
+            "slot": 1,
+        },
+    )
+
+    assert not response["success"]
+    assert response["error"]["code"] == "not_found"
+
+
+async def test_clear_channel_action_write_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_module_subdevices: AsyncMock,
+    mock_relay: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test action clear failures from the library are returned as errors."""
+    mock_relay.clear_action = AsyncMock(side_effect=OSError("eeprom clear failed"))
+    mock_module_subdevices.get_channels.return_value = {1: mock_relay}
+    await _setup_entry(hass, config_entry, advanced_mode=True)
+    client = await hass_ws_client(hass)
+
+    response = await _ws_call(
+        client,
+        "velbus/config_panel/module/actions/clear",
+        {
+            CONF_CONFIG_ENTRY: config_entry.entry_id,
+            CONF_ADDRESS: 88,
+            CONF_CHANNEL: 1,
+            "slot": 1,
+        },
+    )
+
+    assert not response["success"]
+    assert response["error"]["code"] == "home_assistant_error"
+    assert "eeprom clear failed" in response["error"]["message"]
