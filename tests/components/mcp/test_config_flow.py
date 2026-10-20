@@ -1,6 +1,6 @@
 """Test the Model Context Protocol config flow."""
 
-import datetime
+import datetime as dt
 from http import HTTPStatus
 import json
 from typing import Any
@@ -9,7 +9,10 @@ from unittest.mock import AsyncMock, Mock, patch
 import httpx2
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
 from pytest_homeassistant.typing import ClientSessionGenerator
 import respx
 from yarl import URL
@@ -39,10 +42,6 @@ from .conftest import (
     OAUTH_TOKEN_URL,
     TEST_API_NAME,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
-from tests.typing import ClientSessionGenerator
 
 MCP_SERVER_BASE_URL = "http://1.1.1.1:8080"
 OAUTH_DISCOVERY_ENDPOINT = (
@@ -1375,7 +1374,7 @@ async def test_reconfigure(
     assert result["errors"] == {}
 
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(
@@ -1423,7 +1422,7 @@ async def test_reconfigure_mcp_client_error(
     # Reset and retry successfully
     mock_mcp_client.side_effect = None
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(
@@ -1458,7 +1457,7 @@ async def test_reconfigure_invalid_url(
 
     # Retry with a valid URL
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(
@@ -1481,7 +1480,7 @@ async def test_reconfigure_missing_capabilities(
     result = await config_entry.start_reconfigure_flow(hass)
 
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     response.capabilities.tools = None
     mock_mcp_client.return_value.initialize.return_value = response
 
@@ -1511,7 +1510,7 @@ async def test_reconfigure_duplicate_url(
     result = await config_entry.start_reconfigure_flow(hass)
 
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(
@@ -1534,7 +1533,7 @@ async def test_reconfigure_oauth(
     assert result["type"] is FlowResultType.FORM
 
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
 
     # Reconfigure on the same origin with a different path
@@ -1585,7 +1584,7 @@ async def test_reconfigure_oauth_invalid_url(
 
     # Retry with a valid URL
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(
@@ -1608,7 +1607,7 @@ async def test_reconfigure_oauth_different_origin_no_auth(
     assert result["type"] is FlowResultType.FORM
 
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
 
     # Reconfigure on a different origin
@@ -1696,7 +1695,7 @@ async def test_reconfigure_oauth_different_origin_reauth(
     # The new server accepts the freshly acquired token
     mock_mcp_client.side_effect = None
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -1785,9 +1784,7 @@ async def test_reconfigure_oauth_token_refresh_error(
             CONF_TOKEN: {
                 CONF_ACCESS_TOKEN: "test-access-token",
                 "refresh_token": "test-refresh-token",
-                "expires_at": (
-                    dt_util.utcnow() - datetime.timedelta(days=1)
-                ).timestamp(),
+                "expires_at": (dt_util.utcnow() - dt.timedelta(days=1)).timestamp(),
             },
             CONF_SCOPE: ["read", "write"],
         },
@@ -1829,7 +1826,7 @@ async def test_reconfigure_oauth_token_refresh_error(
 
     # The token refresh succeeds on retry, so the flow can still finish
     response = Mock()
-    response.serverInfo.name = TEST_API_NAME
+    response.server_info.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(
