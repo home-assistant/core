@@ -1,6 +1,8 @@
 """Test the Meross Bluetooth sensors."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 
 from homeassistant.components.meross.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS
@@ -13,9 +15,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from . import MEROSS_MS120_ADDRESS, MEROSS_MS120_SERVICE_INFO, MEROSS_MS220_SERVICE_INFO
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 @pytest.mark.usefixtures("mock_bluetooth", "entity_registry_enabled_by_default")

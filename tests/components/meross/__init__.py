@@ -2,8 +2,10 @@
 
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 from meross_ble.const import MEROSS_SERVICE_DATA_UUID, SUBDEV_MS120, SUBDEV_MS220
-
-from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
 
 MEROSS_MS120_ADDRESS = "AA:BB:CC:DD:EE:FF"
 MEROSS_MS220_ADDRESS = "AA:BB:CC:DD:EE:01"

@@ -4,6 +4,11 @@ from unittest.mock import AsyncMock, patch
 
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 from meross_ble import MerossBLEError
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.meross.const import DOMAIN
@@ -17,9 +22,6 @@ from . import (
     MEROSS_MS220_SERVICE_INFO,
     NOT_MEROSS_SERVICE_INFO,
 )
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 
 async def test_bluetooth_discovery(hass: HomeAssistant) -> None:

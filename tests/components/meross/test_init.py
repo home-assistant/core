@@ -1,6 +1,8 @@
 """Test the Meross Bluetooth integration setup."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
 
 from homeassistant.components.meross.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -8,9 +10,6 @@ from homeassistant.const import CONF_ADDRESS, CONF_MODEL
 from homeassistant.core import HomeAssistant
 
 from . import MEROSS_MS120_ADDRESS, MEROSS_MS120_SERVICE_INFO
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 @pytest.mark.usefixtures("mock_bluetooth")
