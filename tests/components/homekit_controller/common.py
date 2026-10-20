@@ -13,6 +13,12 @@ from aiohomekit.hkjson import loads as hkloads
 from aiohomekit.model import Accessories, AccessoriesState, Accessory
 from aiohomekit.model.services import Service
 from aiohomekit.testing import FakeController, FakePairing
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_get_device_automations,
+    load_fixture,
+)
 
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.homekit_controller.const import (
@@ -31,13 +37,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_get_device_automations,
-    load_fixture,
-)
 
 logger = logging.getLogger(__name__)
 

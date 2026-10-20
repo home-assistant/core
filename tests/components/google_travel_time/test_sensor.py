@@ -6,6 +6,7 @@ from freezegun.api import FrozenDateTimeFactory
 from google.api_core.exceptions import GoogleAPIError, PermissionDenied
 from google.maps.routing_v2 import Units
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.google_travel_time.config_flow import default_options
 from homeassistant.components.google_travel_time.const import (
@@ -28,8 +29,6 @@ from homeassistant.util.unit_system import (
 )
 
 from .const import DEFAULT_OPTIONS, MOCK_CONFIG
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture(name="mock_update_empty")

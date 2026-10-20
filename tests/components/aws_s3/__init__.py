@@ -1,10 +1,10 @@
 """Tests for the AWS S3 integration."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 async def setup_integration(

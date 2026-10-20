@@ -2,13 +2,13 @@
 
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.jellyfin.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 async def test_watching(

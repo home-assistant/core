@@ -4,6 +4,7 @@ import math
 import struct
 
 import pytest
+from pytest_homeassistant.common import mock_restore_cache_with_extra_data
 
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.modbus.const import (
@@ -53,8 +54,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_NAME, ReadResult
-
-from tests.common import mock_restore_cache_with_extra_data
 
 ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
 SLAVE_UNIQUE_ID = "ground_floor_sensor"

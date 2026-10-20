@@ -3,6 +3,8 @@
 from typing import Any
 from unittest.mock import AsyncMock, call, patch
 
+from pytest_homeassistant.common import get_fixture_path
+
 from homeassistant import config as hass_config
 from homeassistant.components import notify
 from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TITLE
@@ -11,8 +13,6 @@ from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceRegistry
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import get_fixture_path
 
 
 async def test_reload_notify(

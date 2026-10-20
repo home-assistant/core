@@ -15,6 +15,7 @@ from energyzero import (
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.energyzero.const import (
@@ -29,8 +30,6 @@ from homeassistant.components.energyzero.services import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 pytestmark = pytest.mark.freeze_time("2026-04-10 20:32:59")
 
