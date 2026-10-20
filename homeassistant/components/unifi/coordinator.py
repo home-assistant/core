@@ -33,6 +33,7 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
     ) -> None:
         """Initialize coordinator."""
         supports_websocket = bool(handler.process_messages or handler.remove_messages)
+        self._supports_websocket = supports_websocket
         super().__init__(
             hub.hass,
             LOGGER,
@@ -58,7 +59,8 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
     async def _async_update_data(self) -> None:
         """Update data from the API handler."""
         if not self._connection.available:
-            raise UpdateFailed("UniFi Network connection is unavailable")
+            # Entities follow the hub while it is down; recovery refetches every handler
+            return
 
         try:
             await self._handler.update()
@@ -75,7 +77,7 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
                 )
             raise UpdateFailed(str(err)) from err
         except (TimeoutError, aiounifi.RequestError) as err:
-            self._connection.report_failure(err)
+            self._connection.report_request_failure(err)
             raise UpdateFailed(str(err)) from err
         except aiounifi.AiounifiException as err:
             raise UpdateFailed(str(err)) from err
@@ -83,6 +85,22 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
         if self.update_interval is not None:
             self.update_interval = (
                 POLL_INTERVAL if self._handler.items() else IDLE_POLL_INTERVAL
+            )
+
+    async def async_resync(self) -> None:
+        """Refetch handler data after the connection is restored."""
+        if not self._supports_websocket:
+            await self.async_refresh()
+            return
+
+        # Pushed data stays valid if the refetch fails, the websocket resumes after it
+        try:
+            await self._handler.update()
+        except (TimeoutError, aiounifi.RequestError) as err:
+            self._connection.report_request_failure(err)
+        except aiounifi.AiounifiException as err:
+            LOGGER.debug(
+                "Could not refetch UniFi %s data: %s", type(self._handler).__name__, err
             )
 
     @callback

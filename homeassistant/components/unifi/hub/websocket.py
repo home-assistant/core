@@ -59,11 +59,14 @@ class UnifiWebsocket:
             """Start websocket."""
             try:
                 await self.api.start_websocket()
-            except aiohttp.ClientConnectorError, aiohttp.WSServerHandshakeError:
-                LOGGER.error("Websocket setup failed")
-            except aiounifi.WebsocketError:
-                LOGGER.error("Websocket disconnected")
+            except (
+                aiohttp.ClientConnectorError,
+                aiohttp.WSServerHandshakeError,
+            ) as err:
+                LOGGER.debug("Websocket setup failed: %s", err)
+            except aiounifi.WebsocketError as err:
+                LOGGER.debug("Websocket disconnected: %s", err)
 
-            self.connection.report_failure(log=True)
+            self.connection.report_failure()
 
         self.ws_task = self.hass.loop.create_task(_websocket_runner())

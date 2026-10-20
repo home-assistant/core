@@ -104,11 +104,11 @@ class UnifiEntityLoader:
         self._restore_inactive_clients()
         self.wireless_clients.update_clients(set(self.hub.api.clients.values()))
 
-    async def async_refresh_coordinators(self) -> None:
+    async def async_resync(self) -> None:
         """Refetch all handler data after a connection is restored."""
         await asyncio.gather(
             *(
-                coordinator.async_refresh()
+                coordinator.async_resync()
                 for coordinator in self._data_coordinators.values()
             )
         )
@@ -128,7 +128,7 @@ class UnifiEntityLoader:
         """Refresh required Network application data and report readiness failures."""
         try:
             await self.hub.api.system_information.update()
-        except (TimeoutError, aiounifi.AiounifiException) as err:
+        except (TimeoutError, aiounifi.RequestError) as err:
             self.hub.connection.report_failure(err)
             raise
 

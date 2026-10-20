@@ -1,5 +1,7 @@
 """Test UniFi backoff policy."""
 
+from unittest.mock import patch
+
 from homeassistant.components.unifi.hub.connection import BackoffPolicy
 
 
@@ -10,11 +12,18 @@ def test_default_delay_sequence_grows_and_caps() -> None:
     assert policy.next_delay(0) == 15
     assert policy.next_delay(1) == 30
     assert policy.next_delay(2) == 60
-    assert policy.next_delay(3) == 120
-    assert policy.next_delay(4) == 240
-    assert policy.next_delay(5) == 300
-    assert policy.next_delay(10) == 300
-    assert policy.next_delay(10_000) == 300
+    assert policy.next_delay(3) == 60
+    assert policy.next_delay(10_000) == 60
+
+
+def test_jitter_stays_within_bounds() -> None:
+    """Verify the jittered delay spreads around the plain delay."""
+    policy = BackoffPolicy()
+
+    with patch("random.uniform", side_effect=lambda low, high: low):
+        assert policy.jittered_delay(1) == 30 * 0.8
+    with patch("random.uniform", side_effect=lambda low, high: high):
+        assert policy.jittered_delay(1) == 30 * 1.2
 
 
 def test_custom_policy_parameters() -> None:

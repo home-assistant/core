@@ -65,7 +65,7 @@ class UnifiHub:
 
     async def _async_connection_recovered(self) -> None:
         """Resync data before push updates resume after app recovery."""
-        await self.entity_loader.async_refresh_coordinators()
+        await self.entity_loader.async_resync()
         if self.available and self.websocket.running:
             self.websocket.start_websocket()
 

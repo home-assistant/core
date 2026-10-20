@@ -395,7 +395,7 @@ class WebsocketStateManager(asyncio.Event):
     async def disconnect(self) -> None:
         """Mark future as done to make 'await self.api.start_websocket' return."""
         self.set()
-        await self.hass.async_block_till_done()
+        await self.hass.async_block_till_done(wait_background_tasks=True)
 
     async def reconnect(self, fail: bool = False) -> None:
         """Set up new future to make 'await self.api.start_websocket' block.
@@ -420,11 +420,12 @@ class WebsocketStateManager(asyncio.Event):
 
         if not fail:
             self.clear()
-        delay = self._backoff.next_delay(self._attempt)
+        # Latest possible retry time, including jitter
+        delay = self._backoff.next_delay(self._attempt) * (1 + self._backoff.jitter)
         self._attempt = self._attempt + 1 if fail else 0
         new_time = dt_util.utcnow() + timedelta(seconds=delay)
         async_fire_time_changed(self.hass, new_time)
-        await self.hass.async_block_till_done()
+        await self.hass.async_block_till_done(wait_background_tasks=True)
 
 
 @pytest.fixture(autouse=True, name="_mock_websocket")
