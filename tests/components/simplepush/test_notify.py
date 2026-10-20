@@ -1,8 +1,7 @@
 """Test Simplepush notifications."""
 
-from collections.abc import Generator
 from typing import Any
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, call
 
 import pytest
 from simplepush import ApiError
@@ -19,7 +18,6 @@ from homeassistant.components.simplepush.const import CONF_DEVICE_KEY, CONF_SALT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_API_TOKEN,
     CONF_NAME,
     CONF_PASSWORD,
     STATE_UNAVAILABLE,
@@ -29,6 +27,8 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
+from . import setup_integration
+
 from tests.common import MockConfigEntry, snapshot_platform
 
 MOCK_CONFIG = {
@@ -37,13 +37,6 @@ MOCK_CONFIG = {
 }
 
 SERVICE_NAME = "simplepush"
-
-
-@pytest.fixture
-def mock_send() -> Generator[MagicMock]:
-    """Mock the simplepush send call."""
-    with patch("homeassistant.components.simplepush.notify.send") as mock:
-        yield mock
 
 
 async def setup_config_entry(hass: HomeAssistant, data: dict[str, str]) -> None:
@@ -92,7 +85,7 @@ async def setup_config_entry(hass: HomeAssistant, data: dict[str, str]) -> None:
 )
 async def test_send_message(
     hass: HomeAssistant,
-    mock_send: MagicMock,
+    mock_legacy_send: MagicMock,
     service_data: dict[str, Any],
     expected_attachments: list[Any] | None,
     expected_event: str | None,
@@ -107,7 +100,7 @@ async def test_send_message(
         blocking=True,
     )
 
-    mock_send.assert_called_once_with(
+    mock_legacy_send.assert_called_once_with(
         key="abc",
         title="Home Assistant",
         message="Hello",
@@ -117,7 +110,7 @@ async def test_send_message(
 
 
 async def test_send_message_with_password(
-    hass: HomeAssistant, mock_send: MagicMock
+    hass: HomeAssistant, mock_legacy_send: MagicMock
 ) -> None:
     """Test sending a message with an encryption password."""
     await setup_config_entry(
@@ -131,7 +124,7 @@ async def test_send_message_with_password(
         blocking=True,
     )
 
-    mock_send.assert_called_once_with(
+    mock_legacy_send.assert_called_once_with(
         key="abc",
         password="password",
         salt="salt",
@@ -143,7 +136,7 @@ async def test_send_message_with_password(
 
 
 async def test_send_message_with_invalid_attachment(
-    hass: HomeAssistant, mock_send: MagicMock, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, mock_legacy_send: MagicMock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test that an invalid attachment format sends nothing."""
     await setup_config_entry(hass, MOCK_CONFIG)
@@ -156,7 +149,7 @@ async def test_send_message_with_invalid_attachment(
     )
 
     assert "Attachment format is incorrect" in caplog.text
-    mock_send.assert_not_called()
+    mock_legacy_send.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -178,14 +171,14 @@ async def test_send_message_with_invalid_attachment(
 )
 async def test_send_message_error(
     hass: HomeAssistant,
-    mock_send: MagicMock,
+    mock_legacy_send: MagicMock,
     side_effect: type[Exception],
     expected_exception: type[HomeAssistantError],
     translation_key: str,
 ) -> None:
     """Test that a failing send raises the correct exception."""
     await setup_config_entry(hass, MOCK_CONFIG)
-    mock_send.side_effect = side_effect
+    mock_legacy_send.side_effect = side_effect
 
     with pytest.raises(expected_exception) as exc_info:
         await hass.services.async_call(
@@ -214,30 +207,7 @@ async def test_no_discovery_info(
     assert not hass.services.has_service(NOTIFY_DOMAIN, SERVICE_NAME)
 
 
-APP_CONFIG = {CONF_API_TOKEN: "token"}
-
 ENTITY_ID = "notify.simplepush"
-
-
-@pytest.fixture
-def mock_client() -> Generator[MagicMock]:
-    """Mock the simplepush client of the current app."""
-    with patch("homeassistant.components.simplepush.Client") as mock:
-        yield mock
-
-
-async def setup_app_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Set up an entry of the current app."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, title="Simplepush", data=APP_CONFIG, entry_id="app_entry"
-    )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.LOADED
-
-    return entry
 
 
 async def send_entity_message(hass: HomeAssistant, data: dict[str, str]) -> None:
@@ -255,23 +225,25 @@ async def test_notify_platform(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test the notify entity of the current app."""
-    entry = await setup_app_entry(hass)
+    await setup_integration(hass, config_entry)
 
-    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 async def test_entity_send_message(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_client: MagicMock,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test sending a message through the notify entity of the current app."""
-    entry = await setup_app_entry(hass)
+    await setup_integration(hass, config_entry)
     entity = entity_registry.async_get(ENTITY_ID)
     assert entity is not None
-    assert entity.unique_id == entry.entry_id
+    assert entity.unique_id == config_entry.entry_id
     assert not hass.services.has_service(NOTIFY_DOMAIN, SERVICE_NAME)
 
     await send_entity_message(hass, {ATTR_MESSAGE: "Hello", ATTR_TITLE: "Title"})
@@ -295,11 +267,12 @@ async def test_entity_send_message(
 async def test_entity_send_message_error(
     hass: HomeAssistant,
     mock_client: MagicMock,
+    config_entry: MockConfigEntry,
     side_effect: Exception | type[Exception],
     translation_key: str,
 ) -> None:
     """Test that a failing send through the current app raises."""
-    await setup_app_entry(hass)
+    await setup_integration(hass, config_entry)
     mock_client.return_value.send_task.side_effect = side_effect
 
     with pytest.raises(HomeAssistantError) as exc_info:
@@ -310,12 +283,14 @@ async def test_entity_send_message_error(
 
 
 @pytest.mark.usefixtures("mock_client")
-async def test_unload_app_entry(hass: HomeAssistant) -> None:
+async def test_unload_app_entry(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test unloading an entry of the current app."""
-    entry = await setup_app_entry(hass)
+    await setup_integration(hass, config_entry)
 
-    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE

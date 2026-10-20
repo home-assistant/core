@@ -1,7 +1,6 @@
 """Test Simplepush config flow."""
 
-from collections.abc import Generator
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from simplepush import ApiError
@@ -25,27 +24,7 @@ LEGACY_CONFIG = {
 }
 
 
-@pytest.fixture(autouse=True)
-def simplepush_setup_fixture() -> Generator[None]:
-    """Patch simplepush setup entry."""
-    with patch(
-        "homeassistant.components.simplepush.async_setup_entry", return_value=True
-    ):
-        yield
-
-
-@pytest.fixture(autouse=True)
-def mock_client() -> Generator[MagicMock]:
-    """Patch the simplepush client."""
-    with patch("homeassistant.components.simplepush.config_flow.Client") as mock:
-        yield mock
-
-
-@pytest.fixture
-def mock_legacy_send() -> Generator[MagicMock]:
-    """Patch the send of the old app."""
-    with patch("homeassistant.components.simplepush.config_flow.send") as mock:
-        yield mock
+pytestmark = pytest.mark.usefixtures("mock_setup_entry", "mock_client")
 
 
 async def start_flow(hass: HomeAssistant, app: str) -> FlowResult:
