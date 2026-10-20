@@ -12,11 +12,12 @@ from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
+    DOMAIN as NOTIFY_DOMAIN,
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
     NotifyEntity,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -48,7 +49,7 @@ async def async_get_service(
 
     entry: ConfigEntry = discovery_info[CONF_ENTRY]
     service = ProwlNotificationService(
-        hass, entry.data[CONF_API_KEY], get_async_client(hass)
+        hass, entry.data[CONF_API_KEY], get_async_client(hass), entry
     )
     entry.async_on_unload(service.async_unregister_services)
     return service
@@ -62,8 +63,11 @@ async def async_setup_entry(
     """Set up the notify entities."""
     # A title composed of several YAML names is not used as entity name
     name = "Prowl" if CONF_LEGACY_SERVICE_NAME in entry.data else entry.title
+    # Imported titles can collide (YAML without a name is titled like UI entries);
+    # entries set up in the UI keep their existing unique ID
+    unique_id = entry.entry_id if entry.source == SOURCE_IMPORT else entry.title
     prowl = ProwlNotificationEntity(
-        hass, name, entry.title, entry.data[CONF_API_KEY], get_async_client(hass)
+        hass, name, unique_id, entry.data[CONF_API_KEY], get_async_client(hass)
     )
     async_add_entities([prowl])
 
@@ -75,11 +79,40 @@ class ProwlNotificationService(BaseNotificationService):
     """
 
     def __init__(
-        self, hass: HomeAssistant, api_key: str, httpx_client: httpx2.AsyncClient
+        self,
+        hass: HomeAssistant,
+        api_key: str,
+        httpx_client: httpx2.AsyncClient,
+        entry: ConfigEntry | None = None,
     ) -> None:
         """Initialize the service."""
         self._hass = hass
         self._prowl = prowlpy.AsyncProwl(api_key, client=httpx_client)
+        self._entry = entry
+        self._owns_service = False
+
+    @override
+    async def async_register_services(self) -> None:
+        """Register the legacy action if the entry is active and the name is free."""
+        # The notify loader sets the service up in its own task, so the entry
+        # can unload before registration
+        if self._entry is not None and self._entry.state not in (
+            ConfigEntryState.SETUP_IN_PROGRESS,
+            ConfigEntryState.LOADED,
+        ):
+            return
+        if self.hass.services.has_service(NOTIFY_DOMAIN, self._service_name):
+            return
+        await super().async_register_services()
+        self._owns_service = True
+
+    @override
+    async def async_unregister_services(self) -> None:
+        """Unregister the legacy action only if this service registered it."""
+        if not self._owns_service:
+            return
+        self._owns_service = False
+        await super().async_unregister_services()
 
     @override
     async def async_send_message(self, message: str, **kwargs: Any) -> None:

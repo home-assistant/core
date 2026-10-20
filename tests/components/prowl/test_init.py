@@ -10,7 +10,8 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import notify
 from homeassistant.components.prowl.const import CONF_LEGACY_SERVICE_NAME, DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
+from homeassistant.components.prowl.notify import ProwlNotificationService
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_PLATFORM
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -326,6 +327,89 @@ async def test_legacy_service_setup_cancelled_on_unload(hass: HomeAssistant) -> 
 
     assert cancelled.is_set()
     assert not hass.services.has_service(notify.DOMAIN, "prowl")
+
+
+@pytest.mark.usefixtures("mock_prowlpy")
+async def test_legacy_service_not_registered_after_unload(hass: HomeAssistant) -> None:
+    """Test the notify loader does not register the action of an unloaded entry."""
+    started = asyncio.Event()
+    release = asyncio.Event()
+    original_setup = ProwlNotificationService.async_setup
+
+    async def paused_setup(self: ProwlNotificationService, *args: Any) -> None:
+        await original_setup(self, *args)
+        started.set()
+        await release.wait()
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="prowl",
+        data={CONF_API_KEY: TEST_API_KEY},
+        source=SOURCE_IMPORT,
+    )
+    entry.add_to_hass(hass)
+    with patch.object(ProwlNotificationService, "async_setup", paused_setup):
+        await hass.config_entries.async_setup(entry.entry_id)
+        # The notify loader is now between setting up and registering the action
+        await started.wait()
+        await hass.config_entries.async_unload(entry.entry_id)
+        release.set()
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert not hass.services.has_service(notify.DOMAIN, "prowl")
+
+
+@pytest.mark.usefixtures("mock_prowlpy")
+async def test_legacy_service_unload_keeps_action_of_other_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test unloading an entry that lost a name collision keeps the other action."""
+    entries = [
+        MockConfigEntry(
+            domain=DOMAIN,
+            title="phone",
+            data={CONF_API_KEY: api_key},
+            source=SOURCE_IMPORT,
+        )
+        for api_key in (TEST_API_KEY, OTHER_API_KEY)
+    ]
+    for entry in entries:
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.services.has_service(notify.DOMAIN, "phone")
+
+    # The second entry did not register notify.phone, the first one owns it
+    await hass.config_entries.async_unload(entries[1].entry_id)
+    await hass.async_block_till_done()
+    assert hass.services.has_service(notify.DOMAIN, "phone")
+
+    await hass.config_entries.async_unload(entries[0].entry_id)
+    await hass.async_block_till_done()
+    assert not hass.services.has_service(notify.DOMAIN, "phone")
+
+
+@pytest.mark.usefixtures("mock_prowlpy")
+async def test_imported_and_ui_entries_with_the_same_title(
+    hass: HomeAssistant,
+) -> None:
+    """Test an imported entry titled like a UI entry still gets a notify entity."""
+    for source, api_key in (
+        (SOURCE_USER, TEST_API_KEY),
+        (SOURCE_IMPORT, OTHER_API_KEY),
+    ):
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            title="Prowl",
+            data={CONF_API_KEY: api_key},
+            source=source,
+        )
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(hass.states.async_entity_ids(notify.DOMAIN)) == 2
 
 
 @pytest.mark.usefixtures("mock_prowlpy")
