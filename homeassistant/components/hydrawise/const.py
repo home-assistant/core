@@ -18,12 +18,6 @@ MODEL_ZONE = "Zone"
 MAIN_SCAN_INTERVAL = timedelta(minutes=5)
 WATER_USE_SCAN_INTERVAL = timedelta(minutes=60)
 
-# A controller picks up a command the next time it checks in with the cloud,
-# which is usually every 15 seconds, but not always. After a command, refresh
-# at this interval until the controller has checked in, for at most the timeout.
-COMMAND_REFRESH_INTERVAL = timedelta(seconds=15)
-COMMAND_REFRESH_TIMEOUT = timedelta(minutes=2)
-
 SIGNAL_UPDATE_HYDRAWISE = "hydrawise_update"
 
 SERVICE_RESUME = "resume"

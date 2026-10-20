@@ -96,7 +96,6 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
         await self.entity_description.turn_on_fn(self.coordinator.api, self.zone)
         self._attr_is_on = True
         self.async_write_ha_state()
-        self.coordinator.async_refresh_after_command(self.controller)
 
     @override
     @exception_handler
@@ -105,13 +104,8 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
         await self.entity_description.turn_off_fn(self.coordinator.api, self.zone)
         self._attr_is_on = False
         self.async_write_ha_state()
-        self.coordinator.async_refresh_after_command(self.controller)
 
     @override
     def _update_attrs(self) -> None:
         """Update state attributes."""
-        # Keep the state of a command until the controller has picked it up,
-        # the API keeps reporting the old state until then.
-        if self.coordinator.command_pending(self.controller):
-            return
         self._attr_is_on = self.entity_description.value_fn(self.zone)

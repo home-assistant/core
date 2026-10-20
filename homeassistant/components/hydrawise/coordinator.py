@@ -3,24 +3,20 @@
 from collections.abc import AsyncIterator, Callable, Iterable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
-from datetime import datetime
 from typing import override
 
 from pydrawise import APIError, HydrawiseBase, NotAuthorizedError
 from pydrawise.schema import Controller, ControllerWaterUseSummary, Sensor, User, Zone
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.dt import now, utcnow
+from homeassistant.util.dt import now
 
 from .const import (
-    COMMAND_REFRESH_INTERVAL,
-    COMMAND_REFRESH_TIMEOUT,
     DOMAIN,
     LOGGER,
     MAIN_SCAN_INTERVAL,
@@ -58,71 +54,6 @@ class HydrawiseDataUpdateCoordinator(DataUpdateCoordinator[HydrawiseData]):
 
     api: HydrawiseBase
     config_entry: HydrawiseConfigEntry
-    _command_refresh_unsub: CALLBACK_TYPE | None = None
-    # When the last command was sent to each controller that hasn't picked it
-    # up yet, keyed by controller ID.
-    _pending_commands: dict[int, datetime]
-
-    @callback
-    def async_refresh_after_command(self, controller: Controller) -> None:
-        """Refresh until the controller has picked up a command."""
-        self._pending_commands[controller.id] = utcnow()
-        self._schedule_command_refresh()
-
-    @callback
-    def command_pending(self, controller: Controller) -> bool:
-        """Return if the controller has yet to pick up a command."""
-        return controller.id in self._pending_commands
-
-    @callback
-    def _schedule_command_refresh(self) -> None:
-        """Schedule the next refresh while a command is pending."""
-        # Keep a refresh that is already scheduled: a burst of commands can't
-        # keep pushing it back, and a command sent while a refresh is running
-        # doesn't start a second chain of refreshes.
-        if self._command_refresh_unsub is not None:
-            return
-        self._command_refresh_unsub = async_call_later(
-            self.hass, COMMAND_REFRESH_INTERVAL, self._async_refresh_after_command
-        )
-
-    @callback
-    def _async_drop_handled_commands(self, data: HydrawiseData) -> None:
-        """Drop the commands the controllers picked up, or that timed out."""
-        for controller_id, sent_at in list(self._pending_commands.items()):
-            controller = data.controllers.get(controller_id)
-            if (
-                controller is None
-                # pydrawise reports a naive local time, timestamp() makes it
-                # comparable.
-                or controller.last_contact_time.timestamp() > sent_at.timestamp()
-                or utcnow() - sent_at > COMMAND_REFRESH_TIMEOUT
-            ):
-                del self._pending_commands[controller_id]
-
-    async def _async_refresh_after_command(self, _now: datetime) -> None:
-        """Refresh, and keep refreshing until every pending command is handled."""
-        self._command_refresh_unsub = None
-        await self.async_request_refresh()
-
-        if isinstance(self.last_exception, ConfigEntryAuthFailed):
-            # Polling stopped for reauthentication, so stop here too.
-            self._pending_commands.clear()
-        else:
-            # A failed refresh doesn't get to drop timed out commands.
-            self._async_drop_handled_commands(self.data)
-
-        if self._pending_commands:
-            self._schedule_command_refresh()
-
-    @override
-    async def async_shutdown(self) -> None:
-        """Stop refreshing after commands, then shut down."""
-        if self._command_refresh_unsub is not None:
-            self._command_refresh_unsub()
-            self._command_refresh_unsub = None
-        self._pending_commands.clear()
-        await super().async_shutdown()
 
     @asynccontextmanager
     async def _handle_api_errors(self) -> AsyncIterator[None]:
@@ -164,7 +95,6 @@ class HydrawiseMainDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
             update_interval=MAIN_SCAN_INTERVAL,
         )
         self.api = api
-        self._pending_commands = {}
         self.new_controllers_callbacks: list[
             Callable[[Iterable[Controller]], None]
         ] = []
@@ -193,9 +123,6 @@ class HydrawiseMainDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
                     data.zone_id_to_controller[zone.id] = controller
                 for sensor in controller.sensors:
                     data.sensors[sensor.id] = sensor
-        # Before the entities see the new data, so the ones holding the state
-        # of a command they sent know if the controller has picked it up.
-        self._async_drop_handled_commands(data)
         return data
 
     @callback
@@ -290,7 +217,6 @@ class HydrawiseWaterUseDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
             update_interval=WATER_USE_SCAN_INTERVAL,
         )
         self.api = api
-        self._pending_commands = {}
         self._main_coordinator = main_coordinator
 
     @callback

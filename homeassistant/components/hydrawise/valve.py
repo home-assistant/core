@@ -66,7 +66,6 @@ class HydrawiseValve(HydrawiseEntity, ValveEntity):
         await self.coordinator.api.start_zone(self.zone)
         self._attr_is_closed = False
         self.async_write_ha_state()
-        self.coordinator.async_refresh_after_command(self.controller)
 
     @override
     @exception_handler
@@ -75,13 +74,8 @@ class HydrawiseValve(HydrawiseEntity, ValveEntity):
         await self.coordinator.api.stop_zone(self.zone)
         self._attr_is_closed = True
         self.async_write_ha_state()
-        self.coordinator.async_refresh_after_command(self.controller)
 
     @override
     def _update_attrs(self) -> None:
         """Update state attributes."""
-        # Keep the state of a command until the controller has picked it up,
-        # the API keeps reporting the old state until then.
-        if self.coordinator.command_pending(self.controller):
-            return
         self._attr_is_closed = self.zone.scheduled_runs.current_run is None

@@ -151,16 +151,13 @@ class HydrawiseZoneBinarySensor(HydrawiseBinarySensor):
         await self.coordinator.api.start_zone(
             self.zone, custom_run_duration=int((duration or 0) * 60)
         )
-        self.coordinator.async_refresh_after_command(self.controller)
 
     @exception_handler
     async def suspend(self, until: datetime) -> None:
         """Suspend automatic watering in the irrigation zone."""
         await self.coordinator.api.suspend_zone(self.zone, until=until)
-        self.coordinator.async_refresh_after_command(self.controller)
 
     @exception_handler
     async def resume(self) -> None:
         """Resume automatic watering in the irrigation zone."""
         await self.coordinator.api.resume_zone(self.zone)
-        self.coordinator.async_refresh_after_command(self.controller)
