@@ -1,5 +1,7 @@
 """Tests for the Openhome config flow module."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.openhome.const import DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SOURCE
@@ -10,8 +12,6 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
-
-from tests.common import MockConfigEntry
 
 MOCK_UDN = "uuid:4c494e4e-1234-ab12-abcd-01234567819f"
 MOCK_FRIENDLY_NAME = "Test Client"

@@ -14,6 +14,7 @@ from openai.types.responses import (
 )
 from openai.types.responses.response import IncompleteDetails
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
@@ -53,7 +54,6 @@ from . import (
     create_web_search_item,
 )
 
-from tests.common import MockConfigEntry
 from tests.components.conversation import (
     MockChatLog,
     mock_chat_log,  # noqa: F401

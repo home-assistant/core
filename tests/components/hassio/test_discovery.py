@@ -9,6 +9,14 @@ from aiohasupervisor import SupervisorError, SupervisorNotFoundError
 from aiohasupervisor.models import Discovery
 from aiohttp.test_utils import TestClient
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockUser,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.hassio import DOMAIN
@@ -19,15 +27,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockUser,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
 
 
 @pytest.fixture(name="mock_mqtt")

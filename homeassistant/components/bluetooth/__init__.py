@@ -103,6 +103,7 @@ if TYPE_CHECKING:
     from homeassistant.helpers.typing import ConfigType
 
 __all__ = [
+    "DOMAIN",
     "FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS",
     "MONOTONIC_TIME",
     "SOURCE_LOCAL",

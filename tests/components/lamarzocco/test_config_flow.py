@@ -8,6 +8,7 @@ from pylamarzocco.const import DeviceType, ModelName
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 from pylamarzocco.models import Thing
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant.components.lamarzocco.config_flow import CONF_MACHINE
 from homeassistant.components.lamarzocco.const import (
@@ -35,8 +36,6 @@ from . import (
     async_init_integration,
     get_bluetooth_service_info,
 )
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.fixture(autouse=True)

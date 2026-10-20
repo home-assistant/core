@@ -9,6 +9,7 @@ from b2sdk.v2.exception import (
     Unauthorized,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.backblaze_b2 import DOMAIN
 from homeassistant.components.backblaze_b2.repairs import (
@@ -18,8 +19,6 @@ from homeassistant.components.backblaze_b2.repairs import (
 from homeassistant.components.repairs import ConfirmRepairFlow
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
