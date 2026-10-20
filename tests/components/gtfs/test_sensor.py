@@ -70,6 +70,14 @@ async def test_sensor(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
         pytest.param(
             "2026-10-19 18:00:00-04:00",
             DAY_ROUTE,
+            DAY_ENTITY_ID,
+            "2026-10-20T12:00:00+00:00",
+            {"day": "tomorrow"},
+            id="default_looks_ahead_to_tomorrow",
+        ),
+        pytest.param(
+            "2026-10-19 18:00:00-04:00",
+            {**DAY_ROUTE, "include_tomorrow": False},
             NO_DEPARTURE_ENTITY_ID,
             STATE_UNKNOWN,
             {"info": "No more departures today"},
@@ -179,7 +187,7 @@ async def test_update(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, snapshot: SnapshotAssertion
 ) -> None:
     """Test polling through departures, to none, and back."""
-    await setup_yaml_sensor(hass, **DAY_ROUTE)
+    await setup_yaml_sensor(hass, **DAY_ROUTE, include_tomorrow=False)
     assert hass.states.get(DAY_ENTITY_ID) == snapshot(name="first_departure")
 
     freezer.move_to("2026-10-19 09:00:00-04:00")
@@ -198,6 +206,32 @@ async def test_update(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(DAY_ENTITY_ID) == snapshot(name="next_day")
+
+
+@pytest.mark.parametrize("include_tomorrow", [True, False])
+@pytest.mark.freeze_time("2026-10-19 07:30:00-04:00")
+@pytest.mark.usefixtures("feed_file")
+async def test_include_tomorrow_deprecated(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, include_tomorrow: bool
+) -> None:
+    """Test setting include_tomorrow logs a deprecation warning."""
+    await setup_yaml_sensor(hass, **DAY_ROUTE, include_tomorrow=include_tomorrow)
+
+    assert (
+        "The 'include_tomorrow' option is deprecated, "
+        "please remove it from your configuration"
+    ) in caplog.text
+
+
+@pytest.mark.freeze_time("2026-10-19 07:30:00-04:00")
+@pytest.mark.usefixtures("feed_file")
+async def test_default_config_not_deprecated(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test omitting include_tomorrow logs no deprecation warning."""
+    await setup_yaml_sensor(hass, **DAY_ROUTE)
+
+    assert "include_tomorrow" not in caplog.text
 
 
 async def test_missing_data_file(

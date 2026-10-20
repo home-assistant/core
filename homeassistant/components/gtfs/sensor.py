@@ -257,15 +257,18 @@ WHEELCHAIR_BOARDING_OPTIONS = {1: True, 2: False}
 # date(departure_time) is later for times >= 24:00:00.
 INTERVAL_EPOCH_DATE = "1970-01-01"
 
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        probatio.Required(CONF_ORIGIN): cv.string,
-        probatio.Required(CONF_DESTINATION): cv.string,
-        probatio.Required(CONF_DATA): cv.string,
-        probatio.Optional(CONF_NAME): cv.string,
-        probatio.Optional(CONF_OFFSET, default=0): cv.time_period,
-        probatio.Optional(CONF_TOMORROW, default=False): cv.boolean,
-    }
+PLATFORM_SCHEMA = probatio.All(
+    cv.deprecated(CONF_TOMORROW),
+    SENSOR_PLATFORM_SCHEMA.extend(
+        {
+            probatio.Required(CONF_ORIGIN): cv.string,
+            probatio.Required(CONF_DESTINATION): cv.string,
+            probatio.Required(CONF_DATA): cv.string,
+            probatio.Optional(CONF_NAME): cv.string,
+            probatio.Optional(CONF_OFFSET, default=0): cv.time_period,
+            probatio.Optional(CONF_TOMORROW, default=True): cv.boolean,
+        }
+    ),
 )
 
 
