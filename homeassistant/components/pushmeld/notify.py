@@ -15,6 +15,7 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.components.notify.legacy import NOTIFY_SERVICES
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -95,17 +96,49 @@ class PushMeldNotificationService(BaseNotificationService):
 
     def _entry_is_active(self) -> bool:
         """Return whether the config entry may still register its service."""
-        return self._entry is None or self._entry.state in (
+        if self._entry is None:
+            return True
+
+        if self._entry.state not in (
             ConfigEntryState.SETUP_IN_PROGRESS,
             ConfigEntryState.LOADED,
-        )
+        ):
+            return False
+
+        return self._entry_owns_runtime_service()
+
+    def _entry_owns_runtime_service(self) -> bool:
+        """Return whether this service is the entry's current service."""
+        if self._entry is None:
+            return True
+
+        if not hasattr(self._entry, "runtime_data"):
+            return False
+
+        return self._entry.runtime_data.notify_service is self
+
+    def _remove_from_legacy_registry(self) -> None:
+        """Remove this service instance from the legacy notify registry."""
+        notify_services = self.hass.data.get(NOTIFY_SERVICES)
+        if not notify_services or DOMAIN not in notify_services:
+            return
+
+        services = notify_services[DOMAIN]
+        if self in services:
+            services.remove(self)
+            if not services:
+                del notify_services[DOMAIN]
 
     @override
     async def async_register_services(self) -> None:
         """Register the notify action only while the config entry is active."""
-        if not self._entry_is_active() or self.hass.services.has_service(
-            NOTIFY_DOMAIN, self._service_name
-        ):
+        if not self._entry_is_active():
+            # The legacy notify loader appends the service to its registry after
+            # this method returns, so clean up on the next loop iteration.
+            self.hass.loop.call_soon(self._remove_from_legacy_registry)
+            return
+
+        if self.hass.services.has_service(NOTIFY_DOMAIN, self._service_name):
             return
 
         await super().async_register_services()
@@ -116,11 +149,12 @@ class PushMeldNotificationService(BaseNotificationService):
     @override
     async def async_unregister_services(self) -> None:
         """Unregister only the notify action owned by this service."""
-        if not self._service_registered:
-            return
+        if self._service_registered:
+            if self._entry_owns_runtime_service():
+                await super().async_unregister_services()
+            self._service_registered = False
 
-        await super().async_unregister_services()
-        self._service_registered = False
+        self._remove_from_legacy_registry()
 
     @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:

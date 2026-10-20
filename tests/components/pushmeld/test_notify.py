@@ -16,6 +16,7 @@ from homeassistant.components.notify import (
     ATTR_TITLE,
     DOMAIN as NOTIFY_DOMAIN,
 )
+from homeassistant.components.notify.legacy import NOTIFY_SERVICES
 from homeassistant.components.pushmeld import notify
 from homeassistant.components.pushmeld.const import ATTR_DETAILS, CONF_MAXCODE, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -288,6 +289,65 @@ async def test_unload_during_notification_setup_does_not_register_service(
     await hass.async_block_till_done()
 
     assert not hass.services.has_service(NOTIFY_DOMAIN, "test_channel")
+
+
+async def test_reload_during_notification_setup_does_not_register_stale_service(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Do not retain a stale service when an entry reloads during setup."""
+    old_setup_started = asyncio.Event()
+    new_setup_started = asyncio.Event()
+    release_old_setup = asyncio.Event()
+    setup_count = 0
+    original_setup = notify.PushMeldNotificationService.async_setup
+
+    async def delayed_setup(
+        service: notify.PushMeldNotificationService,
+        setup_hass: HomeAssistant,
+        service_name: str,
+        target_service_name_prefix: str,
+    ) -> None:
+        nonlocal setup_count
+        setup_count += 1
+        if setup_count == 1:
+            old_setup_started.set()
+            await release_old_setup.wait()
+        else:
+            new_setup_started.set()
+        await original_setup(
+            service, setup_hass, service_name, target_service_name_prefix
+        )
+
+    monkeypatch.setattr(
+        notify.PushMeldNotificationService,
+        "async_setup",
+        delayed_setup,
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_MAXCODE: "test-maxcode", "name": "Test channel"},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await old_setup_started.wait()
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await new_setup_started.wait()
+    await hass.async_block_till_done()
+
+    release_old_setup.set()
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(NOTIFY_DOMAIN, "test_channel")
+    assert hass.data[NOTIFY_SERVICES][DOMAIN] == [
+        entry.runtime_data.notify_service
+    ]
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
 
 async def test_unload_does_not_remove_existing_notification_service(
