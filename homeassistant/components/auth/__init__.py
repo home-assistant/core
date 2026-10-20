@@ -140,7 +140,7 @@ from aiohttp import web
 from multidict import MultiDictProxy
 import probatio
 
-from homeassistant.auth import InvalidAuthError
+from homeassistant.auth import DuplicateCredentialsError, InvalidAuthError
 from homeassistant.auth.models import (
     TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
     Credentials,
@@ -377,7 +377,13 @@ class TokenView(HomeAssistantView):
             )
 
         credential = entry.credentials
-        user = await hass.auth.async_get_or_create_user(credential)
+        try:
+            user = await hass.auth.async_get_or_create_user(credential)
+        except DuplicateCredentialsError:
+            return self.json(
+                {"error": "invalid_grant", "error_description": "Sign in again"},
+                status_code=HTTPStatus.BAD_REQUEST,
+            )
 
         if user_access_error := async_user_not_allowed_do_auth(hass, user):
             return self.json(
