@@ -621,6 +621,9 @@ async def async_start(  # noqa: C901
             )
             if not device_discovery_payload:
                 return
+            # The components of the topic clear it again when their device is
+            # removed, while a kept device may no longer be the device of the topic
+            mqtt_data.retained_device_discovery_topics.pop(topic, None)
             device_config: dict[str, Any] = device_discovery_payload[CONF_DEVICE]
             origin_config: dict[str, Any] | None = device_discovery_payload.get(
                 CONF_ORIGIN

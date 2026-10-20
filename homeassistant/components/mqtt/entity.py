@@ -1195,7 +1195,6 @@ class MqttDiscoveryUpdateMixin(Entity):
         self.hass.data[DATA_MQTT].discovery_discovered_and_disabled.pop(
             discovery_hash, None
         )
-        self._async_forget_retained_discovery_topic()
         self._remove_discovery_updated = async_dispatcher_connect(
             self.hass,
             MQTT_DISCOVERY_UPDATED.format(*discovery_hash),
@@ -1229,22 +1228,8 @@ class MqttDiscoveryUpdateMixin(Entity):
         """Process discovery update."""
         try:
             await discovery_update(payload)
-            self._async_forget_retained_discovery_topic()
         finally:
             send_discovery_done(self.hass, discovery_data)
-
-    @callback
-    def _async_forget_retained_discovery_topic(self) -> None:
-        """Forget the device of a kept device discovery topic.
-
-        The entities of the topic clear it again when their device is removed,
-        while the kept device may no longer be the device of the topic.
-        """
-        if TYPE_CHECKING:
-            assert self._discovery_data
-        self.hass.data[DATA_MQTT].retained_device_discovery_topics.pop(
-            self._discovery_data[ATTR_DISCOVERY_TOPIC], None
-        )
 
     async def _async_process_discovery_update_and_remove(self) -> None:
         """Process discovery update and remove entity."""
@@ -1431,9 +1416,6 @@ class MqttDiscoveryUpdateMixin(Entity):
                     ),
                     self._discovery_data,
                 )
-            if not self._added_to_hass:
-                # The aborted entity is linked to its device, like an added entity
-                self._async_forget_retained_discovery_topic()
             self._registry_hooks[discovery_hash] = (
                 async_track_entity_registry_updated_event(
                     self.hass,
