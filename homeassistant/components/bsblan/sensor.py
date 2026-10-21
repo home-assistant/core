@@ -74,7 +74,6 @@ SENSOR_TYPES: tuple[BSBLanSensorEntityDescription, ...] = (
 CIRCUIT_SENSOR_TYPES: tuple[BSBLanCircuitSensorEntityDescription, ...] = (
     BSBLanCircuitSensorEntityDescription(
         key="current_temperature",
-        translation_key="current_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda state: (

@@ -14,7 +14,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_with_selected_platforms
 
-ENTITY_CURRENT_TEMP = "sensor.heating_circuit_1_current_temperature"
+ENTITY_CURRENT_TEMP = "sensor.heating_circuit_1_temperature"
 ENTITY_OUTSIDE_TEMP = "sensor.bsb_lan_outside_temperature"
 ENTITY_TOTAL_ENERGY = "sensor.bsb_lan_total_energy"
 
@@ -88,8 +88,8 @@ async def test_current_temperature_per_circuit(
     )
 
     for entity_id in (
-        "sensor.heating_circuit_1_current_temperature",
-        "sensor.heating_circuit_2_current_temperature",
+        "sensor.heating_circuit_1_temperature",
+        "sensor.heating_circuit_2_temperature",
     ):
         state = hass.states.get(entity_id)
         assert state is not None

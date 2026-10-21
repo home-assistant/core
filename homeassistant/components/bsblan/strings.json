@@ -94,9 +94,6 @@
       }
     },
     "sensor": {
-      "current_temperature": {
-        "name": "Current temperature"
-      },
       "outside_temperature": {
         "name": "Outside temperature"
       },
