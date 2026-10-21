@@ -17,6 +17,7 @@ from evohomeasync2.const import (
 from evohomeasync2.typedefs import EvoDhwScheduleDayOfWeekT, EvoZonScheduleDayOfWeekT
 
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
@@ -212,5 +213,11 @@ class EvoChild(EvoEntity):
     @override
     async def update_attrs(self) -> None:
         """Update the entity's extra state attrs."""
-        await self._update_schedule()
+        # a failed schedule fetch mustn't prevent the entity from being set up
+        try:
+            await self._update_schedule()
+        except HomeAssistantError as err:
+            _LOGGER.warning(
+                "%s: Unable to retrieve the schedule: %s", self._evo_device, err
+            )
         await super().update_attrs()

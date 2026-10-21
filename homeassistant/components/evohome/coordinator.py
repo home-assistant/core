@@ -24,7 +24,10 @@ from evohomeasync2.typedefs import EvoLocStatusT, EvoTcsConfigResponseT
 
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import DOMAIN
 
 
 class EvoDataUpdateCoordinator(DataUpdateCoordinator):
@@ -136,7 +139,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         self,
         client_api: Awaitable[_T],
         request_refresh: bool = True,
-    ) -> _T | None:
+    ) -> _T:
         """Call a client API and update the Coordinator state if required."""
 
         try:
@@ -146,8 +149,11 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             raise
 
         except ec2.ApiCallFailedError as err:
-            self.logger.error(err)
-            return None
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_call_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         if request_refresh:  # wait a moment for system to quiesce before updating state
             await self.async_request_refresh()  # hass.async_create_task() won't help
