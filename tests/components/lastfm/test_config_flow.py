@@ -37,6 +37,7 @@ from . import (
     USERNAME_1,
     USERNAME_2,
     BlockingAccountUser,
+    BlockingUser,
     MockSessionKeyGenerator,
     MockUser,
     get_session_key_polling_task,
@@ -117,6 +118,85 @@ async def test_user_overlapping_candidates_keep_validated_credentials(
         CONF_MAIN_USER: USERNAME_1,
         CONF_USERS: [USERNAME_1],
     }
+
+
+@pytest.mark.parametrize(
+    ("stale_user_data", "stale_error"),
+    [
+        pytest.param(CONF_USER_DATA_WITH_SECRET, None, id="authenticated_submission"),
+        pytest.param(CONF_USER_DATA, None, id="anonymous_submission"),
+        pytest.param(
+            CONF_USER_DATA_WITH_SECRET,
+            WSError(
+                "network",
+                "10",
+                "Invalid API key - You must be granted a valid key by last.fm",
+            ),
+            id="rejected_submission",
+        ),
+    ],
+)
+async def test_stale_user_submission_preserves_authenticated_friends_save(
+    hass: HomeAssistant,
+    default_user: MockUser,
+    stale_user_data: dict[str, str],
+    stale_error: WSError | None,
+) -> None:
+    """A delayed setup submission must not replace an authorized session."""
+    stale_user = BlockingAccountUser(thrown_error=stale_error)
+    friends_user = BlockingUser()
+    with (
+        patch("pylast.User", return_value=default_user),
+        patch(SESSION_KEY_GENERATOR_PATH, return_value=MockSessionKeyGenerator()),
+        patch(POLLING_INTERVAL_PATH, 60),
+        patch_setup_entry(),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        try:
+            with patch("pylast.User", return_value=stale_user):
+                stale_submission = hass.async_create_task(
+                    hass.config_entries.flow.async_configure(
+                        result["flow_id"], user_input=stale_user_data
+                    )
+                )
+                assert await hass.async_add_executor_job(
+                    stale_user.validation_started.wait, 5
+                )
+
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input=CONF_USER_DATA_WITH_SECRET
+            )
+            assert result["type"] is FlowResultType.EXTERNAL_STEP
+            result = await hass.config_entries.flow.async_configure(result["flow_id"])
+            assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
+            result = await hass.config_entries.flow.async_configure(result["flow_id"])
+            assert result["step_id"] == "friends"
+
+            with patch("pylast.User", return_value=friends_user):
+                friends_submission = hass.async_create_task(
+                    hass.config_entries.flow.async_configure(
+                        result["flow_id"], user_input=CONF_FRIENDS_DATA.copy()
+                    )
+                )
+                assert await hass.async_add_executor_job(
+                    friends_user.validation_started.wait, 5
+                )
+
+            stale_user.validation_release.set()
+            stale_result = await stale_submission
+        finally:
+            stale_user.validation_release.set()
+            friends_user.validation_release.set()
+
+        result = await friends_submission
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"] == CONF_DATA_WITH_SESSION_KEY
+    assert stale_result["type"] is FlowResultType.FORM
+    assert stale_result["step_id"] == "friends"
 
 
 @pytest.mark.parametrize(

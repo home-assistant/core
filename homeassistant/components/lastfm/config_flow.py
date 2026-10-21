@@ -187,7 +187,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize per-flow credential and session locks."""
         super().__init__()
         self.data = {}
-        self._reconfigure_lock = asyncio.Lock()
+        self._submission_lock = asyncio.Lock()
         self._session_key_lock = asyncio.Lock()
 
     @staticmethod
@@ -323,18 +323,23 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     check_recent_tracks=CONF_API_SECRET not in candidate,
                 )
             )
-            if not errors:
+            async with self._submission_lock:
                 self._raise_if_removed()
-                if CONF_API_SECRET in candidate:
-                    if (error := await self._async_start_web_auth(candidate)) is None:
-                        return await self.async_step_auth_url()
-                    errors["base"] = error
-                else:
-                    async with self._session_key_lock:
-                        await self._async_cancel_polling_task()
-                        self._raise_if_removed()
-                        self.data = candidate
-                    return await self.async_step_friends()
+                if self.cur_step is not None and self.cur_step["step_id"] != "user":
+                    return self.cur_step
+                if not errors:
+                    if CONF_API_SECRET in candidate:
+                        if (
+                            error := await self._async_start_web_auth(candidate)
+                        ) is None:
+                            return await self.async_step_auth_url()
+                        errors["base"] = error
+                    else:
+                        async with self._session_key_lock:
+                            await self._async_cancel_polling_task()
+                            self._raise_if_removed()
+                            self.data = candidate
+                        return await self.async_step_friends()
         return self.async_show_form(
             step_id="user",
             errors=errors,
@@ -371,7 +376,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         """Configure credentials for an existing Last.fm entry."""
         if user_input is None:
             return await self._async_reconfigure(None)
-        async with self._reconfigure_lock:
+        async with self._submission_lock:
             return await self._async_reconfigure(user_input)
 
     async def _async_reconfigure(
@@ -582,24 +587,29 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         """Form to select other users and friends."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            data = self.data.copy()
             users, errors = await self.hass.async_add_executor_job(
                 validate_lastfm_users,
-                self.data[CONF_API_KEY],
+                data[CONF_API_KEY],
                 user_input[CONF_USERS],
             )
+            self._raise_if_removed()
+            if _credentials_changed(self.data, data):
+                assert self.cur_step is not None
+                return self.cur_step
             user_input[CONF_USERS] = users
             if not errors:
                 options = {
-                    CONF_API_KEY: self.data[CONF_API_KEY],
-                    CONF_MAIN_USER: self.data[CONF_MAIN_USER],
+                    CONF_API_KEY: data[CONF_API_KEY],
+                    CONF_MAIN_USER: data[CONF_MAIN_USER],
                     CONF_USERS: [
-                        self.data[CONF_MAIN_USER],
+                        data[CONF_MAIN_USER],
                         *user_input[CONF_USERS],
                     ],
                 }
-                if CONF_SESSION_KEY in self.data:
-                    options[CONF_API_SECRET] = self.data[CONF_API_SECRET]
-                    options[CONF_SESSION_KEY] = self.data[CONF_SESSION_KEY]
+                if CONF_SESSION_KEY in data:
+                    options[CONF_API_SECRET] = data[CONF_API_SECRET]
+                    options[CONF_SESSION_KEY] = data[CONF_SESSION_KEY]
                 return self.async_create_entry(
                     title="LastFM",
                     data={},
