@@ -32,6 +32,35 @@ async def test_async_iterator_reader(hass: HomeAssistant) -> None:
     assert await hass.async_add_executor_job(_read_all, reader) == data * 10
 
 
+@pytest.mark.parametrize(
+    "read_args",
+    [
+        pytest.param((), id="no_argument"),
+        pytest.param((-1,), id="negative_one"),
+    ],
+)
+async def test_async_iterator_reader_read_all(
+    hass: HomeAssistant, read_args: tuple[int, ...]
+) -> None:
+    """Test read() without a size returns the rest of the stream."""
+
+    async def async_gen() -> AsyncIterator[bytes]:
+        yield b"a"
+        yield b"hello"
+        yield b"world"
+
+    reader = AsyncIteratorReader(hass.loop, async_gen())
+
+    def _read_partial_then_rest() -> tuple[bytes, bytes, bytes]:
+        return reader.read(3), reader.read(*read_args), reader.read(*read_args)
+
+    assert await hass.async_add_executor_job(_read_partial_then_rest) == (
+        b"ahe",
+        b"lloworld",
+        b"",
+    )
+
+
 async def test_async_iterator_reader_empty_chunk(hass: HomeAssistant) -> None:
     """Test an empty chunk is not treated as the end of the stream."""
 
