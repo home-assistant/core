@@ -491,6 +491,7 @@ def _async_check_legacy_entity_repair(
             hass,
             DOMAIN,
             f"{repair_description.issue_translation_key}.{entity_id}",
+            config_entry_id=entity_entry.config_entry_id,
             is_fixable=False,
             is_persistent=False,
             severity=IssueSeverity.WARNING,

@@ -437,6 +437,7 @@ class DriverEvents:
                 self.hass,
                 DOMAIN,
                 f"migrate_unique_id.{self.config_entry.entry_id}",
+                config_entry_id=self.config_entry.entry_id,
                 data={
                     "config_entry_id": self.config_entry.entry_id,
                     "config_entry_title": self.config_entry.title,
@@ -877,6 +878,7 @@ class NodeEvents:
                     self.hass,
                     DOMAIN,
                     issue_id,
+                    config_entry_id=self.config_entry.entry_id,
                     data={"device_id": device.id, "device_name": device_name},
                     is_fixable=True,
                     is_persistent=False,

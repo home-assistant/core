@@ -1468,6 +1468,7 @@ async def test_legacy_door_open_state_repair_issue(
     )
     assert issue is not None
     assert issue.translation_key == "deprecated_legacy_door_open_state"
+    assert issue.config_entry_id == entry.entry_id
     assert issue.translation_placeholders["entity_id"] == entity_id
     assert issue.translation_placeholders["entity_name"] == "Window/door is open"
     assert (
@@ -1475,6 +1476,15 @@ async def test_legacy_door_open_state_repair_issue(
         == "binary_sensor.ehandle_connectsense"
     )
     assert "test" in issue.translation_placeholders["items"]
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"deprecated_legacy_door_open_state.{entity_id}"
+        )
+        is None
+    )
 
 
 async def test_legacy_door_tilt_state_repair_issue(
