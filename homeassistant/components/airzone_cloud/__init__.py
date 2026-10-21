@@ -70,28 +70,32 @@ def _async_register_devices(
     device_registry = dr.async_get(hass)
 
     for ws_id, ws_data in coordinator.data.get(AZD_WEBSERVERS, {}).items():
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, ws_id)},
-            identifiers={(DOMAIN, ws_id)},
-            manufacturer=MANUFACTURER,
-            model="WebServer",
-            name=ws_data[AZD_NAME],
-            sw_version=ws_data[AZD_FIRMWARE],
+            device_info=dr.DeviceInfo(
+                connections={(dr.CONNECTION_NETWORK_MAC, ws_id)},
+                identifiers={(DOMAIN, ws_id)},
+                manufacturer=MANUFACTURER,
+                model="WebServer",
+                name=ws_data[AZD_NAME],
+                sw_version=ws_data[AZD_FIRMWARE],
+            ),
         )
 
     for system_id, system_data in coordinator.data.get(AZD_SYSTEMS, {}).items():
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, system_id)},
-            manufacturer=MANUFACTURER,
-            model=system_data.get(AZD_MODEL),
-            name=system_data[AZD_NAME],
-            sw_version=system_data.get(AZD_FIRMWARE),
-            via_device_id=dr.async_get_device_id_by_identifier(
-                hass,
-                (DOMAIN, system_data[AZD_WEBSERVER]),
-                config_entry_id=entry.entry_id,
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, system_id)},
+                manufacturer=MANUFACTURER,
+                model=system_data.get(AZD_MODEL),
+                name=system_data[AZD_NAME],
+                sw_version=system_data.get(AZD_FIRMWARE),
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    hass,
+                    (DOMAIN, system_data[AZD_WEBSERVER]),
+                    config_entry_id=entry.entry_id,
+                ),
             ),
         )
 

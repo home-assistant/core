@@ -126,6 +126,9 @@ def _stat_average_linear(
         ):
             area += 0.5 * (state + previous_state) * (age - previous_age)
         age_range_seconds = ages[-1] - ages[0]
+        if age_range_seconds == 0:
+            # All samples share one timestamp, so no time to weight by
+            return _stat_mean(states, ages, percentile)
         return area / age_range_seconds
     return None
 
@@ -142,6 +145,9 @@ def _stat_average_step(
         ):
             area += previous_state * (age - previous_age)
         age_range_seconds = ages[-1] - ages[0]
+        if age_range_seconds == 0:
+            # All samples share one timestamp, so no time to weight by
+            return _stat_mean(states, ages, percentile)
         return area / age_range_seconds
     return None
 
@@ -384,6 +390,9 @@ def _stat_binary_average_step(
             if previous_state is True:
                 on_seconds += age - previous_age
         age_range_seconds = ages[-1] - ages[0]
+        if age_range_seconds == 0:
+            # All samples share one timestamp, so no time to weight by
+            return _stat_binary_mean(states, ages, percentile)
         return 100 / age_range_seconds * on_seconds
     return None
 

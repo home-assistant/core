@@ -11,6 +11,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from b2sdk._internal.raw_simulator import BucketSimulator
 from b2sdk.v2 import FileVersion, RawSimulator
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.backblaze_b2.const import (
     CONF_APPLICATION_KEY,
@@ -21,8 +22,6 @@ from homeassistant.components.backblaze_b2.const import (
 from homeassistant.components.backup import AgentBackup
 
 from .const import BACKUP_METADATA, TEST_BACKUP, USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -259,15 +258,18 @@ def b2_fixture():
             file_name,
             content_type=None,
             file_info=None,
+            *,
+            progress_listener,
         ):
             """Mock upload_unbound_stream for backup uploads."""
-            # Read all data from the stream
+            # Read all data from the stream, reporting progress like b2sdk does
             data = b""
             while True:
                 chunk = stream_reader.read(8192)
                 if not chunk:
                     break
                 data += chunk
+                progress_listener.bytes_completed(len(data))
 
             stream = io.BytesIO(data)
             stream.seek(0)

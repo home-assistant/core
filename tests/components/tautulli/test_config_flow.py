@@ -3,6 +3,8 @@
 from unittest.mock import AsyncMock, patch
 
 from pytautulli import exceptions
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.tautulli.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -11,9 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import CONF_DATA, NAME, patch_config_flow_tautulli, setup_integration
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_flow_user(hass: HomeAssistant) -> None:

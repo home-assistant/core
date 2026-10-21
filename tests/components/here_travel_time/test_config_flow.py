@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from here_routing import HERERoutingError, HERERoutingUnauthorizedError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.here_travel_time.config_flow import (
@@ -40,8 +41,6 @@ from .const import (
     ORIGIN_LATITUDE,
     ORIGIN_LONGITUDE,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

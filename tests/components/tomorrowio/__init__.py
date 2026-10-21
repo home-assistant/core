@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.tomorrowio.const import (
     CONF_TIMESTEP,
     DEFAULT_NAME,
@@ -13,8 +15,6 @@ from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, CONF_NAME
 
 from .const import API_KEY, API_V4_ENTRY_DATA, TEST_LOCATION, TEST_SUBENTRY_ID
-
-from tests.common import MockConfigEntry
 
 
 def make_location_subentry_data(

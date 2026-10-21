@@ -1,13 +1,11 @@
 """Tests for rpi_power integration."""
 
-from unittest.mock import MagicMock
+from pytest_homeassistant.common import MockConfigEntry, patch
 
 from homeassistant.components.rpi_power.const import DOMAIN, ISSUE_UNDER_VOLTAGE
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-
-from tests.common import MockConfigEntry, patch
 
 
 async def test_entry_setup_unload(hass: HomeAssistant) -> None:
