@@ -277,6 +277,28 @@ async def test_update_streaming(
             ],
             id="playback_unknown",
         ),
+        pytest.param(
+            [
+                ({Signal.CENTER_DISPLAY: "Off"}, MediaPlayerState.OFF),
+                ({Signal.MEDIA_PLAYBACK_STATUS: "Playing"}, MediaPlayerState.OFF),
+                ({Signal.CENTER_DISPLAY: "On"}, MediaPlayerState.PLAYING),
+            ],
+            id="playback_while_display_off",
+        ),
+        pytest.param(
+            [
+                (
+                    {
+                        Signal.CENTER_DISPLAY: "Off",
+                        Signal.MEDIA_PLAYBACK_STATUS: "Playing",
+                    },
+                    MediaPlayerState.OFF,
+                ),
+                ({Signal.MEDIA_PLAYBACK_STATUS: "Paused"}, MediaPlayerState.OFF),
+                ({Signal.CENTER_DISPLAY: "Driving"}, MediaPlayerState.PAUSED),
+            ],
+            id="playback_changes_while_display_off",
+        ),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -299,6 +321,31 @@ async def test_streaming_center_display(
         )
         await hass.async_block_till_done()
         assert hass.states.get("media_player.test_media_player").state == expected
+
+
+async def test_update_streaming_restore_then_display_off(
+    hass: HomeAssistant, mock_add_listener: AsyncMock
+) -> None:
+    """Test a restored playing state stays off when the car is asleep."""
+
+    entity_id = "media_player.test_media_player"
+    mock_restore_cache(hass, (State(entity_id, MediaPlayerState.PLAYING),))
+
+    await setup_platform(hass, [Platform.MEDIA_PLAYER])
+    assert hass.states.get(entity_id).state == MediaPlayerState.PLAYING
+
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {
+                Signal.CENTER_DISPLAY: "Off",
+                Signal.MEDIA_PLAYBACK_STATUS: "Playing",
+            },
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == MediaPlayerState.OFF
 
 
 async def test_update_streaming_restore_channel(hass: HomeAssistant) -> None:

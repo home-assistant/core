@@ -193,6 +193,7 @@ class TeslemetryStreamingMediaEntity(
         if not self.scoped:
             self._attr_supported_features = MediaPlayerEntityFeature(0)
         self._playback_state: MediaPlayerState | None = None
+        self._display_off = False
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -287,7 +288,8 @@ class TeslemetryStreamingMediaEntity(
         if value is None:
             return
         display_state = DISPLAY_STATES.get(value)
-        if display_state is MediaPlayerState.OFF:
+        self._display_off = display_state is MediaPlayerState.OFF
+        if self._display_off:
             self._attr_state = MediaPlayerState.OFF
         elif self._playback_state is not None:
             self._attr_state = self._playback_state
@@ -300,7 +302,8 @@ class TeslemetryStreamingMediaEntity(
         self._playback_state = (
             MediaPlayerState.OFF if value is None else STATES.get(value)
         )
-        self._attr_state = self._playback_state
+        if not self._display_off:
+            self._attr_state = self._playback_state
         self.async_write_ha_state()
 
     def _async_handle_media_playback_source(self, value: str | None) -> None:
