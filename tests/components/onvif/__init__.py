@@ -46,6 +46,7 @@ def setup_mock_onvif_camera(
     two_profiles=False,
     with_interfaces=True,
     with_interfaces_not_implemented=False,
+    interfaces_failure=False,
     with_serial=True,
     profiles_transient_failure=False,
     auth_fail=False,
@@ -78,6 +79,10 @@ def setup_mock_onvif_camera(
     if with_interfaces_not_implemented:
         devicemgmt.GetNetworkInterfaces = AsyncMock(
             side_effect=Fault("not implemented")
+        )
+    elif interfaces_failure:
+        devicemgmt.GetNetworkInterfaces = AsyncMock(
+            side_effect=Fault("camera not ready")
         )
     else:
         devicemgmt.GetNetworkInterfaces = AsyncMock(

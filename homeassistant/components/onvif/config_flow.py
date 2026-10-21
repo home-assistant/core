@@ -21,6 +21,7 @@ from homeassistant.components.stream import (
     RTSP_TRANSPORTS,
 )
 from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
@@ -174,6 +175,41 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
                     probatio.Required(CONF_USERNAME, default=username): str,
                     probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
+            ),
+            errors=errors,
+            description_placeholders=description_placeholders,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the host and port."""
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            # Re-probe the device ID on every attempt as the host may have changed
+            self.device_id = None
+            self.onvif_config = reconfigure_entry.data | user_input
+            errors, description_placeholders = await self.async_setup_profiles()
+            # The reconfigure form has no password field to attach the error to
+            if auth_error := errors.pop(CONF_PASSWORD, None):
+                errors["base"] = auth_error
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(
+                    {
+                        probatio.Required(CONF_HOST): str,
+                        probatio.Required(CONF_PORT): int,
+                    }
+                ),
+                user_input or reconfigure_entry.data,
             ),
             errors=errors,
             description_placeholders=description_placeholders,
@@ -346,7 +382,10 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
             if not self.device_id:
                 raise AbortFlow(reason="no_mac")
 
-            if configure_unique_id:
+            if self.source == SOURCE_RECONFIGURE:
+                await self.async_set_unique_id(self.device_id)
+                self._abort_if_unique_id_mismatch()
+            elif configure_unique_id:
                 await self.async_set_unique_id(self.device_id, raise_on_progress=False)
                 self._abort_if_unique_id_configured(
                     updates={

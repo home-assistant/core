@@ -8,9 +8,18 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.onvif import config_flow
-from homeassistant.components.onvif.const import CONF_MORE_OPTIONS, DOMAIN
+from homeassistant.components.onvif.const import (
+    CONF_MORE_OPTIONS,
+    CONF_SNAPSHOT_AUTH,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_DHCP
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_USERNAME,
+    HTTP_DIGEST_AUTHENTICATION,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
@@ -1104,3 +1113,141 @@ async def test_flow_manual_entry_wrong_port(hass: HomeAssistant) -> None:
             config_flow.CONF_USERNAME: USERNAME,
             config_flow.CONF_PASSWORD: PASSWORD,
         }
+
+
+async def test_reconfigure(hass: HomeAssistant) -> None:
+    """Test reconfiguring the host and port."""
+    entry, _, _ = await setup_onvif_integration(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with (
+        patch(
+            "homeassistant.components.onvif.config_flow.get_device"
+        ) as mock_onvif_camera,
+        patch(
+            "homeassistant.components.onvif.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
+        setup_mock_onvif_camera(mock_onvif_camera)
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {config_flow.CONF_HOST: "5.6.7.8", config_flow.CONF_PORT: 8080},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert entry.data == {
+        config_flow.CONF_NAME: NAME,
+        config_flow.CONF_HOST: "5.6.7.8",
+        config_flow.CONF_PORT: 8080,
+        config_flow.CONF_USERNAME: USERNAME,
+        config_flow.CONF_PASSWORD: PASSWORD,
+        CONF_SNAPSHOT_AUTH: HTTP_DIGEST_AUTHENTICATION,
+    }
+
+
+@pytest.mark.parametrize(
+    ("camera_setup", "errors", "description_placeholders"),
+    [
+        pytest.param(
+            {"wrong_port": True},
+            {config_flow.CONF_PORT: "no_onvif_service"},
+            {},
+            id="no_onvif_service",
+        ),
+        pytest.param(
+            {"auth_failure": True},
+            {"base": "auth_failed"},
+            {"error": "not authorized (subcodes:NotAuthorized)"},
+            id="auth_failed",
+        ),
+        pytest.param(
+            {"interfaces_failure": True},
+            {"base": "onvif_error"},
+            {"error": "camera not ready"},
+            id="interfaces_fault",
+        ),
+        pytest.param(
+            {"profiles_transient_failure": True},
+            {"base": "onvif_error"},
+            {"error": "camera not ready"},
+            id="onvif_fault",
+        ),
+        pytest.param(
+            {"update_xaddrs_fail": True},
+            {"base": "onvif_error"},
+            {"error": "Unknown error: camera not ready"},
+            id="onvif_error",
+        ),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    camera_setup: dict[str, bool],
+    errors: dict[str, str],
+    description_placeholders: dict[str, str],
+) -> None:
+    """Test reconfigure errors and recovery."""
+    entry, _, _ = await setup_onvif_integration(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with (
+        patch(
+            "homeassistant.components.onvif.config_flow.get_device"
+        ) as mock_onvif_camera,
+        patch("homeassistant.components.onvif.async_setup_entry", return_value=True),
+    ):
+        setup_mock_onvif_camera(mock_onvif_camera, **camera_setup)
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {config_flow.CONF_HOST: "5.6.7.8", config_flow.CONF_PORT: 8080},
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reconfigure"
+        assert result["errors"] == errors
+        assert result["description_placeholders"] == description_placeholders
+
+        setup_mock_onvif_camera(mock_onvif_camera)
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {config_flow.CONF_HOST: "5.6.7.8", config_flow.CONF_PORT: 8080},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[config_flow.CONF_HOST] == "5.6.7.8"
+    assert entry.data[config_flow.CONF_PORT] == 8080
+
+
+async def test_reconfigure_unique_id_mismatch(hass: HomeAssistant) -> None:
+    """Test reconfigure aborts when the new address is a different device."""
+    entry, _, _ = await setup_onvif_integration(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.onvif.config_flow.get_device"
+    ) as mock_onvif_camera:
+        # Without network interfaces the serial number becomes the unique ID
+        setup_mock_onvif_camera(mock_onvif_camera, with_interfaces_not_implemented=True)
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {config_flow.CONF_HOST: "9.9.9.9", config_flow.CONF_PORT: 8080},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert entry.data[config_flow.CONF_HOST] == HOST
+    assert entry.data[config_flow.CONF_PORT] == PORT
