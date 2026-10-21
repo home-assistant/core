@@ -31,6 +31,13 @@ The following platforms have extra guidelines:
 - When overriding `available`, combine it with the parent's value (`return super().available and ...`).
 - Entity base class (e.g. `SensorEntity`, `TrackerEntity`) provide a stable API for child classes to inherit from. Do not suggest redeclaring or duplicating attributes, properties, or methods the base class already provides, and do not add guards against the parent's behavior changing — rely on the base class instead.
 
+## Actions
+
+- Action names and action fields are defined in `<Prefix>Service` and `<Prefix>ServiceArgument` `StrEnum`s, using the integration's usual class prefix (for example `TadoService`, `AITaskServiceArgument`). Integrations define them in `services.py`, or in `const.py` when other modules need them; entity platforms define them in `const.py` and export them.
+- The members cover the registered actions and their fields as listed in `services.yaml`. Do not add members for actions that are not registered, such as stale `services.yaml` entries or description templates for legacy per-platform actions.
+- Use the members for action registration, schema keys and `call.data` lookups instead of raw strings or other string constants (whatever their prefix, for example `SERVICE_*`, `ATTR_*` or `CONF_*`). Shared selector fields such as `config_entry_id`, `device_id` and `entity_id` keep using the `homeassistant.const` constants.
+- Only request these enums, as a blocking change, when a PR adds an integration's first actions (a new `services.yaml`). Do not flag or suggest them for an integration that already has actions.
+
 ## Integration Quality Scale
 
 - When validating the quality scale rules, check them at https://contributors.home-assistant.io/core/quality-scale/rules/
