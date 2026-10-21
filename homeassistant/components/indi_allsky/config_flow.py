@@ -137,7 +137,7 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _discovered_data: dict[str, Any]
+    _discovered_data: dict[str, Any] | None = None
 
     @override
     async def async_step_user(
@@ -185,6 +185,11 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                     entry_data[CONF_USERNAME] = user_input[CONF_USERNAME]
                 if user_input.get(CONF_PASSWORD):
                     entry_data[CONF_PASSWORD] = user_input[CONF_PASSWORD]
+
+                if self._discovered_data and user_input[
+                    CONF_HOST
+                ] != self._discovered_data.get(CONF_HOST):
+                    await self.async_set_unique_id(None)
 
                 return self.async_create_entry(
                     title=f"INDI Allsky ({host_str})",
@@ -251,13 +256,13 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_VERIFY_SSL: True,
         }
 
+        server_name = discovery_info.name.split("._")[0]
+        self.context["title_placeholders"] = {"name": server_name}
+
         try:
             await validate_input(self.hass, self._discovered_data)
         except CannotConnect, InvalidAuth, Unknown:
-            return self.async_abort(reason="cannot_connect")
-
-        server_name = discovery_info.name.split("._")[0]
-        self.context["title_placeholders"] = {"name": server_name}
+            return await self.async_step_user()
 
         return await self.async_step_discovery_confirm()
 
@@ -266,6 +271,7 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle user confirmation of discovery."""
         if user_input is not None:
+            assert self._discovered_data is not None
             self._async_abort_entries_match(
                 {
                     CONF_HOST: self._discovered_data[CONF_HOST],
