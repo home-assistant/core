@@ -601,7 +601,15 @@ class ControllerEvents:
                     "remove_entity"
                 ),
             )
-            # We don't want to remove the device so we can keep the user customizations
+            # We keep the parent device so its user customizations are preserved; it has
+            # a hardware based identifier that distinguishes it from the replacement. Its
+            # child devices only have a node-id based identifier, so they would collide
+            # with the replacement node's child devices (reparenting is rejected), so we
+            # remove them to let the replacement's child devices be created.
+            for child_device in dr.async_entries_for_parent_device(
+                self.dev_reg, device.id
+            ):
+                self.remove_device(child_device)
             return
 
         if reason == RemoveNodeReason.RESET:

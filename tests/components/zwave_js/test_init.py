@@ -2517,6 +2517,120 @@ async def test_replace_different_node(
     }
 
 
+async def test_replace_node_with_children(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    climate_heatit_z_trm3: Node,
+    climate_heatit_z_trm3_state: NodeDataType,
+    integration: MockConfigEntry,
+) -> None:
+    """Test replacing a node that has endpoint child devices.
+
+    The old child devices use node-id based identifiers that would collide with the
+    replacement node's child devices (reparenting is rejected). They are removed during
+    replacement so the replacement's child devices and their entities can be created
+    under the new parent device.
+    """
+    node = climate_heatit_z_trm3
+    node_id = node.node_id
+    driver = client.driver
+    air_temperature_entity_id = "sensor.floor_thermostat_room_sensor_air_temperature"
+
+    old_room_sensor_device = device_registry.async_get_child_device_by_identifier(
+        get_device_id(driver, node, 2), integration.entry_id
+    )
+    assert old_room_sensor_device
+    assert entity_registry.async_get(air_temperature_entity_id)
+
+    # The event models require string name/location (the fixture leaves them null).
+    removed_state = deepcopy(climate_heatit_z_trm3_state)
+    removed_state["name"] = ""
+    removed_state["location"] = ""
+    # Replacement node: same node id and endpoints, different hardware signature.
+    state = deepcopy(removed_state)
+    state["manufacturerId"] = climate_heatit_z_trm3_state["manufacturerId"] + 1
+
+    client.driver.receive_event(
+        Event(
+            type="node removed",
+            data={
+                "source": "controller",
+                "event": "node removed",
+                "reason": 3,
+                "node": removed_state,
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    # The old child devices are removed so their identifiers are free for the replacement.
+    assert device_registry.async_get(old_room_sensor_device.id) is None
+
+    # When the node is replaced, a non-ready node added event is emitted first.
+    client.driver.receive_event(
+        Event(
+            type="node added",
+            data={
+                "source": "controller",
+                "event": "node added",
+                "node": {
+                    "nodeId": node_id,
+                    "index": 0,
+                    "status": 4,
+                    "ready": False,
+                    "isSecure": False,
+                    "interviewAttempts": 1,
+                    "endpoints": [{"nodeId": node_id, "index": 0, "deviceClass": None}],
+                    "values": [],
+                    "deviceClass": None,
+                    "commandClasses": [],
+                    "interviewStage": "None",
+                    "statistics": {
+                        "commandsTX": 0,
+                        "commandsRX": 0,
+                        "commandsDroppedRX": 0,
+                        "commandsDroppedTX": 0,
+                        "timeoutResponse": 0,
+                    },
+                    "isControllerNode": False,
+                },
+                "result": {},
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    client.driver.receive_event(
+        Event(
+            type="ready",
+            data={
+                "source": "node",
+                "event": "ready",
+                "nodeId": node_id,
+                "nodeState": state,
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    # The replacement's endpoint 2 child device is created under the new parent device and
+    # carries the rediscovered air temperature entity.
+    new_node_device = device_registry.async_get_device_by_identifier(
+        get_device_id(driver, node), integration.entry_id
+    )
+    assert new_node_device
+    new_room_sensor_device = device_registry.async_get_child_device_by_identifier(
+        get_device_id(driver, node, 2), integration.entry_id
+    )
+    assert new_room_sensor_device
+    assert new_room_sensor_device.parent_device_id == new_node_device.id
+    entry = entity_registry.async_get(air_temperature_entity_id)
+    assert entry is not None
+    assert entry.device_id == new_room_sensor_device.id
+
+
 async def test_node_model_change(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

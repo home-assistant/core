@@ -45,6 +45,7 @@ from ..helpers import (
     async_get_node_from_device_id,
     async_get_nodes_from_targets,
     get_device_id,
+    get_endpoint_indices_from_child_device,
 )
 
 # Relative platform type should be <SUBMODULE_NAME>
@@ -184,7 +185,9 @@ async def async_attach_trigger(
         # reporting the node (parent) device, so automations that targeted a value
         # before it moved to a child device are not broken. Child targets whose node
         # can't currently be resolved are skipped (like async_get_nodes_from_targets)
-        # so reachable targets still attach.
+        # so reachable targets still attach. A node collapses to a single listener, so
+        # only the child device that covers the configured endpoint is mapped; a child
+        # targeting a different endpoint would otherwise report the wrong device id.
         child_device_by_node_id: dict[int, dr.AnyDeviceEntry] = {}
         for device_id in options.get(ATTR_DEVICE_ID, []):
             if not isinstance(
@@ -195,7 +198,10 @@ async def async_attach_trigger(
                 target_node = async_get_node_from_device_id(hass, device_id)
             except ValueError:
                 continue
-            child_device_by_node_id[target_node.node_id] = device_entry
+            if endpoint in get_endpoint_indices_from_child_device(
+                device_entry, target_node
+            ):
+                child_device_by_node_id[target_node.node_id] = device_entry
         # Nodes list can come from different drivers and we will need to listen to
         # server connections for all of them.
         drivers: set[Driver] = set()
