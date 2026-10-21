@@ -236,6 +236,18 @@ async def test_tts_service_speak_error(
 
 
 @pytest.mark.usefixtures("mock_init_component")
+async def test_tts_supported_languages(hass: HomeAssistant) -> None:
+    """Test the supported languages are unique and cover regional variants."""
+    entity = hass.data[tts.DOMAIN].get_entity("tts.google_ai_tts")
+    languages = entity.supported_languages
+
+    assert len(languages) == len(set(languages))
+    assert {"en-US", "en-GB", "es-419", "kk-KZ", "yue-HK", "zh-CN", "zh-TW"} <= set(
+        languages
+    )
+
+
+@pytest.mark.usefixtures("mock_init_component")
 @pytest.mark.parametrize(
     ("model", "sampling"),
     [
