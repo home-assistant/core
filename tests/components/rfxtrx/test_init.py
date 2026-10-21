@@ -9,6 +9,7 @@ import RFXtrx as rfxtrxmod
 from homeassistant.components.rfxtrx import (
     DOMAIN,
     DeviceTuple,
+    async_setup_entry,
     get_device_tuple_from_device,
     get_pt2262_cmd,
     get_pt2262_deviceid,
@@ -175,7 +176,10 @@ async def test_rediscover_removed_device(
         (DOMAIN, subentry.subentry_id), mock_entry.entry_id
     )
     assert device_entry
-    with patch.object(hass.config_entries, "async_reload") as mock_reload:
+    with patch(
+        "homeassistant.components.rfxtrx.async_setup_entry",
+        wraps=async_setup_entry,
+    ) as mock_setup_entry:
         device_registry.async_remove_device(device_entry.id)
         await hass.async_block_till_done()
         async_fire_time_changed(hass)
@@ -189,7 +193,7 @@ async def test_rediscover_removed_device(
         assert len(mock_entry.subentries) == 1
         assert hass.states.get("binary_sensor.ac_118cdea_2")
 
-    mock_reload.assert_not_called()
+    mock_setup_entry.assert_not_called()
 
 
 async def test_connect(

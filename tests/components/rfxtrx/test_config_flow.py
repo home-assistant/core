@@ -7,6 +7,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from RFXtrx import RFXtrxTransportError
 
 from homeassistant import config_entries
+from homeassistant.components import rfxtrx
 from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.components.usb import SerialDevice
 from homeassistant.const import STATE_UNKNOWN
@@ -840,9 +841,9 @@ async def test_options_replace_device_coalesces_reload(
     # Reconfigure A, picking B as the device to take over. This removes B's
     # subentry and updates A's, each of which notifies the update listener.
     with patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload",
-        wraps=hass.config_entries.async_reload,
-    ) as mock_reload:
+        "homeassistant.components.rfxtrx.async_setup_entry",
+        wraps=rfxtrx.async_setup_entry,
+    ) as mock_setup_entry:
         result = await entry.start_subentry_reconfigure_flow(
             hass, subentry_a.subentry_id
         )
@@ -856,7 +857,7 @@ async def test_options_replace_device_coalesces_reload(
         assert result["type"] is FlowResultType.ABORT
         await async_wait_for_reload(hass)
 
-        assert mock_reload.call_count == 1
+        assert mock_setup_entry.call_count == 1
 
 
 async def test_options_add_device_data_bits_conflict(hass: HomeAssistant) -> None:

@@ -143,9 +143,7 @@ def _create_rfx(
 def _get_device_lookup(entry: ConfigEntry) -> dict[DeviceTuple, ConfigSubentry]:
     """Get a lookup structure for devices."""
     lookup: dict[DeviceTuple, ConfigSubentry] = {}
-    for subentry in entry.subentries.values():
-        if subentry.subentry_type != SUBENTRY_TYPE_DEVICE:
-            continue
+    for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE):
         if (event := get_rfx_object(subentry.data[CONF_EVENT_CODE])) is None:
             continue
         device_id = get_device_tuple_from_device(
@@ -332,9 +330,7 @@ async def async_setup_platform_entry(
     device_ids: set[DeviceTuple] = set()
 
     # Add entities from config
-    for subentry in config_entry.subentries.values():
-        if subentry.subentry_type != SUBENTRY_TYPE_DEVICE:
-            continue
+    for subentry in config_entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE):
         if (event := get_rfx_object(subentry.data[CONF_EVENT_CODE])) is None:
             _LOGGER.error("Invalid device: %s", subentry.data[CONF_EVENT_CODE])
             continue

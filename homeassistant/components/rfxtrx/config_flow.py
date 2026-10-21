@@ -341,9 +341,7 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
     ) -> str | None:
         """Return the id of the subentry already using this device tuple, if any."""
         exclude_subentry_ids = exclude_subentry_ids or set()
-        for subentry in self._get_entry().subentries.values():
-            if subentry.subentry_type != SUBENTRY_TYPE_DEVICE:
-                continue
+        for subentry in self._get_entry().get_subentries_of_type(SUBENTRY_TYPE_DEVICE):
             if subentry.subentry_id in exclude_subentry_ids:
                 continue
             rfx_obj = get_rfx_object(subentry.data[CONF_EVENT_CODE])
@@ -375,9 +373,7 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
     ) -> dict[str, str]:
         """Get other configured devices of the same protocol, to replace with."""
         replace_devices: dict[str, str] = {}
-        for subentry in self._get_entry().subentries.values():
-            if subentry.subentry_type != SUBENTRY_TYPE_DEVICE:
-                continue
+        for subentry in self._get_entry().get_subentries_of_type(SUBENTRY_TYPE_DEVICE):
             if subentry.subentry_id == exclude_subentry_id:
                 continue
             rfx_obj = get_rfx_object(subentry.data[CONF_EVENT_CODE])
