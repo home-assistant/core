@@ -652,6 +652,11 @@
           "temporary_locked": "Temporarily locked"
         }
       }
+    },
+    "switch": {
+      "child_lock": {
+        "name": "Child lock"
+      }
     }
   },
   "exceptions": {
@@ -669,6 +674,9 @@
     },
     "remote_control_disabled": {
       "message": "Remote control is disabled for this appliance. Please enable it on the appliance and try again."
+    },
+    "unsupported_operation": {
+      "message": "The requested operation is not supported by this appliance."
     },
     "unsupported_state_for_command": {
       "message": "The appliance is in a state that prevents executing the request command."
