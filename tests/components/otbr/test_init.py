@@ -6,6 +6,8 @@ from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 import python_otbr_api
 from zeroconf.asyncio import AsyncServiceInfo
 
@@ -28,9 +30,6 @@ from . import (
     TEST_BORDER_AGENT_ID,
     TEST_COPROCESSOR_VERSION,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 DATASET_NO_CHANNEL = bytes.fromhex(
     "0E08000000000001000035060004001FFFE00208F642646DA209B1C00708FDF57B5A"
@@ -158,7 +157,16 @@ async def test_import_share_radio_channel_collision(
         TEST_BORDER_AGENT_ID.hex(),
         TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
     )
-    assert issue_registry.async_get_issue(
+    issue = issue_registry.async_get_issue(
+        domain=otbr.DOMAIN,
+        issue_id=f"otbr_zha_channel_collision_{config_entry.entry_id}",
+    )
+    assert issue
+    assert issue.config_entry_id == config_entry.entry_id
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert not issue_registry.async_get_issue(
         domain=otbr.DOMAIN,
         issue_id=f"otbr_zha_channel_collision_{config_entry.entry_id}",
     )
@@ -237,7 +245,15 @@ async def test_import_insecure_dataset(
         TEST_BORDER_AGENT_ID.hex(),
         TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
     )
-    assert issue_registry.async_get_issue(
+    issue = issue_registry.async_get_issue(
+        domain=otbr.DOMAIN, issue_id=f"insecure_thread_network_{config_entry.entry_id}"
+    )
+    assert issue
+    assert issue.config_entry_id == config_entry.entry_id
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert not issue_registry.async_get_issue(
         domain=otbr.DOMAIN, issue_id=f"insecure_thread_network_{config_entry.entry_id}"
     )
 
@@ -268,7 +284,9 @@ async def test_config_entry_not_ready(
 
 
 async def test_border_agent_id_not_supported(
-    hass: HomeAssistant, get_border_agent_id: AsyncMock
+    hass: HomeAssistant,
+    get_border_agent_id: AsyncMock,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test border router does not support border agent ID."""
 
@@ -284,6 +302,19 @@ async def test_border_agent_id_not_supported(
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
     assert config_entry.reason == "The OTBR does not support Border Agent ID"
+    issue = issue_registry.async_get_issue(
+        domain=otbr.DOMAIN,
+        issue_id=f"get_get_border_agent_id_unsupported_{config_entry.entry_id}",
+    )
+    assert issue
+    assert issue.config_entry_id == config_entry.entry_id
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert not issue_registry.async_get_issue(
+        domain=otbr.DOMAIN,
+        issue_id=f"get_get_border_agent_id_unsupported_{config_entry.entry_id}",
+    )
 
 
 async def test_config_entry_update(hass: HomeAssistant) -> None:

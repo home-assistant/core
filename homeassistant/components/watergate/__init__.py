@@ -4,13 +4,12 @@ from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 import logging
 
+from aiohttp.web import Request, Response
 from watergate_local_api import WatergateLocalApiClient
 from watergate_local_api.models import WebhookEvent
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.webhook import (
-    Request,
-    Response,
     async_generate_url,
     async_register,
     async_unregister,

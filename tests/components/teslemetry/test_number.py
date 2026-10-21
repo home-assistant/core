@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import InvalidCommand
 from teslemetry_stream import Signal
@@ -41,8 +42,6 @@ from .const import (
     VEHICLE_DATA_ALT,
     VIN,
 )
-
-from tests.common import async_fire_time_changed
 
 
 async def _async_enable_charge_on_solar_preview_feature(hass: HomeAssistant) -> None:

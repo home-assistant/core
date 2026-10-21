@@ -6,6 +6,12 @@ from unittest.mock import AsyncMock
 import zoneinfo
 
 import pytest
+from pytest_homeassistant.common import (
+    MockModule,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -18,8 +24,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from . import TEST_DOMAIN, MockFlow, MockTodoListEntity
-
-from tests.common import MockModule, mock_config_flow, mock_integration, mock_platform
 
 TEST_TIMEZONE = zoneinfo.ZoneInfo("America/Regina")
 

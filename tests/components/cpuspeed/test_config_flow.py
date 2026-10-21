@@ -2,12 +2,12 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.cpuspeed.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_full_user_flow(

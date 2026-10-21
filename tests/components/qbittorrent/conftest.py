@@ -4,12 +4,11 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 import requests_mock
 
 from homeassistant.components.qbittorrent import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture

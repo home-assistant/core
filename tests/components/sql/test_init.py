@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.recorder import CONF_DB_URL, Recorder
 from homeassistant.components.sensor import (
@@ -30,8 +31,6 @@ from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 
 from . import YAML_CONFIG_INVALID, YAML_CONFIG_NO_DB, init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(recorder_mock: Recorder, hass: HomeAssistant) -> None:

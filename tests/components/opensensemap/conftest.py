@@ -4,11 +4,10 @@ from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant.components.opensensemap.const import CONF_STATION_ID, DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 TEST_STATION_ID = "test-station-id"
 
