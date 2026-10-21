@@ -19,10 +19,10 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Disable component setup."""
     with (
         patch(
-            "homeassistant.components.philips_js.async_setup_entry", return_value=True
+            "homeassistant.components.philips_js.async_setup_entry", return_value=None
         ) as mock_setup_entry,
         patch(
-            "homeassistant.components.philips_js.async_unload_entry", return_value=True
+            "homeassistant.components.philips_js.async_unload_entry", return_value=None
         ),
     ):
         yield mock_setup_entry

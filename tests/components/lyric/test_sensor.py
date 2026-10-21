@@ -1,7 +1,9 @@
 """Tests for the Honeywell Lyric sensor platform."""
 
 from datetime import datetime
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
+from urllib.parse import urlparse
 
 from aiolyric import Lyric
 from aiolyric.objects.location import LyricLocation
@@ -19,6 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
+from .conftest import location_json, thermostat_json
 
 _MAC = "AABBCCDDEEFF"
 
@@ -181,3 +184,120 @@ async def test_accessory_links_to_thermostat_via_device(
     )
     assert accessory is not None
     assert accessory.via_device_id == thermostat.id
+
+
+SCHEMA_MAC = "AABBCC000004"
+
+# Resideo serves the priority endpoint in two schemas depending on the account.
+# Both payloads describe the same room: one RCHTSENSOR (accessory 4) in room 2.
+CLASSIC_SCHEMA_PRIORITY = {
+    "deviceId": SCHEMA_MAC,
+    "status": "NoHold",
+    "currentPriority": {
+        "priorityType": "FollowMe",
+        "selectedRooms": [0],
+        "rooms": [
+            {
+                "id": 2,
+                "roomName": "Bedroom",
+                "roomAvgTemp": 21.4,
+                "roomAvgHumidity": 58,
+                "overallMotion": False,
+                "accessories": [
+                    {
+                        "id": 4,
+                        "type": "IndoorAirSensor",
+                        "excludeTemp": False,
+                        "excludeMotion": False,
+                        "temperature": 21.5,
+                        "status": "Ok",
+                        "detectMotion": False,
+                    }
+                ],
+            }
+        ],
+    },
+}
+
+CURRENT_SCHEMA_PRIORITY = {
+    "deviceId": SCHEMA_MAC,
+    "priorityStatus": "NoHold",
+    "priority": {
+        "priorityType": "FollowMe",
+        "selectedRooms": [0],
+        "rooms": [
+            {
+                "id": 2,
+                "name": "Bedroom",
+                "avgTemperature": 21.4,
+                "avgHumidity": 58,
+                "overallMotion": False,
+                "accessories": [
+                    {
+                        "id": 4,
+                        "sensorType": "IndoorAirSensor",
+                        "excludeTemperature": False,
+                        "excludeMotion": False,
+                        "temperature": 21.5,
+                        "status": "Ok",
+                        "detectMotion": False,
+                    }
+                ],
+            }
+        ],
+    },
+}
+
+
+@pytest.mark.parametrize(
+    "priority_json",
+    [CLASSIC_SCHEMA_PRIORITY, CURRENT_SCHEMA_PRIORITY],
+    ids=["classic_schema", "current_schema"],
+)
+@pytest.mark.usefixtures("setup_credentials")
+async def test_room_sensors_from_either_priority_schema(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    priority_json: dict[str, Any],
+) -> None:
+    """Room sensors are created from both priority schemas, parsed by aiolyric."""
+    responses = {
+        "/locations": [
+            location_json(1, [thermostat_json(SCHEMA_MAC, f"LCC-{SCHEMA_MAC}")])
+        ],
+        "/priority": priority_json,
+    }
+
+    async def get(url: str) -> MagicMock:
+        path = urlparse(url).path
+        response = MagicMock()
+        response.json = AsyncMock(
+            return_value=next(
+                body for suffix, body in responses.items() if path.endswith(suffix)
+            )
+        )
+        return response
+
+    client = MagicMock()
+    client.get = AsyncMock(side_effect=get)
+
+    with (
+        patch(
+            "homeassistant.components.lyric.ConfigEntryLyricClient",
+            return_value=client,
+        ),
+        patch("homeassistant.components.lyric.PLATFORMS", [Platform.SENSOR]),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    for key, value in (
+        ("room_temperature", "21.5"),
+        ("room_humidity", "58"),
+        ("room_average_temperature", "21.4"),
+    ):
+        entity_id = entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, f"{SCHEMA_MAC}_room2_acc4_{key}"
+        )
+        assert entity_id is not None, key
+        assert hass.states.get(entity_id).state == value

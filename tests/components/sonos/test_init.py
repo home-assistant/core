@@ -72,7 +72,7 @@ async def test_configuring_sonos_creates_entry(hass: HomeAssistant) -> None:
     """Test that specifying config will create an entry."""
     with patch(
         "homeassistant.components.sonos.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         await async_setup_component(
             hass,
@@ -88,7 +88,7 @@ async def test_not_configuring_sonos_not_creates_entry(hass: HomeAssistant) -> N
     """Test that no config will not create an entry."""
     with patch(
         "homeassistant.components.sonos.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         await async_setup_component(hass, sonos.DOMAIN, {})
         await hass.async_block_till_done()
