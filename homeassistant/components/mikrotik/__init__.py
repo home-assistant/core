@@ -10,12 +10,8 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.util import slugify
 
 from .const import ATTR_MANUFACTURER, DOMAIN
-from .coordinator import (
-    MikrotikConfigEntry,
-    MikrotikDataUpdateCoordinator,
-    get_api,
-    mikrotik_config_entry_errors,
-)
+from .coordinator import MikrotikConfigEntry, MikrotikDataUpdateCoordinator, get_api
+from .utils import mikrotik_config_entry_errors
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
