@@ -168,6 +168,11 @@ def async_handle_schema_error(
     )
 
 
+def _log_device_info_error(err: dr.DeviceInfoError) -> None:
+    """Log a device that could not be registered."""
+    _LOGGER.warning("Unable to register MQTT device: %s", err)
+
+
 def _handle_discovery_failure(
     hass: HomeAssistant,
     discovery_payload: MQTTDiscoveryPayload,
@@ -227,6 +232,9 @@ def async_setup_non_entity_entry_helper(
         except probatio.Invalid as err:
             _handle_discovery_failure(hass, discovery_payload)
             async_handle_schema_error(discovery_payload, err)
+        except dr.DeviceInfoError as err:
+            _handle_discovery_failure(hass, discovery_payload)
+            _log_device_info_error(err)
         except Exception:
             _handle_discovery_failure(hass, discovery_payload)
             raise
@@ -1005,6 +1013,10 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
                 # Keep the current payload, so the update is validated again
                 # when it is received again
                 async_handle_schema_error(discovery_payload, err)
+                return
+            except dr.DeviceInfoError as err:
+                # Cancel the update, the current config remains active
+                _log_device_info_error(err)
                 return
             finally:
                 send_discovery_done(self.hass, self._discovery_data)
