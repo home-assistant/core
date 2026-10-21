@@ -60,11 +60,11 @@ async def test_api_headers(
 
 
 @pytest.mark.usefixtures("socket_enabled")
-async def test_api_extra_headers(
+async def test_api_range_header(
     aiohttp_raw_server,  # 'aiohttp_raw_server' must be before 'hass'!
     hass: HomeAssistant,
 ) -> None:
-    """Test extra headers are sent without replacing the Supervisor headers."""
+    """Test the range header is sent."""
     received_request = None
 
     async def mock_handler(request):
@@ -83,12 +83,11 @@ async def test_api_extra_headers(
     await hassio_handler.send_command(
         "/core/logs",
         "GET",
-        headers={hdrs.RANGE: "entries=:-1:2", "X-Hass-Source": "other"},
+        range_header="entries=:-1:2",
     )
 
     assert received_request is not None
     assert received_request.headers[hdrs.RANGE] == "entries=:-1:2"
-    assert received_request.headers["X-Hass-Source"] == "core.handler"
 
 
 @pytest.mark.usefixtures("hassio_stubs")

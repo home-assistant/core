@@ -99,7 +99,7 @@ async def test_get_logs_default(
             method="get",
             return_text=True,
             params={"format": "plain", "no_colors": ""},
-            headers={"Range": "realtime=:1792497600:-1999:2000"},
+            range_header="realtime=:1792497600:-1999:2000",
         )
         for source in ("core", "supervisor")
     ]
@@ -136,7 +136,7 @@ async def test_get_logs_end_time(
         llm_context,
     )
 
-    assert send_command.mock_calls[0].kwargs["headers"] == {"Range": expected_range}
+    assert send_command.mock_calls[0].kwargs["range_header"] == expected_range
 
 
 async def test_get_logs_host_and_app(
@@ -183,18 +183,28 @@ async def test_get_logs_source_error(
 @pytest.mark.parametrize(
     "source",
     [
-        pytest.param(["app:core_mosquitto"], id="app_not_installed"),
+        pytest.param(["app:core_ssh"], id="app_not_installed"),
         pytest.param(["cli"], id="unknown_source"),
         pytest.param([], id="empty"),
+        pytest.param(["../supervisor"], id="path_traversal"),
+        pytest.param(["app:../../supervisor"], id="app_path_traversal"),
+        pytest.param(["app:core_mosquitto/../../host"], id="app_suffix"),
+        pytest.param(["core/logs?lines=1"], id="query"),
+        pytest.param(["core", "../host"], id="valid_and_invalid"),
     ],
 )
 async def test_get_logs_invalid_source(
-    hass: HomeAssistant, llm_context: llm.LLMContext, source: list[str]
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    send_command: AsyncMock,
+    source: list[str],
 ) -> None:
-    """Test only available sources are accepted."""
-    tool = SupervisorGetLogsTool({})
+    """Test only available sources are accepted, so no request is sent."""
+    tool = SupervisorGetLogsTool({"core_mosquitto": "Mosquitto broker"})
 
     with pytest.raises(probatio.Invalid):
         await tool.async_call(
             hass, llm.ToolInput(tool.name, {"source": source}), llm_context
         )
+
+    send_command.assert_not_called()
