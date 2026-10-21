@@ -277,7 +277,9 @@ def get_next_departure(
     include_tomorrow: bool = False,
 ) -> dict:
     """Get the next departure for the given schedule."""
-    now = dt_util.now().replace(tzinfo=None) + offset
+    # Stop times are in the feed's time zone, which GTFS requires all agencies share.
+    time_zone = dt_util.get_time_zone(schedule.agencies_query.first().agency_timezone)
+    now = dt_util.now(time_zone).replace(tzinfo=None) + offset
     now_date = now.strftime(dt_util.DATE_STR_FORMAT)
     yesterday = now - dt.timedelta(days=1)
     yesterday_date = yesterday.strftime(dt_util.DATE_STR_FORMAT)
