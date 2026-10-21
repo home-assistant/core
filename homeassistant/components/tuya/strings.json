@@ -1172,6 +1172,9 @@
       "keypad_sound": {
         "name": "Keypad sound"
       },
+      "master_switch": {
+        "name": "Master switch"
+      },
       "motion_alarm": {
         "name": "Motion alarm"
       },
