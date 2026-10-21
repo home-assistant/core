@@ -538,7 +538,8 @@ class EntityPlatform:
                 self._async_cancel_retry_setup = hass.bus.async_listen_once(
                     EVENT_HOMEASSISTANT_STARTED, setup_again
                 )
-            return False
+            # Not a failure, setup is retried in the background
+            return True
         except TimeoutError:
             logger.error(
                 (
@@ -1163,11 +1164,6 @@ class EntityPlatform:
                 )
                 entity.add_to_platform_abort()
                 return None
-
-            if device and device.disabled and not entry.disabled:
-                entry = entity_registry.async_update_entity(
-                    entry.entity_id, disabled_by=RegistryEntryDisabler.DEVICE
-                )
 
             entity.registry_entry = entry
             entity.entity_id = entry.entity_id

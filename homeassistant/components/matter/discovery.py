@@ -99,23 +99,20 @@ def async_discover_entities(
         primary_attribute = schema.required_attributes[0]
 
         # check vendor_id
-        if (
-            schema.vendor_id is not None
-            and device_info.vendorID not in schema.vendor_id
+        if schema.vendor_id is not None and (
+            device_info is None or device_info.vendorID not in schema.vendor_id
         ):
             continue
 
         # check product_id
-        if (
-            schema.product_id is not None
-            and device_info.productID not in schema.product_id
+        if schema.product_id is not None and (
+            device_info is None or device_info.productID not in schema.product_id
         ):
             continue
 
         # check product_name
-        if (
-            schema.product_name is not None
-            and device_info.productName not in schema.product_name
+        if schema.product_name is not None and (
+            device_info is None or device_info.productName not in schema.product_name
         ):
             continue
 

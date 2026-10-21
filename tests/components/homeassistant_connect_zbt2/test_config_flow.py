@@ -47,7 +47,7 @@ def setup_entry_fixture() -> Generator[AsyncMock]:
     """Mock entry setup."""
     with patch(
         "homeassistant.components.homeassistant_connect_zbt2.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

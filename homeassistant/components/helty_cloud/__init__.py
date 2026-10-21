@@ -13,7 +13,7 @@ from .coordinator import HeltyCloudConfigEntry, HeltyCloudDataUpdateCoordinator
 PLATFORMS: list[Platform] = [Platform.FAN]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HeltyCloudConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HeltyCloudConfigEntry) -> None:
     """Set up Helty Flow Cloud from a config entry."""
     client = HeltyCloud(
         entry.data[CONF_EMAIL],
@@ -46,9 +46,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeltyCloudConfigEntry) -
 
     entry.runtime_data = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: HeltyCloudConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HeltyCloudConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

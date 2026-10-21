@@ -109,7 +109,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         async_setup_entry=DEFAULT,
     ) as mock_setup_entry:
         mock_setup_entry["async_setup"].return_value = True
-        mock_setup_entry["async_setup_entry"].return_value = True
+        mock_setup_entry["async_setup_entry"].return_value = None
         yield mock_setup_entry
 
 
@@ -127,8 +127,8 @@ def mock_init() -> Generator[dict[str, AsyncMock]]:
         async_unload_entry=DEFAULT,
     ) as mock_init:
         mock_init["async_setup"].return_value = True
-        mock_init["async_setup_entry"].return_value = True
-        mock_init["async_unload_entry"].return_value = True
+        mock_init["async_setup_entry"].return_value = None
+        mock_init["async_unload_entry"].return_value = None
         yield mock_init
 
 

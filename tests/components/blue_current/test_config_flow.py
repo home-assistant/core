@@ -46,7 +46,7 @@ async def test_user(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.blue_current.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -104,7 +104,7 @@ async def test_flow_fails(hass: HomeAssistant, error: Exception, message: str) -
         ),
         patch(
             "homeassistant.components.blue_current.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
