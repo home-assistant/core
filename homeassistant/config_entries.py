@@ -353,6 +353,39 @@ def _validate_item(*, disabled_by: ConfigEntryDisabler | Any | None = None) -> N
         )
 
 
+def _async_process_entry_method_result(
+    domain: str,
+    method: str,
+    result: object,
+    logger: logging.Logger,
+) -> bool:
+    """Return if a config entry method succeeded, based on its return value.
+
+    Only custom integrations may still return a boolean, False is converted to
+    a `ConfigEntryError`.
+    See https://github.com/home-assistant/architecture/discussions/1463
+    """
+    if result is None:
+        return True
+    if not isinstance(result, bool):
+        logger.error(
+            "%s.%s returned %r, which is not supported", domain, method, result
+        )
+        return False
+    report_usage(
+        f"returns a boolean from {method}, which should return None",
+        core_integration_behavior=ReportBehavior.ERROR,
+        custom_integration_behavior=ReportBehavior.IGNORE,
+        integration_domain=domain,
+    )
+    if not result:
+        raise ConfigEntryError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key=f"{method}_failed",
+        )
+    return True
+
+
 class ConfigSubentryData(TypedDict):
     """Container for configuration subentry data.
 
@@ -994,18 +1027,9 @@ class ConfigEntry[_DataT = Any]:
                     hass, self
                 )  # type: ignore[func-returns-value]
 
-            # Custom components can continue to return a boolean
-            # See https://github.com/home-assistant/architecture/discussions/1463
-            if setup_result is None:
-                result = True
-            elif not isinstance(setup_result, bool):
-                logger.error(  # type: ignore[unreachable]
-                    "%s.async_setup_entry did not return None or a boolean",
-                    integration.domain,
-                )
-                result = False
-            else:
-                result = setup_result
+            result = _async_process_entry_method_result(
+                integration.domain, "async_setup_entry", setup_result, logger
+            )
 
         except (
             asyncio.CancelledError,
@@ -1149,17 +1173,13 @@ class ConfigEntry[_DataT = Any]:
         try:
             unload_result: bool | None = await component.async_unload_entry(hass, self)  # type: ignore[func-returns-value]
 
-            # Custom components can continue to return a boolean
-            # See https://github.com/home-assistant/architecture/discussions/1463
-            if unload_result is None:
-                result = True
-            else:
-                result = unload_result
-            assert isinstance(result, bool)
+            result = _async_process_entry_method_result(
+                integration.domain, "async_unload_entry", unload_result, self.logger
+            )
 
             # Only do side effects if we unloaded the integration
             if domain_is_integration:
-                if result:  # type: ignore[unused-ignore]
+                if result:
                     await self._async_process_on_unload(hass)
                     if hasattr(self, "runtime_data"):
                         object.__delattr__(self, "runtime_data")
@@ -1321,19 +1341,12 @@ class ConfigEntry[_DataT = Any]:
             return False
 
         migration_result: bool | None = await component.async_migrate_entry(hass, self)  # type: ignore[func-returns-value]
-        # Custom components can continue to return a boolean
-        # See https://github.com/home-assistant/architecture/discussions/1463
-        if migration_result is None:
-            migration_result = True
-        elif not isinstance(migration_result, bool):
-            self.logger.error(  # type: ignore[unreachable]
-                "%s.async_migrate_entry did not return None or a boolean", self.domain
-            )
+        if not _async_process_entry_method_result(
+            integration.domain, "async_migrate_entry", migration_result, self.logger
+        ):
             return False
-        if migration_result:
-            hass.config_entries._async_schedule_save()  # noqa: SLF001
-
-        return migration_result
+        hass.config_entries._async_schedule_save()  # noqa: SLF001
+        return True
 
     def add_update_listener(self, listener: UpdateListenerType) -> CALLBACK_TYPE:
         """Listen for when entry is updated.
