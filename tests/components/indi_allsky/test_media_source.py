@@ -9,6 +9,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiohttp import ClientError, client_exceptions
 from aioindiallsky import ImageItem, IndiAllSkyError, MediaData, MonthItem, VideoItem
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.indi_allsky.const import DOMAIN
 from homeassistant.components.media_player import BrowseError, MediaType
@@ -24,10 +27,6 @@ from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -654,6 +653,7 @@ async def test_proxy_view_success_and_headers(
     )
     assert resp.status == 200
     assert resp.headers.get("Content-Type") == "image/jpeg"
+    assert resp.headers.get("Content-Security-Policy") == "sandbox"
     assert resp.headers.get("Content-Encoding") == "gzip"
     assert resp.headers.get("Accept-Ranges") == "bytes"
     assert resp.headers.get("Content-Length") == str(len(compressed_data))
@@ -661,6 +661,89 @@ async def test_proxy_view_success_and_headers(
         f"bytes 0-{len(compressed_data) - 1}/{len(compressed_data)}"
     )
     assert await resp.read() == raw_data
+
+
+async def test_proxy_view_head_support(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_indi_allsky_client: AsyncMock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test HEAD requests on proxy view return headers without streaming body."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    upstream_url = "https://127.0.0.1:443/indi-allsky/images/sample.jpg"
+    mock_indi_allsky_client.get_media_url.return_value = upstream_url
+
+    await async_resolve_media(
+        hass,
+        f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#media#images/sample.jpg",
+        None,
+    )
+
+    client = await hass_client()
+    aioclient_mock.head(
+        upstream_url,
+        headers={
+            "Accept-Ranges": "bytes",
+            "Content-Length": "1024",
+            "Content-Type": "image/jpeg",
+        },
+    )
+
+    resp = await client.head(
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/aW1hZ2VzL3NhbXBsZS5qcGc=",
+    )
+    assert resp.status == 200
+    assert resp.headers.get("Content-Type") == "image/jpeg"
+    assert resp.headers.get("Content-Security-Policy") == "sandbox"
+    assert resp.headers.get("Accept-Ranges") == "bytes"
+    assert resp.headers.get("Content-Length") == "1024"
+    assert await resp.read() == b""
+
+
+async def test_proxy_view_sandboxes_active_content(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_indi_allsky_client: AsyncMock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test active content types like SVG or HTML are served with sandbox CSP."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    upstream_url = "https://127.0.0.1:443/indi-allsky/images/vector.svg"
+    mock_indi_allsky_client.get_media_url.return_value = upstream_url
+
+    await async_resolve_media(
+        hass,
+        f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#media#images/vector.svg",
+        None,
+    )
+
+    client = await hass_client()
+    svg_payload = b"<svg><script>alert(1)</script></svg>"
+    aioclient_mock.get(
+        upstream_url,
+        content=svg_payload,
+        headers={
+            "Content-Length": str(len(svg_payload)),
+            "Content-Type": "image/svg+xml",
+        },
+    )
+
+    resp = await client.get(
+        f"/api/indi_allsky/media/{mock_config_entry.entry_id}/aW1hZ2VzL3ZlY3Rvci5zdmc=",
+    )
+    assert resp.status == 200
+    assert resp.headers.get("Content-Type") == "image/svg+xml"
+    assert resp.headers.get("Content-Security-Policy") == "sandbox"
+    assert await resp.read() == svg_payload
 
 
 async def test_proxy_view_content_type_inference(

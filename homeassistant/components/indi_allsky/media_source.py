@@ -110,6 +110,15 @@ class IndiAllSkyMediaProxyView(HomeAssistantView):
         """Initialize the proxy view."""
         self.hass = hass
 
+    async def head(
+        self,
+        request: web.Request,
+        entry_id: str,
+        path: str,
+    ) -> web.StreamResponse:
+        """Handle HEAD requests for media assets."""
+        return await self._handle_request(request, entry_id, path)
+
     async def get(
         self,
         request: web.Request,
@@ -117,6 +126,15 @@ class IndiAllSkyMediaProxyView(HomeAssistantView):
         path: str,
     ) -> web.StreamResponse:
         """Stream media assets from the INDI Allsky device."""
+        return await self._handle_request(request, entry_id, path)
+
+    async def _handle_request(
+        self,
+        request: web.Request,
+        entry_id: str,
+        path: str,
+    ) -> web.StreamResponse:
+        """Handle media asset requests from the INDI Allsky device."""
         entry = self.hass.config_entries.async_get_entry(entry_id)
         if (
             not entry
@@ -157,8 +175,9 @@ class IndiAllSkyMediaProxyView(HomeAssistantView):
         response: web.StreamResponse | None = None
         try:
             current_url = url
+            session_method = session.head if request.method == "HEAD" else session.get
             for _ in range(5):
-                async with session.get(
+                async with session_method(
                     current_url,
                     headers=headers,
                     timeout=STREAM_TIMEOUT,
@@ -203,12 +222,14 @@ class IndiAllSkyMediaProxyView(HomeAssistantView):
                         else:
                             response.content_type = "image/jpeg"
 
+                    response.headers["Content-Security-Policy"] = "sandbox"
                     await response.prepare(request)
 
-                    async for chunk in upstream.content.iter_chunked(
-                        MEDIA_STREAM_CHUNK_SIZE
-                    ):
-                        await response.write(chunk)
+                    if request.method != "HEAD":
+                        async for chunk in upstream.content.iter_chunked(
+                            MEDIA_STREAM_CHUNK_SIZE
+                        ):
+                            await response.write(chunk)
 
                     await response.write_eof()
                     return response
