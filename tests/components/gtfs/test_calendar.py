@@ -1,6 +1,8 @@
 """Tests for the GTFS calendar."""
 
+from datetime import timedelta
 import json
+from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -18,6 +20,7 @@ from homeassistant.components.calendar import (
     EVENT_START_DATETIME,
     SERVICE_GET_EVENTS,
 )
+from homeassistant.components.gtfs.calendar import departures
 from homeassistant.components.gtfs.const import (
     CONF_DATABASE,
     CONF_DESTINATION,
@@ -319,3 +322,27 @@ async def test_route_with_stop_missing_from_feed(hass: HomeAssistant) -> None:
     assert (state := hass.states.get("calendar.first_street_to_gone")) is not None
     assert state.state == STATE_OFF
     assert "message" not in state.attributes
+
+
+@pytest.mark.freeze_time("2026-10-19 07:30:00-04:00")
+@pytest.mark.usefixtures("mock_feed_download")
+async def test_calendar_polls_every_15_minutes(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the static schedule is only searched again every 15 minutes."""
+    await setup_integration(hass, mock_config_entry)
+
+    with patch(
+        "homeassistant.components.gtfs.calendar.departures", wraps=departures
+    ) as mock_departures:
+        freezer.tick(timedelta(minutes=14))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert mock_departures.call_count == 0
+
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert mock_departures.call_count == 1
