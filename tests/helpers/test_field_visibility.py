@@ -2,6 +2,7 @@
 
 from typing import Any
 
+import probatio
 import pytest
 
 from homeassistant.helpers import field_visibility
@@ -19,10 +20,8 @@ from homeassistant.helpers import field_visibility
         ({"field": "a", "value": None}, {}, True),
         ({"field": "a"}, {"a": "x"}, False),
         ({"field": "a", "operator": "not_eq"}, {"a": "x"}, True),
-        ({"field": "a", "value": ["x"]}, {"a": ["x"]}, True),
         ({"field": "a", "operator": "in", "value": [1, 2]}, {"a": 2}, True),
         ({"field": "a", "operator": "in", "value": [1, 2]}, {"a": 3}, False),
-        ({"field": "a", "operator": "in", "value": "notalist"}, {"a": "n"}, False),
         ({"field": "a", "operator": "not_in", "value": [1, 2]}, {"a": 3}, True),
         ({"field": "a", "operator": "exists"}, {"a": "x"}, True),
         ({"field": "a", "operator": "exists"}, {"a": ""}, False),
@@ -30,7 +29,6 @@ from homeassistant.helpers import field_visibility
         ({"field": "a", "operator": "not_exists"}, {}, True),
         ({"field": "a", "operator": "not_exists"}, {"a": None}, True),
         ({"field": "a", "operator": "not_exists"}, {"a": 0}, False),
-        ({"field": "a", "operator": "unknown"}, {"a": 1}, False),
     ],
 )
 def test_evaluate_condition(condition: dict, data: dict, expected: bool) -> None:
@@ -90,3 +88,37 @@ def test_get_hidden_fields(
 ) -> None:
     """Test a hidden field reads as absent to the conditions of other fields."""
     assert field_visibility.get_hidden_fields(visible_by_field, data) == expected
+
+
+@pytest.mark.parametrize(
+    "condition",
+    [
+        {"field": "a"},
+        {"field": "a", "value": None},
+        {"field": "a", "operator": "not_eq", "value": 1.5},
+        {"field": "a", "operator": "in", "value": ["x", 1, True, None]},
+        {"field": "a", "operator": "exists"},
+    ],
+)
+def test_condition_schema(condition: dict[str, Any]) -> None:
+    """Test valid conditions."""
+    assert field_visibility.CONDITION_SCHEMA(condition) == condition
+
+
+@pytest.mark.parametrize(
+    "condition",
+    [
+        {"value": 1},
+        {"field": "a", "operator": "gt", "value": 1},
+        {"field": "a", "value": ["x"]},
+        {"field": "a", "value": {"x": 1}},
+        {"field": "a", "operator": "in", "value": "x"},
+        {"field": "a", "operator": "in"},
+        {"field": "a", "operator": "in", "value": [["x"]]},
+        {"field": "a", "operator": "exists", "value": 1},
+    ],
+)
+def test_condition_schema_invalid(condition: dict[str, Any]) -> None:
+    """Test values must match the operator."""
+    with pytest.raises(probatio.Invalid):
+        field_visibility.CONDITION_SCHEMA(condition)
