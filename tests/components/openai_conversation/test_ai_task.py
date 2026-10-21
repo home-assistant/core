@@ -1019,8 +1019,8 @@ async def test_classify_image(
         region=region,
         instructions=instructions,
     )
-    assert result == ai_task.ChoiceAnswer(
-        choice="car", probabilities={"empty": 0.08, "car": 0.92}
+    assert result == ai_task.ClassifyImageResult(
+        label="car", probabilities={"empty": 0.08, "car": 0.92}
     )
     assert classify_decisions.call_args.kwargs == snapshot
     assert [call.args[1] for call in mock_crop_image.call_args_list] == [
@@ -1034,7 +1034,7 @@ async def test_classify_image_choice_follows_probabilities(
     classify_decisions: AsyncMock,
     mock_crop_image: AsyncMock,
 ) -> None:
-    """Pick the label with the highest probability as the choice."""
+    """Pick the label with the highest probability."""
     classify_decisions.return_value = decision([{**CLASSIFY_ANSWER, "choice": "empty"}])
     result = await ai_task.async_classify_image(
         hass,
@@ -1043,7 +1043,7 @@ async def test_classify_image_choice_follows_probabilities(
         image=CLASSIFY_IMAGE,
         labels=CLASSIFY_LABELS,
     )
-    assert result.choice == "car"
+    assert result.label == "car"
 
 
 async def test_classify_image_crop(

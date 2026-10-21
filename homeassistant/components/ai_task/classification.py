@@ -12,8 +12,6 @@ from homeassistant.components.conversation import Attachment
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
-from .evaluation import ChoiceAnswer
-
 
 @dataclass(slots=True, frozen=True)
 class Region:
@@ -46,6 +44,16 @@ class ClassifyImageTask:
 
 class ImageUnusableError(HomeAssistantError):
     """The image shows nothing to classify, for example from an offline camera."""
+
+
+@dataclass(slots=True)
+class ClassifyImageResult:
+    """The label an image shows, with an estimate when the model has one."""
+
+    # None when the model does not commit to a label.
+    label: str | None
+    # A distribution over all labels, None when the model has no estimate.
+    probabilities: dict[str, float] | None = None
 
 
 def _require_image(value: dict[str, Any]) -> dict[str, Any]:
@@ -107,15 +115,20 @@ LABELS_SCHEMA = probatio.Schema(
 )
 
 
-def validate_result(answer: ChoiceAnswer, labels: dict[str, Any]) -> bool:
-    """Return whether an answer is a distribution over the labels with a top choice."""
-    probabilities = answer.probabilities
+def validate_result(result: ClassifyImageResult, labels: dict[str, Any]) -> bool:
+    """Return whether a result names a label and, if given, a distribution."""
+    if result.label is not None and result.label not in labels:
+        return False
+    if (probabilities := result.probabilities) is None:
+        return True
     return (
         probabilities.keys() == labels.keys()
         and all(0 <= value <= 1 for value in probabilities.values())
         and abs(sum(probabilities.values()) - 1) <= PROBABILITY_SUM_TOLERANCE
-        and answer.choice in labels
-        and probabilities[answer.choice] == max(probabilities.values())
+        and (
+            result.label is None
+            or probabilities[result.label] == max(probabilities.values())
+        )
     )
 
 

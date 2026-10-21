@@ -53,10 +53,13 @@ class ImageClassificationBinarySensor(
     @override
     def is_on(self) -> bool | None:
         """Return the state, None while unsure or not taught."""
-        if (answer := self.coordinator.data) is None:
+        if (result := self.coordinator.data) is None:
             return None
-        if answer.probabilities[STATE_ON] >= THRESHOLD:
+        if (probabilities := result.probabilities) is None:
+            # The model has no estimate, only a label or none.
+            return None if result.label is None else result.label == STATE_ON
+        if probabilities[STATE_ON] >= THRESHOLD:
             return True
-        if answer.probabilities[STATE_OFF] >= THRESHOLD:
+        if probabilities[STATE_OFF] >= THRESHOLD:
             return False
         return None

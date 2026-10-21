@@ -42,7 +42,9 @@ LABELS = {
     },
     "car": {"examples": [_example("car_1")]},
 }
-ANSWER = ai_task.ChoiceAnswer(choice="car", probabilities={"empty": 0.08, "car": 0.92})
+ANSWER = ai_task.ClassifyImageResult(
+    label="car", probabilities={"empty": 0.08, "car": 0.92}
+)
 
 
 @pytest.fixture(autouse=True)
@@ -81,7 +83,7 @@ async def test_classify_image(hass: HomeAssistant, mock_classify: AsyncMock) -> 
     """Pass the image, every example per label and the region to the entity."""
     seen: dict[str, list[str]] = {}
 
-    async def classify(task: ai_task.ClassifyImageTask) -> ai_task.ChoiceAnswer:
+    async def classify(task: ai_task.ClassifyImageTask) -> ai_task.ClassifyImageResult:
         seen["image"] = [await _content(hass, task.image)]
         for label_id, label in task.labels.items():
             seen[label_id] = [await _content(hass, e) for e in label.examples]
@@ -106,8 +108,7 @@ async def test_classify_image(hass: HomeAssistant, mock_classify: AsyncMock) -> 
     )
 
     assert response == {
-        "type": "choice",
-        "choice": "car",
+        "label": "car",
         "probabilities": {"empty": 0.08, "car": 0.92},
     }
     task = mock_classify.call_args.args[0]
@@ -278,51 +279,62 @@ async def test_example_permission(
     mock_classify.assert_not_called()
 
 
+def _result(label: str | None, **probabilities: float) -> ai_task.ClassifyImageResult:
+    return ai_task.ClassifyImageResult(label=label, probabilities=probabilities or None)
+
+
 @pytest.mark.usefixtures("init_components")
 @pytest.mark.parametrize(
-    "answer",
+    "result",
     [
-        pytest.param(
-            ai_task.ChoiceAnswer(choice="car", probabilities={"car": 1.0}),
-            id="missing_label",
-        ),
-        pytest.param(
-            ai_task.ChoiceAnswer(
-                choice="car", probabilities={"empty": 0.1, "car": 0.8, "van": 0.1}
-            ),
-            id="extra_label",
-        ),
-        pytest.param(
-            ai_task.ChoiceAnswer(
-                choice="car", probabilities={"empty": -0.1, "car": 1.1}
-            ),
-            id="out_of_range",
-        ),
-        pytest.param(
-            ai_task.ChoiceAnswer(
-                choice="empty", probabilities={"empty": 0.1, "car": 0.9}
-            ),
-            id="not_the_highest",
-        ),
-        pytest.param(
-            ai_task.ChoiceAnswer(
-                choice="van", probabilities={"empty": 0.5, "car": 0.5}
-            ),
-            id="unknown_choice",
-        ),
-        pytest.param(
-            ai_task.ChoiceAnswer(
-                choice="car", probabilities={"empty": 0.4, "car": 0.9}
-            ),
-            id="not_a_distribution",
-        ),
+        pytest.param(_result("car", empty=0.1, car=0.9), id="both"),
+        pytest.param(_result(None, empty=0.45, car=0.55), id="unsure_with_estimate"),
+        pytest.param(_result("car"), id="label_only"),
+        pytest.param(_result(None), id="nothing_committed"),
+    ],
+)
+async def test_valid_result(
+    hass: HomeAssistant,
+    mock_classify: AsyncMock,
+    result: ai_task.ClassifyImageResult,
+) -> None:
+    """Pass results with or without a label and an estimate through."""
+    mock_classify.return_value = result
+    response = await hass.services.async_call(
+        "ai_task",
+        "classify_image",
+        {
+            "task_name": "Bay",
+            "entity_id": TEST_ENTITY_ID,
+            "image": IMAGE,
+            "labels": LABELS,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {"label": result.label, "probabilities": result.probabilities}
+
+
+@pytest.mark.usefixtures("init_components")
+@pytest.mark.parametrize(
+    "result",
+    [
+        pytest.param(_result("car", car=1.0), id="missing_label"),
+        pytest.param(_result("car", empty=0.1, car=0.8, van=0.1), id="extra_label"),
+        pytest.param(_result("car", empty=-0.1, car=1.1), id="out_of_range"),
+        pytest.param(_result("empty", empty=0.1, car=0.9), id="not_the_highest"),
+        pytest.param(_result("van", empty=0.5, car=0.5), id="unknown_label"),
+        pytest.param(_result("van"), id="unknown_label_only"),
+        pytest.param(_result("car", empty=0.4, car=0.9), id="not_a_distribution"),
     ],
 )
 async def test_invalid_result(
-    hass: HomeAssistant, mock_classify: AsyncMock, answer: ai_task.ChoiceAnswer
+    hass: HomeAssistant,
+    mock_classify: AsyncMock,
+    result: ai_task.ClassifyImageResult,
 ) -> None:
-    """Reject answers that break the result contract."""
-    mock_classify.return_value = answer
+    """Reject results that break the result contract."""
+    mock_classify.return_value = result
     with pytest.raises(HomeAssistantError, match="invalid classification"):
         await ai_task.async_classify_image(
             hass,

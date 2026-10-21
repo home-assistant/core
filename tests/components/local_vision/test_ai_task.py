@@ -38,7 +38,7 @@ def examples(media: dict[str, bytes]) -> dict[str, dict]:
 
 async def _classify(
     hass: HomeAssistant, labels: dict[str, dict], **kwargs: object
-) -> ai_task.ChoiceAnswer:
+) -> ai_task.ClassifyImageResult:
     return await ai_task.async_classify_image(
         hass,
         task_name="Bay",
@@ -71,7 +71,7 @@ async def test_classify(
     answer = await _classify(hass, examples, region=region)
 
     expected = "car" if car else "empty"
-    assert answer.choice == expected
+    assert answer.label == expected
     assert answer.probabilities[expected] > 0.5
     assert sum(answer.probabilities.values()) == pytest.approx(1.0)
 
@@ -175,9 +175,9 @@ async def test_example_sets_do_not_mix(
     media[IMAGE] = scene(car=True, seed=50)
     swapped = _labels(["car_0", "car_1"], ["empty_0", "empty_1"])
 
-    assert (await _classify(hass, examples)).choice == "car"
-    assert (await _classify(hass, swapped)).choice == "empty"
-    assert (await _classify(hass, examples)).choice == "car"
+    assert (await _classify(hass, examples)).label == "car"
+    assert (await _classify(hass, swapped)).label == "empty"
+    assert (await _classify(hass, examples)).label == "car"
 
 
 @pytest.mark.usefixtures("init_integration")

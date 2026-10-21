@@ -123,6 +123,32 @@ async def test_state_follows_probabilities(
     assert hass.states.get(ENTITY_ID).state == expected
 
 
+@pytest.mark.parametrize(
+    ("label", "expected"),
+    [
+        pytest.param("on", STATE_ON, id="on"),
+        pytest.param("off", STATE_OFF, id="off"),
+        pytest.param(None, STATE_UNKNOWN, id="not_committed"),
+    ],
+)
+async def test_state_follows_label_without_estimate(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    camera: FakeCamera,
+    classifier: FakeClassifier,
+    mock_config_entry: MockConfigEntry,
+    label: str | None,
+    expected: str,
+) -> None:
+    """A model without probabilities sets the state by its label alone."""
+    await setup_integration(hass, mock_config_entry)
+    await teach_both(hass, mock_config_entry, camera)
+    classifier.probabilities = None
+    classifier.label = label
+    await _poll(hass, freezer)
+    assert hass.states.get(ENTITY_ID).state == expected
+
+
 async def test_classification_task(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,

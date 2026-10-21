@@ -86,7 +86,9 @@ class FakeClassifier(ai_task.AITaskEntity):
     def __init__(self) -> None:
         """Initialize the classifier."""
         super().__init__()
-        self.probabilities = CONFIDENT_ON
+        self.probabilities: dict[str, float] | None = CONFIDENT_ON
+        # Answered when the probabilities are None, like a model without them.
+        self.label: str | None = None
         self.error: Exception | None = None
         self.tasks: list[ai_task.ClassifyImageTask] = []
         self.images: list[bytes] = []
@@ -94,7 +96,7 @@ class FakeClassifier(ai_task.AITaskEntity):
     @override
     async def _async_classify_image(
         self, task: ai_task.ClassifyImageTask
-    ) -> ai_task.ChoiceAnswer:
+    ) -> ai_task.ClassifyImageResult:
         """Record the task and return the set answer."""
         self.tasks.append(task)
         # The camera frame is a temporary file, removed after the task.
@@ -103,8 +105,10 @@ class FakeClassifier(ai_task.AITaskEntity):
         )
         if self.error is not None:
             raise self.error
-        return ai_task.ChoiceAnswer(
-            choice=max(self.probabilities, key=self.probabilities.__getitem__),
+        if self.probabilities is None:
+            return ai_task.ClassifyImageResult(label=self.label)
+        return ai_task.ClassifyImageResult(
+            label=max(self.probabilities, key=self.probabilities.__getitem__),
             probabilities=dict(self.probabilities),
         )
 

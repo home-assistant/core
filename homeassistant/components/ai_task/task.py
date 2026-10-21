@@ -23,6 +23,7 @@ from .classification import (
     IMAGE_SCHEMA,
     LABELS_SCHEMA,
     REGION_SCHEMA,
+    ClassifyImageResult,
     ClassifyImageTask,
     ImageLabel,
     Region,
@@ -38,7 +39,6 @@ from .const import (
 )
 from .evaluation import (
     QUESTIONS_SCHEMA,
-    ChoiceAnswer,
     EvaluationQuestion,
     EvaluationTask,
     EvaluationTaskResult,
@@ -437,7 +437,7 @@ async def async_classify_image(
     instructions: str | None = None,
     entity_id: str | None = None,
     context: Context | None = None,
-) -> ChoiceAnswer:
+) -> ClassifyImageResult:
     """Classify an image by the example images of each label.
 
     Examples are media sources, or image files as attachments for an

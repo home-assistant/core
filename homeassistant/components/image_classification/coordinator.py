@@ -17,7 +17,7 @@ type ImageClassificationConfigEntry = ConfigEntry[ImageClassificationCoordinator
 
 
 class ImageClassificationCoordinator(
-    DataUpdateCoordinator[ai_task.ChoiceAnswer | None]
+    DataUpdateCoordinator[ai_task.ClassifyImageResult | None]
 ):
     """Classify the current camera frame with an AI Task entity."""
 
@@ -40,7 +40,7 @@ class ImageClassificationCoordinator(
         self.taught_frames = taught_frames
 
     @override
-    async def _async_update_data(self) -> ai_task.ChoiceAnswer | None:
+    async def _async_update_data(self) -> ai_task.ClassifyImageResult | None:
         """Return the answer, None while not taught or unsure."""
         if not self.taught_frames.ready:
             # Nothing to compare with yet; spare the camera and the model.
