@@ -43,7 +43,6 @@ from .common import (
     snapshot_platform_entities,
 )
 
-
 IMAGE_BYTES_FROM_STREAM = b"\xff\xd8\xff\xdb" + b"0" * 100 + b"\xff\xd9"
 
 
@@ -838,6 +837,24 @@ async def test_camera_reconnect_webhook(
             "camera_id": camera_id,
             "event_id": "646227f1dc0dfa000ec5f350",
             "push_type": f"{camera_type}-on",
+        }
+        await simulate_webhook(hass, webhook_id, response)
+        await hass.async_block_till_done()
+
+        assert hass.states.get(camera_entity).state == "idle"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is True
+        assert (
+            hass.states.get(camera_entity).attributes.get("motion_detection")
+            is expected_motion_detection
+        )
+
+        # Unhandled event type (new_module) should not change anything
+        response = {
+            "event_type": "new_module",
+            "device_id": camera_id,
+            "camera_id": camera_id,
+            "event_id": "601dce1560abca1ebad9b723",
+            "push_type": f"{camera_type}-new_module",
         }
         await simulate_webhook(hass, webhook_id, response)
         await hass.async_block_till_done()
