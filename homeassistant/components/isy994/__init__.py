@@ -202,15 +202,17 @@ def _async_get_or_create_isy_device_in_registry(
     hass: HomeAssistant, entry: IsyConfigEntry, isy: ISY
 ) -> None:
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, isy.uuid)},
-        identifiers={(DOMAIN, isy.uuid)},
-        manufacturer=MANUFACTURER,
-        name=isy.conf[ISY_CONF_NAME],
-        model=isy.conf[ISY_CONF_MODEL],
-        sw_version=isy.conf[ISY_CONF_FIRMWARE],
-        configuration_url=isy.conn.url,
+        device_info=dr.DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, isy.uuid)},
+            identifiers={(DOMAIN, isy.uuid)},
+            manufacturer=MANUFACTURER,
+            name=isy.conf[ISY_CONF_NAME],
+            model=isy.conf[ISY_CONF_MODEL],
+            sw_version=isy.conf[ISY_CONF_FIRMWARE],
+            configuration_url=isy.conn.url,
+        ),
     )
 
 
@@ -233,7 +235,7 @@ def _create_service_device_info(
         entry_type=DeviceEntryType.SERVICE,
     )
     if via_device_id is not None:
-        device_info["via_device_id"] = via_device_id
+        device_info.via_device_id = via_device_id
     return device_info
 
 

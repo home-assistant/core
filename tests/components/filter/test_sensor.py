@@ -4,6 +4,11 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    assert_setup_component,
+    get_fixture_path,
+)
 
 from homeassistant import config as hass_config
 from homeassistant.components.filter.const import (
@@ -45,8 +50,6 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, assert_setup_component, get_fixture_path
 
 
 @pytest.fixture(name="values")
@@ -102,6 +105,55 @@ async def test_chain(
 
         state = hass.states.get("sensor.test")
         assert state.state == "18.05"
+
+
+@pytest.mark.parametrize(
+    ("readings", "expected_states"),
+    [
+        pytest.param(
+            [("10", None), ("20", None), ("30", None)],
+            ["10.0", "11.0", "12.9"],
+            id="no_unit",
+        ),
+        pytest.param(
+            [("10", "W"), ("20", "W"), ("30", "W")],
+            ["10.0", "11.0", "12.9"],
+            id="constant_unit",
+        ),
+        pytest.param(
+            [("10", "W"), ("20", "W"), ("30", "kW"), ("40", "kW")],
+            ["10.0", "11.0", "30.0", "31.0"],
+            id="unit_change_resets_filters",
+        ),
+    ],
+)
+async def test_unit_of_measurement_reset(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    readings: list[tuple[str, str | None]],
+    expected_states: list[str],
+) -> None:
+    """Test filters are reset before, not after, a reading with a new unit."""
+    config = {
+        "sensor": {
+            "platform": "filter",
+            "name": "test",
+            "entity_id": "sensor.test_monitored",
+            "filters": [{"filter": "lowpass", "time_constant": 10, "precision": 2}],
+        }
+    }
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    states = []
+    for value, unit in readings:
+        hass.states.async_set(
+            "sensor.test_monitored", value, {ATTR_UNIT_OF_MEASUREMENT: unit}
+        )
+        await hass.async_block_till_done()
+        states.append(hass.states.get("sensor.test").state)
+
+    assert states == expected_states
 
 
 async def test_from_config_entry(

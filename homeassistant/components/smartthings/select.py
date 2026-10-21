@@ -12,7 +12,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FullDevice, SmartThingsConfigEntry
-from .const import MAIN
+from .const import DOMAIN, MAIN
 from .entity import SmartThingsEntity
 
 LAMP_TO_HA = {
@@ -41,6 +41,13 @@ CLEANING_TYPE_TO_HA = {
     "mop": "mop",
     "vacuumAndMopTogether": "vacuum_and_mop_together",
     "mopAfterVacuum": "mop_after_vacuum",
+}
+
+TV_PICTURE_MODE_TO_HA = {
+    "Dynamic": "dynamic",
+    "Standard": "standard",
+    "Natural": "natural",
+    "Movie": "movie",
 }
 
 WASHER_SOIL_LEVEL_TO_HA = {
@@ -299,6 +306,15 @@ CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
         entity_category=EntityCategory.CONFIG,
         value_is_integer=True,
     ),
+    Capability.CUSTOM_PICTURE_MODE: SmartThingsSelectDescription(
+        key=Capability.CUSTOM_PICTURE_MODE,
+        translation_key="picture_mode",
+        options_attribute=Attribute.SUPPORTED_PICTURE_MODES,
+        status_attribute=Attribute.PICTURE_MODE,
+        command=Command.SET_PICTURE_MODE,
+        options_map=TV_PICTURE_MODE_TO_HA,
+        entity_category=EntityCategory.CONFIG,
+    ),
     Capability.SAMSUNG_CE_ROBOT_CLEANER_SYSTEM_SOUND_MODE: SmartThingsSelectDescription(
         key=Capability.SAMSUNG_CE_ROBOT_CLEANER_SYSTEM_SOUND_MODE,
         translation_key="robot_cleaner_sound_mode",
@@ -472,7 +488,7 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
             == "false"
         ):
             raise ServiceValidationError(
-                "Can only be updated when remote control is enabled"
+                translation_domain=DOMAIN, translation_key="remote_control_status"
             )
 
         if (
@@ -483,7 +499,11 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
             != self.entity_description.requires_dishwasher_machine_state
         ):
             raise ServiceValidationError(
-                f"Can only be updated when dishwasher machine state is {self.entity_description.requires_dishwasher_machine_state}"
+                translation_domain=DOMAIN,
+                translation_key="dishwasher_machine_state",
+                translation_placeholders={
+                    "machine_state": self.entity_description.requires_dishwasher_machine_state
+                },
             )
 
     @override
@@ -579,7 +599,9 @@ class SmartThingsDishwasherWashingOptionSelectEntity(SmartThingsSelectEntity):
             != "stop"
         ):
             raise ServiceValidationError(
-                "Can only be updated when dishwasher machine state is stop"
+                translation_domain=DOMAIN,
+                translation_key="dishwasher_machine_state",
+                translation_placeholders={"machine_state": "stop"},
             )
 
     @override

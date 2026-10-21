@@ -155,6 +155,8 @@ class _KnxEntityBase(Entity):
     @override
     async def async_added_to_hass(self) -> None:
         """Store register state change callback and start device object."""
+        # xknx log messages and exceptions name the device
+        self._device.name = self.entity_id
         self._device.register_device_updated_cb(self.after_update_callback)
         self._device.xknx.devices.async_add(self._device)
         if uid := self.unique_id:
@@ -171,6 +173,13 @@ class _KnxEntityBase(Entity):
         # super call needed to have methods of multi-inherited classes called
         # eg. for restoring state (like _KNXSwitch)
         await super().async_added_to_hass()
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Rename the xknx device after the new entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+        self._device.name = self.entity_id
 
     @override
     async def async_will_remove_from_hass(self) -> None:
@@ -249,7 +258,7 @@ class KnxYamlEntity(_KnxEntityBase):
                 manufacturer="KNX",
             )
             if device_name := device.get(CONF_NAME):
-                self._attr_device_info["name"] = device_name
+                self._attr_device_info.name = device_name
 
         default_entity_id: str | None
         if (default_entity_id := entity_config.get(CONF_DEFAULT_ENTITY_ID)) is not None:

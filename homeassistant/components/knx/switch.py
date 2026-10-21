@@ -143,7 +143,7 @@ class KnxUiSwitch(_KnxSwitch, KnxUiEntity):
         knx_conf = config.knx
         self._device = XknxSwitch(
             knx_module.xknx,
-            name=config.entity.xknx_name,
+            name=config.entity.name,
             group_address=knx_conf.ga_switch.write,
             group_address_state=state_and_passive(knx_conf.ga_switch),
             respond_to_read=knx_conf.respond_to_read,

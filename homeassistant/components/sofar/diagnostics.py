@@ -36,8 +36,8 @@ async def async_get_config_entry_diagnostics(
             "active_faults": sorted(fault.key for fault in device.state.active_faults),
             "address_masks": masks,
             "link": {
-                "tuning": asdict(runtime_data.tuner.tuning),
-                "stats": asdict(runtime_data.link.stats),
+                "tuning": asdict(device.link_tuning),
+                "stats": asdict(device.link_stats),
             },
             "read_error": read_error,
             "raw": raw,

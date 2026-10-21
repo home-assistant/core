@@ -62,7 +62,7 @@ def _remove_missing_devices(
             device_registry.async_remove_device(device_entry.id)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -> None:
     """Set up Sunricher DALI from a config entry."""
 
     gateway = DaliGateway(
@@ -98,14 +98,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
     _LOGGER.debug("Discovered %d devices on gateway %s", len(devices), gw_sn)
 
     dev_reg = dr.async_get(hass)
-    dev_reg.async_get_or_create(
+    dev_reg.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        connections={(CONNECTION_NETWORK_MAC, gw_sn)},
-        identifiers={(DOMAIN, gw_sn)},
-        manufacturer=MANUFACTURER,
-        name=gateway.name,
-        model="SR-GW-EDA",
-        serial_number=gw_sn,
+        device_info=dr.DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, gw_sn)},
+            identifiers={(DOMAIN, gw_sn)},
+            manufacturer=MANUFACTURER,
+            name=gateway.name,
+            model="SR-GW-EDA",
+            serial_number=gw_sn,
+        ),
     )
     _remove_missing_devices(hass, entry, devices, (DOMAIN, gw_sn))
 
@@ -116,11 +118,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
     )
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, _PLATFORMS):
-        await entry.runtime_data.gateway.disconnect()
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)
+    await entry.runtime_data.gateway.disconnect()

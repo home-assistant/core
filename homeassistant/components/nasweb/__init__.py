@@ -31,7 +31,7 @@ type NASwebConfigEntry = ConfigEntry[NASwebCoordinator]
 DATA_NASWEB: HassKey[NASwebData] = HassKey(DOMAIN)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NASwebConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NASwebConfigEntry) -> None:
     """Set up NASweb from a config entry."""
 
     if DATA_NASWEB not in hass.data:
@@ -108,29 +108,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: NASwebConfigEntry) -> bo
         ) from error
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, webio_serial)},
-        manufacturer=MANUFACTURER,
-        name=webio_api.get_name(),
-        configuration_url=NASWEB_CONFIG_URL.format(host=entry.data[CONF_HOST]),
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, webio_serial)},
+            manufacturer=MANUFACTURER,
+            name=webio_api.get_name(),
+            configuration_url=NASWEB_CONFIG_URL.format(host=entry.data[CONF_HOST]),
+        ),
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: NASwebConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NASwebConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        nasweb_data = hass.data[DATA_NASWEB]
-        coordinator = entry.runtime_data
-        serial = entry.unique_id
-        if serial is not None:
-            nasweb_data.notify_coordinator.remove_coordinator(serial)
-        if nasweb_data.can_be_deinitialized():
-            nasweb_data.deinitialize(hass)
-            hass.data.pop(DATA_NASWEB)
-        webhook_url = nasweb_data.get_webhook_url(hass)
-        await coordinator.webio_api.status_subscription(webhook_url, False)
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    nasweb_data = hass.data[DATA_NASWEB]
+    coordinator = entry.runtime_data
+    serial = entry.unique_id
+    if serial is not None:
+        nasweb_data.notify_coordinator.remove_coordinator(serial)
+    if nasweb_data.can_be_deinitialized():
+        nasweb_data.deinitialize(hass)
+        hass.data.pop(DATA_NASWEB)
+    webhook_url = nasweb_data.get_webhook_url(hass)
+    await coordinator.webio_api.status_subscription(webhook_url, False)

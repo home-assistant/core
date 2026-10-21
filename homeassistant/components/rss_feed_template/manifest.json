@@ -1,6 +1,7 @@
 {
   "domain": "rss_feed_template",
   "name": "RSS feed template",
+  "categories": ["diy_makers.web_data_connectors"],
   "codeowners": ["@home-assistant/core"],
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/rss_feed_template",

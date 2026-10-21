@@ -70,12 +70,14 @@ class SwitcherDataUpdateCoordinator(
     def async_setup(self) -> None:
         """Set up the coordinator."""
         dev_reg = dr.async_get(self.hass)
-        dev_reg.async_get_or_create(
+        dev_reg.async_get_or_create_device(
             config_entry_id=self.config_entry.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
-            identifiers={(DOMAIN, self.device_id)},
-            manufacturer="Switcher",
-            name=self.name,
-            model=self.model,
+            device_info=dr.DeviceInfo(
+                connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
+                identifiers={(DOMAIN, self.device_id)},
+                manufacturer="Switcher",
+                name=self.name,
+                model=self.model,
+            ),
         )
         async_dispatcher_send(self.hass, SIGNAL_DEVICE_ADD, self)
