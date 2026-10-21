@@ -2,16 +2,11 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "api_unauthorized": "Could not verify your A Better Routeplanner account.",
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "cannot_connect": "Failed to connect to A Better Routeplanner.",
       "cloud_not_enabled": "Please make sure you run Home Assistant with `{default_config}` enabled in your configuration.yaml.",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "no_vehicles": "No vehicles were found on this A Better Routeplanner account.",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
       "wrong_account": "The account you signed in with does not match the account being re-authenticated. Please sign in with the same A Better Routeplanner account."
     },
     "create_entry": {

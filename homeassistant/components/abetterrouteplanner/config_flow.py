@@ -13,7 +13,6 @@ from aioabrp import (
 )
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -77,17 +76,10 @@ class AbetterrouteplannerFlowHandler(
         would load green and stay empty until a manual reload. Reauth skips the
         garage check; an emptied garage then reloads with no entities.
         """
-        id_token = data["token"].get("id_token")
-        if id_token is None:
-            return self.async_abort(
-                reason="oauth_error", translation_domain=HOMEASSISTANT_DOMAIN
-            )
         try:
-            identity = parse_unverified_identity(id_token)
+            identity = parse_unverified_identity(data["token"].get("id_token"))
         except AbrpAuthError:
-            return self.async_abort(
-                reason="oauth_error", translation_domain=HOMEASSISTANT_DOMAIN
-            )
+            return self.async_abort(reason="oauth_error")
         await self.async_set_unique_id(identity.subject)
 
         if self.source == SOURCE_REAUTH:
