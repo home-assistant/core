@@ -28,7 +28,7 @@ TEST_USER_UUID = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.notion.async_setup_entry", return_value=True
+        "homeassistant.components.notion.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

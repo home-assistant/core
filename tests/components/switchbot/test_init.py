@@ -280,7 +280,7 @@ async def test_migrate_deprecated_model_sensor_type(
         ) as mock_parse,
         patch_async_setup_entry(),
         patch(
-            "homeassistant.components.switchbot.async_unload_entry", return_value=True
+            "homeassistant.components.switchbot.async_unload_entry", return_value=None
         ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)

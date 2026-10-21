@@ -2,13 +2,15 @@
 
 from typing import Any, override
 
+from starline import StarlineDevice
+
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import StarlineConfigEntry
-from .account import StarlineAccount, StarlineDevice
+from .account import StarlineAccount
 from .entity import StarlineEntity
 
 
