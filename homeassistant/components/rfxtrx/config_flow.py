@@ -235,8 +235,14 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
                         DEVICE_PACKET_TYPE_LIGHTING4
                     ):
                         errors[CONF_DATA_BITS] = "already_configured_device"
+                    elif self.source == SOURCE_RECONFIGURE:
+                        return await self.async_step_reconfigure(
+                            {CONF_EVENT_CODE: self._event_code}
+                        )
                     else:
-                        errors["base"] = "already_configured_device"
+                        return await self.async_step_user(
+                            {CONF_EVENT_CODE: self._event_code}
+                        )
 
             if not errors:
                 event_codes = self._retained_event_codes(

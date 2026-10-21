@@ -140,10 +140,12 @@ def _create_rfx(
     return rfx
 
 
-def _device_subentry_unique_ids(entry: ConfigEntry) -> frozenset[str | None]:
-    """Return the unique_id of every device subentry, to detect changes."""
+def _device_subentry_unique_ids(
+    entry: ConfigEntry,
+) -> frozenset[tuple[str, str | None]]:
+    """Return the id and unique_id of every device subentry, to detect changes."""
     return frozenset(
-        subentry.unique_id
+        (subentry.subentry_id, subentry.unique_id)
         for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE)
     )
 

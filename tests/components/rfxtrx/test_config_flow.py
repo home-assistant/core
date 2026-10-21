@@ -920,15 +920,27 @@ async def test_options_add_device_data_bits_conflict(hass: HomeAssistant) -> Non
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_options_add_device_race_conflict_shows_base_error(
+async def _add_device_in_other_flow(
+    hass: HomeAssistant, entry: MockConfigEntry, event_code: str
+) -> None:
+    """Add a device through a separate, concurrent subentry flow."""
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "device"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={"event_code": event_code}
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_options_add_device_race_conflict_returns_to_event_code(
     hass: HomeAssistant,
 ) -> None:
-    """Test a race-added conflicting non-Lighting4 device errors under base.
-
-    The collision can only be caught once this flow reaches device_options,
-    but non-Lighting4 devices have no data_bits field to attach the error
-    to, so it must show as a base error instead.
-    """
+    """Test a race-added conflicting device is reported on the event code step."""
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -948,26 +960,85 @@ async def test_options_add_device_race_conflict_shows_base_error(
     )
     assert result["step_id"] == "device_options"
 
-    # Another flow adds the same device while this one is still open.
-    other_result = await hass.config_entries.subentries.async_init(
-        (entry.entry_id, "device"),
-        context={"source": config_entries.SOURCE_USER},
-    )
-    other_result = await hass.config_entries.subentries.async_configure(
-        other_result["flow_id"],
-        user_input={"event_code": "0b1100cd0213c7f230010f71"},
-    )
-    other_result = await hass.config_entries.subentries.async_configure(
-        other_result["flow_id"], user_input={}
-    )
-    assert other_result["type"] is FlowResultType.CREATE_ENTRY
+    await _add_device_in_other_flow(hass, entry, "0b1100cd0213c7f230010f71")
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], user_input={}
     )
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
-    assert result["errors"]["base"] == "already_configured_device"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"event_code": "already_configured_device"}
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"event_code": "0b1100cd0213c7f330010f71"},
+    )
+    assert result["step_id"] == "device_options"
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"]["event_code"] == ["0b1100cd0213c7f330010f71"]
+
+
+async def test_options_reconfigure_race_conflict_returns_to_event_code(
+    hass: HomeAssistant,
+) -> None:
+    """Test a race-added conflict during reconfigure is reported on its first step."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": None,
+            "port": None,
+            "device": "/dev/tty123",
+            "automatic_add": False,
+        },
+        subentries_data=(
+            {
+                "data": {"event_code": ["0b1100cd0213c7f230010f71"]},
+                "subentry_type": "device",
+                "title": "AC 213c7f2:48",
+                "unique_id": "11_0_213c7f2:48",
+            },
+        ),
+        unique_id=DOMAIN,
+        version=ENTRY_VERSION,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    subentry = next(iter(entry.subentries.values()))
+    result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"event_code": "0b1100cd0213c7f330010f71"},
+    )
+    assert result["step_id"] == "device_options"
+
+    await _add_device_in_other_flow(hass, entry, "0b1100cd0213c7f330010f71")
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"event_code": "already_configured_device"}
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"event_code": "0b1100cd0213c7f430010f71"},
+    )
+    assert result["step_id"] == "device_options"
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.subentries[subentry.subentry_id].data["event_code"] == [
+        "0b1100cd0213c7f430010f71"
+    ]
 
 
 async def test_options_add_device_matching_masked_device_unmasked(

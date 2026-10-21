@@ -235,12 +235,7 @@ async def test_automatic_add_syncs_device_lookup_before_subentry_creation(
 async def test_automatic_add_syncs_device_lookup_after_reconfigure(
     hass: HomeAssistant, rfxtrx: Mock
 ) -> None:
-    """Test packets around a reconfigure that changes a subentry's address.
-
-    async_update_subentry() mutates the subentry in place rather than
-    replacing entry.subentries, so the cached device lookup must be
-    invalidated by comparing subentry unique_ids, not object identity.
-    """
+    """Test packets around a reconfigure that changes a subentry's address."""
     mock_entry = await setup_rfx_test_cfg(
         hass,
         automatic_add=True,
@@ -268,6 +263,37 @@ async def test_automatic_add_syncs_device_lookup_after_reconfigure(
 
     updated_subentry = mock_entry.subentries[subentry.subentry_id]
     assert updated_subentry.data["event_code"] == ["0b1100100118cdea02010f70"]
+
+
+async def test_device_lookup_syncs_after_remove_and_re_add(
+    hass: HomeAssistant, rfxtrx: Mock
+) -> None:
+    """Test packets use a subentry recreated for the same address before reload."""
+    mock_entry = await setup_rfx_test_cfg(
+        hass,
+        automatic_add=True,
+        devices={"08200300a109000070": {}},
+    )
+    old_subentry = next(iter(mock_entry.subentries.values()))
+
+    with patch("homeassistant.config_entries.ConfigEntries.async_reload"):
+        hass.config_entries.async_remove_subentry(mock_entry, old_subentry.subentry_id)
+        new_subentry = ConfigSubentry(
+            data=MappingProxyType({"event_code": ["08200300a109000070"]}),
+            subentry_type=SUBENTRY_TYPE_DEVICE,
+            title=old_subentry.title,
+            unique_id=old_subentry.unique_id,
+        )
+        hass.config_entries.async_add_subentry(mock_entry, new_subentry)
+        await hass.async_block_till_done()
+
+        await rfxtrx.signal("08200300a109000670")
+
+    assert list(mock_entry.subentries) == [new_subentry.subentry_id]
+    assert mock_entry.subentries[new_subentry.subentry_id].data["event_code"] == [
+        "08200300a109000070",
+        "08200300a109000670",
+    ]
 
 
 @pytest.mark.parametrize("automatic_add", [True, False])
