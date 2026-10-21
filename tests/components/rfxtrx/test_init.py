@@ -1,5 +1,6 @@
 """The tests for the Rfxtrx component."""
 
+from types import MappingProxyType
 from unittest.mock import ANY, Mock, call, patch
 
 import pytest
@@ -20,7 +21,11 @@ from homeassistant.components.rfxtrx.const import (
     EVENT_RFXTRX_EVENT,
     SUBENTRY_TYPE_DEVICE,
 )
-from homeassistant.config_entries import ConfigEntryState, ConfigSubentryDataWithId
+from homeassistant.config_entries import (
+    ConfigEntryState,
+    ConfigSubentry,
+    ConfigSubentryDataWithId,
+)
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -195,6 +200,36 @@ async def test_rediscover_removed_device(
         assert hass.states.get("binary_sensor.ac_118cdea_2")
 
     mock_setup_entry.assert_not_called()
+
+
+async def test_automatic_add_syncs_device_lookup_before_subentry_creation(
+    hass: HomeAssistant, rfxtrx: Mock
+) -> None:
+    """Test a packet for a device just saved by a flow doesn't duplicate-add it.
+
+    The device lookup used for automatic discovery is cached and only
+    refreshed by a reload, so it must be re-synced against the entry's
+    current subentries before deciding a device is new - otherwise a
+    packet arriving before the flow's debounced reload runs would try to
+    add a subentry that already exists.
+    """
+    mock_entry = await setup_rfx_test_cfg(hass, automatic_add=True, devices={})
+
+    with patch("homeassistant.config_entries.ConfigEntries.async_reload"):
+        hass.config_entries.async_add_subentry(
+            mock_entry,
+            ConfigSubentry(
+                data=MappingProxyType({"event_code": ["0b1100100118cdea02010f70"]}),
+                subentry_type=SUBENTRY_TYPE_DEVICE,
+                title="AC 118cdea:2",
+                unique_id="11_0_118cdea:2",
+            ),
+        )
+        await hass.async_block_till_done()
+
+        await rfxtrx.signal("0b1100100118cdea02010f70")
+
+    assert len(mock_entry.subentries) == 1
 
 
 @pytest.mark.parametrize("automatic_add", [True, False])
