@@ -142,8 +142,11 @@ async def test_search_service(
     assert movie_result["guid"] == "plex://movie/5d776b85594b2b001e6dc641"
     assert movie_result["rating_key"] == 1
     assert movie_result["key"] == "/library/metadata/1"
+    assert movie_result["thumb_path"] == (
+        f"/api/plex_image_proxy/{mock_plex_server.machine_identifier}/1"
+    )
     assert movie_result["thumb_url"].startswith(
-        f"/api/plex_image_proxy/{mock_plex_server.machine_identifier}/1?authSig="
+        f"{movie_result['thumb_path']}?authSig="
     )
     assert "X-Plex-Token" not in movie_result["thumb_url"]
     assert movie_result["server_id"] == mock_plex_server.machine_identifier
@@ -536,6 +539,8 @@ async def test_media_result_info_hierarchy(mock_plex_server) -> None:
     assert info["album_title"] == "Album"
     assert info["track_number"] == 3
     assert "show_title" not in info
+    assert info["thumb_path"] is None
+    assert info["thumb_url"] is None
 
 
 async def test_play_show_resumes_on_deck_episode(

@@ -83,7 +83,7 @@
   },
   "services": {
     "on_deck": {
-      "description": "Returns unfinished movies and the next episodes to watch from the Continue Watching list, with the same info as the search service plus watch progress. The poster links in the results are signed and stop working after one hour.",
+      "description": "Returns unfinished movies and the next episodes to watch from the Continue Watching list, with the same info as the search service plus watch progress. The results have a signed poster link (thumb_url) that works in dashboard cards and stays valid for a year or until Home Assistant restarts, and the same link without a signature (thumb_path).",
       "fields": {
         "library_name": {
           "description": "Only return items from this Plex library.",
@@ -123,7 +123,7 @@
       "name": "Refresh library"
     },
     "search": {
-      "description": "Looks up Plex media and returns info (title, type, guid, rating key, server ID, year, summary, ratings, genres, watch status, and more) for each match. Accepts the same criteria as play media, or a free-text query. The poster links in the results are signed and stop working after one hour.",
+      "description": "Looks up Plex media and returns info (title, type, guid, rating key, server ID, year, summary, ratings, genres, watch status, and more) for each match. Accepts the same criteria as play media, or a free-text query. The results have a signed poster link (thumb_url) that works in dashboard cards and stays valid for a year or until Home Assistant restarts, and the same link without a signature (thumb_path).",
       "fields": {
         "album_name": {
           "description": "Name of an album (requires a library).",

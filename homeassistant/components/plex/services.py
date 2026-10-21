@@ -102,7 +102,8 @@ ON_DECK_SCHEMA = probatio.Schema(
     }
 )
 
-THUMBNAIL_URL_EXPIRATION = timedelta(hours=1)
+# Signed links stop working at a restart, because the signing secret is lost
+THUMBNAIL_URL_EXPIRATION = timedelta(days=365)
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -353,9 +354,9 @@ def _sign_thumbnails(hass: HomeAssistant, response: dict[str, Any]) -> None:
     """
     for info in response["results"]:
         for entry in (info, info.get("on_deck")):
-            if entry and (path := entry.get("thumb_url")):
+            if entry and (path := entry.get("thumb_path")):
                 entry["thumb_url"] = async_sign_path(
-                    hass, path, THUMBNAIL_URL_EXPIRATION
+                    hass, path, THUMBNAIL_URL_EXPIRATION, use_content_user=True
                 )
 
 
@@ -367,7 +368,8 @@ def _media_result_info(item: Any, plex_server: PlexServer) -> dict[str, Any]:
         "guid": item.guid,
         "rating_key": item.ratingKey,
         "key": item.key,
-        "thumb_url": _proxy_thumb_url(item, plex_server),
+        "thumb_path": _proxy_thumb_url(item, plex_server),
+        "thumb_url": None,
         "server_id": plex_server.machine_identifier,
         "server_name": plex_server.friendly_name,
     }
