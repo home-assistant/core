@@ -48,9 +48,26 @@
       "last_successful_automatic_backup": {
         "name": "Last successful automatic backup"
       },
+      "last_successful_automatic_backup_size": {
+        "name": "Last successful automatic backup size"
+      },
       "next_scheduled_automatic_backup": {
         "name": "Next scheduled automatic backup"
       }
+    }
+  },
+  "exceptions": {
+    "agent_authentication_failed": {
+      "message": "Authentication with the backup location failed"
+    },
+    "agent_operation_failed": {
+      "message": "Backup operation failed"
+    },
+    "agent_operation_timed_out": {
+      "message": "Backup operation timed out"
+    },
+    "backup_not_found": {
+      "message": "Backup {backup_id} not found"
     }
   },
   "issues": {

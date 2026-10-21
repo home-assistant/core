@@ -12,10 +12,10 @@ from hass_nabucasa.voice import VoiceError, VoiceTokenError
 from hass_nabucasa.voice_data import TTS_VOICES
 import probatio
 import pytest
+from pytest_homeassistant.common import async_mock_service
+from pytest_homeassistant.typing import ClientSessionGenerator
 
-from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=home-assistant-component-root-import
-    STORAGE_KEY,
-)
+from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY  # pylint: disable=home-assistant-component-root-import
 from homeassistant.components.cloud.const import DEFAULT_TTS_DEFAULT_VOICE, DOMAIN
 from homeassistant.components.cloud.tts import (
     DEFAULT_VOICES,
@@ -44,9 +44,7 @@ from homeassistant.setup import async_setup_component
 
 from . import PIPELINE_DATA
 
-from tests.common import async_mock_service
 from tests.components.tts.common import get_media_source_url
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -478,12 +476,8 @@ async def test_migrating_pipelines(
     )
     assert hass_storage[STORAGE_KEY]["data"]["items"][0]["wake_word_entity"] is None
     assert hass_storage[STORAGE_KEY]["data"]["items"][0]["wake_word_id"] is None
-    assert hass_storage[STORAGE_KEY]["data"]["items"][1] == PIPELINE_DATA["items"][
-        1
-    ] | {"user_id": None}
-    assert hass_storage[STORAGE_KEY]["data"]["items"][2] == PIPELINE_DATA["items"][
-        2
-    ] | {"user_id": None}
+    assert hass_storage[STORAGE_KEY]["data"]["items"][1] == PIPELINE_DATA["items"][1]
+    assert hass_storage[STORAGE_KEY]["data"]["items"][2] == PIPELINE_DATA["items"][2]
 
 
 @pytest.mark.parametrize(

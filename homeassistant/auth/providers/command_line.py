@@ -12,7 +12,7 @@ from homeassistant.const import CONF_COMMAND
 from homeassistant.exceptions import HomeAssistantError
 
 from ..models import AuthFlowContext, AuthFlowResult, Credentials, UserMeta
-from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
+from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, MfaLoginFlow
 
 CONF_ARGS = "args"
 CONF_META = "meta"
@@ -138,7 +138,7 @@ class CommandLineAuthProvider(AuthProvider):
         )
 
 
-class CommandLineLoginFlow(LoginFlow[CommandLineAuthProvider]):
+class CommandLineLoginFlow(MfaLoginFlow[CommandLineAuthProvider]):
     """Handler for the login flow."""
 
     @override

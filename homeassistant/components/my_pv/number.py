@@ -13,17 +13,19 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import MyPVConfigEntry
 from .const import DOMAIN
+from .coordinator import MyPVConfigEntry
 from .entity import MyPVSetupEntity
 
 NUMBER_DESCRIPTIONS: Final[dict[str, dict[str, Any]]] = {
     "bsttemp": {
         "device_class": NumberDeviceClass.TEMPERATURE,
+        "entity_category": EntityCategory.CONFIG,
         "translation_key": "ww1boost",
     },
     "ww1boost": {
         "device_class": NumberDeviceClass.TEMPERATURE,
+        "entity_category": EntityCategory.CONFIG,
         "translation_key": "ww1boost",
     },
     "ww_boost_h": {

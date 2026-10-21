@@ -190,7 +190,7 @@ CONTACT_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_JABBER): cv.string,
         probatio.Optional(CONF_ISSUE_MAIL): cv.string,
         probatio.Optional(CONF_KEYMASTERS): probatio.All(
-            cv.ensure_list, [KEYMASTER_SCHEMA], probatio.Length(min=1)
+            probatio.EnsureList(), [KEYMASTER_SCHEMA], probatio.NonEmpty()
         ),
     },
     required=False,
@@ -215,7 +215,7 @@ CONFIG_SCHEMA = probatio.Schema(
             {
                 probatio.Required(CONF_CONTACT): CONTACT_SCHEMA,
                 probatio.Required(CONF_ISSUE_REPORT_CHANNELS): probatio.All(
-                    cv.ensure_list, [probatio.In(ISSUE_REPORT_CHANNELS)]
+                    probatio.EnsureList(), [probatio.In(ISSUE_REPORT_CHANNELS)]
                 ),
                 probatio.Optional(CONF_LOCATION): LOCATION_SCHEMA,
                 probatio.Required(CONF_LOGO): cv.url,
@@ -225,16 +225,16 @@ CONFIG_SCHEMA = probatio.Schema(
                 probatio.Optional(CONF_SENSORS): SENSOR_SCHEMA,
                 probatio.Optional(CONF_SPACEFED): SPACEFED_SCHEMA,
                 probatio.Optional(CONF_CAM): probatio.All(
-                    cv.ensure_list, [cv.url], probatio.Length(min=1)
+                    probatio.EnsureList(), [cv.url], probatio.NonEmpty()
                 ),
                 probatio.Optional(CONF_STREAM): STREAM_SCHEMA,
                 probatio.Optional(CONF_FEEDS): FEEDS_SCHEMA,
                 probatio.Optional(CONF_CACHE): CACHE_SCHEMA,
                 probatio.Optional(CONF_PROJECTS): probatio.All(
-                    cv.ensure_list, [cv.url]
+                    probatio.EnsureList(), [cv.url]
                 ),
                 probatio.Optional(CONF_RADIO_SHOW): probatio.All(
-                    cv.ensure_list, [RADIO_SHOW_SCHEMA]
+                    probatio.EnsureList(), [RADIO_SHOW_SCHEMA]
                 ),
             }
         )

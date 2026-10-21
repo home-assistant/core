@@ -9,10 +9,9 @@ from unittest.mock import ANY, AsyncMock, MagicMock, patch
 from hass_nabucasa import SpeechToTextV2Error
 from hass_nabucasa.voice import STTResponse, VoiceError
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
-from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=home-assistant-component-root-import
-    STORAGE_KEY,
-)
+from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY  # pylint: disable=home-assistant-component-root-import
 from homeassistant.components.cloud.const import DOMAIN, PREVIEW_FEATURE_STT_V2
 from homeassistant.components.labs import async_update_preview_feature
 from homeassistant.components.stt import (
@@ -25,8 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import PIPELINE_DATA
-
-from tests.typing import ClientSessionGenerator
 
 ENTITY_ID = "stt.home_assistant_cloud"
 
@@ -157,12 +154,8 @@ async def test_migrating_pipelines(
     )
     assert hass_storage[STORAGE_KEY]["data"]["items"][0]["wake_word_entity"] is None
     assert hass_storage[STORAGE_KEY]["data"]["items"][0]["wake_word_id"] is None
-    assert hass_storage[STORAGE_KEY]["data"]["items"][1] == PIPELINE_DATA["items"][
-        1
-    ] | {"user_id": None}
-    assert hass_storage[STORAGE_KEY]["data"]["items"][2] == PIPELINE_DATA["items"][
-        2
-    ] | {"user_id": None}
+    assert hass_storage[STORAGE_KEY]["data"]["items"][1] == PIPELINE_DATA["items"][1]
+    assert hass_storage[STORAGE_KEY]["data"]["items"][2] == PIPELINE_DATA["items"][2]
 
 
 @pytest.fixture(name="setup_stt")

@@ -4,19 +4,18 @@ from collections.abc import Iterator
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
-from aioaxlevpp import GridEvent
+from aioaxlevpp import AxleStatus, GridEvent
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.const import CONF_API_KEY
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
 def mock_setup_entry() -> Iterator[AsyncMock]:
     """Skip integration setup during config flow tests."""
     with patch(
-        "homeassistant.components.axle_energy.async_setup_entry", return_value=True
+        "homeassistant.components.axle_energy.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 
@@ -55,4 +54,7 @@ def mock_client(mock_event: GridEvent) -> Iterator[AsyncMock]:
         ),
     ):
         client.return_value.get_event.return_value = mock_event
+        client.return_value.get_status.return_value = AxleStatus(
+            mock_event, opted_out=False
+        )
         yield client.return_value

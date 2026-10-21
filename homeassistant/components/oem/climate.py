@@ -31,9 +31,9 @@ PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_HOST): cv.string,
         probatio.Optional(CONF_NAME, default="Thermostat"): cv.string,
-        probatio.Optional(CONF_PORT, default=80): cv.port,
+        probatio.Optional(CONF_PORT, default=80): probatio.Port(),
         probatio.Inclusive(CONF_USERNAME, "authentication"): cv.string,
-        probatio.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
+        probatio.Inclusive(probatio.Secret(CONF_PASSWORD), "authentication"): cv.string,
     }
 )
 
@@ -70,7 +70,7 @@ class ThermostatDevice(ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, thermostat, name):
         """Initialize the device."""
@@ -122,7 +122,7 @@ class ThermostatDevice(ClimateEntity):
 
     def update(self) -> None:
         """Update local state."""
-        self._attr_target_temperature = self.thermostat.setpoint
-        self._attr_current_temperature = self.thermostat.temperature
+        self._attr_native_target_temperature = self.thermostat.setpoint
+        self._attr_native_current_temperature = self.thermostat.temperature
         self._state = self.thermostat.state
         self._mode = self.thermostat.mode

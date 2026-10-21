@@ -3,6 +3,7 @@
 from copy import deepcopy
 
 import pytest
+from pytest_homeassistant.common import MockEntityPlatform, async_mock_service
 
 from homeassistant.components import alert, notify
 from homeassistant.components.alert.const import (
@@ -30,8 +31,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockEntityPlatform, async_mock_service
 
 NAME = "alert_test"
 DONE_MESSAGE = "alert_gone"
@@ -92,6 +91,32 @@ async def test_fire(hass: HomeAssistant, mock_notifier: list[ServiceCall]) -> No
     hass.states.async_set("sensor.test", STATE_ON)
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_ON
+
+
+async def test_fire_when_already_in_alert_state(
+    hass: HomeAssistant, mock_notifier: list[ServiceCall]
+) -> None:
+    """Test the alert fires if the watched entity is already in the alert state.
+
+    This is the case after a restart when the watched entity's state is
+    restored before the alert subscribes to state changes.
+    """
+    hass.states.async_set("sensor.test", STATE_ON)
+    assert await async_setup_component(hass, DOMAIN, TEST_CONFIG)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
+    assert len(mock_notifier) == 1
+
+
+async def test_idle_when_already_not_in_alert_state(
+    hass: HomeAssistant, mock_notifier: list[ServiceCall]
+) -> None:
+    """Test the alert stays idle if the watched entity is not in the alert state."""
+    hass.states.async_set("sensor.test", STATE_OFF)
+    assert await async_setup_component(hass, DOMAIN, TEST_CONFIG)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_IDLE
+    assert len(mock_notifier) == 0
 
 
 async def test_silence(hass: HomeAssistant, mock_notifier: list[ServiceCall]) -> None:
