@@ -34,8 +34,13 @@ NOT_READY_ERRORS = (
 )
 # Account settings changed, only the user can resolve it
 ACCOUNT_ERRORS = (aiounifi.NoPermission, aiounifi.TwoFaTokenRequired)
-# Rejected credentials, which a booting console can also answer for a moment
-LOGIN_REJECTED_ERRORS = (aiounifi.LoginRequired, aiounifi.Unauthorized)
+# Rejected credentials, which a booting console can also answer for a moment.
+# UniFi OS answers a wrong password with 403.
+LOGIN_REJECTED_ERRORS = (
+    aiounifi.Forbidden,
+    aiounifi.LoginRequired,
+    aiounifi.Unauthorized,
+)
 LOGIN_REJECTIONS_BEFORE_REAUTH = 3
 
 

@@ -1013,6 +1013,7 @@ async def test_failed_setup_does_not_retry(
         # A booting console can reject a login for a moment
         pytest.param(aiounifi.LoginRequired, 3, id="login_required"),
         pytest.param(aiounifi.Unauthorized, 3, id="unauthorized"),
+        pytest.param(aiounifi.Forbidden, 3, id="forbidden"),
     ],
 )
 async def test_rejected_login_starts_reauth_and_stops_retrying(
