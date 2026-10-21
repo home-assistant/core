@@ -1,6 +1,7 @@
 """Test AI task permissions."""
 
 import pytest
+from pytest_homeassistant.common import MockUser
 
 from homeassistant.auth.permissions.const import POLICY_CONTROL, POLICY_READ
 from homeassistant.components.ai_task.permissions import async_check_permissions
@@ -8,8 +9,6 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import Unauthorized, UnknownUser
 
 from .conftest import TEST_ENTITY_ID
-
-from tests.common import MockUser
 
 
 @pytest.mark.parametrize("context", [None, Context()])

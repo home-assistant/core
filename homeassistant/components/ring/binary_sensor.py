@@ -18,8 +18,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_at
 
-from . import RingConfigEntry
-from .coordinator import RingListenCoordinator
+from .coordinator import RingConfigEntry, RingListenCoordinator
 from .entity import (
     DeprecatedInfo,
     RingBaseEntity,

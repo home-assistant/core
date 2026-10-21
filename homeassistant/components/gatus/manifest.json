@@ -1,6 +1,7 @@
 {
   "domain": "gatus",
   "name": "Gatus",
+  "categories": ["computers_network.monitoring"],
   "codeowners": ["@TN-1"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/gatus",

@@ -1,6 +1,7 @@
 {
   "domain": "zamg",
   "name": "GeoSphere Austria",
+  "categories": ["weather_alerts"],
   "codeowners": ["@killer0071234"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zamg",

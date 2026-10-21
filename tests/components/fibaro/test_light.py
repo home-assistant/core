@@ -2,6 +2,8 @@
 
 from unittest.mock import Mock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     DOMAIN as LIGHT_DOMAIN,
@@ -12,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_light_setup(
