@@ -2,6 +2,7 @@
   "domain": "dlna_dmr",
   "name": "DLNA Digital Media Renderer",
   "after_dependencies": ["media_source"],
+  "categories": ["media_entertainment"],
   "codeowners": ["@chishm"],
   "config_flow": true,
   "dependencies": ["ssdp"],

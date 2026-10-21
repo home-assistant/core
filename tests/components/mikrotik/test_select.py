@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mikrotik.const import INTERFACE, MIKROTIK_SERVICES, POE
@@ -18,8 +19,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_mikrotik_entry
 from .const import BRIDGE1_INTERFACE, ETHER1_INTERFACE, ETHER1_POE, INTERFACE_DATA
-
-from tests.common import snapshot_platform
 
 
 async def test_select_entities_created(

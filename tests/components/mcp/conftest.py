@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
@@ -22,8 +23,6 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
 
 TEST_API_NAME = "Memory Server"
 MCP_SERVER_URL = "http://1.1.1.1:8080/mcp"
@@ -59,7 +58,6 @@ def mock_http_streamable_client() -> Generator[AsyncMock]:
         "homeassistant.components.mcp.coordinator.streamable_http_client"
     ) as mock_streamable_client:
         mock_streamable_client.return_value.__aenter__.return_value = (
-            AsyncMock(),
             AsyncMock(),
             AsyncMock(),
         )

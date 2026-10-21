@@ -2,6 +2,7 @@
 
 import probatio
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components import llm as llm_component
 from homeassistant.components.button import ButtonDeviceClass
@@ -16,8 +17,6 @@ from homeassistant.const import SERVICE_TURN_ON
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import intent, llm
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_mock_service
 
 COVER_ENTITY_ID = "cover.test"
 

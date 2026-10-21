@@ -4,6 +4,8 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyfronius import BadStatusError, FroniusError
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.fronius.coordinator import (
     FroniusInverterUpdateCoordinator,
@@ -11,9 +13,6 @@ from homeassistant.components.fronius.coordinator import (
 from homeassistant.core import HomeAssistant
 
 from . import mock_responses, setup_fronius_integration
-
-from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_adaptive_update_interval(

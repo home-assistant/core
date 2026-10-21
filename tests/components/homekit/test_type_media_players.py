@@ -1,6 +1,7 @@
 """Test different accessory types: Media Players."""
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.components.homekit.const import (
@@ -44,8 +45,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, Event, HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import async_mock_service
 
 
 async def test_media_player_set_state(

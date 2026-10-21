@@ -52,12 +52,6 @@ class BleBoxUpdateEntity(BleBoxEntity[blebox_uniapi.update.Update], UpdateEntity
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
     )
 
-    @property
-    @override
-    def should_poll(self) -> bool:
-        """Return True because firmware versions cannot be fetched via coordinator."""
-        return True
-
     def __init__(
         self, coordinator: BleBoxCoordinator, feature: blebox_uniapi.update.Update
     ) -> None:
@@ -66,6 +60,12 @@ class BleBoxUpdateEntity(BleBoxEntity[blebox_uniapi.update.Update], UpdateEntity
         self._in_progress_old_version: str | None = None
         self._poll_cancel: CALLBACK_TYPE | None = None
         self._poll_attempts: int = 0
+
+    @property
+    @override
+    def should_poll(self) -> bool:
+        """Return True because firmware versions cannot be fetched via coordinator."""
+        return True
 
     @property
     @override
