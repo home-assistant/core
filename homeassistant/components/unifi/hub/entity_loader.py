@@ -272,7 +272,9 @@ class UnifiEntityLoader:
                     [unifi_platform_entity(obj_id, self.hub, description)]
                 )
 
+        # A changed object can become supported, e.g. after a device restart
         for description in descriptions:
             description.api_handler_fn(self.hub.api).subscribe(
-                partial(create_unifi_entity, description), ItemEvent.ADDED
+                partial(create_unifi_entity, description),
+                (ItemEvent.ADDED, ItemEvent.CHANGED),
             )

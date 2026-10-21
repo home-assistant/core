@@ -1,6 +1,5 @@
 """UniFi Network sensor platform tests."""
 
-from collections.abc import Callable
 from copy import deepcopy
 from datetime import datetime, timedelta
 from types import MappingProxyType
@@ -16,7 +15,6 @@ from pytest_homeassistant.common import (
     async_fire_time_changed,
     snapshot_platform,
 )
-from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import (
@@ -1315,10 +1313,8 @@ async def test_ups_battery_pool_readings(
 )
 async def test_ups_battery_pool_late_field(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     config_entry_factory: ConfigEntryFactoryType,
     entity_registry: er.EntityRegistry,
-    mock_requests: Callable[[], None],
     mock_websocket_message: WebsocketMessageMock,
     device_payload: list[dict[str, Any]],
     device_name: str,
@@ -1326,29 +1322,20 @@ async def test_ups_battery_pool_late_field(
     sensor: str,
     initial_readings: tuple[None, ...],
 ) -> None:
-    """Test unsupported initial fields need a reload for later discovery."""
+    """Test fields reported later get their sensor."""
     original_device = deepcopy(device_payload[0])
     device_payload[0] = deepcopy(original_device)
     pool = device_payload[0]["vbms_table"]["battpool"]
     pool.pop(field)
     for value in initial_readings:
         pool[field] = value
-    config_entry = await config_entry_factory()
+    await config_entry_factory()
 
     entity_id = f"sensor.{device_name}_{sensor}"
     assert hass.states.get(entity_id) is None
     assert entity_registry.async_get(entity_id) is None
 
     mock_websocket_message(message=MessageKey.DEVICE, data=original_device)
-    await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id) is None
-    assert entity_registry.async_get(entity_id) is None
-
-    device_payload[0] = original_device
-    aioclient_mock.clear_requests()
-    mock_requests()
-    await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == str(
@@ -1786,6 +1773,14 @@ async def test_port_link_speed_sensors(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.mock_name_port_1_link_speed").state == "1000"
+
+    # A port that links up later gets its sensor
+    device_1["port_table"][2]["speed"] = 1000
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
+    await hass.async_block_till_done()
+
+    p3_reg_entry = entity_registry.async_get("sensor.mock_name_port_3_link_speed")
+    assert p3_reg_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
 
 
 @pytest.mark.parametrize(
