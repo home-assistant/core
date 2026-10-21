@@ -10,6 +10,7 @@ from openevsehttp.exceptions import (
     UnsupportedFeature,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.openevse.const import DOMAIN
 from homeassistant.components.openevse.services import OpenEVSEService
@@ -21,8 +22,6 @@ from homeassistant.exceptions import (
     ServiceValidationError,
 )
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 SERVICE_SET_OVERRIDE = OpenEVSEService.SET_OVERRIDE
 
