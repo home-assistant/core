@@ -71,7 +71,9 @@ class AbetterrouteplannerFlowHandler(
 
         The entry is bound to the id_token's subject, so a missing or malformed
         id_token — one the ``openid`` scope guarantees — aborts rather than
-        binding the entry to an unverified account. On a new entry an empty
+        binding the entry to an unverified account. A token without a
+        refresh_token aborts as well: the entry could not outlive the access
+        token, and the stream would retry it forever. On a new entry an empty
         garage aborts too: the garage is only re-read at setup, so such an entry
         would load green and stay empty until a manual reload. Reauth skips the
         garage check; an emptied garage then reloads with no entities.
@@ -79,6 +81,8 @@ class AbetterrouteplannerFlowHandler(
         try:
             identity = parse_unverified_identity(data["token"].get("id_token"))
         except AbrpAuthError:
+            return self.async_abort(reason="oauth_error")
+        if not data["token"].get("refresh_token"):
             return self.async_abort(reason="oauth_error")
         await self.async_set_unique_id(identity.subject)
 

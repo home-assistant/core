@@ -41,13 +41,14 @@ def _mock_token_post(
     aioclient_mock: AiohttpClientMocker,
     id_token: str | None = build_id_token(),
     access_token: str = "mock-access-token",
+    refresh_token: str | None = "mock-refresh-token",
 ) -> None:
     """Queue the standard token-exchange response on ``aioclient_mock``."""
     aioclient_mock.post(
         OAUTH2_TOKEN,
         json={
             "access_token": access_token,
-            "refresh_token": "mock-refresh-token",
+            "refresh_token": refresh_token,
             "token_type": "Bearer",
             "expires_in": 3600,
             "id_token": id_token,
@@ -226,25 +227,29 @@ async def test_no_vehicles_aborts(
 
 
 @pytest.mark.parametrize(
-    "id_token",
+    ("id_token", "refresh_token"),
     [
-        pytest.param(None, id="missing"),
-        pytest.param("header.not-base64!.sig", id="unparsable"),
+        pytest.param(None, "mock-refresh-token", id="missing_id_token"),
+        pytest.param(
+            "header.not-base64!.sig", "mock-refresh-token", id="unparsable_id_token"
+        ),
+        pytest.param(build_id_token(), None, id="missing_refresh_token"),
     ],
 )
 @pytest.mark.usefixtures("current_request_with_host", "use_cloud", "mock_setup_entry")
-async def test_initial_add_unusable_id_token_aborts(
+async def test_initial_add_unusable_token_aborts(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     id_token: str | None,
+    refresh_token: str | None,
 ) -> None:
-    """An absent or unparsable id_token aborts the initial add."""
+    """An unusable id_token or a missing refresh_token aborts the initial add."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     await complete_oauth_callback(hass, hass_client_no_auth, result["flow_id"])
-    _mock_token_post(aioclient_mock, id_token)
+    _mock_token_post(aioclient_mock, id_token, refresh_token=refresh_token)
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
