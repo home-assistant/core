@@ -141,6 +141,65 @@ def test_url() -> None:
         assert schema(value)
 
 
+@pytest.mark.parametrize(
+    "validator",
+    [
+        pytest.param(cv.url, id="url"),
+        pytest.param(cv.url_no_path, id="url_no_path"),
+    ],
+)
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("http://exa mple.com", id="space_in_host"),
+        pytest.param("http://user:pass@exa mple.com", id="space_in_host_with_userinfo"),
+        pytest.param("http://example.com\x00", id="nul"),
+        pytest.param("http://exam\tple.com", id="tab_in_host"),
+        pytest.param("http://exam\nple.com", id="newline_in_host"),
+        pytest.param("http://exam\u00a0ple.com", id="no_break_space_in_host"),
+        pytest.param("http://example.com/pa\tth", id="tab_in_path"),
+        pytest.param("http://example.com/?q=a\nb", id="newline_in_query"),
+        pytest.param("http://example.com/\x7f", id="delete_in_path"),
+    ],
+)
+def test_url_rejects_whitespace_and_control_chars(
+    validator: Callable[[Any], Any], value: str
+) -> None:
+    """Test URLs containing whitespace or control characters are rejected."""
+    with pytest.raises(probatio.Invalid):
+        probatio.Schema(validator)(value)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("\nhttp://example.com", id="leading_newline"),
+        pytest.param("http://example.com\n", id="trailing_newline"),
+        pytest.param("  http://example.com  ", id="surrounding_spaces"),
+    ],
+)
+def test_url_strips_surrounding_whitespace(value: str) -> None:
+    """Test surrounding whitespace is stripped from URLs."""
+    assert probatio.Schema(cv.url)(value) == "http://example.com"
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("http://example.com/snapshot image.jpg", id="space_in_path"),
+        pytest.param(
+            "http://example.com/?file=snapshot image.jpg", id="space_in_query"
+        ),
+        pytest.param("http://example.com/#snapshot image", id="space_in_fragment"),
+        pytest.param("http://user:pa ss@example.com/", id="space_in_password"),
+        pytest.param("http://us er@example.com/", id="space_in_username"),
+    ],
+)
+def test_url_allows_spaces_outside_host(value: str) -> None:
+    """Test spaces outside the host are kept, since HTTP clients encode them."""
+    assert probatio.Schema(cv.url)(value) == value
+
+
 def test_configuration_url() -> None:
     """Test URL."""
     schema = probatio.Schema(cv.configuration_url)

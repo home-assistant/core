@@ -103,8 +103,13 @@ class SwitchbotConnectionPolledEntity(SwitchbotEntity):
     Bluetooth adapter, so the first read is deferred until startup is over.
     """
 
-    _attr_should_poll = True
     _attr_entity_registry_enabled_default = False
+
+    @property
+    @override
+    def should_poll(self) -> bool:
+        """Poll, since the value is only readable over a connection."""
+        return True
 
     async def _async_read_value(self) -> None:
         """Read the value from the device into the entity attributes."""

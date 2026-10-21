@@ -1,7 +1,7 @@
 """Test Home Assistant date util methods."""
 # pylint: disable=home-assistant-enforce-utcnow
 
-from datetime import UTC, datetime, time, timedelta
+from datetime import UTC, datetime, time, timedelta, timezone
 
 import pytest
 
@@ -162,6 +162,52 @@ def test_parse_datetime_converts_correctly() -> None:
     utcnow = dt_util.utcnow()
 
     assert utcnow == dt_util.parse_datetime(utcnow.isoformat())
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        pytest.param(
+            "1880-01-01T00:00:00-04:56:02",
+            datetime(
+                1880,
+                1,
+                1,
+                tzinfo=timezone(-timedelta(hours=4, minutes=56, seconds=2)),
+            ),
+            id="extended",
+        ),
+        pytest.param(
+            "1880-01-01T00:00:00-045602",
+            datetime(
+                1880,
+                1,
+                1,
+                tzinfo=timezone(-timedelta(hours=4, minutes=56, seconds=2)),
+            ),
+            id="basic",
+        ),
+        pytest.param(
+            "1900-01-01T12:30:00.5+01:39:52",
+            datetime(
+                1900,
+                1,
+                1,
+                12,
+                30,
+                0,
+                500000,
+                tzinfo=timezone(timedelta(hours=1, minutes=39, seconds=52)),
+            ),
+            id="fractional_seconds",
+        ),
+    ],
+)
+def test_parse_datetime_offset_with_seconds(value: str, expected: datetime) -> None:
+    """Test parse_datetime handles UTC offsets with a seconds component."""
+    parsed = dt_util.parse_datetime(value)
+    assert parsed == expected
+    assert parsed.utcoffset() == expected.utcoffset()
 
 
 def test_parse_datetime_returns_none_for_incorrect_format() -> None:

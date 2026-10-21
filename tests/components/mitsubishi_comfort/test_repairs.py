@@ -20,6 +20,7 @@ from homeassistant.components.mitsubishi_comfort.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -181,7 +182,7 @@ async def test_fix_flow_failed_reload_restores_issue(
         ),
         patch(
             "homeassistant.components.mitsubishi_comfort.async_unload_entry",
-            return_value=False,
+            side_effect=ConfigEntryError,
         ),
     ):
         data = await process_repair_fix_flow(client, data["flow_id"], json=submission)
@@ -211,7 +212,7 @@ async def test_fix_flow_retry_on_wedged_entry_keeps_issue(
     data = await start_repair_fix_flow(client, DOMAIN, issue_id)
     with patch(
         "homeassistant.components.mitsubishi_comfort.async_unload_entry",
-        return_value=False,
+        side_effect=ConfigEntryError,
     ):
         data = await process_repair_fix_flow(client, data["flow_id"], json={})
         await hass.async_block_till_done()
@@ -266,7 +267,7 @@ async def test_fix_flow_failed_reload_ignores_partial_records(
         ),
         patch(
             "homeassistant.components.mitsubishi_comfort.async_unload_entry",
-            return_value=False,
+            side_effect=ConfigEntryError,
         ),
     ):
         data = await process_repair_fix_flow(

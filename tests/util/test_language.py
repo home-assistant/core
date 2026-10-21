@@ -195,6 +195,26 @@ def test_sr_latn() -> None:
 
 
 @pytest.mark.parametrize(
+    ("target", "supported", "expected"),
+    [
+        pytest.param(
+            "zh-hant", ["zh-Hans", "zh-Hant"], ["zh-Hant", "zh-Hans"], id="zh-hant"
+        ),
+        pytest.param(
+            "ZH-HANS", ["zh-Hant", "zh-Hans"], ["zh-Hans", "zh-Hant"], id="ZH-HANS"
+        ),
+        pytest.param("zh_hant", ["zh-CN", "zh-TW"], ["zh-TW", "zh-CN"], id="zh_hant"),
+        pytest.param("SR-latn", ["sr", "sr-Latn"], ["sr-Latn", "sr"], id="SR-latn"),
+    ],
+)
+def test_script_case_insensitive(
+    target: str, supported: list[str], expected: list[str]
+) -> None:
+    """Test that script subtags are matched case-insensitively."""
+    assert language.matches(target, supported) == expected
+
+
+@pytest.mark.parametrize(
     ("tag", "expected"),
     [
         pytest.param(

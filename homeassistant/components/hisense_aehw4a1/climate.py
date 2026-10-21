@@ -24,11 +24,15 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    CONF_IP_ADDRESS,
+    PRECISION_WHOLE,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import CONF_IP_ADDRESS
 from .const import DATA_HISENSE_AEHW4A1_CONFIG
 
 MIN_TEMP_C = 16
