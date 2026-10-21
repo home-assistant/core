@@ -13,6 +13,7 @@ import socket
 from types import MappingProxyType
 from typing import Any, override
 
+import aiounifi
 from aiounifi.interfaces.sites import Sites
 import probatio
 
@@ -277,7 +278,10 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
     async def _async_update_sites(self, data: Mapping[str, Any]) -> Sites:
         """Get updated sites through UniFi API."""
         hub = await get_unifi_api(self.hass, MappingProxyType(data))
-        await hub.sites.update()
+        try:
+            await hub.sites.update()
+        except aiounifi.RequestError as err:
+            raise CannotConnect from err
         return hub.sites
 
     @callback

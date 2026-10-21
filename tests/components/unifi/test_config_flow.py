@@ -5,6 +5,7 @@ import socket
 from typing import Any
 from unittest.mock import patch
 
+import aiounifi
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -217,15 +218,29 @@ async def test_flow_raise_already_configured(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "error"),
+    ("target", "side_effect", "error"),
     [
-        (AuthenticationRequired, "faulty_credentials"),
-        (CannotConnect, "service_unavailable"),
+        (
+            "homeassistant.components.unifi.config_flow.get_unifi_api",
+            AuthenticationRequired,
+            "faulty_credentials",
+        ),
+        (
+            "homeassistant.components.unifi.config_flow.get_unifi_api",
+            CannotConnect,
+            "service_unavailable",
+        ),
+        (
+            "aiounifi.interfaces.sites.Sites.update",
+            aiounifi.ApplicationNotReady,
+            "service_unavailable",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_default_requests")
 async def test_flow_fails_and_recovers(
     hass: HomeAssistant,
+    target: str,
     side_effect: type[Exception],
     error: str,
 ) -> None:
@@ -237,10 +252,7 @@ async def test_flow_fails_and_recovers(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.unifi.config_flow.get_unifi_api",
-        side_effect=side_effect,
-    ):
+    with patch(target, side_effect=side_effect):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={

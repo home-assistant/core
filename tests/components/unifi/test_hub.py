@@ -609,6 +609,7 @@ async def test_reconnect_mechanism_exceptions(
         (aiounifi.RequestError, CannotConnect),
         (aiounifi.ResponseError, CannotConnect),
         (aiounifi.Unauthorized, AuthenticationRequired),
+        (aiounifi.TwoFaTokenRequired, AuthenticationRequired),
         (aiounifi.LoginRequired, AuthenticationRequired),
         (aiounifi.AiounifiException, AuthenticationRequired),
     ],

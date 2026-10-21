@@ -55,7 +55,7 @@ async def get_unifi_api(
         async with asyncio.timeout(10):
             await api.login()
 
-    except aiounifi.Unauthorized as err:
+    except (aiounifi.TwoFaTokenRequired, aiounifi.Unauthorized) as err:
         LOGGER.warning(
             "Connected to UniFi Network at %s but not registered: %s",
             config[CONF_HOST],
