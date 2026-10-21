@@ -4,13 +4,12 @@ from unittest.mock import Mock, patch
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import async_load_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import location as location_util
-
-from tests.common import async_load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 # Paris
 COORDINATES_PARIS = (48.864716, 2.349014)

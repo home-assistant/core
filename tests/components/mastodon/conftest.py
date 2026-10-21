@@ -3,13 +3,12 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from mastodon.Mastodon import Account, InstanceV2, Status
+from mastodon.Mastodon import Account, InstanceV2, MediaAttachment, Status
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.mastodon.const import CONF_BASE_URL, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
-
-from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture
@@ -17,7 +16,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.mastodon.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -45,6 +44,7 @@ def mock_mastodon_client() -> Generator[AsyncMock]:
             load_fixture("account.json", DOMAIN)
         )
         client.mastodon_api_version = 2
+        client.media_post.side_effect = [MediaAttachment(id=1), MediaAttachment(id=2)]
         client.status_post.return_value = Status.from_json(
             load_fixture("status_post.json", DOMAIN)
         )

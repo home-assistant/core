@@ -2,17 +2,19 @@
 
 from datetime import timedelta
 import logging
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from aioswitcher.device import SwitcherBase
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, update_coordinator
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DOMAIN, MAX_UPDATE_INTERVAL_SEC, SIGNAL_DEVICE_ADD
+
+if TYPE_CHECKING:
+    from . import SwitcherConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,12 +24,12 @@ class SwitcherDataUpdateCoordinator(
 ):
     """Switcher device data update coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: SwitcherConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: SwitcherConfigEntry,
         device: SwitcherBase,
     ) -> None:
         """Initialize the Switcher device coordinator."""
@@ -68,12 +70,14 @@ class SwitcherDataUpdateCoordinator(
     def async_setup(self) -> None:
         """Set up the coordinator."""
         dev_reg = dr.async_get(self.hass)
-        dev_reg.async_get_or_create(
+        dev_reg.async_get_or_create_device(
             config_entry_id=self.config_entry.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
-            identifiers={(DOMAIN, self.device_id)},
-            manufacturer="Switcher",
-            name=self.name,
-            model=self.model,
+            device_info=dr.DeviceInfo(
+                connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
+                identifiers={(DOMAIN, self.device_id)},
+                manufacturer="Switcher",
+                name=self.name,
+                model=self.model,
+            ),
         )
         async_dispatcher_send(self.hass, SIGNAL_DEVICE_ADD, self)

@@ -9,7 +9,7 @@ import probatio
 
 from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_NAME
-from homeassistant.core import callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -82,7 +82,9 @@ class SteamistConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
         self.host = host
         if self.hass.config_entries.flow.async_has_matching_flow(self):
-            return self.async_abort(reason="already_in_progress")
+            return self.async_abort(
+                reason="already_in_progress", translation_domain=HOMEASSISTANT_DOMAIN
+            )
         if not device.name:
             discovery = await async_discover_device(self.hass, device.ipaddress)
             if not discovery:

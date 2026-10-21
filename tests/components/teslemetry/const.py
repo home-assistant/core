@@ -1,20 +1,27 @@
 """Constants for the teslemetry tests."""
 
+from pytest_homeassistant.common import load_json_object_fixture
+
 from homeassistant.components.teslemetry.const import DOMAIN, TeslemetryState
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-from tests.common import load_json_object_fixture
-
 UNIQUE_ID = "abc-123"
 CONFIG_V1 = {CONF_ACCESS_TOKEN: "abc-123"}
+
+# The vehicle in products.json, and the Bluetooth address a subentry pairs it at.
+VIN = "LRW3F7EK4NC700000"
+ADDRESS = "AA:BB:CC:DD:EE:FF"
 
 WAKE_UP_ONLINE = {"response": {"state": TeslemetryState.ONLINE}, "error": None}
 
 PRODUCTS = load_json_object_fixture("products.json", DOMAIN)
 PRODUCTS_MODERN = load_json_object_fixture("products.json", DOMAIN)
 PRODUCTS_MODERN["response"][0]["command_signing"] = "required"
+CYBERTRUCK_VIN = "7G2CEHED0RA000000"
+# A streaming vehicle's products entry carries no vehicle_config.
 PRODUCTS_CYBERTRUCK = load_json_object_fixture("products.json", DOMAIN)
-PRODUCTS_CYBERTRUCK["response"][0]["vehicle_config"]["car_type"] = "cybertruck"
+PRODUCTS_CYBERTRUCK["response"][0]["vin"] = CYBERTRUCK_VIN
+del PRODUCTS_CYBERTRUCK["response"][0]["vehicle_config"]
 VEHICLE_DATA = load_json_object_fixture("vehicle_data.json", DOMAIN)
 VEHICLE_DATA_ASLEEP = load_json_object_fixture("vehicle_data.json", DOMAIN)
 VEHICLE_DATA_ASLEEP["response"]["state"] = TeslemetryState.OFFLINE
@@ -25,6 +32,7 @@ VEHICLE_DATA_NONE["response"]["vehicle_state"]["rt"] = None
 VEHICLE_DATA_NONE["response"]["charge_state"]["charge_port_door_open"] = None
 LIVE_STATUS = load_json_object_fixture("live_status.json", DOMAIN)
 SITE_INFO = load_json_object_fixture("site_info.json", DOMAIN)
+POWERWALL_STATUS = load_json_object_fixture("powerwall_status.json", DOMAIN)
 SITE_INFO_WEEK_CROSSING = load_json_object_fixture(
     "site_info_week_crossing.json", DOMAIN
 )
@@ -83,7 +91,7 @@ RESPONSE_OK = {"response": {}, "error": None}
 # (heated rear bench, no third row, no seat cooling).
 VEHICLE_CONFIG = {
     "rear_seat_heaters": 1,
-    "third_row_seats": "None",
+    "third_row_seats": False,
     "has_seat_cooling": False,
 }
 
@@ -119,6 +127,10 @@ METADATA = {
             "name": "Energy Site",
         }
     },
+}
+METADATA_CYBERTRUCK = {
+    **METADATA,
+    "vehicles": {CYBERTRUCK_VIN: METADATA["vehicles"]["LRW3F7EK4NC700000"]},
 }
 METADATA_LEGACY = {
     "uid": UNIQUE_ID,

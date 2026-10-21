@@ -1,6 +1,7 @@
 {
   "domain": "scorpiontrack",
   "name": "ScorpionTrack",
+  "categories": ["vehicles_transport.cars_evs", "presence_location.trackers"],
   "codeowners": ["@Herbertmt978"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/scorpiontrack",

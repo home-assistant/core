@@ -3,6 +3,8 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries
 from homeassistant.components.application_credentials import (
@@ -22,9 +24,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
 from .conftest import dummy_systems
-
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -123,7 +122,7 @@ async def test_full_flow(
     }
 
     with patch(
-        "homeassistant.components.ekeybionyx.async_setup_entry", return_value=True
+        "homeassistant.components.ekeybionyx.async_setup_entry", return_value=None
     ) as mock_setup:
         flow5 = await hass.config_entries.flow.async_configure(
             flow2["flow_id"],

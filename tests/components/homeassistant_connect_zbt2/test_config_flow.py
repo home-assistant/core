@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from universal_silabs_flasher.flasher import Zbt2Flasher
 
 from homeassistant.components.homeassistant_connect_zbt2.const import DOMAIN
@@ -30,8 +31,6 @@ from homeassistant.setup import async_setup_component
 
 from .common import USB_DATA_ZBT2
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture(name="supervisor")
 def mock_supervisor_fixture() -> Generator[None]:
@@ -48,7 +47,7 @@ def setup_entry_fixture() -> Generator[AsyncMock]:
     """Mock entry setup."""
     with patch(
         "homeassistant.components.homeassistant_connect_zbt2.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -120,6 +119,7 @@ async def test_config_flow_zigbee(hass: HomeAssistant) -> None:
         "serial_number": usb_data.serial_number,
         "vid": usb_data.vid,
     }
+    assert create_result["result"].unique_id == usb_data.serial_number
 
     flows = hass.config_entries.flow.async_progress()
 
@@ -226,6 +226,7 @@ async def test_config_flow_thread(
         "serial_number": usb_data.serial_number,
         "vid": usb_data.vid,
     }
+    assert create_result["result"].unique_id == usb_data.serial_number
 
     flows = hass.config_entries.flow.async_progress()
 
@@ -324,9 +325,7 @@ async def test_options_flow(
                 ),
             ],
         ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.util.parse_firmware_image"
-        ),
+        patch("universal_silabs_flasher.firmware.parse_firmware_image"),
     ):
         pick_result = await hass.config_entries.options.async_configure(
             result["flow_id"],

@@ -3,6 +3,8 @@
 from ipaddress import IPv4Network
 from unittest.mock import AsyncMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from telegram.error import TimedOut
 
 from homeassistant.components.telegram_bot.bot import ALLOWED_UPDATES
@@ -10,9 +12,6 @@ from homeassistant.components.telegram_bot.const import DOMAIN
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_set_webhooks_failed(

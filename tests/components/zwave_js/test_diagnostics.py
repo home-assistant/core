@@ -5,6 +5,12 @@ from typing import Any, cast
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import (
+    get_diagnostics_for_config_entry,
+    get_diagnostics_for_device,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
@@ -23,13 +29,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .common import PROPERTY_ULTRAVIOLET
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import (
-    get_diagnostics_for_config_entry,
-    get_diagnostics_for_device,
-)
-from tests.typing import ClientSessionGenerator
 
 
 async def test_config_entry_diagnostics(

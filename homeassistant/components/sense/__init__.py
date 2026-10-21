@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 from functools import partial
-import logging
 
 from sense_energy import (
     ASyncSenseable,
@@ -27,8 +26,6 @@ from .const import (
 )
 from .coordinator import SenseRealtimeCoordinator, SenseTrendCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 type SenseConfigEntry = ConfigEntry[SenseData]
 
@@ -42,7 +39,7 @@ class SenseData:
     rt: SenseRealtimeCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> None:
     """Set up Sense from a config entry."""
 
     entry_data = entry.data
@@ -73,7 +70,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
         gateway.set_monitor_id(monitor_id)
         await gateway.get_monitor_data()
     except (SenseAuthenticationException, SenseMFARequiredException) as err:
-        _LOGGER.warning("Sense authentication expired")
         raise ConfigEntryAuthFailed(err) from err
     except SENSE_TIMEOUT_EXCEPTIONS as err:
         raise ConfigEntryNotReady(
@@ -94,6 +90,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
     except SenseAPIException as err:
         raise ConfigEntryNotReady(
             str(err) or "API error retrieving realtime data"
+        ) from err
+    except SenseAuthenticationException as err:
+        # We just authenticated, sense_energy also raises this for a 404 while
+        # the monitor is reconnecting
+        raise ConfigEntryNotReady(
+            str(err) or "Monitor not available for realtime data"
         ) from err
 
     trends_coordinator = SenseTrendCoordinator(hass, entry, gateway)
@@ -123,19 +125,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
     # via_device_id; child entities are added by concurrently-loaded platforms
     # before any of them registers the monitor device.
     sense_monitor_id = gateway.sense_monitor_id
-    dr.async_get(hass).async_get_or_create(
+    dr.async_get(hass).async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        name=f"Sense {sense_monitor_id}",
-        identifiers={(DOMAIN, sense_monitor_id)},
-        model="Sense",
-        manufacturer="Sense Labs, Inc.",
-        configuration_url="https://home.sense.com",
+        device_info=dr.DeviceInfo(
+            name=f"Sense {sense_monitor_id}",
+            identifiers={(DOMAIN, sense_monitor_id)},
+            model="Sense",
+            manufacturer="Sense Labs, Inc.",
+            configuration_url="https://home.sense.com",
+        ),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

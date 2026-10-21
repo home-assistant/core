@@ -397,6 +397,7 @@
         'off',
         'co2',
         'pm',
+        'iaqs',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -438,6 +439,7 @@
         'off',
         'co2',
         'pm',
+        'iaqs',
       ]),
     }),
     'context': <ANY>,
@@ -538,7 +540,7 @@
     'supported_features': 0,
     'translation_key': 'nox_learning_offset',
     'unique_id': '84fce612f5b8-nox_learning_offset',
-    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
 # name: test_all_entities[indoor][sensor.airgradient_nox_index_learning_offset-state]
@@ -546,7 +548,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient NOx index learning offset',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.DAYS: 'd'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airgradient_nox_index_learning_offset',
@@ -1141,7 +1143,7 @@
     'supported_features': 0,
     'translation_key': 'tvoc_learning_offset',
     'unique_id': '84fce612f5b8-tvoc_learning_offset',
-    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
 # name: test_all_entities[indoor][sensor.airgradient_voc_index_learning_offset-state]
@@ -1149,7 +1151,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient VOC index learning offset',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.DAYS: 'd'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airgradient_voc_index_learning_offset',
@@ -1304,7 +1306,7 @@
     'supported_features': 0,
     'translation_key': 'nox_learning_offset',
     'unique_id': '84fce612f5b8-nox_learning_offset',
-    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
 # name: test_all_entities[outdoor][sensor.airgradient_nox_index_learning_offset-state]
@@ -1312,7 +1314,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient NOx index learning offset',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.DAYS: 'd'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airgradient_nox_index_learning_offset',
@@ -1575,7 +1577,7 @@
     'supported_features': 0,
     'translation_key': 'tvoc_learning_offset',
     'unique_id': '84fce612f5b8-tvoc_learning_offset',
-    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
 # name: test_all_entities[outdoor][sensor.airgradient_voc_index_learning_offset-state]
@@ -1583,7 +1585,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient VOC index learning offset',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.DAYS: 'd'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airgradient_voc_index_learning_offset',
@@ -2139,7 +2141,7 @@
     'supported_features': 0,
     'translation_key': 'nox_learning_offset',
     'unique_id': '84fce612f5b8-nox_learning_offset',
-    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
 # name: test_v1_entities[sensor.airgradient_nox_index_learning_offset-state]
@@ -2147,7 +2149,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient NOx index learning offset',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.DAYS: 'd'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airgradient_nox_index_learning_offset',
@@ -2957,7 +2959,7 @@
     'supported_features': 0,
     'translation_key': 'tvoc_learning_offset',
     'unique_id': '84fce612f5b8-tvoc_learning_offset',
-    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
 # name: test_v1_entities[sensor.airgradient_voc_index_learning_offset-state]
@@ -2965,7 +2967,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient VOC index learning offset',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.DAYS: 'd'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.airgradient_voc_index_learning_offset',

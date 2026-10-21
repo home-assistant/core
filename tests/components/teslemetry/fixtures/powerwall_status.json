@@ -1,0 +1,34 @@
+{
+  "control": {
+    "islanding": {
+      "contactorClosed": true,
+      "customerIslandMode": "BACKUP",
+      "gridOK": true,
+      "microGridOK": true
+    },
+    "siteShutdown": {
+      "isShutDown": false,
+      "reasons": []
+    }
+  },
+  "esCan": {
+    "firmwareUpdate": {
+      "isUpdating": false,
+      "msa": null,
+      "powerwalls": null,
+      "pvInverters": null,
+      "sync": null
+    }
+  },
+  "pw3Can": {
+    "firmwareUpdate": {
+      "isUpdating": false,
+      "progress": null
+    }
+  },
+  "system": {
+    "sitemanagerStatus": {
+      "isRunning": true
+    }
+  }
+}
