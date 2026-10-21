@@ -16,6 +16,7 @@ from homeassistant.components.usb import (
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_NAME
+from homeassistant.helpers.selector import SerialPortSelector
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from .const import CONF_BUS_POWER, DOMAIN
@@ -109,14 +110,7 @@ class DaliConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=probatio.Schema(
-                {
-                    probatio.Required(CONF_DEVICE): probatio.In(
-                        {
-                            device: _serial_port_label(port)
-                            for device, port in self._ports.items()
-                        }
-                    )
-                }
+                {probatio.Required(CONF_DEVICE): SerialPortSelector()}
             ),
             errors=errors,
         )

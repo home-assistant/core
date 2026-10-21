@@ -18,6 +18,7 @@ from homeassistant.config_entries import SOURCE_USB, SOURCE_USER
 from homeassistant.const import CONF_DEVICE, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.selector import SerialPortSelector
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 
@@ -341,6 +342,25 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     )
     assert len(mock_setup_entry.mock_calls) == 1
     driver.return_value._transport.close.assert_called_once_with()
+
+
+async def test_user_flow_uses_serial_port_selector(hass: HomeAssistant) -> None:
+    """Test the manual flow offers a serial port selector.
+
+    The selector is what lists DALI in the ESPHome serial-proxy setup wizard; a
+    plain enum dropdown would still work but keep DALI out of that wizard.
+    """
+    with patch(
+        "homeassistant.components.dali.config_flow.async_scan_serial_ports",
+        return_value=[USB_PORT],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert isinstance(result["data_schema"].schema[CONF_DEVICE], SerialPortSelector)
 
 
 async def test_user_flow_non_usb_port(
