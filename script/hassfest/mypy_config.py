@@ -88,7 +88,6 @@ STRICT_SETTINGS: Final[list[str]] = [
     "disallow_untyped_calls",
     "disallow_untyped_decorators",
     "disallow_untyped_defs",
-    "no_implicit_reexport",
     "warn_return_any",
     "warn_unreachable",
     # TODO: turn these on, address issues
@@ -232,8 +231,8 @@ def _generate_and_validate_mypy_config(config: Config) -> str:
         mypy_config.add_section(strict_section)
         for key in STRICT_SETTINGS:
             mypy_config.set(strict_section, key, "true")
-        if strict_module in reexport_modules:
-            mypy_config.set(strict_section, "no_implicit_reexport", "true")
+        # Strictly typed integrations do not re-export imported names implicitly
+        mypy_config.set(strict_section, "no_implicit_reexport", "true")
 
     for reexport_module in sorted(reexport_modules.difference(strict_modules)):
         reexport_section = f"mypy-{reexport_module}"
