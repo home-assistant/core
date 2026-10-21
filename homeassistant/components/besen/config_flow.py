@@ -418,16 +418,19 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Validate a LAN host and PIN before selecting LAN."""
         if user_input is not None:
-            if self._current_entry() and not self._pending_data.get(CONF_SERIAL):
+            entry = self._current_entry()
+            if entry and not self._pending_data.get(CONF_SERIAL):
                 return self._lan_form({"base": "identity_unknown"})
             pin = user_input[CONF_PIN]
             if len(pin) != 6 or not (pin.isascii() and pin.isdecimal()):
                 return self._lan_form({"base": "invalid_auth"})
-            if not user_input[CONF_HOST].strip():
+            host = user_input[CONF_HOST].strip()
+            if not host:
                 return self._lan_form({"base": "cannot_connect"})
-            self._pending_data.update(
-                {CONF_HOST: user_input[CONF_HOST].strip(), CONF_PIN: pin}
-            )
+            if entry is None and host != self._pending_data.get(CONF_HOST):
+                self._pending_data = {}
+                self._pending_title = "Besen"
+            self._pending_data.update({CONF_HOST: host, CONF_PIN: pin})
             self._operation_step = "lan"
             return await self._start_operation(TRANSPORT_LAN)
         return self._lan_form({})

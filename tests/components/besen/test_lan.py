@@ -2198,3 +2198,42 @@ async def test_closing_overlapping_recovery_forms_queues_one_reload(
         reload.assert_awaited_once_with(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_config_entry.data[CONF_PIN] == FIXTURE_PIN
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_new_host_retry_resets_provisional_charger_identity(
+    hass: HomeAssistant, validation_clients: tuple[Mock, Mock]
+) -> None:
+    """Allow a different charger after failed initial cleanup has recovered."""
+    first, second = validation_clients
+    second_serial = "1122334455667788"
+    second_host = "192.0.2.20"
+    second.state = second.state.updated(
+        info=second.state.info.updated(serial=second_serial, model="Other BS20")
+    )
+    second.host = second_host
+    first.async_stop.side_effect = CannotConnect("stop failed")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST, CONF_PIN: FIXTURE_PIN}
+    )
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["errors"] == {"base": "cannot_connect"}
+    first.async_stop.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: second_host, CONF_PIN: FIXTURE_PIN}
+    )
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Other BS20"
+    assert result["data"][CONF_SERIAL] == second_serial
+    assert result["data"][CONF_ADDRESS] == f"lan:{second_serial}"
+    assert result["data"][CONF_HOST] == second_host
+    assert result["result"].unique_id == f"lan:{second_serial}"
+    assert first.async_stop.await_count == 2
+    second.async_start.assert_awaited_once()
+    second.async_stop.assert_awaited_once()
