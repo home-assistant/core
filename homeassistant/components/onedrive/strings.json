@@ -100,6 +100,9 @@
     "filenames_do_not_exist": {
       "message": "The following files do not exist: {filenames}"
     },
+    "hash_mismatch": {
+      "message": "Hash validation failed, backup file might be corrupt"
+    },
     "invalid_destination_path": {
       "message": "Invalid destination path `{destination_path}`: must be non-empty, must not contain `:` or `..` path segments"
     },

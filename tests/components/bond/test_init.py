@@ -5,10 +5,12 @@ from unittest.mock import MagicMock, Mock
 from aiohttp import ClientConnectionError, ClientResponseError
 from bond_async import DeviceType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.bond import DOMAIN, BondData
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ASSUMED_STATE, CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -31,9 +33,6 @@ from .common import (
     setup_bond_entity,
     setup_platform,
 )
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def test_async_setup_no_domain_config(hass: HomeAssistant) -> None:
@@ -68,7 +67,7 @@ async def test_async_setup_raises_entry_not_ready(
 
 
 async def test_async_setup_raises_fails_if_auth_fails(hass: HomeAssistant) -> None:
-    """Test that setup fails if auth fails during setup."""
+    """Test that setup fails and starts reauth if auth fails during setup."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
@@ -80,6 +79,10 @@ async def test_async_setup_raises_fails_if_auth_fails(hass: HomeAssistant) -> No
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == config_entry.entry_id
 
 
 async def test_async_setup_entry_sets_up_hub_and_supported_domains(

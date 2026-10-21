@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from justnimbus.exceptions import InvalidClientID, JustNimbusError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.justnimbus.const import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import FIXTURE_OLD_USER_INPUT, FIXTURE_UNIQUE_ID, FIXTURE_USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant) -> None:

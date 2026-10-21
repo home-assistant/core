@@ -10,6 +10,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from uiprotect import ProtectApiClient
 from uiprotect.api import RTSPSStreams
 from uiprotect.data import (
@@ -59,8 +60,6 @@ from .utils import (
     make_public_camera,
     public_rtsps_for,
 )
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 MAC_ADDR = "aa:bb:cc:dd:ee:ff"
 UNIFI_MAC = _async_unifi_mac_from_hass(MAC_ADDR)
@@ -203,6 +202,7 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.public_bootstrap.nvr.display_name = nvr.name
     client.public_bootstrap.nvr.device_type = None
     client.public_bootstrap.nvr.type = None
+    client.public_bootstrap.nvr.unifi_dict.return_value = {"name": nvr.name}
     client.public_bootstrap.nvr.doorbell_settings = PublicDoorbellSettings(
         default_message_text="Welcome", custom_messages=["Test"]
     )

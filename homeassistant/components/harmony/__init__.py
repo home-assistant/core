@@ -25,7 +25,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HarmonyConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HarmonyConfigEntry) -> None:
     """Set up Logitech Harmony Hub from a config entry."""
     # As there currently is no way to import options from yaml
     # when setting up a config entry, we fallback to adding
@@ -51,8 +51,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HarmonyConfigEntry) -> b
 
     entry.runtime_data = data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
 
 
 async def _migrate_old_unique_ids(
@@ -104,9 +102,10 @@ async def _update_listener(hass: HomeAssistant, entry: HarmonyConfigEntry) -> No
     )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: HarmonyConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HarmonyConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    # Shutdown a harmony remote for removal
-    await entry.runtime_data.shutdown()
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    finally:
+        # Shutdown a harmony remote for removal
+        await entry.runtime_data.shutdown()

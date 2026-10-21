@@ -3,6 +3,7 @@
 import asyncio
 from unittest.mock import MagicMock, Mock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from RFXtrx import RFXtrxTransportError
 
 from homeassistant import config_entries
@@ -14,8 +15,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import ENTRY_VERSION
-
-from tests.common import MockConfigEntry
 
 SOME_PROTOCOLS = ["ac", "arc"]
 

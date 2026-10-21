@@ -22,11 +22,15 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from . import LinkPlayConfigEntry
-from .const import DOMAIN, SHARED_DATA_KEY
+from .const import DOMAIN, ENTITY_ID_CHANGED_SIGNAL, SHARED_DATA_KEY
 from .entity import LinkPlayBaseEntity, exception_wrap
 
 _LOGGER = logging.getLogger(__name__)
@@ -149,6 +153,11 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
             entity_to_bridge.pop(self.entity_id, None)
 
         self.async_on_remove(_remove_entity_mapping)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, ENTITY_ID_CHANGED_SIGNAL, self.async_write_ha_state
+            )
+        )
 
     @callback
     @override
@@ -158,6 +167,8 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         entity_to_bridge.pop(old_entity_id, None)
         entity_to_bridge[self.entity_id] = self._bridge.device.uuid
         super().async_entity_id_changed(old_entity_id)
+        # Every player's group members are derived from entity_to_bridge
+        async_dispatcher_send(self.hass, ENTITY_ID_CHANGED_SIGNAL)
 
     @exception_wrap
     async def async_update(self) -> None:
@@ -357,7 +368,7 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         """Image url of playing media."""
         player = self._active_player
         if player.status in [PlayingStatus.PLAYING, PlayingStatus.PAUSED]:
-            return str(player.album_art)
+            return str(player.album_art) or None
         return None
 
     @exception_wrap

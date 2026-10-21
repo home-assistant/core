@@ -1,11 +1,11 @@
 """Tests for the diagnostics data provided by the RFXtrx integration."""
 
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
+
 from homeassistant.core import HomeAssistant
 
 from .conftest import setup_rfx_test_cfg
-
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(

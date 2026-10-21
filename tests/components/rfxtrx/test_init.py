@@ -2,6 +2,8 @@
 
 from unittest.mock import ANY, Mock, call, patch
 
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 import RFXtrx as rfxtrxmod
 
 from homeassistant.components.rfxtrx import (
@@ -24,9 +26,6 @@ from homeassistant.setup import async_setup_component
 
 from . import ENTRY_VERSION
 from .conftest import get_device_identifier, setup_rfx_test_cfg
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 SOME_PROTOCOLS = ["ac", "arc"]
 

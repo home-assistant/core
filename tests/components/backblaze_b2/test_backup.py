@@ -12,6 +12,12 @@ from unittest.mock import Mock, patch
 from b2sdk._internal.raw_simulator import BucketSimulator
 from b2sdk.v2.exception import B2Error
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MagicMock,
+    WebSocketGenerator,
+)
 
 from homeassistant.components.backblaze_b2.backup import (
     _parse_metadata,
@@ -27,9 +33,6 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .const import BACKUP_METADATA, TEST_BACKUP
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -145,7 +148,7 @@ async def test_agents_delete(
         response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
     mock_main.delete.assert_called_once()
     mock_metadata.delete.assert_called_once()
 
@@ -159,7 +162,7 @@ async def test_agents_delete_not_found(
     await client.send_json_auto_id({"type": "backup/delete", "backup_id": "random"})
     response = await client.receive_json()
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
 
 
 async def test_agents_download(

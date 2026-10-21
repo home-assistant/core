@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from aioairzone.const import DEFAULT_SYSTEM_ID
 from aioairzone.exceptions import HotWaterNotAvailable, InvalidMethod, SystemOutOfRange
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -19,8 +20,6 @@ from .util import (
     USER_INPUT,
     async_init_integration,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_unique_id_migrate(

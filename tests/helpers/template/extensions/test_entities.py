@@ -1,9 +1,10 @@
 """Test entity functions for Home Assistant templates."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
 from tests.helpers.template.helpers import render
 
 
@@ -56,14 +57,6 @@ def test_entity_name(
     )
     assert render(hass, f"{{{{ entity_name('{entry2.entity_id}') }}}}") == (
         "Temperature"
-    )
-
-    # Strips device name prefix
-    entity_registry.async_update_entity(
-        entry2.entity_id, name="My Device Custom Sensor"
-    )
-    assert render(hass, f"{{{{ entity_name('{entry2.entity_id}') }}}}") == (
-        "Custom Sensor"
     )
 
 

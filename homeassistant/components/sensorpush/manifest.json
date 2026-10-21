@@ -12,6 +12,7 @@
       "service_uuid": "ef090000-11d6-42ba-93b8-9dd7ec090aa9"
     }
   ],
+  "categories": ["sensors.temperature_humidity"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],
