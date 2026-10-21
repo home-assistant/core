@@ -45,13 +45,16 @@ class UnifiHub:
         self.api = api
         self.config = UnifiConfig.from_config_entry(config_entry)
         self.connection = UnifiConnectionManager(
-            hass, config_entry, api, self.signal_reachable
+            hass,
+            config_entry,
+            api,
+            self.signal_reachable,
+            self._async_connection_recovered,
         )
         config_entry.async_on_unload(self.connection.stop)
         self.websocket = UnifiWebsocket(self.connection)
         self.entity_loader = UnifiEntityLoader(self)
         self._entity_helper = UnifiEntityHelper(hass, api)
-        self.connection.set_recovery_callback(self._async_connection_recovered)
 
         self.site = config_entry.data[CONF_SITE_ID]
         self.is_admin = False
@@ -101,10 +104,8 @@ class UnifiHub:
 
     async def initialize(self) -> None:
         """Set up a UniFi Network instance."""
-        await self.entity_loader.initialize()
-        self._entity_helper.initialize()
-        self.config.entry.async_on_unload(self._entity_helper.reset)
-
+        await self.entity_loader.async_load_sites()
+        # Requests for a site that is gone get 401, check it before using it
         unique_id = self.config.entry.unique_id
         assert unique_id is not None
         if unique_id not in self.api.sites:
@@ -112,6 +113,10 @@ class UnifiHub:
         if (site := self.api.sites.get(unique_id)) is None:
             raise ConfigEntryError(f"UniFi site {unique_id} no longer exists")
         self.is_admin = site.role == "admin"
+
+        await self.entity_loader.initialize()
+        self._entity_helper.initialize()
+        self.config.entry.async_on_unload(self._entity_helper.reset)
 
         self.config.entry.async_on_unload(
             self.config.entry.add_update_listener(self.async_config_entry_updated)
@@ -201,13 +206,6 @@ class UnifiHub:
         await self.connection.stop_and_wait()
         await self.websocket.stop_and_wait()
 
-        unload_ok = await self.hass.config_entries.async_unload_platforms(
+        return await self.hass.config_entries.async_unload_platforms(
             self.config.entry, PLATFORMS
         )
-
-        if not unload_ok:
-            return False
-
-        self._entity_helper.reset()
-
-        return True

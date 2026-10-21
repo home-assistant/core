@@ -1011,7 +1011,8 @@ async def test_wlan_client_sensors(
     await mock_websocket_state.disconnect()
     assert hass.states.get("sensor.ssid_1_clients").state == STATE_UNAVAILABLE
 
-    # Controller reconnects
+    # Controller reconnects, the recovery refetches the clients and the mocked
+    # payload still lists one on the SSID
     await mock_websocket_state.reconnect()
     assert hass.states.get("sensor.ssid_1_clients").state == "1"
 

@@ -8,6 +8,7 @@ import asyncio
 from collections.abc import Callable, Coroutine, Sequence
 from datetime import datetime, timedelta
 from functools import partial
+import json
 from typing import TYPE_CHECKING, Any
 
 import aiounifi
@@ -88,18 +89,24 @@ class UnifiEntityLoader:
         self.known_objects: set[tuple[str, str]] = set()
         """Tuples of entity description key and object ID of loaded entities."""
 
-    async def initialize(self) -> None:
-        """Initialize API data and extra client support."""
+    async def async_load_sites(self) -> None:
+        """Load the sites of the console."""
         try:
             async with asyncio.timeout(REQUEST_TIMEOUT):
                 await self.hub.api.sites.update()
-        except (*NOT_READY_ERRORS, aiounifi.AiounifiException) as err:
+        except (
+            TimeoutError,
+            json.JSONDecodeError,
+            aiounifi.AiounifiException,
+        ) as err:
             raise ConfigEntryNotReady(
                 "UniFi site information is not available"
             ) from err
-        if not self.hub.api.sites:
+        if not self.hub.api.sites.values():
             raise ConfigEntryNotReady("UniFi Network has not listed any site yet")
 
+    async def initialize(self) -> None:
+        """Initialize API data and extra client support."""
         try:
             async with asyncio.timeout(REQUEST_TIMEOUT):
                 await self.hub.api.system_information.update()

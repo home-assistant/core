@@ -25,7 +25,8 @@ UPDATE_TIMEOUT = 30
 
 # Errors after which the session is checked. A half started application can
 # answer with invalid JSON, and aiounifi raises LoginRequired once it does not
-# log in again on its own.
+# log in again on its own. Unlike NOT_READY_ERRORS of the readiness probe, a
+# rejection of a single request does not check the session.
 SESSION_CHECK_ERRORS = (
     TimeoutError,
     json.JSONDecodeError,
@@ -78,9 +79,6 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
     @override
     async def _async_update_data(self) -> None:
         """Update data from the API handler."""
-        if not self._connection.available:
-            raise UpdateFailed("UniFi Network connection is unavailable")
-
         try:
             async with asyncio.timeout(UPDATE_TIMEOUT):
                 await self._handler.update()
@@ -98,7 +96,7 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
             raise UpdateFailed(str(err)) from err
         except SESSION_CHECK_ERRORS as err:
             self._connection.verify_session(err)
-            raise UpdateFailed(str(err)) from err
+            raise UpdateFailed(str(err) or type(err).__name__) from err
         except aiounifi.AiounifiException as err:
             if not self._supports_websocket:
                 raise UpdateFailed(str(err)) from err
@@ -125,9 +123,11 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
     async def async_resync(self) -> None:
         """Refetch handler data after the connection is restored."""
         if not self._supports_websocket:
-            # The session can drop again while other handlers resync
-            if self._connection.available:
-                await self.async_refresh()
+            # A poll from before the outage can hold the refresh lock, don't
+            # let it hold up the recovery
+            self._connection.config_entry.async_create_background_task(
+                self.hass, self.async_refresh(), f"unifi_resync_{self.name}"
+            )
             return
 
         # Pushed data stays valid if the refetch fails, the websocket resumes after it

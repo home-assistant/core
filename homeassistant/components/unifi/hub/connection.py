@@ -2,14 +2,14 @@
 
 import asyncio
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
 import json
 import random
-import sys
 from typing import TYPE_CHECKING
 
 import aiounifi
 
+from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -19,11 +19,20 @@ if TYPE_CHECKING:
     from .. import UnifiConfigEntry
 
 CONNECTION_STABLE_PERIOD = 60
-REQUEST_TIMEOUT = 5
+REQUEST_TIMEOUT = 15
+# A safety net, every refetch of the recovery has its own shorter timeout
 RECOVERY_TIMEOUT = 60
+# Retry delays grow per attempt, spread out so several entries don't retry in step
+RETRY_DELAYS = (15, 30, 60)
+RETRY_JITTER = 0.2
+# UniFi OS limits logins per user and extends the lock on every attempt during it
+RATE_LIMIT_PAUSE = 300
+# Keep trying slowly while reauth is pending, the login may work again on its own
+REAUTH_RETRY_INTERVAL = 600
 
 # The Network application is starting or the session expired, try again later.
-# A half started application can answer with invalid JSON.
+# A half started application can answer with invalid JSON. UniFi OS answers a
+# login with 401 when its login service is down.
 NOT_READY_ERRORS = (
     TimeoutError,
     json.JSONDecodeError,
@@ -36,39 +45,14 @@ NOT_READY_ERRORS = (
 ACCOUNT_ERRORS = (aiounifi.NoPermission, aiounifi.TwoFaTokenRequired)
 # Rejected credentials, which a booting console can also answer for a moment.
 # UniFi OS answers a wrong password with 403.
-LOGIN_REJECTED_ERRORS = (
-    aiounifi.Forbidden,
-    aiounifi.LoginRequired,
-    aiounifi.Unauthorized,
-)
+LOGIN_REJECTED_ERRORS = (aiounifi.Forbidden, aiounifi.Unauthorized)
 LOGIN_REJECTIONS_BEFORE_REAUTH = 3
-# UniFi OS limits logins per user and extends the lock on every attempt during it
-RATE_LIMIT_PAUSE = 300
 
 
-@dataclass
-class BackoffPolicy:
-    """Exponential retry delay capped at a maximum interval."""
-
-    base: float = 15
-    factor: float = 2
-    maximum: float = 60
-    jitter: float = 0.2
-
-    def next_delay(self, attempt: int) -> float:
-        """Return the delay in seconds for a zero-based attempt number."""
-        delay = self.base
-        for _ in range(attempt):
-            if delay >= self.maximum:
-                return self.maximum
-            delay *= self.factor
-        return min(delay, self.maximum)
-
-    def jittered_delay(self, attempt: int) -> float:
-        """Return the delay spread out so several entries don't retry in step."""
-        return self.next_delay(attempt) * random.uniform(
-            1 - self.jitter, 1 + self.jitter
-        )
+def retry_delay(attempt: int) -> float:
+    """Return the jittered delay in seconds for a zero-based attempt number."""
+    delay = RETRY_DELAYS[min(attempt, len(RETRY_DELAYS) - 1)]
+    return delay * random.uniform(1 - RETRY_JITTER, 1 + RETRY_JITTER)
 
 
 class UnifiConnectionManager:
@@ -80,34 +64,30 @@ class UnifiConnectionManager:
         config_entry: UnifiConfigEntry,
         api: aiounifi.Controller,
         signal: str,
+        recovery_callback: Callable[[], Awaitable[None]],
     ) -> None:
-        """Initialize the manager."""
+        """Initialize the manager.
+
+        The recovery callback runs once the Network application is ready again.
+        """
         self.hass = hass
         self.config_entry = config_entry
         self.api = api
         self.signal = signal
         self.available = True
 
-        self._backoff = BackoffPolicy()
+        self._recovery_callback = recovery_callback
         self._attempt = 0
         self._retry_handle: asyncio.TimerHandle | None = None
         self._reconnect_task: asyncio.Task[None] | None = None
         self._verify_task: asyncio.Task[None] | None = None
         self._stable_handle: asyncio.TimerHandle | None = None
         self._recovering = False
-        self._recovery_callback: Callable[[], Awaitable[None]] | None = None
         self._reauth_required = False
         self._stopped = False
         self._login_rejections = 0
         self._rate_limited = False
         self._logged_error: type[BaseException] | None = None
-
-    @callback
-    def set_recovery_callback(
-        self, callback_fn: Callable[[], Awaitable[None]] | None
-    ) -> None:
-        """Set the coroutine run after the Network application is ready."""
-        self._recovery_callback = callback_fn
 
     @property
     def _reconnect_in_flight(self) -> bool:
@@ -160,9 +140,11 @@ class UnifiConnectionManager:
             self.report_failure(probe_err)
         except aiounifi.AiounifiException as probe_err:
             LOGGER.debug("UniFi Network answered with '%s'", probe_err)
-        except Exception:  # noqa: BLE001
+        except Exception as probe_err:  # noqa: BLE001
             # A broken probe must not take down a hub that still delivers data
-            self._log_unexpected_error("Unexpected error while checking UniFi Network")
+            self._log_unexpected_error(
+                "Unexpected error while checking UniFi Network", probe_err
+            )
         else:
             LOGGER.debug("UniFi Network is reachable, request failed with '%s'", err)
 
@@ -180,13 +162,15 @@ class UnifiConnectionManager:
 
     def _schedule_retry(self) -> None:
         """Schedule the next session login attempt unless one is pending."""
-        if self._stopped or self._reauth_required or self._retry_handle is not None:
+        if self._stopped or self._retry_handle is not None:
             return
-        if self._rate_limited:
+        if self._reauth_required:
+            delay: float = REAUTH_RETRY_INTERVAL
+        elif self._rate_limited:
             self._rate_limited = False
-            delay: float = RATE_LIMIT_PAUSE
+            delay = RATE_LIMIT_PAUSE
         else:
-            delay = self._backoff.jittered_delay(self._attempt)
+            delay = retry_delay(self._attempt)
             self._attempt += 1
         self._retry_handle = self.hass.loop.call_later(delay, self._async_reconnect)
 
@@ -208,7 +192,7 @@ class UnifiConnectionManager:
             await self._async_try_reconnect()
         except Exception as err:  # noqa: BLE001
             self._log_unexpected_error(
-                "Unexpected error while reconnecting to UniFi Network"
+                "Unexpected error while reconnecting to UniFi Network", err
             )
             self.report_failure(err)
         finally:
@@ -218,68 +202,98 @@ class UnifiConnectionManager:
                 self._schedule_retry()
 
     async def _async_try_reconnect(self) -> None:
-        """Run one login, readiness probe and recovery attempt."""
-        try:
-            async with asyncio.timeout(REQUEST_TIMEOUT):
-                await self.api.login()
-        except ACCOUNT_ERRORS as err:
-            self._start_reauth(err)
-            return
-        except LOGIN_REJECTED_ERRORS as err:
-            self._login_rejections += 1
-            if self._login_rejections >= LOGIN_REJECTIONS_BEFORE_REAUTH:
-                self._start_reauth(err)
-            else:
-                LOGGER.debug("UniFi Network rejected the login: %s", err)
-            return
-        except aiounifi.AuthenticationRateLimitError as err:
-            LOGGER.debug("UniFi Network rate limits logins: %s", err)
-            self._rate_limited = True
-            return
-        except (TimeoutError, aiounifi.AiounifiException) as err:
-            LOGGER.debug("UniFi Network login failed: %s", err)
-            return
+        """Run one readiness check, login if needed, and recovery attempt."""
+        # The session can outlive an outage, only log in when it did not
+        if not await self._async_application_ready():
+            if not await self._async_login():
+                return
+            if not await self._async_application_ready():
+                return
+
         self._login_rejections = 0
-
-        try:
-            async with asyncio.timeout(REQUEST_TIMEOUT):
-                await self.api.system_information.update()
-        except NOT_READY_ERRORS as err:
-            LOGGER.debug("UniFi Network is not ready after login: %s", err)
-            return
-        except aiounifi.AiounifiException as err:
-            # The application answers, the account may not see system information
-            LOGGER.debug("UniFi Network answered the readiness probe with: %s", err)
-
+        if self._reauth_required:
+            self._end_reauth()
         self._recovering = True
         self._set_available(True)
-        if self._recovery_callback is not None:
-            try:
-                async with asyncio.timeout(RECOVERY_TIMEOUT):
-                    await self._recovery_callback()
-            except TimeoutError as err:
-                self.report_failure(err)
-                return
+        try:
+            async with asyncio.timeout(RECOVERY_TIMEOUT):
+                await self._recovery_callback()
+        except TimeoutError as err:
+            self.report_failure(err)
+            return
 
         if self.available and not self._stopped:
             self._stable_handle = self.hass.loop.call_later(
                 CONNECTION_STABLE_PERIOD, self._async_connection_stable
             )
 
+    async def _async_login(self) -> bool:
+        """Log in, return if it worked."""
+        try:
+            async with asyncio.timeout(REQUEST_TIMEOUT):
+                await self.api.login()
+        except ACCOUNT_ERRORS as err:
+            self._start_reauth(err)
+        except LOGIN_REJECTED_ERRORS as err:
+            self._login_rejections += 1
+            if self._login_rejections >= LOGIN_REJECTIONS_BEFORE_REAUTH:
+                self._start_reauth(err)
+            else:
+                LOGGER.debug("UniFi Network rejected the login: %s", err)
+        except aiounifi.AuthenticationRateLimitError as err:
+            if not self._rate_limited:
+                LOGGER.info(
+                    "UniFi Network at %s limits logins, pausing reconnects for %s"
+                    " seconds",
+                    self.config_entry.data[CONF_HOST],
+                    RATE_LIMIT_PAUSE,
+                )
+            LOGGER.debug("UniFi Network rate limits logins: %s", err)
+            self._rate_limited = True
+        except (TimeoutError, aiounifi.AiounifiException) as err:
+            # Only rejections in a row start reauth
+            self._login_rejections = 0
+            LOGGER.debug("UniFi Network login failed: %r", err)
+        else:
+            return True
+        return False
+
+    async def _async_application_ready(self) -> bool:
+        """Return if the Network application answers with the current session."""
+        try:
+            async with asyncio.timeout(REQUEST_TIMEOUT):
+                await self.api.system_information.update()
+        except NOT_READY_ERRORS as err:
+            LOGGER.debug("UniFi Network is not ready: %r", err)
+            return False
+        except aiounifi.AiounifiException as err:
+            # The application answers, the account may not see system information
+            LOGGER.debug("UniFi Network answered the readiness probe with: %s", err)
+        return True
+
     def _start_reauth(self, err: Exception) -> None:
-        """Stop retrying, only the user can fix the login."""
+        """Ask the user to fix the login, keep retrying slowly meanwhile."""
         LOGGER.debug("UniFi Network rejected the login: %s", err)
+        if self._reauth_required:
+            return
         self._reauth_required = True
         self.config_entry.async_start_reauth(self.hass)
 
-    def _log_unexpected_error(self, message: str) -> None:
+    def _end_reauth(self) -> None:
+        """Drop the reauth request once the login works again on its own."""
+        self._reauth_required = False
+        for flow in self.config_entry.async_get_active_flows(
+            self.hass, {SOURCE_REAUTH}
+        ):
+            self.hass.config_entries.flow.async_abort(flow["flow_id"])
+
+    def _log_unexpected_error(self, message: str, err: Exception) -> None:
         """Log a traceback once while the same error keeps repeating."""
-        error = sys.exc_info()[0]
-        if error is self._logged_error:
-            LOGGER.debug(message, exc_info=True)
+        if type(err) is self._logged_error:
+            LOGGER.debug(message, exc_info=err)
             return
-        self._logged_error = error
-        LOGGER.exception(message)
+        self._logged_error = type(err)
+        LOGGER.error(message, exc_info=err)
 
     @callback
     def _set_available(self, available: bool) -> None:
@@ -288,11 +302,12 @@ class UnifiConnectionManager:
             return
         self.available = available
         async_dispatcher_send(self.hass, self.signal)
+        host = self.config_entry.data[CONF_HOST]
         if available:
             self._logged_error = None
-            LOGGER.info("Connection to UniFi Network restored")
+            LOGGER.info("Connection to UniFi Network at %s restored", host)
         else:
-            LOGGER.info("Connection to UniFi Network lost")
+            LOGGER.info("Connection to UniFi Network at %s lost", host)
 
     @callback
     def stop(self) -> None:
@@ -306,7 +321,6 @@ class UnifiConnectionManager:
             task.cancel()
         self._reconnect_task = None
         self._verify_task = None
-        self._recovery_callback = None
 
     async def stop_and_wait(self) -> None:
         """Cancel and await in-flight login and probe attempts."""
