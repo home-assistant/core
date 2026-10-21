@@ -3433,6 +3433,9 @@ vehicle==3.0.0
 # homeassistant.components.velbus
 velbus-aio==2026.9.0
 
+# homeassistant.components.velbus
+velbus-frontend==2026.9.0
+
 # homeassistant.components.venstar
 venstarcolortouch==0.22
 

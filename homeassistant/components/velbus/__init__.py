@@ -1,7 +1,5 @@
 """Support for Velbus devices."""
 
-import asyncio
-from dataclasses import dataclass
 import logging
 import os
 import shutil
@@ -10,7 +8,6 @@ from velbusaio.controller import Velbus
 from velbusaio.exceptions import VelbusConnectionFailed
 from velbusaio.helpers import get_property_key_map
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
@@ -22,8 +19,10 @@ from homeassistant.helpers import (
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_VLP_FILE, DOMAIN
+from .const import CONF_ADVANCED_MODE, CONF_VLP_FILE, DOMAIN
+from .data import VelbusConfigEntry, VelbusData
 from .services import async_setup_services
+from .websocket_api import async_register_websocket_api, async_update_panel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,16 +39,6 @@ PLATFORMS = [
 ]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-type VelbusConfigEntry = ConfigEntry[VelbusData]
-
-
-@dataclass
-class VelbusData:
-    """Runtime data for the Velbus config entry."""
-
-    controller: Velbus
-    scan_task: asyncio.Task
 
 
 async def velbus_scan_task(
@@ -166,6 +155,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> No
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    async_register_websocket_api(hass)
+    await async_update_panel(hass, setting_up_entry_id=entry.entry_id)
+
 
 async def async_unload_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> None:
     """Unload (close) the velbus connection."""
@@ -173,6 +165,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> N
         await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
     finally:
         await entry.runtime_data.controller.stop()
+        await async_update_panel(hass, unloading_entry_id=entry.entry_id)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> None:
@@ -237,8 +230,22 @@ async def async_migrate_entry(
         if os.path.isdir(cache_path):
             await hass.async_add_executor_job(shutil.rmtree, cache_path)
 
+    data = dict(config_entry.data)
+    options = dict(config_entry.options)
+    minor_version = config_entry.minor_version
+
+    if minor_version < 3:
+        data.setdefault(CONF_ADVANCED_MODE, False)
+        minor_version = 3
+
     # update the config entry
-    hass.config_entries.async_update_entry(config_entry, version=3, minor_version=2)
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data=data,
+        options=options,
+        version=3,
+        minor_version=minor_version,
+    )
 
     _LOGGER.error(
         "Migration to version %s.%s successful",
