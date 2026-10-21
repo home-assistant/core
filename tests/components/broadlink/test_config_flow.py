@@ -28,6 +28,9 @@ def broadlink_setup_fixture():
         patch(
             "homeassistant.components.broadlink.async_setup_entry", return_value=None
         ),
+        patch(
+            "homeassistant.components.broadlink.async_unload_entry", return_value=True
+        ),
     ):
         yield
 
@@ -1107,3 +1110,150 @@ async def test_dhcp_updates_host(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_entry.data["host"] == "4.5.6.7"
+
+
+async def test_reconfigure(hass: HomeAssistant) -> None:
+    """Test reconfiguring the host of a device."""
+    device = get_device("Living Room")
+    mock_entry = device.get_mock_entry()
+    mock_entry.add_to_hass(hass)
+
+    result = await mock_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    device.host = "192.168.1.128"
+    mock_api = device.get_mock_api()
+    with patch(DEVICE_HELLO, return_value=mock_api) as mock_hello:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": device.host}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert dict(mock_entry.data) == device.get_entry_data()
+    assert mock_hello.call_args == call(device.host, timeout=device.timeout)
+    assert mock_api.auth.call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(blke.NetworkTimeoutError(), "cannot_connect", id="timeout"),
+        pytest.param(OSError(errno.EINVAL, None), "invalid_host", id="invalid_ip"),
+        pytest.param(
+            OSError(socket.EAI_NONAME, None), "invalid_host", id="invalid_hostname"
+        ),
+        pytest.param(
+            OSError(errno.ENETUNREACH, None), "cannot_connect", id="unreachable"
+        ),
+        pytest.param(OSError(), "unknown", id="os_error"),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant, side_effect: Exception, error: str
+) -> None:
+    """Test we handle errors when reconfiguring and can recover."""
+    device = get_device("Living Room")
+    mock_entry = device.get_mock_entry()
+    mock_entry.add_to_hass(hass)
+
+    result = await mock_entry.start_reconfigure_flow(hass)
+
+    with patch(DEVICE_HELLO, side_effect=side_effect):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "192.168.1.128"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    device.host = "192.168.1.128"
+    with patch(DEVICE_HELLO, return_value=device.get_mock_api()):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": device.host}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_entry.data["host"] == device.host
+
+
+async def test_reconfigure_unique_id_mismatch(hass: HomeAssistant) -> None:
+    """Test we abort when reconfiguring to a different device."""
+    device = get_device("Living Room")
+    mock_entry = device.get_mock_entry()
+    mock_entry.add_to_hass(hass)
+
+    result = await mock_entry.start_reconfigure_flow(hass)
+
+    other_device = get_device("Office")
+    mock_api = other_device.get_mock_api()
+    with patch(DEVICE_HELLO, return_value=mock_api):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": other_device.host}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert dict(mock_entry.data) == device.get_entry_data()
+    assert mock_api.auth.call_count == 0
+
+
+async def test_reconfigure_locked_device_reset(hass: HomeAssistant) -> None:
+    """Test reconfiguring a device that must be unlocked manually."""
+    device = get_device("Living Room")
+    mock_entry = device.get_mock_entry()
+    mock_entry.add_to_hass(hass)
+
+    result = await mock_entry.start_reconfigure_flow(hass)
+
+    device.host = "192.168.1.128"
+    mock_api = device.get_mock_api()
+    mock_api.auth.side_effect = blke.AuthenticationError()
+    with patch(DEVICE_HELLO, return_value=mock_api):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": device.host}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reset"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    with patch(DEVICE_HELLO, return_value=device.get_mock_api()) as mock_hello:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_entry.data["host"] == device.host
+    assert mock_hello.call_args == call(device.host, timeout=device.timeout)
+
+
+async def test_reconfigure_locked_device_unlock(hass: HomeAssistant) -> None:
+    """Test reconfiguring a locked device offers to unlock it."""
+    device = get_device("Living Room")
+    mock_entry = device.get_mock_entry()
+    mock_entry.add_to_hass(hass)
+
+    result = await mock_entry.start_reconfigure_flow(hass)
+
+    device.host = "192.168.1.128"
+    mock_api = device.get_mock_api()
+    mock_api.is_locked = True
+    with patch(DEVICE_HELLO, return_value=mock_api):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": device.host}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "unlock"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"unlock": True}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_entry.data["host"] == device.host
+    assert mock_api.set_lock.call_args == call(False)

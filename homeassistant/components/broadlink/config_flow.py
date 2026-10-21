@@ -17,6 +17,7 @@ import probatio
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
     SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
 )
@@ -30,6 +31,32 @@ from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DEVICE_TYPES, DOMAIN
 from .helpers import format_mac
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class HelloError(Exception):
+    """Error to indicate a device could not be discovered."""
+
+    def __init__(self, error: str, message: str) -> None:
+        """Initialize the error."""
+        super().__init__(message)
+        self.error = error
+        self.message = message
+
+
+async def _async_hello(host: str, timeout: int) -> blk.Device:
+    """Discover the device at the given host."""
+    try:
+        device = await blk.hello(host, timeout=timeout)
+    except NetworkTimeoutError as err:
+        raise HelloError("cannot_connect", "Device not found") from err
+    except OSError as err:
+        if err.errno in {errno.EINVAL, socket.EAI_NONAME}:
+            raise HelloError("invalid_host", "Invalid hostname or IP address") from err
+        if err.errno == errno.ENETUNREACH:
+            raise HelloError("cannot_connect", str(err)) from err
+        raise HelloError("unknown", str(err)) from err
+    device.timeout = timeout
+    return device
 
 
 class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -118,26 +145,13 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
             timeout = user_input.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
 
             try:
-                device = await blk.hello(host, timeout=timeout)
+                device = await _async_hello(host, timeout)
 
-            except NetworkTimeoutError:
-                errors["base"] = "cannot_connect"
-                err_msg = "Device not found"
-
-            except OSError as err:
-                if err.errno in {errno.EINVAL, socket.EAI_NONAME}:
-                    errors["base"] = "invalid_host"
-                    err_msg = "Invalid hostname or IP address"
-                elif err.errno == errno.ENETUNREACH:
-                    errors["base"] = "cannot_connect"
-                    err_msg = str(err)
-                else:
-                    errors["base"] = "unknown"
-                    err_msg = str(err)
+            except HelloError as err:
+                errors["base"] = err.error
+                err_msg = err.message
 
             else:
-                device.timeout = timeout
-
                 if self.source != SOURCE_REAUTH:
                     await self.async_set_device(device)
                     self._abort_if_unique_id_configured(
@@ -245,6 +259,8 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 },
             )
 
+        if self.source == SOURCE_RECONFIGURE:
+            return await self.async_step_reconfigure({CONF_HOST: device.host[0]})
         return await self.async_step_user(
             {CONF_HOST: device.host[0], CONF_TIMEOUT: device.timeout}
         )
@@ -311,6 +327,12 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
         """Create the config entry."""
         device = self.device
 
+        if self.source == SOURCE_RECONFIGURE:
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(),
+                data_updates={CONF_HOST: device.host[0]},
+            )
+
         # Abort reauthentication flow.
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: device.host[0], CONF_TIMEOUT: device.timeout}
@@ -344,3 +366,32 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
         device.timeout = entry_data[CONF_TIMEOUT]
         await self.async_set_device(device)
         return await self.async_step_reset()
+
+    @override
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the device host."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            try:
+                device = await _async_hello(
+                    user_input[CONF_HOST], entry.data[CONF_TIMEOUT]
+                )
+            except HelloError as err:
+                errors["base"] = err.error
+            else:
+                await self.async_set_device(device, raise_on_progress=False)
+                self._abort_if_unique_id_mismatch()
+                return await self.async_step_auth()
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema({probatio.Required(CONF_HOST): str}),
+                user_input or entry.data,
+            ),
+            errors=errors,
+        )
