@@ -2334,6 +2334,7 @@ def test_valid_entity_id() -> None:
         "Light.kitchen",
         "light.Kitchen",
         "lightkitchen",
+        "light.kitchen\n",
     ):
         assert not ha.valid_entity_id(invalid), invalid
 
@@ -2363,6 +2364,7 @@ def test_valid_domain() -> None:
         "light.kitchen_yo_",
         "light.kitchen.",
         "Light",
+        "light\n",
     ):
         assert not ha.valid_domain(invalid), invalid
 
