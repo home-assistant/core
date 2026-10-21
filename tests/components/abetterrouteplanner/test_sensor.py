@@ -25,9 +25,15 @@ from homeassistant.components.abetterrouteplanner.sensor import (
     CHARGING_STATE_OPTIONS,
     SENSORS,
 )
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .conftest import (
@@ -452,3 +458,31 @@ async def test_multi_vehicle_entity_isolation(
     await hass.async_block_till_done()
     assert hass.states.get(expected_entity_id).state == "400.0"
     assert hass.states.get(other_entity_id).state == "380.0"
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_update_entity_keeps_streamed_value(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    mock_telemetry_stream: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A manual entity update is a no-op; the stream is the only data source."""
+    assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+    await setup_integration(hass, config_entry_with_vehicles)
+    fire_frame(
+        mock_telemetry_stream,
+        MOCK_VEHICLE_ID,
+        Telemetry(power=build_metric_value(12000.0)),
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: POWER_ENTITY_ID},
+        blocking=True,
+    )
+
+    assert hass.states.get(POWER_ENTITY_ID).state == "12000.0"
+    assert "Update method not implemented" not in caplog.text

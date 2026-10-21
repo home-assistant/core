@@ -283,3 +283,7 @@ class AbrpTelemetrySensor(CoordinatorEntity[AbrpTelemetryCoordinator], SensorEnt
         so it stops being reported rather than going stale indefinitely.
         """
         return not self.coordinator.stream_auth_failed and self.native_value is not None
+
+    @override
+    async def async_update(self) -> None:
+        """Make update_entity a no-op; values arrive through the stream."""
