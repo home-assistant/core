@@ -56,6 +56,8 @@ LOGIN_ERRORS = (
     *LOGIN_REJECTED_ERRORS,
     aiounifi.AuthenticationRateLimitError,
 )
+# Only a login answers these, so they need no further check
+LOGIN_ONLY_ERRORS = (*ACCOUNT_ERRORS, aiounifi.AuthenticationRateLimitError)
 
 
 def jitter(delay: float) -> float:
@@ -92,6 +94,7 @@ class UnifiConnectionManager:
         self._recovery_callback = recovery_callback
         self._attempt = 0
         self._retry_handle: asyncio.TimerHandle | None = None
+        self._retry_slowed = False
         self._reconnect_task: asyncio.Task[None] | None = None
         self._verify_task: asyncio.Task[None] | None = None
         self._stable_handle: asyncio.TimerHandle | None = None
@@ -107,8 +110,9 @@ class UnifiConnectionManager:
     def report_failure(self, err: Exception | None = None) -> None:
         """Mark the shared session unavailable and schedule one retry.
 
-        A pending retry stays as it is, and a running attempt schedules the
-        next one itself if it ends unavailable.
+        A pending retry stays as it is unless a pause or reauth now needs a
+        longer delay, and a running attempt schedules the next one itself if
+        it ends unavailable.
         """
         if self._stopped:
             return
@@ -129,6 +133,11 @@ class UnifiConnectionManager:
         """
         # Reauth is only pending while the session is unavailable
         if not self.available or self._stopped:
+            return
+        if isinstance(err, LOGIN_ONLY_ERRORS):
+            # aiounifi logged in on its own, a probe would log in again
+            self._handle_login_error(err)
+            self.report_failure(err)
             return
         if self._verify_task is not None and not self._verify_task.done():
             return
@@ -177,9 +186,19 @@ class UnifiConnectionManager:
         self._attempt = 0
 
     def _schedule_retry(self) -> None:
-        """Schedule the next reconnect attempt unless one is pending."""
-        if self._stopped or self._retry_handle is not None:
+        """Schedule the next reconnect attempt unless one is pending.
+
+        A pending retry is pushed back once when a pause or reauth started
+        after it was scheduled.
+        """
+        if self._stopped:
             return
+        slowed = self._rate_limited or self._reauth_required
+        if self._retry_handle is not None:
+            if not slowed or self._retry_slowed:
+                self._rate_limited = False
+                return
+            self._retry_handle.cancel()
         if self._rate_limited:
             self._rate_limited = False
             delay = jitter(self._rate_limit_pause)
@@ -190,6 +209,7 @@ class UnifiConnectionManager:
         else:
             delay = retry_delay(self._attempt)
             self._attempt += 1
+        self._retry_slowed = slowed
         self._retry_handle = self.hass.loop.call_later(delay, self._async_reconnect)
 
     @callback

@@ -25,13 +25,16 @@ UPDATE_TIMEOUT = 30
 
 # Errors after which the session is checked. A half started application can
 # answer with invalid JSON, and aiounifi raises LoginRequired once it does not
-# log in again on its own. Unlike NOT_READY_ERRORS of the readiness probe, a
-# rejection of a single request does not check the session.
+# log in again on its own, or the answer of its own login. Unlike
+# NOT_READY_ERRORS of the readiness probe, a rejection of a single request
+# does not check the session.
 SESSION_CHECK_ERRORS = (
     TimeoutError,
     json.JSONDecodeError,
+    aiounifi.AuthenticationRateLimitError,
     aiounifi.LoginRequired,
     aiounifi.RequestError,
+    aiounifi.TwoFaTokenRequired,
 )
 
 

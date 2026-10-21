@@ -94,6 +94,8 @@ class UnifiEntityLoader:
         try:
             async with asyncio.timeout(REQUEST_TIMEOUT):
                 await self.hub.api.sites.update()
+        except ACCOUNT_ERRORS as err:
+            raise ConfigEntryAuthFailed from err
         except (
             TimeoutError,
             json.JSONDecodeError,

@@ -293,12 +293,20 @@ async def test_setup_retries_when_network_application_not_ready(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.parametrize(
+    "target",
+    [
+        pytest.param(SITES_UPDATE, id="sites"),
+        pytest.param(SYSTEM_INFORMATION_UPDATE, id="system_information"),
+    ],
+)
 async def test_setup_asks_for_reauth_when_account_needs_mfa(
     hass: HomeAssistant,
     config_entry_factory: ConfigEntryFactoryType,
+    target: str,
 ) -> None:
     """Only the user can resolve multi-factor authentication."""
-    with patch(SYSTEM_INFORMATION_UPDATE, side_effect=aiounifi.TwoFaTokenRequired):
+    with patch(target, side_effect=aiounifi.TwoFaTokenRequired):
         config_entry = await config_entry_factory()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR

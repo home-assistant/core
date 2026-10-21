@@ -1566,7 +1566,7 @@ async def test_rate_limit_seen_while_reconnecting_ends_with_it(
     mock_websocket_state: WebsocketStateManager,
     polled_coordinator: UnifiDataUpdateCoordinator,
 ) -> None:
-    """A limit the session check saw during an outage does not outlive it."""
+    """A limit the session check saw delays a queued retry, but not the next outage."""
     probe_started = asyncio.Event()
     probe_release = asyncio.Event()
     calls = 0
@@ -1593,7 +1593,9 @@ async def test_rate_limit_seen_while_reconnecting_ends_with_it(
         probe_release.set()
         await hass.async_block_till_done(wait_background_tasks=True)
         mock_websocket_state.clear()
-        await _advance(hass, FIRST_RETRY_DELAY)
+        await _advance(hass, MAX_RETRY_DELAY)
+        assert not _available(hass)
+        await _advance(hass, RATE_LIMIT_PAUSE)
     assert _available(hass)
 
     await _advance(hass, CONNECTION_STABLE_PERIOD)
@@ -1645,6 +1647,35 @@ async def test_failure_during_reconnect_attempt_needs_no_second_attempt(
         await _advance(hass, MAX_RETRY_DELAY)
     assert calls == 1
     resync.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("error", "reauth"),
+    [
+        pytest.param(aiounifi.AuthenticationRateLimitError, False, id="rate_limited"),
+        pytest.param(aiounifi.TwoFaTokenRequired, True, id="mfa"),
+    ],
+)
+async def test_login_answer_of_poll_applies_its_policy(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    polled_coordinator: UnifiDataUpdateCoordinator,
+    error: type[Exception],
+    reauth: bool,
+) -> None:
+    """A poll that aiounifi logged in for applies the answer of that login."""
+    hub = config_entry_setup.runtime_data
+    with (
+        patch.object(polled_coordinator.handler, "update", side_effect=error),
+        patch.object(hub.api.system_information, "update") as probe,
+    ):
+        _fire(hass, IDLE_POLL_INTERVAL.total_seconds())
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert not _available(hass)
+        assert _reauth_requested(hass, config_entry_setup) is reauth
+
+        await _advance(hass, MAX_RETRY_DELAY)
+        probe.assert_not_called()
 
 
 @PARAMETRIZE_STOP
