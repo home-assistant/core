@@ -121,6 +121,8 @@ async def _get_nodes_data(
     except TimeoutError as err:
         raise ProxmoxConnectTimeout from err
     except ProxmoxAPIError as err:
+        if err.status == 401:
+            raise ProxmoxAuthenticationError from err
         _LOGGER.debug("Error during Proxmox client initialisation", exc_info=True)
         raise ProxmoxInitFailed from err
     except aiohttp.ClientConnectionError as err:
@@ -154,6 +156,8 @@ async def _get_nodes_data(
                 "Error fetching VMs/LXC for node %s", node.node, exc_info=True
             )
             raise ProxmoxNoVMLXCFound from err
+        except TimeoutError as err:
+            raise ProxmoxConnectTimeout from err
         except aiohttp.ClientConnectionError as err:
             raise ProxmoxConnectionError from err
 

@@ -1,10 +1,10 @@
 """Tests for Proxmox VE integration."""
 
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
+
 from homeassistant.components.proxmoxve.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 # Real response for PVEAuditor on /, with ACLs on VMs outside the mocked cluster
 AUDIT_PERMISSIONS = load_json_object_fixture("access_permissions.json", DOMAIN)

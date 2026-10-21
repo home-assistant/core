@@ -7,6 +7,11 @@ from aioproxmox.exceptions import ProxmoxAPIError, ProxmoxAuthError
 from aioproxmox.model import PVEPermissions
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.proxmoxve.coordinator import DEFAULT_UPDATE_INTERVAL
