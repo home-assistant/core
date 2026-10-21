@@ -14,6 +14,8 @@ from onedrive_personal_sdk.exceptions import (
 )
 from onedrive_personal_sdk.models.items import AppRoot, Drive, File, Folder
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.onedrive.const import (
@@ -31,9 +33,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 
 from . import setup_integration
 from .const import BACKUP_METADATA, INSTANCE_ID
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_load_unload_config_entry(

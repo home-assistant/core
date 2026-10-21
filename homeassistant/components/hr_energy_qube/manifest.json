@@ -9,7 +9,7 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["python_qube_heatpump"],
-  "quality_scale": "gold",
+  "quality_scale": "platinum",
   "requirements": ["python-qube-heatpump==1.17.0"],
   "zeroconf": [
     {

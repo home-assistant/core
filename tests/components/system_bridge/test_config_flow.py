@@ -4,6 +4,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from systembridgeconnector.exceptions import (
     AuthenticationException,
     ConnectionClosedException,
@@ -27,8 +28,6 @@ from . import (
     mock_data_listener,
 )
 
-from tests.common import MockConfigEntry
-
 
 @contextmanager
 def _patch_success() -> Generator[None]:
@@ -47,7 +46,7 @@ def _patch_success() -> Generator[None]:
         ),
         patch(
             "homeassistant.components.system_bridge.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield
@@ -86,7 +85,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.system_bridge.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -502,7 +501,7 @@ async def test_reauth_flow(
         ),
         patch(
             "homeassistant.components.system_bridge.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -558,7 +557,7 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.system_bridge.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(

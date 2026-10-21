@@ -15,6 +15,7 @@ from aioairzone.const import (
     API_ZONE_ID,
 )
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
@@ -29,8 +30,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .util import async_init_integration
-
-from tests.common import snapshot_platform
 
 
 @pytest.fixture(autouse=True)
