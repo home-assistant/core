@@ -146,6 +146,30 @@ def test_throttle() -> None:
     assert len(calls2) == 2
 
 
+def test_throttle_refused_no_throttle_call_keeps_cooldown() -> None:
+    """Test a no_throttle call refused by limit_no_throttle keeps the cooldown."""
+    calls = []
+
+    @util.Throttle(timedelta(seconds=10), timedelta(seconds=5))
+    def test_throttle():
+        calls.append(1)
+        return True
+
+    now = dt_util.utcnow()
+
+    with patch("homeassistant.util.utcnow", return_value=now):
+        assert test_throttle() is True
+
+    # Refused by limit_no_throttle, must not restart the min_time cooldown
+    with patch("homeassistant.util.utcnow", return_value=now + timedelta(seconds=2)):
+        assert test_throttle(no_throttle=True) is None
+
+    with patch("homeassistant.util.utcnow", return_value=now + timedelta(seconds=11)):
+        assert test_throttle() is True
+
+    assert len(calls) == 2
+
+
 def test_throttle_per_instance() -> None:
     """Test that the throttle method is done per instance of a class."""
 

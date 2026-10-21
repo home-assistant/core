@@ -6,6 +6,7 @@ from datetime import date, timedelta
 import enum
 from functools import partial
 import logging
+import math
 import os
 from pathlib import Path
 import re
@@ -410,6 +411,32 @@ def test_time_period() -> None:
     )
     for value, result in options:
         assert schema(value) == result
+
+
+@pytest.mark.parametrize(
+    "validator",
+    [
+        pytest.param(cv.time_period, id="time_period"),
+        pytest.param(cv.positive_time_period, id="positive_time_period"),
+    ],
+)
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param(math.inf, id="float_inf"),
+        pytest.param("inf", id="str_inf"),
+        pytest.param("-inf", id="str_neg_inf"),
+        pytest.param(10**20, id="huge_seconds"),
+        pytest.param("99999999999:00", id="huge_hours"),
+        pytest.param("0:0:inf", id="inf_seconds_field"),
+        pytest.param({"days": math.inf}, id="dict_inf_days"),
+        pytest.param({"days": 1e10}, id="dict_huge_days"),
+    ],
+)
+def test_time_period_overflow(validator: Callable[[Any], Any], value: Any) -> None:
+    """Test time_period rejects periods that overflow timedelta."""
+    with pytest.raises(probatio.Invalid):
+        probatio.Schema(validator)(value)
 
 
 def test_remove_falsy() -> None:

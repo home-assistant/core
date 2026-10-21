@@ -117,6 +117,24 @@ def test_color_xy_to_RGB() -> None:
     assert color_util.color_xy_to_RGB(0, 0, GAMUT) == (9, 85, 255)
 
 
+@pytest.mark.parametrize(
+    ("x", "expected"),
+    [
+        pytest.param(1.0, (255, 0, 60), id="x_1"),
+        pytest.param(0.5, (255, 0, 227), id="x_0.5"),
+        pytest.param(0.3, (181, 0, 255), id="x_0.3"),
+    ],
+)
+@pytest.mark.parametrize("y", [5e-324, 1e-320, 5e-309])
+def test_color_xy_brightness_to_RGB_tiny_y(
+    x: float, y: float, expected: tuple[int, int, int]
+) -> None:
+    """Test a tiny nonzero y is handled like y == 0 instead of producing NaN."""
+    assert color_util.color_xy_brightness_to_RGB(x, y, 255) == expected
+    assert color_util.color_xy_brightness_to_RGB(x, 0, 255) == expected
+    assert color_util.color_xy_to_hs(x, y) == color_util.color_xy_to_hs(x, 0)
+
+
 def test_color_RGB_to_hsv() -> None:
     """Test color_RGB_to_hsv."""
     assert color_util.color_RGB_to_hsv(0, 0, 0) == (0, 0, 0)
