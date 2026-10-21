@@ -1815,6 +1815,46 @@ async def test_unexpected_login_error_ends_rejections_in_a_row(
     assert not _reauth_requested(hass, config_entry_setup)
 
 
+async def test_queued_resync_is_dropped_when_session_goes_down(
+    hass: HomeAssistant,
+    hub: UnifiHub,
+    mock_websocket_state: WebsocketStateManager,
+    polled_coordinator: UnifiDataUpdateCoordinator,
+) -> None:
+    """A resync waiting for an older poll does not run once the session is down."""
+    poll_started = asyncio.Event()
+    poll_release = asyncio.Event()
+    calls = 0
+
+    async def slow_first_poll() -> None:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            poll_started.set()
+            await poll_release.wait()
+
+    with patch.object(
+        polled_coordinator.handler, "update", side_effect=slow_first_poll
+    ):
+        _fire(hass, IDLE_POLL_INTERVAL.total_seconds())
+        await _wait(poll_started)
+        mock_websocket_state.set()
+        await hass.async_block_till_done()
+        mock_websocket_state.clear()
+        # Within the timeout of the hanging poll
+        _fire(hass, FIRST_RETRY_DELAY + 1)
+        await hass.async_block_till_done()
+        assert _available(hass)
+
+        # The session goes down again while the resync waits for the poll
+        hub.connection.report_failure()
+        await hass.async_block_till_done()
+        assert not _available(hass)
+        poll_release.set()
+        await hass.async_block_till_done(wait_background_tasks=True)
+    assert calls == 1
+
+
 @PARAMETRIZE_STOP
 async def test_session_check_in_flight_at_stop_is_cancelled(
     hass: HomeAssistant,

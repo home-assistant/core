@@ -66,6 +66,7 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
             disable_polling_on_endpoint_not_found
         )
         self._endpoint_not_found_logged = False
+        self._resync_task: asyncio.Task[None] | None = None
 
         hub.config.entry.async_on_unload(handler.subscribe(self._async_handle_update))
         hub.config.entry.async_on_unload(
@@ -115,6 +116,10 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
         """Pause polling while the session is down, recovery refetches."""
         if not self._connection.available:
             self._unschedule_refresh()
+            if self._resync_task is not None:
+                # It can still wait for an older poll to free the refresh lock
+                self._resync_task.cancel()
+                self._resync_task = None
 
     @callback
     @override
@@ -128,8 +133,10 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
         if not self._supports_websocket:
             # A poll from before the outage can hold the refresh lock, don't
             # let it hold up the recovery
-            self._connection.config_entry.async_create_background_task(
-                self.hass, self.async_refresh(), f"unifi_resync_{self.name}"
+            self._resync_task = (
+                self._connection.config_entry.async_create_background_task(
+                    self.hass, self.async_refresh(), f"unifi_resync_{self.name}"
+                )
             )
             return
 
