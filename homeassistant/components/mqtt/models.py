@@ -511,9 +511,6 @@ class MqttData:
         tuple[str, str], DiscoveredDisabledEntity
     ] = field(default_factory=dict)
     discovery_already_discovered: set[tuple[str, str]] = field(default_factory=set)
-    # Maps a device discovery topic kept after removing its entities to the ID of
-    # its device, so the topic is cleared when the device is removed
-    retained_device_discovery_topics: dict[str, str] = field(default_factory=dict)
     discovery_pending_discovered: dict[tuple[str, str], PendingDiscovered] = field(
         default_factory=dict
     )

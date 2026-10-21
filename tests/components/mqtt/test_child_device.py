@@ -2,12 +2,12 @@
 
 import json
 from typing import Any
-from unittest.mock import DEFAULT, AsyncMock, call
+from unittest.mock import AsyncMock
 
 import probatio
 import pytest
 from pytest_homeassistant.common import async_fire_mqtt_message
-from pytest_homeassistant.typing import MqttMockHAClientGenerator, WebSocketGenerator
+from pytest_homeassistant.typing import MqttMockHAClientGenerator
 
 from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.components.mqtt.models import DATA_MQTT
@@ -17,7 +17,6 @@ from homeassistant.components.mqtt.schemas import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.setup import async_setup_component
 
 PARENT_DEVICE = {"identifiers": ["parent"], "name": "Parent", "manufacturer": "Acme"}
 CHILD_DEVICE = {"identifiers": ["sub"], "name": "Sub"}
@@ -888,20 +887,17 @@ async def test_remove_child_device_keeps_device_discovery_topic(
     )
 
 
-async def test_remove_last_child_device_keeps_parent_device(
+async def test_remove_last_child_device_removes_empty_parent_device(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test removing the last child device keeps a parent without components.
+    """Test removing the last child device removes a parent without components.
 
-    Removing the parent device afterwards clears the topic.
+    The topic is kept, like when the last entity of a device is removed.
     """
     mqtt_mock = await mqtt_mock_entry()
-    assert await async_setup_component(hass, "config", {})
-    ws_client = await hass_ws_client(hass)
     payload = {
         "dev": {"ids": ["parent"], "name": "Parent"},
         "o": {"name": "Foo2Mqtt"},
@@ -923,178 +919,12 @@ async def test_remove_last_child_device_keeps_parent_device(
     assert len(er.async_entries_for_device(entity_registry, child_device.id)) == 2
     mqtt_mock.async_publish.reset_mock()
 
-    # The entities of the child device are removed together, cleaning up the parent
-    # after the first entity would clear the topic when the next one is removed
+    # The entities of the child device are removed together, removing the parent
+    # after the first entity would let the next one clear the topic
     device_registry.async_remove_device(child_device.id)
-    await hass.async_block_till_done()
-    parent = _get_device(hass, device_registry, "parent")
-    assert parent is not None
-    mqtt_mock.async_publish.assert_not_called()
-
-    # The parent device has no entities left that clear the topic when removed
-    response = await ws_client.remove_device(parent.id)
-    assert response["success"]
     await hass.async_block_till_done()
     assert _get_device(hass, device_registry, "parent") is None
-    mqtt_mock.async_publish.assert_any_call(
-        DEVICE_TOPIC, None, 0, True, message_expiry_interval=None
-    )
-
-
-@pytest.mark.parametrize(
-    "enabled_by_default",
-    [pytest.param(True, id="enabled"), pytest.param(False, id="disabled")],
-)
-async def test_remove_old_parent_device_keeps_moved_device_discovery_topic(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    hass_ws_client: WebSocketGenerator,
-    enabled_by_default: bool,
-) -> None:
-    """Test removing the old device of a kept topic after it moved to another device.
-
-    The old device is kept by an entity of another discovery topic. A disabled
-    entity is not added, but is linked to its new device as well.
-    """
-    mqtt_mock = await mqtt_mock_entry()
-    assert await async_setup_component(hass, "config", {})
-    ws_client = await hass_ws_client(hass)
-    await _discover_switch(hass, "keeper", {"identifiers": ["parent"]}, name="Keeper")
-    component = {**DISCOVERY_SWITCH, "en": enabled_by_default}
-    payload: dict[str, Any] = {
-        "dev": {"ids": ["parent"], "name": "Parent"},
-        "o": {"name": "Foo2Mqtt"},
-        "cdevs": [{"ids": ["sub"], "name": "Sub", "cmps": {"sw": component}}],
-    }
-    async_fire_mqtt_message(hass, DEVICE_TOPIC, json.dumps(payload))
-    await hass.async_block_till_done()
-    child_device = _get_child_device(hass, device_registry, "sub")
-    assert child_device is not None
-    device_registry.async_remove_device(child_device.id)
-    await hass.async_block_till_done()
-
-    # The components of the kept topic are discovered again with another device
-    payload["dev"] = {"ids": ["new_parent"], "name": "New parent"}
-    async_fire_mqtt_message(hass, DEVICE_TOPIC, json.dumps(payload))
-    await hass.async_block_till_done()
-    child_device = _get_child_device(hass, device_registry, "sub")
-    assert child_device is not None
-    new_parent = _get_device(hass, device_registry, "new_parent")
-    assert new_parent is not None
-    assert child_device.parent_device_id == new_parent.id
-    parent = _get_device(hass, device_registry, "parent")
-    assert parent is not None
-    mqtt_mock.async_publish.reset_mock()
-
-    response = await ws_client.remove_device(parent.id)
-    assert response["success"]
-    await hass.async_block_till_done()
-    assert entity_registry.async_get_entity_id("switch", DOMAIN, "sw1") is not None
-    assert (
-        call(DEVICE_TOPIC, None, 0, True, message_expiry_interval=None)
-        not in mqtt_mock.async_publish.call_args_list
-    )
-
-
-async def test_remove_old_parent_device_keeps_device_discovery_topic_of_trigger(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    device_registry: dr.DeviceRegistry,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test removing the old device of a kept topic that now has a device trigger.
-
-    The device trigger is not an entity, and has another device than the kept topic.
-    """
-    mqtt_mock = await mqtt_mock_entry()
-    assert await async_setup_component(hass, "config", {})
-    ws_client = await hass_ws_client(hass)
-    await _discover_switch(hass, "keeper", {"identifiers": ["parent"]}, name="Keeper")
-    payload: dict[str, Any] = {
-        "dev": {"ids": ["parent"], "name": "Parent"},
-        "o": {"name": "Foo2Mqtt"},
-        "cdevs": [{"ids": ["sub"], "name": "Sub", "cmps": {"sw": DISCOVERY_SWITCH}}],
-    }
-    async_fire_mqtt_message(hass, DEVICE_TOPIC, json.dumps(payload))
-    await hass.async_block_till_done()
-    child_device = _get_child_device(hass, device_registry, "sub")
-    assert child_device is not None
-    device_registry.async_remove_device(child_device.id)
-    await hass.async_block_till_done()
-
-    payload = {
-        "dev": {"ids": ["new_parent"], "name": "New parent"},
-        "o": {"name": "Foo2Mqtt"},
-        "cmps": {"trigger1": {"p": "device_automation", **TRIGGER_CONFIG}},
-    }
-    async_fire_mqtt_message(hass, DEVICE_TOPIC, json.dumps(payload))
-    await hass.async_block_till_done()
-    assert _get_device(hass, device_registry, "new_parent") is not None
-    parent = _get_device(hass, device_registry, "parent")
-    assert parent is not None
-    mqtt_mock.async_publish.reset_mock()
-
-    response = await ws_client.remove_device(parent.id)
-    assert response["success"]
-    await hass.async_block_till_done()
-    assert _get_device(hass, device_registry, "new_parent") is not None
-    assert (
-        call(DEVICE_TOPIC, None, 0, True, message_expiry_interval=None)
-        not in mqtt_mock.async_publish.call_args_list
-    )
-
-
-async def test_remove_parent_device_skips_forgotten_device_discovery_topic(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    device_registry: dr.DeviceRegistry,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test a kept topic forgotten while clearing another topic is not cleared."""
-    mqtt_mock = await mqtt_mock_entry()
-    assert await async_setup_component(hass, "config", {})
-    ws_client = await hass_ws_client(hass)
-    other_topic = "homeassistant/device/parent_other/config"
-    for topic, child_id, component_id in (
-        (DEVICE_TOPIC, "sub1", "sw1"),
-        (other_topic, "sub2", "sw2"),
-    ):
-        payload = {
-            "dev": {"ids": ["parent"], "name": "Parent"},
-            "o": {"name": "Foo2Mqtt"},
-            "cdevs": [
-                {
-                    "ids": [child_id],
-                    "cmps": {
-                        component_id: {**DISCOVERY_SWITCH, "uniq_id": component_id}
-                    },
-                }
-            ],
-        }
-        async_fire_mqtt_message(hass, topic, json.dumps(payload))
-        await hass.async_block_till_done()
-        child_device = _get_child_device(hass, device_registry, child_id)
-        assert child_device is not None
-        device_registry.async_remove_device(child_device.id)
-        await hass.async_block_till_done()
-    parent = _get_device(hass, device_registry, "parent")
-    assert parent is not None
-    mqtt_mock.async_publish.reset_mock()
-
-    def forget_other_topic(*args: Any, **kwargs: Any) -> Any:
-        """Simulate a rediscovery of the other topic while publishing."""
-        hass.data[DATA_MQTT].retained_device_discovery_topics.pop(other_topic, None)
-        return DEFAULT
-
-    mqtt_mock.async_publish.side_effect = forget_other_topic
-    response = await ws_client.remove_device(parent.id)
-    assert response["success"]
-    await hass.async_block_till_done()
-    mqtt_mock.async_publish.assert_called_once_with(
-        DEVICE_TOPIC, None, 0, True, message_expiry_interval=None
-    )
+    mqtt_mock.async_publish.assert_not_called()
 
 
 async def test_remove_parent_device_with_child_device_components_clears_topic(

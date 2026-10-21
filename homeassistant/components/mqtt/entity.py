@@ -842,9 +842,9 @@ async def async_remove_entity_discovery_payload(
 
     A device discovery topic is only cleared when the device is removed as well,
     as clearing it removes all components of the device, including the components
-    of its child devices. Removing a child device keeps the topic and the parent
-    device, also when the parent device has no components left. The topic is then
-    cleared when the parent device is removed.
+    of its child devices. Removing a child device keeps the topic, and removes the
+    parent device when it has no components left, like a device that has no
+    entities left.
     """
     discovery_payload: MQTTDiscoveryPayload = discovery_data[ATTR_DISCOVERY_PAYLOAD]
     if discovery_payload.device_discovery:
@@ -862,10 +862,6 @@ async def async_remove_entity_discovery_payload(
         )
         is not None
     ):
-        # The device may have no entities left to clear the topic when it is removed
-        hass.data[DATA_MQTT].retained_device_discovery_topics[
-            discovery_data[ATTR_DISCOVERY_TOPIC]
-        ] = discovered_device_id
         application: str = discovery_payload[CONF_ORIGIN][CONF_NAME]
         _LOGGER.warning(
             "Although entity %s was removed from Home Assistant, it will be added "
@@ -881,6 +877,12 @@ async def async_remove_entity_discovery_payload(
         # discovery payload can no longer clean it up
         await async_cleanup_device_registry(
             hass, registry_entry.device_id, registry_entry.config_entry_id
+        )
+        # The entities of a removed child device check the parent device first,
+        # removing it earlier would let the next entity clear the topic
+        await asyncio.sleep(0)
+        await async_cleanup_device_registry(
+            hass, discovered_device_id, registry_entry.config_entry_id
         )
         return
     await async_remove_discovery_payload(hass, discovery_data)

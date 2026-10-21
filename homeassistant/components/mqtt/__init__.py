@@ -508,18 +508,6 @@ async def async_remove_config_entry_device(
     from . import device_automation  # noqa: PLC0415
 
     await device_automation.async_removed_from_device(hass, device_entry.id)
-    # Clear device discovery topics that no entity of the device clears anymore
-    retained_topics = hass.data[DATA_MQTT].retained_device_discovery_topics
-    for discovery_topic in [
-        topic
-        for topic, device_id in retained_topics.items()
-        if device_id == device_entry.id
-    ]:
-        # A rediscovery while publishing can forget or move the next topics
-        if retained_topics.get(discovery_topic) != device_entry.id:
-            continue
-        del retained_topics[discovery_topic]
-        await async_publish(hass, discovery_topic, None, retain=True)
     return True
 
 
