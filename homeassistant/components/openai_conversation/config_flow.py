@@ -29,6 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
+from homeassistant.helpers.field_visibility import FieldCondition
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     NumberSelector,
@@ -338,7 +339,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             )
         ] = bool
 
-        not_recommended: data_entry_flow.FieldCondition = {
+        not_recommended: FieldCondition = {
             "field": CONF_RECOMMENDED,
             "value": False,
         }
