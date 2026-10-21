@@ -1,6 +1,7 @@
 {
   "domain": "rotarex",
   "name": "Rotarex DIMES SRG",
+  "categories": ["energy"],
   "codeowners": ["@kangnieric"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/rotarex",

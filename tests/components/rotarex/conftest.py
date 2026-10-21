@@ -5,12 +5,11 @@ from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from rotarex_dimes_srg_api import RotarexSyncData, RotarexTank
 
 from homeassistant.components.rotarex.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
