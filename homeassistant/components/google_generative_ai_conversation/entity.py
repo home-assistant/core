@@ -111,6 +111,12 @@ def _gemini_version(name: str) -> tuple[int, int] | None:
     return None
 
 
+def supports_speech_metadata(model: str) -> bool:
+    """Return whether a TTS model accepts per-turn speech metadata like style."""
+    version = _gemini_version(model.removeprefix("models/"))
+    return version is not None and version >= (3, 8)
+
+
 def supports_custom_sampling(model: str) -> bool:
     """Keep sampling for older models and omit it for newer Gemini models."""
     name = model.removeprefix("models/")
