@@ -122,14 +122,16 @@ def _setup_server_device_registry(
     device_registry = dr.async_get(hass)
 
     # Create the parent OpenRGB SDK server device
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.entry_id)},
-        name=entry.data[CONF_NAME],
-        model="OpenRGB SDK Server",
-        manufacturer="OpenRGB",
-        sw_version=coordinator.get_client_protocol_version(),
-        entry_type=dr.DeviceEntryType.SERVICE,
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+            name=entry.data[CONF_NAME],
+            model="OpenRGB SDK Server",
+            manufacturer="OpenRGB",
+            sw_version=coordinator.get_client_protocol_version(),
+            entry_type=dr.DeviceEntryType.SERVICE,
+        ),
     )
 
 
