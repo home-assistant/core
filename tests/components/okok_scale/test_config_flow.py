@@ -204,7 +204,6 @@ async def test_async_step_user_replace_ignored(
     assert result["result"].title == OKOK_F0_TITLE
 
 
-@pytest.mark.usefixtures("mock_bluetooth")
 async def test_async_step_user_takes_precedence_over_discovery(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:

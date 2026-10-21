@@ -51,7 +51,7 @@ class MockBleakClient:
         return bytearray(OKOK_F0_GATT_DATA[id])
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_bluetooth(enable_bluetooth: None) -> Generator[None]:
     """Auto mock bluetooth."""
 

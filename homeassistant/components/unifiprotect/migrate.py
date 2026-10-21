@@ -1,6 +1,7 @@
 """UniFi Protect data migrations."""
 
 import logging
+from typing import NamedTuple
 
 from uiprotect.data import Bootstrap
 
@@ -14,6 +15,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.helpers.issue_registry import IssueSeverity
+from homeassistant.helpers.start import async_at_started
 
 from .const import DOMAIN
 from .data import UFPConfigEntry
@@ -87,6 +89,8 @@ def async_migrate_insecure_cameras(hass: HomeAssistant, entry: UFPConfigEntry) -
     Added in 2026.7.0
     """
     registry = er.async_get(hass)
+    # The rename must land before the camera platform sets up. Only the removal waits.
+    removals: list[_Removal] = []
     for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
         if entity.domain != Platform.CAMERA or not entity.unique_id.endswith(
             "_insecure"
@@ -101,14 +105,16 @@ def async_migrate_insecure_cameras(hass: HomeAssistant, entry: UFPConfigEntry) -
                 entity.entity_id, new_unique_id=secure_unique_id
             )
             continue
-        _async_repair_if_used(
-            hass,
-            entity,
-            f"insecure_camera_removed_{entity.unique_id}",
-            "insecure_camera_removed",
-            {"replacement": secure_entity_id},
+        removals.append(
+            _Removal(
+                entity.domain,
+                entity.unique_id,
+                f"insecure_camera_removed_{entity.unique_id}",
+                "insecure_camera_removed",
+                {"replacement": secure_entity_id},
+            )
         )
-        registry.async_remove(entity.entity_id)
+    _async_remove_when_started(hass, entry, removals)
 
 
 @callback
@@ -156,6 +162,51 @@ def _async_repair_if_used(
     )
 
 
+class _Removal(NamedTuple):
+    """An entity to remove once startup is done, with the repair if it is used."""
+
+    domain: str
+    unique_id: str
+    issue_id: str
+    translation_key: str
+    placeholders: dict[str, str] | None = None
+
+
+@callback
+def _async_remove_when_started(
+    hass: HomeAssistant,
+    entry: UFPConfigEntry,
+    removals: list[_Removal],
+) -> None:
+    """Remove entities once startup is done, raising a repair for used ones.
+
+    Before the automations are loaded every entity looks unused, so removing
+    earlier would drop the repair for good.
+    """
+    if not removals:
+        return
+
+    @callback
+    def _async_remove(_hass: HomeAssistant) -> None:
+        registry = er.async_get(hass)
+        for removal in removals:
+            entity_id = registry.async_get_entity_id(
+                removal.domain, DOMAIN, removal.unique_id
+            )
+            if entity_id is None or (entity := registry.async_get(entity_id)) is None:
+                continue
+            _async_repair_if_used(
+                hass,
+                entity,
+                removal.issue_id,
+                removal.translation_key,
+                removal.placeholders,
+            )
+            registry.async_remove(entity_id)
+
+    entry.async_on_unload(async_at_started(hass, _async_remove))
+
+
 @callback
 def async_remove_package_binary_sensor(
     hass: HomeAssistant, entry: UFPConfigEntry
@@ -171,18 +222,21 @@ def async_remove_package_binary_sensor(
     Added in 2026.7.0
     """
     registry = er.async_get(hass)
+    removals: list[_Removal] = []
     for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
         if entity.domain != Platform.BINARY_SENSOR or not entity.unique_id.endswith(
             "_smart_obj_package"
         ):
             continue
-        _async_repair_if_used(
-            hass,
-            entity,
-            f"package_binary_sensor_removed_{entity.unique_id}",
-            "package_binary_sensor_removed",
+        removals.append(
+            _Removal(
+                entity.domain,
+                entity.unique_id,
+                f"package_binary_sensor_removed_{entity.unique_id}",
+                "package_binary_sensor_removed",
+            )
         )
-        registry.async_remove(entity.entity_id)
+    _async_remove_when_started(hass, entry, removals)
 
 
 @callback
@@ -199,18 +253,21 @@ def async_remove_hdr_switch(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
     # Drop the stored record of the old deprecation repair.
     ir.async_delete_issue(hass, DOMAIN, "deprecate_hdr_switch")
     registry = er.async_get(hass)
+    removals: list[_Removal] = []
     for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
         if entity.domain != Platform.SWITCH or not entity.unique_id.endswith(
             "_hdr_mode"
         ):
             continue
-        _async_repair_if_used(
-            hass,
-            entity,
-            f"hdr_switch_removed_{entity.unique_id}",
-            "hdr_switch_removed",
+        removals.append(
+            _Removal(
+                entity.domain,
+                entity.unique_id,
+                f"hdr_switch_removed_{entity.unique_id}",
+                "hdr_switch_removed",
+            )
         )
-        registry.async_remove(entity.entity_id)
+    _async_remove_when_started(hass, entry, removals)
 
 
 @callback
@@ -272,6 +329,7 @@ def async_remove_sense_setting_mirrors(
     if not sensor_macs:
         return
     registry = er.async_get(hass)
+    removals: list[_Removal] = []
     for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
         mac, _, key = entity.unique_id.partition("_")
         replacement = _SENSE_SETTING_MIRRORS.get((entity.domain, key))
@@ -281,24 +339,29 @@ def async_remove_sense_setting_mirrors(
             hass, DOMAIN, f"sense_setting_mirror_deprecated_{entity.unique_id}"
         )
         replacement_platform, replacement_key = replacement
+        issue_id = f"sense_setting_mirror_removed_{entity.unique_id}"
         if replacement_entity_id := registry.async_get_entity_id(
             replacement_platform, DOMAIN, f"{mac}_{replacement_key}"
         ):
-            _async_repair_if_used(
-                hass,
-                entity,
-                f"sense_setting_mirror_removed_{entity.unique_id}",
-                "sense_setting_mirror_removed",
-                {"replacement": replacement_entity_id},
+            removals.append(
+                _Removal(
+                    entity.domain,
+                    entity.unique_id,
+                    issue_id,
+                    "sense_setting_mirror_removed",
+                    {"replacement": replacement_entity_id},
+                )
             )
         else:
-            _async_repair_if_used(
-                hass,
-                entity,
-                f"sense_setting_mirror_removed_{entity.unique_id}",
-                "sense_setting_mirror_removed_no_replacement",
+            removals.append(
+                _Removal(
+                    entity.domain,
+                    entity.unique_id,
+                    issue_id,
+                    "sense_setting_mirror_removed_no_replacement",
+                )
             )
-        registry.async_remove(entity.entity_id)
+    _async_remove_when_started(hass, entry, removals)
 
 
 # Release that removes the deprecated light mirrors.
@@ -366,30 +429,35 @@ def _async_deprecate_setting_mirrors(
     """Raise a repair for each used mirror, pointing at its replacement.
 
     The mirror keys are shared across device types, so the match is scoped to
-    ``macs``.
+    ``macs``. Waits for startup to finish, like ``_async_remove_when_started``.
     """
     if not macs:
         return
-    registry = er.async_get(hass)
-    for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
-        mac, _, key = entity.unique_id.partition("_")
-        mirror = (entity.domain, key)
-        if mirror not in replacements or mac not in macs:
-            continue
-        platform, replacement_key, translation_key = replacements[mirror]
-        replacement_id = registry.async_get_entity_id(
-            platform,
-            DOMAIN,
-            mac if replacement_key is None else f"{mac}_{replacement_key}",
-        )
-        # Nothing to point the repair at before the replacement exists.
-        if replacement_id is None:
-            continue
-        _async_repair_if_used(
-            hass,
-            entity,
-            f"setting_mirror_deprecated_{entity.unique_id}",
-            translation_key,
-            {"replacement": replacement_id},
-            breaks_in=breaks_in,
-        )
+
+    @callback
+    def _async_deprecate(_hass: HomeAssistant) -> None:
+        registry = er.async_get(hass)
+        for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
+            mac, _, key = entity.unique_id.partition("_")
+            mirror = (entity.domain, key)
+            if mirror not in replacements or mac not in macs:
+                continue
+            platform, replacement_key, translation_key = replacements[mirror]
+            replacement_id = registry.async_get_entity_id(
+                platform,
+                DOMAIN,
+                mac if replacement_key is None else f"{mac}_{replacement_key}",
+            )
+            # Nothing to point the repair at before the replacement exists.
+            if replacement_id is None:
+                continue
+            _async_repair_if_used(
+                hass,
+                entity,
+                f"setting_mirror_deprecated_{entity.unique_id}",
+                translation_key,
+                {"replacement": replacement_id},
+                breaks_in=breaks_in,
+            )
+
+    entry.async_on_unload(async_at_started(hass, _async_deprecate))
