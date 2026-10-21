@@ -4,7 +4,7 @@ from contextlib import ExitStack
 from datetime import timedelta
 import threading
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -19,8 +19,6 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.vicare.const import DEFAULT_CACHE_DURATION
-from homeassistant.components.vicare.sensor import _build_entities
-from homeassistant.components.vicare.types import ViCareDevice
 from homeassistant.const import EntityCategory, Platform, UnitOfRatio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
