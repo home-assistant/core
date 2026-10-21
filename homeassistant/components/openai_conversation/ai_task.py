@@ -19,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util.json import json_loads
 
+from .chatgpt_auth import is_chatgpt_entry
 from .const import (
     CONF_CHAT_MODEL,
     CONF_IMAGE_MODEL,
@@ -73,7 +74,10 @@ class OpenAITaskEntity(
             | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS
         )
         model = self.subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
-        if not model.startswith(tuple(UNSUPPORTED_IMAGE_MODELS)):
+        if not is_chatgpt_entry(entry) and not model.startswith(
+            tuple(UNSUPPORTED_IMAGE_MODELS)
+        ):
+            # ChatGPT plan usage does not support the image generation tool.
             self._attr_supported_features |= ai_task.AITaskEntityFeature.GENERATE_IMAGE
 
     @override

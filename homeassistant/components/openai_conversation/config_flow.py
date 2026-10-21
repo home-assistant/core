@@ -21,12 +21,15 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_CLIENT_ID,
     CONF_LLM_HASS_API,
     CONF_NAME,
     CONF_PROMPT,
     EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import llm
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
@@ -43,9 +46,30 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.typing import VolDictType
 
+from .chatgpt_auth import (
+    CLIENT_ID_PREFIX,
+    PLAN_SCOPE,
+    RESOURCE,
+    AuthorizationRequest,
+    ChatGPTAuth,
+    ChatGPTCredentials,
+    ChatGPTSubscriptionClient,
+    async_get_agent_host_id,
+    async_get_subscription_models,
+    async_get_subscription_models_for_credentials,
+    async_token_request,
+    async_validate_id_token,
+    create_authorization_request,
+    credentials_from_token,
+    is_chatgpt_entry,
+    parse_callback_url,
+    subscription_model_options,
+)
 from .const import (
+    CONF_CALLBACK_URL,
     CONF_CHAT_MODEL,
     CONF_CODE_INTERPRETER,
+    CONF_ID_TOKEN,
     CONF_IMAGE_MODEL,
     CONF_MAX_TOKENS,
     CONF_PRO_MODE,
@@ -54,6 +78,7 @@ from .const import (
     CONF_RECOMMENDED,
     CONF_SERVICE_TIER,
     CONF_STORE_RESPONSES,
+    CONF_SUB,
     CONF_TEMPERATURE,
     CONF_TOP_P,
     CONF_TTS_SPEED,
@@ -107,9 +132,17 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = probatio.Schema(
+# Title of a config entry which authenticates with a ChatGPT plan.
+DEFAULT_CHATGPT_TITLE = "ChatGPT subscription"
+
+STEP_API_KEY_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+    }
+)
+STEP_CALLBACK_DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_CALLBACK_URL): str,
     }
 )
 
@@ -117,7 +150,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect.
 
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
+    Data has the keys from STEP_API_KEY_DATA_SCHEMA with values provided by the user.
     """
     client = openai.AsyncOpenAI(
         api_key=data[CONF_API_KEY],
@@ -132,12 +165,84 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 2
     MINOR_VERSION = 8
 
+    # Pending Sign in with ChatGPT authorization attempt.
+    _siwc_request: AuthorizationRequest
+
+    # Credentials and entry data of a completed sign in, held while the user
+    # picks a model before a new entry is created.
+    _siwc_credentials: ChatGPTCredentials
+    _siwc_data: dict[str, Any]
+    _siwc_models: list[str]
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial step."""
-        return await self._async_step_api_key(user_input, "user")
+        """Handle the initial step: pick the authentication method.
+
+        A form step cannot hide a field conditionally, so the API key field
+        must not sit in the form that also shows the method; the menu sends the
+        user straight to the chosen method's own step.
+        """
+        return self.async_show_menu(step_id="user", menu_options=["api_key", "chatgpt"])
+
+    async def async_step_api_key(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the API key of a new entry."""
+        return await self._async_step_api_key(user_input, "api_key")
+
+    @callback
+    def _siwc_entry(self) -> ConfigEntry | None:
+        """Return the entry which is being reauthenticated."""
+        if self.source == SOURCE_REAUTH:
+            return self._get_reauth_entry()
+        return None
+
+    async def _async_catalog_models(self, credentials: ChatGPTCredentials) -> list[str]:
+        """Return the first model of the signed in account's catalog, if any.
+
+        The catalog is only used to preselect a model. Reading it can fail
+        (OpenAI returned a transient 520 while this was written), and that must
+        not fail the sign in: the default model is used instead. An
+        authentication failure of the credentials is not an unreadable catalog
+        and is re-raised.
+        """
+        try:
+            return await async_get_subscription_models_for_credentials(
+                self.hass, credentials
+            )
+        except ConfigEntryAuthFailed:
+            raise
+        except HomeAssistantError as err:
+            _LOGGER.warning(
+                "Could not read the OpenAI model catalog, using the default "
+                "model instead: %s",
+                err,
+            )
+            return []
+
+    def _async_update_configured_entry(
+        self, data: dict[str, Any]
+    ) -> ConfigFlowResult | None:
+        """Update the entry a reauth or reconfigure flow works on.
+
+        Returns None when the flow is neither a reauth nor a reconfigure flow.
+        """
+        if self.source not in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
+            return None
+        entry = (
+            self._get_reauth_entry()
+            if self.source == SOURCE_REAUTH
+            else self._get_reconfigure_entry()
+        )
+        if is_chatgpt_entry(entry):
+            # Switching a plan entry back to an API key replaces the whole data
+            # layout and drops the account scoped unique id.
+            return self.async_update_reload_and_abort(entry, data=data, unique_id=None)
+        if entry.update_listeners:
+            return self.async_update_and_abort(entry, data_updates=data)
+        return self.async_update_reload_and_abort(entry, data_updates=data)
 
     async def _async_step_api_key(
         self, user_input: dict[str, Any] | None, step_id: str
@@ -146,71 +251,68 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            self._async_abort_entries_match(user_input)
-            try:
-                await validate_input(self.hass, user_input)
-            except openai.APIConnectionError:
-                errors["base"] = "cannot_connect"
-            except openai.AuthenticationError:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+            if not (api_key := user_input.get(CONF_API_KEY)):
+                errors[CONF_API_KEY] = "api_key_required"
             else:
-                if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
-                    entry = (
-                        self._get_reauth_entry()
-                        if self.source == SOURCE_REAUTH
-                        else self._get_reconfigure_entry()
+                # The auth method is a flow-only choice: API key entries keep
+                # their historical data layout without it.
+                data = {CONF_API_KEY: api_key}
+                self._async_abort_entries_match(data)
+                try:
+                    await validate_input(self.hass, data)
+                except openai.APIConnectionError:
+                    errors["base"] = "cannot_connect"
+                except openai.AuthenticationError:
+                    errors["base"] = "invalid_auth"
+                except Exception:
+                    _LOGGER.exception("Unexpected exception")
+                    errors["base"] = "unknown"
+                else:
+                    if (
+                        updated := self._async_update_configured_entry(data)
+                    ) is not None:
+                        return updated
+                    return self.async_create_entry(
+                        title="ChatGPT",
+                        data=data,
+                        subentries=[
+                            {
+                                "subentry_type": "conversation",
+                                "data": RECOMMENDED_CONVERSATION_OPTIONS,
+                                "title": DEFAULT_CONVERSATION_NAME,
+                                "unique_id": None,
+                            },
+                            {
+                                "subentry_type": "ai_task_data",
+                                "data": RECOMMENDED_AI_TASK_OPTIONS,
+                                "title": DEFAULT_AI_TASK_NAME,
+                                "unique_id": None,
+                            },
+                            {
+                                "subentry_type": "ai_task_evaluate",
+                                "data": RECOMMENDED_EVALUATION_OPTIONS,
+                                "title": DEFAULT_EVALUATION_NAME,
+                                "unique_id": None,
+                            },
+                            {
+                                "subentry_type": "stt",
+                                "data": RECOMMENDED_STT_OPTIONS,
+                                "title": DEFAULT_STT_NAME,
+                                "unique_id": None,
+                            },
+                            {
+                                "subentry_type": "tts",
+                                "data": RECOMMENDED_TTS_OPTIONS,
+                                "title": DEFAULT_TTS_NAME,
+                                "unique_id": None,
+                            },
+                        ],
                     )
-                    if entry.update_listeners:
-                        return self.async_update_and_abort(
-                            entry, data_updates=user_input
-                        )
-                    return self.async_update_reload_and_abort(
-                        entry, data_updates=user_input
-                    )
-                return self.async_create_entry(
-                    title="ChatGPT",
-                    data=user_input,
-                    subentries=[
-                        {
-                            "subentry_type": "conversation",
-                            "data": RECOMMENDED_CONVERSATION_OPTIONS,
-                            "title": DEFAULT_CONVERSATION_NAME,
-                            "unique_id": None,
-                        },
-                        {
-                            "subentry_type": "ai_task_data",
-                            "data": RECOMMENDED_AI_TASK_OPTIONS,
-                            "title": DEFAULT_AI_TASK_NAME,
-                            "unique_id": None,
-                        },
-                        {
-                            "subentry_type": "ai_task_evaluate",
-                            "data": RECOMMENDED_EVALUATION_OPTIONS,
-                            "title": DEFAULT_EVALUATION_NAME,
-                            "unique_id": None,
-                        },
-                        {
-                            "subentry_type": "stt",
-                            "data": RECOMMENDED_STT_OPTIONS,
-                            "title": DEFAULT_STT_NAME,
-                            "unique_id": None,
-                        },
-                        {
-                            "subentry_type": "tts",
-                            "data": RECOMMENDED_TTS_OPTIONS,
-                            "title": DEFAULT_TTS_NAME,
-                            "unique_id": None,
-                        },
-                    ],
-                )
 
         return self.async_show_form(
             step_id=step_id,
             data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, user_input
+                STEP_API_KEY_DATA_SCHEMA, user_input
             ),
             errors=errors,
             description_placeholders={
@@ -218,10 +320,225 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    def _show_chatgpt_form(
+        self, errors: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
+        """Show the Sign in with ChatGPT form."""
+        return self.async_show_form(
+            step_id="chatgpt",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_CALLBACK_DATA_SCHEMA, None
+            ),
+            errors=errors or {},
+            description_placeholders={"auth_url": self._siwc_request.url},
+        )
+
+    async def async_step_chatgpt(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Start a Sign in with ChatGPT authorization.
+
+        Home Assistant cannot receive the loopback callback (the browser is
+        normally on another machine), so the authorization URL is shown to the
+        user and they paste back the URL their browser ended up on.
+        """
+        entry = self._siwc_entry()
+
+        if user_input is not None:
+            try:
+                return await self._async_step_chatgpt_callback(user_input, entry)
+            except AbortFlow:
+                # The flow aborts on purpose (an entry already exists, ...).
+                raise
+            except ConfigEntryAuthFailed as err:
+                # Credentials which the account route rejected must surface as
+                # an auth failure instead of creating an entry which setup
+                # would immediately send back into reauthentication.
+                _LOGGER.error("Sign in with ChatGPT failed: %s", err)
+                return self._show_chatgpt_form({"base": "invalid_auth"})
+            except Exception:
+                # A user must never be left with a bare "unknown error": log
+                # what happened and ask them to start the sign in again.
+                _LOGGER.exception("Unexpected error during the ChatGPT sign in")
+                return self._show_chatgpt_form({"base": "unexpected_error"})
+
+        self._siwc_request = create_authorization_request(
+            # A saved client id re-authorizes a known registration; a retained
+            # ID token identifies the account and skips the account selector.
+            client_id=entry.data.get(CONF_CLIENT_ID) if entry else None,
+            ext_agent_host_id=await async_get_agent_host_id(self.hass),
+            id_token_hint=entry.data.get(CONF_ID_TOKEN) if entry else None,
+        )
+        return self._show_chatgpt_form()
+
+    async def _async_step_chatgpt_callback(
+        self, user_input: dict[str, Any], entry: ConfigEntry | None
+    ) -> ConfigFlowResult:
+        """Validate the returned callback and complete the sign in."""
+        request = self._siwc_request
+        params = parse_callback_url(user_input[CONF_CALLBACK_URL])
+
+        if error := params.get("error"):
+            _LOGGER.debug("Sign in with ChatGPT returned: %s", error)
+            return self._show_chatgpt_form(
+                {"base": "access_denied" if error == "access_denied" else "unknown"}
+            )
+
+        if not params.get("code"):
+            return self._show_chatgpt_form({"base": "invalid_callback_url"})
+
+        if params.get("state") != request.state:
+            return self._show_chatgpt_form({"base": "invalid_state"})
+
+        if request.registration:
+            # A new registration returns the issued client id, which replaces
+            # `dynamic_agent_client` and is reused for later sign ins.
+            client_id = params.get("client_id", "")
+            if not client_id.startswith(CLIENT_ID_PREFIX):
+                return self._show_chatgpt_form({"base": "registration_incomplete"})
+        else:
+            client_id = request.client_id
+            if (returned := params.get("client_id")) and returned != client_id:
+                return self._show_chatgpt_form({"base": "client_id_mismatch"})
+
+        try:
+            token = await async_token_request(
+                self.hass,
+                {
+                    "grant_type": "authorization_code",
+                    "client_id": client_id,
+                    "code": params["code"],
+                    "code_verifier": request.code_verifier,
+                    "redirect_uri": request.redirect_uri,
+                    "resource": RESOURCE,
+                },
+            )
+        except HomeAssistantError as err:
+            _LOGGER.error("Sign in with ChatGPT failed: %s", err)
+            return self._show_chatgpt_form({"base": "invalid_auth"})
+
+        if PLAN_SCOPE not in str(token.get("scope", "")).split():
+            # A valid sign in without the ChatGPT plan scope must not silently
+            # fall back to an API key session.
+            return self.async_abort(reason="plan_usage_not_granted")
+
+        if not (id_token := token.get("id_token")):
+            return self._show_chatgpt_form({"base": "invalid_auth"})
+
+        try:
+            claims = await async_validate_id_token(
+                self.hass, id_token, client_id=client_id, nonce=request.nonce
+            )
+        except HomeAssistantError as err:
+            _LOGGER.error("Sign in with ChatGPT returned an invalid ID token: %s", err)
+            return self._show_chatgpt_form({"base": "invalid_auth"})
+
+        credentials = credentials_from_token(
+            token,
+            client_id=client_id,
+            ext_agent_host_id=request.ext_agent_host_id,
+            sub=str(claims["sub"]),
+            email=claims.get("email"),
+        )
+        data = credentials.as_entry_data()
+
+        if entry is not None:
+            if entry.data.get(CONF_SUB) not in (None, credentials.sub):
+                # Reauthenticating with another ChatGPT account would replace
+                # the entry while its unique id still names the old account.
+                return self._show_chatgpt_form({"base": "wrong_account"})
+            existing = self.hass.config_entries.async_entry_for_domain_unique_id(
+                DOMAIN, credentials.unique_id
+            )
+            if existing is not None and existing.entry_id != entry.entry_id:
+                return self.async_abort(reason="already_configured")
+
+            return self.async_update_reload_and_abort(
+                entry, unique_id=credentials.unique_id, data=data
+            )
+
+        await self.async_set_unique_id(credentials.unique_id)
+        self._abort_if_unique_id_configured()
+        # The plan usage route rejects the regular API default model, so a new
+        # entry must not be created before the user picked a model. The catalog
+        # of the signed in account is offered when it can be read; when it
+        # cannot, the user enters a model of their plan instead.
+        self._siwc_credentials = credentials
+        self._siwc_data = data
+        self._siwc_models = await self._async_catalog_models(credentials)
+        return await self.async_step_chatgpt_model()
+
+    async def async_step_chatgpt_model(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask which model a new ChatGPT plan entry should use.
+
+        ChatGPT plan usage does not support speech to text, text to speech or
+        image generation, and it serves its own catalog instead of the API
+        default model, which it rejects. The catalog is offered as a dropdown;
+        when it could not be read, the user enters a model instead.
+        """
+        if user_input is not None:
+            model = user_input[CONF_CHAT_MODEL]
+            return self.async_create_entry(
+                title=DEFAULT_CHATGPT_TITLE,
+                data=self._siwc_data,
+                subentries=[
+                    {
+                        "subentry_type": "conversation",
+                        "data": {
+                            **RECOMMENDED_CONVERSATION_OPTIONS,
+                            CONF_CHAT_MODEL: model,
+                        },
+                        "title": DEFAULT_CONVERSATION_NAME,
+                        "unique_id": None,
+                    },
+                    {
+                        "subentry_type": "ai_task_data",
+                        "data": {
+                            **RECOMMENDED_AI_TASK_OPTIONS,
+                            CONF_CHAT_MODEL: model,
+                        },
+                        "title": DEFAULT_AI_TASK_NAME,
+                        "unique_id": None,
+                    },
+                    {
+                        "subentry_type": "ai_task_evaluate",
+                        "data": {
+                            **RECOMMENDED_EVALUATION_OPTIONS,
+                            CONF_CHAT_MODEL: model,
+                        },
+                        "title": DEFAULT_EVALUATION_NAME,
+                        "unique_id": None,
+                    },
+                ],
+            )
+
+        options = subscription_model_options(self._siwc_models)
+        schema = probatio.Schema(
+            {
+                probatio.Required(CONF_CHAT_MODEL, default=options[0]): SelectSelector(
+                    SelectSelectorConfig(
+                        options=options,
+                        custom_value=True,
+                        mode=SelectSelectorMode.DROPDOWN,
+                    )
+                )
+            }
+        )
+        return self.async_show_form(step_id="chatgpt_model", data_schema=schema)
+
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
-        """Perform reauth upon an API authentication error."""
+        """Perform reauth upon an API authentication error.
+
+        Reauthentication follows the method the entry already uses: a ChatGPT
+        plan entry signs in with ChatGPT again, an API key entry asks for a new
+        API key.
+        """
+        if is_chatgpt_entry(self._get_reauth_entry()):
+            return await self.async_step_chatgpt()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -243,13 +560,17 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
-        return {
+        subentry_types: dict[str, type[ConfigSubentryFlow]] = {
             "conversation": OpenAISubentryFlowHandler,
             "ai_task_data": OpenAISubentryFlowHandler,
             "ai_task_evaluate": OpenAISubentryEvaluationFlowHandler,
-            "stt": OpenAISubentrySTTFlowHandler,
-            "tts": OpenAISubentryTTSFlowHandler,
         }
+        if not is_chatgpt_entry(config_entry):
+            # ChatGPT plan usage does not support speech to text or text to
+            # speech, and the transcription API is not available.
+            subentry_types["stt"] = OpenAISubentrySTTFlowHandler
+            subentry_types["tts"] = OpenAISubentryTTSFlowHandler
+        return subentry_types
 
 
 class OpenAISubentryFlowHandler(ConfigSubentryFlow):
@@ -342,13 +663,27 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
 
             if user_input[CONF_RECOMMENDED]:
                 if self._is_new:
+                    if is_chatgpt_entry(self._get_entry()):
+                        # The plan usage route rejects the API default model, so a
+                        # plan subentry cannot be created without choosing a model.
+                        self.options.update(user_input)
+                        return await self.async_step_additional()
                     return self.async_create_entry(
                         title=user_input.pop(CONF_NAME),
                         data=user_input,
                     )
+                subentry = self._get_reconfigure_subentry()
+                if is_chatgpt_entry(self._get_entry()) and (
+                    model := subentry.data.get(CONF_CHAT_MODEL)
+                ):
+                    # The subentry data carries the plan model; dropping it would
+                    # send requests to the API default model, which the route
+                    # rejects. Other entries follow upstream's replacement
+                    # semantics.
+                    user_input = {**user_input, CONF_CHAT_MODEL: model}
                 return self.async_update_and_abort(
                     self._get_entry(),
-                    self._get_reconfigure_subentry(),
+                    subentry,
                     data=user_input,
                 )
 
@@ -371,32 +706,97 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         options = self.options
         errors: dict[str, str] = {}
 
-        step_schema: VolDictType = {
-            probatio.Optional(
-                CONF_CHAT_MODEL,
-                default=RECOMMENDED_CHAT_MODEL,
-            ): str,
-            probatio.Optional(
-                CONF_MAX_TOKENS,
-                default=RECOMMENDED_MAX_TOKENS,
-            ): int,
-            probatio.Optional(
-                CONF_TOP_P,
-                default=RECOMMENDED_TOP_P,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            probatio.Optional(
-                CONF_TEMPERATURE,
-                default=RECOMMENDED_TEMPERATURE,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
-            probatio.Optional(
-                CONF_STORE_RESPONSES,
-                default=RECOMMENDED_STORE_RESPONSES,
-            ): bool,
-        }
+        # ChatGPT plan usage rejects the sampling and storage parameters. Its
+        # chat model has to be one of the models of the account's catalog.
+        subscription = is_chatgpt_entry(self._get_entry())
+
+        catalog_models: list[str] = []
+        catalog_available = False
+        if subscription:
+            try:
+                entry = self._get_entry()
+                runtime_data = getattr(entry, "runtime_data", None)
+                # The loaded entry's token manager is reused so that a refresh
+                # inside this form cannot invalidate the credentials the
+                # runtime client still holds.
+                auth = (
+                    runtime_data.auth
+                    if runtime_data is not None and hasattr(runtime_data, "auth")
+                    else ChatGPTAuth.from_entry(self.hass, entry)
+                )
+                catalog_models = await async_get_subscription_models(
+                    self.hass,
+                    auth,
+                )
+                catalog_available = bool(catalog_models)
+            except HomeAssistantError as err:
+                # The catalog could not be read, which says nothing about the
+                # model the user submits: it cannot be checked against the
+                # catalog and is therefore accepted. The selector allows any
+                # value to be typed.
+                _LOGGER.warning("Could not read the OpenAI model catalog: %s", err)
+            # The API default model is rejected by the plan usage route, so it
+            # is only used as the default when the catalog could be read and
+            # held a model, or a model is already stored on the subentry.
+            default = (
+                catalog_models[0]
+                if catalog_available
+                else options.get(CONF_CHAT_MODEL)
+                or subscription_model_options(catalog_models)[0]
+            )
+            step_schema: VolDictType = {
+                (
+                    probatio.Required(CONF_CHAT_MODEL, default=default)
+                    if default
+                    else probatio.Required(CONF_CHAT_MODEL)
+                ): SelectSelector(
+                    SelectSelectorConfig(
+                        options=subscription_model_options(catalog_models),
+                        custom_value=True,
+                        mode=SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+            }
+        else:
+            step_schema = {
+                probatio.Optional(
+                    CONF_CHAT_MODEL,
+                    default=RECOMMENDED_CHAT_MODEL,
+                ): str,
+            }
+            step_schema.update(
+                {
+                    probatio.Optional(
+                        CONF_MAX_TOKENS,
+                        default=RECOMMENDED_MAX_TOKENS,
+                    ): int,
+                    probatio.Optional(
+                        CONF_TOP_P,
+                        default=RECOMMENDED_TOP_P,
+                    ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+                    probatio.Optional(
+                        CONF_TEMPERATURE,
+                        default=RECOMMENDED_TEMPERATURE,
+                    ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
+                    probatio.Optional(
+                        CONF_STORE_RESPONSES,
+                        default=RECOMMENDED_STORE_RESPONSES,
+                    ): bool,
+                }
+            )
 
         if user_input is not None:
             options.update(user_input)
-            if user_input.get(CONF_CHAT_MODEL) in UNSUPPORTED_MODELS:
+            if subscription:
+                # Only a model the catalog actually offers is an error. When
+                # the catalog could not be read it cannot be checked and the
+                # submitted model is accepted.
+                if (
+                    catalog_available
+                    and user_input.get(CONF_CHAT_MODEL) not in catalog_models
+                ):
+                    errors[CONF_CHAT_MODEL] = "model_not_supported"
+            elif user_input.get(CONF_CHAT_MODEL) in UNSUPPORTED_MODELS:
                 errors[CONF_CHAT_MODEL] = "model_not_supported"
 
             if not errors:
@@ -408,6 +808,14 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 probatio.Schema(step_schema), options
             ),
             errors=errors,
+            description_placeholders={
+                "catalog_note": (
+                    ""
+                    if catalog_available or not subscription
+                    else " The model catalog could not be read. Enter a model of "
+                    "your ChatGPT plan, for example `gpt-5.5`."
+                )
+            },
         )
 
     async def async_step_model(
@@ -419,9 +827,15 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
 
         step_schema: VolDictType = {}
 
+        # ChatGPT plan usage does not support Code Interpreter, web search,
+        # hosted tools or image generation.
+        subscription = is_chatgpt_entry(self._get_entry())
+
         model = options[CONF_CHAT_MODEL]
 
-        if not model.startswith(tuple(UNSUPPORTED_CODE_INTERPRETER_MODELS)):
+        if not subscription and not model.startswith(
+            tuple(UNSUPPORTED_CODE_INTERPRETER_MODELS)
+        ):
             step_schema.update(
                 {
                     probatio.Optional(
@@ -508,7 +922,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         elif CONF_REASONING_SUMMARY in options:
             options.pop(CONF_REASONING_SUMMARY)
 
-        service_tiers = self._get_service_tiers(model)
+        service_tiers = self._get_service_tiers(model, subscription)
         if "flex" in service_tiers or "priority" in service_tiers:
             step_schema[
                 probatio.Optional(
@@ -527,7 +941,9 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         if options.get(CONF_SERVICE_TIER) not in service_tiers:
             options.pop(CONF_SERVICE_TIER, None)
 
-        if not model.startswith(tuple(UNSUPPORTED_WEB_SEARCH_MODELS)):
+        if not subscription and not model.startswith(
+            tuple(UNSUPPORTED_WEB_SEARCH_MODELS)
+        ):
             step_schema.update(
                 {
                     probatio.Optional(
@@ -571,8 +987,10 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 )
             }
 
-        if self._subentry_type == "ai_task_data" and not model.startswith(
-            tuple(UNSUPPORTED_IMAGE_MODELS)
+        if (
+            not subscription
+            and self._subentry_type == "ai_task_data"
+            and not model.startswith(tuple(UNSUPPORTED_IMAGE_MODELS))
         ):
             step_schema[
                 probatio.Optional(CONF_IMAGE_MODEL, default=RECOMMENDED_IMAGE_MODEL)
@@ -657,8 +1075,16 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 return options
         return []  # pragma: no cover
 
-    def _get_service_tiers(self, model: str) -> list[str]:
-        """Get service tier options based on model."""
+    def _get_service_tiers(self, model: str, subscription: bool) -> list[str]:
+        """Get the service tier options to offer for a model.
+
+        The plan usage route rejects the service tier
+        (`shape_request_for_subscription` removes it), so a ChatGPT plan entry
+        is offered none and any stored value is dropped.
+        """
+        if subscription:
+            return []
+
         service_tiers = ["auto"]
 
         if not model.startswith(tuple(UNSUPPORTED_FLEX_SERVICE_TIERS_MODELS)):
@@ -676,10 +1102,24 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         location_data: dict[str, str] = {}
         zone_home = self.hass.states.get(ENTITY_ID_HOME)
         if zone_home is not None:
-            client = openai.AsyncOpenAI(
-                api_key=self._get_entry().data[CONF_API_KEY],
-                http_client=get_async_client(self.hass),
-            )
+            entry = self._get_entry()
+            # Works for both API key and ChatGPT subscription entries, also
+            # while the entry is not loaded.
+            client: openai.AsyncClient
+            if (runtime_data := getattr(entry, "runtime_data", None)) is not None:
+                client = runtime_data
+            elif is_chatgpt_entry(entry):  # pragma: no cover
+                # Unreachable: a plan entry is never offered the web search
+                # user location options, which are the only caller of this.
+                client = ChatGPTSubscriptionClient(
+                    ChatGPTAuth.from_entry(self.hass, entry),
+                    http_client=get_async_client(self.hass),
+                )
+            else:
+                client = openai.AsyncOpenAI(
+                    api_key=entry.data[CONF_API_KEY],
+                    http_client=get_async_client(self.hass),
+                )
             location_schema = probatio.Schema(
                 {
                     probatio.Optional(
