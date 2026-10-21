@@ -31,7 +31,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import VolDictType
 
-from . import DOMAIN, DeviceTuple, get_device_tuple_from_device, get_rfx_object
+from . import DeviceTuple, get_device_tuple_from_device, get_rfx_object
 from .binary_sensor import supported as binary_supported
 from .const import (
     CONF_AUTOMATIC_ADD,
@@ -45,6 +45,7 @@ from .const import (
     CONST_VENETIAN_BLIND_MODE_EU,
     CONST_VENETIAN_BLIND_MODE_US,
     DEVICE_PACKET_TYPE_LIGHTING4,
+    DOMAIN,
     SUBENTRY_TYPE_DEVICE,
 )
 
