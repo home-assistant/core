@@ -51,6 +51,15 @@ def _validate(tmp_path: Path, config: Config, files: dict[str, bytes]) -> Integr
             id="full_set",
         ),
         pytest.param({"logo.png": _png(256, 600)}, id="tall_logo"),
+        pytest.param(
+            {
+                "icon.png": _png(256, 256),
+                "dark_icon.png": _png(256, 256, b"dark"),
+                "dark_logo.png": _png(256, 256),
+            },
+            # dark_icon.png is served when dark_logo.png is missing, not icon.png.
+            id="identical_to_later_fallback",
+        ),
     ],
 )
 def test_valid_brand_folder(
@@ -122,6 +131,11 @@ def test_no_brand_folder(tmp_path: Path, config: Config) -> None:
             id="not_png",
         ),
         pytest.param(
+            {"icon.png": _png(256, 256)[:18]},
+            "brand/icon.png is not a PNG image",
+            id="truncated_png",
+        ),
+        pytest.param(
             {"icon.png": _png(256, 256), "icon.svg": b"<svg></svg>"},
             "brand/icon.svg is not a brand image Home Assistant uses, allowed are:"
             " dark_icon.png, dark_icon@2x.png, dark_logo.png, dark_logo@2x.png,"
@@ -146,4 +160,21 @@ def test_invalid_brand_folder_core(tmp_path: Path, config: Config) -> None:
     assert integration.warnings == []
     assert [error.error for error in integration.errors] == [
         "brand/icon.png is 512x512, but must be 256x256"
+    ]
+
+
+def test_directory_in_brand_folder(tmp_path: Path, config: Config) -> None:
+    """Test a directory in the brand folder is reported instead of read."""
+    brand_dir = tmp_path / "test" / "brand"
+    (brand_dir / "icon.png").mkdir(parents=True)
+    (brand_dir / "logo.png").write_bytes(_png(400, 128))
+    integration = Integration(
+        tmp_path / "test",
+        _config=config,
+        _manifest={"domain": "test", "name": "Test"},
+    )
+    brand_images.validate({"test": integration}, config)
+    assert integration.errors == []
+    assert [warning.error for warning in integration.warnings] == [
+        "brand/icon.png is not a file"
     ]

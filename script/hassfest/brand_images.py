@@ -26,7 +26,7 @@ def _png_size(path: Path) -> tuple[int, int] | None:
     """Return the width and height from a PNG header, or None if it is no PNG."""
     with path.open("rb") as file:
         header = file.read(24)
-    if header[:8] != PNG_SIGNATURE or header[12:16] != b"IHDR":
+    if len(header) < 24 or header[:8] != PNG_SIGNATURE or header[12:16] != b"IHDR":
         return None
     width, height = struct.unpack(">II", header[16:24])
     return width, height
@@ -55,7 +55,12 @@ def _validate_size(integration: Integration, image: str, size: tuple[int, int]) 
 
 def _validate_brand_folder(integration: Integration, brand_dir: Path) -> None:
     """Validate the brand folder of an integration."""
-    images = {path.name: path for path in brand_dir.iterdir()}
+    images: dict[str, Path] = {}
+    for path in sorted(brand_dir.iterdir()):
+        if path.is_file():
+            images[path.name] = path
+        else:
+            _report(integration, f"brand/{path.name} is not a file")
 
     for name in sorted(images.keys() - ALLOWED_IMAGES):
         _report(
@@ -77,16 +82,20 @@ def _validate_brand_folder(integration: Integration, brand_dir: Path) -> None:
                 " is missing",
             )
 
-        # An image identical to one it falls back to adds nothing.
-        content = images[image].read_bytes()
-        for fallback in IMAGE_FALLBACKS.get(image, ()):
-            if fallback in images and images[fallback].read_bytes() == content:
-                _report(
-                    integration,
-                    f"brand/{image} is identical to brand/{fallback}, which is used"
-                    f" when brand/{image} is missing, remove brand/{image}",
-                )
-                break
+        # The brands integration serves the first fallback that exists, so an image
+        # identical to that one adds nothing.
+        fallback = next(
+            (name for name in IMAGE_FALLBACKS.get(image, ()) if name in images), None
+        )
+        if (
+            fallback is not None
+            and images[fallback].read_bytes() == images[image].read_bytes()
+        ):
+            _report(
+                integration,
+                f"brand/{image} is identical to brand/{fallback}, which is used"
+                f" when brand/{image} is missing, remove brand/{image}",
+            )
 
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:
