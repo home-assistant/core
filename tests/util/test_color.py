@@ -174,6 +174,23 @@ def test_color_hsb_to_RGB() -> None:
     assert color_util.color_hsb_to_RGB(0, 1.0, 1.0) == (255, 0, 0)
 
 
+@pytest.mark.parametrize(
+    ("hue", "saturation", "brightness", "expected"),
+    [
+        pytest.param(360, 1.0, 1.0, (255, 0, 0), id="red"),
+        pytest.param(360, 0.5, 1.0, (255, 127, 127), id="half_saturation"),
+        pytest.param(360, 1.0, 0.5, (127, 0, 0), id="half_brightness"),
+        pytest.param(720, 1.0, 1.0, (255, 0, 0), id="two_turns"),
+    ],
+)
+def test_color_hsb_to_RGB_full_turn(
+    hue: float, saturation: float, brightness: float, expected: tuple[int, int, int]
+) -> None:
+    """Test color_hsb_to_RGB treats a full turn of hue like hue 0."""
+    assert color_util.color_hsb_to_RGB(hue, saturation, brightness) == expected
+    assert color_util.color_hsb_to_RGB(0, saturation, brightness) == expected
+
+
 def test_color_xy_to_hs() -> None:
     """Test color_xy_to_hs."""
     assert color_util.color_xy_to_hs(1, 1) == (47.294, 100)
