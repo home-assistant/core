@@ -20,8 +20,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import ChunkAsyncStreamIterator
 from homeassistant.util import slugify
 
-from . import DATA_BACKUP_AGENT_LISTENERS, GoogleDriveConfigEntry
+from . import DATA_BACKUP_AGENT_LISTENERS
 from .const import DOMAIN
+from .coordinator import GoogleDriveConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
