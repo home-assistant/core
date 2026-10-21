@@ -50,6 +50,7 @@ from boschshcpy import (
     ThermostatService,
 )
 from boschshcpy.services_impl import (
+    DimmerConfigurationService,
     DisplayDirection,
     DisplayedTemperatureConfiguration,
     OutdoorSirenService,
@@ -592,6 +593,9 @@ def micromodule_dimmer_device(
     name: str = "Dimmer",
     binarystate: bool = False,
     brightness: int = 50,
+    supports_dimmer_configuration: bool = False,
+    edge_phase_control_mode: DimmerConfigurationService.EdgePhaseControlMode
+    | None = None,
 ) -> SHCMicromoduleDimmer:
     """Build a minimal device double for the micromodule_dimmers bucket."""
     device = create_autospec(SHCMicromoduleDimmer, instance=True, spec_set=True)
@@ -606,6 +610,8 @@ def micromodule_dimmer_device(
     device.status = "AVAILABLE"
     device.binarystate = binarystate
     device.brightness = brightness
+    device.supports_dimmer_configuration = supports_dimmer_configuration
+    device.edge_phase_control_mode = edge_phase_control_mode
     return device
 
 

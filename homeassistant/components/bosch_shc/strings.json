@@ -101,6 +101,13 @@
           "unsupported": "Unsupported"
         }
       },
+      "dimmer_phase_control": {
+        "name": "Dimmer phase control",
+        "state": {
+          "leading": "Leading edge phase cut",
+          "trailing": "Trailing edge phase cut"
+        }
+      },
       "display_direction": {
         "name": "Display orientation",
         "state": {
