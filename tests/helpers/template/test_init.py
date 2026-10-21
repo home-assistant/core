@@ -953,6 +953,25 @@ async def test_parse_result(hass: HomeAssistant) -> None:
         assert render(hass, tpl) == result
 
 
+async def test_parse_result_returns_independent_containers(
+    hass: HomeAssistant,
+) -> None:
+    """Renders with the same output do not share mutable containers."""
+    first_list = render(hass, "{{ x }}", {"x": "[[1], 2]"})
+    first_list[0].append("mutated")
+    first_list.append("mutated")
+    assert render(hass, "{{ x }}", {"x": "[[1], 2]"}) == [[1], 2]
+
+    first_dict = render(hass, "{{ x }}", {"x": "{'a': {'b': 1}}"})
+    first_dict["a"]["mutated"] = True
+    first_dict["mutated"] = True
+    assert render(hass, "{{ x }}", {"x": "{'a': {'b': 1}}"}) == {"a": {"b": 1}}
+
+    first_tuple = render(hass, "{{ x }}", {"x": "([1], 2)"})
+    first_tuple[0].append("mutated")
+    assert render(hass, "{{ x }}", {"x": "([1], 2)"}) == ([1], 2)
+
+
 class _Color(StrEnum):
     RED = "red"
 
