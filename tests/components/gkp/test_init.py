@@ -19,6 +19,7 @@ from gkphomepython import (
 )
 from gkphomepython.const import FIRST_REPORT_TIMEOUT, OFFLINE_AFTER
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.climate import (
     ATTR_TEMPERATURE,
@@ -46,8 +47,6 @@ from .conftest import (
     LIVING_ROOM_ENTITY_ID,
     LIVING_ROOM_ID,
 )
-
-from tests.common import MockConfigEntry
 
 RETRY_AFTER = 120
 
@@ -99,9 +98,17 @@ async def test_oauth_implementation_not_available(
 @pytest.mark.parametrize(
     ("exception", "expected_state"),
     [
-        (GkpAuthError("Auth failed"), ConfigEntryState.SETUP_ERROR),
-        (GkpConnectionError("Connection lost"), ConfigEntryState.SETUP_RETRY),
-        (GkpError("API error"), ConfigEntryState.SETUP_RETRY),
+        pytest.param(
+            GkpAuthError("Auth failed"), ConfigEntryState.SETUP_ERROR, id="auth_error"
+        ),
+        pytest.param(
+            GkpConnectionError("Connection lost"),
+            ConfigEntryState.SETUP_RETRY,
+            id="connection_error",
+        ),
+        pytest.param(
+            GkpError("API error"), ConfigEntryState.SETUP_RETRY, id="api_error"
+        ),
     ],
 )
 async def test_setup_entry_discovery_errors(
@@ -219,8 +226,8 @@ async def test_available_until_first_report_timeout(
 @pytest.mark.parametrize(
     ("exception", "has_reauth_flow"),
     [
-        (GkpAuthError("expired"), True),
-        (GkpConnectionError("lost"), False),
+        pytest.param(GkpAuthError("expired"), True, id="auth_error"),
+        pytest.param(GkpConnectionError("lost"), False, id="connection_error"),
     ],
 )
 async def test_wake_up_errors(

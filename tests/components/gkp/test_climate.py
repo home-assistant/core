@@ -13,6 +13,7 @@ from gkphomepython import (
 )
 from probatio import Invalid
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -53,8 +54,6 @@ from .conftest import (
     LIVING_ROOM_ID,
 )
 
-from tests.common import MockConfigEntry, snapshot_platform
-
 
 @pytest.mark.usefixtures("mock_gkp_client")
 async def test_entities(
@@ -70,13 +69,13 @@ async def test_entities(
 
 
 @pytest.mark.parametrize(
-    ("mode", "heating", "expected"),
+    ("mode", "heating", "expected_state", "expected_attributes"),
     [
         pytest.param(
             GkpMode.OFF.value,
             1,
+            HVACMode.OFF,
             {
-                "state": HVACMode.OFF,
                 ATTR_HVAC_ACTION: HVACAction.OFF,
                 ATTR_PRESET_MODE: None,
                 ATTR_TEMPERATURE: None,
@@ -86,8 +85,8 @@ async def test_entities(
         pytest.param(
             GkpMode.ECO.value,
             0,
+            HVACMode.HEAT,
             {
-                "state": HVACMode.HEAT,
                 ATTR_HVAC_ACTION: HVACAction.IDLE,
                 ATTR_PRESET_MODE: PRESET_ECO,
                 ATTR_TEMPERATURE: 22.0,
@@ -97,8 +96,8 @@ async def test_entities(
         pytest.param(
             GkpMode.AUTO.value,
             1,
+            HVACMode.AUTO,
             {
-                "state": HVACMode.AUTO,
                 ATTR_HVAC_ACTION: HVACAction.HEATING,
                 ATTR_PRESET_MODE: None,
                 ATTR_TEMPERATURE: 22.0,
@@ -108,8 +107,8 @@ async def test_entities(
         pytest.param(
             GkpMode.DEFROST.value,
             0,
+            HVACMode.HEAT,
             {
-                "state": HVACMode.HEAT,
                 ATTR_HVAC_ACTION: HVACAction.IDLE,
                 ATTR_PRESET_MODE: PRESET_DEFROST,
                 ATTR_TEMPERATURE: 22.0,
@@ -119,8 +118,8 @@ async def test_entities(
         pytest.param(
             GkpMode.BOOST.value,
             1,
+            HVACMode.HEAT,
             {
-                "state": HVACMode.HEAT,
                 ATTR_HVAC_ACTION: HVACAction.HEATING,
                 ATTR_PRESET_MODE: PRESET_BOOST,
                 ATTR_TEMPERATURE: 22.0,
@@ -130,8 +129,8 @@ async def test_entities(
         pytest.param(
             None,
             1,
+            STATE_UNKNOWN,
             {
-                "state": STATE_UNKNOWN,
                 ATTR_HVAC_ACTION: None,
                 ATTR_PRESET_MODE: None,
                 ATTR_TEMPERATURE: 22.0,
@@ -147,7 +146,8 @@ async def test_mode_states(
     device_contents: dict[str, dict[str, Any]],
     mode: int | None,
     heating: int,
-    expected: dict[str, Any],
+    expected_state: str,
+    expected_attributes: dict[str, Any],
 ) -> None:
     """Test the state of the entity in each device mode."""
     device_contents[LIVING_ROOM_ID]["Cm"]["value"] = mode
@@ -157,11 +157,11 @@ async def test_mode_states(
 
     state = hass.states.get(LIVING_ROOM_ENTITY_ID)
     assert state is not None
+    assert state.state == expected_state
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21.1
     assert {
-        "state": state.state,
-        **{key: state.attributes.get(key) for key in expected if key != "state"},
-    } == expected
+        key: state.attributes.get(key) for key in expected_attributes
+    } == expected_attributes
 
 
 @pytest.mark.parametrize(
@@ -442,14 +442,13 @@ async def test_activate_boost_duration_out_of_range(
 
 
 @pytest.mark.parametrize(
-    ("domain", "service", "data", "client_method", "error", "translation_key"),
+    ("domain", "service", "data", "client_method", "translation_key"),
     [
         pytest.param(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {ATTR_TEMPERATURE: 23.5},
             "set_temperature",
-            GkpConnectionError("lost"),
             "set_temperature_error",
             id="set_temperature",
         ),
@@ -458,7 +457,6 @@ async def test_activate_boost_duration_out_of_range(
             SERVICE_SET_HVAC_MODE,
             {ATTR_HVAC_MODE: HVACMode.OFF},
             "set_mode",
-            GkpConnectionError("lost"),
             "set_hvac_mode_error",
             id="set_hvac_mode",
         ),
@@ -467,7 +465,6 @@ async def test_activate_boost_duration_out_of_range(
             SERVICE_SET_PRESET_MODE,
             {ATTR_PRESET_MODE: PRESET_ECO},
             "set_mode",
-            GkpConnectionError("lost"),
             "set_preset_mode_error",
             id="set_preset_mode",
         ),
@@ -476,7 +473,6 @@ async def test_activate_boost_duration_out_of_range(
             SERVICE_ACTIVATE_BOOST,
             {ATTR_TEMPERATURE: 24.5, ATTR_DURATION: timedelta(minutes=90)},
             "activate_boost",
-            GkpConnectionError("lost"),
             "activate_boost_error",
             id="activate_boost",
         ),
@@ -490,12 +486,11 @@ async def test_command_error(
     service: str,
     data: dict[str, Any],
     client_method: str,
-    error: Exception,
     translation_key: str,
 ) -> None:
     """Test API errors while sending a command."""
     await setup_integration(hass, mock_config_entry)
-    getattr(mock_gkp_client, client_method).side_effect = error
+    getattr(mock_gkp_client, client_method).side_effect = GkpConnectionError("lost")
 
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(

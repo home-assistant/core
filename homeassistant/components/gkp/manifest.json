@@ -1,6 +1,7 @@
 {
   "domain": "gkp",
   "name": "GKP Home",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@theobld-ww", "@AnthonyPerrier-FRRO"],
   "config_flow": true,
   "dependencies": ["application_credentials", "cloud"],

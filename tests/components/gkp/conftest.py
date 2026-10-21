@@ -7,6 +7,11 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from gkphomepython import Installation, Thermostat, ThermostatsResult
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
@@ -16,12 +21,6 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.gkp.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import (
-    MockConfigEntry,
-    load_json_array_fixture,
-    load_json_object_fixture,
-)
 
 CLIENT_ID = "test_client_id"
 CLIENT_SECRET = "test_client_secret"

@@ -4,6 +4,9 @@ from collections.abc import Awaitable, Callable
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries
 from homeassistant.components.gkp.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
@@ -13,10 +16,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .conftest import TEST_USER_ID
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 TOKEN_RESPONSE = {
     "refresh_token": "mock-refresh-token",
