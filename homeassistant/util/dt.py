@@ -327,6 +327,22 @@ def _get_timestring(timediff: float, precision: int = 1) -> str:
 
     factors = (365 * 24 * 60 * 60, 30 * 24 * 60 * 60, 24 * 60 * 60, 60 * 60, 60, 1)
 
+    # Round at the last shown unit up front, so it carries into the larger units
+    remainder = timediff
+    current_precision = 0
+    for current_factor in factors:
+        if remainder < current_factor:
+            continue
+        current_precision += 1
+        if current_precision == precision:
+            months = (timediff % factors[0]) // factors[1]
+            timediff += round(remainder / current_factor) * current_factor - remainder
+            # 12 months are 5 days short of a year, so rounding up to them ends the year
+            if months < 12 <= (timediff % factors[0]) // factors[1]:
+                timediff += factors[0] - timediff % factors[0]
+            break
+        remainder %= current_factor
+
     result_string: str = ""
     current_precision = 0
 

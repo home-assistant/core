@@ -24,6 +24,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.const import EnergyExportMode
 from tesla_fleet_api.exceptions import (
@@ -47,6 +48,7 @@ from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 from tesla_protocol.command import vcsec_pb2
 from teslemetry_stream import TeslemetryStreamAuthenticationError
 
+from homeassistant.components.bluetooth import BluetoothReachabilityIntent
 from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
@@ -139,8 +141,6 @@ from .const import (
     VEHICLE_DATA_ASLEEP,
     VIN,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 LIVE_STATUS_ENTITY_ID = "sensor.energy_site_battery_power"
 
@@ -2449,19 +2449,34 @@ async def _paired_entry(
         await hass.async_block_till_done()
 
 
-async def test_vehicle_bluetooth_out_of_range(hass: HomeAssistant) -> None:
-    """A paired vehicle out of range still gets a router, and skips Bluetooth."""
-    async with _paired_entry(hass, MagicMock(return_value=None)) as (
-        router,
-        bluetooth_vehicle,
-        cloud,
-    ):
-        assert isinstance(router, VehicleRouter)
+async def test_vehicle_bluetooth_out_of_range(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A paired vehicle out of range skips Bluetooth and logs why."""
+    with patch(
+        "homeassistant.components.teslemetry.async_address_reachability_diagnostics",
+        return_value="unknown (never seen by any scanner)",
+    ) as mock_diagnostics:
+        async with _paired_entry(hass, MagicMock(return_value=None)) as (
+            router,
+            bluetooth_vehicle,
+            cloud,
+        ):
+            assert isinstance(router, VehicleRouter)
 
-        assert await router.flash_lights() == CLOUD_RESULT
+            with caplog.at_level(logging.DEBUG):
+                assert await router.flash_lights() == CLOUD_RESULT
 
-        cloud.assert_awaited_once()
-        bluetooth_vehicle.flash_lights.assert_not_called()
+            cloud.assert_awaited_once()
+            bluetooth_vehicle.flash_lights.assert_not_called()
+
+    mock_diagnostics.assert_called_with(
+        hass, ADDRESS, BluetoothReachabilityIntent.CONNECTION
+    )
+    assert (
+        f"Vehicle {VIN} is not reachable over Bluetooth, using cloud: "
+        "unknown (never seen by any scanner)"
+    ) in caplog.text
 
 
 async def test_vehicle_router_resumes_bluetooth_when_vehicle_returns(

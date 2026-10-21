@@ -4,6 +4,8 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from yolink.const import OAUTH2_TOKEN
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 from yolink.model import BRDP
@@ -26,9 +28,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_SECRET_KEY, TEST_UAID, build_yolink_home, home_info_response
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.usefixtures("setup_credentials", "mock_auth_manager", "mock_yolink_home")

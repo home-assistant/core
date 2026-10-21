@@ -18,6 +18,7 @@ from onedrive_personal_sdk.models.items import (
     User,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
@@ -34,8 +35,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .const import BACKUP_METADATA, CLIENT_ID, CLIENT_SECRET, IDENTITY_SET, INSTANCE_ID
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="scopes")

@@ -5,6 +5,9 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from yolink.const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from yolink.endpoint import Endpoints
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
@@ -33,10 +36,6 @@ from .conftest import (
     TEST_UAID,
     home_info_response,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 HOME_LOOKUP_FAILURES = [
     pytest.param(

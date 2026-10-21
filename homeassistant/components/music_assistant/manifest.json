@@ -2,6 +2,7 @@
   "domain": "music_assistant",
   "name": "Music Assistant",
   "after_dependencies": ["hassio", "media_source", "tts"],
+  "categories": ["media_entertainment.music_radio_services"],
   "codeowners": ["@music-assistant", "@arturpragacz"],
   "config_flow": true,
   "dependencies": ["auth"],

@@ -6,6 +6,10 @@ from typing import Any
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
 from yarl import URL
 from yolink.const import OAUTH2_TOKEN
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
@@ -15,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .conftest import TEST_SECRET_KEY, TEST_UAID
-
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 
 def _uac_auth(hass: HomeAssistant) -> UACAuth:

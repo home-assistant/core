@@ -251,7 +251,7 @@
   },
   "exceptions": {
     "unsupported_hvac_mode": {
-      "message": "This room does not support the HVAC mode {hvac_mode}."
+      "message": "This entity does not support the HVAC mode {hvac_mode}."
     }
   }
 }

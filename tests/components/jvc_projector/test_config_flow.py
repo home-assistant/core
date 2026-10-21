@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from jvcprojector import JvcProjectorAuthError, JvcProjectorTimeoutError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.jvc_projector.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_HOST, MOCK_MAC_FORMATED, MOCK_PASSWORD, MOCK_PORT
-
-from tests.common import MockConfigEntry
 
 TARGET = "homeassistant.components.jvc_projector.config_flow.JvcProjector"
 

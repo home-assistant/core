@@ -3,8 +3,19 @@
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aionanoleaf2 import InvalidToken, Unauthorized, Unavailable
+from aionanoleaf2 import (
+    AuthError,
+    EndpointNotFoundError,
+    InvalidResponseError,
+    InvalidToken,
+    NanoleafConnectionError,
+    NanoleafError,
+    NanoleafTimeoutError,
+    Unauthorized,
+    Unavailable,
+)
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.nanoleaf.const import DOMAIN
@@ -18,8 +29,6 @@ from homeassistant.helpers.service_info.zeroconf import (
     ZeroconfServiceInfo,
 )
 
-from tests.common import MockConfigEntry
-
 TEST_NAME = "Canvas ADF9"
 TEST_HOST = "192.168.0.100"
 TEST_OTHER_HOST = "192.168.0.200"
@@ -27,6 +36,22 @@ TEST_TOKEN = "R34F1c92FNv3pcZs4di17RxGqiLSwHM"
 TEST_OTHER_TOKEN = "Qs4dxGcHR34l29RF1c92FgiLQBt3pcM"
 TEST_DEVICE_ID = "5E:2E:EA:XX:XX:XX"
 TEST_OTHER_DEVICE_ID = "5E:2E:EA:YY:YY:YY"
+
+# Every library error that means "the device cannot be used right now"
+CONNECT_ERRORS = [
+    pytest.param(Unavailable("unavailable"), id="unavailable"),
+    pytest.param(NanoleafConnectionError("connection"), id="connection"),
+    pytest.param(NanoleafTimeoutError("timeout"), id="timeout"),
+    pytest.param(InvalidResponseError("response"), id="invalid_response"),
+    pytest.param(EndpointNotFoundError("new"), id="endpoint_not_found"),
+    pytest.param(NanoleafError("generic"), id="generic"),
+]
+
+# Library errors that mean "the access token is not accepted"
+AUTH_ERRORS = [
+    pytest.param(InvalidToken("invalid"), id="invalid_token"),
+    pytest.param(AuthError("auth"), id="auth_error"),
+]
 
 
 def _mock_nanoleaf(
@@ -44,14 +69,17 @@ def _mock_nanoleaf(
     return nanoleaf
 
 
-async def test_user_unavailable_user_step_link_step(hass: HomeAssistant) -> None:
-    """Test we handle Unavailable in user and link step."""
+@pytest.mark.parametrize("error", CONNECT_ERRORS)
+async def test_user_unavailable_user_step_link_step(
+    hass: HomeAssistant, error: NanoleafError
+) -> None:
+    """Test we handle library errors in user and link step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     with patch(
         "homeassistant.components.nanoleaf.config_flow.Nanoleaf.authorize",
-        side_effect=Unavailable,
+        side_effect=error,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -80,7 +108,7 @@ async def test_user_unavailable_user_step_link_step(hass: HomeAssistant) -> None
 
     with patch(
         "homeassistant.components.nanoleaf.config_flow.Nanoleaf.authorize",
-        side_effect=Unavailable,
+        side_effect=error,
     ):
         result3 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result3["type"] is FlowResultType.ABORT
@@ -90,9 +118,9 @@ async def test_user_unavailable_user_step_link_step(hass: HomeAssistant) -> None
 @pytest.mark.parametrize(
     ("error", "reason"),
     [
-        (Unavailable, "cannot_connect"),
-        (InvalidToken, "invalid_token"),
-        (Exception, "unknown"),
+        *[pytest.param(e.values[0], "cannot_connect", id=e.id) for e in CONNECT_ERRORS],
+        *[pytest.param(e.values[0], "invalid_token", id=e.id) for e in AUTH_ERRORS],
+        pytest.param(Exception, "unknown", id="unknown"),
     ],
 )
 async def test_user_error_setup_finish(
@@ -312,6 +340,31 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
     assert entry.data[CONF_HOST] == TEST_HOST
     assert entry.data[CONF_TOKEN] == TEST_TOKEN
+
+
+@pytest.mark.parametrize("error", CONNECT_ERRORS)
+async def test_reauth_library_error_aborts_with_cannot_connect(
+    hass: HomeAssistant, error: NanoleafError
+) -> None:
+    """Test a library error while requesting a new token aborts the reauth."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_NAME,
+        data={CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_OTHER_TOKEN},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.nanoleaf.config_flow.Nanoleaf",
+        return_value=_mock_nanoleaf(authorize_error=error),
+    ):
+        result = await entry.start_reauth_flow(hass)
+        assert result["step_id"] == "link"
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+    assert entry.data[CONF_TOKEN] == TEST_OTHER_TOKEN
 
 
 @pytest.mark.parametrize(
@@ -562,8 +615,8 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("error", "expected_error"),
     [
-        pytest.param(Unavailable, "cannot_connect", id="unavailable"),
-        pytest.param(InvalidToken, "invalid_token", id="invalid_token"),
+        *[pytest.param(e.values[0], "cannot_connect", id=e.id) for e in CONNECT_ERRORS],
+        *[pytest.param(e.values[0], "invalid_token", id=e.id) for e in AUTH_ERRORS],
         pytest.param(Exception, "unknown", id="unknown"),
     ],
 )

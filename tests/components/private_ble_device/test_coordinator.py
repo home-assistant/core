@@ -1,6 +1,7 @@
 """Tests for the private_ble_device coordinator."""
 
 import pytest
+from pytest_homeassistant.components.bluetooth import _get_manager
 
 from homeassistant.core import HomeAssistant
 
@@ -12,8 +13,6 @@ from . import (
     async_mock_config_entry,
     async_move_time_forwards,
 )
-
-from tests.components.bluetooth import _get_manager
 
 OTHER_IRK = "11111111111111111111111111111111"
 

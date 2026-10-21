@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from satel_integra import (
     SatelConnectFailedError,
     SatelConnectionInitializationError,
@@ -43,8 +44,6 @@ from . import (
     MOCK_ZONE_TEMPERATURE_SUBENTRY,
     setup_integration,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

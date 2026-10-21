@@ -7,6 +7,9 @@ from urllib.parse import parse_qs, urlparse
 
 from aiohttp import ClientError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from tibber import (
     FatalHttpExceptionError,
     InvalidLoginError,
@@ -25,10 +28,6 @@ from homeassistant.components.tibber.const import AUTH_IMPLEMENTATION, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(name="tibber_setup", autouse=True)

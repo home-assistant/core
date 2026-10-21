@@ -71,15 +71,17 @@ async def async_setup_entry(
         raise ConfigEntryNotReady from exc
 
     dev_reg = dr.async_get(hass)
-    dev_reg.async_get_or_create(
+    dev_reg.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        connections=set(),
-        identifiers={(DOMAIN, entry.data[CONF_GATEWAY_ID])},
-        manufacturer="IKEA of Sweden",
-        name="Gateway",
-        # They just have 1 gateway model. Type is not exposed yet.
-        model="E1526",
-        sw_version=gateway_info.firmware_version,
+        device_info=dr.DeviceInfo(
+            connections=set(),
+            identifiers={(DOMAIN, entry.data[CONF_GATEWAY_ID])},
+            manufacturer="IKEA of Sweden",
+            name="Gateway",
+            # They just have 1 gateway model. Type is not exposed yet.
+            model="E1526",
+            sw_version=gateway_info.firmware_version,
+        ),
     )
 
     remove_stale_devices(hass, entry, devices)

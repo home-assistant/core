@@ -13,6 +13,7 @@ from opendisplay import (
     OpenDisplayError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
@@ -29,8 +30,6 @@ from . import (
     VALID_SERVICE_INFO,
     make_service_info,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 UNSUPPORTED_SERVICE_INFOS = [
     pytest.param(make_service_info(name="Other Device"), id="wrong_name"),
