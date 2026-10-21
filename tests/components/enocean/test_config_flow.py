@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, Mock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.enocean.config_flow import EnOceanFlowHandler
 from homeassistant.components.enocean.const import DOMAIN, MANUFACTURER
 from homeassistant.config_entries import (
@@ -14,8 +16,6 @@ from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
-
-from tests.common import MockConfigEntry
 
 GATEWAY_CLASS = "homeassistant.components.enocean.config_flow.Gateway"
 GLOB_METHOD = "homeassistant.components.enocean.config_flow.glob.glob"

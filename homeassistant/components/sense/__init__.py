@@ -125,13 +125,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> Non
     # via_device_id; child entities are added by concurrently-loaded platforms
     # before any of them registers the monitor device.
     sense_monitor_id = gateway.sense_monitor_id
-    dr.async_get(hass).async_get_or_create(
+    dr.async_get(hass).async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        name=f"Sense {sense_monitor_id}",
-        identifiers={(DOMAIN, sense_monitor_id)},
-        model="Sense",
-        manufacturer="Sense Labs, Inc.",
-        configuration_url="https://home.sense.com",
+        device_info=dr.DeviceInfo(
+            name=f"Sense {sense_monitor_id}",
+            identifiers={(DOMAIN, sense_monitor_id)},
+            model="Sense",
+            manufacturer="Sense Labs, Inc.",
+            configuration_url="https://home.sense.com",
+        ),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

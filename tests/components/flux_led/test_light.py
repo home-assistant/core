@@ -17,6 +17,7 @@ from flux_led.const import (
 )
 from flux_led.protocol import MusicMode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import flux_led
 from homeassistant.components.flux_led.const import (
@@ -78,8 +79,6 @@ from . import (
     async_mock_device_turn_off,
     async_mock_device_turn_on,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_light_unique_id(
