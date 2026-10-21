@@ -74,7 +74,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry so config flow tests do not load the full integration."""
     with patch(
         "homeassistant.components.imou.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         yield mock_setup
 

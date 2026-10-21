@@ -31,11 +31,11 @@ def mock_setup_entry() -> Generator[MagicMock]:
     with (
         patch(
             "homeassistant.components.mijn_farmad_apotheek.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup,
         patch(
             "homeassistant.components.mijn_farmad_apotheek.async_unload_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield mock_setup
