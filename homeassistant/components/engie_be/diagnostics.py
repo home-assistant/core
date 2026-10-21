@@ -67,10 +67,11 @@ def _household_diagnostics(
 def _epex_diagnostics(epex: EngieBeEpexCoordinator) -> dict[str, Any]:
     """Return the diagnostics of the EPEX day-ahead prices."""
     data = epex.data
-    all_slots = sorted(
-        (slot for granularity in EpexGranularity for slot in data.slots(granularity)),
-        key=lambda slot: slot.start,
-    )
+    all_slots = [
+        slot for granularity in EpexGranularity for slot in data.slots(granularity)
+    ]
+    first_slot_start = min((slot.start for slot in all_slots), default=None)
+    last_slot_end = max((slot.end for slot in all_slots), default=None)
     today = dt_util.now(BRUSSELS_TIME_ZONE).date()
     today_prices: dict[str, dict[str, float | None]] = {}
     for granularity in EpexGranularity:
@@ -89,8 +90,12 @@ def _epex_diagnostics(epex: EngieBeEpexCoordinator) -> dict[str, Any]:
             granularity.name: len(data.slots(granularity))
             for granularity in EpexGranularity
         },
-        "first_slot_start": all_slots[0].start.isoformat() if all_slots else None,
-        "last_slot_end": all_slots[-1].end.isoformat() if all_slots else None,
+        "first_slot_start": (
+            first_slot_start.isoformat() if first_slot_start is not None else None
+        ),
+        "last_slot_end": (
+            last_slot_end.isoformat() if last_slot_end is not None else None
+        ),
         "today_available": epex_day_available(data, today),
         "tomorrow_available": epex_day_available(data, today + timedelta(days=1)),
         "today_prices": today_prices,
