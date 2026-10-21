@@ -147,6 +147,7 @@ async def test_form_failures_and_recovery(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id is None
     assert result["title"] == "INDI Allsky (127.0.0.1)"
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -629,6 +630,8 @@ async def test_zeroconf_rejects_protocol_downgrade(
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_PORT] == 443
     assert entry.data[CONF_SSL] is True
+
+
 async def test_form_with_credentials_success(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
@@ -659,6 +662,7 @@ async def test_form_with_credentials_success(
         assert mock_client_cls.call_args.kwargs["password"] == "test_password"
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id is None
     assert result["title"] == "INDI Allsky (127.0.0.1)"
     assert result["data"] == {
         CONF_HOST: "127.0.0.1",
@@ -713,6 +717,7 @@ async def test_form_missing_credentials_failure(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id is None
     assert result["data"] == {
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 443,
