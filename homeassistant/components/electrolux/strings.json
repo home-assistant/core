@@ -655,6 +655,15 @@
     }
   },
   "exceptions": {
+    "authorization_failed": {
+      "message": "The request failed authorization. Please retry the action, and if the problem persists, reconfigure the integration."
+    },
+    "command_validation_failed": {
+      "message": "The requested command could not be executed because it failed validation. Please check the command parameters and try again."
+    },
+    "generic_error": {
+      "message": "An unexpected error occurred. Please try again later."
+    },
     "read_only_option": {
       "message": "The selected option is read-only and the entity cannot be set to it."
     },
