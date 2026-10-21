@@ -6,6 +6,7 @@ Reauthentication when issue with credentials are reported.
 Configuration of options through options flow.
 """
 
+import asyncio
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 import operator
@@ -56,8 +57,9 @@ from .const import (
     CONF_TRACK_WIRED_CLIENTS,
     DEFAULT_DPI_RESTRICTIONS,
     DOMAIN,
+    LOGGER,
 )
-from .errors import AuthenticationRequired, CannotConnect
+from .errors import AuthenticationRequired, CannotConnect, MfaRequired
 from .hub import UnifiHub, get_unifi_api
 
 DEFAULT_HOST = "unifi"
@@ -279,9 +281,26 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
         """Get updated sites through UniFi API."""
         hub = await get_unifi_api(self.hass, MappingProxyType(data))
         try:
-            await hub.sites.update()
-        except (aiounifi.RequestError, aiounifi.ResponseError) as err:
+            async with asyncio.timeout(10):
+                await hub.sites.update()
+        except (
+            aiounifi.Forbidden,
+            aiounifi.LoginRequired,
+            aiounifi.NoPermission,
+            aiounifi.Unauthorized,
+        ) as err:
+            raise AuthenticationRequired from err
+        except (TimeoutError, aiounifi.AiounifiException) as err:
+            LOGGER.warning(
+                "Error fetching sites from UniFi Network at %s: %s",
+                data[CONF_HOST],
+                err,
+            )
             raise CannotConnect from err
+        if not hub.sites.values():
+            # A console without the Network application answers with no sites
+            LOGGER.warning("No sites found on UniFi Network at %s", data[CONF_HOST])
+            raise CannotConnect
         return hub.sites
 
     @callback
@@ -458,6 +477,8 @@ def _catch_unifi_api_flow_errors(errors: dict[str, str]) -> Iterator[None]:
     """Map UniFi API exceptions to config flow form errors."""
     try:
         yield
+    except MfaRequired:
+        errors["base"] = "mfa_required"
     except AuthenticationRequired:
         errors["base"] = "faulty_credentials"
     except CannotConnect:

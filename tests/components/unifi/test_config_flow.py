@@ -28,7 +28,11 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_WIRED_CLIENTS,
     DOMAIN,
 )
-from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
+from homeassistant.components.unifi.errors import (
+    AuthenticationRequired,
+    CannotConnect,
+    MfaRequired,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -217,28 +221,47 @@ async def test_flow_raise_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
+GET_UNIFI_API = "homeassistant.components.unifi.config_flow.get_unifi_api"
+SITES_UPDATE = "aiounifi.interfaces.sites.Sites.update"
+
+
 @pytest.mark.parametrize(
     ("target", "side_effect", "error"),
     [
-        (
-            "homeassistant.components.unifi.config_flow.get_unifi_api",
-            AuthenticationRequired,
-            "faulty_credentials",
+        pytest.param(
+            GET_UNIFI_API, AuthenticationRequired, "faulty_credentials", id="auth"
         ),
-        (
-            "homeassistant.components.unifi.config_flow.get_unifi_api",
-            CannotConnect,
-            "service_unavailable",
+        pytest.param(GET_UNIFI_API, MfaRequired, "mfa_required", id="mfa"),
+        pytest.param(
+            GET_UNIFI_API, CannotConnect, "service_unavailable", id="cannot_connect"
         ),
-        (
-            "aiounifi.interfaces.sites.Sites.update",
+        pytest.param(
+            SITES_UPDATE,
             aiounifi.RequestError,
             "service_unavailable",
+            id="sites_request_error",
         ),
-        (
-            "aiounifi.interfaces.sites.Sites.update",
+        pytest.param(
+            SITES_UPDATE,
             aiounifi.ResponseError,
             "service_unavailable",
+            id="sites_response_error",
+        ),
+        pytest.param(
+            SITES_UPDATE, TimeoutError, "service_unavailable", id="sites_timeout"
+        ),
+        pytest.param(SITES_UPDATE, None, "service_unavailable", id="sites_empty"),
+        pytest.param(
+            SITES_UPDATE,
+            aiounifi.Forbidden,
+            "faulty_credentials",
+            id="sites_forbidden",
+        ),
+        pytest.param(
+            SITES_UPDATE,
+            aiounifi.LoginRequired,
+            "faulty_credentials",
+            id="sites_login_required",
         ),
     ],
 )
