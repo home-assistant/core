@@ -51,6 +51,14 @@ FLOW_NOT_COMPLETE_STEPS = {
 }
 
 
+STEP_ID_OPTIONAL_STEPS = {
+    FlowResultType.EXTERNAL_STEP,
+    FlowResultType.FORM,
+    FlowResultType.MENU,
+    FlowResultType.SHOW_PROGRESS,
+}
+
+
 _FlowContextT = TypeVar("_FlowContextT", bound="FlowContext", default="FlowContext")
 _FlowResultT = TypeVar(
     "_FlowResultT", bound="FlowResult[Any, Any]", default="FlowResult"
@@ -539,6 +547,10 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         elif result["type"] is not FlowResultType.SHOW_PROGRESS:
             flow.async_cancel_progress_task()
 
+        if result["type"] in STEP_ID_OPTIONAL_STEPS:
+            if "step_id" not in result:
+                result["step_id"] = step_id
+
         if result["type"] in FLOW_NOT_COMPLETE_STEPS:
             self._raise_if_step_does_not_exist(flow, result["step_id"])
             flow.cur_step = result
@@ -603,6 +615,15 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             for flow in flows
             if include_uninitialized or flow.cur_step is not None
         ]
+
+
+def _report_missing_step_id(method: str) -> None:
+    """Report a flow result built without a step id."""
+    report_usage(
+        f"calls {method} without passing a step_id",
+        core_behavior=ReportBehavior.LOG,
+        breaks_in_ha_version="2027.5.0",
+    )
 
 
 class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
@@ -694,7 +715,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
     def async_show_form(
         self,
         *,
-        step_id: str,
+        step_id: str | None = None,
         data_schema: probatio.Schema | None = None,
         errors: dict[str, str] | None = None,
         description_placeholders: Mapping[str, str] | None = None,
@@ -702,17 +723,21 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         preview: str | None = None,
     ) -> _FlowResultT:
         """Return the definition of a form to gather user input."""
-        return self._flow_result(
+        flow_result = self._flow_result(
             type=FlowResultType.FORM,
             flow_id=self.flow_id,
             handler=self.handler,
-            step_id=step_id,
             data_schema=data_schema,
             errors=errors,
             description_placeholders=description_placeholders,
             last_step=last_step,  # Display next or submit button in frontend
             preview=preview,  # Display preview component in frontend
         )
+        if step_id is not None:
+            flow_result["step_id"] = step_id
+        else:
+            _report_missing_step_id("async_show_form")
+        return flow_result
 
     @callback
     def async_create_entry(
@@ -765,19 +790,23 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
     def async_external_step(
         self,
         *,
-        step_id: str,
+        step_id: str | None = None,
         url: str,
         description_placeholders: Mapping[str, str] | None = None,
     ) -> _FlowResultT:
         """Return the definition of an external step for the user to take."""
-        return self._flow_result(
+        flow_result = self._flow_result(
             type=FlowResultType.EXTERNAL_STEP,
             flow_id=self.flow_id,
             handler=self.handler,
-            step_id=step_id,
             url=url,
             description_placeholders=description_placeholders,
         )
+        if step_id is not None:
+            flow_result["step_id"] = step_id
+        else:
+            _report_missing_step_id("async_external_step")
+        return flow_result
 
     @callback
     def async_external_step_done(self, *, next_step_id: str) -> _FlowResultT:
@@ -793,7 +822,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
     def async_show_progress(
         self,
         *,
-        step_id: str,
+        step_id: str | None = None,
         progress_action: str,
         description_placeholders: Mapping[str, str] | None = None,
         progress_task: asyncio.Task[Any] | None = None,
@@ -817,15 +846,19 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         if progress_task is None:
             self.deprecated_show_progress = True
 
-        return self._flow_result(
+        flow_result = self._flow_result(
             type=FlowResultType.SHOW_PROGRESS,
             flow_id=self.flow_id,
             handler=self.handler,
-            step_id=step_id,
             progress_action=progress_action,
             description_placeholders=description_placeholders,
             progress_task=progress_task,
         )
+        if step_id is not None:
+            flow_result["step_id"] = step_id
+        else:
+            _report_missing_step_id("async_show_progress")
+        return flow_result
 
     @callback
     def async_update_progress(self, progress: float) -> None:
@@ -860,7 +893,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
     def async_show_menu(
         self,
         *,
-        step_id: str,
+        step_id: str | None = None,
         menu_options: Container[str],
         sort: bool = False,
         description_placeholders: Mapping[str, str] | None = None,
@@ -873,13 +906,16 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             type=FlowResultType.MENU,
             flow_id=self.flow_id,
             handler=self.handler,
-            step_id=step_id,
             data_schema=probatio.Schema({"next_step_id": probatio.In(menu_options)}),
             menu_options=menu_options,
             description_placeholders=description_placeholders,
         )
         if sort:
             flow_result["sort"] = sort
+        if step_id is not None:
+            flow_result["step_id"] = step_id
+        else:
+            _report_missing_step_id("async_show_menu")
         return flow_result
 
     @callback

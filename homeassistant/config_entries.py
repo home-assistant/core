@@ -3825,7 +3825,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
     def async_show_form(
         self,
         *,
-        step_id: str,
+        step_id: str | None = None,
         data_schema: probatio.Schema | None = None,
         errors: dict[str, str] | None = None,
         description_placeholders: Mapping[str, str] | None = None,
