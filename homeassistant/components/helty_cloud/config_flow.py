@@ -36,11 +36,11 @@ class HeltyCloudConfigFlow(ConfigFlow, domain=DOMAIN):
             await client.login()
         except HeltyCloudAuthError:
             errors["base"] = "invalid_auth"
+            return None
         except HeltyCloudError:
             errors["base"] = "cannot_connect"
-        else:
-            return client.user_id
-        return None
+            return None
+        return client.user_id
 
     @override
     async def async_step_user(
