@@ -1,5 +1,6 @@
 """Tests for the BSB-LAN climate platform."""
 
+import asyncio
 from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
@@ -552,3 +553,72 @@ async def test_set_data_ignores_failed_reread(
     mock_bsblan.thermostat.assert_called_once()
     mock_bsblan.sensor.assert_not_called()
     assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
+
+
+async def test_write_keeps_poll_schedule(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a write between two polls does not postpone the next poll."""
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+
+    freezer.tick(timedelta(seconds=6))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 19},
+        blocking=True,
+    )
+    mock_bsblan.sensor.reset_mock()
+
+    freezer.tick(timedelta(seconds=7))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_bsblan.sensor.assert_called_once()
+
+
+async def test_reread_waits_for_running_poll(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a poll that read the circuit before a write cannot revert it."""
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+    old_state = mock_bsblan.state.return_value
+    new_state = old_state.model_copy(
+        update={"target_temperature": MagicMock(value=19.5)}
+    )
+    mock_bsblan.state.side_effect = [old_state, new_state]
+    release = asyncio.Event()
+    sensor = mock_bsblan.sensor.return_value
+
+    async def _blocked_sensor(*args: object, **kwargs: object) -> object:
+        await release.wait()
+        return sensor
+
+    mock_bsblan.sensor.side_effect = _blocked_sensor
+
+    # The poll reads the circuit, then waits on the sensors
+    freezer.tick(timedelta(seconds=12))
+    async_fire_time_changed(hass)
+    await asyncio.sleep(0)
+    write = hass.async_create_task(
+        hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 19.5},
+            blocking=True,
+        )
+    )
+    await asyncio.sleep(0)
+    release.set()
+    await write
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).attributes["temperature"] == 19.5
