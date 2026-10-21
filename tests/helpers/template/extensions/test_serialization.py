@@ -1,6 +1,7 @@
 """Test serialization functions for Home Assistant templates."""
 
 import json
+import math
 
 import orjson
 import pytest
@@ -101,6 +102,34 @@ def test_to_json_ensure_ascii_sort_keys_non_str_keys(hass: HomeAssistant) -> Non
         "{{ value | to_json(sort_keys=True) }}",
         {"value": value},
         parse_result=False,
+    )
+    assert json.loads(actual_result) == json.loads(default_result)
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        pytest.param(math.nan, "null", id="nan"),
+        pytest.param(
+            {"a": math.inf, "b": [-math.inf, 1.5]},
+            '{"a": null, "b": [null, 1.5]}',
+            id="nested",
+        ),
+    ],
+)
+def test_to_json_ensure_ascii_non_finite_floats(
+    hass: HomeAssistant, value: object, expected: str
+) -> None:
+    """Test to_json with ensure_ascii serializes NaN and Infinity as null."""
+    actual_result = render(
+        hass,
+        "{{ value | to_json(ensure_ascii=True) }}",
+        {"value": value},
+        parse_result=False,
+    )
+    assert actual_result == expected
+    default_result = render(
+        hass, "{{ value | to_json }}", {"value": value}, parse_result=False
     )
     assert json.loads(actual_result) == json.loads(default_result)
 

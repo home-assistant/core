@@ -1905,6 +1905,35 @@ async def test_self_reset_weekly(hass: HomeAssistant) -> None:
     )
 
 
+@pytest.mark.parametrize(
+    ("offset", "next_reset"),
+    [
+        pytest.param(timedelta(0), "2024-01-08T00:00:00+00:00", id="no_offset"),
+        pytest.param(timedelta(days=6), "2024-01-07T00:00:00+00:00", id="6_days"),
+        pytest.param(timedelta(days=7), "2024-01-08T00:00:00+00:00", id="7_days"),
+        pytest.param(
+            timedelta(days=8, hours=2), "2024-01-09T02:00:00+00:00", id="8_days"
+        ),
+        pytest.param(
+            timedelta(days=27, hours=23, minutes=59),
+            "2024-01-07T23:59:00+00:00",
+            id="27_days",
+        ),
+    ],
+)
+@freeze_time("2024-01-03T12:00:00+00:00")
+async def test_weekly_offset(
+    hass: HomeAssistant, offset: timedelta, next_reset: str
+) -> None:
+    """Test a weekly meter with an offset of a week or more still resets weekly."""
+    assert await async_setup_component(hass, DOMAIN, gen_config("weekly", offset))
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_bill")
+    assert state is not None
+    assert state.attributes.get("next_reset") == next_reset
+
+
 async def test_self_reset_monthly(hass: HomeAssistant) -> None:
     """Test monthly reset of meter."""
     await _test_self_reset(
