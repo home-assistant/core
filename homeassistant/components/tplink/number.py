@@ -16,10 +16,9 @@ from homeassistant.components.number import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TPLinkConfigEntry
+from .coordinator import TPLinkConfigEntry, TPLinkDataUpdateCoordinator
 from .entity import (
     CoordinatedTPLinkFeatureEntity,
-    TPLinkDataUpdateCoordinator,
     TPLinkFeatureEntityDescription,
     async_refresh_after,
 )

@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from victron_mqtt import (
     AuthenticationError,
     CannotConnectError,
@@ -40,8 +41,6 @@ from .const import (
     MOCK_MODEL,
     MOCK_SERIAL,
 )
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

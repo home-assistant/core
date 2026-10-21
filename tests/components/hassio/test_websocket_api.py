@@ -8,6 +8,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import HomeAssistantUpdateOptions, StoreAddonUpdate
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser, async_mock_signal
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup import BackupManagerError, ManagerBackup
@@ -31,10 +34,6 @@ from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, MockUser, async_mock_signal
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import WebSocketGenerator
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
@@ -1058,3 +1057,27 @@ async def test_read_update_config(
 
     await websocket_client.send_json_auto_id({"type": "hassio/update/config/info"})
     assert await websocket_client.receive_json() == snapshot
+
+
+@pytest.mark.usefixtures("hassio_env")
+async def test_update_config_keeps_other_options(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test updating the backup options keeps the other options."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={}, options={"core_auto_update": True}, unique_id=DOMAIN
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    websocket_client = await hass_ws_client(hass)
+
+    await websocket_client.send_json_auto_id(
+        {"type": "hassio/update/config/update", "core_backup_before_update": True}
+    )
+    assert (await websocket_client.receive_json())["success"]
+
+    assert config_entry.options["core_auto_update"] is True
+    assert config_entry.options["core_backup_before_update"] is True

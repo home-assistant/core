@@ -5,6 +5,9 @@ from unittest.mock import AsyncMock
 
 from pymiele import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.miele.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -13,10 +16,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import CLIENT_ID
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 REDIRECT_URL = "https://example.com/auth/external/callback"
 

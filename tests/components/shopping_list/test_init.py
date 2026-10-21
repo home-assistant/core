@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 
 import pytest
+from pytest_homeassistant.common import async_capture_events
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.shopping_list import NoMatchingShoppingListItem
@@ -12,7 +14,6 @@ from homeassistant.components.shopping_list.common import _get_shopping_data
 from homeassistant.components.shopping_list.const import (
     ATTR_REVERSE,
     DOMAIN,
-    EVENT_SHOPPING_LIST_UPDATED,
     SERVICE_ADD_ITEM,
     SERVICE_CLEAR_COMPLETED_ITEMS,
     SERVICE_COMPLETE_ITEM,
@@ -25,14 +26,10 @@ from homeassistant.components.websocket_api import (
     ERR_NOT_FOUND,
     TYPE_RESULT,
 )
-from homeassistant.const import ATTR_NAME
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.const import ATTR_NAME, EVENT_SHOPPING_LIST_UPDATED
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import intent, issue_registry as ir
-from homeassistant.setup import async_setup_component
-
-from tests.common import async_capture_events
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
+from homeassistant.helpers import intent
 
 
 def assert_shopping_list_data(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
@@ -952,15 +949,3 @@ async def test_sort_list_service(
     assert _get_shopping_data(hass).items[1][ATTR_NAME] == "ddd"
     assert _get_shopping_data(hass).items[2][ATTR_NAME] == "aaa"
     assert len(events) == 2
-
-
-async def test_config_import_deprecation(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test yaml config import is deprecated."""
-    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
-
-    await hass.async_block_till_done(True)
-
-    assert (HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}") in issue_registry.issues

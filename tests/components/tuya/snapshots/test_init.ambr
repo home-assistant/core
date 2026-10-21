@@ -7239,6 +7239,36 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[qpic3qqzgk]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'qpic3qqzgk',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': '16-way controller',
+    'model_id': 'zqq3cipq',
+    'name': 'RCU controller',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[qt0o5jlatiqf2rscps]
   DeviceRegistryEntrySnapshot({
     'area_id': None,

@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from unittest.mock import ANY, AsyncMock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.kodi.config_flow import (
@@ -34,8 +35,6 @@ from .util import (
     MockWSConnection,
     get_kodi_connection,
 )
-
-from tests.common import MockConfigEntry
 
 
 @contextmanager
