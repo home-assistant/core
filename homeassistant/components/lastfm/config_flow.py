@@ -368,7 +368,14 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="reauth_confirm", data_schema=probatio.Schema({})
             )
-        return await self._async_start_reauth()
+        async with self._submission_lock:
+            self._raise_if_removed()
+            if (
+                self.cur_step is not None
+                and self.cur_step["step_id"] != "reauth_confirm"
+            ):
+                return self.cur_step
+            return await self._async_start_reauth()
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
@@ -604,9 +611,6 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_USERS],
             )
             self._raise_if_removed()
-            if _credentials_changed(self.data, data):
-                assert self.cur_step is not None
-                return self.cur_step
             user_input[CONF_USERS] = users
             if not errors:
                 options = {

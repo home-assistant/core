@@ -4,7 +4,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pylast import LastFMNetwork, WSError
+from pylast import LastFMNetwork, PyLastError, WSError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
@@ -194,6 +194,10 @@ async def test_reconfigure_unlocks_hidden_listening_information(
                 )
             ),
             id="recent_tracks",
+        ),
+        pytest.param(
+            MockUser(thrown_error=PyLastError("Something strange")),
+            id="plain_library_error",
         ),
     ],
 )

@@ -458,6 +458,104 @@ async def test_reauth_flow(
     }
 
 
+@pytest.mark.parametrize(
+    ("first_error", "first_type", "expected_url", "expected_requests"),
+    [
+        pytest.param(
+            None, FlowResultType.EXTERNAL_STEP, AUTH_URL, 1, id="reuse_authorization"
+        ),
+        pytest.param(
+            WSError("network", "16", "Service unavailable"),
+            FlowResultType.FORM,
+            f"{AUTH_URL}-second",
+            2,
+            id="retry_transient_error",
+        ),
+    ],
+)
+async def test_reauth_overlapping_confirmations(
+    hass: HomeAssistant,
+    authenticated_config_entry: MockConfigEntry,
+    first_error: WSError | None,
+    first_type: FlowResultType,
+    expected_url: str,
+    expected_requests: int,
+) -> None:
+    """Queued confirmations must preserve the first successful authorization."""
+    authenticated_config_entry.add_to_hass(hass)
+    first_generator = MockSessionKeyGenerator(
+        web_auth_url_error=first_error, session_key=NEW_SESSION_KEY
+    )
+    second_generator = MockSessionKeyGenerator(session_key=NEW_SESSION_KEY)
+    get_web_auth_url = first_generator.get_web_auth_url
+    authorization_started = Event()
+    authorization_release = Event()
+    submissions: list[asyncio.Task[ConfigFlowResult]] = []
+
+    def blocked_get_web_auth_url() -> str:
+        """Wait for the second confirmation before returning the first token."""
+        authorization_started.set()
+        assert authorization_release.wait(5)
+        return get_web_auth_url()
+
+    with (
+        patch(
+            SESSION_KEY_GENERATOR_PATH,
+            side_effect=[first_generator, second_generator],
+        ) as session_key_generator,
+        patch.object(
+            first_generator, "get_web_auth_url", side_effect=blocked_get_web_auth_url
+        ),
+        patch.object(
+            second_generator, "get_web_auth_url", return_value=f"{AUTH_URL}-second"
+        ),
+        patch(POLLING_INTERVAL_PATH, 60),
+        patch_setup_entry(),
+    ):
+        result = await authenticated_config_entry.start_reauth_flow(hass)
+        submissions.append(
+            hass.async_create_task(
+                hass.config_entries.flow.async_configure(
+                    result["flow_id"], user_input={}
+                )
+            )
+        )
+        try:
+            assert await hass.async_add_executor_job(authorization_started.wait, 5)
+            submissions.append(
+                hass.async_create_task(
+                    hass.config_entries.flow.async_configure(
+                        result["flow_id"], user_input={}
+                    )
+                )
+            )
+            authorization_release.set()
+            first_result = await submissions[0]
+            second_result = await submissions[1]
+            polling_task = get_session_key_polling_task(hass, result["flow_id"])
+
+            result = await hass.config_entries.flow.async_configure(result["flow_id"])
+            assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
+            result = await hass.config_entries.flow.async_configure(result["flow_id"])
+            await hass.async_block_till_done()
+        finally:
+            authorization_release.set()
+            await asyncio.gather(*submissions, return_exceptions=True)
+            await hass.async_block_till_done()
+
+    assert first_result["type"] is first_type
+    assert second_result["type"] is FlowResultType.EXTERNAL_STEP
+    assert second_result["step_id"] == "auth_url"
+    assert second_result["url"] == expected_url
+    assert session_key_generator.call_count == expected_requests
+    assert result["reason"] == "reauth_successful"
+    assert authenticated_config_entry.options == {
+        **CONF_DATA_WITH_SESSION_KEY,
+        CONF_SESSION_KEY: NEW_SESSION_KEY,
+    }
+    assert polling_task.cancelled()
+
+
 async def test_reauth_flow_wrong_account(
     hass: HomeAssistant,
     authenticated_config_entry: MockConfigEntry,
