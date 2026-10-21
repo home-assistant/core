@@ -1,6 +1,7 @@
 """Constants for the KNX integration."""
 
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 from enum import Enum, StrEnum
 from typing import TYPE_CHECKING, Final, TypedDict
 
@@ -18,6 +19,25 @@ if TYPE_CHECKING:
 
 DOMAIN: Final = "knx"
 KNX_MODULE_KEY: HassKey[KNXModule] = HassKey(DOMAIN)
+
+
+@dataclass(slots=True, frozen=True)
+class KnxEntityIdentifier:
+    """Class to identify KNX entities in KNX frontend."""
+
+    platform: str
+    unique_id: str
+    ui: bool  # ui or yaml entity
+
+
+class GroupAddressEntity(TypedDict):
+    """An entity using a group address, as reported to the KNX frontend."""
+
+    platform: str
+    unique_id: str
+    ui: bool
+    disabled: bool  # disabled in the entity registry
+
 
 # Prefix of device identifiers created via the `knx/create_device` websocket
 # command (see websocket.py). A YAML `device.id` matching this prefix is

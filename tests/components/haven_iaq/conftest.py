@@ -17,7 +17,7 @@ from . import TEST_CAM_SERIAL, TEST_HOST, TEST_INFO, TEST_SENSORS, TEST_SERIAL
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Prevent config flow tests from setting up the integration."""
     with patch(
-        "homeassistant.components.haven_iaq.async_setup_entry", return_value=True
+        "homeassistant.components.haven_iaq.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 

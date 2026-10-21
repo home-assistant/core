@@ -2665,3 +2665,66 @@ async def test_open_block_precision_same_second(
     assert hass.states.get("sensor.precision_count").state == "1"
     assert hass.states.get("sensor.precision_time").state == "0.0"
     assert hass.states.get("sensor.precision_ratio").state == "0.0"
+
+
+@pytest.mark.parametrize(
+    ("off_offset", "expected_ratio"),
+    [
+        pytest.param(timedelta(seconds=99, milliseconds=500), "99.5", id="before_end"),
+        pytest.param(timedelta(seconds=100), "100.0", id="at_end"),
+        pytest.param(
+            timedelta(seconds=100, milliseconds=500),
+            "100.0",
+            id="within_second_after_end",
+        ),
+        pytest.param(timedelta(seconds=101), "100.0", id="after_end"),
+    ],
+)
+async def test_state_change_just_after_period_end(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    off_offset: timedelta,
+    expected_ratio: str,
+) -> None:
+    """Test a state change less than a second after the period end is not counted."""
+    await hass.config.async_set_time_zone("UTC")
+    start_time = dt_util.utcnow().replace(microsecond=0) - timedelta(hours=1)
+
+    def _fake_states(*args, **kwargs) -> dict[str, list[ha.State]]:
+        return {
+            "binary_sensor.test_id": [
+                ha.State("binary_sensor.test_id", "on", last_changed=start_time),
+                ha.State(
+                    "binary_sensor.test_id",
+                    "off",
+                    last_changed=start_time + off_offset,
+                ),
+            ]
+        }
+
+    with patch(
+        "homeassistant.components.recorder.history.state_changes_during_period",
+        _fake_states,
+    ):
+        await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.test_id",
+                        "name": "sensor1",
+                        "state": "on",
+                        "start": start_time.isoformat(),
+                        "duration": {"seconds": 100},
+                        "type": "ratio",
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+        await async_update_entity(hass, "sensor.sensor1")
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.sensor1").state == expected_ratio

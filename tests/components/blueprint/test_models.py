@@ -449,3 +449,125 @@ async def test_inputs_from_config_nonexisting_blueprint(
         await domain_bps.async_inputs_from_config(
             {"use_blueprint": {"path": "non-existing.yaml"}}
         )
+
+
+def _visible_blueprint(inputs: dict[str, Any]) -> models.Blueprint:
+    return models.Blueprint(
+        {
+            "blueprint": {"name": "Hello", "domain": "automation", "input": inputs},
+            "dim_mode": Input("dim_mode"),
+            "brightness": Input("brightness"),
+        },
+        schema=BLUEPRINT_SCHEMA,
+    )
+
+
+def _resolve(blueprint: models.Blueprint, values: dict[str, Any]) -> dict[str, Any]:
+    inputs = models.BlueprintInputs(
+        blueprint, {"use_blueprint": {"path": "bla", "input": values}}
+    )
+    inputs.validate()
+    return inputs.async_substitute()
+
+
+VISIBLE_BRIGHTNESS = {"field": "dim_mode", "value": "fixed"}
+
+
+@pytest.mark.parametrize(
+    ("brightness", "values", "expected"),
+    [
+        pytest.param(
+            {"visible": VISIBLE_BRIGHTNESS},
+            {"dim_mode": "none"},
+            {"dim_mode": "none", "brightness": None},
+            id="hidden_without_default",
+        ),
+        pytest.param(
+            {"default": 50, "visible": VISIBLE_BRIGHTNESS},
+            {"dim_mode": "none", "brightness": 80},
+            {"dim_mode": "none", "brightness": 50},
+            id="hidden_uses_default",
+        ),
+        pytest.param(
+            {"default": 50, "visible": VISIBLE_BRIGHTNESS},
+            {"dim_mode": "fixed", "brightness": 80},
+            {"dim_mode": "fixed", "brightness": 80},
+            id="visible",
+        ),
+    ],
+)
+def test_blueprint_inputs_visible(
+    brightness: dict[str, Any], values: dict[str, Any], expected: dict[str, Any]
+) -> None:
+    """Test a hidden input resolves to its default, or None without one."""
+    blueprint = _visible_blueprint({"dim_mode": None, "brightness": brightness})
+    assert _resolve(blueprint, values) == expected
+
+
+@pytest.mark.parametrize(
+    "inputs",
+    [
+        pytest.param({"dim_mode": {}, "brightness": {}}, id="top_level"),
+        pytest.param(
+            {"dim_mode": {}, "dimming": {"input": {"brightness": {}}}},
+            id="in_section",
+        ),
+    ],
+)
+def test_blueprint_inputs_empty_definition(inputs: dict[str, Any]) -> None:
+    """Test empty input definitions have no visible condition."""
+    blueprint = _visible_blueprint(inputs)
+    assert _resolve(blueprint, {"dim_mode": "none", "brightness": 80}) == {
+        "dim_mode": "none",
+        "brightness": 80,
+    }
+
+
+def test_blueprint_inputs_visible_missing() -> None:
+    """Test a visible input without a value or default is still required."""
+    blueprint = _visible_blueprint(
+        {"dim_mode": None, "brightness": {"visible": VISIBLE_BRIGHTNESS}}
+    )
+    inputs = models.BlueprintInputs(
+        blueprint, {"use_blueprint": {"path": "bla", "input": {"dim_mode": "fixed"}}}
+    )
+    with pytest.raises(errors.MissingInput):
+        inputs.validate()
+
+
+def test_blueprint_inputs_visible_section() -> None:
+    """Test inputs of a hidden section resolve like hidden inputs."""
+    blueprint = _visible_blueprint(
+        {
+            "dim_mode": None,
+            "dimming": {
+                "visible": VISIBLE_BRIGHTNESS,
+                "input": {"brightness": None},
+            },
+        }
+    )
+    assert _resolve(blueprint, {"dim_mode": "none"}) == {
+        "dim_mode": "none",
+        "brightness": None,
+    }
+    assert _resolve(blueprint, {"dim_mode": "fixed", "brightness": 80}) == {
+        "dim_mode": "fixed",
+        "brightness": 80,
+    }
+
+
+@pytest.mark.parametrize(
+    "visible",
+    [{"value": 1}, {"field": "dim_mode", "operator": "gt"}, "yes"],
+)
+def test_blueprint_invalid_visible(visible: Any) -> None:
+    """Test an invalid visible condition is rejected."""
+    with pytest.raises(errors.InvalidBlueprint):
+        _visible_blueprint({"dim_mode": None, "brightness": {"visible": visible}})
+    with pytest.raises(errors.InvalidBlueprint):
+        _visible_blueprint(
+            {
+                "dim_mode": None,
+                "dimming": {"visible": visible, "input": {"brightness": None}},
+            }
+        )

@@ -132,7 +132,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -726,7 +726,7 @@ async def test_form_errors(
         ),
         patch(
             "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -770,11 +770,11 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.google_generative_ai_conversation.async_unload_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_unload_entry,
     ):
         result = await hass.config_entries.flow.async_configure(

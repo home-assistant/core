@@ -1,7 +1,9 @@
 """Test config entries API."""
 
 from typing import Any
+from unittest.mock import patch
 
+from aiohttp import WSMsgType
 import pytest
 from pytest_homeassistant.common import CLIENT_ID, MockUser
 from pytest_homeassistant.typing import WebSocketGenerator
@@ -308,27 +310,54 @@ async def test_create_auth_duplicate_username(
 async def test_delete_removes_just_auth(
     hass_ws_client: WebSocketGenerator,
     hass: HomeAssistant,
-    hass_storage: dict[str, Any],
+    auth_provider: prov_ha.HassAuthProvider,
 ) -> None:
     """Test deleting an auth without being connected to a user."""
     client = await hass_ws_client(hass)
-
-    hass_storage[prov_ha.STORAGE_KEY] = {
-        "version": 1,
-        "data": {"users": [{"username": "test-user"}]},
-    }
+    await auth_provider.async_add_auth("unlinked-user", "test-pass")
 
     await client.send_json(
         {
             "id": 5,
             "type": "config/auth_provider/homeassistant/delete",
-            "username": "test-user",
+            "username": "unlinked-user",
         }
     )
 
     result = await client.receive_json()
     assert result["success"], result
-    assert len(hass_storage[prov_ha.STORAGE_KEY]["data"]["users"]) == 0
+    assert auth_provider.data is not None
+    assert [user["username"] for user in auth_provider.data.users] == ["test-user"]
+
+
+async def test_delete_own_credentials_replies_before_logging_out(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+    auth_provider: prov_ha.HassAuthProvider,
+) -> None:
+    """Test deleting the password of this session replies before it is closed."""
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.websocket_api.connection.AUTH_CLOSE_DELAY", 0.001
+    ):
+        await client.send_json(
+            {
+                "id": 5,
+                "type": "config/auth_provider/homeassistant/delete",
+                "username": "test-user",
+            }
+        )
+
+        result = await client.receive_json()
+        assert result["success"], result
+        assert (await client.receive()).type is WSMsgType.CLOSE
+
+    assert hass_admin_user.credentials == []
+    assert hass_admin_user.refresh_tokens == {}
+    assert auth_provider.data is not None
+    assert auth_provider.data.users == []
 
 
 async def test_delete_removes_credential(
