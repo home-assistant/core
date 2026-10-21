@@ -449,12 +449,23 @@ def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> lis
     return res
 
 
-def _dst_offset_diff(dattim: dt.datetime) -> dt.timedelta:
-    """Return the offset when crossing the DST barrier."""
-    delta = dt.timedelta(hours=24)
-    return (dattim + delta).utcoffset() - (  # type: ignore[operator]
-        dattim - delta
-    ).utcoffset()
+def _second_fold_start(dattim: dt.datetime) -> dt.datetime:
+    """Return the first wall time of the second fold of an ambiguous datetime.
+
+    The result has fold=1. The transition is searched in UTC, between the
+    first and second fold readings of dattim, to the second.
+    """
+    tzinfo = dattim.tzinfo
+    low = dattim.replace(microsecond=0, fold=0).astimezone(UTC)
+    first_fold_offset = low.astimezone(tzinfo).utcoffset()
+    high = dattim.replace(microsecond=0, fold=1).astimezone(UTC)
+    while (gap := int((high - low).total_seconds())) > 1:
+        middle = low + dt.timedelta(seconds=gap // 2)
+        if middle.astimezone(tzinfo).utcoffset() == first_fold_offset:
+            low = middle
+        else:
+            high = middle
+    return high.astimezone(tzinfo).replace(fold=1)
 
 
 def _lower_bound(arr: list[int], cmp: int) -> int | None:
@@ -573,15 +584,14 @@ def find_next_time_expression_time(
             # longer matches within the fold).
             #   -> Check if result matches in the next fold. If so, emit that match
 
-            # Turn back the time by the DST offset, effectively run the algorithm on
-            # the first fold. If it matches on the first fold, that means it will also
-            # match on the second one.
+            # Run the algorithm from the start of the second fold. The whole second
+            # fold comes after `now`, so its first match is the next one.
 
             # Example: 2021.10.31 02:45:00+02:00 with pattern 02:30
             #   -> 2021.10.31 02:30:00+01:00
 
             check_result = find_next_time_expression_time(
-                now + _dst_offset_diff(now), seconds, minutes, hours
+                _second_fold_start(now), seconds, minutes, hours
             )
             if _datetime_ambiguous(check_result):
                 return check_result.replace(fold=1)

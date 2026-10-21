@@ -592,6 +592,61 @@ def test_find_next_time_expression_exiting_dst(now_dt, expected_dt) -> None:
     assert dt_util.as_utc(res_dt) == dt_util.as_utc(expected_dt)
 
 
+# DST transitions that are not on a whole hour boundary. Lord Howe turns back
+# 30 minutes on 2024.04.07 2:00, so 1:30-2:00 is ambiguous; Chatham turns back
+# 1h on 2024.04.07 3:45, so 2:45-3:45 is ambiguous.
+@pytest.mark.parametrize(
+    ("time_zone", "now_dt", "hour", "minute", "expected_dt"),
+    [
+        pytest.param(
+            "Australia/Lord_Howe",
+            datetime(2024, 4, 7, 1, 50, 0, fold=0),
+            1,
+            [25, 35],
+            datetime(2024, 4, 7, 1, 35, 0, fold=1),
+            id="lord_howe_skip_match_before_fold",
+        ),
+        pytest.param(
+            "Pacific/Chatham",
+            datetime(2024, 4, 7, 3, 0, 0, fold=0),
+            2,
+            "*",
+            datetime(2024, 4, 7, 2, 45, 0, fold=1),
+            id="chatham_start_of_fold",
+        ),
+        pytest.param(
+            "Pacific/Chatham",
+            datetime(2024, 4, 7, 3, 30, 0, fold=0),
+            [2, 3],
+            15,
+            datetime(2024, 4, 7, 3, 15, 0, fold=1),
+            id="chatham_match_in_fold",
+        ),
+    ],
+)
+def test_find_next_time_expression_exiting_dst_not_hour_aligned(
+    time_zone: str,
+    now_dt: datetime,
+    hour: int | list[int],
+    minute: int | list[int] | str,
+    expected_dt: datetime,
+) -> None:
+    """Test exiting DST by less than or off an hour boundary."""
+    tz = dt_util.get_time_zone(time_zone)
+    dt_util.set_default_time_zone(tz)
+    pattern_seconds = dt_util.parse_time_expression(0, 0, 59)
+    pattern_minutes = dt_util.parse_time_expression(minute, 0, 59)
+    pattern_hours = dt_util.parse_time_expression(hour, 0, 23)
+
+    now_dt = now_dt.replace(tzinfo=tz)
+    expected_dt = expected_dt.replace(tzinfo=tz)
+
+    res_dt = dt_util.find_next_time_expression_time(
+        now_dt, pattern_seconds, pattern_minutes, pattern_hours
+    )
+    assert dt_util.as_utc(res_dt) == dt_util.as_utc(expected_dt)
+
+
 def test_find_next_time_expression_time_dst_chicago() -> None:
     """Test daylight saving time for find_next_time_expression_time."""
     tz = dt_util.get_time_zone("America/Chicago")
