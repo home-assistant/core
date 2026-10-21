@@ -20,7 +20,7 @@ from xknx.exceptions import XKNXException
 from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later, async_track_time_change
 from homeassistant.helpers.storage import STORAGE_DIR, Store
@@ -31,6 +31,7 @@ from .const import (
     CONF_KNX_TELEGRAM_DB_POSTGRES_DSN,
     CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
     DOMAIN,
+    EVENT_KNX_STATE_CHANGED,
     KNX_TELEGRAM_BACKEND_POSTGRES,
     KNX_TELEGRAM_DB_PATH_SQLITE,
     SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
@@ -99,6 +100,36 @@ class TelegramDict(DecodedTelegramPayload):
     source_name: str
     telegramtype: str
     timestamp: str  # ISO format
+
+
+class KnxTelegramContext(Context):
+    """Incoming telegram metadata retained until its state change is recorded."""
+
+    __slots__ = ("logged", "telegram_data")
+
+    def __init__(self, telegram_data: TelegramDict) -> None:
+        """Snapshot project names using the already decoded telegram."""
+        super().__init__()
+        self.telegram_data = telegram_data
+        self.logged = False
+
+    @callback
+    def async_log(self, hass: HomeAssistant) -> None:
+        """Record at most one attribution event for this telegram."""
+        if self.logged:
+            return
+        self.logged = True
+        hass.bus.async_fire(
+            EVENT_KNX_STATE_CHANGED,
+            {
+                "source": self.telegram_data["source"],
+                "source_name": self.telegram_data["source_name"],
+                "destination": self.telegram_data["destination"],
+                "destination_name": self.telegram_data["destination_name"],
+                "telegramtype": self.telegram_data["telegramtype"],
+            },
+            context=self,
+        )
 
 
 class Telegrams:
@@ -349,6 +380,8 @@ class Telegrams:
         telegram_dict = self.telegram_to_dict(telegram)
         if telegram_dict["payload"] is not None:
             # exclude GroupValueRead telegrams
+            if telegram.direction is TelegramDirection.INCOMING:
+                telegram.context = KnxTelegramContext(telegram_dict)
             self.last_ga_telegrams[telegram_dict["destination"]] = telegram_dict
 
         # Store in history store
