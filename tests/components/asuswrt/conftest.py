@@ -71,7 +71,7 @@ MOCK_BOOTTIME = {
 def mock_controller_patch_setup_entry():
     """Mock setting up a config entry."""
     with patch(
-        f"{ASUSWRT_BASE}.async_setup_entry", return_value=None
+        f"{ASUSWRT_BASE}.async_setup_entry", return_value=True
     ) as setup_entry_mock:
         yield setup_entry_mock
 
