@@ -18,6 +18,8 @@ TEST_NAME = "Bedroom Shade"
 
 def status_packet(position: int = 50, battery_mv: int = 3700) -> bytes:
     """Build a Get Status reply packet with the given position and battery."""
+    # position, tilt, memory, battery_mv, time, cycles, stalls, temperature,
+    # raw position, raw tilt
     payload = struct.pack(
         "<hhHHIIIhII", position, 0, 0, battery_mv, 0, 0, 0, 20, position, 0
     )
