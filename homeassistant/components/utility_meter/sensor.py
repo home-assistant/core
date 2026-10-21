@@ -83,7 +83,7 @@ from .const import (
 )
 
 PERIOD2CRON = {
-    QUARTER_HOURLY: "{minute}/15 * * * *",
+    QUARTER_HOURLY: "{quarter_minute}/15 * * * *",
     HOURLY: "{minute} * * * *",
     DAILY: "{minute} {hour} * * *",
     WEEKLY: "{minute} {hour} * * {weekday}",
@@ -365,6 +365,7 @@ class UtilityMeterSensor(RestoreSensor):
             # the period and offset into a cron pattern
             self._cron_pattern = PERIOD2CRON[meter_type].format(
                 minute=meter_offset.seconds % 3600 // 60,
+                quarter_minute=meter_offset.seconds // 60 % 15,
                 hour=meter_offset.seconds // 3600,
                 day=meter_offset.days + 1,
                 weekday=meter_offset.days % 7 + 1,

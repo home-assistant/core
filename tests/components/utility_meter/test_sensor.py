@@ -1805,6 +1805,33 @@ async def test_self_reset_quarter_hourly_third_quarter(hass: HomeAssistant) -> N
     )
 
 
+@pytest.mark.parametrize(
+    ("offset", "next_reset"),
+    [
+        pytest.param(timedelta(0), "2024-01-03T13:00:00+00:00", id="no_offset"),
+        pytest.param(timedelta(minutes=5), "2024-01-03T13:05:00+00:00", id="5_min"),
+        pytest.param(timedelta(minutes=20), "2024-01-03T13:05:00+00:00", id="20_min"),
+        pytest.param(timedelta(minutes=50), "2024-01-03T13:05:00+00:00", id="50_min"),
+        pytest.param(
+            timedelta(hours=1, minutes=35), "2024-01-03T13:05:00+00:00", id="95_min"
+        ),
+    ],
+)
+@freeze_time("2024-01-03T12:52:00+00:00")
+async def test_quarter_hourly_offset(
+    hass: HomeAssistant, offset: timedelta, next_reset: str
+) -> None:
+    """Test a quarter-hourly meter with an offset of 15 minutes or more resets every quarter."""
+    assert await async_setup_component(
+        hass, DOMAIN, gen_config("quarter-hourly", offset)
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_bill")
+    assert state is not None
+    assert state.attributes.get("next_reset") == next_reset
+
+
 async def test_self_reset_hourly(hass: HomeAssistant) -> None:
     """Test hourly reset of meter."""
     await _test_self_reset(
