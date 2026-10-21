@@ -188,3 +188,8 @@ class EheimDigitalDeviceUpdateCoordinator[_DeviceT: EheimDigitalDevice](
         self.main_coordinator = main_coordinator
         self.data = device
         self.msg_title = msg_title
+
+    @override
+    async def async_request_refresh(self) -> None:
+        """Request a refresh from the main coordinator."""
+        await self.main_coordinator.async_request_refresh()

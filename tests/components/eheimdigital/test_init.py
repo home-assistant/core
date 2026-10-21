@@ -3,8 +3,8 @@
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from eheimdigital.types import EheimDeviceType, EheimDigitalClientError
-from pytest_homeassistant.common import MockConfigEntry
+from eheimdigital.types import EheimDeviceType, EheimDigitalClientError, MsgTitle
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.eheimdigital.const import DOMAIN
@@ -12,7 +12,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .conftest import init_integration
 
@@ -65,6 +67,27 @@ async def test_dynamic_entities(
             "00:00:00:00:00:02"
         ].night_temperature_offset
     )
+
+
+async def test_main_coordinator_refresh_lifecycle(
+    hass: HomeAssistant,
+    eheimdigital_hub_mock: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that the main coordinator refreshes only while the entry is loaded."""
+    await init_integration(hass, mock_config_entry)
+
+    hub_update = eheimdigital_hub_mock.return_value.update
+    update_count = hub_update.call_count
+    async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
+    await hass.async_block_till_done()
+    assert hub_update.call_count == update_count + 1
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    update_count = hub_update.call_count
+    async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
+    await hass.async_block_till_done()
+    assert hub_update.call_count == update_count
 
 
 async def test_remove_device(

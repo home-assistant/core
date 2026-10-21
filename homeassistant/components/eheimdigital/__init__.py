@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from eheimdigital.device import EheimDigitalDevice
 
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, async_noop
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import AnyDeviceEntry
 
@@ -46,6 +46,7 @@ async def async_setup_entry(
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    entry.async_on_unload(coordinator.async_add_listener(async_noop))
 
 
 async def async_unload_entry(
