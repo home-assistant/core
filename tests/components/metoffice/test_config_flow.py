@@ -46,7 +46,7 @@ async def test_form(hass: HomeAssistant, requests_mock: requests_mock.Mocker) ->
 
     with patch(
         "homeassistant.components.metoffice.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"api_key": TEST_API_KEY}
@@ -136,7 +136,7 @@ async def test_form_cannot_connect(
     )
     with patch(
         "homeassistant.components.metoffice.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -170,7 +170,7 @@ async def test_form_unknown_error(
     mock_instance.get_forecast.return_value.name = TEST_SITE_NAME_WAVERTREE
     with patch(
         "homeassistant.components.metoffice.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
