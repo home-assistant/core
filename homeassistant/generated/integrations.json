@@ -1675,6 +1675,16 @@
             "messaging_notifications.chat_apps"
           ],
           "name": "Cisco Webex Teams"
+        },
+        "meraki": {
+          "integration_type": "hub",
+          "config_flow": false,
+          "iot_class": "cloud_polling",
+          "categories": [
+            "presence_location.network_presence",
+            "computers_network.routers_network"
+          ],
+          "name": "Meraki"
         }
       }
     },
@@ -6716,16 +6726,6 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "meraki": {
-      "name": "Meraki",
-      "integration_type": "hub",
-      "categories": [
-        "presence_location.network_presence",
-        "computers_network.routers_network"
-      ],
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
     "message_bird": {
       "name": "MessageBird",
       "integration_type": "hub",
@@ -6939,6 +6939,16 @@
       ],
       "config_flow": true,
       "iot_class": "cloud_push",
+      "single_config_entry": true
+    },
+    "mijn_farmad_apotheek": {
+      "name": "Mijn Farmad Apotheek",
+      "integration_type": "service",
+      "categories": [
+        "health_wellbeing"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_polling",
       "single_config_entry": true
     },
     "mijndomein_energie": {

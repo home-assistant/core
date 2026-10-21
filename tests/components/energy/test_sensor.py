@@ -1712,6 +1712,85 @@ async def test_cost_sensor_readded_starts_over(
     assert hass.states.get("sensor.energy_consumption_cost").state == "0.0"
 
 
+@pytest.mark.parametrize(
+    ("source_type", "first_unit", "second_unit", "readings"),
+    [
+        pytest.param(
+            "grid",
+            UnitOfEnergy.KILO_WATT_HOUR,
+            UnitOfEnergy.WATT_HOUR,
+            ("110000", "112000"),
+            id="kwh_to_wh",
+        ),
+        pytest.param(
+            "water",
+            UnitOfVolume.CUBIC_METERS,
+            UnitOfVolume.LITERS,
+            ("110000", "112000"),
+            id="m3_to_l",
+        ),
+        # Can't be converted, start over from the first reading in the new unit
+        pytest.param(
+            "gas",
+            UnitOfEnergy.KILO_WATT_HOUR,
+            UnitOfVolume.CUBIC_METERS,
+            ("50", "52"),
+            id="kwh_to_m3",
+        ),
+    ],
+)
+async def test_cost_sensor_meter_unit_change(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    source_type: str,
+    first_unit: str,
+    second_unit: str,
+    readings: tuple[str, str],
+) -> None:
+    """Test a meter changing its unit is not priced as usage."""
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["energy_sources"].append(
+        {
+            "type": source_type,
+            "stat_energy_from": "sensor.meter",
+            "stat_cost": None,
+            "entity_energy_price": None,
+            "number_energy_price": 2,
+            "cost_adjustment_day": 0,
+        }
+    )
+    hass_storage[data.STORAGE_KEY] = {"version": 1, "data": energy_data}
+    attributes = {ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING}
+    hass.states.async_set(
+        "sensor.meter", "100", {**attributes, ATTR_UNIT_OF_MEASUREMENT: first_unit}
+    )
+    await setup_integration(hass)
+    hass.states.async_set(
+        "sensor.meter", "110", {**attributes, ATTR_UNIT_OF_MEASUREMENT: first_unit}
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.meter_cost").state == "20.0"
+
+    # Same reading in the new unit
+    hass.states.async_set(
+        "sensor.meter",
+        readings[0],
+        {**attributes, ATTR_UNIT_OF_MEASUREMENT: second_unit},
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.meter_cost").state == "20.0"
+
+    # 2 kWh or m³ used
+    hass.states.async_set(
+        "sensor.meter",
+        readings[1],
+        {**attributes, ATTR_UNIT_OF_MEASUREMENT: second_unit},
+    )
+    await hass.async_block_till_done()
+    assert float(hass.states.get("sensor.meter_cost").state) == pytest.approx(24.0)
+
+
 async def test_needs_power_sensor_standard(hass: HomeAssistant) -> None:
     """Test _needs_power_sensor returns False for standard stat_rate."""
     assert SensorManager._needs_power_sensor({"stat_rate": "sensor.power"}) is False
