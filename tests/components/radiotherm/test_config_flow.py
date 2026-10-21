@@ -40,7 +40,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.radiotherm.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -87,7 +87,7 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.radiotherm.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -128,7 +128,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.radiotherm.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -170,7 +170,7 @@ async def test_dhcp_can_confirm(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.radiotherm.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -261,7 +261,7 @@ async def test_user_unique_id_already_exists(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.radiotherm.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
