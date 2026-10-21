@@ -54,7 +54,7 @@ def create_rfx_test_subentries(
         data = {
             key: value for key, value in entity_info.items() if key != CONF_DEVICE_ID
         }
-        data[CONF_EVENT_CODE] = event_code
+        data[CONF_EVENT_CODE] = [event_code]
 
         unique_id: str | None = None
         title = event_code

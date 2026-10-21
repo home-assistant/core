@@ -29,7 +29,7 @@ def async_get_device_object(hass: HomeAssistant, device_id: str) -> RFXtrxDevice
     if (subentry := entry.subentries.get(subentry_id)) is None:
         raise ValueError(f"Device {device_id} has no subentry {subentry_id}")
 
-    event = get_rfx_object(subentry.data[CONF_EVENT_CODE])
+    event = get_rfx_object(subentry.data[CONF_EVENT_CODE][0])
     if event is None:
         raise ValueError(f"Device {device_id} has an invalid event code")
     device_tuple = get_device_tuple_from_device(

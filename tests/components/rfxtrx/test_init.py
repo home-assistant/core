@@ -2,6 +2,7 @@
 
 from unittest.mock import ANY, Mock, call, patch
 
+import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.typing import WebSocketGenerator
 import RFXtrx as rfxtrxmod
@@ -194,6 +195,70 @@ async def test_rediscover_removed_device(
         assert hass.states.get("binary_sensor.ac_118cdea_2")
 
     mock_setup_entry.assert_not_called()
+
+
+@pytest.mark.parametrize("automatic_add", [True, False])
+async def test_rediscover_additional_entity_type(
+    hass: HomeAssistant,
+    rfxtrx: Mock,
+    automatic_add: bool,
+) -> None:
+    """Test a new entity type is added for an already-configured device."""
+    mock_entry = await setup_rfx_test_cfg(
+        hass,
+        automatic_add=automatic_add,
+        devices={"08200300a109000070": {}},
+    )
+
+    assert hass.states.get("binary_sensor.kd101_smoke_detector_a10900_32")
+    assert hass.states.get("siren.kd101_smoke_detector_a10900_32") is None
+
+    await rfxtrx.signal("08200300a109000670")
+
+    assert hass.states.get("siren.kd101_smoke_detector_a10900_32")
+
+    subentry = next(iter(mock_entry.subentries.values()))
+    assert subentry.data["event_code"] == [
+        "08200300a109000070",
+        "08200300a109000670",
+    ]
+
+    await hass.config_entries.async_reload(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.kd101_smoke_detector_a10900_32")
+    assert hass.states.get("siren.kd101_smoke_detector_a10900_32")
+
+
+async def test_invalid_secondary_event_code(hass: HomeAssistant, rfxtrx: Mock) -> None:
+    """Test a subentry with an unparsable secondary event code is skipped."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": None,
+            "port": None,
+            "device": "/dev/tty123",
+            "automatic_add": False,
+        },
+        subentries_data=(
+            ConfigSubentryDataWithId(
+                data={"event_code": ["08200300a109000070", "invalid"]},
+                subentry_type=SUBENTRY_TYPE_DEVICE,
+                title="KD101 Smoke Detector a10900:32",
+                unique_id="20_3_a10900:32",
+                subentry_id="existing_subentry_id",
+            ),
+        ),
+        unique_id=DOMAIN,
+        version=ENTRY_VERSION,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("binary_sensor.kd101_smoke_detector_a10900_32")
 
 
 async def test_connect(
@@ -491,22 +556,26 @@ async def test_migrate_entry(
         duplicate_device_id.unique_id,
     }
 
-    # Only one subentry is created for the two event codes that mask to the
-    # same device, using the data from whichever is processed first.
+    # One subentry is created for the two event codes that mask to the same
+    # device, keeping both codes but the options from whichever is
+    # processed first.
     subentry_dup = subentries[duplicate_device_id.unique_id]
-    assert subentry_dup.data["event_code"] == "0913000022670e013970"
+    assert subentry_dup.data["event_code"] == [
+        "0913000022670e013970",
+        "09130000226707013970",
+    ]
     assert subentry_dup.data["off_delay"] == 5
 
     subentry_1 = subentries["11_0_213c7f2:16"]
     assert subentry_1.title == "AC 213c7f2:16"
     assert dict(subentry_1.data) == {
         "fire_event": True,
-        "event_code": "0b1100cd0213c7f210010f51",
+        "event_code": ["0b1100cd0213c7f210010f51"],
     }
 
     subentry_2 = subentries["16_0_00:90"]
     assert subentry_2.title == "Byron SX 00:90"
-    assert dict(subentry_2.data) == {"event_code": "0716000100900970"}
+    assert dict(subentry_2.data) == {"event_code": ["0716000100900970"]}
 
     device_1 = device_registry.async_get(device_1.id)
     assert device_1
@@ -580,7 +649,7 @@ async def test_migrate_entry_skips_foreign_and_migrated_entities(
         data=legacy_config,
         subentries_data=(
             ConfigSubentryDataWithId(
-                data={"event_code": "0b1100cd0213c7f210010f51"},
+                data={"event_code": ["0b1100cd0213c7f210010f51"]},
                 subentry_type=SUBENTRY_TYPE_DEVICE,
                 title="AC 213c7f2:16",
                 unique_id="11_0_213c7f2:16",

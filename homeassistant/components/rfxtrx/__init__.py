@@ -144,7 +144,7 @@ def _get_device_lookup(entry: ConfigEntry) -> dict[DeviceTuple, ConfigSubentry]:
     """Get a lookup structure for devices."""
     lookup: dict[DeviceTuple, ConfigSubentry] = {}
     for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE):
-        if (event := get_rfx_object(subentry.data[CONF_EVENT_CODE])) is None:
+        if (event := get_rfx_object(subentry.data[CONF_EVENT_CODE][0])) is None:
             continue
         device_id = get_device_tuple_from_device(
             event.device, data_bits=subentry.data.get(CONF_DATA_BITS)
@@ -222,10 +222,13 @@ async def async_setup_internal(hass: HomeAssistant, entry: RfxtrxConfigEntry) ->
         device_id = get_device_tuple_from_device(event.device, data_bits=data_bits)
 
         if device_id not in devices:
-            if config[CONF_AUTOMATIC_ADD]:
-                _add_device(event, device_id)
-            else:
+            if not config[CONF_AUTOMATIC_ADD]:
                 return
+            _add_device(event, device_id)
+        else:
+            async_dispatcher_send(
+                hass, SIGNAL_DEVICE_ADDED, event, devices[device_id], _note_event_code
+            )
 
         if event.device.packettype == DEVICE_PACKET_TYPE_LIGHTING4:
             find_possible_pt2262_device(pt2262_devices, event.device.id_string)
@@ -246,6 +249,23 @@ async def async_setup_internal(hass: HomeAssistant, entry: RfxtrxConfigEntry) ->
         hass.bus.async_fire(EVENT_RFXTRX_EVENT, event_data)
 
     @callback
+    def _note_event_code(subentry_id: str, event_code: str) -> None:
+        """Record a code that revealed a new entity, for future startups."""
+        nonlocal pending_internal_updates
+        subentry = entry.subentries[subentry_id]
+        codes = subentry.data[CONF_EVENT_CODE]
+        if event_code in codes:
+            return
+        pending_internal_updates += 1
+        hass.config_entries.async_update_subentry(
+            entry,
+            subentry,
+            data=MappingProxyType(
+                {**subentry.data, CONF_EVENT_CODE: [*codes, event_code]}
+            ),
+        )
+
+    @callback
     def _add_device(event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple) -> None:
         """Add a device to config entry."""
         nonlocal pending_internal_updates
@@ -260,7 +280,7 @@ async def async_setup_internal(hass: HomeAssistant, entry: RfxtrxConfigEntry) ->
         )
 
         subentry = ConfigSubentry(
-            data=MappingProxyType({CONF_EVENT_CODE: event_code}),
+            data=MappingProxyType({CONF_EVENT_CODE: [event_code]}),
             subentry_type=SUBENTRY_TYPE_DEVICE,
             title=f"{event.device.type_string} {device_id.id_string}",
             unique_id=device_id.unique_id,
@@ -268,7 +288,9 @@ async def async_setup_internal(hass: HomeAssistant, entry: RfxtrxConfigEntry) ->
         pending_internal_updates += 1
         hass.config_entries.async_add_subentry(entry, subentry)
         devices[device_id] = subentry
-        async_dispatcher_send(hass, SIGNAL_DEVICE_ADDED, event, subentry)
+        async_dispatcher_send(
+            hass, SIGNAL_DEVICE_ADDED, event, subentry, _note_event_code
+        )
 
     @callback
     def _remove_device(subentry_id: str) -> None:
@@ -312,6 +334,20 @@ async def async_setup_internal(hass: HomeAssistant, entry: RfxtrxConfigEntry) ->
     )
 
 
+def _new_entities(
+    entities: list[Entity], known_unique_ids: set[str]
+) -> tuple[list[Entity], list[str]]:
+    """Return the entities not already in known_unique_ids, with their ids."""
+    new_entities: list[Entity] = []
+    new_unique_ids: list[str] = []
+    for entity in entities:
+        if entity.unique_id is None or entity.unique_id in known_unique_ids:
+            continue
+        new_entities.append(entity)
+        new_unique_ids.append(entity.unique_id)
+    return new_entities, new_unique_ids
+
+
 async def async_setup_platform_entry(
     hass: HomeAssistant,
     config_entry: RfxtrxConfigEntry,
@@ -328,43 +364,56 @@ async def async_setup_platform_entry(
 ) -> None:
     """Set up config entry."""
     device_ids: set[DeviceTuple] = set()
+    known_unique_ids: set[str] = set()
 
-    # Add entities from config
     for subentry in config_entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE):
-        if (event := get_rfx_object(subentry.data[CONF_EVENT_CODE])) is None:
-            _LOGGER.error("Invalid device: %s", subentry.data[CONF_EVENT_CODE])
-            continue
-        if not supported(event):
+        codes = subentry.data[CONF_EVENT_CODE]
+        if (primary_event := get_rfx_object(codes[0])) is None:
+            _LOGGER.error("Invalid device: %s", codes[0])
             continue
 
         device_id = get_device_tuple_from_device(
-            event.device, data_bits=subentry.data.get(CONF_DATA_BITS)
+            primary_event.device, data_bits=subentry.data.get(CONF_DATA_BITS)
         )
         if device_id in device_ids:
             continue
         device_ids.add(device_id)
 
-        entities = constructor(event, None, subentry)
-        async_add_entities(entities, config_subentry_id=subentry.subentry_id)
-
-    # If automatic add is on, hookup listener
-    if config_entry.data[CONF_AUTOMATIC_ADD]:
-
-        @callback
-        def _device_added(
-            event: rfxtrxmod.RFXtrxEvent, subentry: ConfigSubentry
-        ) -> None:
-            """Add entities for an automatically discovered device."""
+        for code in codes:
+            if (event := get_rfx_object(code)) is None:
+                _LOGGER.error("Invalid device: %s", code)
+                continue
             if not supported(event):
-                return
-            async_add_entities(
-                constructor(event, event, subentry),
-                config_subentry_id=subentry.subentry_id,
-            )
+                continue
+            entities = constructor(event, None, subentry)
+            new_entities, new_unique_ids = _new_entities(entities, known_unique_ids)
+            if not new_entities:
+                continue
+            known_unique_ids.update(new_unique_ids)
+            async_add_entities(new_entities, config_subentry_id=subentry.subentry_id)
 
-        config_entry.async_on_unload(
-            async_dispatcher_connect(hass, SIGNAL_DEVICE_ADDED, _device_added)
+    @callback
+    def _device_added(
+        event: rfxtrxmod.RFXtrxEvent,
+        subentry: ConfigSubentry,
+        note_event_code: Callable[[str, str], None],
+    ) -> None:
+        """Add entities revealed by an event for a known or new device."""
+        if not supported(event):
+            return
+        entities = constructor(event, event, subentry)
+        new_entities, new_unique_ids = _new_entities(entities, known_unique_ids)
+        if not new_entities:
+            return
+        known_unique_ids.update(new_unique_ids)
+        async_add_entities(new_entities, config_subentry_id=subentry.subentry_id)
+        note_event_code(
+            subentry.subentry_id, binascii.hexlify(event.data).decode("ASCII")
         )
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, SIGNAL_DEVICE_ADDED, _device_added)
+    )
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -421,13 +470,23 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 event.device, data_bits=entity_info.get(CONF_DATA_BITS)
             )
             if device_id.unique_id in subentry_by_unique_id:
+                existing = entry.subentries[subentry_by_unique_id[device_id.unique_id]]
+                codes = existing.data[CONF_EVENT_CODE]
+                if event_code not in codes:
+                    hass.config_entries.async_update_subentry(
+                        entry,
+                        existing,
+                        data=MappingProxyType(
+                            {**existing.data, CONF_EVENT_CODE: [*codes, event_code]}
+                        ),
+                    )
                 continue
             subentry_data = {
                 key: value
                 for key, value in entity_info.items()
                 if key != CONF_DEVICE_ID
             }
-            subentry_data[CONF_EVENT_CODE] = event_code
+            subentry_data[CONF_EVENT_CODE] = [event_code]
             subentry = ConfigSubentry(
                 data=MappingProxyType(subentry_data),
                 subentry_type=SUBENTRY_TYPE_DEVICE,

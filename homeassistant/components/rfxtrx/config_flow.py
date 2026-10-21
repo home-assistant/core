@@ -142,7 +142,7 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
         subentry = self._get_reconfigure_subentry()
         errors: dict[str, str] = {}
 
-        current_device_object = get_rfx_object(subentry.data[CONF_EVENT_CODE])
+        current_device_object = get_rfx_object(subentry.data[CONF_EVENT_CODE][0])
         assert current_device_object
         replace_devices = self._get_replace_devices(
             current_device_object, subentry.subentry_id
@@ -154,7 +154,7 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
                 event_code = (
                     self._get_entry()
                     .subentries[replace_subentry_id]
-                    .data[CONF_EVENT_CODE]
+                    .data[CONF_EVENT_CODE][0]
                 )
             else:
                 event_code = user_input[CONF_EVENT_CODE]
@@ -178,7 +178,7 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
 
         schema: VolDictType = {
             probatio.Required(
-                CONF_EVENT_CODE, default=subentry.data[CONF_EVENT_CODE]
+                CONF_EVENT_CODE, default=subentry.data[CONF_EVENT_CODE][0]
             ): str,
         }
         if replace_devices:
@@ -233,7 +233,7 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
                     errors[CONF_DATA_BITS] = "already_configured_device"
 
             if not errors:
-                data: dict[str, Any] = {CONF_EVENT_CODE: self._event_code}
+                data: dict[str, Any] = {CONF_EVENT_CODE: [self._event_code]}
                 if user_input.get(CONF_OFF_DELAY):
                     data[CONF_OFF_DELAY] = user_input[CONF_OFF_DELAY]
                 if user_input.get(CONF_DATA_BITS):
@@ -344,7 +344,7 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
         for subentry in self._get_entry().get_subentries_of_type(SUBENTRY_TYPE_DEVICE):
             if subentry.subentry_id in exclude_subentry_ids:
                 continue
-            rfx_obj = get_rfx_object(subentry.data[CONF_EVENT_CODE])
+            rfx_obj = get_rfx_object(subentry.data[CONF_EVENT_CODE][0])
             if rfx_obj is None:
                 continue
 
@@ -376,7 +376,7 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
         for subentry in self._get_entry().get_subentries_of_type(SUBENTRY_TYPE_DEVICE):
             if subentry.subentry_id == exclude_subentry_id:
                 continue
-            rfx_obj = get_rfx_object(subentry.data[CONF_EVENT_CODE])
+            rfx_obj = get_rfx_object(subentry.data[CONF_EVENT_CODE][0])
             if rfx_obj is None:
                 continue
             if _same_protocol(rfx_obj.device, current_device_object.device):

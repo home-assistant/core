@@ -24,4 +24,4 @@ async def test_diagnostics(
     assert result["entry"]["data"]["port"] == 1234
     subentry = result["entry"]["subentries"][0]
     assert subentry["subentry_type"] == "device"
-    assert subentry["data"]["event_code"] == "0b1100cd0213c7f230010f71"
+    assert subentry["data"]["event_code"] == ["0b1100cd0213c7f230010f71"]

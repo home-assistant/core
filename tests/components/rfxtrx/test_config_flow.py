@@ -440,7 +440,7 @@ async def test_options_add_device(hass: HomeAssistant) -> None:
     await async_wait_for_reload(hass)
 
     subentry = next(iter(entry.subentries.values()))
-    assert subentry.data["event_code"] == "0b1100cd0213c7f230010f71"
+    assert subentry.data["event_code"] == ["0b1100cd0213c7f230010f71"]
     assert "off_delay" not in subentry.data
 
     state = hass.states.get("binary_sensor.ac_213c7f2_48")
@@ -518,7 +518,7 @@ async def test_options_replace_device(
     await async_wait_for_reload(hass)
 
     subentry = entry.subentries[subentry.subentry_id]
-    assert subentry.data["event_code"] == "0b1100100118cdea02010f70"
+    assert subentry.data["event_code"] == ["0b1100100118cdea02010f70"]
 
     # Same device, same entity, same customization - only the underlying
     # radio address changed.
@@ -649,7 +649,7 @@ async def test_options_reconfigure_ignores_broken_subentries(
                 "unique_id": None,
             },
             {
-                "data": {"event_code": "invalid"},
+                "data": {"event_code": ["invalid"]},
                 "subentry_type": "device",
                 "title": "Broken device",
                 "unique_id": None,
@@ -675,7 +675,7 @@ async def test_options_reconfigure_ignores_broken_subentries(
     device_subentry = next(
         s
         for s in entry.subentries.values()
-        if s.data.get("event_code") == "0b1100cd0213c7f230010f71"
+        if s.data.get("event_code") == ["0b1100cd0213c7f230010f71"]
     )
 
     # Reconfiguring it exercises _get_replace_devices skipping the same
@@ -770,7 +770,7 @@ async def test_options_replace_device_with_existing(
     # A kept its identity and customization, but now has B's event code
     assert entry.subentries.keys() == {subentry_a.subentry_id}
     subentry_a = entry.subentries[subentry_a.subentry_id]
-    assert subentry_a.data["event_code"] == "0b1100100118cdea02010f70"
+    assert subentry_a.data["event_code"] == ["0b1100100118cdea02010f70"]
 
     device_a = device_registry.async_get(device_a.id)
     assert device_a
@@ -877,7 +877,7 @@ async def test_options_add_device_data_bits_conflict(hass: HomeAssistant) -> Non
         },
         subentries_data=(
             {
-                "data": {"event_code": "0913000022670e013970", "data_bits": 4},
+                "data": {"event_code": ["0913000022670e013970"], "data_bits": 4},
                 "subentry_type": "device",
                 "title": "PT2262 226700",
                 "unique_id": "13_0_226700",
@@ -941,7 +941,7 @@ async def test_options_add_device_matching_masked_device_unmasked(
         },
         subentries_data=(
             {
-                "data": {"event_code": "0913000022670e013970", "data_bits": 4},
+                "data": {"event_code": ["0913000022670e013970"], "data_bits": 4},
                 "subentry_type": "device",
                 "title": "PT2262 226700",
                 "unique_id": "13_0_226700",
@@ -993,7 +993,7 @@ async def test_options_add_duplicate_device(hass: HomeAssistant) -> None:
         },
         subentries_data=(
             {
-                "data": {"event_code": "0b1100cd0213c7f230010f71"},
+                "data": {"event_code": ["0b1100cd0213c7f230010f71"]},
                 "subentry_type": "device",
                 "title": "AC 213c7f2:48",
                 "unique_id": "11_0_213c7f2:48",
@@ -1097,7 +1097,7 @@ async def test_options_add_and_configure_device(
     await async_wait_for_reload(hass)
 
     subentry = next(iter(entry.subentries.values()))
-    assert subentry.data["event_code"] == "0913000022670e013970"
+    assert subentry.data["event_code"] == ["0913000022670e013970"]
     assert subentry.data["off_delay"] == 9
 
     state = hass.states.get("binary_sensor.pt2262_226700")
@@ -1137,7 +1137,7 @@ async def test_options_add_and_configure_device(
     await hass.async_block_till_done()
 
     subentry = entry.subentries[subentry.subentry_id]
-    assert subentry.data["event_code"] == "0913000022670e013970"
+    assert subentry.data["event_code"] == ["0913000022670e013970"]
     assert "off_delay" not in subentry.data
 
 
@@ -1182,7 +1182,7 @@ async def test_options_configure_rfy_cover_device(
     await async_wait_for_reload(hass)
 
     subentry = next(iter(entry.subentries.values()))
-    assert subentry.data["event_code"] == "0C1a0000010203010000000000"
+    assert subentry.data["event_code"] == ["0C1a0000010203010000000000"]
     assert subentry.data["venetian_blind_mode"] == "EU"
 
     device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
@@ -1215,5 +1215,5 @@ async def test_options_configure_rfy_cover_device(
     await hass.async_block_till_done()
 
     subentry = entry.subentries[subentry.subentry_id]
-    assert subentry.data["event_code"] == "0C1a0000010203010000000000"
+    assert subentry.data["event_code"] == ["0C1a0000010203010000000000"]
     assert subentry.data["venetian_blind_mode"] == "EU"
