@@ -10,6 +10,8 @@ from infrared_protocols.commands.gree_ac import (
     GreeAcMode,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.gree_infrared.const import (
@@ -23,9 +25,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import ENTRY_ID
-
-from tests.common import MockConfigEntry
-from tests.components.infrared.common import MockInfraredEmitterEntity
 
 _CLIMATE = "climate.gree_ac"
 

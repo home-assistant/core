@@ -4,6 +4,13 @@ from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.infrared import (
+    EMITTER_ENTITY_ID as mock_infrared_emitter_entity_id,
+    RECEIVER_ENTITY_ID as mock_infrared_receiver_entity_id,
+)
+from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.config import config_entries as config_entries_api
@@ -23,14 +30,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.components.infrared import (
-    EMITTER_ENTITY_ID as mock_infrared_emitter_entity_id,
-    RECEIVER_ENTITY_ID as mock_infrared_receiver_entity_id,
-)
-from tests.components.infrared.common import MockInfraredEmitterEntity
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
@@ -283,10 +282,7 @@ async def test_reconfigure_model(
         data={**mock_config_entry.data, CONF_GENERIC_OPTIONS: not generic_options},
     )
     original_data = dict(mock_config_entry.data)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
-    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
     assert (

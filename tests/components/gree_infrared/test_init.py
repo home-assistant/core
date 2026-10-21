@@ -1,10 +1,10 @@
 """Tests for the Gree Infrared integration setup."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.gree_infrared.state import GreeAcState
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_and_unload_entry(
