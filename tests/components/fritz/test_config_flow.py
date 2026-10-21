@@ -69,7 +69,7 @@ def _patch_fritz_connection(fc_class_mock: MagicMock) -> Generator[None]:
             "homeassistant.components.fritz.config_flow.socket.gethostbyname",
             return_value=MOCK_IPS["fritz.box"],
         ),
-        patch("homeassistant.components.fritz.async_setup_entry", return_value=True),
+        patch("homeassistant.components.fritz.async_setup_entry", return_value=None),
     ):
         yield
 
@@ -213,7 +213,7 @@ async def test_user_already_configured(
             "homeassistant.components.fritz.config_flow.socket.gethostbyname",
             return_value=MOCK_IPS["fritz.box"],
         ) as mock_gethostbyname,
-        patch("homeassistant.components.fritz.async_setup_entry", return_value=True),
+        patch("homeassistant.components.fritz.async_setup_entry", return_value=None),
     ):
         mock_request_get.return_value.status_code = 200
         mock_request_get.return_value.content = MOCK_REQUEST
