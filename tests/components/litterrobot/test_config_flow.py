@@ -5,6 +5,7 @@ from unittest.mock import PropertyMock, patch
 from pylitterbot import Account
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -13,8 +14,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .common import ACCOUNT_USER_ID, CONFIG, DOMAIN
-
-from tests.common import MockConfigEntry
 
 DHCP_DISCOVERY_LR4 = DhcpServiceInfo(
     ip="192.168.1.100",
@@ -71,9 +70,15 @@ async def test_already_configured(hass: HomeAssistant) -> None:
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=CONFIG[DOMAIN],
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=CONFIG[DOMAIN],
     )
 
     assert result["type"] is FlowResultType.ABORT

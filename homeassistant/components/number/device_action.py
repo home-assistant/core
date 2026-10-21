@@ -1,6 +1,6 @@
 """Provides device actions for Number."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import async_validate_entity_schema
 from homeassistant.const import (
@@ -20,9 +20,9 @@ ATYP_SET_VALUE = "set_value"
 
 _ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): ATYP_SET_VALUE,
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Required(ATTR_VALUE): vol.Coerce(float),
+        probatio.Required(CONF_TYPE): ATYP_SET_VALUE,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Required(ATTR_VALUE): probatio.Coerce(float),
     }
 )
 
@@ -79,8 +79,8 @@ async def async_call_action_from_config(
 
 async def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List action capabilities."""
-    fields = {vol.Required(ATTR_VALUE): vol.Coerce(float)}
+    fields = {probatio.Required(ATTR_VALUE): probatio.Coerce(float)}
 
-    return {"extra_fields": vol.Schema(fields)}
+    return {"extra_fields": probatio.Schema(fields)}

@@ -9,6 +9,7 @@ from aiostreammagic import (
     TransportControl,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ARTIST,
@@ -51,8 +52,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import mock_state_update, setup_integration
 from .const import ENTITY_ID
-
-from tests.common import MockConfigEntry
 
 
 async def test_entity_supported_features(

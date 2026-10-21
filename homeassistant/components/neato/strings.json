@@ -2,14 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "create_entry": {
@@ -48,8 +41,29 @@
     }
   },
   "exceptions": {
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    "clean_spot_failed": {
+      "message": "Failed to start spot cleaning."
+    },
+    "disable_schedule_failed": {
+      "message": "Failed to disable the Neato cleaning schedule."
+    },
+    "enable_schedule_failed": {
+      "message": "Failed to enable the Neato cleaning schedule."
+    },
+    "locate_failed": {
+      "message": "Failed to locate the vacuum."
+    },
+    "pause_failed": {
+      "message": "Failed to pause cleaning."
+    },
+    "return_to_base_failed": {
+      "message": "Failed to send the vacuum back to its dock."
+    },
+    "start_failed": {
+      "message": "Failed to start cleaning."
+    },
+    "stop_failed": {
+      "message": "Failed to stop cleaning."
     }
   },
   "services": {

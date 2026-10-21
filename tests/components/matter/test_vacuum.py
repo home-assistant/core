@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, call
 from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
@@ -19,8 +20,6 @@ from .common import (
     snapshot_matter_entities,
     trigger_subscription_callback,
 )
-
-from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.usefixtures("matter_devices")
@@ -480,6 +479,7 @@ async def test_vacuum_clean_area_select_areas_failure(
 async def test_vacuum_no_issue_on_transient_empty_segments(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
@@ -506,8 +506,7 @@ async def test_vacuum_no_issue_on_transient_empty_segments(
     set_node_attribute(matter_node, 1, 336, 0, [])
     await trigger_subscription_callback(hass, matter_client)
 
-    issue_reg = ir.async_get(hass)
-    issue = issue_reg.async_get_issue(
+    issue = issue_registry.async_get_issue(
         VACUUM_DOMAIN, f"segments_changed_{entity_entry.id}"
     )
     assert issue is None
@@ -517,6 +516,7 @@ async def test_vacuum_no_issue_on_transient_empty_segments(
 async def test_vacuum_raise_segments_changed_issue(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
@@ -542,8 +542,7 @@ async def test_vacuum_raise_segments_changed_issue(
     set_node_attribute(matter_node, 1, 97, 4, 0x02)
     await trigger_subscription_callback(hass, matter_client)
 
-    issue_reg = ir.async_get(hass)
-    issue = issue_reg.async_get_issue(
+    issue = issue_registry.async_get_issue(
         VACUUM_DOMAIN, f"segments_changed_{entity_entry.id}"
     )
     assert issue is not None

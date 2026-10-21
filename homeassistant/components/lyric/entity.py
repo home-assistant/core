@@ -50,6 +50,17 @@ class LyricEntity(CoordinatorEntity[LyricDataUpdateCoordinator]):
         return self.location.devices_dict[self._mac_id]
 
 
+def create_thermostat_device_info(device: LyricDevice) -> DeviceInfo:
+    """Return the device info for a Lyric thermostat."""
+    return DeviceInfo(
+        identifiers={(dr.CONNECTION_NETWORK_MAC, device.mac_id)},
+        connections={(dr.CONNECTION_NETWORK_MAC, device.mac_id)},
+        manufacturer="Honeywell",
+        model=device.device_model,
+        name=f"{device.name} Thermostat",
+    )
+
+
 class LyricDeviceEntity(LyricEntity):
     """Defines a Honeywell Lyric device entity."""
 
@@ -57,13 +68,7 @@ class LyricDeviceEntity(LyricEntity):
     @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this Honeywell Lyric instance."""
-        return DeviceInfo(
-            identifiers={(dr.CONNECTION_NETWORK_MAC, self._mac_id)},
-            connections={(dr.CONNECTION_NETWORK_MAC, self._mac_id)},
-            manufacturer="Honeywell",
-            model=self.device.device_model,
-            name=f"{self.device.name} Thermostat",
-        )
+        return create_thermostat_device_info(self.device)
 
 
 class LyricAccessoryEntity(LyricDeviceEntity):
@@ -97,7 +102,11 @@ class LyricAccessoryEntity(LyricDeviceEntity):
             manufacturer="Honeywell",
             model="RCHTSENSOR",
             name=f"{self.room.room_name} Sensor",
-            via_device=(dr.CONNECTION_NETWORK_MAC, self._mac_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass,
+                (dr.CONNECTION_NETWORK_MAC, self._mac_id),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            ),
         )
 
     @property

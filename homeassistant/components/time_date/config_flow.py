@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -28,9 +28,9 @@ from .sensor import TimeDateSensor
 
 _LOGGER = logging.getLogger(__name__)
 
-USER_SCHEMA = vol.Schema(
+USER_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_DISPLAY_OPTIONS): SelectSelector(
+        probatio.Required(CONF_DISPLAY_OPTIONS): SelectSelector(
             SelectSelectorConfig(
                 options=OPTION_TYPES,
                 mode=SelectSelectorMode.DROPDOWN,
@@ -84,10 +84,10 @@ class TimeDateConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "time_date/start_preview",
-        vol.Required("flow_id"): str,
-        vol.Required("flow_type"): vol.Any("config_flow"),
-        vol.Required("user_input"): dict,
+        probatio.Required("type"): "time_date/start_preview",
+        probatio.Required("flow_id"): str,
+        probatio.Required("flow_type"): probatio.Any("config_flow"),
+        probatio.Required("user_input"): dict,
     }
 )
 @websocket_api.async_response

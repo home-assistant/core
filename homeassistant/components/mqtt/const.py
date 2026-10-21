@@ -11,6 +11,7 @@ from homeassistant.exceptions import TemplateError
 ATTR_DISCOVERY_HASH = "discovery_hash"
 ATTR_DISCOVERY_PAYLOAD = "discovery_payload"
 ATTR_DISCOVERY_TOPIC = "discovery_topic"
+ATTR_EVALUATE_PAYLOAD = "evaluate_payload"
 ATTR_MESSAGE_EXPIRY_INTERVAL = "message_expiry_interval"
 ATTR_PAYLOAD = "payload"
 ATTR_QOS = "qos"
@@ -382,6 +383,9 @@ MQTT_PROCESSED_SUBSCRIPTIONS = "mqtt_processed_subscriptions"
 PAYLOAD_EMPTY_JSON = "{}"
 PAYLOAD_NONE = "None"
 
+SERVICE_DUMP = "dump"
+SERVICE_PUBLISH = "publish"
+
 CONFIG_ENTRY_VERSION = 2
 CONFIG_ENTRY_MINOR_VERSION = 1
 
@@ -399,6 +403,7 @@ ENTITY_PLATFORMS = [
     Platform.FAN,
     Platform.HUMIDIFIER,
     Platform.IMAGE,
+    Platform.INFRARED,
     Platform.LIGHT,
     Platform.LAWN_MOWER,
     Platform.LOCK,
@@ -434,6 +439,7 @@ SUPPORTED_COMPONENTS = (
     "fan",
     "humidifier",
     "image",
+    "infrared",
     "lawn_mower",
     "light",
     "lock",

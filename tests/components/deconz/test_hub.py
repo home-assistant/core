@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from pydeconz.websocket import State
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.deconz.config_flow import DECONZ_MANUFACTURERURL
@@ -21,8 +22,6 @@ from homeassistant.helpers.service_info.ssdp import (
 
 from .conftest import BRIDGE_ID
 
-from tests.common import MockConfigEntry
-
 
 async def test_device_registry_entry(
     config_entry_setup: MockConfigEntry,
@@ -30,8 +29,8 @@ async def test_device_registry_entry(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Successful setup."""
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, config_entry_setup.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, config_entry_setup.unique_id), config_entry_setup.entry_id
     )
     assert device_entry == snapshot
 
@@ -75,7 +74,7 @@ async def test_update_address(
     with (
         patch(
             "homeassistant.components.deconz.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch("pydeconz.gateway.WSClient") as ws_mock,
     ):

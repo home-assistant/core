@@ -7,6 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pycognito.exceptions import WarrantException
 from pyschlage.exceptions import Error, NotAuthorizedError
 from pyschlage.lock import Lock
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.schlage.const import DOMAIN, UPDATE_INTERVAL
@@ -16,8 +17,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceRegistry
 
 from . import MockSchlageConfigEntry
-
-from tests.common import async_fire_time_changed
 
 
 @patch(
@@ -112,7 +111,9 @@ async def test_lock_device_registry(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test lock is added to device registry."""
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "test")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "test"), mock_added_config_entry.entry_id
+    )
     assert device == snapshot
 
 
@@ -126,7 +127,9 @@ async def test_auto_add_device(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test new devices are auto-added to the device registry."""
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "test")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "test"), mock_added_config_entry.entry_id
+    )
     assert device is not None
     all_devices = dr.async_entries_for_config_entry(
         device_registry, mock_added_config_entry.entry_id
@@ -143,7 +146,9 @@ async def test_auto_add_device(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    new_device = device_registry.async_get_device(identifiers={(DOMAIN, "test2")})
+    new_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "test2"), mock_added_config_entry.entry_id
+    )
     assert new_device is not None
 
     all_devices = dr.async_entries_for_config_entry(
@@ -160,7 +165,12 @@ async def test_auto_remove_device(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test new devices are auto-added to the device registry."""
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "test")}) is not None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "test"), mock_added_config_entry.entry_id
+        )
+        is not None
+    )
 
     mock_schlage.locks.return_value = []
 
@@ -169,7 +179,12 @@ async def test_auto_remove_device(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "test")}) is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "test"), mock_added_config_entry.entry_id
+        )
+        is None
+    )
     all_devices = dr.async_entries_for_config_entry(
         device_registry, mock_added_config_entry.entry_id
     )

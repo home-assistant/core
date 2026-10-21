@@ -3,9 +3,11 @@
 import asyncio
 
 from pytouchlinesl import TouchlineSL
+from pytouchlinesl.client import RothAPIError
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
@@ -60,15 +62,21 @@ def _migrate_device_identifiers(
             break
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TouchlineSLConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TouchlineSLConfigEntry) -> None:
     """Set up Roth Touchline SL from a config entry."""
     account = TouchlineSL(
         username=entry.data[CONF_USERNAME], password=entry.data[CONF_PASSWORD]
     )
 
+    try:
+        modules = await account.modules()
+    except RothAPIError as error:
+        if error.status == 401:
+            raise ConfigEntryAuthFailed from error
+        raise ConfigEntryNotReady from error
+
     coordinators: list[TouchlineSLModuleCoordinator] = [
-        TouchlineSLModuleCoordinator(hass, entry, module)
-        for module in await account.modules()
+        TouchlineSLModuleCoordinator(hass, entry, module) for module in modules
     ]
 
     await asyncio.gather(
@@ -85,23 +93,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: TouchlineSLConfigEntry) 
     # Create a new Device for each coorodinator to represent each module
     for c in coordinators:
         module = c.data.module
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, module.id)},
-            name=module.name,
-            manufacturer="Roth",
-            model=module.type,
-            sw_version=module.version,
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, module.id)},
+                name=module.name,
+                manufacturer="Roth",
+                model=module.type,
+                sw_version=module.version,
+            ),
         )
 
     entry.runtime_data = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: TouchlineSLConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

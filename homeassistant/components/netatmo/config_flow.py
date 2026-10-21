@@ -5,9 +5,9 @@ import logging
 from typing import Any, override
 import uuid
 
-import voluptuous as vol
+import probatio
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_SHOW_ON_MAP, CONF_UUID
 from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
@@ -62,10 +62,6 @@ class NetatmoFlowHandler(
     async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Handle a flow start."""
         await self.async_set_unique_id(DOMAIN)
-
-        if self.source != SOURCE_REAUTH and self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         return await super().async_step_user(user_input)
 
     async def async_step_reauth(
@@ -129,13 +125,13 @@ class NetatmoOptionsFlowHandler(OptionsFlow):
 
         weather_areas = list(self.options[CONF_WEATHER_AREAS])
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_WEATHER_AREAS,
                     default=weather_areas,
                 ): cv.multi_select(dict.fromkeys(weather_areas)),
-                vol.Optional(CONF_NEW_AREA): str,
+                probatio.Optional(CONF_NEW_AREA): str,
             }
         )
         return self.async_show_form(
@@ -165,38 +161,40 @@ class NetatmoOptionsFlowHandler(OptionsFlow):
         default_latitude = self.hass.config.latitude
         default_size = 0.04
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Optional(CONF_AREA_NAME, default=user_input[CONF_NEW_AREA]): str,
-                vol.Optional(
+                probatio.Optional(
+                    CONF_AREA_NAME, default=user_input[CONF_NEW_AREA]
+                ): str,
+                probatio.Optional(
                     CONF_LAT_NE,
                     default=orig_options.get(
                         CONF_LAT_NE, default_latitude + default_size
                     ),
                 ): cv.latitude,
-                vol.Optional(
+                probatio.Optional(
                     CONF_LON_NE,
                     default=orig_options.get(
                         CONF_LON_NE, default_longitude + default_size
                     ),
                 ): cv.longitude,
-                vol.Optional(
+                probatio.Optional(
                     CONF_LAT_SW,
                     default=orig_options.get(
                         CONF_LAT_SW, default_latitude - default_size
                     ),
                 ): cv.latitude,
-                vol.Optional(
+                probatio.Optional(
                     CONF_LON_SW,
                     default=orig_options.get(
                         CONF_LON_SW, default_longitude - default_size
                     ),
                 ): cv.longitude,
-                vol.Required(
+                probatio.Required(
                     CONF_PUBLIC_MODE,
                     default=orig_options.get(CONF_PUBLIC_MODE, "avg"),
-                ): vol.In(["avg", "max", "min"]),
-                vol.Required(
+                ): probatio.In(["avg", "max", "min"]),
+                probatio.Required(
                     CONF_SHOW_ON_MAP,
                     default=orig_options.get(CONF_SHOW_ON_MAP, False),
                 ): bool,

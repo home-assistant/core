@@ -5,6 +5,7 @@ from datetime import timedelta
 from kasa import Device, Feature, Module
 from kasa.smart.modules.temperaturecontrol import ThermostatState
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -33,8 +34,6 @@ from . import (
     snapshot_platform,
 )
 from .const import DEVICE_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = "climate.thermostat"
 
@@ -107,6 +106,26 @@ async def test_states(
     await snapshot_platform(
         hass, entity_registry, device_registry, snapshot, mock_config_entry.entry_id
     )
+
+
+async def test_device_does_not_link_via_self(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    mocked_hub: Device,
+) -> None:
+    """Test a child sharing its parent's device_id does not link to itself."""
+    await setup_platform_for_device(
+        hass, mock_config_entry, Platform.CLIMATE, mocked_hub
+    )
+
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert devices
+    for device in devices:
+        assert device.via_device_id != device.id
 
 
 async def test_set_temperature(

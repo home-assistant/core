@@ -1,6 +1,7 @@
 """Tests for the sma integration."""
 
 from pysma.helpers import DeviceInfo
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.sma.const import CONF_GROUP
 from homeassistant.const import (
@@ -11,8 +12,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 MOCK_DEVICE = DeviceInfo(
     manufacturer="SMA",
@@ -40,6 +39,7 @@ MOCK_USER_RECONFIGURE = {
     CONF_SSL: True,
     CONF_VERIFY_SSL: False,
     CONF_GROUP: "user",
+    CONF_PASSWORD: "new_password",
 }
 
 

@@ -17,6 +17,7 @@ from flux_led.const import (
 )
 from flux_led.protocol import MusicMode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import flux_led
 from homeassistant.components.flux_led.const import (
@@ -32,7 +33,7 @@ from homeassistant.components.flux_led.const import (
     MIN_RGB_BRIGHTNESS,
     TRANSITION_JUMP,
 )
-from homeassistant.components.flux_led.light import (
+from homeassistant.components.flux_led.services import (
     ATTR_BACKGROUND_COLOR,
     ATTR_FOREGROUND_COLOR,
     ATTR_LIGHT_SCREEN,
@@ -78,8 +79,6 @@ from . import (
     async_mock_device_turn_off,
     async_mock_device_turn_on,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_light_unique_id(
@@ -189,8 +188,8 @@ async def test_light_device_registry(
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)}
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS), config_entry.entry_id
     )
     assert device.sw_version == str(sw_version)
     assert device.model == model

@@ -8,11 +8,10 @@ from google.maps.routing_v2 import ComputeRoutesResponse, Route
 from google.protobuf import duration_pb2
 from google.type import localized_text_pb2
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.google_travel_time.const import DOMAIN
+from homeassistant.components.google_travel_time.const import DEFAULT_NAME, DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="mock_config")
@@ -22,6 +21,7 @@ async def mock_config_fixture(
     """Mock a Google Travel Time config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
+        title=DEFAULT_NAME,
         data=data,
         options=options,
         entry_id="test",
@@ -37,7 +37,7 @@ def mock_setup_entry() -> Generator[None]:
     """Bypass entry setup."""
     with patch(
         "homeassistant.components.google_travel_time.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         yield
 

@@ -1,6 +1,15 @@
 """Test Xiaomi BLE events."""
 
 import pytest
+from pytest_homeassistant.common import (
+    Any,
+    MockConfigEntry,
+    async_capture_events,
+    async_get_device_automations,
+)
+from pytest_homeassistant.components.bluetooth import (
+    inject_bluetooth_service_info_bleak,
+)
 
 from homeassistant.components import automation
 from homeassistant.components.bluetooth import DOMAIN as BLUETOOTH_DOMAIN
@@ -12,14 +21,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import make_advertisement
-
-from tests.common import (
-    Any,
-    MockConfigEntry,
-    async_capture_events,
-    async_get_device_automations,
-)
-from tests.components.bluetooth import inject_bluetooth_service_info_bleak
 
 
 @callback
@@ -190,7 +191,9 @@ async def test_get_triggers_button(
     await hass.async_block_till_done()
     assert len(events) == 1
 
-    device = device_registry.async_get_device(identifiers={get_device_id(mac)})
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(mac), entry.entry_id
+    )
     assert device
     expected_trigger = {
         CONF_PLATFORM: "device",
@@ -231,7 +234,9 @@ async def test_get_triggers_double_button(
     await hass.async_block_till_done()
     assert len(events) == 1
 
-    device = device_registry.async_get_device(identifiers={get_device_id(mac)})
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(mac), entry.entry_id
+    )
     assert device
     expected_trigger = {
         CONF_PLATFORM: "device",
@@ -273,7 +278,9 @@ async def test_get_triggers_lock(
     await hass.async_block_till_done()
     assert len(events) == 1
 
-    device = device_registry.async_get_device(identifiers={get_device_id(mac)})
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(mac), entry.entry_id
+    )
     assert device
     expected_trigger = {
         CONF_PLATFORM: "device",
@@ -310,7 +317,9 @@ async def test_get_triggers_motion(
     await hass.async_block_till_done()
     assert len(events) == 1
 
-    device = device_registry.async_get_device(identifiers={get_device_id(mac)})
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(mac), entry.entry_id
+    )
     assert device
     expected_trigger = {
         CONF_PLATFORM: "device",
@@ -413,7 +422,9 @@ async def test_if_fires_on_button_press(
     # wait for the device being created
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={get_device_id(mac)})
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(mac), entry.entry_id
+    )
     device_id = device.id
 
     assert await async_setup_component(
@@ -476,7 +487,9 @@ async def test_if_fires_on_double_button_long_press(
     # wait for the device being created
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={get_device_id(mac)})
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(mac), entry.entry_id
+    )
     device_id = device.id
 
     assert await async_setup_component(
@@ -535,7 +548,9 @@ async def test_if_fires_on_motion_detected(
     # wait for the device being created
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={get_device_id(mac)})
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(mac), entry.entry_id
+    )
     device_id = device.id
 
     assert await async_setup_component(
@@ -591,7 +606,9 @@ async def test_automation_with_invalid_trigger_type(
     # wait for the event
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={get_device_id(mac)})
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(mac), entry.entry_id
+    )
     device_id = device.id
 
     assert await async_setup_component(
@@ -640,7 +657,9 @@ async def test_automation_with_invalid_trigger_event_property(
     # wait for the event
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={get_device_id(mac)})
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(mac), entry.entry_id
+    )
     device_id = device.id
 
     assert await async_setup_component(

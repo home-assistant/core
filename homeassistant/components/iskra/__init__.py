@@ -23,7 +23,7 @@ from .coordinator import IskraConfigEntry, IskraDataUpdateCoordinator
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: IskraConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: IskraConfigEntry) -> None:
     """Set up iskra device from a config entry."""
     conf = entry.data
     adapter = None
@@ -64,13 +64,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: IskraConfigEntry) -> boo
     if base_device.is_gateway:
         # Add the gateway device to the device registry
         device_registry = dr.async_get(hass)
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, base_device.serial)},
-            manufacturer=MANUFACTURER,
-            name=base_device.model,
-            model=base_device.model,
-            sw_version=base_device.fw_version,
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, base_device.serial)},
+                manufacturer=MANUFACTURER,
+                name=base_device.model,
+                model=base_device.model,
+                sw_version=base_device.fw_version,
+            ),
         )
 
         coordinators = [
@@ -87,9 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IskraConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: IskraConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: IskraConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

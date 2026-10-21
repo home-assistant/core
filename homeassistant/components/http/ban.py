@@ -19,17 +19,17 @@ from aiohttp.web import (
     middleware,
 )
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
-import voluptuous as vol
+import probatio
 
 from homeassistant.config import load_yaml_config_file
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.hassio import get_supervisor_ip, is_hassio
+from homeassistant.helpers.http import KEY_HASS, HomeAssistantView
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 
-from .const import KEY_HASS, is_supervisor_unix_socket_request
-from .view import HomeAssistantView
+from .const import is_supervisor_unix_socket_request
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -45,8 +45,8 @@ NOTIFICATION_ID_LOGIN: Final = "http-login"
 IP_BANS_FILE: Final = "ip_bans.yaml"
 ATTR_BANNED_AT: Final = "banned_at"
 
-SCHEMA_IP_BAN_ENTRY: Final = vol.Schema(
-    {vol.Optional("banned_at"): vol.Any(None, cv.datetime)}
+SCHEMA_IP_BAN_ENTRY: Final = probatio.Schema(
+    {probatio.Optional(ATTR_BANNED_AT, default=None): probatio.Any(None, cv.datetime)}
 )
 
 
@@ -118,8 +118,11 @@ async def process_wrong_login(request: Request) -> None:
 
     assert request.remote
     remote_addr = ip_address(request.remote)
+    # Before the reverse DNS lookup, so a ban already applies to the next request.
+    banned = await _async_count_wrong_login(request.app, hass, remote_addr)
+
     remote_host = request.remote
-    with suppress(herror):
+    with suppress(herror, UnicodeDecodeError):
         remote_host, _, _ = await hass.async_add_executor_job(
             gethostbyaddr, request.remote
         )
@@ -144,30 +147,35 @@ async def process_wrong_login(request: Request) -> None:
         hass, notification_msg, "Login attempt failed", NOTIFICATION_ID_LOGIN
     )
 
-    # Check if ban middleware is loaded
-    if KEY_BAN_MANAGER not in request.app or request.app[KEY_LOGIN_THRESHOLD] < 1:
-        return
-
-    request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] += 1
-
-    # Supervisor IP should never be banned
-    if is_hassio(hass) and str(remote_addr) == get_supervisor_ip():
-        return
-
-    if (
-        request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr]
-        >= request.app[KEY_LOGIN_THRESHOLD]
-    ):
-        ban_manager = request.app[KEY_BAN_MANAGER]
+    if banned:
         _LOGGER.warning("Banned IP %s for too many login attempts", remote_addr)
-        await ban_manager.async_add_ban(remote_addr)
-
         persistent_notification.async_create(
             hass,
             f"Too many login attempts from {remote_addr}",
             "Banning IP address",
             NOTIFICATION_ID_BAN,
         )
+
+
+async def _async_count_wrong_login(
+    app: Application, hass: HomeAssistant, remote_addr: IPv4Address | IPv6Address
+) -> bool:
+    """Count a wrong login attempt and return if it got the address banned."""
+    # Check if ban middleware is loaded
+    if KEY_BAN_MANAGER not in app or app[KEY_LOGIN_THRESHOLD] < 1:
+        return False
+
+    app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] += 1
+
+    # Supervisor IP should never be banned
+    if is_hassio(hass) and str(remote_addr) == get_supervisor_ip():
+        return False
+
+    if app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] < app[KEY_LOGIN_THRESHOLD]:
+        return False
+
+    await app[KEY_BAN_MANAGER].async_add_ban(remote_addr)
+    return True
 
 
 @callback
@@ -232,7 +240,7 @@ class IpBanManager:
                 ip_info = SCHEMA_IP_BAN_ENTRY(ip_info)
                 ban = IpBan(ip_ban, ip_info["banned_at"])
                 ip_bans_lookup[ban.ip_address] = ban
-            except vol.Invalid as err:
+            except probatio.Invalid as err:
                 _LOGGER.error("Failed to load IP ban %s: %s", ip_info, err)
                 continue
             except ValueError:
@@ -254,4 +262,8 @@ class IpBanManager:
         """Add a new IP address to the banned list."""
         if remote_addr not in self.ip_bans_lookup:
             new_ban = self.ip_bans_lookup[remote_addr] = IpBan(remote_addr)
-            await self.hass.async_add_executor_job(self._add_ban, new_ban)
+            try:
+                await self.hass.async_add_executor_job(self._add_ban, new_ban)
+            except OSError as err:
+                # The ban still applies until Home Assistant restarts.
+                _LOGGER.error("Unable to save the ban of %s: %s", remote_addr, err)

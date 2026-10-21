@@ -5,6 +5,8 @@ from copy import deepcopy
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from satel_integra import SatelFirmwareVersion, SatelPanelInfo, SatelPanelModel
 
 from homeassistant.components.satel_integra.config_flow import SatelConfigFlow
 from homeassistant.components.satel_integra.const import DOMAIN
@@ -21,15 +23,13 @@ from . import (
     get_monitor_callbacks,
 )
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override integration setup."""
     with patch(
         "homeassistant.components.satel_integra.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -58,12 +58,26 @@ def mock_satel() -> Generator[AsyncMock]:
         ),
     ):
         client = mock_client.return_value
+        client.add_connection_status_callback.return_value = MagicMock(
+            return_value=None
+        )
 
         client.partition_states = {}
         client.violated_outputs = []
         client.violated_zones = []
 
         client.connect = AsyncMock(return_value=True)
+        client.read_panel_info = AsyncMock(
+            return_value=SatelPanelInfo(
+                type_code=2,
+                model=SatelPanelModel("INTEGRA 64"),
+                firmware=SatelFirmwareVersion(
+                    version="1.24", release_date="2025-03-12"
+                ),
+                language_code=0,
+                settings_stored_in_flash=True,
+            )
+        )
         client.read_temperature = AsyncMock(return_value=21.5)
         client.read_temperatures = AsyncMock(return_value={1: 21.5})
         client.set_output = AsyncMock()

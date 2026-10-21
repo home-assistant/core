@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     },
     "flow_title": "{name}",
@@ -98,6 +97,20 @@
             }
           }
         }
+      }
+    },
+    "sensor": {
+      "humidity_probe": {
+        "name": "Humidity probe {probe_id}"
+      },
+      "low_temperature_alarm_probe": {
+        "name": "Low temperature alarm probe {probe_id}"
+      },
+      "temperature_alarm_probe": {
+        "name": "Temperature alarm probe {probe_id}"
+      },
+      "temperature_probe": {
+        "name": "Temperature probe {probe_id}"
       }
     }
   }

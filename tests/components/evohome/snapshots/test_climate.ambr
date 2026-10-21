@@ -69,6 +69,16 @@
     ),
   ])
 # ---
+# name: test_ctl_set_hvac_mode[sys_006]
+  list([
+    tuple(
+      <SystemMode.OFF: 'off'>,
+    ),
+    tuple(
+      <SystemMode.AUTO: 'auto'>,
+    ),
+  ])
+# ---
 # name: test_ctl_turn_off[default]
   list([
     tuple(
@@ -115,6 +125,13 @@
   list([
     tuple(
       <SystemMode.HEATING_OFF: 'heating_off'>,
+    ),
+  ])
+# ---
+# name: test_ctl_turn_off[sys_006]
+  list([
+    tuple(
+      <SystemMode.OFF: 'off'>,
     ),
   ])
 # ---
@@ -167,6 +184,13 @@
     ),
   ])
 # ---
+# name: test_ctl_turn_on[sys_006]
+  list([
+    tuple(
+      <SystemMode.AUTO: 'auto'>,
+    ),
+  ])
+# ---
 # name: test_entities_update_over_time[default][climate.bathroom_dn-state-initial]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -204,7 +228,8 @@
         'zone_id': '3432579',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 16.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 16.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.bathroom_dn',
@@ -251,7 +276,8 @@
         'zone_id': '3432579',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 16.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 16.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.bathroom_dn',
@@ -297,7 +323,8 @@
         'zone_id': '3432521',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.dead_zone',
@@ -343,7 +370,8 @@
         'zone_id': '3432521',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.dead_zone',
@@ -391,7 +419,8 @@
         'zone_id': '3432577',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 21.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 21.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.front_room',
@@ -439,7 +468,8 @@
         'zone_id': '3432577',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 21.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 21.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.front_room',
@@ -486,7 +516,8 @@
         'zone_id': '3449703',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.kids_room',
@@ -533,7 +564,8 @@
         'zone_id': '3449703',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.kids_room',
@@ -580,7 +612,8 @@
         'zone_id': '3432578',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.kitchen',
@@ -627,7 +660,8 @@
         'zone_id': '3432578',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.kitchen',
@@ -674,7 +708,8 @@
         'zone_id': '3432580',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 16.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 16.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.main_bedroom',
@@ -721,7 +756,8 @@
         'zone_id': '3432580',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 16.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 16.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.main_bedroom',
@@ -768,7 +804,8 @@
         'zone_id': '3432576',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.main_room',
@@ -815,7 +852,8 @@
         'zone_id': '3432576',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.main_room',
@@ -839,7 +877,6 @@
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'eco',
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'Reset',
         'eco',
         'away',
         'home',
@@ -855,6 +892,7 @@
         }),
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.my_home',
@@ -878,7 +916,6 @@
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'eco',
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'Reset',
         'eco',
         'away',
         'home',
@@ -894,6 +931,7 @@
         }),
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.my_home',
@@ -940,7 +978,8 @@
         'zone_id': '3450733',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 14.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 14.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.spare_room',
@@ -987,7 +1026,8 @@
         'zone_id': '3450733',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 14.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 14.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.spare_room',
@@ -1034,7 +1074,8 @@
         'zone_id': '3432579',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 16.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 16.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.bathroom_dn',
@@ -1080,7 +1121,8 @@
         'zone_id': '3432521',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.dead_zone',
@@ -1132,7 +1174,8 @@
         'zone_id': '3432577',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 21.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 21.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.front_room',
@@ -1179,7 +1222,8 @@
         'zone_id': '3449703',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.kids_room',
@@ -1226,7 +1270,8 @@
         'zone_id': '3432578',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.kitchen',
@@ -1273,7 +1318,8 @@
         'zone_id': '3432580',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 16.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 16.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.main_bedroom',
@@ -1324,7 +1370,8 @@
         'zone_id': '3432576',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.main_room',
@@ -1348,7 +1395,6 @@
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'eco',
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'Reset',
         'eco',
         'away',
         'home',
@@ -1364,6 +1410,7 @@
         }),
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.my_home',
@@ -1410,7 +1457,8 @@
         'zone_id': '3432579',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 16.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 16.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.bathroom_dn',
@@ -1456,7 +1504,8 @@
         'zone_id': '3432521',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.dead_zone',
@@ -1504,7 +1553,8 @@
         'zone_id': '3432577',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 21.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 21.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.front_room',
@@ -1551,7 +1601,8 @@
         'zone_id': '3449703',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.kids_room',
@@ -1598,7 +1649,8 @@
         'zone_id': '3432578',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.kitchen',
@@ -1645,7 +1697,8 @@
         'zone_id': '3432580',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 16.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 16.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.main_bedroom',
@@ -1692,7 +1745,8 @@
         'zone_id': '3432576',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.main_room',
@@ -1716,7 +1770,6 @@
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'eco',
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'Reset',
         'eco',
         'away',
         'home',
@@ -1732,6 +1785,7 @@
         }),
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.my_home',
@@ -1778,7 +1832,8 @@
         'zone_id': '3450733',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 14.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 14.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.spare_room',
@@ -1810,6 +1865,7 @@
         }),
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 384>,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.my_home',
@@ -1856,7 +1912,8 @@
         'zone_id': '416856',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 21.5,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 21.5,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.thermostat',
@@ -1893,6 +1950,7 @@
         }),
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.my_home',
@@ -1939,7 +1997,8 @@
         'zone_id': '8557539',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 21.5,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 21.5,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.thermostat',
@@ -1986,7 +2045,8 @@
         'zone_id': '8557541',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 21.5,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 21.5,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.thermostat_2',
@@ -2033,7 +2093,8 @@
         'zone_id': '3454854',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 5.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 5.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.thermostat',
@@ -2080,7 +2141,8 @@
         'zone_id': '3454855',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 20.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 20.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.thermostat_2',
@@ -2117,6 +2179,7 @@
         }),
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.vr',
@@ -2163,7 +2226,8 @@
         'zone_id': '10090505',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 5.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 5.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.ba',
@@ -2210,7 +2274,8 @@
         'zone_id': '10090507',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 15.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 15.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.ka',
@@ -2257,7 +2322,8 @@
         'zone_id': '10090508',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 15.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 15.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.ka_2',
@@ -2282,7 +2348,6 @@
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'eco',
-        'Reset',
         'away',
         'home',
         'Custom',
@@ -2297,6 +2362,7 @@
         }),
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.kl',
@@ -2343,7 +2409,8 @@
         'zone_id': '10090506',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 18.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 18.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.sl',
@@ -2390,7 +2457,8 @@
         'zone_id': '10090509',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 19.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 19.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.wo',
@@ -2437,7 +2505,8 @@
         'zone_id': '3432576',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 17.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.main_room',
@@ -2461,7 +2530,6 @@
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'eco',
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'Reset',
         'eco',
         'away',
         'home',
@@ -2477,6 +2545,7 @@
         }),
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.my_home',
@@ -2518,6 +2587,7 @@
         }),
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.living_room',
@@ -2564,7 +2634,8 @@
         'zone_id': '4187768',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 15.0,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 15.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.thermostat',
@@ -2572,6 +2643,112 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'auto',
+  })
+# ---
+# name: test_setup_platform[sys_006][climate.main_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 19.5,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main Room',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+        'none',
+        'temporary',
+        'permanent',
+      ]),
+      'status': dict({
+        'activeFaults': tuple(
+          dict({
+            'fault_type': 'TempZoneActuatorLowBattery',
+            'since': '2024-11-01T01:00:00+01:00',
+          }),
+          dict({
+            'fault_type': 'TempZoneSensorCommunicationLost',
+            'since': '2024-05-01T01:00:00+02:00',
+          }),
+        ),
+        'setpoint_status': dict({
+          'setpoint_mode': 'FollowSchedule',
+          'target_heat_temperature': 14.0,
+        }),
+        'setpoints': dict({
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Paris')),
+          'next_sp_temp': 18.6,
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Paris')),
+          'this_sp_temp': 16.0,
+        }),
+        'temperature_status': dict({
+          'is_available': True,
+          'temperature': 19.5,
+        }),
+        'zone_id': '0001004',
+      }),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 14.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.main_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[sys_006][climate.my_home_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 19.5,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home 1',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:thermostat-box',
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'eco',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+        'eco',
+        'away',
+      ]),
+      'status': dict({
+        'activeSystemFaults': tuple(
+          dict({
+            'fault_type': 'BoilerCommunicationLost',
+            'since': '2024-10-01T01:00:00+02:00',
+          }),
+          dict({
+            'fault_type': 'ChValveCommunicationLost',
+            'since': '2024-09-01T01:00:00+02:00',
+          }),
+          dict({
+            'fault_type': 'GatewayCommunicationLost',
+            'since': '2024-06-01T01:00:00+02:00',
+          }),
+        ),
+        'system_id': '0001003',
+        'system_mode_status': dict({
+          'is_permanent': False,
+          'mode': 'AutoWithEco',
+          'time_until': '2024-07-11T02:00:00+02:00',
+        }),
+      }),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.my_home_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
   })
 # ---
 # name: test_zone_set_hvac_mode[default]
@@ -2617,6 +2794,13 @@
   ])
 # ---
 # name: test_zone_set_hvac_mode[sys_004]
+  list([
+    tuple(
+      5.0,
+    ),
+  ])
+# ---
+# name: test_zone_set_hvac_mode[sys_006]
   list([
     tuple(
       5.0,
@@ -2714,6 +2898,19 @@
     }),
   ])
 # ---
+# name: test_zone_set_preset_mode[sys_006]
+  list([
+    tuple(
+      14.0,
+    ),
+    tuple(
+      14.0,
+    ),
+    dict({
+      'until': HAFakeDatetime(2024, 7, 10, 20, 10, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
 # name: test_zone_set_temperature[default]
   list([
     dict({
@@ -2763,6 +2960,13 @@
     }),
   ])
 # ---
+# name: test_zone_set_temperature[sys_006]
+  list([
+    dict({
+      'until': HAFakeDatetime(2024, 7, 10, 20, 10, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
 # name: test_zone_turn_off[default]
   list([
     tuple(
@@ -2806,6 +3010,13 @@
   ])
 # ---
 # name: test_zone_turn_off[sys_004]
+  list([
+    tuple(
+      5.0,
+    ),
+  ])
+# ---
+# name: test_zone_turn_off[sys_006]
   list([
     tuple(
       5.0,

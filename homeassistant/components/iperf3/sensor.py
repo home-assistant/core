@@ -10,7 +10,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import ATTR_VERSION, DATA_UPDATED, DOMAIN, SENSOR_TYPES
+from . import SENSOR_TYPES
+from .const import ATTR_VERSION, DATA_UPDATED, DOMAIN
 
 ATTR_PROTOCOL = "Protocol"
 ATTR_REMOTE_HOST = "Remote Server"

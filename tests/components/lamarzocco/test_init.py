@@ -8,6 +8,7 @@ from pylamarzocco.const import FirmwareType
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 from pylamarzocco.models import WebSocketDetails
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lamarzocco.const import CONF_INSTALLATION_KEY, DOMAIN
@@ -26,8 +27,6 @@ from homeassistant.helpers import (
 )
 
 from . import MOCK_INSTALLATION_KEY, USER_INPUT, async_init_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_load_unload_config_entry(
@@ -126,6 +125,10 @@ async def test_v1_migration_fails(
     await hass.async_block_till_done()
 
     assert entry_v1.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry_v1.reason == (
+        "Migration from version 1 is no longer supported, remove and re-add the"
+        " integration"
+    )
 
 
 async def test_v4_migration(
@@ -157,14 +160,34 @@ async def test_v4_migration(
     }
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "state", "reason"),
+    [
+        pytest.param(
+            AuthFail("Error"),
+            ConfigEntryState.MIGRATION_ERROR,
+            "Authentication failed",
+            id="auth_failed",
+        ),
+        pytest.param(
+            RequestNotSuccessful("Error"),
+            ConfigEntryState.SETUP_RETRY,
+            "Error while communicating with the API",
+            id="request_not_successful",
+        ),
+    ],
+)
 async def test_migration_errors(
     hass: HomeAssistant,
     mock_cloud_client: MagicMock,
     mock_lamarzocco: MagicMock,
+    side_effect: Exception,
+    state: ConfigEntryState,
+    reason: str,
 ) -> None:
     """Test errors during migration."""
 
-    mock_cloud_client.async_register_client.side_effect = RequestNotSuccessful("Error")
+    mock_cloud_client.async_register_client.side_effect = side_effect
 
     entry_v3 = MockConfigEntry(
         domain=DOMAIN,
@@ -179,7 +202,9 @@ async def test_migration_errors(
     entry_v3.add_to_hass(hass)
 
     assert not await hass.config_entries.async_setup(entry_v3.entry_id)
-    assert entry_v3.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry_v3.state is state
+    assert entry_v3.reason == reason
+    assert entry_v3.version == 3
 
 
 async def test_config_flow_entry_migration_downgrade(
@@ -220,6 +245,7 @@ async def test_websocket_closed_on_unload(
 )
 async def test_gateway_version_issue(
     hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
     mock_config_entry: MockConfigEntry,
     mock_cloud_client: MagicMock,
     version: str,
@@ -232,7 +258,6 @@ async def test_gateway_version_issue(
 
     await async_init_integration(hass, mock_config_entry)
 
-    issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(DOMAIN, "unsupported_gateway_firmware")
     assert (issue is not None) == issue_exists
 

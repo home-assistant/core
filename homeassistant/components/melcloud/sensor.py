@@ -26,7 +26,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import MelCloudConfigEntry, MelCloudDeviceUpdateCoordinator
-from .entity import MelCloudEntity
+from .entity import MelCloudDescriptionEntity
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -307,24 +307,10 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class MelDeviceSensor(MelCloudEntity, SensorEntity):
+class MelDeviceSensor(MelCloudDescriptionEntity, SensorEntity):
     """Representation of a Sensor."""
 
     entity_description: MelcloudSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: MelCloudDeviceUpdateCoordinator,
-        description: MelcloudSensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-
-        self._attr_unique_id = (
-            f"{coordinator.device.serial}-{coordinator.device.mac}-{description.key}"
-        )
-        self._attr_device_info = coordinator.device_info
 
     @property
     @override

@@ -1,6 +1,7 @@
 """Test Efergy integration."""
 
 from pyefergy import exceptions
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.efergy.const import DEFAULT_NAME, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -9,8 +10,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import _patch_efergy_status, create_entry, init_integration, setup_platform
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
@@ -55,7 +54,9 @@ async def test_device_info(
     """Test device info."""
     entry = await setup_platform(hass, aioclient_mock, SENSOR_DOMAIN)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    )
 
     assert device.configuration_url == "https://engage.efergy.com/user/login"
     assert device.connections == {("mac", "ff:ff:ff:ff:ff:ff")}

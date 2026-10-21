@@ -1,56 +1,121 @@
 """Tests for AVM Fritz!Box config flow."""
 
 import dataclasses
+import socket
 from unittest import mock
 from unittest.mock import Mock, patch
-from urllib.parse import urlparse
 
 from pyfritzhome import LoginError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from requests.exceptions import HTTPError
 
 from homeassistant.components.fritzbox.const import DOMAIN
-from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
-from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_SSDP, SOURCE_USER
+from homeassistant.const import (
+    CONF_DEVICES,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_URL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_PRESENTATION_URL,
     ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
 
 from .const import CONF_FAKE_NAME, MOCK_CONFIG
 
-from tests.common import MockConfigEntry
-
-MOCK_USER_DATA = MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]
+MOCK_USER_DATA = {
+    CONF_URL: "http://10.0.0.1",
+    CONF_PASSWORD: "fake_pass",
+    CONF_USERNAME: "fake_user",
+    CONF_VERIFY_SSL: False,
+}
 MOCK_SSDP_DATA = {
     "ip4_valid": SsdpServiceInfo(
         ssdp_usn="mock_usn",
         ssdp_st="mock_st",
-        ssdp_location="https://10.0.0.1:12345/test",
+        ssdp_location="http://10.0.0.1:49000/fboxdesc.xml",
         upnp={
             ATTR_UPNP_FRIENDLY_NAME: CONF_FAKE_NAME,
             ATTR_UPNP_UDN: "uuid:only-a-test",
+            ATTR_UPNP_PRESENTATION_URL: "http://10.0.0.1",
+        },
+    ),
+    "hostname_valid": SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="mock_st",
+        ssdp_location="http://fritz-new.repeater:49000/fboxdesc.xml",
+        upnp={
+            ATTR_UPNP_FRIENDLY_NAME: CONF_FAKE_NAME,
+            ATTR_UPNP_UDN: "uuid:only-a-test",
+            ATTR_UPNP_PRESENTATION_URL: "http://fritz-new.repeater",
+        },
+    ),
+    "ip4_ssdp_fallback": SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="mock_st",
+        ssdp_location="http://10.0.0.1:49000/fboxdesc.xml",
+        upnp={
+            ATTR_UPNP_FRIENDLY_NAME: CONF_FAKE_NAME,
+            ATTR_UPNP_UDN: "uuid:only-a-test",
+            ATTR_UPNP_PRESENTATION_URL: "",
         },
     ),
     "ip6_valid": SsdpServiceInfo(
         ssdp_usn="mock_usn",
         ssdp_st="mock_st",
-        ssdp_location="https://[1234::1]:12345/test",
+        ssdp_location="http://[1234::1]:49000/fboxdesc.xml",
         upnp={
             ATTR_UPNP_FRIENDLY_NAME: CONF_FAKE_NAME,
             ATTR_UPNP_UDN: "uuid:only-a-test",
+            ATTR_UPNP_PRESENTATION_URL: "http://[1234::1]",
+        },
+    ),
+    "ip4_hostname": SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="mock_st",
+        ssdp_location="http://10.0.0.1:49000/fboxdesc.xml",
+        upnp={
+            ATTR_UPNP_FRIENDLY_NAME: CONF_FAKE_NAME,
+            ATTR_UPNP_UDN: "uuid:only-a-test",
+            ATTR_UPNP_PRESENTATION_URL: "http://fritz.repeater",
+        },
+    ),
+    "ip4_relative_presentation_url": SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="mock_st",
+        ssdp_location="http://10.0.0.1:49000/fboxdesc.xml",
+        upnp={
+            ATTR_UPNP_FRIENDLY_NAME: CONF_FAKE_NAME,
+            ATTR_UPNP_UDN: "uuid:only-a-test",
+            ATTR_UPNP_PRESENTATION_URL: "/",
+        },
+    ),
+    "ip6_invalid_hostname": SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="mock_st",
+        ssdp_location="http://[fe80::1%1]:49000/fboxdesc.xml",
+        upnp={
+            ATTR_UPNP_FRIENDLY_NAME: CONF_FAKE_NAME,
+            ATTR_UPNP_UDN: "uuid:only-a-test",
+            ATTR_UPNP_PRESENTATION_URL: "http://fritz.repeater",
         },
     ),
     "ip6_invalid": SsdpServiceInfo(
         ssdp_usn="mock_usn",
         ssdp_st="mock_st",
-        ssdp_location="https://[fe80::1%1]:12345/test",
+        ssdp_location="http://[fe80::1%1]:49000/fboxdesc.xml",
         upnp={
             ATTR_UPNP_FRIENDLY_NAME: CONF_FAKE_NAME,
             ATTR_UPNP_UDN: "uuid:only-a-test",
+            ATTR_UPNP_PRESENTATION_URL: "https://[fe80::1%1]",
         },
     ),
 }
@@ -78,10 +143,11 @@ async def test_user(hass: HomeAssistant, fritz: Mock) -> None:
         result["flow_id"], user_input=MOCK_USER_DATA
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "10.0.0.1"
-    assert result["data"][CONF_HOST] == "10.0.0.1"
+    assert result["title"] == "http://10.0.0.1"
+    assert result["data"][CONF_HOST] == "http://10.0.0.1"
     assert result["data"][CONF_PASSWORD] == "fake_pass"
     assert result["data"][CONF_USERNAME] == "fake_user"
+    assert result["data"][CONF_VERIFY_SSL] is False
     assert not result["result"].unique_id
 
 
@@ -90,11 +156,23 @@ async def test_user_auth_failed(hass: HomeAssistant, fritz: Mock) -> None:
     fritz().login.side_effect = [LoginError("Boom"), mock.DEFAULT]
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_DATA
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_DATA
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
     assert result["errors"]["base"] == "invalid_auth"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_DATA
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_not_successful(hass: HomeAssistant, fritz: Mock) -> None:
@@ -102,7 +180,13 @@ async def test_user_not_successful(hass: HomeAssistant, fritz: Mock) -> None:
     fritz().login.side_effect = OSError("Boom")
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_DATA
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_DATA
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
@@ -110,14 +194,25 @@ async def test_user_not_successful(hass: HomeAssistant, fritz: Mock) -> None:
 
 async def test_user_already_configured(hass: HomeAssistant, fritz: Mock) -> None:
     """Test starting a flow by user when already configured."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_DATA
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "http://10.0.0.1",
+            CONF_PASSWORD: "fake_pass",
+            CONF_USERNAME: "fake_user",
+            CONF_VERIFY_SSL: False,
+        },
     )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert not result["result"].unique_id
+    mock_config.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_DATA
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_DATA
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -125,7 +220,12 @@ async def test_user_already_configured(hass: HomeAssistant, fritz: Mock) -> None
 
 async def test_reauth_success(hass: HomeAssistant, fritz: Mock) -> None:
     """Test starting a reauthentication flow."""
-    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
+        version=1,
+        minor_version=2,
+    )
     mock_config.add_to_hass(hass)
     result = await mock_config.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
@@ -149,7 +249,12 @@ async def test_reauth_auth_failed(hass: HomeAssistant, fritz: Mock) -> None:
     """Test starting a reauthentication flow with authentication failure."""
     fritz().login.side_effect = LoginError("Boom")
 
-    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
+        version=1,
+        minor_version=2,
+    )
     mock_config.add_to_hass(hass)
     result = await mock_config.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
@@ -167,12 +272,28 @@ async def test_reauth_auth_failed(hass: HomeAssistant, fritz: Mock) -> None:
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"]["base"] == "invalid_auth"
 
+    fritz().login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: "other_fake_user",
+            CONF_PASSWORD: "other_fake_password",
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
 
 async def test_reauth_not_successful(hass: HomeAssistant, fritz: Mock) -> None:
     """Test starting a reauthentication flow but no connection found."""
     fritz().login.side_effect = OSError("Boom")
 
-    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
+        version=1,
+        minor_version=2,
+    )
     mock_config.add_to_hass(hass)
     result = await mock_config.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
@@ -192,10 +313,15 @@ async def test_reauth_not_successful(hass: HomeAssistant, fritz: Mock) -> None:
 
 async def test_reconfigure_success(hass: HomeAssistant, fritz: Mock) -> None:
     """Test starting a reconfigure flow."""
-    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
+        version=1,
+        minor_version=2,
+    )
     mock_config.add_to_hass(hass)
 
-    assert mock_config.data[CONF_HOST] == "10.0.0.1"
+    assert mock_config.data[CONF_HOST] == "http://10.0.0.1"
     assert mock_config.data[CONF_USERNAME] == "fake_user"
     assert mock_config.data[CONF_PASSWORD] == "fake_pass"
 
@@ -205,26 +331,30 @@ async def test_reconfigure_success(hass: HomeAssistant, fritz: Mock) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={
-            CONF_HOST: "new_host",
-        },
+        user_input={CONF_URL: "https://new_host:8443", CONF_VERIFY_SSL: True},
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert mock_config.data[CONF_HOST] == "new_host"
+    assert mock_config.data[CONF_HOST] == "https://new_host:8443"
     assert mock_config.data[CONF_USERNAME] == "fake_user"
     assert mock_config.data[CONF_PASSWORD] == "fake_pass"
+    assert mock_config.data[CONF_VERIFY_SSL] is True
 
 
 async def test_reconfigure_failed(hass: HomeAssistant, fritz: Mock) -> None:
     """Test starting a reconfigure flow with failure."""
     fritz().login.side_effect = [OSError("Boom"), None]
 
-    mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
+        version=1,
+        minor_version=2,
+    )
     mock_config.add_to_hass(hass)
 
-    assert mock_config.data[CONF_HOST] == "10.0.0.1"
+    assert mock_config.data[CONF_HOST] == "http://10.0.0.1"
     assert mock_config.data[CONF_USERNAME] == "fake_user"
     assert mock_config.data[CONF_PASSWORD] == "fake_pass"
 
@@ -234,9 +364,7 @@ async def test_reconfigure_failed(hass: HomeAssistant, fritz: Mock) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={
-            CONF_HOST: "new_host",
-        },
+        user_input={CONF_URL: "https://new_host:8443", CONF_VERIFY_SSL: True},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
@@ -244,30 +372,43 @@ async def test_reconfigure_failed(hass: HomeAssistant, fritz: Mock) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={
-            CONF_HOST: "new_host",
-        },
+        user_input={CONF_URL: "https://new_host:8443", CONF_VERIFY_SSL: True},
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert mock_config.data[CONF_HOST] == "new_host"
+    assert mock_config.data[CONF_HOST] == "https://new_host:8443"
     assert mock_config.data[CONF_USERNAME] == "fake_user"
     assert mock_config.data[CONF_PASSWORD] == "fake_pass"
+    assert mock_config.data[CONF_VERIFY_SSL] is True
 
 
 @pytest.mark.parametrize(
-    ("test_data", "expected_result"),
+    ("test_data", "expected_host", "expected_result"),
     [
-        (MOCK_SSDP_DATA["ip4_valid"], FlowResultType.FORM),
-        (MOCK_SSDP_DATA["ip6_valid"], FlowResultType.FORM),
-        (MOCK_SSDP_DATA["ip6_invalid"], FlowResultType.ABORT),
+        (MOCK_SSDP_DATA["ip4_valid"], "http://10.0.0.1", FlowResultType.FORM),
+        (
+            MOCK_SSDP_DATA["hostname_valid"],
+            "http://fritz-new.repeater",
+            FlowResultType.FORM,
+        ),
+        (MOCK_SSDP_DATA["ip4_ssdp_fallback"], "http://10.0.0.1", FlowResultType.FORM),
+        (MOCK_SSDP_DATA["ip4_hostname"], "http://10.0.0.1", FlowResultType.FORM),
+        (
+            MOCK_SSDP_DATA["ip4_relative_presentation_url"],
+            "http://10.0.0.1",
+            FlowResultType.FORM,
+        ),
+        (MOCK_SSDP_DATA["ip6_valid"], "http://[1234::1]", FlowResultType.FORM),
+        (MOCK_SSDP_DATA["ip6_invalid"], None, FlowResultType.ABORT),
+        (MOCK_SSDP_DATA["ip6_invalid_hostname"], None, FlowResultType.ABORT),
     ],
 )
 async def test_ssdp(
     hass: HomeAssistant,
     fritz: Mock,
     test_data: SsdpServiceInfo,
+    expected_host: str | None,
     expected_result: str,
 ) -> None:
     """Test starting a flow from discovery."""
@@ -287,9 +428,10 @@ async def test_ssdp(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == CONF_FAKE_NAME
-    assert result["data"][CONF_HOST] == urlparse(test_data.ssdp_location).hostname
+    assert result["data"][CONF_HOST] == expected_host
     assert result["data"][CONF_PASSWORD] == "fake_pass"
     assert result["data"][CONF_USERNAME] == "fake_user"
+    assert result["data"][CONF_VERIFY_SSL] is True
     assert result["result"].unique_id == "only-a-test"
 
 
@@ -309,10 +451,11 @@ async def test_ssdp_no_friendly_name(hass: HomeAssistant, fritz: Mock) -> None:
         user_input={CONF_PASSWORD: "fake_pass", CONF_USERNAME: "fake_user"},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "10.0.0.1"
-    assert result["data"][CONF_HOST] == "10.0.0.1"
+    assert result["title"] == "http://10.0.0.1"
+    assert result["data"][CONF_HOST] == "http://10.0.0.1"
     assert result["data"][CONF_PASSWORD] == "fake_pass"
     assert result["data"][CONF_USERNAME] == "fake_user"
+    assert result["data"][CONF_VERIFY_SSL] is True
     assert result["result"].unique_id == "only-a-test"
 
 
@@ -334,6 +477,13 @@ async def test_ssdp_auth_failed(hass: HomeAssistant, fritz: Mock) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["errors"]["base"] == "invalid_auth"
+
+    fritz().login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PASSWORD: "fake_pass", CONF_USERNAME: "fake_user"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_ssdp_not_successful(hass: HomeAssistant, fritz: Mock) -> None:
@@ -372,6 +522,35 @@ async def test_ssdp_not_supported(hass: HomeAssistant, fritz: Mock) -> None:
     assert result["reason"] == "not_supported"
 
 
+@pytest.mark.parametrize(
+    ("capabilities", "expected_type", "expected_step", "expected_reason"),
+    [
+        (True, FlowResultType.FORM, "confirm", None),
+        (False, FlowResultType.ABORT, None, "not_supported"),
+        (None, FlowResultType.FORM, "confirm", None),
+    ],
+)
+async def test_ssdp_smarthome_capabilities(
+    hass: HomeAssistant,
+    fritz: Mock,
+    capabilities: bool | None,
+    expected_type: str,
+    expected_step: str | None,
+    expected_reason: str | None,
+) -> None:
+    """Test starting a flow from discovery with SmartHome capabilities."""
+    fritz().has_smarthome_capabilities.return_value = capabilities
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA["ip4_valid"]
+    )
+
+    assert result["type"] is expected_type
+    assert result.get("step_id") == expected_step
+    assert result.get("reason") == expected_reason
+    fritz().has_smarthome_capabilities.assert_called_once_with()
+
+
 async def test_ssdp_already_in_progress_unique_id(
     hass: HomeAssistant, fritz: Mock
 ) -> None:
@@ -407,17 +586,184 @@ async def test_ssdp_already_in_progress_host(hass: HomeAssistant, fritz: Mock) -
     assert result["reason"] == "already_in_progress"
 
 
-async def test_ssdp_already_configured(hass: HomeAssistant, fritz: Mock) -> None:
+@pytest.mark.parametrize(
+    ("configured_host", "ssdp_host", "expected_type", "expected_reason", "unique_id"),
+    [
+        pytest.param(
+            "http://192.168.178.1",
+            "http://192.168.178.1",
+            FlowResultType.ABORT,
+            "already_configured",
+            "only-a-test",
+            id="ip-entry-ip-discovery",
+        ),
+        pytest.param(
+            "http://192.168.178.1",
+            "http://fritz.box",
+            FlowResultType.ABORT,
+            "already_configured",
+            "only-a-test",
+            id="ip-entry-hostname-discovery",
+        ),
+        pytest.param(
+            "http://fritz.box",
+            "http://192.168.178.1",
+            FlowResultType.ABORT,
+            "already_configured",
+            "only-a-test",
+            id="hostname-entry-ip-discovery",
+        ),
+        pytest.param(
+            "http://fritz.box",
+            "http://fritz.box",
+            FlowResultType.ABORT,
+            "already_configured",
+            "only-a-test",
+            id="hostname-entry-hostname-discovery",
+        ),
+        pytest.param(
+            "http://192.168.178.10",
+            "http://192.168.178.1",
+            FlowResultType.FORM,
+            None,
+            None,
+            id="other-ip-entry-ip-discovery",
+        ),
+        pytest.param(
+            "http://192.168.178.10",
+            "http://fritz.box",
+            FlowResultType.FORM,
+            None,
+            None,
+            id="other-ip-entry-hostname-discovery",
+        ),
+        pytest.param(
+            "http://fritz.box",
+            "http://192.168.178.10",
+            FlowResultType.FORM,
+            None,
+            None,
+            id="hostname-entry-other-ip-discovery",
+        ),
+    ],
+)
+async def test_ssdp_already_configured(
+    hass: HomeAssistant,
+    fritz: Mock,
+    configured_host: str,
+    ssdp_host: str,
+    expected_type: FlowResultType,
+    expected_reason: str | None,
+    unique_id: str | None,
+) -> None:
     """Test starting a flow from discovery when already configured."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_DATA
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: configured_host,
+            CONF_PASSWORD: "fake_pass",
+            CONF_USERNAME: "fake_user",
+            CONF_VERIFY_SSL: False,
+        },
     )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert not result["result"].unique_id
+    mock_config.add_to_hass(hass)
+    assert not mock_config.unique_id
 
-    result2 = await hass.config_entries.flow.async_init(
+    discovery_info = SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="mock_st",
+        ssdp_location=f"{ssdp_host}:49000/fboxdesc.xml",
+        upnp={
+            ATTR_UPNP_FRIENDLY_NAME: CONF_FAKE_NAME,
+            ATTR_UPNP_UDN: "uuid:only-a-test",
+            ATTR_UPNP_PRESENTATION_URL: ssdp_host,
+        },
+    )
+
+    async def mock_getaddrinfo(host: str, port: int | None) -> list[tuple]:
+        if host == "fritz.box":
+            return [(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("192.168.178.1", 0))]
+        raise socket.gaierror
+
+    with patch.object(hass.loop, "getaddrinfo", mock_getaddrinfo):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_info
+        )
+
+    assert result["type"] is expected_type
+    assert result.get("reason") == expected_reason
+    assert mock_config.unique_id == unique_id
+
+
+@pytest.mark.parametrize(
+    ("existing_host", "discovery_info", "expected_host"),
+    [
+        pytest.param(
+            "http://fritz.repeater",
+            MOCK_SSDP_DATA["ip4_valid"],
+            "http://fritz.repeater",
+            id="hostname-entry-ip-discovery",
+        ),
+        pytest.param(
+            "http://fritz.repeater",
+            MOCK_SSDP_DATA["hostname_valid"],
+            "http://fritz.repeater",
+            id="hostname-entry-hostname-discovery",
+        ),
+        pytest.param(
+            "http://10.0.0.2",
+            MOCK_SSDP_DATA["ip4_valid"],
+            "http://10.0.0.1",
+            id="ip-entry-ip-discovery",
+        ),
+        pytest.param(
+            "http://10.0.0.2",
+            MOCK_SSDP_DATA["hostname_valid"],
+            "http://10.0.0.2",
+            id="ip-entry-hostname-discovery",
+        ),
+    ],
+)
+async def test_ssdp_already_configured_unique_id(
+    hass: HomeAssistant,
+    fritz: Mock,
+    existing_host: str,
+    discovery_info: SsdpServiceInfo,
+    expected_host: str,
+) -> None:
+    """Test discovery for an existing entry with the same unique ID."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="only-a-test",
+        data={
+            CONF_HOST: existing_host,
+            CONF_PASSWORD: "fake_pass",
+            CONF_USERNAME: "fake_user",
+            CONF_VERIFY_SSL: False,
+        },
+    )
+    mock_config.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_info
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config.data[CONF_HOST] == expected_host
+
+
+async def test_ssdp_ignored_entry(hass: HomeAssistant, fritz: Mock) -> None:
+    """Test discovery of an ignored device is aborted without updating it."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN, unique_id="only-a-test", source=SOURCE_IGNORE, data={}
+    )
+    mock_config.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_SSDP_DATA["ip4_valid"]
     )
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
-    assert result["result"].unique_id == "only-a-test"
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config.data == {}

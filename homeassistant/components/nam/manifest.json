@@ -1,13 +1,14 @@
 {
   "domain": "nam",
   "name": "Nettigo Air Monitor",
+  "categories": ["sensors.air_quality"],
   "codeowners": ["@bieniu"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nam",
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["nettigo_air_monitor"],
-  "requirements": ["nettigo-air-monitor==5.0.0"],
+  "requirements": ["nettigo-air-monitor==5.1.0"],
   "zeroconf": [
     {
       "name": "nam-*",

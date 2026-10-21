@@ -59,7 +59,6 @@ class OndiloIcoPoolsCoordinator(DataUpdateCoordinator[dict[str, OndiloIcoPoolDat
             update_interval=timedelta(minutes=20),
         )
         self.api = api
-        self.config_entry = config_entry
         self._device_registry = dr.async_get(self.hass)
 
     @override
@@ -80,27 +79,27 @@ class OndiloIcoPoolsCoordinator(DataUpdateCoordinator[dict[str, OndiloIcoPoolDat
             pool_data.measures_coordinator = OndiloIcoMeasuresCoordinator(
                 self.hass, self.config_entry, self.api, pool_id
             )
-            self._device_registry.async_get_or_create(
+            self._device_registry.async_get_or_create_device(
                 config_entry_id=self.config_entry.entry_id,
-                identifiers={(DOMAIN, pool_data.ico["serial_number"])},
-                manufacturer="Ondilo",
-                model="ICO",
-                name=pool_data.pool["name"],
-                sw_version=pool_data.ico["sw_version"],
+                device_info=dr.DeviceInfo(
+                    identifiers={(DOMAIN, pool_data.ico["serial_number"])},
+                    manufacturer="Ondilo",
+                    model="ICO",
+                    name=pool_data.pool["name"],
+                    sw_version=pool_data.ico["sw_version"],
+                ),
             )
 
         removed_pools = known_pools - current_pools
         for pool_id in removed_pools:
             pool_data = self.data.pop(pool_id)
             await pool_data.measures_coordinator.async_shutdown()
-            device_entry = self._device_registry.async_get_device(
-                identifiers={(DOMAIN, pool_data.ico["serial_number"])}
+            device_entry = self._device_registry.async_get_device_by_identifier(
+                (DOMAIN, pool_data.ico["serial_number"]),
+                self.config_entry.entry_id,
             )
             if device_entry:
-                self._device_registry.async_update_device(
-                    device_id=device_entry.id,
-                    remove_config_entry_id=self.config_entry.entry_id,
-                )
+                self._device_registry.async_remove_device(device_entry.id)
 
         for pool_id in current_pools:
             pool_data = data[pool_id]
@@ -149,7 +148,7 @@ class OndiloIcoMeasuresCoordinator(DataUpdateCoordinator[OndiloIcoMeasurementDat
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: OndiloIcoConfigEntry,
         api: OndiloClient,
         pool_id: str,
     ) -> None:

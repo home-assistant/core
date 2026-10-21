@@ -10,8 +10,19 @@ from unittest.mock import patch
 
 from aiohttp.test_utils import TestClient
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import (
+    MockUser,
+    async_capture_events,
+    async_fire_time_changed,
+)
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 
 from homeassistant.components.frontend import (
     CONF_DEVELOPMENT_PR,
@@ -20,29 +31,23 @@ from homeassistant.components.frontend import (
     CONF_GITHUB_TOKEN,
     CONF_THEMES,
     CONFIG_SCHEMA,
-    DEFAULT_THEME_COLOR,
+    DATA_PANELS,
     DOMAIN,
     EVENT_PANELS_UPDATED,
     THEMES_STORAGE_KEY,
     add_extra_js_url,
+    async_get_theme_names,
     async_panel_exists,
     async_register_built_in_panel,
     async_remove_panel,
     remove_extra_js_url,
 )
+from homeassistant.components.frontend.helpers import DEFAULT_THEME_COLOR
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockUser, async_capture_events, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import (
-    ClientSessionGenerator,
-    MockHAClientWebSocket,
-    WebSocketGenerator,
-)
 
 MOCK_THEMES = {
     "happy": {"primary-color": "red", "app-header-background-color": "blue"},
@@ -349,7 +354,7 @@ async def test_themes_set_theme_wrong_name(
     """Test frontend.set_theme service called with wrong name."""
 
     with pytest.raises(
-        vol.error.MultipleInvalid,
+        probatio.error.MultipleInvalid,
         match="Theme wrong not found",
     ):
         await hass.services.async_call(
@@ -453,7 +458,7 @@ async def test_themes_set_dark_theme_wrong_name(
 ) -> None:
     """Test frontend.set_theme service called with mode dark and wrong name."""
     with pytest.raises(
-        vol.error.MultipleInvalid,
+        probatio.error.MultipleInvalid,
         match="Theme wrong not found",
     ):
         await hass.services.async_call(DOMAIN, "set_theme", schema, blocking=True)
@@ -472,11 +477,11 @@ async def test_themes_reload_themes(
     """Test frontend.reload_themes service."""
 
     with patch(
-        "homeassistant.components.frontend.async_hass_config_yaml",
+        "homeassistant.components.frontend.services.async_hass_config_yaml",
         return_value={DOMAIN: {CONF_THEMES: {"sad": {"primary-color": "blue"}}}},
     ):
         with pytest.raises(
-            vol.error.MultipleInvalid,
+            probatio.error.MultipleInvalid,
             match="Theme happy not found",
         ):
             await hass.services.async_call(
@@ -500,7 +505,7 @@ async def test_themes_reload_themes(
             {
                 "invalid0": "blue",
             },
-            "expected a dictionary",
+            "expected a mapping",
             None,
         ),
         (
@@ -511,13 +516,13 @@ async def test_themes_reload_themes(
                 }
             },
             None,
-            "expected a dictionary",
+            "expected a mapping",
         ),
         (
             {
                 "invalid2": None,
             },
-            "expected a dictionary",
+            "expected a mapping",
             None,
         ),
         (
@@ -528,7 +533,7 @@ async def test_themes_reload_themes(
                 }
             },
             None,
-            "must contain at least one of light, dark",
+            "at least one of ['light', 'dark'] is required",
         ),
         (
             {
@@ -537,7 +542,7 @@ async def test_themes_reload_themes(
                     "modes": None,
                 }
             },
-            "string value is None for dictionary value",
+            "string value is None",
             None,
         ),
         (
@@ -547,7 +552,7 @@ async def test_themes_reload_themes(
                     "modes": {"light": {}, "dank": {}},
                 }
             },
-            "extra keys not allowed.*dank",
+            "not a valid option.*dank",
             None,
         ),
     ],
@@ -563,14 +568,14 @@ async def test_themes_reload_invalid(
     """Test frontend.reload_themes service with an invalid theme."""
 
     with patch(
-        "homeassistant.components.frontend.async_hass_config_yaml",
+        "homeassistant.components.frontend.services.async_hass_config_yaml",
         return_value={DOMAIN: {CONF_THEMES: {"happy": {"primary-color": "pink"}}}},
     ):
         await hass.services.async_call(DOMAIN, "reload_themes", blocking=True)
 
     with (
         patch(
-            "homeassistant.components.frontend.async_hass_config_yaml",
+            "homeassistant.components.frontend.services.async_hass_config_yaml",
             return_value={DOMAIN: {CONF_THEMES: invalid_theme}},
         ),
         pytest.raises(HomeAssistantError, match=rf"Failed to reload themes.*{error}")
@@ -756,6 +761,32 @@ async def test_async_panel_exists(hass: HomeAssistant) -> None:
 
     async_remove_panel(hass, "test_panel")
     assert async_panel_exists(hass, "test_panel") is False
+
+
+@pytest.mark.usefixtures("ignore_frontend_deps")
+async def test_async_get_theme_names(hass: HomeAssistant) -> None:
+    """Test async_get_theme_names helper."""
+    assert async_get_theme_names(hass) == []
+
+    assert await async_setup_component(hass, DOMAIN, CONFIG_THEMES)
+    assert async_get_theme_names(hass) == sorted(MOCK_THEMES)
+
+
+async def test_register_panel_collision_names_the_owner(hass: HomeAssistant) -> None:
+    """Test that the collision error says which component holds the URL path.
+
+    The path is often claimed by a dashboard or a custom panel rather than by
+    the integration that fails, and the failure takes that integration down,
+    so the message has to point at the holder.
+    """
+    async_register_built_in_panel(hass, "lovelace", frontend_url_path="todo")
+
+    with pytest.raises(ValueError, match="Overwriting panel todo owned by lovelace"):
+        async_register_built_in_panel(hass, "todo", frontend_url_path="todo")
+
+    # Registering with update=True stays allowed.
+    async_register_built_in_panel(hass, "todo", frontend_url_path="todo", update=True)
+    assert hass.data[DATA_PANELS]["todo"].component_name == "todo"
 
 
 async def test_get_panels_non_admin(
@@ -958,13 +989,24 @@ async def test_get_version(
     ("from_url", "to_url", "expected_status"),
     [
         ("/.well-known/change-password", "/profile", 302),
-        ("/developer-tools", "/config/developer-tools", 301),
-        ("/developer-tools/yaml", "/config/developer-tools/yaml", 301),
-        ("/developer-tools/state", "/config/developer-tools/state", 301),
-        ("/developer-tools/action", "/config/developer-tools/action", 301),
-        ("/developer-tools/template", "/config/developer-tools/template", 301),
-        ("/developer-tools/event", "/config/developer-tools/event", 301),
-        ("/developer-tools/debug", "/config/developer-tools/debug", 301),
+        ("/developer-tools", "/config/tools", 301),
+        ("/developer-tools/yaml", "/config/tools/yaml", 301),
+        ("/developer-tools/state", "/config/tools/state", 301),
+        ("/developer-tools/action", "/config/tools/action", 301),
+        ("/developer-tools/template", "/config/tools/template", 301),
+        ("/developer-tools/event", "/config/tools/event", 301),
+        ("/developer-tools/statistics", "/config/tools/statistics", 301),
+        ("/developer-tools/assist", "/config/tools/assist", 301),
+        ("/developer-tools/debug", "/config/tools/debug", 301),
+        ("/config/developer-tools", "/config/tools", 301),
+        ("/config/developer-tools/yaml", "/config/tools/yaml", 301),
+        ("/config/developer-tools/state", "/config/tools/state", 301),
+        ("/config/developer-tools/action", "/config/tools/action", 301),
+        ("/config/developer-tools/template", "/config/tools/template", 301),
+        ("/config/developer-tools/event", "/config/tools/event", 301),
+        ("/config/developer-tools/statistics", "/config/tools/statistics", 301),
+        ("/config/developer-tools/assist", "/config/tools/assist", 301),
+        ("/config/developer-tools/debug", "/config/tools/debug", 301),
         ("/shopping-list", "/todo", 301),
     ],
 )
@@ -998,6 +1040,20 @@ async def test_manifest_json(hass: HomeAssistant, mock_http_client: TestClient) 
 
     json = await resp.json()
     assert json["theme_color"] != DEFAULT_THEME_COLOR
+
+
+async def test_manifest_json_cors(mock_http_client: TestClient) -> None:
+    """Test manifest.json is readable cross-origin.
+
+    The landing page detects Core availability by reading manifest.json
+    cross-origin when its request is redirected from the legacy HTTP port
+    to the default port.
+    """
+    resp = await mock_http_client.get(
+        "/manifest.json", headers={"Origin": "http://example.local:8123"}
+    )
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["Access-Control-Allow-Origin"] == "http://example.local:8123"
 
 
 async def test_static_path_cache(mock_http_client: TestClient) -> None:
@@ -1142,13 +1198,13 @@ async def test_development_pr_and_github_token_inclusive() -> None:
             CONF_DEVELOPMENT_PR: 12345,
         }
     }
-    with pytest.raises(vol.Invalid, match="some but not all"):
+    with pytest.raises(probatio.Invalid, match="some but not all"):
         CONFIG_SCHEMA(invalid_config_pr_only)
 
     invalid_config_token_only: dict[str, dict[str, Any]] = {
         DOMAIN: {CONF_GITHUB_TOKEN: "test_token"}
     }
-    with pytest.raises(vol.Invalid, match="some but not all"):
+    with pytest.raises(probatio.Invalid, match="some but not all"):
         CONFIG_SCHEMA(invalid_config_token_only)
 
 

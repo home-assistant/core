@@ -1,12 +1,13 @@
 """Provides device triggers for Nanoleaf."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import (
     DEVICE_TRIGGER_BASE_SCHEMA,
     DeviceNotFound,
 )
 from homeassistant.components.homeassistant.triggers import event as event_trigger
+from homeassistant.components.homeassistant.triggers.event import EventTriggerArgument
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -26,9 +27,9 @@ TRIGGER_TYPES = TOUCH_GESTURE_TRIGGER_MAP.values()
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_DOMAIN): DOMAIN,
-        vol.Required(CONF_DEVICE_ID): str,
-        vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
+        probatio.Required(CONF_DOMAIN): DOMAIN,
+        probatio.Required(CONF_DEVICE_ID): str,
+        probatio.Required(CONF_TYPE): probatio.In(TRIGGER_TYPES),
     }
 )
 
@@ -38,7 +39,7 @@ async def async_get_triggers(
 ) -> list[dict[str, str]]:
     """List device triggers for Nanoleaf devices."""
     device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get(device_id)
+    device_entry = device_registry.async_get(device_id, include_child_devices=False)
     if device_entry is None:
         raise DeviceNotFound(f"Device ID {device_id} is not valid")
     if device_entry.model not in TOUCH_MODELS:
@@ -72,9 +73,9 @@ async def async_attach_trigger(
     )
     event_config = event_trigger.TRIGGER_SCHEMA(
         {
-            event_trigger.CONF_PLATFORM: CONF_EVENT,
-            event_trigger.CONF_EVENT_TYPE: NANOLEAF_EVENT,
-            event_trigger.CONF_EVENT_DATA: {
+            EventTriggerArgument.PLATFORM: CONF_EVENT,
+            EventTriggerArgument.EVENT_TYPE: NANOLEAF_EVENT,
+            EventTriggerArgument.EVENT_DATA: {
                 CONF_TYPE: config[CONF_TYPE],
                 CONF_DEVICE_ID: config[CONF_DEVICE_ID],
             },

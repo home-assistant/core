@@ -3,6 +3,11 @@
 from http import HTTPStatus
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
 
 from homeassistant.components import number
 from homeassistant.components.rainbird import DOMAIN
@@ -21,9 +26,6 @@ from .conftest import (
     mock_response,
     mock_response_error,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 
 @pytest.fixture
@@ -74,14 +76,15 @@ async def test_set_value(
     device_registry: dr.DeviceRegistry,
     aioclient_mock: AiohttpClientMocker,
     responses: list[str],
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test setting the rain delay number."""
 
     raindelay = hass.states.get("number.rain_bird_controller_rain_delay")
     assert raindelay is not None
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MAC_ADDRESS.lower())}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MAC_ADDRESS.lower()), config_entry.entry_id
     )
     assert device
     assert device.name == "Rain Bird Controller"
