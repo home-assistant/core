@@ -105,7 +105,7 @@ async def test_user_setup(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.medcom_ble.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -264,7 +264,7 @@ async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.medcom_ble.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
