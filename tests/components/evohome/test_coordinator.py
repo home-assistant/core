@@ -3,16 +3,18 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
-from evohomeasync2 import ControlSystem
+from evohomeasync2 import ControlSystem, HotWater, Zone
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.evohome import EvoData
-from homeassistant.components.evohome.const import DOMAIN
+from homeassistant.components.evohome.const import DOMAIN, SCHEDULE_MAX_AGE
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
+
+from .const import TEST_INSTALLS
 
 
 @pytest.mark.parametrize("install", ["minimal"])
@@ -94,3 +96,40 @@ async def test_high_precision_temps(
     state = hass.states.get(zone_id)
     assert state is not None
     assert state.attributes["current_temperature"] == expected
+
+
+@pytest.mark.parametrize("install", TEST_INSTALLS)
+@pytest.mark.usefixtures("evohome")
+async def test_schedules_fetched_only_when_stale(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    tcs: ControlSystem,
+) -> None:
+    """Test schedules are re-fetched only after SCHEDULE_MAX_AGE, not every poll."""
+
+    evo_data: EvoData = hass.data.get(DOMAIN)  # type: ignore[assignment]
+    update_interval: timedelta = evo_data.coordinator.update_interval  # type: ignore[assignment]
+
+    num_children = len(tcs.zones) + (tcs.hotwater is not None)
+
+    async def poll() -> None:
+        freezer.tick(update_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    with (
+        patch.object(Zone, "get_schedule") as mock_zon,
+        patch.object(HotWater, "get_schedule") as mock_dhw,
+    ):
+        # the first poll after setup fetches every schedule
+        await poll()
+        assert mock_zon.await_count + mock_dhw.await_count == num_children
+
+        # subsequent polls within SCHEDULE_MAX_AGE fetch none
+        for _ in range(SCHEDULE_MAX_AGE // update_interval - 1):
+            await poll()
+        assert mock_zon.await_count + mock_dhw.await_count == num_children
+
+        # once SCHEDULE_MAX_AGE has elapsed, every schedule is fetched again
+        await poll()
+        assert mock_zon.await_count + mock_dhw.await_count == num_children * 2
