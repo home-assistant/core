@@ -90,10 +90,8 @@ class GkpHubCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
             self.last_user_connected is None
             or now - self.last_user_connected >= USER_CONNECTED_INTERVAL.total_seconds()
         ):
-            await self._async_notify_user_connected()
-            if self.first_user_connected is None:
-                self.first_user_connected = dt_util.utcnow()
-            self.last_user_connected = now
+            await self._async_wake_up_devices(now)
+            # Read the state the devices report in answer to the wake up
             self.update_interval = USER_CONNECTED_REPORT_DELAY
         else:
             self.update_interval = UPDATE_INTERVAL
@@ -119,7 +117,7 @@ class GkpHubCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
         if stale_devices := previous_devices - set(self.device_installations):
             self._remove_stale_devices(stale_devices)
 
-    async def _async_notify_user_connected(self) -> None:
+    async def _async_wake_up_devices(self, now: float) -> None:
         """Ask the devices to report their current state."""
         for installation_id in self.installations:
             try:
@@ -135,6 +133,10 @@ class GkpHubCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
                     installation_id,
                     err,
                 )
+
+        if self.first_user_connected is None:
+            self.first_user_connected = dt_util.utcnow()
+        self.last_user_connected = now
 
     async def _async_fetch_thermostats(self) -> dict[str, Thermostat]:
         """Fetch all thermostats, keeping the last state of failing ones."""
