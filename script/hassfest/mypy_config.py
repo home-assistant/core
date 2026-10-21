@@ -88,11 +88,11 @@ STRICT_SETTINGS: Final[list[str]] = [
     "disallow_untyped_calls",
     "disallow_untyped_decorators",
     "disallow_untyped_defs",
+    "no_implicit_reexport",
     "warn_return_any",
     "warn_unreachable",
     # TODO: turn these on, address issues
     # "disallow_any_generics",
-    # "no_implicit_reexport",
 ]
 
 # Strict settings are already applied for core files.
