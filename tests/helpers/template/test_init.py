@@ -931,6 +931,10 @@ async def test_parse_result(hass: HomeAssistant) -> None:
         # ("+48100200300", "+48100200300"),  # phone number
         ("010", "010"),
         ("0011101.00100001010001", "0011101.00100001010001"),
+        # Non-ASCII digits are not Python numeric literals
+        ("\u0661\u0662\u0663", "\u0661\u0662\u0663"),
+        ("-\u0967\u0968", "-\u0967\u0968"),
+        ("\uff11.\uff15", "\uff11.\uff15"),
         # Plain string states are not Python literals and must be returned
         # unchanged (literal_eval raises and the original render is used).
         ("on", "on"),
