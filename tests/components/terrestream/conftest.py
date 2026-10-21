@@ -4,11 +4,10 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from terrestream_local import Credentials
 
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 UUID = "00000000-0000-4000-8000-000000000001"
 CREDENTIALS = Credentials(UUID, "ab" * 32, "cd" * 32)

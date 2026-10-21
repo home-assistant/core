@@ -5,11 +5,10 @@ from copy import deepcopy
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from terrestream_local.models import Snapshot
 
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 LIGHT = "sensor.terrestream_illuminance"
 
