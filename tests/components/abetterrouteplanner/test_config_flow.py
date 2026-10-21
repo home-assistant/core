@@ -56,12 +56,11 @@ def _mock_token_post(
     )
 
 
-@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud", "mock_abrp_client")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    mock_abrp_client: AsyncMock,
     mock_setup_entry: AsyncMock,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,

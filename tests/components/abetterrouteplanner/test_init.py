@@ -311,6 +311,7 @@ async def test_display_failure_degrades_only_that_vehicle(
 
     await setup_integration(hass, config_entry_with_vehicles)
 
+    assert f"No display metadata for vehicle {MOCK_VEHICLE_ID}" in caplog.text
     scope = config_entry_with_vehicles.unique_id
     degraded = device_registry.async_get_device_by_identifier(
         (DOMAIN, f"{scope}_{MOCK_VEHICLE_ID}"), config_entry_with_vehicles.entry_id
@@ -417,7 +418,6 @@ async def test_shutdown_stops_stream(
     mock_telemetry_stream.return_value.stop.assert_awaited_once()
 
 
-@pytest.mark.usefixtures("mock_abrp_client")
 async def test_vehicle_added_to_garage_appears_after_reload(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
