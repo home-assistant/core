@@ -283,6 +283,47 @@ async def test_cover_position_aware_lift_null_tilt(
     assert "current_tilt_position" not in state.attributes
 
 
+@pytest.mark.parametrize("node_fixture", ["wago_home_blind_control"])
+async def test_cover_wago_blind_type(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the WAGO Home Blind Control hides tilt when set to roller shutter.
+
+    The device keeps reporting the tilt feature and a tilt blind Type in
+    roller shutter mode; only the vendor BlindType attribute tells.
+    """
+    entity_id = "cover.home_blind_wi_fi"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["device_class"] == "shutter"
+    assert (
+        state.attributes["supported_features"] & CoverEntityFeature.SET_TILT_POSITION
+        == 0
+    )
+    assert "current_tilt_position" not in state.attributes
+
+    set_node_attribute(matter_node, 1, 258, 355729413, 1)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["device_class"] == "blind"
+    assert (
+        state.attributes["supported_features"] & CoverEntityFeature.SET_TILT_POSITION
+        != 0
+    )
+    assert state.attributes["current_tilt_position"] == 100
+
+    set_node_attribute(matter_node, 1, 258, 355729413, 0)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["device_class"] == "shutter"
+    assert "current_tilt_position" not in state.attributes
+
+
 @pytest.mark.parametrize(
     ("node_fixture", "entity_id"),
     [
