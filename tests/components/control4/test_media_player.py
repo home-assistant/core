@@ -157,12 +157,20 @@ async def test_media_player_turn_on_restarts_last_source(
     """Test that the source survives the room being turned off.
 
     Room 1 has two video sources both named "TV" (ids 100 and 101). The room
-    plays 101, then the director resets its source variables on ROOM_OFF, and
-    turn_on must still post 101 by id; a name lookup would pick 100.
+    starts on 100 and switches to 101, then the director resets its source
+    variables on ROOM_OFF, and turn_on must still post 101 by id; a name lookup
+    would pick 100.
     """
     mock_room_off_variables[1]["POWER_STATE"] = True
-    mock_room_off_variables[1]["CURRENT MEDIA INFO"] = {"mediainfo": {"medSrcDev": 101}}
+    mock_room_off_variables[1]["CURRENT MEDIA INFO"] = {"mediainfo": {"medSrcDev": 100}}
     await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("media_player.living_room")
+    assert state is not None
+    assert state.attributes["last_source_id"] == 100
+
+    mock_room_off_variables[1]["CURRENT MEDIA INFO"] = {"mediainfo": {"medSrcDev": 101}}
+    await _async_refresh(hass, freezer)
 
     state = hass.states.get("media_player.living_room")
     assert state is not None
