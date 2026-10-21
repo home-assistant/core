@@ -22,6 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+from .timetable import SERVICE_ADDED
 
 # National feeds run to hundreds of megabytes, so only stalls are capped.
 DOWNLOAD_TIMEOUT = ClientTimeout(total=None, sock_connect=30, sock_read=60)
@@ -32,7 +33,6 @@ _REQUIRED_FILES = frozenset(
 _CALENDAR_FILES = frozenset({"calendar.txt", "calendar_dates.txt"})
 # A stop or platform; trips only stop at these.
 LOCATION_TYPE_STOP = 0
-SERVICE_ADDED = 1
 
 type GtfsConfigEntry = ConfigEntry[GtfsFeed]
 
