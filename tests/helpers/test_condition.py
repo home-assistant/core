@@ -6208,6 +6208,70 @@ async def test_state_condition_attr_duration_recorder_ready_during_read(
         assert test.async_check() is False
 
 
+async def test_state_condition_attr_duration_read_overlaps_queued_states(
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    hass: HomeAssistant,
+) -> None:
+    """Rows the read returns that overlap the queued states are left out.
+
+    If the recorder commits queued changes before the read, the read returns
+    them too, after the state at the start of the window, which is stamped at
+    the window start. The queued states hold the run since before then, so the
+    read's rows must not cut it short.
+    """
+    instance = await _async_setup_recorder_not_started(
+        hass, async_setup_recorder_instance
+    )
+    entity_id = "test.entity_1"
+    start = dt_util.utcnow()
+    with freeze_time(start) as freezer:
+        # Valid since t=0h; an unrelated attribute change at t=8h keeps it valid.
+        hass.states.async_set(entity_id, STATE_ON, {"test_attr": True})
+        freezer.move_to(start + timedelta(hours=8))
+        hass.states.async_set(entity_id, STATE_ON, {"test_attr": True, "other": 1})
+        await hass.async_block_till_done()
+
+        # The lookback is capped at 6h, so the window starts at t=3h.
+        window_start = start + timedelta(hours=3)
+        changed = start + timedelta(hours=8)
+        committed = {
+            entity_id: [
+                State(
+                    entity_id,
+                    STATE_ON,
+                    {"test_attr": True},
+                    last_changed=window_start,
+                    last_reported=window_start,
+                    last_updated=window_start,
+                ),
+                State(
+                    entity_id,
+                    STATE_ON,
+                    {"test_attr": True, "other": 1},
+                    last_changed=changed,
+                    last_reported=changed,
+                    last_updated=changed,
+                ),
+            ]
+        }
+
+        freezer.move_to(start + timedelta(hours=9))
+        assert instance.async_get_queued_states([entity_id]) is not None
+        with patch(
+            "homeassistant.components.recorder.history.get_significant_states",
+            return_value=committed,
+        ):
+            test = await _setup_attr_state_condition(
+                hass,
+                entity_ids=entity_id,
+                states={True},
+                condition_options={CONF_FOR: {"hours": 8}},
+            )
+
+        # Valid since t=0h, so the 8h `for:` is met.
+        assert test.async_check() is True
+
+
 async def test_async_setup_creates_history_priming_manager(
     hass: HomeAssistant,
 ) -> None:

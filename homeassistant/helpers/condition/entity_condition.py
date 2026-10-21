@@ -400,11 +400,22 @@ class EntityConditionBase(Condition):
 
         queued_states = queued or {}
         for entity_id, anchor in anchors.items():
-            rows: list[State | None] = [
-                *cast(list[State], historical_states.get(entity_id, [])),
-                *queued_states.get(entity_id, []),
-            ]
-            valid_since = self._valid_since_from_history(entity_id, rows)
+            rows = cast(list[State], historical_states.get(entity_id, []))
+            entity_queued = queued_states.get(entity_id, [])
+            # If the recorder committed some of the snapshot before the read, the
+            # read returns those too, and a start state stamped at the window
+            # start: keep only older rows so that the rows stay in order.
+            if first_queued := next(
+                (_state for _state in entity_queued if _state is not None), None
+            ):
+                rows = [
+                    row
+                    for row in rows
+                    if row.last_updated_timestamp < first_queued.last_updated_timestamp
+                ]
+            valid_since = self._valid_since_from_history(
+                entity_id, [*rows, *entity_queued]
+            )
             if valid_since is not None:
                 anchors[entity_id] = min(valid_since, anchor)
 
