@@ -406,15 +406,10 @@ class ChimeRingVolumeNumber(
     def _async_get_channel(
         self, device: PublicDeviceModel
     ) -> PublicRingSettings | None:
-        return next(
-            (
-                ring_setting
-                for ring_setting in cast(PublicChime, device).ring_settings
-                if ring_setting.camera_id == self._channel_id
-                and ring_setting.volume is not None
-            ),
-            None,
-        )
+        ring_setting = cast(PublicChime, device).get_ring_setting(self._channel_id)
+        if ring_setting is None or ring_setting.volume is None:
+            return None
+        return ring_setting
 
     @callback
     @override

@@ -881,6 +881,8 @@ def make_public_chime(
         if ring_settings is None
         else ring_settings
     )
+    # The real lookup, over the mock's ring settings.
+    public.get_ring_setting = partial(PublicChime.get_ring_setting, public)
     return public
 
 
