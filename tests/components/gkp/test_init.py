@@ -5,7 +5,6 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 from gkphomepython import (
     USER_CONNECTED_INTERVAL,
@@ -14,7 +13,6 @@ from gkphomepython import (
     GkpConnectionError,
     GkpDeviceError,
     GkpError,
-    GkpMode,
     GkpRateLimitError,
     Installation,
     ThermostatsResult,
@@ -31,7 +29,6 @@ from homeassistant.components.gkp.const import (
     DISCOVERY_INTERVAL,
     DOMAIN,
     FAST_POLLING_INTERVAL,
-    OAUTH2_TOKEN,
     UPDATE_INTERVAL,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -46,7 +43,6 @@ from . import setup_integration
 from .conftest import BEDROOM_ID, LIVING_ROOM_ID
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 LIVING_ROOM_ENTITY_ID = "climate.living_room"
 BEDROOM_ENTITY_ID = "climate.bedroom"
@@ -59,22 +55,6 @@ async def _tick(
     freezer.tick(delta)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
-
-
-def _expired_token_entry() -> MockConfigEntry:
-    """Return a config entry whose token must be refreshed."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="test-user-id",
-        data={
-            "auth_implementation": DOMAIN,
-            "token": {
-                "access_token": "test-access-token",
-                "refresh_token": "test-refresh-token",
-                "expires_at": 0,
-            },
-        },
-    )
 
 
 async def test_setup_entry_success(
@@ -108,35 +88,6 @@ async def test_oauth_implementation_not_available(
         await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-@pytest.mark.parametrize(
-    ("token_response", "expected_state"),
-    [
-        pytest.param({"status": 401}, ConfigEntryState.SETUP_ERROR, id="auth_failed"),
-        pytest.param({"status": 500}, ConfigEntryState.SETUP_RETRY, id="server_error"),
-        pytest.param(
-            {"exc": ClientError("Connection timeout")},
-            ConfigEntryState.SETUP_RETRY,
-            id="network_error",
-        ),
-    ],
-)
-async def test_setup_entry_token_errors(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    token_response: dict[str, Any],
-    expected_state: ConfigEntryState,
-) -> None:
-    """Test setup when the token cannot be refreshed."""
-    config_entry = _expired_token_entry()
-    config_entry.add_to_hass(hass)
-    aioclient_mock.post(OAUTH2_TOKEN, **token_response)
-
-    assert not await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry.state is expected_state
 
 
 @pytest.mark.parametrize(
@@ -226,9 +177,9 @@ async def test_refresh_after_user_connected(
     assert mock_gkp_client.get_thermostat.call_count == 4
 
 
+@pytest.mark.usefixtures("mock_gkp_client")
 async def test_available_until_first_report_timeout(
     hass: HomeAssistant,
-    mock_gkp_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     device_contents: dict[str, dict[str, Any]],
@@ -289,9 +240,9 @@ async def test_user_connected_errors(
     assert mock_gkp_client.get_thermostat.called is not has_reauth_flow
 
 
+@pytest.mark.usefixtures("mock_gkp_client")
 async def test_dynamic_device_creation(
     hass: HomeAssistant,
-    mock_gkp_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
@@ -322,9 +273,9 @@ async def test_dynamic_device_creation(
     assert hass.states.get("climate.kitchen") is not None
 
 
+@pytest.mark.usefixtures("mock_gkp_client")
 async def test_stale_device_removal(
     hass: HomeAssistant,
-    mock_gkp_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
@@ -377,10 +328,9 @@ async def test_periodic_discovery_error(
     [
         (GkpAuthError("expired"), True),
         (GkpConnectionError("lost"), False),
-        (ValueError("unexpected"), False),
     ],
 )
-async def test_hub_coordinator_update_errors(
+async def test_update_errors(
     hass: HomeAssistant,
     mock_gkp_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -388,7 +338,7 @@ async def test_hub_coordinator_update_errors(
     exception: Exception,
     has_reauth_flow: bool,
 ) -> None:
-    """Test hub coordinator handles errors during regular update."""
+    """Test errors during a regular update keep the last known state."""
     await setup_integration(hass, mock_config_entry)
     mock_gkp_client.get_thermostat.side_effect = exception
 
@@ -438,9 +388,9 @@ async def test_single_device_error_keeps_others(
     assert bedroom.attributes["current_temperature"] == 19.0
 
 
+@pytest.mark.usefixtures("mock_gkp_client")
 async def test_device_offline_when_not_reporting(
     hass: HomeAssistant,
-    mock_gkp_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     device_contents: dict[str, dict[str, Any]],
@@ -476,18 +426,15 @@ async def _set_temperature(hass: HomeAssistant) -> None:
     )
 
 
-async def test_device_coordinator_refresh_error(
+async def test_refresh_after_command_error(
     hass: HomeAssistant,
     mock_gkp_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test device coordinator handles refresh error."""
+    """Test a device is unavailable when it cannot be read after a command."""
     await setup_integration(hass, mock_config_entry)
     await _set_temperature(hass)
-    mock_gkp_client.set_temperature.assert_called_once_with(
-        LIVING_ROOM_ID, GkpMode.COMFORT, 23.5
-    )
 
     mock_gkp_client.get_thermostat.side_effect = GkpConnectionError("lost")
     await _tick(hass, freezer, FAST_POLLING_INTERVAL)

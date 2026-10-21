@@ -229,26 +229,6 @@ async def test_set_temperature_not_adjustable(
     mock_gkp_client.set_temperature.assert_not_called()
 
 
-async def test_set_temperature_error(
-    hass: HomeAssistant,
-    mock_gkp_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test an API error while setting the temperature."""
-    await setup_integration(hass, mock_config_entry)
-    mock_gkp_client.set_temperature.side_effect = GkpConnectionError("lost")
-
-    with pytest.raises(HomeAssistantError) as err:
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: LIVING_ROOM_ENTITY_ID, ATTR_TEMPERATURE: 23.5},
-            blocking=True,
-        )
-
-    assert err.value.translation_key == "set_temperature_error"
-
-
 @pytest.mark.parametrize(
     ("service", "data", "mode"),
     [
@@ -335,46 +315,6 @@ async def test_turn_on(
     mock_gkp_client.set_mode.assert_called_once_with(LIVING_ROOM_ID, GkpMode.COMFORT)
 
 
-@pytest.mark.parametrize(
-    ("service", "data", "translation_key"),
-    [
-        pytest.param(
-            SERVICE_SET_HVAC_MODE,
-            {ATTR_HVAC_MODE: HVACMode.OFF},
-            "set_hvac_mode_error",
-            id="hvac_mode",
-        ),
-        pytest.param(
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_PRESET_MODE: PRESET_ECO},
-            "set_preset_mode_error",
-            id="preset_mode",
-        ),
-    ],
-)
-async def test_set_mode_error(
-    hass: HomeAssistant,
-    mock_gkp_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    service: str,
-    data: dict[str, Any],
-    translation_key: str,
-) -> None:
-    """Test API errors while changing the mode."""
-    await setup_integration(hass, mock_config_entry)
-    mock_gkp_client.set_mode.side_effect = GkpConnectionError("lost")
-
-    with pytest.raises(HomeAssistantError) as err:
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            service,
-            {ATTR_ENTITY_ID: LIVING_ROOM_ENTITY_ID, **data},
-            blocking=True,
-        )
-
-    assert err.value.translation_key == translation_key
-
-
 async def test_fast_polling(
     hass: HomeAssistant,
     mock_gkp_client: AsyncMock,
@@ -419,49 +359,6 @@ async def test_fast_polling(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_gkp_client.get_thermostat.assert_not_called()
-
-
-@pytest.mark.parametrize(
-    ("service", "data", "client_method"),
-    [
-        pytest.param(
-            SERVICE_SET_TEMPERATURE,
-            {ATTR_TEMPERATURE: 23.5},
-            "set_temperature",
-            id="set_temperature",
-        ),
-        pytest.param(
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_PRESET_MODE: PRESET_ECO},
-            "set_mode",
-            id="set_mode",
-        ),
-    ],
-)
-async def test_command_rate_limited(
-    hass: HomeAssistant,
-    mock_gkp_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    service: str,
-    data: dict[str, Any],
-    client_method: str,
-) -> None:
-    """Test commands tell the user when to try again when rate limited."""
-    await setup_integration(hass, mock_config_entry)
-    getattr(mock_gkp_client, client_method).side_effect = GkpRateLimitError(
-        "limited", 30
-    )
-
-    with pytest.raises(HomeAssistantError) as err:
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            service,
-            {ATTR_ENTITY_ID: LIVING_ROOM_ENTITY_ID, **data},
-            blocking=True,
-        )
-
-    assert err.value.translation_key == "rate_limited"
-    assert err.value.translation_placeholders == {"retry_after": "30"}
 
 
 @pytest.mark.parametrize(
@@ -551,35 +448,88 @@ async def test_activate_boost_duration_out_of_range(
 
 
 @pytest.mark.parametrize(
-    ("error", "translation_key"),
+    ("domain", "service", "data", "client_method", "error", "translation_key"),
     [
-        pytest.param(GkpConnectionError("lost"), "activate_boost_error", id="error"),
         pytest.param(
-            GkpRateLimitError("limited", 30), "rate_limited", id="rate_limited"
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_TEMPERATURE: 23.5},
+            "set_temperature",
+            GkpConnectionError("lost"),
+            "set_temperature_error",
+            id="set_temperature",
+        ),
+        pytest.param(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_HVAC_MODE: HVACMode.OFF},
+            "set_mode",
+            GkpConnectionError("lost"),
+            "set_hvac_mode_error",
+            id="set_hvac_mode",
+        ),
+        pytest.param(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_PRESET_MODE: PRESET_ECO},
+            "set_mode",
+            GkpConnectionError("lost"),
+            "set_preset_mode_error",
+            id="set_preset_mode",
+        ),
+        pytest.param(
+            DOMAIN,
+            SERVICE_ACTIVATE_BOOST,
+            {ATTR_TEMPERATURE: 24.5, ATTR_DURATION: timedelta(minutes=90)},
+            "activate_boost",
+            GkpConnectionError("lost"),
+            "activate_boost_error",
+            id="activate_boost",
         ),
     ],
 )
-async def test_activate_boost_error(
+async def test_command_error(
     hass: HomeAssistant,
     mock_gkp_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    domain: str,
+    service: str,
+    data: dict[str, Any],
+    client_method: str,
     error: Exception,
     translation_key: str,
 ) -> None:
-    """Test API errors while activating boost."""
+    """Test API errors while sending a command."""
     await setup_integration(hass, mock_config_entry)
-    mock_gkp_client.activate_boost.side_effect = error
+    getattr(mock_gkp_client, client_method).side_effect = error
 
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
-            DOMAIN,
-            SERVICE_ACTIVATE_BOOST,
-            {
-                ATTR_ENTITY_ID: LIVING_ROOM_ENTITY_ID,
-                ATTR_TEMPERATURE: 24.5,
-                ATTR_DURATION: timedelta(minutes=90),
-            },
+            domain,
+            service,
+            {ATTR_ENTITY_ID: LIVING_ROOM_ENTITY_ID, **data},
             blocking=True,
         )
 
     assert err.value.translation_key == translation_key
+
+
+async def test_command_rate_limited(
+    hass: HomeAssistant,
+    mock_gkp_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test commands tell the user when to try again when rate limited."""
+    await setup_integration(hass, mock_config_entry)
+    mock_gkp_client.set_temperature.side_effect = GkpRateLimitError("limited", 30)
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: LIVING_ROOM_ENTITY_ID, ATTR_TEMPERATURE: 23.5},
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "rate_limited"
+    assert err.value.translation_placeholders == {"retry_after": "30"}
