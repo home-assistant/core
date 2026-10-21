@@ -421,6 +421,15 @@ SWITCHES: dict[DeviceCategory, tuple[TuyaSwitchEntityDescription, ...]] = {
             translation_placeholders={"index": "8"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
+        *(
+            TuyaSwitchEntityDescription(
+                key=f"switch_{index}",
+                translation_key="indexed_switch",
+                translation_placeholders={"index": str(index)},
+                device_class=SwitchDeviceClass.OUTLET,
+            )
+            for index in range(9, 23)
+        ),
         TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_USB1,
             translation_key="indexed_usb",
@@ -965,26 +974,6 @@ SWITCHES[DeviceCategory.CZ] = SWITCHES[DeviceCategory.PC]
 # Smart Camera - Low power consumption camera (duplicate of `sp`)
 SWITCHES[DeviceCategory.DGHSXJ] = SWITCHES[DeviceCategory.SP]
 
-PRODUCT_SWITCHES: dict[
-    tuple[DeviceCategory, str], tuple[TuyaSwitchEntityDescription, ...]
-] = {
-    (DeviceCategory.KG, "zqq3cipq"): (
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_1,
-            translation_key="master_switch",
-        ),
-        # This product uses switch_7 through switch_22 for physical channels 1-16.
-        *(
-            TuyaSwitchEntityDescription(
-                key=f"switch_{index + 6}",
-                translation_key="indexed_switch",
-                translation_placeholders={"index": str(index)},
-            )
-            for index in range(1, 17)
-        ),
-    ),
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -1000,9 +989,7 @@ async def async_setup_entry(
         entities: list[TuyaSwitchEntity] = []
         for device_id in device_ids:
             device = manager.device_map[device_id]
-            if descriptions := PRODUCT_SWITCHES.get(
-                (device.category, device.product_id), SWITCHES.get(device.category)
-            ):
+            if descriptions := SWITCHES.get(device.category):
                 entities.extend(
                     TuyaSwitchEntity(device, manager, description, definition)
                     for description in descriptions
