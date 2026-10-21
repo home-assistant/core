@@ -431,6 +431,22 @@ def test_wrap(hass: HomeAssistant) -> None:
             render(hass, case)
 
 
+@pytest.mark.parametrize(
+    ("value", "min_value", "max_value", "expected"),
+    [
+        pytest.param(-1e-20, 0, 10, 0.0, id="tiny_negative"),
+        pytest.param(-1e-15, 0, 360, 0.0, id="tiny_negative_angle"),
+        pytest.param(0.9999999999999999, 1, 360, 1.0, id="tiny_below_offset_min"),
+        pytest.param(-1e-10, 0, 10, 10 - 1e-10, id="small_negative_representable"),
+    ],
+)
+def test_wrap_never_returns_max(
+    value: float, min_value: float, max_value: float, expected: float
+) -> None:
+    """Test wrap stays in [min, max) when the modulo rounds up to max."""
+    assert MathExtension.wrap(value, min_value, max_value) == expected
+
+
 def test_remap(hass: HomeAssistant) -> None:
     """Test remap function."""
     # Test function and filter usage in templates, with kitchen sink parameters.
