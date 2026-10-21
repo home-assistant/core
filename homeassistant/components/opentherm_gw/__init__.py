@@ -120,30 +120,38 @@ class OpenThermGatewayHub:
             "Connected to OpenTherm Gateway %s at %s", self.gw_version, self.device_path
         )
         dev_reg = dr.async_get(self.hass)
-        gw_dev = dev_reg.async_get_or_create(
+        gw_dev = dev_reg.async_get_or_create_device(
             config_entry_id=self.config_entry_id,
-            identifiers={
-                (DOMAIN, f"{self.hub_id}-{OpenThermDeviceIdentifier.GATEWAY}")
-            },
-            manufacturer="Schelte Bron",
-            model="OpenTherm Gateway",
-            translation_key="gateway_device",
-            sw_version=self.gw_version,
+            device_info=dr.DeviceInfo(
+                identifiers={
+                    (DOMAIN, f"{self.hub_id}-{OpenThermDeviceIdentifier.GATEWAY}")
+                },
+                manufacturer="Schelte Bron",
+                model="OpenTherm Gateway",
+                translation_key="gateway_device",
+                sw_version=self.gw_version,
+            ),
         )
         if gw_dev.sw_version != self.gw_version:
             dev_reg.async_update_device(gw_dev.id, sw_version=self.gw_version)
 
-        boiler_device = dev_reg.async_get_or_create(
+        boiler_device = dev_reg.async_get_or_create_device(
             config_entry_id=self.config_entry_id,
-            identifiers={(DOMAIN, f"{self.hub_id}-{OpenThermDeviceIdentifier.BOILER}")},
-            translation_key="boiler_device",
+            device_info=dr.DeviceInfo(
+                identifiers={
+                    (DOMAIN, f"{self.hub_id}-{OpenThermDeviceIdentifier.BOILER}")
+                },
+                translation_key="boiler_device",
+            ),
         )
-        thermostat_device = dev_reg.async_get_or_create(
+        thermostat_device = dev_reg.async_get_or_create_device(
             config_entry_id=self.config_entry_id,
-            identifiers={
-                (DOMAIN, f"{self.hub_id}-{OpenThermDeviceIdentifier.THERMOSTAT}")
-            },
-            translation_key="thermostat_device",
+            device_info=dr.DeviceInfo(
+                identifiers={
+                    (DOMAIN, f"{self.hub_id}-{OpenThermDeviceIdentifier.THERMOSTAT}")
+                },
+                translation_key="thermostat_device",
+            ),
         )
 
         self.hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self.cleanup)

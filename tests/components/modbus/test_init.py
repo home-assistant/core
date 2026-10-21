@@ -24,6 +24,7 @@ import probatio
 from pymodbus.exceptions import ModbusException
 from pymodbus.pdu import ExceptionResponse
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, get_fixture_path
 
 from homeassistant import config as hass_config
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -133,8 +134,6 @@ from .conftest import (
     TEST_PORT_TCP,
     ReadResult,
 )
-
-from tests.common import async_fire_time_changed, get_fixture_path
 
 
 @pytest.fixture(name="mock_modbus_with_pymodbus")

@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 import aiohttp
 from lunatone_rest_api_client.models import InfoData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from yarl import URL
 
 from homeassistant.components.lunatone.const import DOMAIN
@@ -24,8 +25,6 @@ from . import (
     build_info_data,
     setup_integration,
 )
-
-from tests.common import MockConfigEntry
 
 ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     ip_address=ip_address(BASE_IP),

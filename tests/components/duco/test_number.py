@@ -11,6 +11,11 @@ from duco_connectivity import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.duco.const import SCAN_INTERVAL
@@ -23,8 +28,6 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import async_fire_coordinator_update, setup_platform_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 _ZONE_1_ENTITY_ID = "number.living_bypass_target_1"
 _ZONE_2_ENTITY_ID = "number.living_bypass_target_2"

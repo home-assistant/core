@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.flux_led.config_flow import FluxLedConfigFlow
@@ -41,8 +42,6 @@ from . import (
     _patch_discovery,
     _patch_wifibulb,
 )
-
-from tests.common import MockConfigEntry
 
 MAC_ADDRESS_DIFFERENT = "ff:bb:ff:dd:ee:ff"
 
