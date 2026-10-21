@@ -162,6 +162,9 @@
           "standby": "[%key:common::state::standby%]"
         }
       },
+      "ash_level": {
+        "name": "Ash level"
+      },
       "boiler_supply_temperature": {
         "name": "Boiler supply temperature"
       },
