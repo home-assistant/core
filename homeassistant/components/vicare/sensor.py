@@ -140,6 +140,14 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ViCareSensorEntityDescription(
+        key="ash_level",
+        translation_key="ash_level",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_getter=lambda api: api.getAshLevel(),
+    ),
+    ViCareSensorEntityDescription(
         key="boiler_supply_temperature",
         translation_key="boiler_supply_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
