@@ -59,7 +59,9 @@ rules:
   discovery: todo
   discovery-update-info: todo
   docs-data-update: done
-  docs-examples: done
+  docs-examples:
+    status: todo
+    comment: The documentation describes a use case but has no YAML example or blueprint.
   docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
@@ -73,7 +75,7 @@ rules:
     comment: All entities expose primary measurements.
   entity-device-class: done
   entity-disabled-by-default:
-    status: done
+    status: exempt
     comment: All entities expose primary measurements used in dashboards and automations.
   entity-translations: done
   exception-translations: done
