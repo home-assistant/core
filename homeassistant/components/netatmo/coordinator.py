@@ -19,6 +19,7 @@ from pyatmo.schedule import Schedule
 from homeassistant.components import cloud
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import EventDeviceRegistryUpdatedData
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -154,6 +155,7 @@ class NetatmoPublisher:
     available: bool = True
     error_count: int = 0
     unavailable_logged: bool = False
+    last_error: Exception | None = None
 
 
 class NetatmoDataHandler:
@@ -218,6 +220,15 @@ class NetatmoDataHandler:
         )
 
         await self.subscribe(ACCOUNT, ACCOUNT, None)
+
+        # Entities are only created from this first topology. An account
+        # without homes answers NoDeviceError, which a retry cannot change.
+        error = self.publisher[ACCOUNT].last_error
+        if error is not None and not isinstance(error, pyatmo.NoDeviceError):
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="homes_unavailable",
+            ) from error
 
         # Parents must exist before a platform links a child to one
         self.module_parents = netatmo_module_parents(self.account)
@@ -323,12 +334,14 @@ class NetatmoDataHandler:
             aiohttp.ClientConnectorError,
         ) as err:
             has_error = True
+            publisher.last_error = err
             if not publisher.unavailable_logged:
                 _LOGGER.info("Error while fetching %s data: %s", signal_name, err)
                 publisher.unavailable_logged = True
             else:
                 _LOGGER.debug(err)
         else:
+            publisher.last_error = None
             if publisher.unavailable_logged:
                 _LOGGER.info("Fetching %s data recovered", signal_name)
                 publisher.unavailable_logged = False
