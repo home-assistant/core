@@ -7,6 +7,7 @@ import aiohttp
 from aioproxmox.exceptions import ProxmoxAPIError, ProxmoxAuthError
 from aioproxmox.model import PVEPermissions
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import SERVICE_PRESS

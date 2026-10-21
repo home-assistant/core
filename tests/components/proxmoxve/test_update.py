@@ -7,6 +7,12 @@ from aioproxmox.model import PVEPermissions
 from aioproxmox.model.pve import AptArchType, NodeAptUpdate, NodeAptUpdateProperty
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.proxmoxve.coordinator import DEFAULT_UPDATE_INTERVAL

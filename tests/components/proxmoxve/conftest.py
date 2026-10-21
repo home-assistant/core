@@ -62,12 +62,6 @@ from homeassistant.const import (
 
 from . import MERGED_PERMISSIONS
 
-from pytest_homeassistant.common import (
-    MockConfigEntry,
-    load_json_array_fixture,
-    load_json_object_fixture,
-)
-
 # Actions declared as descriptors, which autospec cannot see
 _ACTION_DESCRIPTORS = (
     LXCActionProperty,
