@@ -389,9 +389,9 @@ async def test_reload_entry_in_setup_retry(
     hass: HomeAssistant, client: TestClient, hass_admin_user: MockUser
 ) -> None:
     """Test reloading an entry via the API that is in setup retry."""
-    mock_setup_entry = AsyncMock(return_value=True)
-    mock_unload_entry = AsyncMock(return_value=True)
-    mock_migrate_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=None)
+    mock_unload_entry = AsyncMock(return_value=None)
+    mock_migrate_entry = AsyncMock(return_value=None)
 
     mock_integration(
         hass,
@@ -590,7 +590,7 @@ async def test_create_account(hass: HomeAssistant, client: TestClient) -> None:
     mock_platform(hass, "test.config_flow", None)
 
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
 
     class TestFlow(core_ce.ConfigFlow):
@@ -653,7 +653,7 @@ async def test_create_account(hass: HomeAssistant, client: TestClient) -> None:
 async def test_two_step_flow(hass: HomeAssistant, client: TestClient) -> None:
     """Test we can finish a two step flow."""
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
     mock_platform(hass, "test.config_flow", None)
 
@@ -743,7 +743,7 @@ async def test_continue_flow_unauth(
 ) -> None:
     """Test we can't finish a two step flow."""
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
     mock_platform(hass, "test.config_flow", None)
 
@@ -798,7 +798,7 @@ async def test_get_progress_index(
     ws_client = await hass_ws_client(hass)
 
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
 
     entry = MockConfigEntry(domain="test", title="Test", entry_id="1234")
@@ -951,7 +951,7 @@ async def test_get_progress_subscribe(
     ws_client = await hass_ws_client(hass)
 
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
 
     entry = MockConfigEntry(domain="test", title="Test", entry_id="1234")
@@ -1063,7 +1063,7 @@ async def test_get_progress_subscribe_create_entry(hass: HomeAssistant) -> None:
     mock_platform(hass, "test.config_flow", None)
 
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
 
     class TestFlow(core_ce.ConfigFlow):
@@ -1096,7 +1096,7 @@ async def test_get_progress_subscribe_in_progress(
     ws_client = await hass_ws_client(hass)
 
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
 
     entry = MockConfigEntry(domain="test", title="Test", entry_id="1234")
@@ -1219,7 +1219,7 @@ async def test_get_progress_subscribe_in_progress_bad_flow(
     ws_client = await hass_ws_client(hass)
 
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
 
     entry = MockConfigEntry(domain="test", title="Test", entry_id="1234")
@@ -1454,7 +1454,7 @@ async def test_options_flow_unauth(
 async def test_two_step_options_flow(hass: HomeAssistant, client: TestClient) -> None:
     """Test we can finish a two step options flow."""
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
     mock_platform(hass, "test.config_flow", None)
 
@@ -1522,7 +1522,7 @@ async def test_options_flow_with_invalid_data(
 ) -> None:
     """Test an options flow with invalid_data."""
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
     mock_platform(hass, "test.config_flow", None)
 
@@ -1930,7 +1930,7 @@ async def test_subentry_flow_unauth(
 async def test_two_step_subentry_flow(hass: HomeAssistant, client) -> None:
     """Test we can finish a two step subentry flow."""
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
     mock_platform(hass, "test.config_flow", None)
 
@@ -2008,7 +2008,7 @@ async def test_two_step_subentry_flow(hass: HomeAssistant, client) -> None:
 async def test_subentry_flow_with_invalid_data(hass: HomeAssistant, client) -> None:
     """Test a subentry flow with invalid_data."""
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
     mock_platform(hass, "test.config_flow", None)
 
@@ -2472,7 +2472,7 @@ async def test_ignore_flow(
     """Test we can ignore a flow."""
     assert await async_setup_component(hass, DOMAIN, {})
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
     mock_platform(hass, "test.config_flow", None)
 
@@ -3563,8 +3563,8 @@ async def test_subscribe_entries_ws_disabled_by_changed(
         MockModule(
             "comp",
             async_setup=AsyncMock(return_value=False),
-            async_setup_entry=AsyncMock(return_value=True),
-            async_unload_entry=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=None),
+            async_unload_entry=AsyncMock(return_value=None),
         ),
     )
     mock_platform(hass, "comp.config_flow", None)
@@ -3612,7 +3612,7 @@ async def test_flow_with_multiple_schema_errors(
 ) -> None:
     """Test an config flow with multiple schema errors."""
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
     mock_platform(hass, "test.config_flow", None)
 
@@ -3658,7 +3658,7 @@ async def test_flow_with_multiple_schema_errors_base(
 ) -> None:
     """Test config flow with multiple schema errors."""
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
     mock_platform(hass, "test.config_flow", None)
 
@@ -3707,7 +3707,7 @@ async def test_supports_reconfigure(
     mock_platform(hass, "test.config_flow", None)
 
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
 
     entry = MockConfigEntry(domain="test", title="Test", entry_id="1")
@@ -3782,7 +3782,7 @@ async def test_does_not_support_reconfigure(
     mock_platform(hass, "test.config_flow", None)
 
     mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=None))
     )
 
     class TestFlow(core_ce.ConfigFlow):
