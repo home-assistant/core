@@ -21,7 +21,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.vicare.const import DEFAULT_CACHE_DURATION
 from homeassistant.components.vicare.sensor import _build_entities
 from homeassistant.components.vicare.types import ViCareDevice
-from homeassistant.const import Platform, UnitOfRatio
+from homeassistant.const import EntityCategory, Platform, UnitOfRatio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
@@ -69,34 +69,39 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-def test_ash_level_sensor_is_created_when_supported() -> None:
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_ash_level_sensor_is_created_when_supported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test the ash-level sensor is created for pellet boilers that support it."""
-    mock_vicare = MockPyViCare([Fixture(set(), "vicare/Vitodens300W.json")])
+    mock_vicare = MockPyViCare([Fixture(set(), "vicare/Vitoligno300C.json")])
     device_config = mock_vicare.devices[0]
     device_config.device_model = "Vitoligno_300-C"
-    api = device_config.asAutoDetectDevice()
 
-    with patch(
-        "PyViCare.PyViCarePelletsBoiler.PelletsBoiler.getAshLevel", return_value=18.2
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(f"{MODULE}.PyViCare", return_value=mock_vicare),
+        patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
     ):
-        device = ViCareDevice(
-            config=device_config,
-            api=api,
-            serial="boiler-serial",
-            coordinator=MagicMock(),
-        )
-        entities = _build_entities([device])
-        ash_level_sensor = next(
-            entity
-            for entity in entities
-            if entity.entity_description.key == "ash_level"
-        )
+        await setup_integration(hass, mock_config_entry)
 
-        assert (
-            ash_level_sensor.entity_description.native_unit_of_measurement
-            == UnitOfRatio.PERCENTAGE
-        )
-        assert ash_level_sensor.entity_description.value_getter(device.api) == 18.2
+    ash_level_entity_id = next(
+        entity_id
+        for entity_id in hass.states.async_entity_ids(SENSOR_DOMAIN)
+        if entity_id.endswith("_ash_level")
+    )
+    state = hass.states.get(ash_level_entity_id)
+    assert state is not None
+    assert state.state == "18.2"
+    assert state.attributes["unit_of_measurement"] == UnitOfRatio.PERCENTAGE
+    assert (
+        entity_registry.async_get(ash_level_entity_id).entity_category
+        == EntityCategory.DIAGNOSTIC
+    )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
