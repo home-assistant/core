@@ -189,6 +189,12 @@
     "api_refusal": {
       "message": "Potential policy violation detected."
     },
+    "classification_image_unreadable": {
+      "message": "Unable to read an image to classify."
+    },
+    "classification_not_found": {
+      "message": "Claude did not return a valid label."
+    },
     "json_parse_error": {
       "message": "Error with Claude structured response."
     },
@@ -212,6 +218,9 @@
     },
     "system_message_not_found": {
       "message": "First message must be a system message."
+    },
+    "too_many_classification_images": {
+      "message": "Image classification supports at most {max_images} images including the image to classify, received {images}."
     },
     "tool_args_parse_error": {
       "message": "Claude returned invalid tool arguments."

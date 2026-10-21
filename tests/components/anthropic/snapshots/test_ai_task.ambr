@@ -1,4 +1,178 @@
 # serializer version: 1
+# name: test_classify_image[defaults]
+  dict({
+    'max_tokens': 3000,
+    'messages': list([
+      dict({
+        'content': list([
+          dict({
+            'text': 'Examples of "empty": The bay is empty',
+            'type': 'text',
+          }),
+          dict({
+            'source': dict({
+              'data': 'ZW1wdHlfMQ==',
+              'media_type': 'image/jpeg',
+              'type': 'base64',
+            }),
+            'type': 'image',
+          }),
+          dict({
+            'source': dict({
+              'data': 'ZW1wdHlfMg==',
+              'media_type': 'image/jpeg',
+              'type': 'base64',
+            }),
+            'type': 'image',
+          }),
+          dict({
+            'text': 'Examples of "car"',
+            'type': 'text',
+          }),
+          dict({
+            'cache_control': dict({
+              'type': 'ephemeral',
+            }),
+            'source': dict({
+              'data': 'Y2FyXzE=',
+              'media_type': 'image/jpeg',
+              'type': 'base64',
+            }),
+            'type': 'image',
+          }),
+          dict({
+            'text': 'Image to classify:',
+            'type': 'text',
+          }),
+          dict({
+            'source': dict({
+              'data': 'Y2FtZXJhLmdhcmFnZQ==',
+              'media_type': 'image/jpeg',
+              'type': 'base64',
+            }),
+            'type': 'image',
+          }),
+        ]),
+        'role': 'user',
+      }),
+    ]),
+    'model': 'claude-haiku-5-5',
+    'output_config': dict({
+      'format': dict({
+        'schema': dict({
+          'additionalProperties': False,
+          'properties': dict({
+            'label': dict({
+              'enum': list([
+                'empty',
+                'car',
+              ]),
+              'type': 'string',
+            }),
+            'unsure': dict({
+              'type': 'boolean',
+            }),
+          }),
+          'required': list([
+            'label',
+            'unsure',
+          ]),
+          'type': 'object',
+        }),
+        'type': 'json_schema',
+      }),
+    }),
+    'stream': True,
+    'system': 'Left garage bay: Which label matches the image to classify? Each label is shown by its examples. Answer with the label that matches, and set unsure to true when the image to classify does not clearly match one label.',
+  })
+# ---
+# name: test_classify_image[instructions-and-region]
+  dict({
+    'max_tokens': 3000,
+    'messages': list([
+      dict({
+        'content': list([
+          dict({
+            'text': 'Examples of "empty": The bay is empty',
+            'type': 'text',
+          }),
+          dict({
+            'source': dict({
+              'data': 'ZW1wdHlfMQ==',
+              'media_type': 'image/jpeg',
+              'type': 'base64',
+            }),
+            'type': 'image',
+          }),
+          dict({
+            'source': dict({
+              'data': 'ZW1wdHlfMg==',
+              'media_type': 'image/jpeg',
+              'type': 'base64',
+            }),
+            'type': 'image',
+          }),
+          dict({
+            'text': 'Examples of "car"',
+            'type': 'text',
+          }),
+          dict({
+            'cache_control': dict({
+              'type': 'ephemeral',
+            }),
+            'source': dict({
+              'data': 'Y2FyXzE=',
+              'media_type': 'image/jpeg',
+              'type': 'base64',
+            }),
+            'type': 'image',
+          }),
+          dict({
+            'text': 'Image to classify:',
+            'type': 'text',
+          }),
+          dict({
+            'source': dict({
+              'data': 'Y2FtZXJhLmdhcmFnZQ==',
+              'media_type': 'image/jpeg',
+              'type': 'base64',
+            }),
+            'type': 'image',
+          }),
+        ]),
+        'role': 'user',
+      }),
+    ]),
+    'model': 'claude-haiku-5-5',
+    'output_config': dict({
+      'format': dict({
+        'schema': dict({
+          'additionalProperties': False,
+          'properties': dict({
+            'label': dict({
+              'enum': list([
+                'empty',
+                'car',
+              ]),
+              'type': 'string',
+            }),
+            'unsure': dict({
+              'type': 'boolean',
+            }),
+          }),
+          'required': list([
+            'label',
+            'unsure',
+          ]),
+          'type': 'object',
+        }),
+        'type': 'json_schema',
+      }),
+    }),
+    'stream': True,
+    'system': 'Is a car parked in the left bay? Each label is shown by its examples. Answer with the label that matches, and set unsure to true when the image to classify does not clearly match one label.',
+  })
+# ---
 # name: test_generate_structured_data
   dict({
     'container': None,
