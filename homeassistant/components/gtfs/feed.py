@@ -8,7 +8,6 @@ from functools import partial
 import io
 import logging
 from pathlib import Path
-import re
 import threading
 from typing import BinaryIO
 import zipfile
@@ -27,8 +26,6 @@ from .const import DOMAIN
 from .timetable import SERVICE_ADDED
 
 _LOGGER = logging.getLogger(__name__)
-
-_GENERATED_FILE = re.compile(r"(?P<stem>[0-9a-f]{32})\.(?:sqlite|sqlite\.tmp|zip)")
 
 # National feeds run to hundreds of megabytes, so only stalls are capped.
 DOWNLOAD_TIMEOUT = ClientTimeout(total=None, sock_connect=30, sock_read=60)
@@ -70,15 +67,10 @@ def feed_database_path(hass: HomeAssistant, database: str) -> Path:
     return Path(hass.config.cache_path(DOMAIN, database))
 
 
-def list_generated_files(directory: Path) -> list[Path]:
-    """List the files in directory with names the config flow generates.
-
-    Files kept by YAML users never match these names.
-    """
+def list_files(directory: Path) -> list[Path]:
+    """List the files in directory, or none if it cannot be listed."""
     try:
-        return [
-            path for path in directory.iterdir() if _GENERATED_FILE.fullmatch(path.name)
-        ]
+        return list(directory.iterdir())
     except OSError as err:
         _LOGGER.debug("Could not list %s: %s", directory, err)
         return []

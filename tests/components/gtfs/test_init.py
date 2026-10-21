@@ -12,7 +12,12 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
-from homeassistant.components.gtfs.const import CONF_DATABASE, DOMAIN, FLOW_DATABASES
+from homeassistant.components.gtfs.const import (
+    CONF_DATABASE,
+    DEFAULT_PATH,
+    DOMAIN,
+    FLOW_DATABASES,
+)
 from homeassistant.components.gtfs.feed import (
     close_feed,
     feed_database_path,
@@ -347,17 +352,11 @@ ORPHAN_FILES = [
     f"{ORPHAN}.zip",
     f"{ORPHAN}.sqlite.tmp",
     f"{OTHER_ORPHAN}.sqlite",
-]
-UNRELATED_FILES = [
-    "abc.sqlite",
-    "bart.sqlite",
-    "bart.zip",
     "feed.sqlite",
-    "feed.zip",
-    f"{'D' * 32}.sqlite",
-    f"{KEPT}.sqlite.bak",
     f"x{KEPT}.zip",
 ]
+# Files YAML users keep in config/gtfs, including one named like a flow's.
+YAML_FILES = ["bart.sqlite", "bart.zip", f"{ORPHAN}.zip"]
 
 
 def _create_files(hass: HomeAssistant, names: list[str]) -> None:
@@ -368,19 +367,27 @@ def _create_files(hass: HomeAssistant, names: list[str]) -> None:
 
 
 async def test_setup_removes_orphaned_feed_files(hass: HomeAssistant) -> None:
-    """Test files no entry or flow owns are removed and everything else is kept."""
+    """Test files in the cache folder that no entry or flow owns are removed.
+
+    YAML users' files live in config/gtfs, which is never touched.
+    """
     MockConfigEntry(
         domain=DOMAIN,
         data={CONF_URL: FEED_URL, CONF_DATABASE: f"{KEPT}.sqlite"},
     ).add_to_hass(hass)
-    kept = [f"{KEPT}.sqlite", *UNRELATED_FILES]
+    kept = [f"{KEPT}.sqlite", f"{KEPT}.sqlite-journal"]
     _create_files(hass, [*ORPHAN_FILES, *kept])
+    yaml_dir = Path(hass.config.path(DEFAULT_PATH))
+    yaml_dir.mkdir()
+    for name in YAML_FILES:
+        (yaml_dir / name).touch()
 
     with patch("homeassistant.components.gtfs.async_setup_entry", return_value=None):
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
     assert gtfs_files(hass) == sorted(kept)
+    assert sorted(path.name for path in yaml_dir.iterdir()) == sorted(YAML_FILES)
 
 
 async def test_setup_keeps_database_of_disabled_entry(hass: HomeAssistant) -> None:

@@ -22,7 +22,7 @@ from .feed import (
     async_fetch_feed,
     close_feed,
     feed_database_path,
-    list_generated_files,
+    list_files,
     open_feed,
     remove_files,
 )
@@ -35,9 +35,13 @@ PLATFORMS = [Platform.CALENDAR]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Remove feed files left behind when Home Assistant stopped mid-import."""
+    """Remove feed files that no config entry or flow owns.
+
+    Home Assistant can stop during an import, or between a reconfigure saving
+    its new database and deleting the old one.
+    """
     files = await hass.async_add_executor_job(
-        list_generated_files, Path(hass.config.cache_path(DOMAIN))
+        list_files, Path(hass.config.cache_path(DOMAIN))
     )
     # Setup can run while another flow is importing, so its files are kept. A
     # listed file's owner named it before creating it, so it is known by now.
