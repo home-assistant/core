@@ -353,14 +353,14 @@
     'supported_features': 0,
     'translation_key': 'latest_email_click_rate',
     'unique_id': 'a1b2c3d4-e5f6-7890-abcd-ef1234567890_latest_email_click_rate',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities[sensor.test_ghost_latest_email_click_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Ghost Latest email click rate',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_ghost_latest_email_click_rate',
@@ -457,14 +457,14 @@
     'supported_features': 0,
     'translation_key': 'latest_email_open_rate',
     'unique_id': 'a1b2c3d4-e5f6-7890-abcd-ef1234567890_latest_email_open_rate',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities[sensor.test_ghost_latest_email_open_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Ghost Latest email open rate',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_ghost_latest_email_open_rate',

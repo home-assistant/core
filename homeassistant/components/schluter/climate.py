@@ -25,7 +25,8 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from . import DATA_SCHLUTER_API, DATA_SCHLUTER_SESSION, DOMAIN
+from . import DATA_SCHLUTER_API, DATA_SCHLUTER_SESSION
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(

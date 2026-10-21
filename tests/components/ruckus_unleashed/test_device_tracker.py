@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 from aioruckus.const import ERROR_CONNECT_EOF, ERROR_LOGIN_INCORRECT
 from aioruckus.exceptions import AuthenticationError
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.ruckus_unleashed.const import (
     API_CLIENT_MAC,
@@ -27,8 +28,6 @@ from . import (
     init_integration,
     mock_config_entry,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_client_connected(hass: HomeAssistant) -> None:

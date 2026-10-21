@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 from pysmlight import Info
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.smlight.const import DOMAIN
 from homeassistant.config_entries import (
@@ -27,8 +28,6 @@ from .conftest import (
     MOCK_PASSWORD,
     MOCK_USERNAME,
 )
-
-from tests.common import MockConfigEntry
 
 DISCOVERY_INFO = ZeroconfServiceInfo(
     ip_address=ip_address("192.168.1.161"),

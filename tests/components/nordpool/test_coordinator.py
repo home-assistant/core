@@ -16,6 +16,8 @@ from pynordpool import (
     NordPoolResponseError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.nordpool.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
@@ -23,9 +25,6 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from . import ENTRY_CONFIG
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.freeze_time("2025-10-01T10:00:00+02:00")

@@ -1395,6 +1395,7 @@ def test_automation_behavior_selector_schema_error(schema) -> None:
             (
                 "abc123",
                 None,
+                {"name": "abc123", "percentage": 3},
                 [{"name": "abc123", "percentage": "nope"}],
                 [{"name": "abc123", "percentage": 3, "not_exist": 5}],
             ),
