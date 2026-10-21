@@ -2608,7 +2608,7 @@ pyqvrpro==0.52
 pyqwikswitch==0.93
 
 # homeassistant.components.nmbs
-pyrail==0.4.1
+pyrail==0.6.0
 
 # homeassistant.components.rainbird
 pyrainbird==6.6.0
