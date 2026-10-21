@@ -483,11 +483,7 @@ class LoginFlowResourceView(LoginFlowBaseView):
             return self.json_message("Invalid client id", HTTPStatus.BAD_REQUEST)
 
         try:
-            # do not allow change ip during login flow
             flow = self._flow_mgr.async_get(flow_id)
-            if flow["context"]["ip_address"] != ip_address(request.remote):  # type: ignore[arg-type]
-                return self.json_message("IP address changed", HTTPStatus.BAD_REQUEST)
-            result = await self._flow_mgr.async_configure(flow_id, data)
         except data_entry_flow.UnknownFlow as err:
             # A flow that is gone, like an expired one, can't be guessed, so
             # it is raised to keep log_invalid_auth from counting a failed login.
@@ -495,6 +491,16 @@ class LoginFlowResourceView(LoginFlowBaseView):
                 text=json_dumps({"message": "Invalid flow specified"}),
                 content_type=CONTENT_TYPE_JSON,
             ) from err
+
+        # do not allow change ip during login flow
+        if flow["context"]["ip_address"] != ip_address(request.remote):  # type: ignore[arg-type]
+            return self.json_message("IP address changed", HTTPStatus.BAD_REQUEST)
+
+        try:
+            result = await self._flow_mgr.async_configure(flow_id, data)
+        except data_entry_flow.UnknownFlow:
+            # Removed while the step ran, so a failed check still counts.
+            return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
         except probatio.Invalid:
             return self.json_message("User input malformed", HTTPStatus.BAD_REQUEST)
 
