@@ -93,13 +93,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TouchlineSLConfigEntry) 
     # Create a new Device for each coorodinator to represent each module
     for c in coordinators:
         module = c.data.module
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, module.id)},
-            name=module.name,
-            manufacturer="Roth",
-            model=module.type,
-            sw_version=module.version,
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, module.id)},
+                name=module.name,
+                manufacturer="Roth",
+                model=module.type,
+                sw_version=module.version,
+            ),
         )
 
     entry.runtime_data = coordinators

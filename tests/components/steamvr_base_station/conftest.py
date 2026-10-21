@@ -10,7 +10,9 @@ from pytest_homeassistant.components.bluetooth import (
     inject_bluetooth_service_info_bleak,
 )
 
+from homeassistant.components.steamvr_base_station import PLATFORMS
 from homeassistant.components.steamvr_base_station.const import DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from . import STATION_SERVICE_INFO, TEST_ADDRESS, TEST_NAME
@@ -66,11 +68,21 @@ def station_in_range(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
+def platforms() -> list[Platform]:
+    """Return the platforms to set up."""
+    return PLATFORMS
+
+
+@pytest.fixture
 async def init_integration(
-    hass: HomeAssistant, station_in_range: None, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    station_in_range: None,
+    mock_config_entry: MockConfigEntry,
+    platforms: list[Platform],
 ) -> MockConfigEntry:
     """Set up the integration for a station in range."""
     mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    with patch("homeassistant.components.steamvr_base_station.PLATFORMS", platforms):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
     return mock_config_entry

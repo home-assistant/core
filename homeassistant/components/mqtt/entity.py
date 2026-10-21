@@ -1441,9 +1441,9 @@ def ensure_via_device_exists(
         "Device Registry, creating new entry",
         identifier,
     )
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=config_entry.entry_id,
-        identifiers={identifier},
+        device_info=dr.DeviceInfo(identifiers={identifier}),
     )
 
 
@@ -1489,8 +1489,8 @@ class MqttEntityDeviceInfo(Entity):
         device_info = self.device_info
 
         if device_info is not None:
-            device_registry.async_get_or_create(
-                config_entry_id=config_entry_id, **device_info
+            device_registry.async_get_or_create_device(
+                config_entry_id=config_entry_id, device_info=device_info
             )
 
     @property
@@ -1936,8 +1936,8 @@ def update_device(
     if config_entry_id is not None and device_info is not None:
         if via_device_id := _resolve_via_device_id(hass, specifications, config_entry):
             device_info.via_device_id = via_device_id
-        device = device_registry.async_get_or_create(
-            config_entry_id=config_entry_id, **device_info
+        device = device_registry.async_get_or_create_device(
+            config_entry_id=config_entry_id, device_info=device_info
         )
 
     return device.id if device else None
