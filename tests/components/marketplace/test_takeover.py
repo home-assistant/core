@@ -12,6 +12,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import flush_store, load_json_object_fixture
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import bootstrap, config_entries
@@ -27,8 +28,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.json import json_dumps
 from homeassistant.setup import async_setup_component
-
-from tests.common import flush_store, load_json_object_fixture
 
 HACS_FILES = ("hacs.repositories", "hacs.hacs", "hacs.data")
 REGISTRY_KEYS = (

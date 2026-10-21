@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.lookin import UDP_MANAGER
 from homeassistant.components.lookin.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -10,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import DEVICE_ID, DEVICE_NAME, IP_ADDRESS, MODULE
-
-from tests.common import MockConfigEntry
 
 MEDIA_UUID = "9999"
 

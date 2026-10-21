@@ -1,12 +1,12 @@
 """Tests for the Elk-M1 Control utils."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.elkm1.const import DOMAIN
 from homeassistant.components.elkm1.util import deprecate_entity
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
-
-from tests.common import MockConfigEntry
 
 ISSUE_ID = "deprecated_sensor_elkm1_setting_1"
 

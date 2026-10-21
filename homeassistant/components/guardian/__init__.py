@@ -118,14 +118,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: GuardianConfigEntry) -> 
     # Register the valve controller device up front so paired sensors can resolve
     # it as their via device when they are added:
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.data[CONF_UID])},
-        manufacturer="Elexa",
-        name=f"Guardian valve controller {entry.data[CONF_UID]}",
-        sw_version=valve_controller_coordinators[API_SYSTEM_DIAGNOSTICS].data[
-            "firmware"
-        ],
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, entry.data[CONF_UID])},
+            manufacturer="Elexa",
+            name=f"Guardian valve controller {entry.data[CONF_UID]}",
+            sw_version=valve_controller_coordinators[API_SYSTEM_DIAGNOSTICS].data[
+                "firmware"
+            ],
+        ),
     )
 
     # Set up all of the Guardian entity platforms:
@@ -227,7 +229,8 @@ class PairedSensorManager:
         # Remove the paired sensor device from the device registry (which will
         # clean up entities and the entity registry):
         dev_reg = dr.async_get(self._hass)
-        device = dev_reg.async_get_or_create(
-            config_entry_id=self._entry.entry_id, identifiers={(DOMAIN, uid)}
+        device = dev_reg.async_get_or_create_device(
+            config_entry_id=self._entry.entry_id,
+            device_info=dr.DeviceInfo(identifiers={(DOMAIN, uid)}),
         )
         dev_reg.async_remove_device(device.id)

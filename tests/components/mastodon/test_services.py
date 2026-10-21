@@ -12,6 +12,7 @@ from mastodon.Mastodon import (
 )
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import media_source
@@ -64,8 +65,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 MEDIA_IMAGES = {
     "media-source://camera/camera.demo_camera": media_source.MediaImage(

@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from azure.eventhub.exceptions import EventHubError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.azure_event_hub.const import (
@@ -28,8 +29,6 @@ from .const import (
     SAS_CONFIG_FULL,
     UPDATE_OPTIONS,
 )
-
-from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

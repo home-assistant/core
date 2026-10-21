@@ -4,6 +4,11 @@ import datetime as dt
 import json
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
 import requests_mock
 
 from homeassistant.components.metoffice.const import DOMAIN
@@ -12,12 +17,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.util import utcnow
 
 from .const import METOFFICE_CONFIG_WAVERTREE
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-)
 
 
 @pytest.mark.freeze_time(dt.datetime(2024, 11, 23, 12, tzinfo=dt.UTC))

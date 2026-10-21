@@ -3,6 +3,7 @@
 from unittest.mock import Mock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.izone.const import DOMAIN
@@ -12,8 +13,6 @@ import homeassistant.helpers.device_registry as dr
 import homeassistant.helpers.entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 SUPPLY_ENTITY = "sensor.izone_controller_000000001_supply_temperature"
 RETURN_ENTITY = "sensor.izone_controller_000000001_return_temperature"
