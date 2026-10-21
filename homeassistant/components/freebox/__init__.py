@@ -35,7 +35,7 @@ _STATIC_UNIQUE_ID_MIGRATIONS: tuple[tuple[Platform, str, str], ...] = (
 def _get_registration_name(entry: FreeboxConfigEntry) -> str:
     """Return the name Home Assistant is registered with on the Freebox."""
     # Entries created before the name was configurable registered the hostname
-    return entry.data.get(CONF_REGISTRATION_NAME) or socket.gethostname()
+    return entry.data.get(CONF_REGISTRATION_NAME, socket.gethostname())
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> None:
