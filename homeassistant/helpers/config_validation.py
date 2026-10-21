@@ -1,6 +1,6 @@
 """Helpers for config validation using probatio."""
 
-from collections.abc import Callable, Hashable, Mapping
+from collections.abc import Callable, Hashable, Iterable, Mapping
 import contextlib
 from contextvars import ContextVar
 from datetime import (
@@ -349,6 +349,8 @@ def _entity_ids(value: str | list, allow_uuid: bool) -> list[str]:
         raise probatio.Invalid("Entity IDs cannot be None")
     if isinstance(value, str):
         value = [ent_id.strip() for ent_id in value.split(",")]
+    elif not isinstance(value, Iterable):
+        raise probatio.Invalid("Entity IDs must be a string or a list")
 
     validator = entity_id_or_uuid if allow_uuid else entity_id
     return [validator(ent_id) for ent_id in value]
@@ -455,7 +457,7 @@ def icon(value: Any) -> str:
     raise probatio.Invalid('Icons should be specified in the form "prefix:name"')
 
 
-_COLOR_HEX = re.compile(r"^#[0-9A-F]{6}$", re.IGNORECASE)
+_COLOR_HEX = re.compile(r"^#[0-9A-F]{6}\Z", re.IGNORECASE)
 
 
 def color_hex(value: Any) -> str:
@@ -470,6 +472,15 @@ def color_hex(value: Any) -> str:
 
 _TIME_PERIOD_DICT_KEYS = ("days", "hours", "minutes", "seconds", "milliseconds")
 
+
+def _timedelta(**kwargs: float) -> timedelta:
+    """Create a timedelta, raising Invalid if it is out of range."""
+    try:
+        return timedelta(**kwargs)
+    except OverflowError as err:
+        raise probatio.Invalid("Time period is out of range") from err
+
+
 time_period_dict = probatio.All(
     dict,
     probatio.Schema(
@@ -482,7 +493,7 @@ time_period_dict = probatio.All(
         }
     ),
     probatio.AtLeastOne(*_TIME_PERIOD_DICT_KEYS),
-    lambda value: timedelta(**value),
+    lambda value: _timedelta(**value),
 )
 
 
@@ -545,7 +556,7 @@ def time_period_str(value: str) -> timedelta:
     except ValueError as err:
         raise probatio.Invalid(TIME_PERIOD_ERROR.format(value)) from err
 
-    offset = timedelta(hours=hour, minutes=minute, seconds=second)
+    offset = _timedelta(hours=hour, minutes=minute, seconds=second)
 
     if negative_offset:
         offset *= -1
@@ -556,7 +567,7 @@ def time_period_str(value: str) -> timedelta:
 def time_period_seconds(value: float | str) -> timedelta:
     """Validate and transform seconds to a time offset."""
     try:
-        return timedelta(seconds=float(value))
+        return _timedelta(seconds=float(value))
     except (ValueError, TypeError) as err:
         raise probatio.Invalid(f"Expected seconds, got {value}") from err
 
@@ -807,15 +818,23 @@ def socket_timeout(value: Any | None) -> object:
     raise probatio.Invalid("Invalid socket timeout value. float > 0.0 required.")
 
 
+_URL_CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f]")
+_URL_WHITESPACE = re.compile(r"\s")
+
+
 def url(
     value: Any,
     _schema_list: frozenset[UrlProtocolSchema] = EXTERNAL_URL_PROTOCOL_SCHEMA_LIST,
 ) -> str:
     """Validate a URL."""
-    url_in = str(value)
+    url_in = str(value).strip()
+    # urlparse silently drops tabs/newlines, so check the raw string
+    if _URL_CONTROL_CHARS.search(url_in):
+        raise probatio.Invalid("invalid url")
     parsed = urlparse(url_in)
 
-    if parsed.scheme not in _schema_list:
+    # HTTP clients encode spaces in the path and query, but not in the host
+    if parsed.scheme not in _schema_list or _URL_WHITESPACE.search(parsed.netloc):
         raise probatio.Invalid("invalid url")
 
     try:
