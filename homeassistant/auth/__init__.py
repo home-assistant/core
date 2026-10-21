@@ -202,6 +202,8 @@ class AuthManager:
         self._revoke_callbacks: dict[str, set[CALLBACK_TYPE]] = {}
         # Refresh token id to when its step up proof stops counting.
         self._step_ups: dict[str, datetime] = {}
+        # Refresh token ids that used their recent sign in as a step up.
+        self._sign_in_step_ups_used: set[str] = set()
         # User id to the monotonic times of their recent step up attempts.
         self._step_up_attempts: dict[str, deque[float]] = {}
         self._create_user_lock = asyncio.Lock()
@@ -385,10 +387,15 @@ class AuthManager:
             return now < expires
 
         # A user that no provider can verify again has to rely on having signed
-        # in moments ago.
-        return now < refresh_token.created_at + STEP_UP_VALIDITY and not (
-            self.async_get_step_up_providers(refresh_token.user)
-        )
+        # in moments ago, which counts once like a proof.
+        if (
+            refresh_token.id in self._sign_in_step_ups_used
+            or now >= refresh_token.created_at + STEP_UP_VALIDITY
+            or self.async_get_step_up_providers(refresh_token.user)
+        ):
+            return False
+        self._sign_in_step_ups_used.add(refresh_token.id)
+        return True
 
     async def async_get_or_create_user(
         self, credentials: models.Credentials
@@ -643,6 +650,7 @@ class AuthManager:
         """Delete a refresh token."""
         self._store.async_remove_refresh_token(refresh_token)
         self._step_ups.pop(refresh_token.id, None)
+        self._sign_in_step_ups_used.discard(refresh_token.id)
 
         callbacks = self._revoke_callbacks.pop(refresh_token.id, ())
         for revoke_callback in callbacks:

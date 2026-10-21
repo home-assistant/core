@@ -1825,10 +1825,15 @@ async def test_step_up_falls_back_to_a_recent_sign_in(
     )
 
     assert hass.auth.async_consume_step_up(refresh_token.id)
+    # Like a proof, the sign in only counts once.
+    assert not hass.auth.async_consume_step_up(refresh_token.id)
 
+    late = await hass.auth.async_create_refresh_token(
+        hass_admin_user, "https://other.example.com/"
+    )
     freezer.tick(auth.STEP_UP_VALIDITY)
 
-    assert not hass.auth.async_consume_step_up(refresh_token.id)
+    assert not hass.auth.async_consume_step_up(late.id)
 
 
 async def test_step_up_refuses_long_lived_access_token(
