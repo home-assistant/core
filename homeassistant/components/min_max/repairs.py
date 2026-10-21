@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 
 import probatio
 
-from homeassistant.components.group import (
+from homeassistant.components.group.const import (  # pylint: disable=home-assistant-component-root-import
     CONF_HIDE_MEMBERS,
     CONF_IGNORE_NON_NUMERIC,
     DOMAIN as GROUP_DOMAIN,

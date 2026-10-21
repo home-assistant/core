@@ -9,7 +9,7 @@ from typing import Any, override
 
 import probatio
 
-from homeassistant.components.group import CONF_IGNORE_NON_NUMERIC
+from homeassistant.components.group.const import CONF_IGNORE_NON_NUMERIC  # pylint: disable=home-assistant-component-root-import
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASS_STATE_CLASSES,

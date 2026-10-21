@@ -30,7 +30,6 @@ from .const import (
     CONF_ALL,
     CONF_GROUP_TYPE,
     CONF_HIDE_MEMBERS,
-    CONF_IGNORE_NON_NUMERIC,
     DATA_COMPONENT,
     DOMAIN,
     REG_KEY,
@@ -44,8 +43,6 @@ from .services import async_process_config, async_setup_services
 _LOGGER = logging.getLogger(__name__)
 
 __all__ = [
-    "CONF_HIDE_MEMBERS",
-    "CONF_IGNORE_NON_NUMERIC",
     "DOMAIN",
     "SERVICE_RELOAD",
     "SERVICE_REMOVE",
