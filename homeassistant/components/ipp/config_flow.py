@@ -31,6 +31,16 @@ from .const import CONF_BASE_PATH, CONF_SERIAL, DOMAIN, REQUEST_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
+DATA_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT, default=631): int,
+        probatio.Required(CONF_BASE_PATH, default="/ipp/print"): str,
+        probatio.Required(CONF_SSL, default=False): bool,
+        probatio.Required(CONF_VERIFY_SSL, default=False): bool,
+    }
+)
+
 
 async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
     """Validate the user input allows us to connect.
@@ -51,6 +61,22 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
     printer = await ipp.printer()
 
     return {CONF_SERIAL: printer.info.serial, CONF_UUID: printer.info.uuid}
+
+
+def _unique_id_from_info(info: dict[str, Any]) -> str | None:
+    """Return the printer UUID, falling back to its serial number."""
+    unique_id: str | None = info[CONF_UUID]
+
+    if not unique_id and info[CONF_SERIAL]:
+        _LOGGER.debug(
+            "Printer UUID is missing from IPP response. Falling back to IPP serial"
+            " number"
+        )
+        unique_id = info[CONF_SERIAL]
+    elif not unique_id:
+        _LOGGER.debug("Unable to determine unique id from IPP response")
+
+    return unique_id
 
 
 class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -86,21 +112,49 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("IPP Error", exc_info=True)
             return self.async_abort(reason="ipp_error")
 
-        unique_id = user_input[CONF_UUID] = info[CONF_UUID]
-
-        if not unique_id and info[CONF_SERIAL]:
-            _LOGGER.debug(
-                "Printer UUID is missing from IPP response. Falling back to IPP serial"
-                " number"
-            )
-            unique_id = info[CONF_SERIAL]
-        elif not unique_id:
-            _LOGGER.debug("Unable to determine unique id from IPP response")
-
-        await self.async_set_unique_id(unique_id)
+        user_input[CONF_UUID] = info[CONF_UUID]
+        await self.async_set_unique_id(_unique_id_from_info(info))
         self._abort_if_unique_id_configured(updates={CONF_HOST: user_input[CONF_HOST]})
 
         return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of an existing printer."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            try:
+                info = await validate_input(self.hass, user_input)
+            except IPPConnectionUpgradeRequired:
+                errors["base"] = "connection_upgrade"
+            except IPPConnectionError, IPPResponseError:
+                _LOGGER.debug("IPP Connection/Response Error", exc_info=True)
+                errors["base"] = "cannot_connect"
+            except IPPParseError:
+                _LOGGER.warning("IPP Parse Error", exc_info=True)
+                return self.async_abort(reason="parse_error")
+            except IPPVersionNotSupportedError:
+                return self.async_abort(reason="ipp_version_error")
+            except IPPError:
+                _LOGGER.debug("IPP Error", exc_info=True)
+                return self.async_abort(reason="ipp_error")
+            else:
+                await self.async_set_unique_id(_unique_id_from_info(info))
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA, user_input or reconfigure_entry.data
+            ),
+            errors=errors,
+        )
 
     @override
     async def async_step_zeroconf(
@@ -209,14 +263,6 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
-            data_schema=probatio.Schema(
-                {
-                    probatio.Required(CONF_HOST): str,
-                    probatio.Required(CONF_PORT, default=631): int,
-                    probatio.Required(CONF_BASE_PATH, default="/ipp/print"): str,
-                    probatio.Required(CONF_SSL, default=False): bool,
-                    probatio.Required(CONF_VERIFY_SSL, default=False): bool,
-                }
-            ),
+            data_schema=DATA_SCHEMA,
             errors=errors or {},
         )

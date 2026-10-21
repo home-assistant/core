@@ -7,6 +7,7 @@
       "ipp_error": "Encountered IPP error.",
       "ipp_version_error": "IPP version not supported by printer.",
       "parse_error": "Failed to parse response from printer.",
+      "unique_id_mismatch": "The provided connection details belong to a different printer. Please reconfigure against the same printer.",
       "unique_id_required": "Device missing unique identification required for discovery."
     },
     "error": {
@@ -15,6 +16,24 @@
     },
     "flow_title": "{name}",
     "step": {
+      "reconfigure": {
+        "data": {
+          "base_path": "[%key:component::ipp::config::step::user::data::base_path%]",
+          "host": "[%key:component::ipp::config::step::user::data::host%]",
+          "port": "[%key:component::ipp::config::step::user::data::port%]",
+          "ssl": "[%key:component::ipp::config::step::user::data::ssl%]",
+          "verify_ssl": "[%key:component::ipp::config::step::user::data::verify_ssl%]"
+        },
+        "data_description": {
+          "base_path": "The relative path to the printer's IPP endpoint, for example /ipp/print.",
+          "host": "The hostname or IP address of your printer.",
+          "port": "The port the printer's IPP service listens on, usually 631.",
+          "ssl": "Connect to the printer using SSL/TLS (IPPS).",
+          "verify_ssl": "Verify the printer's SSL certificate."
+        },
+        "description": "Update the connection details of your printer.",
+        "title": "Reconfigure your printer"
+      },
       "user": {
         "data": {
           "base_path": "Relative path to the printer",

@@ -18,7 +18,14 @@ from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.ipp.const import CONF_BASE_PATH, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SSL, CONF_UUID
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_UUID,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -29,6 +36,14 @@ from . import (
 )
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
+RECONFIGURE_USER_INPUT = {
+    CONF_HOST: "192.168.1.32",
+    CONF_PORT: 632,
+    CONF_BASE_PATH: "/ipp/printer",
+    CONF_SSL: True,
+    CONF_VERIFY_SSL: False,
+}
 
 
 async def test_show_user_form(hass: HomeAssistant) -> None:
@@ -574,3 +589,164 @@ async def test_zeroconf_empty_unique_id_uses_serial(hass: HomeAssistant) -> None
 
     assert result["result"]
     assert result["result"].unique_id == "555534593035345555"
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ipp_config_flow: MagicMock,
+) -> None:
+    """Test the reconfigure flow updates the connection details."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=RECONFIGURE_USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        **RECONFIGURE_USER_INPUT,
+        CONF_UUID: "cfe92100-67c4-11d4-a45f-f8d027761251",
+    }
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(IPPConnectionError, "cannot_connect", id="cannot_connect"),
+        pytest.param(
+            IPPConnectionUpgradeRequired,
+            "connection_upgrade",
+            id="connection_upgrade",
+        ),
+    ],
+)
+async def test_reconfigure_flow_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ipp_config_flow: MagicMock,
+    side_effect: type[Exception],
+    error: str,
+) -> None:
+    """Test the reconfigure flow recovers from errors."""
+    mock_config_entry.add_to_hass(hass)
+    mock_ipp_config_flow.printer.side_effect = side_effect
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=RECONFIGURE_USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    mock_ipp_config_flow.printer.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=RECONFIGURE_USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.32"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "reason"),
+    [
+        pytest.param(IPPParseError, "parse_error", id="parse_error"),
+        pytest.param(
+            IPPVersionNotSupportedError,
+            "ipp_version_error",
+            id="ipp_version_error",
+        ),
+        pytest.param(IPPError, "ipp_error", id="ipp_error"),
+    ],
+)
+async def test_reconfigure_flow_abort_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ipp_config_flow: MagicMock,
+    side_effect: type[Exception],
+    reason: str,
+) -> None:
+    """Test the reconfigure flow aborts on unrecoverable IPP errors."""
+    mock_config_entry.add_to_hass(hass)
+    mock_ipp_config_flow.printer.side_effect = side_effect
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=RECONFIGURE_USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.31"
+
+
+@pytest.mark.parametrize(
+    "mock_printer", ["ipp/printer_without_uuid.json"], indirect=True
+)
+async def test_reconfigure_flow_unique_id_mismatch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ipp_config_flow: MagicMock,
+) -> None:
+    """Test the reconfigure flow aborts when pointed at a different printer."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=RECONFIGURE_USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.31"
+
+
+async def test_reconfigure_flow_without_unique_id(
+    hass: HomeAssistant,
+    mock_ipp_config_flow: MagicMock,
+    mock_printer: Printer,
+) -> None:
+    """Test reconfiguring an entry of a printer without unique identification."""
+    mock_printer.info.uuid = None
+    mock_printer.info.serial = None
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={**MOCK_USER_INPUT, CONF_UUID: None}, unique_id=None
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=RECONFIGURE_USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {**RECONFIGURE_USER_INPUT, CONF_UUID: None}
+
+
+async def test_zeroconf_without_unique_id(
+    hass: HomeAssistant,
+    mock_ipp_config_flow: MagicMock,
+    mock_printer: Printer,
+) -> None:
+    """Test zeroconf flow for a printer without any unique identification."""
+    mock_printer.info.uuid = None
+    mock_printer.info.serial = None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
