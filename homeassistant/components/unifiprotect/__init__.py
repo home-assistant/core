@@ -243,14 +243,16 @@ async def _async_setup_public_only_entry(
     # firmware version, which no public-only entity provides. ``type`` is only
     # present on newer firmware; market name and console URL are private-only.
     device_registry = dr.async_get(hass)
-    nvr_device = device_registry.async_get_or_create(
+    nvr_device = device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, unifi_mac)},
-        identifiers={(DOMAIN, unifi_mac)},
-        manufacturer=DEFAULT_BRAND,
-        name=nvr.display_name or None,
-        model=nvr.type,
-        sw_version=str(meta.version),
+        device_info=dr.DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, unifi_mac)},
+            identifiers={(DOMAIN, unifi_mac)},
+            manufacturer=DEFAULT_BRAND,
+            name=nvr.display_name or None,
+            model=nvr.type,
+            sw_version=str(meta.version),
+        ),
     )
     data_service.nvr_device_id = nvr_device.id
 
@@ -304,15 +306,17 @@ async def _async_setup_entry(
     # This ensures via_device references work for all device entities
     nvr = bootstrap.nvr
     device_registry = dr.async_get(hass)
-    nvr_device = device_registry.async_get_or_create(
+    nvr_device = device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, nvr.mac)},
-        identifiers={(DOMAIN, nvr.mac)},
-        manufacturer="Ubiquiti",
-        name=nvr.display_name or None,
-        model=nvr.type,
-        sw_version=str(nvr.version),
-        configuration_url=nvr.api.base_url,
+        device_info=dr.DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, nvr.mac)},
+            identifiers={(DOMAIN, nvr.mac)},
+            manufacturer="Ubiquiti",
+            name=nvr.display_name or None,
+            model=nvr.type,
+            sw_version=str(nvr.version),
+            configuration_url=nvr.api.base_url,
+        ),
     )
     data_service.nvr_device_id = nvr_device.id
 

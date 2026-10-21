@@ -114,13 +114,15 @@ def _async_register_base_station(
     """Register a new bridge."""
     device_registry = dr.async_get(hass)
 
-    base_station = device_registry.async_get_or_create(
+    base_station = device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, str(system.system_id))},
-        manufacturer="SimpliSafe",
-        model=str(system.version),
-        name=system.address,
-        serial_number=system.serial,
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, str(system.system_id))},
+            manufacturer="SimpliSafe",
+            model=str(system.version),
+            name=system.address,
+            serial_number=system.serial,
+        ),
     )
 
     # Check for an old system ID format and remove it:
@@ -153,16 +155,18 @@ def _async_register_camera(
     model_id = system.camera_data[camera.serial]["model"]
     device_name = f"{camera.name.capitalize()} {model_name}"
 
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, camera.serial)},
-        manufacturer="SimpliSafe",
-        model=model_name,
-        model_id=model_id,
-        name=device_name,
-        serial_number=camera.serial,
-        via_device_id=dr.async_get_device_id_by_identifier(
-            hass, (DOMAIN, str(system.system_id)), config_entry_id=entry.entry_id
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, camera.serial)},
+            manufacturer="SimpliSafe",
+            model=model_name,
+            model_id=model_id,
+            name=device_name,
+            serial_number=camera.serial,
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass, (DOMAIN, str(system.system_id)), config_entry_id=entry.entry_id
+            ),
         ),
     )
 

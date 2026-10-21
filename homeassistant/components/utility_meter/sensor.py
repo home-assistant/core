@@ -83,10 +83,10 @@ from .const import (
 )
 
 PERIOD2CRON = {
-    QUARTER_HOURLY: "{minute}/15 * * * *",
+    QUARTER_HOURLY: "{quarter_minute}/15 * * * *",
     HOURLY: "{minute} * * * *",
     DAILY: "{minute} {hour} * * *",
-    WEEKLY: "{minute} {hour} * * {day}",
+    WEEKLY: "{minute} {hour} * * {weekday}",
     MONTHLY: "{minute} {hour} {day} * *",
     BIMONTHLY: "{minute} {hour} {day} */2 *",
     QUARTERLY: "{minute} {hour} {day} */3 *",
@@ -275,7 +275,7 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
         if isinstance(self.last_reset, (datetime)):
             data["last_reset"] = self.last_reset.isoformat()
         data["last_valid_state"] = (
-            str(self.last_valid_state) if self.last_valid_state else None
+            str(self.last_valid_state) if self.last_valid_state is not None else None
         )
         data["status"] = self.status
         data["input_device_class"] = str(self.input_device_class)
@@ -365,8 +365,10 @@ class UtilityMeterSensor(RestoreSensor):
             # the period and offset into a cron pattern
             self._cron_pattern = PERIOD2CRON[meter_type].format(
                 minute=meter_offset.seconds % 3600 // 60,
+                quarter_minute=meter_offset.seconds // 60 % 15,
                 hour=meter_offset.seconds // 3600,
                 day=meter_offset.days + 1,
+                weekday=meter_offset.days % 7 + 1,
             )
             _LOGGER.debug("CRON pattern: %s", self._cron_pattern)
         else:

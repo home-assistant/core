@@ -18,6 +18,7 @@ from .const import (
     SERVICE_STOP,
     LawnMowerActivity,
     LawnMowerEntityFeature,
+    LawnMowerService,
 )
 from .entity import LawnMowerEntity, LawnMowerEntityEntityDescription
 from .services import async_setup_services
@@ -42,6 +43,7 @@ __all__ = [
     "LawnMowerEntity",
     "LawnMowerEntityEntityDescription",
     "LawnMowerEntityFeature",
+    "LawnMowerService",
 ]
 
 
