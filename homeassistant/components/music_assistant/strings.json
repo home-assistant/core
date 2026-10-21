@@ -12,7 +12,8 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_server_version": "The Music Assistant server is not the correct version",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "wrong_server": "The URL points to a different Music Assistant server than the one configured."
     },
     "error": {
       "auth_failed": "[%key:component::music_assistant::config::abort::auth_failed%]",
@@ -70,6 +71,15 @@
       "reauth_confirm": {
         "description": "The authentication token for Music Assistant server `{url}` is no longer valid. Please re-authenticate to continue using the integration.",
         "title": "Reauthentication required"
+      },
+      "reconfigure": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "url": "[%key:component::music_assistant::config::step::manual::data_description::url%]"
+        },
+        "description": "Update the URL of your Music Assistant server."
       },
       "start_app": {
         "title": "Starting app"

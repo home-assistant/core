@@ -1770,3 +1770,94 @@ async def test_hassio_discovery_during_user_flow(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+) -> None:
+    """Test reconfigure flow updates the URL and keeps the token."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=DEFAULT_NAME,
+        data={CONF_URL: "http://localhost:8095", CONF_TOKEN: "test_token"},
+        unique_id="1234",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "http://new-host:8095"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {CONF_URL: "http://new-host:8095", CONF_TOKEN: "test_token"}
+    mock_get_server_info.assert_called_once_with(hass, "http://new-host:8095")
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        pytest.param(
+            CannotConnect("cannot_connect"), "cannot_connect", id="cannot_connect"
+        ),
+        pytest.param(
+            InvalidServerVersion("invalid_server_version"),
+            "invalid_server_version",
+            id="invalid_server_version",
+        ),
+        pytest.param(MusicAssistantClientException("unknown"), "unknown", id="unknown"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_errors(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: MusicAssistantClientException,
+    error: str,
+) -> None:
+    """Test reconfigure flow errors and recovery."""
+    mock_config_entry.add_to_hass(hass)
+    mock_get_server_info.side_effect = exception
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "http://new-host:8095"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    mock_get_server_info.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "http://new-host:8095"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {CONF_URL: "http://new-host:8095"}
+
+
+async def test_reconfigure_flow_wrong_server(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow aborts when the URL points to another server."""
+    mock_config_entry.add_to_hass(hass)
+    mock_get_server_info.return_value.server_id = "5678"
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "http://other-host:8095"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_server"
+    assert mock_config_entry.data == {CONF_URL: "http://localhost:8095"}
