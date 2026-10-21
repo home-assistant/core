@@ -1,7 +1,10 @@
 """Tests for system_log LLM tools."""
 
 import logging
+from pathlib import Path
+from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
 from pytest_homeassistant.common import MockUser
@@ -10,11 +13,15 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components import system_log
 from homeassistant.components.system_log.llm import (
     SystemLogGetEntriesTool,
+    SystemLogGetLogsTool,
     async_get_tools,
 )
+from homeassistant.const import KEY_DATA_LOGGING
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType
 
 _LOGGER = logging.getLogger("test_system_log_llm")
@@ -257,3 +264,258 @@ async def test_limit(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:
 
     assert result.error is False
     assert len(result.data["result"]) == 2
+
+
+LOG_FILE = """\
+2026-10-20 13:40:00.000+02:00 INFO (MainThread) [homeassistant.core] Before the window
+2026-10-20 13:50:00.000 ERROR (MainThread) [homeassistant.old] Without an offset
+2026-10-20 13:50:00.000+02:00 DEBUG (MainThread) [homeassistant.components.zwave_js] Polling
+2026-10-20 13:55:00.000+02:00 ERROR (MainThread) [homeassistant.components.zwave_js] Connection lost
+Traceback (most recent call last):
+ValueError: Boom
+2026-10-20 13:58:00.000+02:00 WARNING (MainThread) [homeassistant.components.hue] Slow update
+"""
+
+
+@pytest.fixture
+def frozen_time(freezer: FrozenDateTimeFactory) -> None:
+    """Freeze the time to 14:00 at the UTC offset of the logs."""
+    freezer.move_to("2026-10-20 12:00:00+00:00")
+
+
+@pytest.fixture
+def logs_tool(
+    hass: HomeAssistant, tmp_path: Path, llm_context: llm.LLMContext
+) -> llm.Tool:
+    """Return the logs tool for a log file."""
+    path = tmp_path / "home-assistant.log"
+    path.write_text(LOG_FILE)
+    hass.data[KEY_DATA_LOGGING] = str(path)
+    tools = async_get_tools(hass, llm_context, llm.LLM_API_HOME_ASSISTANT)
+    assert tools is not None
+    return tools.tools[1]
+
+
+@pytest.mark.parametrize(
+    ("data", "components", "expected_tools"),
+    [
+        pytest.param(
+            {KEY_DATA_LOGGING: "home-assistant.log"},
+            set(),
+            ["system_log__get_entries", "system_log__get_logs"],
+            id="log_file",
+        ),
+        pytest.param({}, set(), ["system_log__get_entries"], id="no_log_file"),
+        pytest.param(
+            {KEY_DATA_LOGGING: "home-assistant.log"},
+            {"hassio"},
+            ["system_log__get_entries"],
+            id="supervisor",
+        ),
+    ],
+)
+async def test_async_get_tools_logs(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    data: dict[HassKey[str], str],
+    components: set[str],
+    expected_tools: list[str],
+) -> None:
+    """Test the logs tool is only provided for a log file without Supervisor."""
+    hass.data.update(data)
+    hass.config.components.update(components)
+
+    tools = async_get_tools(hass, llm_context, llm.LLM_API_HOME_ASSISTANT)
+
+    assert tools is not None
+    assert [tool.name for tool in tools.tools] == expected_tools
+
+
+def test_logs_parameters_openapi(snapshot: SnapshotAssertion) -> None:
+    """Test that the logs tool schema can be exported for LLM clients."""
+    tool = SystemLogGetLogsTool(
+        {"core": "Home Assistant", "host": "the operating system"}, ["core"]
+    )
+
+    assert probatio.to_openapi(tool.parameters) == snapshot
+
+
+@pytest.mark.usefixtures("frozen_time")
+async def test_get_logs_default(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    logs_tool: llm.Tool,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test reading the last 15 minutes of the log file."""
+    result = await logs_tool.async_call(
+        hass, llm.ToolInput(logs_tool.name, {}), llm_context
+    )
+
+    assert result == snapshot
+
+
+@pytest.mark.parametrize(
+    ("tool_args", "expected_messages"),
+    [
+        pytest.param(
+            {"level": "warning"},
+            [
+                "ERROR (MainThread) [homeassistant.components.zwave_js] Connection lost",
+                "WARNING (MainThread) [homeassistant.components.hue] Slow update",
+            ],
+            id="level",
+        ),
+        pytest.param(
+            {"contains": "boom"},
+            [
+                "ERROR (MainThread) [homeassistant.components.zwave_js] Connection lost",
+            ],
+            id="contains_traceback",
+        ),
+        pytest.param(
+            {"contains": "ZWAVE_JS"},
+            [
+                "DEBUG (MainThread) [homeassistant.components.zwave_js] Polling",
+                "ERROR (MainThread) [homeassistant.components.zwave_js] Connection lost",
+            ],
+            id="contains_logger",
+        ),
+        pytest.param(
+            {"start_time": "2026-10-20T13:30:00+02:00", "limit": 2},
+            [
+                "ERROR (MainThread) [homeassistant.components.zwave_js] Connection lost",
+                "WARNING (MainThread) [homeassistant.components.hue] Slow update",
+            ],
+            id="limit_keeps_newest",
+        ),
+        pytest.param(
+            {
+                "start_time": "2026-10-20T13:30:00+02:00",
+                "end_time": "2026-10-20T13:45:00+02:00",
+            },
+            ["INFO (MainThread) [homeassistant.core] Before the window"],
+            id="time_window",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("frozen_time")
+async def test_get_logs_filters(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    logs_tool: llm.Tool,
+    tool_args: JsonObjectType,
+    expected_messages: list[str],
+) -> None:
+    """Test filtering the records of the log file."""
+    result = await logs_tool.async_call(
+        hass, llm.ToolInput(logs_tool.name, tool_args), llm_context
+    )
+
+    assert [
+        record["message"].partition("\n")[0] for record in result.data["records"]
+    ] == expected_messages
+
+
+@pytest.mark.parametrize(
+    ("tool_args", "error"),
+    [
+        pytest.param({"end_time": "yesterday"}, "Invalid end_time", id="end_time"),
+        pytest.param({"start_time": "today"}, "Invalid start_time", id="start_time"),
+        pytest.param(
+            {
+                "start_time": "2026-10-20T14:00:00+02:00",
+                "end_time": "2026-10-20T13:00:00+02:00",
+            },
+            "start_time must be before end_time",
+            id="reversed",
+        ),
+    ],
+)
+async def test_get_logs_invalid_time(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    logs_tool: llm.Tool,
+    tool_args: JsonObjectType,
+    error: str,
+) -> None:
+    """Test invalid time windows are reported."""
+    result = await logs_tool.async_call(
+        hass, llm.ToolInput(logs_tool.name, tool_args), llm_context
+    )
+
+    assert result == llm.ToolResult(data={"error": error}, error=True)
+
+
+@pytest.mark.usefixtures("frozen_time")
+async def test_get_logs_not_read_before(
+    hass: HomeAssistant, llm_context: llm.LLMContext, logs_tool: llm.Tool
+) -> None:
+    """Test reporting a time window that starts before the lines read."""
+    with patch("homeassistant.components.system_log.llm.LOG_QUERY_READ_LINES", 3):
+        result = await logs_tool.async_call(
+            hass, llm.ToolInput(logs_tool.name, {}), llm_context
+        )
+
+    # Continuation lines of a record that was not read are dropped
+    assert len(result.data["records"]) == 1
+    assert result.data["sources"] == {
+        "core": {
+            "matched": 1,
+            "returned": 1,
+            "not_read_before": "2026-10-20T04:58:00.000-07:00",
+        }
+    }
+
+
+@pytest.mark.usefixtures("frozen_time")
+async def test_get_logs_merge_sources(
+    hass: HomeAssistant, llm_context: llm.LLMContext, snapshot: SnapshotAssertion
+) -> None:
+    """Test the default sources are merged and the limit is split fairly."""
+    logs: dict[str, list[str] | HomeAssistantError] = {
+        "busy": [
+            *(
+                f"2026-10-20 13:5{minute}:00.000+02:00 INFO (MainThread) "
+                f"[busy] Message {minute}"
+                for minute in range(10)
+            ),
+            "2026-10-20 13:59:30.000+02:00 DEBUG (MainThread) [busy] Debug",
+        ],
+        "quiet": ["2026-10-20 13:52:30.000+02:00 quiet[1]: Without a level"],
+        "failing": HomeAssistantError("Could not read"),
+    }
+    tool = SystemLogGetLogsTool(
+        dict.fromkeys((*logs, "other"), "a test log"), list(logs)
+    )
+
+    async def _read_source(hass: HomeAssistant, source: str, lines: int) -> list[str]:
+        if isinstance(log := logs[source], HomeAssistantError):
+            raise log
+        return log
+
+    with patch.object(tool, "async_read_source", side_effect=_read_source):
+        result = await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"limit": 4, "level": "info"}), llm_context
+        )
+
+    assert result == snapshot
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        pytest.param(["unknown"], id="unknown_source"),
+        pytest.param([], id="empty"),
+    ],
+)
+async def test_get_logs_invalid_source(
+    hass: HomeAssistant, llm_context: llm.LLMContext, source: list[str]
+) -> None:
+    """Test only available sources are accepted."""
+    tool = SystemLogGetLogsTool({"core": "Home Assistant"}, ["core"])
+
+    with pytest.raises(probatio.Invalid):
+        await tool.async_call(
+            hass, llm.ToolInput(tool.name, {"source": source}), llm_context
+        )

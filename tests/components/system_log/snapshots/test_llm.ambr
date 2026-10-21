@@ -1,4 +1,131 @@
 # serializer version: 1
+# name: test_get_logs_default
+  dict({
+    'data': dict({
+      'records': list([
+        dict({
+          'message': 'DEBUG (MainThread) [homeassistant.components.zwave_js] Polling',
+          'source': 'core',
+          'time': '2026-10-20T04:50:00.000-07:00',
+        }),
+        dict({
+          'message': '''
+            ERROR (MainThread) [homeassistant.components.zwave_js] Connection lost
+            Traceback (most recent call last):
+            ValueError: Boom
+          ''',
+          'source': 'core',
+          'time': '2026-10-20T04:55:00.000-07:00',
+        }),
+        dict({
+          'message': 'WARNING (MainThread) [homeassistant.components.hue] Slow update',
+          'source': 'core',
+          'time': '2026-10-20T04:58:00.000-07:00',
+        }),
+      ]),
+      'sources': dict({
+        'core': dict({
+          'matched': 3,
+          'returned': 3,
+        }),
+      }),
+    }),
+    'error': False,
+  })
+# ---
+# name: test_get_logs_merge_sources
+  dict({
+    'data': dict({
+      'records': list([
+        dict({
+          'message': 'quiet[1]: Without a level',
+          'source': 'quiet',
+          'time': '2026-10-20T04:52:30.000-07:00',
+        }),
+        dict({
+          'message': 'INFO (MainThread) [busy] Message 7',
+          'source': 'busy',
+          'time': '2026-10-20T04:57:00.000-07:00',
+        }),
+        dict({
+          'message': 'INFO (MainThread) [busy] Message 8',
+          'source': 'busy',
+          'time': '2026-10-20T04:58:00.000-07:00',
+        }),
+        dict({
+          'message': 'INFO (MainThread) [busy] Message 9',
+          'source': 'busy',
+          'time': '2026-10-20T04:59:00.000-07:00',
+        }),
+      ]),
+      'sources': dict({
+        'busy': dict({
+          'matched': 10,
+          'returned': 3,
+        }),
+        'failing': dict({
+          'error': 'Could not read',
+        }),
+        'quiet': dict({
+          'matched': 1,
+          'returned': 1,
+        }),
+      }),
+    }),
+    'error': False,
+  })
+# ---
+# name: test_logs_parameters_openapi
+  dict({
+    'additionalProperties': False,
+    'properties': dict({
+      'contains': dict({
+        'description': 'Only return records that contain this text (case-insensitive). Matches the logger name and the message, including tracebacks.',
+        'type': 'string',
+      }),
+      'end_time': dict({
+        'description': 'End of the time window as an ISO 8601 datetime. Local time is used when no UTC offset is given (default: now).',
+        'type': 'string',
+      }),
+      'level': dict({
+        'description': 'Minimum log level. Records without a level are always included.',
+        'enum': list([
+          'debug',
+          'info',
+          'warning',
+          'error',
+          'critical',
+        ]),
+        'format': 'lower',
+        'type': 'string',
+      }),
+      'limit': dict({
+        'default': 100,
+        'description': 'Maximum number of records to return, split fairly over the sources (default: 100, max: 500).',
+        'maximum': 500,
+        'minimum': 1,
+        'type': 'integer',
+      }),
+      'source': dict({
+        'description': 'Logs to read (default: core). Available: core (Home Assistant), host (the operating system)',
+        'items': dict({
+          'enum': list([
+            'core',
+            'host',
+          ]),
+          'type': 'string',
+        }),
+        'minItems': 1,
+        'type': 'array',
+      }),
+      'start_time': dict({
+        'description': 'Start of the time window as an ISO 8601 datetime. Local time is used when no UTC offset is given (default: 15 minutes before end_time).',
+        'type': 'string',
+      }),
+    }),
+    'type': 'object',
+  })
+# ---
 # name: test_parameters_openapi
   dict({
     'additionalProperties': False,
