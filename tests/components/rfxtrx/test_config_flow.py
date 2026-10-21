@@ -920,6 +920,56 @@ async def test_options_add_device_data_bits_conflict(hass: HomeAssistant) -> Non
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+async def test_options_add_device_race_conflict_shows_base_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test a race-added conflicting non-Lighting4 device errors under base.
+
+    The collision can only be caught once this flow reaches device_options,
+    but non-Lighting4 devices have no data_bits field to attach the error
+    to, so it must show as a base error instead.
+    """
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": None,
+            "port": None,
+            "device": "/dev/tty123",
+            "automatic_add": False,
+        },
+        unique_id=DOMAIN,
+        version=ENTRY_VERSION,
+    )
+    result = await start_add_device_flow(hass, entry)
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"event_code": "0b1100cd0213c7f230010f71"},
+    )
+    assert result["step_id"] == "device_options"
+
+    # Another flow adds the same device while this one is still open.
+    other_result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "device"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    other_result = await hass.config_entries.subentries.async_configure(
+        other_result["flow_id"],
+        user_input={"event_code": "0b1100cd0213c7f230010f71"},
+    )
+    other_result = await hass.config_entries.subentries.async_configure(
+        other_result["flow_id"], user_input={}
+    )
+    assert other_result["type"] is FlowResultType.CREATE_ENTRY
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
+    assert result["errors"]["base"] == "already_configured_device"
+
+
 async def test_options_add_device_matching_masked_device_unmasked(
     hass: HomeAssistant,
 ) -> None:
@@ -1139,6 +1189,67 @@ async def test_options_add_and_configure_device(
     subentry = entry.subentries[subentry.subentry_id]
     assert subentry.data["event_code"] == ["0913000022670e013970"]
     assert "off_delay" not in subentry.data
+
+
+async def test_options_reconfigure_keeps_matching_event_codes(
+    hass: HomeAssistant,
+) -> None:
+    """Test reconfiguring unrelated options keeps other matching codes.
+
+    A stale, unparsable code is also kept out, rather than erroring.
+    """
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": None,
+            "port": None,
+            "device": "/dev/tty123",
+            "automatic_add": False,
+        },
+        subentries_data=(
+            {
+                "data": {
+                    "event_code": [
+                        "08200300a109000070",
+                        "08200300a109000670",
+                        "invalid",
+                    ]
+                },
+                "subentry_type": "device",
+                "title": "KD101 Smoke Detector a10900:32",
+                "unique_id": "20_3_a10900:32",
+            },
+        ),
+        unique_id=DOMAIN,
+        version=ENTRY_VERSION,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    subentry = next(iter(entry.subentries.values()))
+    result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"event_code": "08200300a109000070"},
+    )
+    assert result["step_id"] == "device_options"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"off_delay": 5},
+    )
+    assert result["type"] is FlowResultType.ABORT
+
+    subentry = entry.subentries[subentry.subentry_id]
+    assert subentry.data["event_code"] == [
+        "08200300a109000070",
+        "08200300a109000670",
+    ]
+    assert subentry.data["off_delay"] == 5
 
 
 async def test_options_configure_rfy_cover_device(

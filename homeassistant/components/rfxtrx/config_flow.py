@@ -231,10 +231,18 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
                         self._replace_subentry_id
                     )
                 if self._find_conflicting_subentry(device_id, exclude_subentry_ids):
-                    errors[CONF_DATA_BITS] = "already_configured_device"
+                    if self._device_object.device.packettype == (
+                        DEVICE_PACKET_TYPE_LIGHTING4
+                    ):
+                        errors[CONF_DATA_BITS] = "already_configured_device"
+                    else:
+                        errors["base"] = "already_configured_device"
 
             if not errors:
-                data: dict[str, Any] = {CONF_EVENT_CODE: [self._event_code]}
+                event_codes = self._retained_event_codes(
+                    current_data, device_id, user_input.get(CONF_DATA_BITS)
+                )
+                data: dict[str, Any] = {CONF_EVENT_CODE: event_codes}
                 if user_input.get(CONF_OFF_DELAY):
                     data[CONF_OFF_DELAY] = user_input[CONF_OFF_DELAY]
                 if user_input.get(CONF_DATA_BITS):
@@ -327,6 +335,28 @@ class RfxtrxSubentryFlowHandler(ConfigSubentryFlow):
             data_schema=probatio.Schema(data_schema),
             errors=errors,
         )
+
+    def _retained_event_codes(
+        self,
+        current_data: Mapping[str, Any],
+        device_id: DeviceTuple,
+        data_bits: int | None,
+    ) -> list[str]:
+        """Return self._event_code plus current codes still matching the device."""
+        assert self._event_code
+        event_codes = [self._event_code]
+        for code in current_data.get(CONF_EVENT_CODE, []):
+            if code == self._event_code:
+                continue
+            old_event = get_rfx_object(code)
+            if old_event is None:
+                continue
+            old_device_id = get_device_tuple_from_device(
+                old_event.device, data_bits=data_bits
+            )
+            if old_device_id == device_id:
+                event_codes.append(code)
+        return event_codes
 
     def _reconfigure_exclude_ids(self, replace_subentry_id: str | None) -> set[str]:
         """Subentry ids that must not collide with the device being configured."""
