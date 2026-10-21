@@ -80,14 +80,16 @@ async def async_setup_entry(
         entities would never be added.
         """
         for controller in controllers:
-            device_registry.async_get_or_create(
+            device_registry.async_get_or_create_device(
                 config_entry_id=config_entry.entry_id,
-                identifiers={(DOMAIN, str(controller.id))},
-                manufacturer=MANUFACTURER,
-                model=controller.hardware.model.description,
-                name=controller.name,
-                serial_number=controller.hardware.serial_number or None,
-                sw_version=controller.software_version or None,
+                device_info=dr.DeviceInfo(
+                    identifiers={(DOMAIN, str(controller.id))},
+                    manufacturer=MANUFACTURER,
+                    model=controller.hardware.model.description,
+                    name=controller.name,
+                    serial_number=controller.hardware.serial_number or None,
+                    sw_version=controller.software_version or None,
+                ),
             )
 
     # Register the controllers known at setup before the platforms construct

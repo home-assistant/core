@@ -30,7 +30,9 @@ async def async_setup_entry(
     entities: list[ButtonEntity] = []
 
     if isinstance(coordinator.device, switchbot.SwitchbotAirPurifier):
-        entities.append(LightSensorButton(coordinator))
+        entities.extend(
+            [LightSensorButton(coordinator), ResetFilterUsageButton(coordinator)]
+        )
 
     if isinstance(coordinator.device, switchbot.SwitchbotArtFrame):
         entities.extend(
@@ -71,6 +73,28 @@ class LightSensorButton(SwitchbotEntity, ButtonEntity):
         """Handle the button press."""
         _LOGGER.debug("Toggling light sensor mode for %s", self._address)
         await self._device.open_light_sensitive_switch()
+
+
+class ResetFilterUsageButton(SwitchbotEntity, ButtonEntity):
+    """Reset the purifier filter counter and verify the reported usage."""
+
+    _attr_translation_key = "reset_filter_usage"
+    _attr_entity_category = EntityCategory.CONFIG
+    _device: switchbot.SwitchbotAirPurifier
+
+    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
+        """Initialize the filter reset button."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.base_unique_id}_reset_filter_usage"
+
+    @exception_handler
+    @override
+    async def async_press(self) -> None:
+        """Reset the filter counter through the device's public API."""
+        self._last_run_success = False
+        self.async_write_ha_state()
+        self._last_run_success = await self._device.reset_filter_usage()
+        self.async_write_ha_state()
 
 
 class SwitchBotArtFrameButtonBase(SwitchbotEntity, ButtonEntity):

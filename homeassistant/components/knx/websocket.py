@@ -711,11 +711,11 @@ def ws_create_device(
     """Create a new KNX device."""
     identifier = f"{UI_DEVICE_ID_PREFIX}{ulid_now()}"
     device_registry = dr.async_get(hass)
-    _device = device_registry.async_get_or_create(
+    _device = device_registry.async_get_or_create_device(
         config_entry_id=knx.entry.entry_id,
-        manufacturer="KNX",
-        name=msg["name"],
-        identifiers={(DOMAIN, identifier)},
+        device_info=dr.DeviceInfo(
+            manufacturer="KNX", name=msg["name"], identifiers={(DOMAIN, identifier)}
+        ),
     )
     device_registry.async_update_device(
         _device.id,

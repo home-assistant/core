@@ -312,6 +312,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/chef_iq/ @Invader444
 /homeassistant/components/chess_com/ @joostlek
 /tests/components/chess_com/ @joostlek
+/homeassistant/components/chirpstack/ @balloob
+/tests/components/chirpstack/ @balloob
 /homeassistant/components/cielo_home/ @ihsan-cielo @mudasar-cielo
 /tests/components/cielo_home/ @ihsan-cielo @mudasar-cielo
 /homeassistant/components/cisco_ios/ @fbradyirl
@@ -1206,6 +1208,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/midea/ @chemelli74 @rokam
 /homeassistant/components/miele/ @astrandb
 /tests/components/miele/ @astrandb
+/homeassistant/components/mijn_farmad_apotheek/ @DaanVervacke
+/tests/components/mijn_farmad_apotheek/ @DaanVervacke
 /homeassistant/components/mikrotik/ @engrbm87 @chemelli74
 /tests/components/mikrotik/ @engrbm87 @chemelli74
 /homeassistant/components/mill/ @danielhiversen
