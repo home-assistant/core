@@ -103,7 +103,10 @@ def is_host_valid(host: str) -> bool:
 
 def normalize_url(address: str) -> str:
     """Normalize a given URL."""
-    url = yarl.URL(address.rstrip("/"))
+    url = yarl.URL(address)
+    # A trailing "/" is only part of the path without a query or fragment
+    if not url.raw_query_string and not url.raw_fragment:
+        url = yarl.URL(str(url).rstrip("/"))
     if url.is_absolute() and url.is_default_port():
         return str(url.with_port(None))
     return str(url)
