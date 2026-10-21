@@ -179,8 +179,8 @@ def split_entity_id(entity_id: str) -> tuple[str, str]:
 
 _OBJECT_ID = r"(?!_)[\da-z_]+(?<!_)"
 _DOMAIN = r"(?!.+__)" + _OBJECT_ID
-VALID_DOMAIN = re.compile(r"^" + _DOMAIN + r"$")
-VALID_ENTITY_ID = re.compile(r"^" + _DOMAIN + r"\." + _OBJECT_ID + r"$")
+VALID_DOMAIN = re.compile(r"^" + _DOMAIN + r"\Z")
+VALID_ENTITY_ID = re.compile(r"^" + _DOMAIN + r"\." + _OBJECT_ID + r"\Z")
 
 
 @functools.lru_cache(64)
@@ -652,7 +652,7 @@ class HomeAssistant:
 
         frame.report_usage(
             "calls `async_add_job`, which should be reviewed against "
-            "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
+            "https://contributors.home-assistant.io/blog/2024/03/13/deprecate_add_run_job/"
             " for replacement options",
             core_behavior=frame.ReportBehavior.LOG,
             breaks_in_ha_version="2025.4",
@@ -708,7 +708,7 @@ class HomeAssistant:
 
         frame.report_usage(
             "calls `async_add_hass_job`, which should be reviewed against "
-            "https://developers.home-assistant.io/blog/2024/04/07/deprecate_add_hass_job"
+            "https://contributors.home-assistant.io/blog/2024/04/07/deprecate_add_hass_job/"
             " for replacement options",
             core_behavior=frame.ReportBehavior.LOG,
             breaks_in_ha_version="2025.5",
@@ -982,7 +982,7 @@ class HomeAssistant:
 
         frame.report_usage(
             "calls `async_run_job`, which should be reviewed against "
-            "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
+            "https://contributors.home-assistant.io/blog/2024/03/13/deprecate_add_run_job/"
             " for replacement options",
             core_behavior=frame.ReportBehavior.LOG,
             breaks_in_ha_version="2025.4",
@@ -2121,7 +2121,11 @@ class State:
             last_reported = dt_util.parse_datetime(last_reported)
 
         if context := json_dict.get("context"):
-            context = Context(id=context.get("id"), user_id=context.get("user_id"))
+            context = Context(
+                id=context.get("id"),
+                user_id=context.get("user_id"),
+                parent_id=context.get("parent_id"),
+            )
 
         return cls(
             json_dict["entity_id"],

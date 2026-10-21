@@ -2,6 +2,7 @@
   "domain": "dlna_dms",
   "name": "DLNA Digital Media Server",
   "after_dependencies": ["media_source"],
+  "categories": ["media_entertainment", "computers_network.nas_servers"],
   "codeowners": ["@chishm"],
   "config_flow": true,
   "dependencies": ["ssdp"],

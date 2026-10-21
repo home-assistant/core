@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import json_bytes
+from homeassistant.helpers.recorder import get_instance
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
@@ -63,7 +64,7 @@ from .statistics import (
     update_statistics_issues,
     validate_statistics,
 )
-from .util import PERIOD_SCHEMA, get_instance, resolve_period
+from .util import PERIOD_SCHEMA, resolve_period
 
 _LOGGER = logging.getLogger(__name__)
 

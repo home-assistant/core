@@ -3,12 +3,11 @@
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import axis
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(config_entry_setup: MockConfigEntry) -> None:
@@ -55,7 +54,7 @@ async def test_migrate_entry(
     mock_device.api.vapix.light_control = None
     mock_device.api.vapix.params.image_format = None
 
-    with patch("homeassistant.components.axis.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.axis.async_setup_entry", return_value=None):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert config_entry.state is ConfigEntryState.LOADED

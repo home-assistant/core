@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from pycasperglow import BatteryLevel, GlowState
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import SensorDeviceClass
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 BATTERY_ENTITY_ID = "sensor.jar_battery"
 DIMMING_END_TIME_ENTITY_ID = "sensor.jar_dimming_end_time"

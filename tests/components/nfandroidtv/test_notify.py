@@ -1,11 +1,14 @@
 """Tests for the Notifications for Android TV / Fire TV notify platform."""
 
 from collections.abc import AsyncGenerator
+import errno
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 from notifications_android_tv.notifications import ConnectError
 import pytest
+from pytest_homeassistant.common import AsyncMock, MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import media_source
@@ -33,14 +36,12 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import NAME
-
-from tests.common import AsyncMock, MockConfigEntry, snapshot_platform
 
 LEGACY_SERVICE_NAME = "android_tv_fire_tv_1_2_3_4"
 ENTITY_ID = "notify.android_tv_fire_tv_1_2_3_4"
@@ -435,7 +436,12 @@ async def test_nfandroidtv_send_message_media_not_readable(
     assert state
     assert state.state == STATE_UNKNOWN
     with (
-        patch("pathlib.Path.read_bytes", side_effect=FileNotFoundError),
+        patch(
+            "pathlib.Path.read_bytes",
+            side_effect=FileNotFoundError(
+                errno.ENOENT, "No such file or directory", "/media/screenshot.jpg"
+            ),
+        ),
         pytest.raises(HomeAssistantError) as err,
     ):
         await hass.services.async_call(
@@ -452,7 +458,11 @@ async def test_nfandroidtv_send_message_media_not_readable(
             },
             blocking=True,
         )
-    assert err.value.translation_key == "media_not_readable"
+    assert err.value.translation_key == "os_read_not_found"
+    assert err.value.translation_placeholders == {
+        "path": str(Path("tests/testing_config/media/screenshot.jpg").resolve())
+    }
+    assert err.value.translation_domain == HOMEASSISTANT_DOMAIN
 
 
 @pytest.mark.parametrize(

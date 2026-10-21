@@ -1,5 +1,11 @@
 """Tests for DSMR Reader sensor."""
 
+from unittest.mock import patch
+
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClient
+
 from homeassistant.components.dsmr_reader.const import DOMAIN
 from homeassistant.components.dsmr_reader.definitions import (
     DSMRReaderSensorEntityDescription,
@@ -7,9 +13,8 @@ from homeassistant.components.dsmr_reader.definitions import (
 from homeassistant.components.dsmr_reader.sensor import DSMRSensor
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_mqtt_message
-from tests.typing import MqttMockHAClient
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
 
 
 async def test_dsmr_sensor_mqtt(
@@ -64,3 +69,28 @@ async def test_dsmr_sensor_mqtt(
     async_fire_mqtt_message(hass, "DSMR_TEST_KEY", "192.8")
     await hass.async_block_till_done()
     assert sensor.native_value == "192.8"
+
+
+@pytest.mark.usefixtures("mqtt_mock")
+async def test_cannot_subscribe_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test an issue linked to the entry is created when subscribing fails."""
+    config_entry = MockConfigEntry(domain=DOMAIN, title=DOMAIN)
+    config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.dsmr_reader.sensor.mqtt.async_subscribe",
+        side_effect=HomeAssistantError,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    issue_id = "cannot_subscribe_mqtt_topic_dsmr/reading/electricity_delivered_1"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.config_entry_id == config_entry.entry_id
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None

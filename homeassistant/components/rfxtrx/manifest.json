@@ -1,6 +1,7 @@
 {
   "domain": "rfxtrx",
   "name": "RFXCOM RFXtrx",
+  "categories": ["hubs_protocols.wireless_protocols"],
   "codeowners": ["@danielhiversen", "@elupus", "@RobBie1221"],
   "config_flow": true,
   "dependencies": ["usb"],

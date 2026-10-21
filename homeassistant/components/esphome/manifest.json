@@ -2,6 +2,7 @@
   "domain": "esphome",
   "name": "ESPHome",
   "after_dependencies": ["hassio", "tag", "usb", "zeroconf"],
+  "categories": ["diy_makers.boards_hardware"],
   "codeowners": ["@jesserockz", "@kbx81", "@bdraco", "@arturpragacz"],
   "config_flow": true,
   "dependencies": ["assist_pipeline", "bluetooth", "intent", "ffmpeg", "http"],

@@ -10,6 +10,7 @@ from pyscorpiontrack import (
     ScorpionTrackShareUnavailableError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant.components.scorpiontrack.const import CONF_SHARE_TOKEN, DOMAIN
 from homeassistant.config_entries import SOURCE_RECONFIGURE, ConfigEntryState
@@ -19,8 +20,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 @pytest.mark.parametrize(
