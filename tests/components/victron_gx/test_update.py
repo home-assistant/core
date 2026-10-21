@@ -103,13 +103,34 @@ async def test_firmware_update_entity(
     assert state.attributes[ATTR_IN_PROGRESS] is True
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 25
 
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/platform/0/Firmware/State",
+        '{"value": 1000}',
+    )
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
 
+    state = hass.states.get(update_entry.entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
+
+
+@pytest.mark.parametrize(
+    "firmware_state",
+    [
+        pytest.param(1002, id="downloading-and-installing"),
+        pytest.param(1001, id="checking-during-install"),
+    ],
+)
 async def test_install_firmware_update_service(
     hass: HomeAssistant,
     init_integration_with_update: tuple[VictronVenusHub, MockConfigEntry],
     entity_registry: er.EntityRegistry,
+    firmware_state: int,
 ) -> None:
-    """Test installing the firmware offered by the GX device."""
+    """Test installation stays in progress across device state changes."""
     victron_hub, config_entry = init_integration_with_update
     await _async_inject_firmware_versions(hass, victron_hub, "v3.60", "v3.70")
     update_entry = next(
@@ -123,11 +144,40 @@ async def test_install_firmware_update_service(
     async def install_firmware_update(
         progress_callback: Callable[[int], None],
     ) -> None:
+        state = hass.states.get(update_entry.entity_id)
+        assert state is not None
+        assert state.attributes[ATTR_IN_PROGRESS] is True
+
         progress_callback(42)
+        await inject_message(
+            victron_hub,
+            f"N/{MOCK_INSTALLATION_ID}/platform/0/Firmware/State",
+            f'{{"value": {firmware_state}}}',
+        )
+        await finalize_injection(victron_hub)
+        await hass.async_block_till_done()
+
         state = hass.states.get(update_entry.entity_id)
         assert state is not None
         assert state.attributes[ATTR_IN_PROGRESS] is True
         assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 42
+
+        progress_callback(84)
+        state = hass.states.get(update_entry.entity_id)
+        assert state is not None
+        assert state.attributes[ATTR_IN_PROGRESS] is True
+        assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 84
+
+        with pytest.raises(HomeAssistantError) as err:
+            await hass.services.async_call(
+                UPDATE_DOMAIN,
+                SERVICE_INSTALL,
+                {ATTR_ENTITY_ID: update_entry.entity_id},
+                blocking=True,
+            )
+
+        assert err.value.translation_domain == UPDATE_DOMAIN
+        assert err.value.translation_key == "update_in_progress"
 
     with patch.object(
         victron_hub,
@@ -142,6 +192,19 @@ async def test_install_firmware_update_service(
         )
 
     install.assert_awaited_once()
+    state = hass.states.get(update_entry.entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
+
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/platform/0/Firmware/State",
+        '{"value": 1000}',
+    )
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
+
     state = hass.states.get(update_entry.entity_id)
     assert state is not None
     assert state.attributes[ATTR_IN_PROGRESS] is False
@@ -164,15 +227,21 @@ async def test_install_propagates_translated_failure_and_clears_progress(
         if entry.domain == UPDATE_DOMAIN
     )
 
+    async def install_firmware_update(
+        progress_callback: Callable[[int], None],
+    ) -> None:
+        progress_callback(42)
+        state = hass.states.get(update_entry.entity_id)
+        assert state is not None
+        assert state.attributes[ATTR_IN_PROGRESS] is True
+        assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 42
+        raise FirmwareUpdateError(FirmwareUpdateErrorReason.ERROR_DURING_UPDATE)
+
     with (
         patch.object(
             victron_hub,
             "install_firmware_update",
-            new=AsyncMock(
-                side_effect=FirmwareUpdateError(
-                    FirmwareUpdateErrorReason.ERROR_DURING_UPDATE
-                )
-            ),
+            new=AsyncMock(side_effect=install_firmware_update),
         ),
         pytest.raises(HomeAssistantError) as err,
     ):
@@ -185,6 +254,19 @@ async def test_install_propagates_translated_failure_and_clears_progress(
 
     assert err.value.translation_domain == "victron_gx"
     assert err.value.translation_key == "error_during_update"
+    state = hass.states.get(update_entry.entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
+
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/platform/0/Firmware/State",
+        '{"value": 1001}',
+    )
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
+
     state = hass.states.get(update_entry.entity_id)
     assert state is not None
     assert state.attributes[ATTR_IN_PROGRESS] is False

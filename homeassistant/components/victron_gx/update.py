@@ -49,6 +49,7 @@ class VictronFirmwareUpdateEntity(UpdateEntity):
         """Initialize the firmware update entity."""
         self._hub = entry.runtime_data
         self._firmware_info = self._hub.firmware_update_info
+        self._installing = False
         self._attr_unique_id = f"{entry.unique_id}_firmware"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{entry.unique_id}_system_0")}
@@ -70,9 +71,11 @@ class VictronFirmwareUpdateEntity(UpdateEntity):
     def _on_firmware_update(self, info: FirmwareUpdateInfo) -> None:
         """Handle updated firmware information."""
         self._firmware_info = info
-        # Install callbacks can update progress before the next firmware snapshot.
-        self._attr_in_progress = info.in_progress
-        self._attr_update_percentage = info.progress if info.in_progress else None
+        self._attr_in_progress = self._installing or info.in_progress
+        if not self._attr_in_progress:
+            self._attr_update_percentage = None
+        elif info.in_progress and info.progress is not None:
+            self._attr_update_percentage = info.progress
         self.async_write_ha_state()
 
     @property
@@ -110,7 +113,7 @@ class VictronFirmwareUpdateEntity(UpdateEntity):
         if not self._firmware_info.update_available:
             return
 
-        self._attr_in_progress = True
+        self._installing = self._attr_in_progress = True
         self.async_write_ha_state()
 
         @callback
@@ -126,6 +129,7 @@ class VictronFirmwareUpdateEntity(UpdateEntity):
                 translation_key=err.reason.value,
             ) from err
         finally:
+            self._installing = False
             self._attr_in_progress = False
             self._attr_update_percentage = None
             self.async_write_ha_state()
