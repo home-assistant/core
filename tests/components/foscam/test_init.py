@@ -100,7 +100,7 @@ async def test_unique_id_migration_not_needed(
         patch("homeassistant.components.foscam.FoscamCamera") as mock_foscam_camera,
         patch(
             "homeassistant.components.foscam.async_migrate_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         setup_mock_foscam_camera(mock_foscam_camera)
