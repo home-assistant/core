@@ -654,7 +654,9 @@ async def test_hvac_mode_heat(hass: HomeAssistant) -> None:
     assert call.data["entity_id"] == ENT_SWITCH
 
 
-def _setup_switch(hass: HomeAssistant, is_on: bool) -> list[ServiceCall]:
+def _setup_switch(
+    hass: HomeAssistant, is_on: bool, *, mirror_state: bool = False
+) -> list[ServiceCall]:
     """Set up the test switch."""
     hass.states.async_set(ENT_SWITCH, STATE_ON if is_on else STATE_OFF)
     calls = []
@@ -663,6 +665,12 @@ def _setup_switch(hass: HomeAssistant, is_on: bool) -> list[ServiceCall]:
     def log_call(call: ServiceCall) -> None:
         """Log service calls."""
         calls.append(call)
+        if mirror_state:
+            hass.states.async_set(
+                ENT_SWITCH,
+                STATE_ON if call.service == SERVICE_TURN_ON else STATE_OFF,
+                context=call.context,
+            )
 
     hass.services.async_register(ha.DOMAIN, SERVICE_TURN_ON, log_call)
     hass.services.async_register(ha.DOMAIN, SERVICE_TURN_OFF, log_call)
@@ -1266,6 +1274,45 @@ async def test_max_cycle_duration_turns_off(hass: HomeAssistant) -> None:
     assert calls[1].service == SERVICE_TURN_OFF
 
 
+async def test_max_cycle_duration_does_not_restart_without_cooldown(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test that max_cycle_duration does not immediately restart the heater."""
+    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
+    now = dt_util.utcnow()
+    freezer.move_to(now)
+    calls = _setup_switch(hass, False, mirror_state=True)
+    assert await async_setup_component(
+        hass,
+        CLIMATE_DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 0.3,
+                "hot_tolerance": 0.3,
+                "target_temp": 25,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "max_cycle_duration": dt.timedelta(minutes=10),
+                "initial_hvac_mode": HVACMode.HEAT,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    _setup_sensor(hass, 20)
+    await hass.async_block_till_done()
+    assert [call.service for call in calls] == [SERVICE_TURN_ON]
+
+    freezer.move_to(now + dt.timedelta(minutes=10))
+    async_fire_time_changed(hass, now + dt.timedelta(minutes=10))
+    await hass.async_block_till_done()
+
+    assert [call.service for call in calls] == [SERVICE_TURN_ON, SERVICE_TURN_OFF]
+    assert hass.states.is_state(ENT_SWITCH, STATE_OFF)
+
+
 async def test_max_cycle_duration_restarts_after_cooldown(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
@@ -1273,7 +1320,7 @@ async def test_max_cycle_duration_restarts_after_cooldown(
     hass.config.temperature_unit = UnitOfTemperature.CELSIUS
     now = dt_util.utcnow()
     freezer.move_to(now)
-    calls = _setup_switch(hass, False)
+    calls = _setup_switch(hass, False, mirror_state=True)
     assert await async_setup_component(
         hass,
         CLIMATE_DOMAIN,
@@ -1293,26 +1340,6 @@ async def test_max_cycle_duration_restarts_after_cooldown(
         },
     )
     await hass.async_block_till_done()
-
-    hass.services.async_remove(HOMEASSISTANT_DOMAIN, SERVICE_TURN_ON)
-    hass.services.async_remove(HOMEASSISTANT_DOMAIN, SERVICE_TURN_OFF)
-
-    @callback
-    def handle_switch_call(call: ServiceCall) -> None:
-        """Record and apply the switch service call."""
-        calls.append(call)
-        hass.states.async_set(
-            ENT_SWITCH,
-            STATE_ON if call.service == SERVICE_TURN_ON else STATE_OFF,
-            context=call.context,
-        )
-
-    hass.services.async_register(
-        HOMEASSISTANT_DOMAIN, SERVICE_TURN_ON, handle_switch_call
-    )
-    hass.services.async_register(
-        HOMEASSISTANT_DOMAIN, SERVICE_TURN_OFF, handle_switch_call
-    )
 
     _setup_sensor(hass, 20)
     await hass.async_block_till_done()
