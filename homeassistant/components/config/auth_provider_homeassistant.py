@@ -74,25 +74,29 @@ async def websocket_create(
             )
             return
 
-        await provider.async_add_auth(msg["username"], msg["password"])
-
-        # A password that isn't linked must not stay behind as a login of its own.
+        hashed_password = await provider.async_hash_password(msg["password"])
+        # Checked before linking, so a taken username doesn't get linked.
+        provider.async_validate_new_username(msg["username"])
+        credentials = await provider.async_get_or_create_credentials(
+            {"username": msg["username"]}
+        )
         try:
-            credentials = await provider.async_get_or_create_credentials(
-                {"username": msg["username"]}
-            )
             await hass.auth.async_link_user(user, credentials)
         except CredentialsExistError:
             # Linked by another way than this command in the meantime.
-            await provider.async_remove_auth(msg["username"])
             connection.send_error(
                 msg["id"],
                 "credentials_exist",
                 "User already has credentials for this provider",
             )
             return
+
+        # Added only once linked, so no sign in can get a code for a password
+        # that is removed again.
+        try:
+            await provider.async_add_hashed_auth(msg["username"], hashed_password)
         except BaseException:
-            await provider.async_remove_auth(msg["username"])
+            await hass.auth.async_remove_credentials(credentials)
             raise
 
     connection.send_result(msg["id"])

@@ -8,6 +8,7 @@ import pytest
 from pytest_homeassistant.common import CLIENT_ID, MockUser
 from pytest_homeassistant.typing import WebSocketGenerator
 
+from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant as prov_ha
 from homeassistant.components.config import auth_provider_homeassistant as auth_ha
 from homeassistant.core import HomeAssistant
@@ -143,6 +144,68 @@ async def test_create_auth_link_fails(
         await auth_provider.async_validate_login("test-user2", "test-pass")
 
 
+async def test_create_auth_password_unusable_until_linked(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    auth_provider: prov_ha.HassAuthProvider,
+) -> None:
+    """Test the new password can't sign in before its credentials are linked."""
+    client = await hass_ws_client(hass)
+    user = MockUser().add_to_hass(hass)
+    link_user = hass.auth.async_link_user
+
+    async def link_after_trying_to_sign_in(
+        user: MockUser, credentials: Credentials
+    ) -> None:
+        with pytest.raises(prov_ha.InvalidAuth):
+            await auth_provider.async_validate_login("test-user2", "test-pass")
+        await link_user(user, credentials)
+
+    with patch.object(hass.auth, "async_link_user", link_after_trying_to_sign_in):
+        await client.send_json(
+            {
+                "id": 5,
+                "type": "config/auth_provider/homeassistant/create",
+                "user_id": user.id,
+                "username": "test-user2",
+                "password": "test-pass",
+            }
+        )
+        result = await client.receive_json()
+
+    assert result["success"], result
+    await auth_provider.async_validate_login("test-user2", "test-pass")
+
+
+async def test_create_auth_unlinks_when_the_password_isnt_added(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    auth_provider: prov_ha.HassAuthProvider,
+) -> None:
+    """Test credentials linked for a password that can't be added are removed."""
+    client = await hass_ws_client(hass)
+    user = MockUser().add_to_hass(hass)
+
+    with patch.object(
+        auth_provider, "async_add_hashed_auth", side_effect=OSError("Disk full")
+    ):
+        await client.send_json(
+            {
+                "id": 5,
+                "type": "config/auth_provider/homeassistant/create",
+                "user_id": user.id,
+                "username": "test-user2",
+                "password": "test-pass",
+            }
+        )
+        result = await client.receive_json()
+
+    assert not result["success"], result
+    assert user.credentials == []
+    with pytest.raises(prov_ha.InvalidAuth):
+        await auth_provider.async_validate_login("test-user2", "test-pass")
+
+
 async def test_create_auth_concurrent(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -152,13 +215,13 @@ async def test_create_auth_concurrent(
     client = await hass_ws_client(hass)
     user = MockUser().add_to_hass(hass)
     stored: list[str] = []
-    add_auth = auth_provider.async_add_auth
+    add_hashed_auth = auth_provider.async_add_hashed_auth
 
-    async def record_add_auth(username: str, password: str) -> None:
+    async def record_add_hashed_auth(username: str, hashed_password: bytes) -> None:
         stored.append(username)
-        await add_auth(username, password)
+        await add_hashed_auth(username, hashed_password)
 
-    with patch.object(auth_provider, "async_add_auth", record_add_auth):
+    with patch.object(auth_provider, "async_add_hashed_auth", record_add_hashed_auth):
         for msg_id, username in ((5, "test-user2"), (6, "test-user3")):
             await client.send_json(
                 {

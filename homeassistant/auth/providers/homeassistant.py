@@ -159,7 +159,7 @@ class Data:
 
         Raises InvalidUsername if the new username is invalid.
         """
-        self._validate_new_username(username)
+        self.validate_new_username(username)
 
         self.users.append({"username": username, "password": hashed_password.decode()})
 
@@ -194,7 +194,7 @@ class Data:
             raise InvalidUser(translation_key="user_not_found")
 
     @callback
-    def _validate_new_username(self, new_username: str) -> None:
+    def validate_new_username(self, new_username: str) -> None:
         """Validate that username is normalized and unique.
 
         Raises InvalidUsername if the new username is invalid.
@@ -223,7 +223,7 @@ class Data:
         Raises InvalidUsername if the new username is invalid.
         """
         username = self.normalize_username(username)
-        self._validate_new_username(new_username)
+        self.validate_new_username(new_username)
 
         for user in self.users:
             if self.normalize_username(user["username"]) == username:
@@ -308,15 +308,36 @@ class HassAuthProvider(AuthProvider):
 
     async def async_add_auth(self, username: str, password: str) -> None:
         """Call add_auth on data."""
+        # Hashed first, so the username is checked and added in one go and two
+        # requests for the same username can't both add it.
+        await self.async_add_hashed_auth(
+            username, await self.async_hash_password(password)
+        )
+
+    async def async_hash_password(self, password: str) -> bytes:
+        """Hash a password for storage, without adding it to anything."""
         if self.data is None:
             await self.async_initialize()
             assert self.data is not None
 
-        # Hashed first, so the username is checked and added in one go and two
-        # requests for the same username can't both add it.
-        hashed_password = await self.hass.async_add_executor_job(
+        return await self.hass.async_add_executor_job(
             self.data.hash_password, password, True
         )
+
+    @callback
+    def async_validate_new_username(self, username: str) -> None:
+        """Raise InvalidUsername if the username can't be added."""
+        assert self.data is not None
+        self.data.validate_new_username(username)
+
+    async def async_add_hashed_auth(
+        self, username: str, hashed_password: bytes
+    ) -> None:
+        """Add a username with a password from async_hash_password."""
+        if self.data is None:
+            await self.async_initialize()
+            assert self.data is not None
+
         self.data.add_hashed_auth(username, hashed_password)
         await self.data.async_save()
 
