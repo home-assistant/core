@@ -5,6 +5,7 @@ from unittest.mock import call
 
 from bond_async import Action, DeviceType, Direction
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant import core
 from homeassistant.components import fan
@@ -44,8 +45,6 @@ from .common import (
     patch_bond_device_state,
     setup_platform,
 )
-
-from tests.common import async_fire_time_changed
 
 
 def ceiling_fan_with_breeze(name: str):

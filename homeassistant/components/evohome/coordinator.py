@@ -89,7 +89,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         """
 
         try:
-            await self.client.update(dont_update_status=True)  # only config for now
+            await self.client.setup()  # only config for now
         except ec2.EvohomeError as err:
             raise UpdateFailed(err) from err
 
@@ -104,7 +104,9 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
                 """
             ) from err
 
-        self.tcs = self.loc.gateways[0].systems[0]
+        if (tcs := self.loc.tcs) is None:
+            raise UpdateFailed(f"Config error: location {self.loc.id} has no TCS")
+        self.tcs = tcs
 
         if self.logger.isEnabledFor(logging.DEBUG):
             loc_info = {
@@ -130,20 +132,20 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             }
             self.logger.debug("Config = %s", [config])
 
-    async def call_client_api(
+    async def call_client_api[_T](
         self,
-        client_api: Awaitable[dict[str, Any] | None],
+        client_api: Awaitable[_T],
         request_refresh: bool = True,
-    ) -> dict[str, Any] | None:
+    ) -> _T | None:
         """Call a client API and update the Coordinator state if required."""
 
         try:
             result = await client_api
 
-        except ec2.InvalidSystemModeError:
+        except ec2.AuthenticationFailedError:
             raise
 
-        except ec2.ApiRequestFailedError as err:
+        except ec2.ApiCallFailedError as err:
             self.logger.error(err)
             return None
 
@@ -158,7 +160,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         assert self.client_v1 is not None  # mypy check
 
         try:
-            await self.client_v1.update()
+            await self.client_v1.get_status()
 
         except ec1.BadUserCredentialsError as err:
             self.logger.warning(
@@ -181,9 +183,10 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             self.temps = {}  # high-precision temps now considered stale
 
         else:
-            self.temps = await self.client_v1.location_by_id[
-                self.loc.id
-            ].get_temperatures(dont_update_status=True)
+            tcs = self.client_v1.location_by_id[self.loc.id].tcs
+            self.temps = (
+                await tcs.get_temperatures(dont_update_status=True) if tcs else {}
+            )
 
         self.logger.debug("Status (high-res temps) = %s", self.temps)
 
@@ -191,9 +194,9 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         """Get the latest modes, temperatures, setpoints of a Location."""
 
         try:
-            status = await self.loc.update()
+            status = await self.loc.get_status()
 
-        except ec2.ApiRequestFailedError as err:
+        except ec2.ApiCallFailedError as err:
             if err.status != HTTPStatus.TOO_MANY_REQUESTS:
                 raise UpdateFailed(err) from err
 

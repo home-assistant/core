@@ -71,6 +71,13 @@ async def test_flow_user_bad_key(hass: HomeAssistant, mock_prowlpy: AsyncMock) -
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == INVALID_API_KEY_ERROR
 
+    mock_prowlpy.verify_key.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=CONF_INPUT,
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_flow_user_prowl_timeout(
     hass: HomeAssistant, mock_prowlpy: AsyncMock
@@ -91,6 +98,13 @@ async def test_flow_user_prowl_timeout(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == TIMEOUT_ERROR
 
+    mock_prowlpy.verify_key.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=CONF_INPUT,
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_flow_api_failure(hass: HomeAssistant, mock_prowlpy: AsyncMock) -> None:
     """Test Prowl API failure."""
@@ -108,3 +122,10 @@ async def test_flow_api_failure(hass: HomeAssistant, mock_prowlpy: AsyncMock) ->
     assert mock_prowlpy.verify_key.call_count > 0
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == BAD_API_RESPONSE
+
+    mock_prowlpy.verify_key.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=CONF_INPUT,
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY

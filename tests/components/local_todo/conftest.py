@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.local_todo import LocalTodoListStore
 from homeassistant.components.local_todo.const import (
@@ -14,8 +15,6 @@ from homeassistant.components.local_todo.const import (
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 TODO_NAME = "My Tasks"
 FRIENDLY_NAME = "My tasks"
@@ -49,6 +48,7 @@ class FakeStore(LocalTodoListStore):
         mock_path.read_text.return_value = ics_content
         mock_path.read_text.side_effect = read_side_effect
         mock_path.write_text = self._mock_write_text
+        mock_path.__str__ = Mock(return_value=str(path))
 
         super().__init__(hass, mock_path)
 

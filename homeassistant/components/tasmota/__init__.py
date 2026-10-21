@@ -35,7 +35,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up Tasmota from a config entry."""
     hass.data[DATA_UNSUB] = []
 
@@ -76,16 +76,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, discovery_prefix, entry, tasmota_mqtt, async_discover_device
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
 
     # cleanup platforms
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if not unload_ok:
-        return False
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
     # disable discovery
     await discovery.async_stop(hass)
@@ -102,8 +98,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
     for device in devices:
         await device_automation.async_remove_automations(hass, device.id)
-
-    return True
 
 
 async def _remove_device(
@@ -133,14 +127,16 @@ def _update_device(
 ) -> None:
     """Add or update device registry."""
     _LOGGER.debug("Adding or updating tasmota device %s", config[CONF_MAC])
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=config_entry.entry_id,
-        configuration_url=f"http://{config[CONF_IP]}/",
-        connections={(CONNECTION_NETWORK_MAC, config[CONF_MAC])},
-        manufacturer=config[CONF_MANUFACTURER],
-        model=config[CONF_MODEL],
-        name=config[CONF_NAME],
-        sw_version=config[CONF_SW_VERSION],
+        device_info=dr.DeviceInfo(
+            configuration_url=f"http://{config[CONF_IP]}/",
+            connections={(CONNECTION_NETWORK_MAC, config[CONF_MAC])},
+            manufacturer=config[CONF_MANUFACTURER],
+            model=config[CONF_MODEL],
+            name=config[CONF_NAME],
+            sw_version=config[CONF_SW_VERSION],
+        ),
     )
 
 

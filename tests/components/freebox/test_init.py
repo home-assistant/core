@@ -8,6 +8,7 @@ from aiohttp import ClientError
 from freebox_api.exceptions import HttpRequestError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytest_unordered import unordered
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -25,8 +26,6 @@ from homeassistant.setup import async_setup_component
 
 from .common import setup_platform
 from .const import DATA_HOME_GET_NODES, MOCK_HOST, MOCK_PORT
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 MOCK_MAC = "68:A3:78:00:00:00"
 
@@ -204,6 +203,26 @@ async def test_unique_id_migration(
     assert (
         entity_registry.async_get_entity_id(platform, DOMAIN, new_unique_id) is not None
     )
+
+
+async def test_unique_id_migration_cannot_connect(
+    hass: HomeAssistant, router: Mock
+) -> None:
+    """Test migration is retried when the router cannot be reached."""
+    router.return_value.open.side_effect = HttpRequestError("Boom")
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
+        unique_id=MOCK_HOST,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.reason == f"Failed to connect to the Freebox router at {MOCK_HOST}"
+    assert entry.version == 1
 
 
 @pytest.mark.usefixtures("router")

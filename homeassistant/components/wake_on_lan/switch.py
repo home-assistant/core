@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_NAME,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
@@ -124,17 +124,6 @@ class WolSwitch(SwitchEntity):
         if self._attr_assumed_state:
             self._state = True
             self.schedule_update_ha_state()
-
-    @callback
-    @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Opt in to in-place entity_id changes.
-
-        Can be removed when backwards compatibility is disabled for core
-        integrations, i.e. once all core integrations have been migrated
-        to in-place entity ID change.
-        """
-        super().async_entity_id_changed(old_entity_id)
 
     @override
     async def async_will_remove_from_hass(self) -> None:

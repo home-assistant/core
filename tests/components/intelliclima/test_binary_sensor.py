@@ -9,6 +9,7 @@ from pyintelliclima.intelliclima_types import (
     IntelliClimaFilterStatus,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -23,8 +24,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import async_poll, setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 FAN_STATE_ENTITY_IDS = {
     "boost": "binary_sensor.test_vmc_boost",

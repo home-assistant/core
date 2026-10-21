@@ -1,6 +1,7 @@
 {
   "domain": "solarman",
   "name": "Solarman",
+  "categories": ["energy.meters_monitoring", "plugs_switches"],
   "codeowners": ["@solarmanpv"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/solarman",

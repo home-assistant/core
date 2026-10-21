@@ -18,6 +18,11 @@ from librehardwaremonitor_api.model import (
 )
 from librehardwaremonitor_api.sensor_type import SensorType
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.libre_hardware_monitor.const import (
@@ -29,7 +34,7 @@ from homeassistant.components.libre_hardware_monitor.sensor import (
     STATE_MIN_VALUE,
 )
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -54,8 +59,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from . import init_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_sensors_are_created(
@@ -333,7 +336,6 @@ async def test_sensor_invalid_auth_after_update(
     mock_lhm_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test invalid auth after sensor update."""
     mock_config_entry.add_to_hass(hass)
@@ -346,7 +348,7 @@ async def test_sensor_invalid_auth_after_update(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert "Authentication against LibreHardwareMonitor instance failed" in caplog.text
+    assert mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH})
 
     unavailable_states = hass.states.async_all()
     assert all(state.state == STATE_UNAVAILABLE for state in unavailable_states)
@@ -356,7 +358,6 @@ async def test_sensor_invalid_auth_during_startup(
     hass: HomeAssistant,
     mock_lhm_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test invalid auth in initial sensor update during integration startup."""
     mock_lhm_client.get_data.side_effect = LibreHardwareMonitorUnauthorizedError
@@ -365,7 +366,6 @@ async def test_sensor_invalid_auth_during_startup(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert "Authentication against LibreHardwareMonitor instance failed" in caplog.text
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     assert mock_config_entry.reason == "Authentication failed"
 

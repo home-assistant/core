@@ -6,6 +6,7 @@ import httpx2
 from openai import APIConnectionError, AuthenticationError, BadRequestError
 from openai.types.responses import Response, ResponseOutputMessage, ResponseOutputText
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.openai_conversation.config_flow import (
@@ -36,11 +37,13 @@ from homeassistant.components.openai_conversation.const import (
     CONF_WEB_SEARCH_USER_LOCATION,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
+    DEFAULT_EVALUATION_NAME,
     DEFAULT_STT_NAME,
     DEFAULT_TTS_NAME,
     DOMAIN,
     RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_EVALUATION_OPTIONS,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_REASONING_SUMMARY,
     RECOMMENDED_STT_OPTIONS,
@@ -50,8 +53,6 @@ from homeassistant.components.openai_conversation.const import (
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_PROMPT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -106,6 +107,12 @@ async def test_form(hass: HomeAssistant) -> None:
             "unique_id": None,
         },
         {
+            "subentry_type": "ai_task_evaluate",
+            "data": RECOMMENDED_EVALUATION_OPTIONS,
+            "title": DEFAULT_EVALUATION_NAME,
+            "unique_id": None,
+        },
+        {
             "subentry_type": "stt",
             "data": RECOMMENDED_STT_OPTIONS,
             "title": DEFAULT_STT_NAME,
@@ -119,7 +126,7 @@ async def test_form(hass: HomeAssistant) -> None:
         },
     ]
     assert result2["version"] == 2
-    assert result2["minor_version"] == 7
+    assert result2["minor_version"] == 8
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -225,8 +232,9 @@ async def test_subentry_recommended(
     assert subentry.data["prompt"] == "Speak like a pirate"
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_subentry_unsupported_model(
-    hass: HomeAssistant, mock_config_entry, mock_init_component
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test the subentry form giving error about models not supported."""
     subentry = next(iter(mock_config_entry.subentries.values()))
@@ -259,6 +267,21 @@ async def test_subentry_unsupported_model(
     await hass.async_block_till_done()
     assert subentry_flow["type"] is FlowResultType.FORM
     assert subentry_flow["errors"] == {"chat_model": "model_not_supported"}
+
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_CHAT_MODEL: "gpt-5",
+        },
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "model"
+
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"], {}
+    )
+    assert subentry_flow["type"] is FlowResultType.ABORT
+    assert subentry_flow["reason"] == "reconfigure_successful"
 
 
 @pytest.mark.parametrize(
@@ -662,7 +685,9 @@ async def test_subentry_unsupported_reasoning_effort(
         ),
     ],
 )
-async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> None:
+async def test_form_invalid_auth(
+    hass: HomeAssistant, side_effect: Exception, error: str
+) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -682,6 +707,26 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error}
+
+    with (
+        patch(
+            "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
+            new_callable=AsyncMock,
+        ),
+        patch(
+            "homeassistant.components.openai_conversation.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "api_key": "bla",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -1337,8 +1382,8 @@ async def test_creating_ai_task_subentry(
 ) -> None:
     """Test creating an AI task subentry."""
     old_subentries = set(mock_config_entry.subentries)
-    # Original conversation + ai_task + stt + tts
-    assert len(mock_config_entry.subentries) == 4
+    # Original conversation + data + evaluation + stt + tts
+    assert len(mock_config_entry.subentries) == 5
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "ai_task_data"),
@@ -1364,9 +1409,7 @@ async def test_creating_ai_task_subentry(
         CONF_RECOMMENDED: True,
     }
 
-    assert (
-        len(mock_config_entry.subentries) == 5
-    )  # Original conversation + stt + tts + ai_task + new ai_task
+    assert len(mock_config_entry.subentries) == 6  # Original subentries + new AI task
 
     new_subentry_id = list(set(mock_config_entry.subentries) - old_subentries)[0]
     new_subentry = mock_config_entry.subentries[new_subentry_id]
@@ -1570,8 +1613,8 @@ async def test_creating_stt_subentry(
 ) -> None:
     """Test creating a STT subentry."""
     old_subentries = set(mock_config_entry.subentries)
-    # Original conversation + ai_task + stt + tts
-    assert len(mock_config_entry.subentries) == 4
+    # Original conversation + data + evaluation + stt + tts
+    assert len(mock_config_entry.subentries) == 5
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "stt"),
@@ -1603,9 +1646,7 @@ async def test_creating_stt_subentry(
         CONF_CHAT_MODEL: "gpt-4o-transcribe",
     }
 
-    assert (
-        len(mock_config_entry.subentries) == 5
-    )  # Original conversation + ai_task + tts + original stt + new stt
+    assert len(mock_config_entry.subentries) == 6  # Original subentries + new STT
 
     new_subentry_id = list(set(mock_config_entry.subentries) - old_subentries)[0]
     new_subentry = mock_config_entry.subentries[new_subentry_id]
@@ -1659,8 +1700,8 @@ async def test_creating_tts_subentry(
 ) -> None:
     """Test creating a TTS subentry."""
     old_subentries = set(mock_config_entry.subentries)
-    # Original conversation + ai_task + stt + tts
-    assert len(mock_config_entry.subentries) == 4
+    # Original conversation + data + evaluation + stt + tts
+    assert len(mock_config_entry.subentries) == 5
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "tts"),
@@ -1689,8 +1730,8 @@ async def test_creating_tts_subentry(
     }
 
     assert (
-        len(mock_config_entry.subentries) == 5
-    )  # Original conversation + ai_task + stt + tts + new tts
+        len(mock_config_entry.subentries) == 6
+    )  # Original conversation + data + evaluation + stt + tts + new tts
 
     new_subentry_id = list(set(mock_config_entry.subentries) - old_subentries)[0]
     new_subentry = mock_config_entry.subentries[new_subentry_id]
@@ -1828,6 +1869,21 @@ async def test_reconfigure_invalid_auth(
     assert result["step_id"] == "reconfigure"
     assert result["errors"] == {"base": "invalid_auth"}
     assert mock_config_entry.data[CONF_API_KEY] == "bla"
+
+    with (
+        patch(
+            "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
+            new_callable=AsyncMock,
+        ),
+        patch("homeassistant.config_entries.ConfigEntries.async_reload"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_KEY: "new_api_key"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 @pytest.mark.parametrize(

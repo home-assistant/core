@@ -7,6 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pyintelliclima.const import FanMode, FanSpeed
 from pyintelliclima.intelliclima_types import IntelliClimaDevices
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import async_poll, setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 SELECT_ENTITY_ID = "select.test_vmc_fan_direction_mode"
 
