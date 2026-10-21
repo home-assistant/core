@@ -94,7 +94,7 @@ class UnifiConnectionManager:
         self._recovery_callback = recovery_callback
         self._attempt = 0
         self._retry_handle: asyncio.TimerHandle | None = None
-        self._retry_slowed = False
+        self._retry_for_reauth = False
         self._reconnect_task: asyncio.Task[None] | None = None
         self._verify_task: asyncio.Task[None] | None = None
         self._stable_handle: asyncio.TimerHandle | None = None
@@ -188,16 +188,18 @@ class UnifiConnectionManager:
     def _schedule_retry(self) -> None:
         """Schedule the next reconnect attempt unless one is pending.
 
-        A pending retry is pushed back once when a pause or reauth started
-        after it was scheduled.
+        A pending retry is pushed back when a pause or reauth started after it
+        was scheduled, repeated failure reports leave it as it is.
         """
         if self._stopped:
             return
-        slowed = self._rate_limited or self._reauth_required
+        remaining = 0.0
         if self._retry_handle is not None:
-            if not slowed or self._retry_slowed:
-                self._rate_limited = False
+            if not self._rate_limited and (
+                not self._reauth_required or self._retry_for_reauth
+            ):
                 return
+            remaining = self._retry_handle.when() - self.hass.loop.time()
             self._retry_handle.cancel()
         if self._rate_limited:
             self._rate_limited = False
@@ -209,8 +211,10 @@ class UnifiConnectionManager:
         else:
             delay = retry_delay(self._attempt)
             self._attempt += 1
-        self._retry_slowed = slowed
-        self._retry_handle = self.hass.loop.call_later(delay, self._async_reconnect)
+        self._retry_for_reauth = self._reauth_required
+        self._retry_handle = self.hass.loop.call_later(
+            max(delay, remaining), self._async_reconnect
+        )
 
     @callback
     def _async_reconnect(self) -> None:
@@ -219,6 +223,10 @@ class UnifiConnectionManager:
         if self._reconnect_task is not None and not self._reconnect_task.done():
             # The running attempt schedules the next one if it ends unavailable
             return
+        if self._verify_task is not None and not self._verify_task.done():
+            # The attempt checks the session itself, a late answer of an older
+            # check must not mark it down again
+            self._verify_task.cancel()
 
         self._reconnect_task = self.config_entry.async_create_background_task(
             self.hass, self._async_reconnect_and_recover(), "unifi_reconnect"

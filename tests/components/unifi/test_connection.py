@@ -1678,6 +1678,86 @@ async def test_login_answer_of_poll_applies_its_policy(
         probe.assert_not_called()
 
 
+async def test_late_answer_of_older_session_check_is_dropped(
+    hass: HomeAssistant,
+    hub: UnifiHub,
+    mock_websocket_state: WebsocketStateManager,
+    polled_coordinator: UnifiDataUpdateCoordinator,
+) -> None:
+    """A reconnect replaces a session check that has not answered yet."""
+    probe_started = asyncio.Event()
+    probe_release = asyncio.Event()
+    calls = 0
+
+    async def slow_first_probe() -> None:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            probe_started.set()
+            await probe_release.wait()
+            raise aiounifi.RequestError
+
+    with (
+        patch.object(
+            polled_coordinator.handler, "update", side_effect=aiounifi.RequestError
+        ),
+        patch.object(
+            hub.api.system_information, "update", side_effect=slow_first_probe
+        ),
+    ):
+        _fire(hass, IDLE_POLL_INTERVAL.total_seconds())
+        await _wait(probe_started)
+        mock_websocket_state.set()
+        await hass.async_block_till_done()
+        mock_websocket_state.clear()
+        await _advance(hass, MAX_RETRY_DELAY)
+        assert _available(hass)
+
+        probe_release.set()
+        await hass.async_block_till_done(wait_background_tasks=True)
+    assert _available(hass)
+
+
+async def test_reauth_after_rate_limit_delays_queued_retry(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    polled_coordinator: UnifiDataUpdateCoordinator,
+) -> None:
+    """A reauth that follows a rate limit pushes the queued retry back again."""
+    hub = config_entry_setup.runtime_data
+    probe_started = asyncio.Event()
+    probe_release = asyncio.Event()
+    calls = 0
+
+    async def mfa_after_wait() -> None:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            probe_started.set()
+            await probe_release.wait()
+            raise aiounifi.TwoFaTokenRequired
+
+    with (
+        patch.object(
+            polled_coordinator.handler, "update", side_effect=aiounifi.RequestError
+        ),
+        patch.object(hub.api.system_information, "update", side_effect=mfa_after_wait),
+    ):
+        _fire(hass, IDLE_POLL_INTERVAL.total_seconds())
+        await _wait(probe_started)
+        # Another request saw aiounifi's own login being rate limited
+        hub.connection.verify_session(aiounifi.AuthenticationRateLimitError())
+        assert not _available(hass)
+        probe_release.set()
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert _reauth_requested(hass, config_entry_setup)
+
+        await _advance(hass, RATE_LIMIT_PAUSE + MAX_RETRY_DELAY)
+        assert calls == 1
+        await _advance(hass, REAUTH_RETRY_INTERVAL + MAX_RETRY_DELAY)
+    assert calls > 1
+
+
 @PARAMETRIZE_STOP
 async def test_session_check_in_flight_at_stop_is_cancelled(
     hass: HomeAssistant,
