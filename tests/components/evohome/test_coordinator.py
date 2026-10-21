@@ -227,3 +227,30 @@ async def test_setup_tolerates_failed_schedule_fetch(
         async for _ in setup_evohome(hass, config, install="default"):
             assert hass.states.async_entity_ids(CLIMATE_DOMAIN)
             assert hass.states.async_entity_ids(WATER_HEATER_DOMAIN)
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.usefixtures("evohome")
+async def test_failed_schedule_poll_keeps_entities_available(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    zone_id: str,
+) -> None:
+    """Test a failed background schedule GET is logged, not a failed update."""
+
+    evo_data: EvoData = hass.data.get(DOMAIN)  # type: ignore[assignment]
+    update_interval: timedelta = evo_data.coordinator.update_interval  # type: ignore[assignment]
+
+    with patch.object(
+        Zone,
+        "get_schedule",
+        side_effect=evo_exc.ApiCallFailedError("API call failed"),
+    ) as mock_fcn:
+        freezer.tick(update_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    mock_fcn.assert_awaited()  # the schedules were due to be fetched
+
+    state = hass.states.get(zone_id)
+    assert state is not None and state.state != STATE_UNAVAILABLE

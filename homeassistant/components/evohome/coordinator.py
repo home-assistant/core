@@ -239,7 +239,9 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             if not self._schedule_is_stale(zone):
                 continue
             try:
-                await zone.get_schedule()
+                await self.call_client_api(
+                    zone.get_schedule(), request_refresh=False, raise_on_error=False
+                )
             except ec2.InvalidScheduleError as err:
                 self.logger.warning(
                     "Zone '%s' has an invalid/missing schedule: %r", zone.name, err
@@ -248,7 +250,9 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
 
         if (dhw := self.tcs.hotwater) and self._schedule_is_stale(dhw):
             try:
-                await dhw.get_schedule()
+                await self.call_client_api(
+                    dhw.get_schedule(), request_refresh=False, raise_on_error=False
+                )
             except ec2.InvalidScheduleError as err:
                 self.logger.warning("DHW has an invalid/missing schedule: %r", err)
             self._schedules_fetched[dhw.id] = dt_util.utcnow()
