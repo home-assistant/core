@@ -707,6 +707,294 @@
     'state': '2020-12-18T05:36:58+00:00',
   })
 # ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.gateway_clients-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry connections=[('mac', '00:00:00:00:02:01')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.gateway_clients',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Clients',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Clients',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_clients',
+    'unique_id': 'device_clients-00:00:00:00:02:01',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.gateway_clients-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gateway Clients',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gateway_clients',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.gateway_ips_rule_count-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry connections=[('mac', '00:00:00:00:02:01')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.gateway_ips_rule_count',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'IPS rule count',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'IPS rule count',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ips_rule_count',
+    'unique_id': 'ips_rule_count-00:00:00:00:02:01',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.gateway_ips_rule_count-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gateway IPS rule count',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gateway_ips_rule_count',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '33185',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.gateway_ips_signatures_updated-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry connections=[('mac', '00:00:00:00:02:01')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.gateway_ips_signatures_updated',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'IPS signatures updated',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'IPS signatures updated',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ips_signatures_updated',
+    'unique_id': 'ips_signatures_updated-00:00:00:00:02:01',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.gateway_ips_signatures_updated-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gateway IPS signatures updated',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gateway_ips_signatures_updated',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-10-14T11:00:17+00:00',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.gateway_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disconnected',
+        'connected',
+        'pending',
+        'firmware_mismatch',
+        'upgrading',
+        'provisioning',
+        'heartbeat_missed',
+        'adopting',
+        'deleting',
+        'inform_error',
+        'adoption_failed',
+        'isolated',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry connections=[('mac', '00:00:00:00:02:01')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.gateway_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'State',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'State',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_state',
+    'unique_id': 'device_state-00:00:00:00:02:01',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.gateway_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gateway State',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'disconnected',
+        'connected',
+        'pending',
+        'firmware_mismatch',
+        'upgrading',
+        'provisioning',
+        'heartbeat_missed',
+        'adopting',
+        'deleting',
+        'inform_error',
+        'adoption_failed',
+        'isolated',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gateway_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'connected',
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.gateway_uptime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': None,
+    'device_class': None,
+    'device_id': <DeviceEntry connections=[('mac', '00:00:00:00:02:01')]>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.gateway_uptime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Uptime',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
+    'original_icon': None,
+    'original_name': 'Uptime',
+    'platform': 'unifi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'device_uptime-00:00:00:00:02:01',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.gateway_uptime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gateway Uptime',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gateway_uptime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_entity_and_device_data[wlan_payload0-device_payload0-client_payload0-config_entry_options0][sensor.mock_name_clients-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

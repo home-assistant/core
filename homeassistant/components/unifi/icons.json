@@ -32,6 +32,9 @@
       "device_uplink_mac": {
         "default": "mdi:ethernet"
       },
+      "ips_rule_count": {
+        "default": "mdi:shield-search"
+      },
       "port_bandwidth_rx": {
         "default": "mdi:download"
       },

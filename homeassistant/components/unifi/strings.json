@@ -118,6 +118,12 @@
       "device_uplink_mac": {
         "name": "Uplink MAC"
       },
+      "ips_rule_count": {
+        "name": "IPS rule count"
+      },
+      "ips_signatures_updated": {
+        "name": "IPS signatures updated"
+      },
       "outlet_power": {
         "name": "{outlet_name} outlet power"
       },
