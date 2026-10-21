@@ -87,49 +87,25 @@ async def test_uac_token_request_http_error(
 
 
 @pytest.mark.parametrize(
-    ("response", "code", "message"),
+    "message",
     [
-        pytest.param(
-            {"code": "000103", "desc": "Client is not exist"},
-            "000103",
-            "Client is not exist",
-            id="yolink_error_body",
-        ),
-        pytest.param(
-            {"error": "invalid_client", "error_description": "Bad secret key"},
-            "invalid_client",
-            "Bad secret key",
-            id="oauth_error_body",
-        ),
-        pytest.param(
-            {"desc": "Client is not exist"},
-            "unknown",
-            "Client is not exist",
-            id="described_error_body",
-        ),
-        pytest.param(
-            {"access_token": "", "code": "000103", "desc": "Client is not exist"},
-            "000103",
-            "Client is not exist",
-            id="empty_access_token_with_error",
-        ),
+        pytest.param("Auth Failed", id="wrong_secret_key"),
+        pytest.param("Not Support", id="unknown_uaid"),
     ],
 )
 async def test_uac_token_request_error_body(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    response: dict[str, Any],
-    code: str,
     message: str,
 ) -> None:
-    """Test the token endpoint reporting an error with HTTP 200."""
-    aioclient_mock.post(OAUTH2_TOKEN, json=response)
+    """Test the token endpoint refusing credentials with HTTP 200."""
+    aioclient_mock.post(OAUTH2_TOKEN, json={"state": "error", "msg": message})
     auth = _uac_auth(hass)
 
     with pytest.raises(YoLinkAuthFailError) as err:
         await auth.check_and_refresh_token()
 
-    assert err.value.code == code
+    assert err.value.code == "error"
     assert err.value.message == message
 
 

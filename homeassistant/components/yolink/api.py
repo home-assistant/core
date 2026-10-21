@@ -16,25 +16,20 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 _LOGGER = logging.getLogger(__name__)
 
-_TOKEN_ERROR_FIELDS = ("code", "desc", "error", "error_description")
-
 
 def _parse_token_response(payload: Any) -> dict[str, Any]:
     """Return the token of a successful token response, or raise."""
     if not isinstance(payload, dict):
         raise YoLinkClientError("invalid_response", "Token response is not an object")
 
+    # Refused credentials are reported with HTTP 200 and an error state.
+    if payload.get("state") == "error":
+        raise YoLinkAuthFailError("error", payload.get("msg", "unknown error"))
+
     access_token = payload.get("access_token")
     if not isinstance(access_token, str) or not access_token:
-        if not any(field in payload for field in _TOKEN_ERROR_FIELDS):
-            # Nothing was refused, so this must not start a reauthentication.
-            raise YoLinkClientError(
-                "invalid_response", "Token response has no usable access token"
-            )
-        # Invalid credentials are reported with HTTP 200 and an error body.
-        raise YoLinkAuthFailError(
-            payload.get("code", payload.get("error", "unknown")),
-            payload.get("desc", payload.get("error_description", "unknown error")),
+        raise YoLinkClientError(
+            "invalid_response", "Token response has no usable access token"
         )
 
     expires_in = payload.get("expires_in")
