@@ -1,0 +1,174 @@
+"""Tests for the Spin EV Charger charging switch."""
+
+from collections.abc import Generator
+from dataclasses import replace
+from unittest.mock import AsyncMock, patch
+
+import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from spinev_ble import (
+    ChargerState,
+    ChargerStatus,
+    SpinEvCommandRejectedError,
+    SpinEvError,
+)
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNKNOWN,
+    Platform,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
+
+from . import setup_integration, setup_persistent
+from .const import IDLE_STATUS, STATUS
+
+CHARGING_SWITCH = "switch.123456789012_charging"
+
+
+@pytest.fixture(autouse=True)
+def platforms() -> Generator[None]:
+    """Set up only the switch platform."""
+    with patch("homeassistant.components.spin_ble.PLATFORMS", [Platform.SWITCH]):
+        yield
+
+
+@pytest.mark.usefixtures("mock_charger")
+async def test_switches(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """The switch platform registers the entities it is expected to."""
+    await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("state", "expected"),
+    [
+        pytest.param(ChargerState.AVAILABLE, STATE_OFF, id="available"),
+        pytest.param(ChargerState.IDLE, STATE_OFF, id="idle"),
+        pytest.param(ChargerState.STARTING, STATE_ON, id="starting"),
+        pytest.param(ChargerState.CHARGING, STATE_ON, id="charging"),
+        # A vehicle pausing resumes without a command, so the switch stays on
+        # rather than flapping mid-session.
+        pytest.param(ChargerState.EV_SUSPENDED, STATE_ON, id="ev_suspended"),
+        pytest.param(ChargerState.EVSE_SUSPENDED, STATE_ON, id="evse_suspended"),
+        pytest.param(ChargerState.FINISHING, STATE_OFF, id="finishing"),
+        # The charger still answers with a state the library does not know, so
+        # the switch is unknown rather than unavailable.
+        pytest.param(None, STATE_UNKNOWN, id="unrecognised"),
+    ],
+)
+async def test_the_switch_follows_the_session(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_charger: AsyncMock,
+    state: ChargerState | None,
+    expected: str,
+) -> None:
+    """The switch is on for a whole session, including while it is paused."""
+    mock_charger.async_get_status.return_value = replace(IDLE_STATUS, state=state)
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(CHARGING_SWITCH).state == expected
+
+
+@pytest.mark.parametrize(
+    ("service", "status", "command"),
+    [
+        pytest.param(
+            SERVICE_TURN_ON, IDLE_STATUS, "async_start_charging", id="turn_on"
+        ),
+        pytest.param(SERVICE_TURN_OFF, STATUS, "async_stop_charging", id="turn_off"),
+    ],
+)
+async def test_commands_reach_the_charger(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_charger: AsyncMock,
+    service: str,
+    status: ChargerStatus,
+    command: str,
+) -> None:
+    """A command is sent, the link handed back, and the charger re-read."""
+    mock_charger.async_get_status.return_value = status
+    await setup_integration(hass, mock_config_entry)
+    mock_charger.async_get_status.reset_mock()
+    mock_charger.async_disconnect.reset_mock()
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: CHARGING_SWITCH}, blocking=True
+    )
+
+    getattr(mock_charger, command).assert_awaited_once()
+    mock_charger.async_disconnect.assert_awaited()
+    mock_charger.async_get_status.assert_awaited_once()
+
+
+async def test_a_persistent_link_is_held_through_a_command(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_charger: AsyncMock
+) -> None:
+    """A command does not give up a slot the user chose to keep."""
+    await setup_persistent(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: CHARGING_SWITCH},
+        blocking=True,
+    )
+
+    mock_charger.async_stop_charging.assert_awaited_once()
+    mock_charger.async_disconnect.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    ("error", "translation_key", "released"),
+    [
+        # The charger answered, so a held link is still good.
+        pytest.param(
+            SpinEvCommandRejectedError("refused"),
+            "command_rejected",
+            False,
+            id="rejected",
+        ),
+        pytest.param(SpinEvError("no reply"), "cannot_send", True, id="no_reply"),
+    ],
+)
+async def test_a_failed_command_raises(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_charger: AsyncMock,
+    error: SpinEvError,
+    translation_key: str,
+    released: bool,
+) -> None:
+    """A command the charger refuses or never answers surfaces to the user."""
+    mock_charger.async_get_status.return_value = IDLE_STATUS
+    mock_charger.async_start_charging.side_effect = error
+    await setup_persistent(hass, mock_config_entry)
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: CHARGING_SWITCH},
+            blocking=True,
+        )
+
+    assert err.value.translation_key == translation_key
+    assert mock_charger.async_disconnect.await_count == int(released)

@@ -4,6 +4,11 @@
       "state": {
         "default": "mdi:ev-station"
       }
+    },
+    "switch": {
+      "charging": {
+        "default": "mdi:ev-plug-type2"
+      }
     }
   }
 }

@@ -1,18 +1,27 @@
 """Snapshot tests for the Spin EV Charger sensors."""
 
+from collections.abc import Generator
 from dataclasses import replace
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from spinev_ble import ChargerState
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .const import IDLE_STATUS, STATE_SENSOR
+
+
+@pytest.fixture(autouse=True)
+def platforms() -> Generator[None]:
+    """Set up only the sensor platform."""
+    with patch("homeassistant.components.spin_ble.PLATFORMS", [Platform.SENSOR]):
+        yield
 
 
 @pytest.mark.usefixtures("mock_charger")

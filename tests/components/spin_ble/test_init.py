@@ -18,19 +18,8 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
-from . import setup_integration
+from . import setup_integration, setup_persistent
 from .const import IDLE_STATUS, STATE_SENSOR, STATUS
-
-
-async def setup_persistent(hass: HomeAssistant, entry: MockConfigEntry) -> None:
-    """Set the integration up with the charger's Bluetooth slot held open."""
-    entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        entry,
-        options={**entry.options, CONF_CONNECTION_MODE: ConnectionMode.PERSISTENT},
-    )
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures("mock_charger")
