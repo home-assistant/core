@@ -1391,7 +1391,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==14.3.0
+ical==14.3.1
 
 # homeassistant.components.caldav
 icalendar==6.3.1
@@ -1436,7 +1436,7 @@ influxdb-client==1.50.0
 influxdb==5.3.2
 
 # homeassistant.components.infrared
-infrared-protocols==10.3.0
+infrared-protocols==10.4.1
 
 # homeassistant.components.inkbird
 inkbird-ble==1.7.1
@@ -1623,7 +1623,7 @@ matrix-nio==0.26.0
 matter-ble-proxy==0.7.1
 
 # homeassistant.components.matter
-matter-python-client==1.4.0
+matter-python-client==1.5.0
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
@@ -1687,7 +1687,7 @@ mitsubishi-comfort==0.6.0
 moat-ble==0.1.1
 
 # homeassistant.components.modbus
-modbus-connection[tmodbus]==4.12.4
+modbus-connection[tmodbus]==4.12.6
 
 # homeassistant.components.moehlenhoff_alpha2
 moehlenhoff-alpha2==1.4.0
@@ -2341,7 +2341,7 @@ pyheltycloud==0.2.0
 pyheos==1.0.6
 
 # homeassistant.components.hive
-pyhive-integration==1.0.9
+pyhive-integration==1.0.10
 
 # homeassistant.components.homematic
 pyhomematic==0.1.78

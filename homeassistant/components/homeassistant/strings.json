@@ -108,6 +108,9 @@
     "platform_schema_validator_err": {
       "message": "Unknown error when validating config for {domain} from integration {p_name} - {error}."
     },
+    "platform_setup_failed": {
+      "message": "Failed to set up the {platform} {domain} platform."
+    },
     "scene_config_reload_failed": {
       "message": "Failed to reload the Home Assistant scene platform configuration - {error}"
     },
