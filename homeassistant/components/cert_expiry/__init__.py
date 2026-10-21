@@ -11,7 +11,7 @@ from .helper import async_get_ssl_context
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: CertExpiryConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: CertExpiryConfigEntry) -> None:
     """Load the saved entities."""
     host: str = entry.data[CONF_HOST]
     port: int = entry.data[CONF_PORT]
@@ -33,9 +33,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: CertExpiryConfigEntry) -
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async_at_started(hass, _async_finish_startup)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: CertExpiryConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: CertExpiryConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

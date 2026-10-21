@@ -4,6 +4,7 @@ from copy import deepcopy
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.starlink.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, STATE_OFF, STATE_UNKNOWN
@@ -17,8 +18,6 @@ from .patchers import (
     STATUS_DATA_FIXTURE,
     STATUS_DATA_TARGET,
 )
-
-from tests.common import MockConfigEntry
 
 # Alerts that a dish which does not support roaming stops reporting. The
 # library builds the alert dict from the fields the dish actually sends, so

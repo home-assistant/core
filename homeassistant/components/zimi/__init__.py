@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 type ZimiConfigEntry = ConfigEntry[ControlPoint]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ZimiConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ZimiConfigEntry) -> None:
     """Connect to Zimi Controller and register device."""
 
     try:
@@ -45,27 +45,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZimiConfigEntry) -> bool
     entry.runtime_data = api
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, api.mac)},
-        manufacturer=api.brand,
-        name=api.network_name,
-        model="Zimi Cloud Connect",
-        sw_version=api.firmware_version,
-        connections={(CONNECTION_NETWORK_MAC, api.mac)},
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, api.mac)},
+            manufacturer=api.brand,
+            name=api.network_name,
+            model="Zimi Cloud Connect",
+            sw_version=api.firmware_version,
+            connections={(CONNECTION_NETWORK_MAC, api.mac)},
+        ),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     _LOGGER.debug("Zimi setup complete")
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ZimiConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ZimiConfigEntry) -> None:
     """Unload a config entry."""
 
     api = entry.runtime_data
     api.disconnect()
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

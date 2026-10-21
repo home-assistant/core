@@ -10,8 +10,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.x509.oid import ExtendedKeyUsageOID, NameOID
 import pytest
-
-from tests.patch_time import ha_datetime_to_fakedatetime
+from pytest_homeassistant.patch_time import ha_datetime_to_fakedatetime
 
 
 @pytest.fixture

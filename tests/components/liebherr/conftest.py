@@ -30,12 +30,11 @@ from pyliebherrhomeapi.exceptions import (
     LiebherrTimeoutError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.liebherr.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 # Complete multi-zone device for comprehensive testing
 MOCK_DEVICE = Device(

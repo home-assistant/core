@@ -65,7 +65,7 @@ async def call_c4_api_retry(func, *func_args):
     ) from exc
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> None:
     """Set up Control4 from a config entry."""
     account_session = aiohttp_client.async_get_clientsession(hass)
 
@@ -103,14 +103,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
     director_model = model.upper()
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, controller_unique_id)},
-        connections={(dr.CONNECTION_NETWORK_MAC, mac_address)},
-        manufacturer="Control4",
-        name=controller_unique_id,
-        model=director_model,
-        sw_version=director_sw_version,
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, controller_unique_id)},
+            connections={(dr.CONNECTION_NETWORK_MAC, mac_address)},
+            manufacturer="Control4",
+            name=controller_unique_id,
+            model=director_model,
+            sw_version=director_sw_version,
+        ),
     )
 
     # Store all items found on controller for platforms to use
@@ -144,12 +146,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def get_items_of_category(

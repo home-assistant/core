@@ -182,6 +182,7 @@ class PlaystationNetworkGroupsUpdateCoordinator(
                 self.hass,
                 DOMAIN,
                 f"group_chat_forbidden_{self.config_entry.entry_id}",
+                config_entry_id=self.config_entry.entry_id,
                 is_fixable=False,
                 issue_domain=DOMAIN,
                 severity=ir.IssueSeverity.ERROR,

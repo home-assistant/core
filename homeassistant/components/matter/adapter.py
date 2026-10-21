@@ -256,17 +256,20 @@ class MatterAdapter:
         else:
             model_id = str(product_id) if (product_id := basic_info.productID) else None
 
-        device_registry.async_get_or_create(
-            name=name,
+        device_registry.async_get_or_create_device(
             config_entry_id=self.config_entry.entry_id,
-            identifiers=identifiers,
-            hw_version=basic_info.hardwareVersionString,
-            sw_version=basic_info.softwareVersionString,
-            manufacturer=basic_info.vendorName or endpoint.node.device_info.vendorName,
-            model=model_name,
-            model_id=model_id,
-            serial_number=serial_number,
-            via_device_id=via_device_id,
+            device_info=dr.DeviceInfo(
+                name=name,
+                identifiers=identifiers,
+                hw_version=basic_info.hardwareVersionString,
+                sw_version=basic_info.softwareVersionString,
+                manufacturer=basic_info.vendorName
+                or endpoint.node.device_info.vendorName,
+                model=model_name,
+                model_id=model_id,
+                serial_number=serial_number,
+                via_device_id=via_device_id,
+            ),
         )
 
     def _setup_endpoint(self, endpoint: MatterEndpoint) -> None:

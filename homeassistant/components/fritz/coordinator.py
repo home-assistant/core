@@ -196,15 +196,17 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self.hass.data[FRITZ_DATA_KEY].wol_buttons[self.unique_id] = set()
 
         device_registry = dr.async_get(self.hass)
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=self.config_entry.entry_id,
-            configuration_url=f"http://{self.host}",
-            connections={(dr.CONNECTION_NETWORK_MAC, self.mac)},
-            identifiers={(DOMAIN, self.unique_id)},
-            manufacturer="FRITZ!",
-            model=self.model,
-            name=self.config_entry.title,
-            sw_version=self.current_firmware,
+            device_info=dr.DeviceInfo(
+                configuration_url=f"http://{self.host}",
+                connections={(dr.CONNECTION_NETWORK_MAC, self.mac)},
+                identifiers={(DOMAIN, self.unique_id)},
+                manufacturer="FRITZ!",
+                model=self.model,
+                name=self.config_entry.title,
+                sw_version=self.current_firmware,
+            ),
         )
         self.connection.clear_cache()
 
@@ -651,16 +653,18 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
         # manually register device entry for new connected device
         device_registry = dr.async_get(self.hass)
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=self.config_entry.entry_id,
-            connections={(CONNECTION_NETWORK_MAC, dev_mac)},
-            manufacturer="FRITZ!",
-            model="FRITZ!Box Tracked device",
-            name=device.hostname,
-            via_device_id=dr.async_get_device_id_by_identifier(
-                self.hass,
-                (DOMAIN, self.unique_id),
-                config_entry_id=self.config_entry.entry_id,
+            device_info=dr.DeviceInfo(
+                connections={(CONNECTION_NETWORK_MAC, dev_mac)},
+                manufacturer="FRITZ!",
+                model="FRITZ!Box Tracked device",
+                name=device.hostname,
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    self.hass,
+                    (DOMAIN, self.unique_id),
+                    config_entry_id=self.config_entry.entry_id,
+                ),
             ),
         )
         return True

@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_get_device_automations,
+    async_mock_service,
+)
 from pytest_unordered import unordered
 from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
 from zigpy.device import Device
@@ -22,12 +27,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
-
-from tests.common import (
-    MockConfigEntry,
-    async_get_device_automations,
-    async_mock_service,
-)
 
 SHORT_PRESS = "remote_button_short_press"
 COMMAND = "command"
@@ -306,6 +305,14 @@ async def test_inovelli_led_effect_rejects_unknown_effect(
         "duration": 255,
         **extra_config,
     }
+
+    with pytest.raises(probatio.Invalid):
+        await device_action.async_validate_action_config(hass, config)
+
+
+async def test_action_without_type_is_invalid(hass: HomeAssistant) -> None:
+    """Test an action without a type fails validation."""
+    config = {"device_id": "device_id", "domain": DOMAIN}
 
     with pytest.raises(probatio.Invalid):
         await device_action.async_validate_action_config(hass, config)

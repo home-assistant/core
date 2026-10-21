@@ -9,6 +9,7 @@ from unittest.mock import ANY, patch
 from cryptography import x509
 from cryptography.hazmat.primitives.serialization import Encoding
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.cert_expiry.const import CONF_CA_CERTIFICATES, DOMAIN
@@ -17,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import HOST, PORT
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

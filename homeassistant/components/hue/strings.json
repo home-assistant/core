@@ -164,6 +164,9 @@
     },
     "duplicate_entry": {
       "message": "Another entry already exists for this Hue bridge, this entry will be removed"
+    },
+    "unload_failed": {
+      "message": "Failed to unload the Hue bridge"
     }
   },
   "issues": {

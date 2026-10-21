@@ -220,12 +220,14 @@ def _add_camera(
             ),
         )
 
-    device = device_registry.async_get_or_create(
+    device = device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={device_identifier},
-        manufacturer=MOTIONEYE_MANUFACTURER,
-        model=MOTIONEYE_MANUFACTURER,
-        name=camera[KEY_NAME],
+        device_info=dr.DeviceInfo(
+            identifiers={device_identifier},
+            manufacturer=MOTIONEYE_MANUFACTURER,
+            model=MOTIONEYE_MANUFACTURER,
+            name=camera[KEY_NAME],
+        ),
     )
     if entry.options.get(CONF_WEBHOOK_SET, DEFAULT_WEBHOOK_SET):
         url = async_generate_motioneye_webhook(hass, entry.data[CONF_WEBHOOK_ID])
@@ -273,7 +275,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MotionEyeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MotionEyeConfigEntry) -> None:
     """Set up motionEye from a config entry."""
 
     client = create_motioneye_client(
@@ -357,18 +359,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: MotionEyeConfigEntry) ->
     )
     await coordinator.async_refresh()
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: MotionEyeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MotionEyeConfigEntry) -> None:
     """Unload a config entry."""
     webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        await entry.runtime_data.client.async_client_close()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.client.async_client_close()
 
 
 async def handle_webhook(

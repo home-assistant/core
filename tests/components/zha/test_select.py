@@ -4,6 +4,7 @@ from collections.abc import Callable, Coroutine
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import mock_restore_cache
 from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 from zigpy.device import Device
 from zigpy.profiles import zha
@@ -25,8 +26,6 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
 from .common import find_entity_id
-
-from tests.common import mock_restore_cache
 
 
 @pytest.fixture(autouse=True)

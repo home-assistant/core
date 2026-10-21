@@ -1,7 +1,7 @@
 """Helper functions for the Cert Expiry platform."""
 
 import asyncio
-import datetime
+import datetime as dt
 import socket
 import ssl
 
@@ -115,7 +115,7 @@ async def get_cert_expiry_timestamp(
     *,
     verify_ssl: bool = True,
     ssl_context: ssl.SSLContext | None = None,
-) -> datetime.datetime:
+) -> dt.datetime:
     """Return the certificate's expiration timestamp."""
     try:
         cert = await async_get_cert(
