@@ -52,6 +52,10 @@ class InvalidProvider(Exception):
     """Authentication provider not found."""
 
 
+class DuplicateCredentialsError(Exception):
+    """Raised when new credentials match credentials stored in the meantime."""
+
+
 class LastLoginMethodError(Exception):
     """Raised when removing credentials would leave the owner unable to log in."""
 
@@ -191,6 +195,7 @@ class AuthManager:
         self._mfa_modules = mfa_modules
         self.login_flow = AuthManagerFlowManager(hass, self)
         self._revoke_callbacks: dict[str, set[CALLBACK_TYPE]] = {}
+        self._create_user_lock = asyncio.Lock()
         # Removals wait for each other, so two can't each count the other's
         # credentials as the login that is left.
         self._remove_credentials_lock = asyncio.Lock()
@@ -313,26 +318,35 @@ class AuthManager:
         self, credentials: models.Credentials
     ) -> models.User:
         """Get or create a user."""
-        if not credentials.is_new:
-            user = await self.async_get_user_by_credentials(credentials)
-            if user is None:
-                raise ValueError("Unable to find the user.")
-            return user
+        async with self._create_user_lock:
+            if not credentials.is_new:
+                user = await self.async_get_user_by_credentials(credentials)
+                if user is None:
+                    raise ValueError("Unable to find the user.")
+                return user
 
-        auth_provider = self._async_get_auth_provider(credentials)
+            auth_provider = self._async_get_auth_provider(credentials)
 
-        if auth_provider is None:
-            raise RuntimeError("Credential with unknown provider encountered")
+            if auth_provider is None:
+                raise RuntimeError("Credential with unknown provider encountered")
 
-        info = await auth_provider.async_user_meta_for_credentials(credentials)
+            # Each sign in finished before the first code was redeemed brings its
+            # own new credentials for the same account.
+            if any(
+                stored.data == credentials.data
+                for stored in await auth_provider.async_credentials()
+            ):
+                raise DuplicateCredentialsError
 
-        user = await self._store.async_create_user(
-            credentials=credentials,
-            name=info.name,
-            is_active=info.is_active,
-            group_ids=[GROUP_ID_ADMIN if info.group is None else info.group],
-            local_only=info.local_only,
-        )
+            info = await auth_provider.async_user_meta_for_credentials(credentials)
+
+            user = await self._store.async_create_user(
+                credentials=credentials,
+                name=info.name,
+                is_active=info.is_active,
+                group_ids=[GROUP_ID_ADMIN if info.group is None else info.group],
+                local_only=info.local_only,
+            )
 
         self.hass.bus.async_fire(EVENT_USER_ADDED, {"user_id": user.id})
 
@@ -418,11 +432,12 @@ class AuthManager:
             self.async_remove_refresh_token(refresh_token)
 
     async def async_remove_credentials(self, credentials: models.Credentials) -> None:
-        """Remove credentials."""
+        """Remove credentials and end the sessions that signed in with them."""
         async with self._remove_credentials_lock:
+            user = await self.async_get_user_by_credentials(credentials)
             # Enforced here to cover every way of removing credentials.
             if (
-                (user := await self.async_get_user_by_credentials(credentials))
+                user is not None
                 and user.is_owner
                 and not self.async_has_other_login_method(user, credentials)
             ):
@@ -434,6 +449,15 @@ class AuthManager:
                 await provider.async_will_remove_credentials(credentials)
 
             await self._store.async_remove_credentials(credentials)
+
+        if user is None:
+            return
+        for refresh_token in list(user.refresh_tokens.values()):
+            if (
+                refresh_token.credential is not None
+                and refresh_token.credential.id == credentials.id
+            ):
+                self.async_remove_refresh_token(refresh_token)
 
     @callback
     def async_has_other_login_method(

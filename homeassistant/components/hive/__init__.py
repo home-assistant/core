@@ -58,14 +58,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> None
         connections.add((dr.CONNECTION_NETWORK_MAC, mac))
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, hub_data["device_id"])},
-        connections=connections,
-        name=hub_data["hiveName"],
-        model=hub_data["deviceData"]["model"],
-        sw_version=hub_data["deviceData"]["version"],
-        manufacturer=hub_data["deviceData"]["manufacturer"],
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, hub_data["device_id"])},
+            connections=connections,
+            name=hub_data["hiveName"],
+            model=hub_data["deviceData"]["model"],
+            sw_version=hub_data["deviceData"]["version"],
+            manufacturer=hub_data["deviceData"]["manufacturer"],
+        ),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

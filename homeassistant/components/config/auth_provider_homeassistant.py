@@ -116,17 +116,18 @@ async def websocket_delete(
                 "Unable to delete the credentials of the owner",
             )
             return
-        try:
-            await hass.auth.async_remove_credentials(credentials)
-        except LastLoginMethodError:
-            connection.send_error(
-                msg["id"],
-                "cannot_delete_owner_credentials",
-                "Unable to delete the credentials of the owner",
-            )
-            return
-
-        connection.send_result(msg["id"])
+        # Deleting the password of this session ends it, so that waits for the result.
+        with connection.async_defer_auth_close():
+            try:
+                await hass.auth.async_remove_credentials(credentials)
+            except LastLoginMethodError:
+                connection.send_error(
+                    msg["id"],
+                    "cannot_delete_owner_credentials",
+                    "Unable to delete the credentials of the owner",
+                )
+                return
+            connection.send_result(msg["id"])
         return
 
     await provider.async_remove_auth(msg["username"])
