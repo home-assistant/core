@@ -1,6 +1,7 @@
 """Test decorators."""
 
 from typing import Any
+from unittest.mock import patch
 
 import probatio
 import pytest
@@ -221,3 +222,36 @@ async def test_supervisor_only_allows_supervisor(
     msg = await client.receive_json()
     assert msg["id"] == 5
     assert msg["success"]
+
+
+@pytest.mark.parametrize(
+    ("stepped_up", "success"),
+    [
+        pytest.param(True, True, id="stepped-up"),
+        pytest.param(False, False, id="not-stepped-up"),
+    ],
+)
+async def test_require_step_up(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    stepped_up: bool,
+    success: bool,
+) -> None:
+    """Test a command needing a step up only runs after one."""
+
+    @websocket_api.require_step_up
+    @websocket_api.websocket_command({"type": "test-require-step-up"})
+    def require_step_up_request(
+        hass: HomeAssistant,
+        connection: websocket_api.ActiveConnection,
+        msg: dict[str, Any],
+    ) -> None:
+        connection.send_result(msg["id"])
+
+    websocket_api.async_register_command(hass, require_step_up_request)
+
+    with patch.object(hass.auth, "async_consume_step_up", return_value=stepped_up):
+        await websocket_client.send_json({"id": 5, "type": "test-require-step-up"})
+        msg = await websocket_client.receive_json()
+
+    assert msg["success"] is success

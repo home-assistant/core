@@ -69,6 +69,29 @@ def require_admin(func: const.WebSocketCommandHandler) -> const.WebSocketCommand
     return with_admin
 
 
+def require_step_up(
+    func: const.WebSocketCommandHandler,
+) -> const.WebSocketCommandHandler:
+    """Websocket decorator to require the session to have just proved its user."""
+
+    @wraps(func)
+    def with_step_up(
+        hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+    ) -> None:
+        """Use up the step up proof and call function."""
+        if not hass.auth.async_consume_step_up(connection.refresh_token_id):
+            connection.send_error(
+                msg["id"],
+                const.ERR_STEP_UP_REQUIRED,
+                "Verify your identity again first",
+            )
+            return
+
+        func(hass, connection, msg)
+
+    return with_step_up
+
+
 def ws_require_user(
     only_owner: bool = False,
     only_system_user: bool = False,

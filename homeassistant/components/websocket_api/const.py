@@ -44,6 +44,7 @@ ERR_UNKNOWN_ERROR: Final = "unknown_error"
 ERR_UNAUTHORIZED: Final = "unauthorized"
 ERR_TIMEOUT: Final = "timeout"
 ERR_TEMPLATE_ERROR: Final = "template_error"
+ERR_STEP_UP_REQUIRED: Final = "step_up_required"
 
 TYPE_RESULT: Final = "result"
 

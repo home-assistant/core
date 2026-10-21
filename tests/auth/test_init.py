@@ -9,6 +9,7 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import jwt
 import probatio
 import pytest
@@ -32,6 +33,8 @@ from homeassistant.auth import (
 )
 from homeassistant.auth.const import GROUP_ID_ADMIN, MFA_SESSION_EXPIRATION
 from homeassistant.auth.models import Credentials
+from homeassistant.auth.providers import InvalidStepUpError
+from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
@@ -1674,3 +1677,87 @@ async def test_provider_initialization_is_not_swallowed_when_cancelled(
         await auth.auth_manager_from_config(
             mock_hass, [{"type": "insecure_example", "users": []}], []
         )
+
+
+async def test_get_step_up_providers(mock_hass) -> None:
+    """Test only the providers a user can re-verify with are offered."""
+    manager = await auth.auth_manager_from_config(
+        mock_hass,
+        [{"type": "homeassistant"}, {"type": "insecure_example", "users": []}],
+        [],
+    )
+    hass_provider, example_provider = manager.auth_providers
+    user = MockUser().add_to_auth_manager(manager)
+
+    assert manager.async_get_step_up_providers(user) == []
+
+    # The example provider cannot re-verify anybody.
+    user.credentials.append(
+        example_provider.async_create_credentials({"username": "test-user"})
+    )
+    assert manager.async_get_step_up_providers(user) == []
+
+    user.credentials.append(
+        hass_provider.async_create_credentials({"username": "test-user"})
+    )
+    assert manager.async_get_step_up_providers(user) == [hass_provider]
+
+
+async def test_step_up_proof_expires(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    hass_access_token: str,
+    local_auth: HassAuthProvider,
+) -> None:
+    """Test a step up proof only counts for a short while."""
+    await hass.async_add_executor_job(local_auth.data.add_auth, "admin", "test-pass")
+    refresh_token_id = hass.auth.async_validate_access_token(hass_access_token).id
+    await hass.auth.async_step_up(
+        refresh_token_id, local_auth, {"password": "test-pass"}, None
+    )
+
+    freezer.tick(auth.STEP_UP_VALIDITY)
+
+    assert not hass.auth.async_consume_step_up(refresh_token_id)
+
+
+async def test_step_up_needed_when_the_user_can_step_up(
+    hass: HomeAssistant, hass_access_token: str
+) -> None:
+    """Test a fresh session alone does not count when the user can step up."""
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
+
+    assert not hass.auth.async_consume_step_up(refresh_token.id)
+
+
+async def test_step_up_falls_back_to_a_recent_sign_in(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_admin_user: MockUser
+) -> None:
+    """Test a user nothing can re-verify relies on having just signed in."""
+    refresh_token = await hass.auth.async_create_refresh_token(
+        hass_admin_user, CLIENT_ID
+    )
+
+    assert hass.auth.async_consume_step_up(refresh_token.id)
+
+    freezer.tick(auth.STEP_UP_VALIDITY)
+
+    assert not hass.auth.async_consume_step_up(refresh_token.id)
+
+
+async def test_step_up_refuses_long_lived_access_token(
+    hass: HomeAssistant, hass_admin_user: MockUser, local_auth: HassAuthProvider
+) -> None:
+    """Test a long-lived access token never counts as a signed in session."""
+    refresh_token = await hass.auth.async_create_refresh_token(
+        hass_admin_user,
+        client_name="Script",
+        token_type=auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+    )
+
+    with pytest.raises(InvalidStepUpError):
+        await hass.auth.async_step_up(
+            refresh_token.id, local_auth, {"password": "test-pass"}, None
+        )
+    # Not even as a recent sign in for a user nothing can re-verify.
+    assert not hass.auth.async_consume_step_up(refresh_token.id)

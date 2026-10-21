@@ -143,9 +143,11 @@ import probatio
 from homeassistant.auth import DuplicateCredentialsError, InvalidAuthError
 from homeassistant.auth.models import (
     TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+    AuthFlowContext,
     Credentials,
     User,
 )
+from homeassistant.auth.providers import AuthProvider, InvalidStepUpError
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.http.auth import async_sign_path
@@ -224,6 +226,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_delete_all_refresh_tokens)
     websocket_api.async_register_command(hass, websocket_sign_path)
     websocket_api.async_register_command(hass, websocket_refresh_token_set_expiry)
+    websocket_api.async_register_command(hass, websocket_start_step_up)
+    websocket_api.async_register_command(hass, websocket_step_up)
 
     login_flow.async_setup(hass, store_result)
     mfa_setup_flow.async_setup(hass)
@@ -660,6 +664,74 @@ async def websocket_create_long_lived_access_token(
         return
 
     connection.send_result(msg["id"], access_token)
+
+
+STEP_UP_HANDLER_SCHEMA = probatio.All(
+    [probatio.Any(str, None)], probatio.Length(2, 2), probatio.Coerce(tuple)
+)
+
+
+@callback
+def _async_step_up_provider(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> AuthProvider | None:
+    """Return the provider to step up with, reporting back when there is none."""
+    if (
+        provider := hass.auth.get_auth_provider(*msg["handler"])
+    ) in hass.auth.async_get_step_up_providers(connection.user):
+        return provider
+    connection.send_error(
+        msg["id"], "invalid_provider", "Provider cannot verify this user"
+    )
+    return None
+
+
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): "auth/step_up/start",
+        probatio.Required("handler"): STEP_UP_HANDLER_SCHEMA,
+    }
+)
+@websocket_api.ws_require_user()
+@websocket_api.async_response
+async def websocket_start_step_up(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Return what the client needs to prove the user's identity again."""
+    if (provider := _async_step_up_provider(hass, connection, msg)) is None:
+        return
+
+    connection.send_result(
+        msg["id"],
+        await provider.async_start_step_up(connection.user, AuthFlowContext()),
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): "auth/step_up",
+        probatio.Required("handler"): STEP_UP_HANDLER_SCHEMA,
+        probatio.Required("data"): dict,
+    }
+)
+@websocket_api.ws_require_user()
+@websocket_api.async_response
+async def websocket_step_up(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Verify the user's identity again before a sensitive change."""
+    if (provider := _async_step_up_provider(hass, connection, msg)) is None:
+        return
+
+    try:
+        await hass.auth.async_step_up(
+            connection.refresh_token_id, provider, msg["data"], AuthFlowContext()
+        )
+    except InvalidStepUpError as err:
+        connection.send_error(msg["id"], "invalid_step_up", str(err))
+        return
+
+    connection.send_result(msg["id"])
 
 
 @websocket_api.websocket_command({probatio.Required("type"): "auth/refresh_tokens"})

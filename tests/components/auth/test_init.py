@@ -21,6 +21,7 @@ from homeassistant.auth.models import (
     Credentials,
     RefreshToken,
 )
+from homeassistant.auth.providers import homeassistant as prov_ha
 from homeassistant.components import auth
 from homeassistant.components.auth import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -1217,3 +1218,110 @@ async def test_auth_code_unexpected_verifier_rejected(
     result = await resp.json()
     assert result["error"] == "invalid_request"
     assert "no code challenge was present" in result["error_description"]
+
+
+async def test_ws_step_up(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_access_token: str,
+    local_auth: prov_ha.HassAuthProvider,
+) -> None:
+    """Test a step up proof unlocks exactly one sensitive change."""
+    assert await async_setup_component(hass, DOMAIN, {"http": {}})
+    await hass.async_add_executor_job(local_auth.data.add_auth, "admin", "test-pass")
+    refresh_token_id = hass.auth.async_validate_access_token(hass_access_token).id
+    ws_client = await hass_ws_client(hass, hass_access_token)
+
+    await ws_client.send_json(
+        {"id": 5, "type": "auth/step_up/start", "handler": ["homeassistant", None]}
+    )
+    result = await ws_client.receive_json()
+    assert result["success"], result
+    assert result["result"] == {}
+
+    await ws_client.send_json(
+        {
+            "id": 6,
+            "type": "auth/step_up",
+            "handler": ["homeassistant", None],
+            "data": {"password": "wrong-pass"},
+        }
+    )
+    result = await ws_client.receive_json()
+    assert not result["success"]
+    assert result["error"]["code"] == "invalid_step_up"
+    assert not hass.auth.async_consume_step_up(refresh_token_id)
+
+    await ws_client.send_json(
+        {
+            "id": 7,
+            "type": "auth/step_up",
+            "handler": ["homeassistant", None],
+            "data": {"password": "test-pass"},
+        }
+    )
+    result = await ws_client.receive_json()
+    assert result["success"], result
+
+    assert hass.auth.async_consume_step_up(refresh_token_id)
+    # The proof is used up by the change it unlocked.
+    assert not hass.auth.async_consume_step_up(refresh_token_id)
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        pytest.param({"type": "auth/step_up/start"}, id="start"),
+        pytest.param(
+            {"type": "auth/step_up", "data": {"password": "test-pass"}}, id="verify"
+        ),
+    ],
+)
+async def test_ws_step_up_needs_a_provider_of_the_user(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_access_token: str,
+    payload: dict[str, Any],
+) -> None:
+    """Test only a provider that can verify the user is accepted."""
+    assert await async_setup_component(hass, DOMAIN, {"http": {}})
+    ws_client = await hass_ws_client(hass, hass_access_token)
+
+    await ws_client.send_json(
+        {"id": 5, "handler": ["insecure_example", None], **payload}
+    )
+    result = await ws_client.receive_json()
+    assert not result["success"]
+    assert result["error"]["code"] == "invalid_provider"
+
+
+async def test_ws_step_up_refuses_long_lived_access_token(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+    hass_admin_credential: Credentials,
+) -> None:
+    """Test a long-lived access token cannot earn a step up proof."""
+    assert await async_setup_component(hass, DOMAIN, {"http": {}})
+    await hass.auth.async_link_user(hass_admin_user, hass_admin_credential)
+    refresh_token = await hass.auth.async_create_refresh_token(
+        hass_admin_user,
+        client_name="Script",
+        token_type=TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+    )
+    ws_client = await hass_ws_client(
+        hass, hass.auth.async_create_access_token(refresh_token)
+    )
+
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "auth/step_up",
+            "handler": ["homeassistant", None],
+            "data": {"password": "test-pass"},
+        }
+    )
+    result = await ws_client.receive_json()
+    assert not result["success"]
+    assert result["error"]["code"] == "invalid_step_up"
+    assert not hass.auth.async_consume_step_up(refresh_token.id)

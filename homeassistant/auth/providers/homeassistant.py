@@ -265,6 +265,19 @@ class HassAuthProvider(AuthProvider):
         """Return a flow to login."""
         return HassLoginFlow(self)
 
+    @property
+    @override
+    def support_step_up(self) -> bool:
+        """Return that a signed in user can re-verify with their password."""
+        return True
+
+    @override
+    async def async_start_step_up(
+        self, user: User, context: AuthFlowContext | None
+    ) -> dict[str, Any]:
+        """Return the data needed to build a password proof."""
+        return {}
+
     @override
     async def async_verify_step_up(
         self, user: User, data: Mapping[str, Any], context: AuthFlowContext | None

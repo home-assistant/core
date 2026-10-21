@@ -328,3 +328,11 @@ async def test_verify_step_up_needs_a_credential_of_this_provider(
     assert provider.async_get_username(user) is None
     with pytest.raises(InvalidStepUpError):
         await provider.async_verify_step_up(user, {"password": "test-pass"}, None)
+
+
+async def test_start_step_up(hass: HomeAssistant, data: hass_auth.Data) -> None:
+    """Test a password proof needs nothing from the server up front."""
+    provider, user = await _signed_in_user(hass, data)
+
+    assert provider.support_step_up is True
+    assert await provider.async_start_step_up(user, None) == {}

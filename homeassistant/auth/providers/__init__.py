@@ -80,6 +80,11 @@ class AuthProvider:
         """Return the name of the auth provider."""
         return self.config.get(CONF_NAME, self.DEFAULT_TITLE)  # type: ignore[no-any-return]
 
+    @property
+    def support_step_up(self) -> bool:
+        """Return whether the provider can re-verify an already signed in user."""
+        return False
+
     async def async_credentials(self) -> list[Credentials]:
         """Return all credentials of this provider."""
         users = await self.store.async_get_users()
@@ -130,6 +135,12 @@ class AuthProvider:
 
         Will be used to populate info when creating a new user.
         """
+        raise NotImplementedError
+
+    async def async_start_step_up(
+        self, user: User, context: AuthFlowContext | None
+    ) -> dict[str, Any]:
+        """Return the data the client needs to build a step up proof."""
         raise NotImplementedError
 
     async def async_verify_step_up(
