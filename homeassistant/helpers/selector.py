@@ -1867,6 +1867,8 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
             raise probatio.Invalid("Value should be a dict or a list of dicts")
         if isinstance(data, list) and not self.config["multiple"]:
             raise probatio.Invalid("Value should not be a list")
+        if not isinstance(data, list) and self.config["multiple"]:
+            raise probatio.Invalid("Value should be a list")
 
         test_data = data if isinstance(data, list) else [data]
 

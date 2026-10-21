@@ -214,6 +214,54 @@ def test_script_case_insensitive(
     assert language.matches(target, supported) == expected
 
 
+@pytest.mark.parametrize(
+    ("tag", "expected"),
+    [
+        pytest.param(
+            "zh-Hant-TW", language.Dialect("zh", "TW", "Hant"), id="zh-Hant-TW"
+        ),
+        pytest.param(
+            "zh_Hans_CN", language.Dialect("zh", "CN", "Hans"), id="zh_Hans_CN"
+        ),
+        pytest.param(
+            "sr-Latn-RS", language.Dialect("sr", "RS", "Latn"), id="sr-Latn-RS"
+        ),
+    ],
+)
+def test_parse_script_and_region(tag: str, expected: language.Dialect) -> None:
+    """Test parsing a tag with both a script and a region."""
+    assert language.Dialect.parse(tag) == expected
+
+
+@pytest.mark.parametrize(
+    ("target", "supported", "country", "expected"),
+    [
+        pytest.param(
+            "zh-TW",
+            ["zh-Hans-CN", "zh-Hant-TW"],
+            None,
+            ["zh-Hant-TW", "zh-Hans-CN"],
+            id="zh-TW",
+        ),
+        pytest.param(
+            "sr", ["sr-Latn-RS", "sr-RS"], "RS", ["sr-RS", "sr-Latn-RS"], id="sr"
+        ),
+        pytest.param(
+            "sr-Latn",
+            ["sr-RS", "sr-Latn-RS"],
+            "RS",
+            ["sr-Latn-RS", "sr-RS"],
+            id="sr-Latn",
+        ),
+    ],
+)
+def test_script_and_region_match(
+    target: str, supported: list[str], country: str | None, expected: list[str]
+) -> None:
+    """Test matching language-script-region tags."""
+    assert language.matches(target, supported, country=country) == expected
+
+
 def test_no_nb_same() -> None:
     """Test that the no/nb are interchangeable."""
     assert language.matches(

@@ -1,7 +1,7 @@
 """Test Home Assistant date util methods."""
 # pylint: disable=home-assistant-enforce-utcnow
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, time, timedelta
 
 import pytest
 
@@ -29,14 +29,30 @@ async def test_async_get_time_zone_retrieves_valid_time_zone() -> None:
     assert await dt_util.async_get_time_zone(TEST_TIME_ZONE) is not None
 
 
-def test_get_time_zone_returns_none_for_garbage_time_zone() -> None:
-    """Test getting a non existing time zone."""
-    assert dt_util.get_time_zone("Non existing time zone") is None
+GARBAGE_TIME_ZONES = [
+    pytest.param("Non existing time zone", id="not_found"),
+    pytest.param("", id="empty"),
+    pytest.param("Europe/", id="trailing_slash"),
+    pytest.param("Europe//Berlin", id="double_slash"),
+    pytest.param("/UTC", id="absolute_path"),
+    pytest.param("../etc", id="parent_directory"),
+    pytest.param("UTC\x00", id="null_byte"),
+    pytest.param("a" * 300, id="name_too_long"),
+]
 
 
-async def test_async_get_time_zone_returns_none_for_garbage_time_zone() -> None:
+@pytest.mark.parametrize("time_zone_str", GARBAGE_TIME_ZONES)
+def test_get_time_zone_returns_none_for_garbage_time_zone(time_zone_str: str) -> None:
     """Test getting a non existing time zone."""
-    assert await dt_util.async_get_time_zone("Non existing time zone") is None
+    assert dt_util.get_time_zone(time_zone_str) is None
+
+
+@pytest.mark.parametrize("time_zone_str", GARBAGE_TIME_ZONES)
+async def test_async_get_time_zone_returns_none_for_garbage_time_zone(
+    time_zone_str: str,
+) -> None:
+    """Test getting a non existing time zone."""
+    assert await dt_util.async_get_time_zone(time_zone_str) is None
 
 
 def test_set_default_time_zone() -> None:
@@ -185,6 +201,22 @@ def test_parse_duration(
     assert dt_util.parse_duration(duration_string) == expected_result
 
 
+@pytest.mark.parametrize(
+    ("time_string", "expected_result"),
+    [
+        pytest.param("12:34", time(12, 34), id="hours_minutes"),
+        pytest.param("12:34:56", time(12, 34, 56), id="hours_minutes_seconds"),
+        pytest.param("24:00", None, id="hour_out_of_range"),
+        pytest.param("0:2147483648", None, id="minute_overflows_c_int"),
+        pytest.param("2147483648:00", None, id="hour_overflows_c_int"),
+        pytest.param("0:0:99999999999999999999", None, id="second_overflows_c_long"),
+    ],
+)
+def test_parse_time(time_string: str, expected_result: time | None) -> None:
+    """Test that parse_time returns the expected result."""
+    assert dt_util.parse_time(time_string) == expected_result
+
+
 def test_get_age() -> None:
     """Test get_age."""
     diff = dt_util.now() - timedelta(seconds=0)
@@ -320,6 +352,10 @@ def test_time_remaining() -> None:
         (timedelta(days=29, hours=13), 1, "1 month"),
         (timedelta(days=364, hours=13), 2, "1 year"),
         (timedelta(days=350), 1, "1 year"),
+        (timedelta(days=360), 1, "1 year"),
+        (timedelta(days=364), 1, "1 year"),
+        (timedelta(days=365, hours=-1), 1, "1 year"),
+        (timedelta(days=729), 2, "2 years"),
         (timedelta(days=724, hours=23, minutes=59, seconds=50), 2, "2 years"),
         (timedelta(days=724, hours=13), 3, "2 years"),
         (timedelta(days=380, hours=23, minutes=59, seconds=50), 2, "1 year 16 days"),
