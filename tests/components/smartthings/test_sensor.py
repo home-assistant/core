@@ -458,13 +458,19 @@ async def test_stick_cleaner_operating_state_is_mapped(
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ks_range_0101x"])
+@pytest.mark.parametrize("reverse_listeners", [False, True])
 async def test_meat_probe_unavailable_when_disconnected(
     hass: HomeAssistant,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    reverse_listeners: bool,
 ) -> None:
     """Test meat probe sensors hide the 0 °F reading of an unplugged probe."""
     await setup_integration(hass, mock_config_entry)
+    # Entities share status objects; the result must not depend on which
+    # entity handles an event first.
+    if reverse_listeners:
+        devices.add_device_capability_event_listener.call_args_list.reverse()
     device_id = "2c3cbaa0-1899-5ddc-7b58-9d657bd48f18"
     entity_id = "sensor.vulcan_meat_probe_temperature"
 

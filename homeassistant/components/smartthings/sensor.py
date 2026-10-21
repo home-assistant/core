@@ -1501,7 +1501,10 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         self._attribute = attribute
         self.capability = capability
         self.entity_description = entity_description
-        self._value_is_stale = False
+        self._value_is_stale = (
+            entity_description.requires_fresh_value
+            and not self._available_fn_passes(self._internal_state[capability])
+        )
         if self.entity_description.translation_placeholders_fn:
             self._attr_translation_placeholders = (
                 self.entity_description.translation_placeholders_fn(component)
@@ -1515,30 +1518,33 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
     @override
     def available(self) -> bool:
         """Return if the entity is available."""
-        if (available_fn := self.entity_description.available_fn) is None:
-            return super().available
         return (
             super().available
-            and available_fn(self._internal_state[self.capability])
+            and self._available_fn_passes(self._internal_state[self.capability])
             and not self._value_is_stale
         )
 
+    def _available_fn_passes(self, status: dict[Attribute | str, Status]) -> bool:
+        available_fn = self.entity_description.available_fn
+        return available_fn is None or available_fn(status)
+
     @override
     def _update_handler(self, event: DeviceEvent) -> None:
-        # Checked before the event is applied: any event arriving while
-        # available_fn fails, including the one that makes it pass again,
-        # marks the cached value stale until this attribute is updated.
-        if self.entity_description.requires_fresh_value:
-            available_fn = cast(
-                Callable[[dict[Attribute | str, Status]], bool],
-                self.entity_description.available_fn,
-            )
-            if (
-                event.capability == self.capability
-                and event.attribute == self._attribute
-            ):
+        # Status objects are shared between entities of the device, so another
+        # listener may already have applied this event. Judge it from the event
+        # alone: a value cached while available_fn failed stays stale until this
+        # attribute is reported again.
+        if self.entity_description.requires_fresh_value and (
+            event.capability == self.capability
+        ):
+            if event.attribute == self._attribute:
                 self._value_is_stale = False
-            elif not available_fn(self._internal_state[self.capability]):
+            elif not self._available_fn_passes(
+                {
+                    **self._internal_state[self.capability],
+                    event.attribute: Status(event.value),
+                }
+            ):
                 self._value_is_stale = True
         super()._update_handler(event)
 
