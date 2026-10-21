@@ -30,6 +30,7 @@ from homeassistant.components.unifi.errors import AuthenticationRequired, Cannot
 from homeassistant.components.unifi.hub import get_unifi_api
 from homeassistant.components.unifi.hub.connection import (
     CONNECTION_STABLE_PERIOD,
+    RATE_LIMIT_PAUSE,
     RECOVERY_TIMEOUT,
     REQUEST_TIMEOUT,
 )
@@ -732,7 +733,6 @@ async def test_reconnect_mechanism(
     "exception",
     [
         TimeoutError,
-        aiounifi.AuthenticationRateLimitError,
         aiounifi.BadGateway,
         aiounifi.ServiceUnavailable,
         aiounifi.AiounifiException,
@@ -1781,3 +1781,27 @@ async def test_backoff_keeps_growing_when_resync_loses_session(
         await _advance(hass, FIRST_RETRY_DELAY)
 
     assert login.call_count == 3
+
+
+async def test_rate_limited_login_pauses_retries(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_state: WebsocketStateManager,
+) -> None:
+    """Wait for the login limit to pass instead of extending it."""
+    hub = config_entry_setup.runtime_data
+
+    with patch.object(
+        hub.api, "login", side_effect=aiounifi.AuthenticationRateLimitError
+    ) as login:
+        await mock_websocket_state.disconnect()
+        await _advance(hass, FIRST_RETRY_DELAY)
+        assert login.call_count == 1
+
+        await _advance(hass, RATE_LIMIT_PAUSE - 1)
+        assert login.call_count == 1
+
+    mock_websocket_state.clear()
+    await _advance(hass, RATE_LIMIT_PAUSE)
+    assert hub.available
+    assert not list(config_entry_setup.async_get_active_flows(hass, {SOURCE_REAUTH}))

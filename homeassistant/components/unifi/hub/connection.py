@@ -42,6 +42,8 @@ LOGIN_REJECTED_ERRORS = (
     aiounifi.Unauthorized,
 )
 LOGIN_REJECTIONS_BEFORE_REAUTH = 3
+# UniFi OS limits logins per user and extends the lock on every attempt during it
+RATE_LIMIT_PAUSE = 300
 
 
 @dataclass
@@ -97,6 +99,7 @@ class UnifiConnectionManager:
         self._reauth_required = False
         self._stopped = False
         self._login_rejections = 0
+        self._rate_limited = False
         self._logged_error: type[BaseException] | None = None
 
     @callback
@@ -179,8 +182,12 @@ class UnifiConnectionManager:
         """Schedule the next session login attempt unless one is pending."""
         if self._stopped or self._reauth_required or self._retry_handle is not None:
             return
-        delay = self._backoff.jittered_delay(self._attempt)
-        self._attempt += 1
+        if self._rate_limited:
+            self._rate_limited = False
+            delay: float = RATE_LIMIT_PAUSE
+        else:
+            delay = self._backoff.jittered_delay(self._attempt)
+            self._attempt += 1
         self._retry_handle = self.hass.loop.call_later(delay, self._async_reconnect)
 
     @callback
@@ -224,6 +231,10 @@ class UnifiConnectionManager:
                 self._start_reauth(err)
             else:
                 LOGGER.debug("UniFi Network rejected the login: %s", err)
+            return
+        except aiounifi.AuthenticationRateLimitError as err:
+            LOGGER.debug("UniFi Network rate limits logins: %s", err)
+            self._rate_limited = True
             return
         except (TimeoutError, aiounifi.AiounifiException) as err:
             LOGGER.debug("UniFi Network login failed: %s", err)
