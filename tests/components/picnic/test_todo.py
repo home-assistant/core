@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, Mock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from python_picnic_api2.models import Cart, SearchResult, SearchResultItem
 from syrupy.assertion import SnapshotAssertion
 
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
 from .conftest import ENTITY_ID
-
-from tests.common import MockConfigEntry
 
 
 async def test_cart_list_with_items(

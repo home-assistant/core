@@ -49,7 +49,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> None:
     """Set up OneDrive from a config entry."""
     client, get_access_token = await _get_onedrive_client(hass, entry)
 
@@ -104,12 +104,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
 
     entry.async_on_unload(entry.async_on_state_change(async_notify_backup_listeners))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> None:
     """Unload a OneDrive config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def _migrate_backup_files(client: OneDriveClient, backup_folder_id: str) -> None:
@@ -134,7 +132,7 @@ async def _migrate_backup_files(client: OneDriveClient, backup_folder_id: str) -
             _LOGGER.debug("Migrated backup file %s", file.name)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> None:
     """Migrate old entry."""
 
     if (version := entry.version) == 1 and (minor_version := entry.minor_version) == 1:
@@ -169,7 +167,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -
             minor_version=2,
         )
         _LOGGER.debug("Migration to version 1.2 successful")
-    return True
 
 
 async def _get_onedrive_client(

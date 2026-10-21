@@ -17,6 +17,12 @@ from music_assistant_models.media_items import SearchResults, Track
 from music_assistant_models.player import PlayerMedia
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    AsyncMock,
+    MockUser,
+    mock_config_flow,
+    mock_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import paths
 
@@ -101,7 +107,6 @@ from .common import (
     trigger_subscription_callback,
 )
 
-from tests.common import AsyncMock, MockUser, mock_config_flow, mock_platform
 from tests.components.tts.common import (
     DEFAULT_LANG,
     MockTTSEntity,

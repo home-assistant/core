@@ -166,7 +166,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> None:
     """Set up the Nuki entry."""
 
     # Migration of entry unique_id
@@ -193,14 +193,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> bool
     # Device registration for the bridge
     bridge_id = parse_id(info["ids"]["hardwareId"])
     dev_reg = dr.async_get(hass)
-    dev_reg.async_get_or_create(
+    dev_reg.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, bridge_id)},
-        manufacturer="Nuki Home Solutions GmbH",
-        name=f"Nuki Bridge {bridge_id}",
-        model="Hardware Bridge",
-        sw_version=info["versions"]["firmwareVersion"],
-        serial_number=parse_id(info["ids"]["hardwareId"]),
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, bridge_id)},
+            manufacturer="Nuki Home Solutions GmbH",
+            name=f"Nuki Bridge {bridge_id}",
+            model="Hardware Bridge",
+            sw_version=info["versions"]["firmwareVersion"],
+            serial_number=parse_id(info["ids"]["hardwareId"]),
+        ),
     )
 
     try:
@@ -240,10 +242,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> None:
     """Unload the Nuki entry."""
     webhook.async_unregister(hass, entry.entry_id)
 
@@ -263,4 +263,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> boo
             f"Unable to remove callback. Error communicating with Bridge: {err}"
         ) from err
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

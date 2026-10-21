@@ -5,6 +5,8 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -16,9 +18,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import TEST_DEVICE_ID, TEST_TAG_ID, TEST_TAG_ID_2, TEST_TAG_NAME, TEST_TAG_NAME_2
-
-from tests.common import async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture

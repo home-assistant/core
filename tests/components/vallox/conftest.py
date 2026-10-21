@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from vallox_websocket_api import MetricData
 
 from homeassistant.components.vallox.const import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 DEFAULT_HOST = "192.168.100.50"
 DEFAULT_NAME = "Vallox"

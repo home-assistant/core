@@ -15,13 +15,12 @@ from pyoverkiz.models import (
     EventState,
     ExecutionStateChangedEvent,
 )
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.overkiz.const import UPDATE_INTERVAL
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockOverkizClient
-
-from tests.common import async_fire_time_changed
 
 
 def assert_command_call(

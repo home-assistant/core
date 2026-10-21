@@ -18,7 +18,7 @@ from .types import SolarEdgeConfigEntry, SolarEdgeData
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SolarEdgeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SolarEdgeConfigEntry) -> None:
     """Set up SolarEdge from a config entry."""
     entry.runtime_data = SolarEdgeData()
     site_id = entry.data[CONF_SITE_ID]
@@ -53,10 +53,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolarEdgeConfigEntry) ->
         # Register the site device up front so per-battery devices can resolve it
         # as their via_device when their entities are created.
         device_registry = dr.async_get(hass)
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, site_id)},
-            manufacturer="SolarEdge",
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, site_id)}, manufacturer="SolarEdge"
+            ),
         )
 
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -67,12 +68,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolarEdgeConfigEntry) ->
         await coordinator.async_config_entry_first_refresh()
         entry.runtime_data[DATA_MODULES_COORDINATOR] = coordinator
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: SolarEdgeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SolarEdgeConfigEntry) -> None:
     """Unload SolarEdge config entry."""
     if DATA_API_CLIENT not in entry.runtime_data:
-        return True  # Nothing to unload
+        return  # Nothing to unload
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -80,7 +80,7 @@ async def _async_migrate_unique_ids(
         await er.async_migrate_entries(hass, entry.entry_id, _async_migrator)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> None:
     """Set up Airzone from a config entry."""
     options = ConnectionOptions(
         entry.data[CONF_HOST],
@@ -111,38 +111,44 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> b
         if ws_data is not None:
             mac = ws_data.get(AZD_MAC, "")
 
-            ws_device = device_registry.async_get_or_create(
+            ws_device = device_registry.async_get_or_create_device(
                 config_entry_id=entry.entry_id,
-                connections={(dr.CONNECTION_NETWORK_MAC, mac)},
-                identifiers={(DOMAIN, f"{entry.entry_id}_ws")},
-                manufacturer=MANUFACTURER,
-                model=ws_data.get(AZD_MODEL),
-                name=ws_data.get(AZD_FULL_NAME),
-                sw_version=ws_data.get(AZD_FIRMWARE),
+                device_info=dr.DeviceInfo(
+                    connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+                    identifiers={(DOMAIN, f"{entry.entry_id}_ws")},
+                    manufacturer=MANUFACTURER,
+                    model=ws_data.get(AZD_MODEL),
+                    name=ws_data.get(AZD_FULL_NAME),
+                    sw_version=ws_data.get(AZD_FIRMWARE),
+                ),
             )
             ws_device_id = ws_device.id
 
         for system_data in coordinator.data.get(AZD_SYSTEMS, {}).values():
             system_id = system_data[AZD_ID]
-            device_registry.async_get_or_create(
+            device_registry.async_get_or_create_device(
                 config_entry_id=entry.entry_id,
-                identifiers={(DOMAIN, f"{entry.entry_id}_{system_id}")},
-                manufacturer=MANUFACTURER,
-                model=system_data.get(AZD_MODEL),
-                name=f"System {system_id}",
-                sw_version=system_data.get(AZD_FIRMWARE),
-                via_device_id=ws_device_id,
+                device_info=dr.DeviceInfo(
+                    identifiers={(DOMAIN, f"{entry.entry_id}_{system_id}")},
+                    manufacturer=MANUFACTURER,
+                    model=system_data.get(AZD_MODEL),
+                    name=f"System {system_id}",
+                    sw_version=system_data.get(AZD_FIRMWARE),
+                    via_device_id=ws_device_id,
+                ),
             )
 
         dhw_data: dict[str, Any] | None = coordinator.data.get(AZD_HOT_WATER)
         if dhw_data is not None:
-            device_registry.async_get_or_create(
+            device_registry.async_get_or_create_device(
                 config_entry_id=entry.entry_id,
-                identifiers={(DOMAIN, f"{entry.entry_id}_dhw")},
-                manufacturer=MANUFACTURER,
-                model="DHW",
-                name=dhw_data.get(AZD_NAME),
-                via_device_id=ws_device_id,
+                device_info=dr.DeviceInfo(
+                    identifiers={(DOMAIN, f"{entry.entry_id}_dhw")},
+                    manufacturer=MANUFACTURER,
+                    model="DHW",
+                    name=dhw_data.get(AZD_NAME),
+                    via_device_id=ws_device_id,
+                ),
             )
 
     # Register the parents before forwarding platforms, and keep them registered
@@ -152,15 +158,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> None:
     """Migrate an old entry."""
     if entry.version == 1 and entry.minor_version < 2:
         # Add missing CONF_ID
@@ -178,5 +182,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) ->
         entry.version,
         entry.minor_version,
     )
-
-    return True

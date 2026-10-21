@@ -197,7 +197,9 @@ def _create_climate_yaml(xknx: XKNX, config: ConfigType) -> XknxClimate:
     )
 
 
-def _create_climate_ui(xknx: XKNX, conf: ClimateKnxConfig, name: str) -> XknxClimate:
+def _create_climate_ui(
+    xknx: XKNX, conf: ClimateKnxConfig, name: str | None
+) -> XknxClimate:
     """Return a KNX Climate device to be used within XKNX from UI config."""
     op_modes: list[str | HVACOperationMode] = list(HVACOperationMode)
     if conf.ignore_auto_mode:
@@ -205,7 +207,7 @@ def _create_climate_ui(xknx: XKNX, conf: ClimateKnxConfig, name: str) -> XknxCli
 
     climate_mode = XknxClimateMode(
         xknx,
-        name=f"{name} Mode",
+        name=f"{name} Mode" if name else None,
         group_address_operation_mode=write_address(conf.ga_operation_mode),
         group_address_operation_mode_state=state_and_passive(conf.ga_operation_mode),
         group_address_operation_mode_comfort=write_and_passive(
@@ -693,9 +695,7 @@ class KnxUiClimate(_KnxClimate, KnxUiEntity):
             entity_config=config.entity,
         )
         knx_conf = config.knx
-        self._device = _create_climate_ui(
-            knx_module.xknx, knx_conf, config.entity.xknx_name
-        )
+        self._device = _create_climate_ui(knx_module.xknx, knx_conf, config.entity.name)
 
         default_hvac_mode = HVACMode(knx_conf.default_controller_mode)
         fan_max_step = knx_conf.fan_max_step

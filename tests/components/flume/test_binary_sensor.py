@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from requests_mock.mocker import Mocker
 from syrupy.assertion import SnapshotAssertion
 
@@ -14,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import NOTIFICATIONS_URL, SENSOR_DEVICE, USER_ID
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 LOW_BATTERY_UNIQUE_ID = "low_battery_1234"
 

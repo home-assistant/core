@@ -9,7 +9,6 @@ from midealocal.devices.ea import MideaEADevice
 from midealocal.devices.ec import MideaECDevice
 
 from homeassistant.components.sensor import (
-    EntityCategory,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -17,6 +16,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     REVOLUTIONS_PER_MINUTE,
+    EntityCategory,
     UnitOfDensity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -430,11 +430,10 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
     ),
     MideaSensorEntityDescription(
         key="energy_consumption",
-        translation_key="energy_consumption",
+        translation_key="energy_consumption_24h",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        entity_category=EntityCategory.DIAGNOSTIC,
+        models=[DeviceType.CA],
     ),
     MideaSensorEntityDescription(
         key="refrigerator_actual_temp",

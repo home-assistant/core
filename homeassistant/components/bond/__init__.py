@@ -44,7 +44,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: BondConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BondConfigEntry) -> None:
     """Set up Bond from a config entry."""
     host = entry.data[CONF_HOST]
     token = entry.data[CONF_ACCESS_TOKEN]
@@ -89,28 +89,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: BondConfigEntry) -> bool
     assert hub.bond_id is not None
     hub_name = hub.name or hub.bond_id
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=config_entry_id,
-        identifiers={(DOMAIN, hub.bond_id)},
-        manufacturer=BRIDGE_MAKE,
-        name=hub_name,
-        model=hub.target,
-        sw_version=hub.fw_ver,
-        hw_version=hub.mcu_ver,
-        suggested_area=hub.location,
-        configuration_url=f"http://{host}",
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, hub.bond_id)},
+            manufacturer=BRIDGE_MAKE,
+            name=hub_name,
+            model=hub.target,
+            sw_version=hub.fw_ver,
+            hw_version=hub.mcu_ver,
+            suggested_area=hub.location,
+            configuration_url=f"http://{host}",
+        ),
     )
 
     _async_remove_old_device_identifiers(config_entry_id, device_registry, hub)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: BondConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BondConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 @callback

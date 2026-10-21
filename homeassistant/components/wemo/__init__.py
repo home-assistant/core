@@ -117,7 +117,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a wemo config entry."""
     wemo_data = hass.data[DATA_WEMO]
     dispatcher = WemoDispatcher(entry)
@@ -135,10 +135,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if wemo_data.discovery_enabled:
         await discovery.async_discover_and_schedule()
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a wemo config entry."""
     _LOGGER.debug("Unloading WeMo")
     wemo_data = hass.data[DATA_WEMO]
@@ -146,14 +144,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     wemo_data.config_entry_data.discovery.async_stop_discovery()
 
     dispatcher = wemo_data.config_entry_data.dispatcher
-    if unload_ok := await dispatcher.async_unload_platforms(hass):
-        for coordinator in list(
-            wemo_data.config_entry_data.device_coordinators.values()
-        ):
-            await coordinator.async_shutdown()
-        assert not wemo_data.config_entry_data.device_coordinators
-        wemo_data.config_entry_data = None  # type: ignore[assignment]
-    return unload_ok
+    await dispatcher.async_unload_platforms(hass)
+    for coordinator in list(wemo_data.config_entry_data.device_coordinators.values()):
+        await coordinator.async_shutdown()
+    assert not wemo_data.config_entry_data.device_coordinators
+    wemo_data.config_entry_data = None  # type: ignore[assignment]
 
 
 async def async_wemo_dispatcher_connect(
@@ -236,11 +231,11 @@ class WemoDispatcher:
             ),
         )
 
-    async def async_unload_platforms(self, hass: HomeAssistant) -> bool:
+    async def async_unload_platforms(self, hass: HomeAssistant) -> None:
         """Forward the unloading of an entry to platforms."""
         platforms: set[Platform] = set(self._dispatch_backlog.keys())
         platforms.update(self._dispatch_callbacks.keys())
-        return await hass.config_entries.async_unload_platforms(
+        await hass.config_entries.async_unload_platforms_or_raise(
             self._config_entry, platforms
         )
 

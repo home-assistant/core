@@ -3,6 +3,7 @@
 from typing import Any, NamedTuple
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_get_device_automations
 from pytest_unordered import unordered
 import RFXtrx
 
@@ -15,8 +16,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .conftest import create_rfx_test_entry
-
-from tests.common import MockConfigEntry, async_get_device_automations
 
 
 class DeviceTestData(NamedTuple):

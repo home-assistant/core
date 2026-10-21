@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.ourgroceries.coordinator import SCAN_INTERVAL
 from homeassistant.components.todo import (
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 
 from . import items_to_shopping_list
-
-from tests.common import async_fire_time_changed
 
 
 def _mock_version_id(og: AsyncMock, version: int) -> None:
