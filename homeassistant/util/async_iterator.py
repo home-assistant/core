@@ -64,7 +64,7 @@ class AsyncIteratorReader:
                 except CancelledError as err:
                     raise Abort from err
                 self._pos = 0
-            if not self._buffer:
+            if self._buffer is None:
                 # The stream is exhausted
                 self._exhausted = True
                 break

@@ -6,6 +6,7 @@ from datetime import date, timedelta
 import enum
 from functools import partial
 import logging
+import math
 import os
 from pathlib import Path
 import re
@@ -219,6 +220,9 @@ def test_entity_id() -> None:
     with pytest.raises(probatio.MultipleInvalid):
         schema("invalid_entity")
 
+    with pytest.raises(probatio.MultipleInvalid):
+        schema("sensor.light\n")
+
     assert schema("sensor.LIGHT") == "sensor.light"
 
 
@@ -294,6 +298,31 @@ def test_entity_domain() -> None:
 
     assert schema("sensor.LIGHT") == "sensor.light"
     assert schema("binary_sensor.LIGHT") == "binary_sensor.light"
+
+
+@pytest.mark.parametrize(
+    "validator",
+    [
+        pytest.param(cv.entity_ids, id="entity_ids"),
+        pytest.param(cv.entity_ids_or_uuids, id="entity_ids_or_uuids"),
+        pytest.param(cv.comp_entity_ids, id="comp_entity_ids"),
+        pytest.param(cv.comp_entity_ids_or_uuids, id="comp_entity_ids_or_uuids"),
+        pytest.param(cv.entity_domain("sensor"), id="entity_domain"),
+        pytest.param(cv.entities_domain("sensor"), id="entities_domain"),
+    ],
+)
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param(True, id="bool"),
+        pytest.param(4, id="int"),
+        pytest.param(1.5, id="float"),
+    ],
+)
+def test_entity_ids_non_iterable(validator: Callable[[Any], Any], value: Any) -> None:
+    """Test entity ID validators reject non-string scalars with Invalid."""
+    with pytest.raises(probatio.Invalid):
+        validator(value)
 
 
 def test_entities_domain() -> None:
@@ -410,6 +439,32 @@ def test_time_period() -> None:
     )
     for value, result in options:
         assert schema(value) == result
+
+
+@pytest.mark.parametrize(
+    "validator",
+    [
+        pytest.param(cv.time_period, id="time_period"),
+        pytest.param(cv.positive_time_period, id="positive_time_period"),
+    ],
+)
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param(math.inf, id="float_inf"),
+        pytest.param("inf", id="str_inf"),
+        pytest.param("-inf", id="str_neg_inf"),
+        pytest.param(10**20, id="huge_seconds"),
+        pytest.param("99999999999:00", id="huge_hours"),
+        pytest.param("0:0:inf", id="inf_seconds_field"),
+        pytest.param({"days": math.inf}, id="dict_inf_days"),
+        pytest.param({"days": 1e10}, id="dict_huge_days"),
+    ],
+)
+def test_time_period_overflow(validator: Callable[[Any], Any], value: Any) -> None:
+    """Test time_period rejects periods that overflow timedelta."""
+    with pytest.raises(probatio.Invalid):
+        probatio.Schema(validator)(value)
 
 
 def test_remove_falsy() -> None:
@@ -818,7 +873,12 @@ def test_time() -> None:
     """Test date validation."""
     schema = probatio.Schema(cv.time)
 
-    for value in ("Not a time", "2016-11-23", "2016-11-23T18:59:08"):
+    for value in (
+        "Not a time",
+        "2016-11-23",
+        "2016-11-23T18:59:08",
+        "0:2147483648",
+    ):
         with pytest.raises(probatio.Invalid):
             schema(value)
 
@@ -1900,6 +1960,9 @@ def test_color_hex() -> None:
 
     with pytest.raises(probatio.Invalid, match=msg):
         cv.color_hex("#FFFFFFF")
+
+    with pytest.raises(probatio.Invalid, match=msg):
+        cv.color_hex("#FFFFFF\n")
 
     with pytest.raises(probatio.Invalid, match=msg):
         cv.color_hex(123456)
