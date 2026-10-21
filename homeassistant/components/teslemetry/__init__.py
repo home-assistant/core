@@ -1152,8 +1152,8 @@ def async_setup_energy_device(
     if version := data.get("version"):
         energysite.device.sw_version = version
 
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id, **energysite.device
+    device_registry.async_get_or_create_device(
+        config_entry_id=entry.entry_id, device_info=energysite.device
     )
 
     entry.async_on_unload(

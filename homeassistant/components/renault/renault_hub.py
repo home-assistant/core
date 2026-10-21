@@ -360,14 +360,16 @@ class RenaultHub:
             scan_interval=scan_interval,
         )
         await vehicle.async_initialise()
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=config_entry.entry_id,
-            identifiers=vehicle.device_info.identifiers,
-            manufacturer=vehicle.device_info.manufacturer,
-            name=vehicle.device_info.name,
-            model=vehicle.device_info.model,
-            model_id=vehicle.device_info.model_id,
-            sw_version=None,  # cleanup from PR #125399
+            device_info=dr.DeviceInfo(
+                identifiers=vehicle.device_info.identifiers,
+                manufacturer=vehicle.device_info.manufacturer,
+                name=vehicle.device_info.name,
+                model=vehicle.device_info.model,
+                model_id=vehicle.device_info.model_id,
+                sw_version=None,
+            ),  # cleanup from PR #125399
         )
         self._vehicles[vehicle_link.vin] = vehicle
         for add_vehicle in self._vehicle_listeners:

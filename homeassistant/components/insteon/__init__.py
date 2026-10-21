@@ -150,11 +150,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 def create_insteon_device(hass, device, config_entry_id):
     """Create an Insteon device."""
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=config_entry_id,  # entry.entry_id,
-        identifiers={(DOMAIN, str(device.address))},
-        manufacturer="SmartLabs, Inc",
-        name=f"{device.description} {device.address}",
-        model=f"{device.model} ({device.cat!r}, 0x{device.subcat:02x})",
-        sw_version=f"{device.firmware:02x} Engine Version: {device.engine_version}",
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, str(device.address))},
+            manufacturer="SmartLabs, Inc",
+            name=f"{device.description} {device.address}",
+            model=f"{device.model} ({device.cat!r}, 0x{device.subcat:02x})",
+            sw_version=f"{device.firmware:02x} Engine Version: {device.engine_version}",
+        ),
     )

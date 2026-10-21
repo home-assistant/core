@@ -12,9 +12,8 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FeedReaderConfigEntry
 from .const import DOMAIN, EVENT_FEEDREADER
-from .coordinator import FeedReaderCoordinator
+from .coordinator import FeedReaderConfigEntry, FeedReaderCoordinator
 
 LOGGER = logging.getLogger(__name__)
 

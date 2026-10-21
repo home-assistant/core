@@ -145,10 +145,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> 
         await coordinator.async_config_entry_first_refresh()
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, str(entry.unique_id))},
-        manufacturer="Withings",
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, str(entry.unique_id))}, manufacturer="Withings"
+        ),
     )
     entry.runtime_data = withings_data
 

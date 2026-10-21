@@ -18,7 +18,7 @@ from .const import (
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
-    from . import AnthropicConfigEntry
+    from .coordinator import AnthropicConfigEntry
 
 
 TO_REDACT = {
