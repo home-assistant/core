@@ -18,7 +18,7 @@ def mock_setup_entry():
     """Mock the integration setup."""
     with patch(
         "homeassistant.components.smarttub.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock:
         yield mock
 
