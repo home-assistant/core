@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 import json
 import logging
-from typing import Any, cast, override
+from typing import Any, override
 
 import openai
 import probatio
@@ -68,6 +68,7 @@ from .const import (
     CONF_WEB_SEARCH_USER_LOCATION,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
+    DEFAULT_EVALUATION_NAME,
     DEFAULT_STT_NAME,
     DEFAULT_STT_PROMPT,
     DEFAULT_TTS_NAME,
@@ -76,6 +77,8 @@ from .const import (
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_CODE_INTERPRETER,
     RECOMMENDED_CONVERSATION_OPTIONS,
+    RECOMMENDED_DECISION_MODEL,
+    RECOMMENDED_EVALUATION_OPTIONS,
     RECOMMENDED_IMAGE_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_PRO_MODE,
@@ -118,8 +121,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """
     client = openai.AsyncOpenAI(
         api_key=data[CONF_API_KEY],
-        # Legacy HTTPX clients are supported at runtime only.
-        http_client=cast(Any, get_async_client(hass)),
+        http_client=get_async_client(hass),
     )
     await client.models.list(timeout=10.0)
 
@@ -128,7 +130,7 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenAI Conversation."""
 
     VERSION = 2
-    MINOR_VERSION = 7
+    MINOR_VERSION = 8
 
     @override
     async def async_step_user(
@@ -185,6 +187,12 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
                             "unique_id": None,
                         },
                         {
+                            "subentry_type": "ai_task_evaluate",
+                            "data": RECOMMENDED_EVALUATION_OPTIONS,
+                            "title": DEFAULT_EVALUATION_NAME,
+                            "unique_id": None,
+                        },
+                        {
                             "subentry_type": "stt",
                             "data": RECOMMENDED_STT_OPTIONS,
                             "title": DEFAULT_STT_NAME,
@@ -238,6 +246,7 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
         return {
             "conversation": OpenAISubentryFlowHandler,
             "ai_task_data": OpenAISubentryFlowHandler,
+            "ai_task_evaluate": OpenAISubentryEvaluationFlowHandler,
             "stt": OpenAISubentrySTTFlowHandler,
             "tts": OpenAISubentryTTSFlowHandler,
         }
@@ -669,7 +678,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         if zone_home is not None:
             client = openai.AsyncOpenAI(
                 api_key=self._get_entry().data[CONF_API_KEY],
-                http_client=cast(Any, get_async_client(self.hass)),
+                http_client=get_async_client(self.hass),
             )
             location_schema = probatio.Schema(
                 {
@@ -882,4 +891,65 @@ class OpenAISubentryTTSFlowHandler(ConfigSubentryFlow):
                 probatio.Schema(step_schema), options
             ),
             errors=errors,
+        )
+
+
+class OpenAISubentryEvaluationFlowHandler(ConfigSubentryFlow):
+    """Configure an OpenAI evaluation entity."""
+
+    options: dict[str, Any]
+
+    @property
+    def _is_new(self) -> bool:
+        """Return if this is a new subentry."""
+        return self.source == "user"
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Add an evaluation task entity."""
+        self.options = {CONF_CHAT_MODEL: RECOMMENDED_DECISION_MODEL}
+        return await self.async_step_init()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Reconfigure an evaluation task entity."""
+        self.options = self._get_reconfigure_subentry().data.copy()
+        return await self.async_step_init()
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Configure the decision model."""
+        if self._get_entry().state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
+        if user_input is not None:
+            self.options.update(user_input)
+            if self._is_new:
+                return self.async_create_entry(
+                    title=self.options.pop(CONF_NAME), data=self.options
+                )
+            return self.async_update_and_abort(
+                self._get_entry(),
+                self._get_reconfigure_subentry(),
+                data=self.options,
+            )
+
+        schema: VolDictType = {}
+        if self._is_new:
+            schema[probatio.Required(CONF_NAME, default=DEFAULT_EVALUATION_NAME)] = str
+        schema[probatio.Required(CONF_CHAT_MODEL)] = SelectSelector(
+            SelectSelectorConfig(
+                options=[RECOMMENDED_DECISION_MODEL],
+                mode=SelectSelectorMode.DROPDOWN,
+                custom_value=True,
+            )
+        )
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                probatio.Schema(schema), self.options
+            ),
         )

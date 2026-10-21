@@ -8,6 +8,7 @@ from unittest.mock import MagicMock
 from matter_server.client.models.node import MatterNode
 from matter_server.common.helpers.util import dataclass_from_dict
 from matter_server.common.models import EventType, MatterNodeData
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.matter import DOMAIN
@@ -15,8 +16,6 @@ from homeassistant.components.matter.const import ID_TYPE_DEVICE_ID
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry, load_fixture
 
 FIXTURES = [
     "air_quality_sensor",
@@ -27,6 +26,7 @@ FIXTURES = [
     "aqara_sensor_w100",
     "aqara_shutter_switch_h2",
     "aqara_thermostat_w500",
+    "aqara_thermostat_w500_presets",
     "aqara_u200",
     "atios_knx_bridge",
     "color_temperature_light",

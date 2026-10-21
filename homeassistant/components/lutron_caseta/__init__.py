@@ -13,7 +13,7 @@ from pylutron_caseta.smartbridge import Smartbridge
 from homeassistant import config_entries
 from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -157,7 +157,7 @@ async def _async_migrate_unique_ids(
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: LutronCasetaConfigEntry
-) -> bool:
+) -> None:
     """Set up a bridge from a config entry."""
     entry_id = entry.entry_id
     host = entry.data[CONF_HOST]
@@ -179,9 +179,12 @@ async def async_setup_entry(
             ca_certs=ca_certs,
             on_connect_callback=_on_connect,
         )
-    except ssl.SSLError:
-        _LOGGER.error("Invalid certificate used to connect to bridge at %s", host)
-        return False
+    except ssl.SSLError as err:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_certificate",
+            translation_placeholders={"host": host},
+        ) from err
 
     connect_task = hass.async_create_task(bridge.connect())
     for future, name, timeout in (
@@ -221,8 +224,6 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 @callback
 def _async_register_bridge_device(
@@ -241,7 +242,7 @@ def _async_register_bridge_device(
 
     area = area_name_from_id(bridge.areas, bridge_device["area"])
     if area != UNASSIGNED_AREA:
-        device_args["suggested_area"] = area
+        device_args.suggested_area = area
 
     device_registry.async_get_or_create(**device_args, config_entry_id=config_entry_id)
 
@@ -378,7 +379,7 @@ def _async_build_lutron_keypad(
         ),
     )
     if area_name != UNASSIGNED_AREA:
-        device_info["suggested_area"] = area_name
+        device_info.suggested_area = area_name
 
     return LutronKeypad(
         lutron_device_id=keypad_device_id,
@@ -504,11 +505,11 @@ def _async_subscribe_keypad_events(
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: LutronCasetaConfigEntry
-) -> bool:
+) -> None:
     """Unload the bridge from a config entry."""
     data = entry.runtime_data
     await data.bridge.close()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 def _id_to_identifier(lutron_id: str) -> tuple[str, str]:

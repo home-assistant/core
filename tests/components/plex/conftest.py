@@ -4,17 +4,16 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 import requests_mock
 
-from homeassistant.components.plex.const import DOMAIN, PLEX_SERVER_CONFIG, SERVERS
+from homeassistant.components.plex.const import DOMAIN, PLEX_SERVER_CONFIG
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, PLEX_DIRECT_URL
 from .helpers import websocket_connected
 from .mock_classes import MockGDM
-
-from tests.common import MockConfigEntry, load_fixture
 
 
 def plex_server_url(entry):
@@ -601,7 +600,7 @@ def setup_plex_server(
             websocket_connected(mock_websocket)
             await hass.async_block_till_done()
 
-        return hass.data[DOMAIN][SERVERS][entry.unique_id]
+        return config_entry.runtime_data.server
 
     return _wrapper
 

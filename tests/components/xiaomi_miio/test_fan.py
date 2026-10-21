@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, Mock, patch
 from miio.integrations.fan.dmaker.fan import FanStatusP5
 from miio.integrations.fan.dmaker.fan_miot import FanStatusMiot
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.xiaomi_miio import MODEL_TO_CLASS_MAP
@@ -22,8 +23,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import TEST_MAC
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 _MODEL_INFORMATION = {
     "dmaker.fan.p5": {

@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from wyoming.asr import Transcript
 from wyoming.error import Error
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import TEST_ATTR, MockAsyncTcpClient
-
-from tests.common import async_fire_time_changed
 
 
 async def test_support(hass: HomeAssistant, init_wyoming_wake_word) -> None:

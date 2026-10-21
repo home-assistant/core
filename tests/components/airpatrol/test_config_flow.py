@@ -4,14 +4,13 @@ from unittest.mock import patch
 
 from airpatrol.api import AirPatrolAPI, AirPatrolAuthenticationError, AirPatrolError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.airpatrol.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 TEST_USER_INPUT = {
     CONF_EMAIL: "test@example.com",

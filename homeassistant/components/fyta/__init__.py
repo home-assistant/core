@@ -27,7 +27,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FytaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FytaConfigEntry) -> None:
     """Set up the Fyta integration."""
     tz: str = hass.config.time_zone
 
@@ -50,18 +50,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: FytaConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: FytaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FytaConfigEntry) -> None:
     """Unload Fyta entity."""
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: FytaConfigEntry
-) -> bool:
+) -> None:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
@@ -89,5 +87,3 @@ async def async_migrate_entry(
         config_entry.version,
         config_entry.minor_version,
     )
-
-    return True

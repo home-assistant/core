@@ -16,6 +16,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, CONF_SCAN_INTERVAL, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
@@ -147,6 +148,8 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
         try:
             if target_temp is not None:
                 self._api.set_temperature(self._session_id, serial_number, target_temp)
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except RequestException as ex:
-            _LOGGER.error("An error occurred while setting temperature: %s", ex)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_temperature_failed",
+            ) from ex

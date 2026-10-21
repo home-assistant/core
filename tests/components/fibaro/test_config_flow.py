@@ -4,6 +4,7 @@ from unittest.mock import Mock
 
 from pyfibaro.fibaro_client import FibaroAuthenticationFailed, FibaroConnectFailed
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.fibaro import DOMAIN
@@ -14,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 
 from .conftest import TEST_NAME, TEST_PASSWORD, TEST_URL, TEST_USERNAME
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry", "mock_fibaro_client")
 
@@ -91,6 +90,7 @@ async def test_config_flow_user_initiated_success(hass: HomeAssistant) -> None:
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_IMPORT_PLUGINS: False,
     }
+    assert result["result"].unique_id == "hc2-111111"
 
 
 async def test_config_flow_user_initiated_auth_failure(

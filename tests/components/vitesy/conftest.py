@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock, patch
 
 from aiovitesy.api import VitesyDevice, VitesyModeStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.vitesy.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-
-from tests.common import MockConfigEntry
 
 DEVICE_ID = "80:65:99:34:F9:B4"
 EMAIL = "test@example.com"
@@ -60,7 +59,20 @@ def mock_devices() -> dict[str, VitesyDevice]:
                 "filter": {"due_date": "2026-08-02T06:45:07.623Z"},
                 "fridge": {"due_date": "2026-10-31T06:45:07.623Z"},
             },
-            programs={},
+            programs={
+                "eco-s1": {
+                    "id": "eco-s1",
+                    "name": "Eco",
+                    "preset": {"mode": "eco"},
+                    "metadata": {"fan": "MID", "power": "HIGH"},
+                },
+                "performance-s1": {
+                    "id": "performance-s1",
+                    "name": "Performance",
+                    "preset": {"mode": "boost"},
+                    "metadata": {"fan": "HIGH", "power": "LOW"},
+                },
+            },
         )
     }
 
