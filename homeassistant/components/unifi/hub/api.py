@@ -58,7 +58,8 @@ async def get_unifi_api(
     except aiounifi.TwoFaTokenRequired as err:
         LOGGER.warning(
             "UniFi Network at %s requires multi-factor authentication, which is"
-            " not supported. Use a local account without it",
+            " not supported. Use a local account without multi-factor"
+            " authentication",
             config[CONF_HOST],
         )
         raise MfaRequired from err

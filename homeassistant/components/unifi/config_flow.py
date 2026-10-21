@@ -63,6 +63,7 @@ from .errors import AuthenticationRequired, CannotConnect, MfaRequired
 from .hub import UnifiHub, get_unifi_api
 
 DEFAULT_HOST = "unifi"
+SITE_REQUEST_TIMEOUT = 10
 DEFAULT_PORT = 443
 DEFAULT_SITE_ID = "default"
 DEFAULT_VERIFY_SSL = False
@@ -281,7 +282,7 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
         """Get updated sites through UniFi API."""
         hub = await get_unifi_api(self.hass, MappingProxyType(data))
         try:
-            async with asyncio.timeout(10):
+            async with asyncio.timeout(SITE_REQUEST_TIMEOUT):
                 await hub.sites.update()
         except (
             aiounifi.Forbidden,
@@ -289,16 +290,23 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
             aiounifi.NoPermission,
             aiounifi.Unauthorized,
         ) as err:
-            raise AuthenticationRequired from err
-        except (TimeoutError, aiounifi.AiounifiException) as err:
             LOGGER.warning(
-                "Error fetching sites from UniFi Network at %s: %s",
+                "UniFi Network at %s rejected the site request: %r",
+                data[CONF_HOST],
+                err,
+            )
+            raise AuthenticationRequired from err
+        # aiounifi 97 can raise a JSON decode error, which is a ValueError
+        except (TimeoutError, ValueError, aiounifi.AiounifiException) as err:
+            LOGGER.warning(
+                "Error fetching sites from UniFi Network at %s: %r",
                 data[CONF_HOST],
                 err,
             )
             raise CannotConnect from err
         if not hub.sites.values():
-            # A console without the Network application answers with no sites
+            # aiounifi 97 returns no sites for an HTML answer, as a console
+            # without the Network application or a starting one gives
             LOGGER.warning("No sites found on UniFi Network at %s", data[CONF_HOST])
             raise CannotConnect
         return hub.sites

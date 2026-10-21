@@ -1,5 +1,6 @@
 """Test UniFi Network config flow."""
 
+import asyncio
 from collections.abc import Callable
 import socket
 from typing import Any
@@ -250,7 +251,17 @@ SITES_UPDATE = "aiounifi.interfaces.sites.Sites.update"
         pytest.param(
             SITES_UPDATE, TimeoutError, "service_unavailable", id="sites_timeout"
         ),
+        # Without a side effect the patched update leaves the site list empty
         pytest.param(SITES_UPDATE, None, "service_unavailable", id="sites_empty"),
+        pytest.param(
+            SITES_UPDATE, ValueError, "service_unavailable", id="sites_invalid_json"
+        ),
+        pytest.param(
+            SITES_UPDATE,
+            aiounifi.AiounifiException,
+            "service_unavailable",
+            id="sites_unknown_error",
+        ),
         pytest.param(
             SITES_UPDATE,
             aiounifi.Forbidden,
@@ -262,6 +273,18 @@ SITES_UPDATE = "aiounifi.interfaces.sites.Sites.update"
             aiounifi.LoginRequired,
             "faulty_credentials",
             id="sites_login_required",
+        ),
+        pytest.param(
+            SITES_UPDATE,
+            aiounifi.NoPermission,
+            "faulty_credentials",
+            id="sites_no_permission",
+        ),
+        pytest.param(
+            SITES_UPDATE,
+            aiounifi.Unauthorized,
+            "faulty_credentials",
+            id="sites_unauthorized",
         ),
     ],
 )
@@ -424,6 +447,72 @@ async def test_reconfigure_flow_update_configuration(
     assert config_entry.data[CONF_HOST] == "1.2.3.4"
     assert config_entry.data[CONF_USERNAME] == "new_name"
     assert config_entry.data[CONF_PASSWORD] == "new_pass"
+
+
+@pytest.mark.usefixtures("mock_default_requests")
+async def test_flow_site_request_timeout(hass: HomeAssistant) -> None:
+    """Test config flow gives up on a site request that does not answer."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    user_input = {
+        CONF_HOST: "1.2.3.4",
+        CONF_USERNAME: "username",
+        CONF_PASSWORD: "password",
+        CONF_PORT: 1234,
+        CONF_VERIFY_SSL: True,
+    }
+
+    async def hang() -> None:
+        await asyncio.Event().wait()
+
+    with (
+        patch("homeassistant.components.unifi.config_flow.SITE_REQUEST_TIMEOUT", 0),
+        patch(SITES_UPDATE, side_effect=hang),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=user_input
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "service_unavailable"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_reconfigure_flow_with_no_sites(
+    hass: HomeAssistant, config_entry_setup: MockConfigEntry
+) -> None:
+    """Verify an empty site list is an error that can be retried, not an abort."""
+    result = await config_entry_setup.start_reconfigure_flow(hass)
+    user_input = {
+        CONF_HOST: "1.2.3.4",
+        CONF_USERNAME: "new_name",
+        CONF_PASSWORD: "new_pass",
+        CONF_PORT: 1234,
+        CONF_VERIFY_SSL: True,
+    }
+
+    # Without a side effect the patched update leaves the site list empty
+    with patch(SITES_UPDATE):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=user_input
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "service_unavailable"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 @pytest.mark.parametrize(
