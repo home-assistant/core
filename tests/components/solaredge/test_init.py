@@ -7,13 +7,14 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.recorder import Recorder
+from homeassistant.components.solaredge.api import SolarEdgeConnectionError
 from homeassistant.components.solaredge.const import CONF_SITE_ID, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-from .conftest import API_KEY, PASSWORD, SITE_ID, USERNAME
+from .conftest import PASSWORD, SITE_ID, TOKEN, USERNAME
 
 
 @patch(
@@ -29,7 +30,7 @@ async def test_setup_unload_api_key(
     """Test successful setup and unload of a config entry with API key."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_SITE_ID: SITE_ID, CONF_API_KEY: API_KEY},
+        data={CONF_SITE_ID: SITE_ID, CONF_TOKEN: TOKEN},
     )
     entry.add_to_hass(hass)
 
@@ -99,7 +100,7 @@ async def test_setup_unload_both(
         domain=DOMAIN,
         data={
             CONF_SITE_ID: SITE_ID,
-            CONF_API_KEY: API_KEY,
+            CONF_TOKEN: TOKEN,
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
         },
@@ -125,10 +126,10 @@ async def test_api_key_config_not_ready(
     recorder_mock: Recorder, hass: HomeAssistant, solaredge_api: Mock
 ) -> None:
     """Test for setup failure with API key."""
-    solaredge_api.get_details.side_effect = ClientError()
+    solaredge_api.get_details.side_effect = SolarEdgeConnectionError()
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_SITE_ID: SITE_ID, CONF_API_KEY: API_KEY},
+        data={CONF_SITE_ID: SITE_ID, CONF_TOKEN: TOKEN},
     )
     entry.add_to_hass(hass)
 

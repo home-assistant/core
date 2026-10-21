@@ -4,7 +4,7 @@
   "categories": ["energy.solar_batteries"],
   "codeowners": ["@bdraco", "@tronikos"],
   "config_flow": true,
-  "dependencies": ["recorder"],
+  "dependencies": ["application_credentials", "recorder"],
   "dhcp": [
     {
       "hostname": "target",
@@ -14,6 +14,6 @@
   "documentation": "https://www.home-assistant.io/integrations/solaredge",
   "integration_type": "device",
   "iot_class": "cloud_polling",
-  "loggers": ["aiosolaredge", "solaredge_web"],
-  "requirements": ["aiosolaredge==1.0.2", "solaredge-web==0.5.0"]
+  "loggers": ["solaredge_web"],
+  "requirements": ["solaredge-web==0.5.0"]
 }

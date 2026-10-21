@@ -8,14 +8,28 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from solaredge_web import EnergyData
 
+from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.components.solaredge.const import CONF_SITE_ID, DOMAIN
-from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 SITE_ID = "1a2b3c4d5e6f7g8h"
-API_KEY = "a1b2c3d4e5f6g7h8"
+TOKEN = {
+    "access_token": "access-token",
+    "refresh_token": "refresh-token",
+    "expires_at": 4102444800,
+    "expires_in": 7200,
+}
 USERNAME = "test-username"
 PASSWORD = "test-password"
+CLIENT_ID = "client-id"
+CLIENT_SECRET = "client-secret"
 
 
 @pytest.fixture
@@ -29,13 +43,29 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+async def setup_credentials(hass: HomeAssistant) -> None:
+    """Set up SolarEdge application credentials."""
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential(CLIENT_ID, CLIENT_SECRET),
+    )
+
+
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
-    """Return a MockConfigEntry with API key auth."""
+    """Return a MockConfigEntry with OAuth."""
     return MockConfigEntry(
         domain=DOMAIN,
         title="SolarEdge",
         unique_id=SITE_ID,
-        data={CONF_SITE_ID: SITE_ID, CONF_API_KEY: API_KEY},
+        data={
+            CONF_SITE_ID: SITE_ID,
+            "auth_implementation": DOMAIN,
+            CONF_TOKEN: TOKEN,
+        },
+        version=2,
     )
 
 
@@ -56,7 +86,7 @@ def mock_config_entry_web_login() -> MockConfigEntry:
 
 @pytest.fixture(name="solaredge_api")
 def mock_solaredge_api_fixture() -> Generator[Mock]:
-    """Mock a successful SolarEdge Monitoring API."""
+    """Mock a successful SolarEdge V2 API."""
     api = Mock()
     api.get_details = AsyncMock(
         return_value=load_json_object_fixture("details.json", DOMAIN)
@@ -78,14 +108,24 @@ def mock_solaredge_api_fixture() -> Generator[Mock]:
     )
     with (
         patch(
-            "homeassistant.components.solaredge.config_flow.aiosolaredge.SolarEdge",
+            "homeassistant.components.solaredge.config_flow.SolarEdgeV2",
             return_value=api,
         ),
         patch(
-            "homeassistant.components.solaredge.SolarEdge",
+            "homeassistant.components.solaredge.SolarEdgeV2",
             return_value=api,
         ),
+        patch(
+            "homeassistant.components.solaredge.config_entry_oauth2_flow."
+            "async_get_config_entry_implementation",
+            new=AsyncMock(return_value=Mock()),
+        ),
+        patch(
+            "homeassistant.components.solaredge.config_entry_oauth2_flow.OAuth2Session"
+        ) as oauth_session,
     ):
+        oauth_session.return_value.token = TOKEN
+        oauth_session.return_value.async_ensure_token_valid = AsyncMock()
         yield api
 
 

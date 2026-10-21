@@ -1,6 +1,6 @@
 """Tests for the SolarEdge sensor platform."""
 
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
@@ -81,6 +81,25 @@ async def test_all_entities(
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_v2_preserves_legacy_unique_ids(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    solaredge_api: Mock,
+) -> None:
+    """Test the V2 migration preserves existing entity registry identities."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        entity_registry.async_get("sensor.solaredge_lifetime_energy").unique_id
+        == f"{SITE_ID}_lifetime_energy"
+    )
+    assert (
+        entity_registry.async_get("sensor.solaredge_site_details").unique_id == SITE_ID
+    )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -791,9 +810,7 @@ def _power_flow_payload(
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@patch("homeassistant.components.solaredge.SolarEdge")
 async def test_power_flow_direction_sensors(
-    mock_solaredge: MagicMock,
     recorder_mock: Recorder,
     hass: HomeAssistant,
     solaredge_api: Mock,
@@ -809,8 +826,6 @@ async def test_power_flow_direction_sensors(
             grid_export=grid_export, storage_charging=storage_charging
         )
     )
-    mock_solaredge.return_value = solaredge_api
-
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -839,9 +854,7 @@ async def test_power_flow_direction_sensors(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@patch("homeassistant.components.solaredge.SolarEdge")
 async def test_storage_level_from_power_flow(
-    mock_solaredge: MagicMock,
     recorder_mock: Recorder,
     hass: HomeAssistant,
     solaredge_api: Mock,
@@ -853,8 +866,6 @@ async def test_storage_level_from_power_flow(
             grid_export=False, storage_charging=True, charge_level=42
         )
     )
-    mock_solaredge.return_value = solaredge_api
-
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -865,9 +876,7 @@ async def test_storage_level_from_power_flow(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@patch("homeassistant.components.solaredge.SolarEdge")
 async def test_power_flow_direction_sensors_missing_connections(
-    mock_solaredge: MagicMock,
     recorder_mock: Recorder,
     hass: HomeAssistant,
     solaredge_api: Mock,
@@ -877,8 +886,6 @@ async def test_power_flow_direction_sensors_missing_connections(
     solaredge_api.get_current_power_flow = AsyncMock(
         return_value={"siteCurrentPowerFlow": {"unit": "W"}}
     )
-    mock_solaredge.return_value = solaredge_api
-
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
