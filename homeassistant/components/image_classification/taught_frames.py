@@ -2,7 +2,8 @@
 
 import asyncio
 from collections import Counter
-from collections.abc import Iterable
+from collections.abc import AsyncIterator, Iterable
+import contextlib
 from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
@@ -69,6 +70,9 @@ class TaughtFrames:
         # Raw stored data, so fields written by newer versions survive a save.
         self._data: dict[str, Any] = {}
         self._items: dict[str, dict[str, Any]] = {}
+        # Classifications reading the files; deletions wait until they end.
+        self._readers = 0
+        self._doomed: set[str] = set()
 
     @property
     def frames(self) -> list[TaughtFrame]:
@@ -89,6 +93,18 @@ class TaughtFrames:
         """Return the number of frames per state."""
         return Counter(item["label"] for item in self._items.values())
 
+    @contextlib.asynccontextmanager
+    async def async_lease(self) -> AsyncIterator[dict[str, dict[str, Any]]]:
+        """Return the labels for an AI Task, their files kept until the end."""
+        self._readers += 1
+        try:
+            yield self.labels()
+        finally:
+            self._readers -= 1
+            if not self._readers and self._doomed:
+                doomed, self._doomed = list(self._doomed), set()
+                await self._hass.async_add_executor_job(self._delete_files, doomed)
+
     def labels(self) -> dict[str, dict[str, Any]]:
         """Return the labels with their examples for an AI Task."""
         return {
@@ -106,10 +122,10 @@ class TaughtFrames:
             for state in STATES
         }
 
-    def _excess(self) -> list[str]:
+    def _excess(self, items: dict[str, dict[str, Any]] | None = None) -> list[str]:
         """Return the oldest frames beyond the cap of each state."""
         frame_ids: dict[str, list[str]] = {state: [] for state in STATES}
-        for frame_id, item in self._items.items():
+        for frame_id, item in (self._items if items is None else items).items():
             frame_ids[item["label"]].append(frame_id)
         return [
             frame_id
@@ -179,24 +195,35 @@ class TaughtFrames:
         async with self._lock:
             self._check_open()
             frame_id = uuid.uuid4().hex
-            self._items[frame_id] = {
-                "id": frame_id,
-                "label": state,
-                "created": dt_util.utcnow().isoformat(),
+            # The file comes first, so a failure leaves the frames as they were.
+            await self._hass.async_add_executor_job(self._write, frame_id, frame)
+            items = {
+                **self._items,
+                frame_id: {
+                    "id": frame_id,
+                    "label": state,
+                    "created": dt_util.utcnow().isoformat(),
+                },
             }
-            excess = self._excess()
+            excess = self._excess(items)
             for evicted_id in excess:
-                del self._items[evicted_id]
-            await self._hass.async_add_executor_job(
-                self._write, frame_id, frame, excess
-            )
-            await self._async_save()
+                del items[evicted_id]
+            saved = False
+            try:
+                await self._async_save(items)
+                saved = True
+            finally:
+                if not saved:
+                    await self._hass.async_add_executor_job(
+                        self._delete_files, [frame_id]
+                    )
+            self._items = items
+            await self._async_discard(excess)
 
-    def _write(self, frame_id: str, frame: bytes, evicted: list[str]) -> None:
+    def _write(self, frame_id: str, frame: bytes) -> None:
         path = self._path(frame_id)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(frame)
-        self._delete_files(evicted)
 
     async def async_remove(self, frame_ids: Iterable[str]) -> None:
         """Remove taught frames; raise EntryClosed when the entry was unloaded."""
@@ -212,10 +239,21 @@ class TaughtFrames:
                 for frame_id in dict.fromkeys(frame_ids)
                 if frame_id in self._items
             ]
+            items = {
+                frame_id: item
+                for frame_id, item in self._items.items()
+                if frame_id not in frame_ids
+            }
+            await self._async_save(items)
+            self._items = items
+            await self._async_discard(frame_ids)
+
+    async def _async_discard(self, frame_ids: list[str]) -> None:
+        """Delete the files of dropped frames once no classification reads them."""
+        if self._readers:
+            self._doomed.update(frame_ids)
+        else:
             await self._hass.async_add_executor_job(self._delete_files, frame_ids)
-            for frame_id in frame_ids:
-                del self._items[frame_id]
-            await self._async_save()
 
     def _check_open(self) -> None:
         if self._closed:
@@ -228,10 +266,9 @@ class TaughtFrames:
         for frame_id in frame_ids:
             self._path(frame_id).unlink(missing_ok=True)
 
-    async def _async_save(self) -> None:
-        await self._store.async_save(
-            {**self._data, "frames": list(self._items.values())}
-        )
+    async def _async_save(self, items: dict[str, dict[str, Any]] | None = None) -> None:
+        frames = self._items if items is None else items
+        await self._store.async_save({**self._data, "frames": list(frames.values())})
 
 
 async def async_remove_taught_frames(hass: HomeAssistant, entry_id: str) -> None:

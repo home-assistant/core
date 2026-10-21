@@ -409,3 +409,59 @@ async def test_follows_renamed_camera(
     assert mock_config_entry.options[CONF_ENTITY_ID] == "camera.garage_left"
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
+
+
+async def test_files_outlive_a_running_classification(
+    hass: HomeAssistant,
+    camera: FakeCamera,
+    mock_config_entry: MockConfigEntry,
+    config_dir: Path,
+) -> None:
+    """A frame removed while a classification reads it is deleted afterwards."""
+    await setup_integration(hass, mock_config_entry)
+    await teach_both(hass, mock_config_entry, camera)
+    taught_frames = mock_config_entry.runtime_data.taught_frames
+    frame = taught_frames.frames[0]
+
+    async with taught_frames.async_lease() as labels:
+        path = labels[frame.label]["examples"][0].path
+        await taught_frames.async_remove([frame.id])
+        assert frame.id not in {f.id for f in taught_frames.frames}
+        assert path.exists()
+
+    assert not path.exists()
+    assert frame_files(config_dir, mock_config_entry) == {
+        f.id for f in taught_frames.frames
+    }
+
+
+@pytest.mark.parametrize(
+    "failing",
+    [
+        pytest.param("_write", id="file"),
+        pytest.param("_async_save", id="index"),
+    ],
+)
+async def test_failed_teach_keeps_frames(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    camera: FakeCamera,
+    mock_config_entry: MockConfigEntry,
+    config_dir: Path,
+    failing: str,
+) -> None:
+    """A frame that cannot be stored leaves the frames and files as they were."""
+    await setup_integration(hass, mock_config_entry)
+    await teach_both(hass, mock_config_entry, camera)
+    taught_frames = mock_config_entry.runtime_data.taught_frames
+    before = stored_frames(hass_storage, mock_config_entry)
+
+    with (
+        patch.object(taught_frames, failing, side_effect=OSError("disk full")),
+        pytest.raises(OSError, match="disk full"),
+    ):
+        await taught_frames.async_teach(render_frame(car=True), "on")
+
+    assert stored_frames(hass_storage, mock_config_entry) == before
+    assert [f.id for f in taught_frames.frames] == [i["id"] for i in before]
+    assert frame_files(config_dir, mock_config_entry) == {i["id"] for i in before}

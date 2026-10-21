@@ -141,12 +141,15 @@ def crop_image(path: Path, region: Region | None) -> bytes:
         image = source.convert("RGB")
     if region is not None:
         width, height = image.size
+        # A narrow region may round to no pixels; keep at least one.
+        left = min(round(region.left * width), width - 1)
+        top = min(round(region.top * height), height - 1)
         image = image.crop(
             (
-                round(region.left * width),
-                round(region.top * height),
-                round(region.right * width),
-                round(region.bottom * height),
+                left,
+                top,
+                max(round(region.right * width), left + 1),
+                max(round(region.bottom * height), top + 1),
             )
         )
     output = io.BytesIO()

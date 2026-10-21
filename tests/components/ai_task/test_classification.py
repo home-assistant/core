@@ -361,6 +361,12 @@ async def test_invalid_result(
             (0, 0, 255),
             id="right_half",
         ),
+        pytest.param(
+            ai_task.Region(left=0.25, top=0.0, right=0.251, bottom=1.0),
+            (1, 20),
+            (255, 0, 0),
+            id="narrower_than_a_pixel",
+        ),
     ],
 )
 def test_crop_image(
