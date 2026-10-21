@@ -25,37 +25,6 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    ("password", "crypto_serial", "mac"),
-    [
-        pytest.param("", "", "", id="no-local-data"),
-        pytest.param("", "", MOCK_MAC, id="mac-only"),
-        pytest.param("dGVzdA==", "0102030405060708090a", "", id="no-mac"),
-    ],
-)
-async def test_cloud_account_onboarding(
-    hass: HomeAssistant,
-    mock_cloud_account: AsyncMock,
-    mock_device_info: DeviceInfo,
-    password: str,
-    crypto_serial: str,
-    mac: str,
-) -> None:
-    """New accounts can be set up without local secrets or a MAC."""
-    mock_device_info.password = password
-    mock_device_info.crypto_serial = crypto_serial
-    mock_device_info.mac = mac
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert (
-        mock_cloud_account.discover_devices.call_args.kwargs["cloud_fallback"] is True
-    )
-
-
-@pytest.mark.parametrize(
     ("cached", "recovered", "expected"),
     [
         pytest.param(
@@ -150,7 +119,7 @@ async def test_reauth_merges_local_credentials(
     assert credentials_at_setup == [expected_credentials]
     assert mock_config_entry.data[CONF_ADDRESSES] == original_addresses
     mock_cloud_account.discover_devices.assert_awaited_once_with(
-        cached_credentials=credentials, cloud_fallback=True
+        cached_credentials=credentials
     )
 
 
@@ -294,7 +263,7 @@ def _partial_device_info() -> DeviceInfo:
         label="Living Room",
         address="",
         mac="",
-        unit_type="headless",
+        unit_type="ductless",
         password="dGVzdHBhc3M=",
         crypto_serial="0102030405060708090a",
     )
@@ -440,7 +409,7 @@ async def test_user_step_username_change_drops_cached_credentials(
                     label="Bedroom",
                     address="",
                     mac="11:22:33:44:55:66",
-                    unit_type="headless",
+                    unit_type="ductless",
                     password="",
                     crypto_serial="",
                 )
@@ -455,7 +424,7 @@ async def test_user_step_username_change_drops_cached_credentials(
                     label="Bedroom",
                     address="",
                     mac="",
-                    unit_type="headless",
+                    unit_type="ductless",
                     password="dGVzdHBhc3M=",
                     crypto_serial="0102030405060708090a",
                 )

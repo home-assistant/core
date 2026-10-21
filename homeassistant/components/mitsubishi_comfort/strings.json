@@ -9,7 +9,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "no_devices": "No devices were found on this account",
-      "no_usable_devices": "No supported devices were found. Kumo Station devices require local-control credentials.",
+      "no_usable_devices": "The cloud did not return complete local-control information for any device on this account. For cloud control, add the Mitsubishi Comfort Cloud integration.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
@@ -34,7 +34,7 @@
           "password": "The password for your Kumo Cloud account.",
           "username": "The email address for your Kumo Cloud account."
         },
-        "description": "Indoor units use local control when local credentials and an IP address are available. Otherwise, they use Mitsubishi Comfort cloud control, which requires an internet connection."
+        "description": "Control devices over your local network using credentials retrieved from your Mitsubishi Comfort account. For cloud control, add the separate Mitsubishi Comfort Cloud integration."
       }
     }
   },
@@ -70,7 +70,7 @@
         },
         "step": {
           "addresses": {
-            "description": "These devices have local-control credentials but no known local IP address. Indoor units use cloud control until an address is available. Enter the local IPv4 address for each device to enable local control; each field is labeled with its MAC address. Leave a field blank to keep waiting for DHCP discovery, which only works on the same network as Home Assistant. Devices: {devices}",
+            "description": "These devices have no known local IP address, so they have no entities yet. Enter the local IPv4 address for each device below; each field is labeled with the device's MAC address. Leave a field blank to keep waiting for DHCP discovery (which only works when the device is on the same network as Home Assistant). After you submit, the integration reloads and sets up every device that has an address. Devices: {devices}",
             "title": "Device IP addresses"
           },
           "confirm": {

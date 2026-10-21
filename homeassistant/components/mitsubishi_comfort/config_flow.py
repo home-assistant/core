@@ -64,7 +64,7 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await account.login()
                 devices = await account.discover_devices(
-                    cached_credentials=self._cached_credentials, cloud_fallback=True
+                    cached_credentials=self._cached_credentials
                 )
             except AuthenticationError:
                 errors["base"] = "invalid_auth"
@@ -106,10 +106,7 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._cached_credentials = credentials
                 if not devices:
                     errors["base"] = "no_devices"
-                elif not any(
-                    info.is_indoor_unit or is_fully_credentialed(info)
-                    for info in devices.values()
-                ):
+                elif not any(is_fully_credentialed(info) for info in devices.values()):
                     errors["base"] = "no_usable_devices"
                 else:
                     return self.async_create_entry(

@@ -4,9 +4,7 @@ import asyncio
 import logging
 from typing import Any
 
-from aiohttp import ClientSession
 from mitsubishi_comfort import (
-    CloudIndoorUnit,
     DeviceInfo,
     IndoorUnit,
     KumoStation,
@@ -48,7 +46,7 @@ def _make_device(
     info: DeviceInfo,
     serial: str,
     address: str,
-    session: ClientSession,
+    session,
 ) -> IndoorUnit | KumoStation:
     """Create the appropriate device instance from DeviceInfo."""
     cls = IndoorUnit if info.is_indoor_unit else KumoStation
@@ -87,9 +85,7 @@ async def async_setup_entry(
 
     try:
         await account.login()
-        devices = await account.discover_devices(
-            cached_credentials=cached_credentials, cloud_fallback=True
-        )
+        devices = await account.discover_devices(cached_credentials=cached_credentials)
     except AuthenticationError as err:
         raise ConfigEntryAuthFailed("Mitsubishi cloud authentication failed") from err
     except DeviceConnectionError as err:
@@ -158,20 +154,15 @@ async def async_setup_entry(
     no_address: list[str] = []
     incomplete: list[str] = []
     for serial, info in devices.items():
-        address = addresses.get(dr.format_mac(info.mac))
-        local_credentials = is_fully_credentialed(info)
-        device: IndoorUnit | CloudIndoorUnit | KumoStation
-        if local_credentials and not address:
-            no_address.append(info.label)
-        if local_credentials and address:
-            device = _make_device(info, serial, address, session)
-        elif info.is_indoor_unit:
-            device = CloudIndoorUnit(info, account)
-            _LOGGER.debug("Using cloud control for %s", info.label)
-        else:
-            if not local_credentials:
-                incomplete.append(info.label)
+        if not is_fully_credentialed(info):
+            incomplete.append(info.label)
             continue
+        address = addresses.get(dr.format_mac(info.mac))
+        if not address:
+            no_address.append(info.label)
+            continue
+        _LOGGER.debug("Setting up %s at %s", info.label, address)
+        device = _make_device(info, serial, address, session)
         coordinators[serial] = MitsubishiComfortCoordinator(
             hass, entry, device, info.mac
         )
@@ -182,36 +173,27 @@ async def async_setup_entry(
             len(incomplete),
             ", ".join(sorted(incomplete)),
         )
-    # Offer local control when credentials are available but the address is not.
+    # A device the cloud cannot locate stays unaddressable across restarts
+    # until DHCP discovery reaches it or the user enters an IP in the repair
+    # flow; raise a fixable repair issue while any device lacks an address and
+    # clear it once they all have one.
     if no_address:
         async_create_missing_address_issue(hass, entry.entry_id)
     else:
         ir.async_delete_issue(hass, DOMAIN, f"missing_address_{entry.entry_id}")
+    # The three buckets reconcile: set up + awaiting address + incomplete local
+    # data equals the number of devices on the account.
     _LOGGER.debug(
-        "Set up %d of %d device(s); %d missing a LAN address, %d unsupported without local data",
+        "Set up %d of %d device(s); %d awaiting a LAN address, %d with incomplete local data",
         len(coordinators),
         len(devices),
         len(no_address),
         len(incomplete),
     )
 
-    results = await asyncio.gather(
-        *(c.async_config_entry_first_refresh() for c in coordinators.values()),
-        return_exceptions=True,
+    await asyncio.gather(
+        *(c.async_config_entry_first_refresh() for c in coordinators.values())
     )
-    failures: list[ConfigEntryNotReady | ConfigEntryAuthFailed] = []
-    auth_failure: ConfigEntryAuthFailed | None = None
-    for result in results:
-        if isinstance(result, ConfigEntryAuthFailed):
-            auth_failure = result
-        if isinstance(result, (ConfigEntryNotReady, ConfigEntryAuthFailed)):
-            failures.append(result)
-        elif isinstance(result, BaseException):
-            raise result
-    if failures and len(failures) == len(results):
-        raise auth_failure or failures[0]
-    if auth_failure:
-        entry.async_start_reauth(hass)
 
     entry.runtime_data = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
