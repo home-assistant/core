@@ -147,6 +147,15 @@
           "on": "[%key:common::state::on%]"
         }
       },
+      "switch_type": {
+        "name": "Switch type",
+        "state": {
+          "no_switch": "No switch",
+          "none": "None",
+          "pushbutton": "Push button",
+          "switch": "Rocker switch"
+        }
+      },
       "valve_type": {
         "name": "Valve type",
         "state": {

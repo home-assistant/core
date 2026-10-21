@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, override
 
 from boschshcpy import (
     OutdoorSirenService,
+    SHCMicromoduleRelay,
     SHCMotionDetector2,
     SHCOutdoorSiren,
     SHCRoomThermostat2,
@@ -22,6 +23,7 @@ from boschshcpy.services_impl import (
     PirSensorConfigurationService,
     PowerSwitchConfigurationService,
     SmokeSensitivityService,
+    SwitchConfiguration,
     VibrationSensorService,
     WallThermostatConfiguration,
 )
@@ -231,6 +233,28 @@ HEATER_TYPE_DESCRIPTION = SHCSelectEntityDescription[SHCThermostatGen2](
 )
 
 
+def _switch_type_select_option(device: SHCMicromoduleRelay, option: str) -> None:
+    """Write the relay's switch type."""
+    device.switch_type = SwitchConfiguration.SwitchType[option.upper()]
+
+
+SWITCH_TYPE_DESCRIPTION = SHCSelectEntityDescription[SHCMicromoduleRelay](
+    key="switch_type",
+    translation_key="switch_type",
+    entity_category=EntityCategory.CONFIG,
+    options=[
+        "none",
+        "pushbutton",
+        "switch",
+        "no_switch",
+    ],
+    current_option_fn=lambda device, options: (
+        value.name.lower() if (value := device.switch_type) else None
+    ),
+    select_option_fn=_switch_type_select_option,
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BoschConfigEntry,
@@ -378,6 +402,17 @@ async def async_setup_entry(
         if isinstance(thermostat, SHCThermostatGen2)
         and thermostat.supports_wall_thermostat_configuration
         and thermostat.heater_type is not None
+    )
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=relay,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=SWITCH_TYPE_DESCRIPTION,
+        )
+        for relay in session.device_helper.micromodule_relays
+        if relay.supports_switch_configuration and relay.switch_type is not None
     )
 
     async_add_entities(entities)

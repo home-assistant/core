@@ -10,6 +10,7 @@ from boschshcpy.services_impl import (
     PirSensorConfigurationService,
     PowerSwitchConfigurationService,
     SmokeSensitivityService,
+    SwitchConfiguration,
     VibrationSensorService,
     WallThermostatConfiguration,
 )
@@ -21,6 +22,7 @@ from homeassistant.const import ATTR_ENTITY_ID, SERVICE_SELECT_OPTION, STATE_UNK
 from homeassistant.core import HomeAssistant
 
 from .conftest import (
+    micromodule_relay_device,
     motion_detector2_device,
     outdoor_siren_device,
     setup_integration,
@@ -627,3 +629,57 @@ async def test_thermostat_valve_and_heater_type_unsupported(
 
     assert hass.states.get(VALVE_TYPE_ENTITY_ID) is None
     assert hass.states.get(HEATER_TYPE_ENTITY_ID) is None
+
+
+SWITCH_TYPE_ENTITY_ID = "select.relay_switch_type"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "micromodule_relays": [
+                micromodule_relay_device(
+                    supports_switch_configuration=True,
+                    switch_type=SwitchConfiguration.SwitchType.PUSHBUTTON,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_relay_switch_type(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The relay switch type is reported and written to the device."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.micromodule_relays[0]
+
+    assert hass.states.get(SWITCH_TYPE_ENTITY_ID).state == "pushbutton"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: SWITCH_TYPE_ENTITY_ID, "option": "switch"},
+        blocking=True,
+    )
+    assert device.switch_type == SwitchConfiguration.SwitchType.SWITCH
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"micromodule_relays": [micromodule_relay_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_relay_switch_type_unsupported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No switch type select is created without switch configuration support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(SWITCH_TYPE_ENTITY_ID) is None
