@@ -33,6 +33,9 @@ def test_read_only_dict() -> None:
     with pytest.raises(RuntimeError):
         data.setdefault("yo", "yo")
 
+    with pytest.raises(RuntimeError):
+        data |= {"yo": "yo"}
+
     assert isinstance(data, dict)
     assert dict(data) == {"hello": "world"}
     assert json.dumps(data) == json.dumps({"hello": "world"})

@@ -20,6 +20,7 @@ class ReadOnlyDict[_KT, _VT](dict[_KT, _VT]):
     clear = _readonly
     update = _readonly
     setdefault = _readonly
+    __ior__ = _readonly
 
     def __copy__(self) -> dict[_KT, _VT]:
         """Create a shallow copy."""
