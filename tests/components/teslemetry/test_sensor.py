@@ -20,7 +20,11 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.teslemetry.const import DOMAIN, ENERGY_HISTORY_FIELDS
+from homeassistant.components.teslemetry.const import (
+    DOMAIN,
+    ENERGY_HISTORY_FIELDS,
+    STREAM_DISCONNECT_GRACE,
+)
 from homeassistant.components.teslemetry.coordinator import (
     LOCAL_COMPONENTS_INTERVAL,
     LOCAL_STATUS_INTERVAL,
@@ -1239,6 +1243,7 @@ async def test_energy_history_time_zone_fallback(
 async def test_energy_history_update_entity_service(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
     mock_add_connection_listener: MagicMock,
     mock_energy_totals_stream: MagicMock,
     mock_wall_connector_totals_stream: MagicMock,
@@ -1258,7 +1263,9 @@ async def test_energy_history_update_entity_service(
     mock_wall_connector_totals_stream.send()
     await hass.async_block_till_done()
     mock_add_connection_listener.send(connected)
-    await hass.async_block_till_done()
+    freezer.tick(STREAM_DISCONNECT_GRACE)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     await hass.services.async_call(
         HOMEASSISTANT_DOMAIN,
@@ -1274,6 +1281,7 @@ async def test_energy_history_update_entity_service(
 
 async def test_energy_history_unavailable_while_stream_disconnected(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_add_connection_listener: MagicMock,
     mock_energy_totals_stream: MagicMock,
 ) -> None:
@@ -1285,7 +1293,9 @@ async def test_energy_history_unavailable_while_stream_disconnected(
     assert hass.states.get(ENERGY_HISTORY_ENTITY).state == "0.036"
 
     mock_add_connection_listener.send(False)
-    await hass.async_block_till_done()
+    freezer.tick(STREAM_DISCONNECT_GRACE)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(ENERGY_HISTORY_ENTITY).state == STATE_UNAVAILABLE
 
     mock_energy_totals_stream.send(is_cache=True)
@@ -1429,6 +1439,7 @@ async def test_wall_connector_totals_stream_updates(
 
 async def test_wall_connector_totals_unavailable_while_stream_disconnected(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_add_connection_listener: MagicMock,
     mock_wall_connector_totals_stream: MagicMock,
 ) -> None:
@@ -1440,7 +1451,9 @@ async def test_wall_connector_totals_unavailable_while_stream_disconnected(
     assert hass.states.get(WALL_CONNECTOR_ENERGY_ENTITY).state == "7.25"
 
     mock_add_connection_listener.send(False)
-    await hass.async_block_till_done()
+    freezer.tick(STREAM_DISCONNECT_GRACE)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(WALL_CONNECTOR_ENERGY_ENTITY).state == STATE_UNAVAILABLE
 
     mock_wall_connector_totals_stream.send(is_cache=True)
