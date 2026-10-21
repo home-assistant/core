@@ -1214,13 +1214,11 @@ def _reduce_statistics(
     stats: dict[str, list[StatisticsRow]],
     same_period: Callable[[float, float], bool],
     period_start_end: Callable[[float], tuple[float, float]],
-    period: timedelta,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
     metadata: dict[str, tuple[int, StatisticMetaData]],
 ) -> dict[str, list[StatisticsRow]]:
     """Reduce hourly statistics to daily or monthly statistics."""
     result: dict[str, list[StatisticsRow]] = defaultdict(list)
-    period_seconds = period.total_seconds()
     _want_mean = "mean" in types
     _want_min = "min" in types
     _want_max = "max" in types
@@ -1232,7 +1230,10 @@ def _reduce_statistics(
         mean_values: list[tuple[float, float]] = []
         min_values: list[float] = []
         prev_stat: StatisticsRow = stat_list[0]
-        fake_entry: StatisticsRow = {"start": stat_list[-1]["start"] + period_seconds}
+        # A fixed offset could land inside a period lengthened by DST
+        fake_entry: StatisticsRow = {
+            "start": period_start_end(stat_list[-1]["start"])[1]
+        }
 
         # Loop over the hourly statistics + a fake entry to end the period
         for statistic in chain(stat_list, (fake_entry,)):
@@ -1325,9 +1326,7 @@ def _reduce_statistics_per_day(
 ) -> dict[str, list[StatisticsRow]]:
     """Reduce hourly statistics to daily statistics."""
     _same_day_ts, _day_start_end_ts = reduce_day_ts_factory()
-    return _reduce_statistics(
-        stats, _same_day_ts, _day_start_end_ts, timedelta(days=1), types, metadata
-    )
+    return _reduce_statistics(stats, _same_day_ts, _day_start_end_ts, types, metadata)
 
 
 def reduce_week_ts_factory() -> tuple[
@@ -1375,9 +1374,7 @@ def _reduce_statistics_per_week(
 ) -> dict[str, list[StatisticsRow]]:
     """Reduce hourly statistics to weekly statistics."""
     _same_week_ts, _week_start_end_ts = reduce_week_ts_factory()
-    return _reduce_statistics(
-        stats, _same_week_ts, _week_start_end_ts, timedelta(days=7), types, metadata
-    )
+    return _reduce_statistics(stats, _same_week_ts, _week_start_end_ts, types, metadata)
 
 
 def _find_month_end_time(timestamp: datetime) -> datetime:
@@ -1431,7 +1428,7 @@ def _reduce_statistics_per_month(
     """Reduce hourly statistics to monthly statistics."""
     _same_month_ts, _month_start_end_ts = reduce_month_ts_factory()
     return _reduce_statistics(
-        stats, _same_month_ts, _month_start_end_ts, timedelta(days=31), types, metadata
+        stats, _same_month_ts, _month_start_end_ts, types, metadata
     )
 
 
@@ -1479,9 +1476,7 @@ def _reduce_statistics_per_year(
 ) -> dict[str, list[StatisticsRow]]:
     """Reduce hourly statistics to yearly statistics."""
     _same_year_ts, _year_start_end_ts = reduce_year_ts_factory()
-    return _reduce_statistics(
-        stats, _same_year_ts, _year_start_end_ts, timedelta(days=366), types, metadata
-    )
+    return _reduce_statistics(stats, _same_year_ts, _year_start_end_ts, types, metadata)
 
 
 def _generate_statistics_during_period_stmt(

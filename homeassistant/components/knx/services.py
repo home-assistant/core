@@ -42,7 +42,8 @@ from .const import (
     SERVICE_KNX_SEND,
 )
 from .expose import create_knx_exposure
-from .schema import ExposeSchema, dpt_base_type_validator, ga_validator
+from .schema import ExposeSchema
+from .validation import dpt_base_type_validator, ga_validator
 
 if TYPE_CHECKING:
     from .knx_module import KNXModule

@@ -832,7 +832,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE),
         patch(
             "homeassistant.components.isy994.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result4 = await hass.config_entries.flow.async_configure(
