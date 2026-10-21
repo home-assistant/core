@@ -1220,16 +1220,31 @@ Integration's `__init__.py` should implement `async_unload_entry`.
 
 ## `home_assistant_sequential_executor_jobs` checker
 
-Detects consecutive `async_add_executor_job` calls in integration modules
-that could be grouped into a single executor job.
+Detects consecutive executor jobs in integration modules that could be
+grouped into a single executor job.
 
 ### `W7415`: `home-assistant-sequential-executor-jobs`
 
-Two or more `async_add_executor_job` calls appearing as consecutive
-statements (uninterrupted by control flow such as `if`/`try`/`with`/`for`)
-should be combined into a single executor job that performs all the work,
-avoiding unnecessary context switches back to the event loop between
-blocking calls. The rule applies to integration modules only.
+Two or more awaited executor jobs that run without yielding to the event
+loop in between should be combined into a single executor job that performs
+all the work, avoiding unnecessary context switches back to the event loop
+between blocking calls. The rule applies to integration modules only.
+
+Executor jobs are `async_add_executor_job`, `async_add_import_executor_job`,
+`loop.run_in_executor` and `asyncio.to_thread` calls. A statement counts as
+an executor job when the executor job is its only `await`, so
+`x = (await hass.async_add_executor_job(func)) == "1"` is included.
+
+Jobs are only grouped when they run on the same executor: `hass`,
+`self.hass`, `run_in_executor(None, ...)` and `asyncio.to_thread` share the
+default executor, while import executor jobs and jobs on other receivers
+(such as the recorder's `get_instance(hass)`) are tracked separately.
+
+Plain statements between the jobs (assignments, expressions, `assert`,
+`del`, `pass`) do not break the sequence, unless they `await` or call a
+function named `async_*`, as those must run in the event loop. Control
+flow such as `if`/`try`/`with`/`for`/`match` breaks the sequence, but the
+checker also inspects the bodies of these blocks.
 
 
 ## `home_assistant_has_entity_name` checker
