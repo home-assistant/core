@@ -1,6 +1,6 @@
 """Service actions for the ecosmart integration."""
 
-from typing import Final
+from enum import StrEnum
 
 from aioecosmart import (
     EcosmartAuthError,
@@ -26,7 +26,12 @@ from homeassistant.util.json import JsonValueType
 from .const import DOMAIN, FORECAST_HOURS
 from .coordinator import EcosmartConfigEntry, EcosmartCoordinator, retry_delay
 
-SERVICE_GET_FORECASTS: Final = "get_forecasts"
+
+class EcosmartService(StrEnum):
+    """Store keys for ecosmart services."""
+
+    GET_FORECASTS = "get_forecasts"
+
 
 GET_FORECASTS_SCHEMA = probatio.Schema(
     {
@@ -116,7 +121,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Register the ecosmart service actions."""
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_FORECASTS,
+        EcosmartService.GET_FORECASTS,
         _async_get_forecasts,
         schema=GET_FORECASTS_SCHEMA,
         supports_response=SupportsResponse.ONLY,

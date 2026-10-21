@@ -17,7 +17,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ecosmart.const import DOMAIN, FORECAST_HOURS
-from homeassistant.components.ecosmart.services import SERVICE_GET_FORECASTS
+from homeassistant.components.ecosmart.services import EcosmartService
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -49,7 +49,7 @@ async def _get_forecasts(hass: HomeAssistant, device_id: str) -> dict[str, objec
     """Call the action and return its response."""
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_FORECASTS,
+        EcosmartService.GET_FORECASTS,
         {ATTR_DEVICE_ID: device_id},
         blocking=True,
         return_response=True,
@@ -216,7 +216,7 @@ async def test_get_forecasts_requires_a_device(
     with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_FORECASTS,
+            EcosmartService.GET_FORECASTS,
             {},
             blocking=True,
             return_response=True,
