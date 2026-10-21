@@ -1,6 +1,8 @@
 """Tests for the Google Generative AI Conversation STT entity."""
 
+import base64
 from collections.abc import AsyncIterable, Generator
+import json
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from google.genai import interactions, types
@@ -600,7 +602,6 @@ async def test_stt_uses_default_model(
         ("gemini-3.1-flash-lite", True),
         ("gemini-3.8-flash", False),
         ("gemini-flash-latest", False),
-        ("gemini-3.5-transcribe", False),
     ],
 )
 async def test_stt_wire_parameters(
@@ -641,3 +642,52 @@ async def test_stt_wire_parameters(
     }
     assert "en-US" in body["contents"][0]["parts"][0]["text"]
     assert body["contents"][0]["parts"][1]["inlineData"]["mime_type"] == "audio/ogg"
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_stt_interactions_wire_parameters(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_genai_interactions_transport: Mock,
+) -> None:
+    """Run a loaded STT entity through real SDK Interactions request construction."""
+    subentry = mock_config_entry.subentries["ulid-stt"]
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={**subentry.data, CONF_CHAT_MODEL: "gemini-3.5-transcribe"},
+    )
+    await hass.async_block_till_done()
+    entity = hass.data[stt.DOMAIN].get_entity("stt.google_ai_stt")
+    metadata = stt.SpeechMetadata(
+        language="en-US",
+        format=stt.AudioFormats.OGG,
+        codec=stt.AudioCodecs.OPUS,
+        bit_rate=stt.AudioBitRates.BITRATE_16,
+        sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+        channel=stt.AudioChannels.CHANNEL_MONO,
+    )
+    result = await entity.async_process_audio_stream(
+        metadata, _async_get_audio_stream(b"audio")
+    )
+    assert result.result is stt.SpeechResultState.SUCCESS
+    assert result.text == "Done"
+    [request] = mock_genai_interactions_transport.call_args.args
+    body = json.loads(request.content)
+    assert body["model"] == "gemini-3.5-transcribe"
+    assert body["generation_config"] == {
+        "transcription_config": {"language_codes": ["en-US"]}
+    }
+    assert "system_instruction" not in body
+    assert body["input"] == [
+        {
+            "type": "user_input",
+            "content": [
+                {
+                    "type": "audio",
+                    "mime_type": "audio/ogg",
+                    "data": base64.b64encode(b"audio").decode(),
+                }
+            ],
+        }
+    ]
