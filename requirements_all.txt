@@ -2339,7 +2339,7 @@ pyhaversion==22.8.0
 pyhelty==0.2.0
 
 # homeassistant.components.helty_cloud
-pyheltycloud==0.2.0
+pyheltycloud==0.2.1
 
 # homeassistant.components.heos
 pyheos==1.0.6
@@ -2692,7 +2692,7 @@ pysmarty2==0.10.3
 pysmartyplants==0.2.1
 
 # homeassistant.components.smhi
-pysmhi==2.0.0
+pysmhi==2.1.0
 
 # homeassistant.components.edl21
 pysml==0.1.8
@@ -2752,7 +2752,7 @@ python-awair==0.2.5
 python-blockchain-api==0.0.2
 
 # homeassistant.components.bsblan
-python-bsblan==6.1.10
+python-bsblan==6.1.11
 
 # homeassistant.components.citybikes
 python-citybikes==0.3.3
