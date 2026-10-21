@@ -10,12 +10,8 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.util import slugify
 
 from .const import ATTR_MANUFACTURER, DOMAIN
-from .coordinator import (
-    MikrotikConfigEntry,
-    MikrotikDataUpdateCoordinator,
-    get_api,
-    mikrotik_config_entry_errors,
-)
+from .coordinator import MikrotikConfigEntry, MikrotikDataUpdateCoordinator, get_api
+from .utils import mikrotik_config_entry_errors
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -48,13 +44,15 @@ async def async_setup_entry(
     config_entry.runtime_data = coordinator
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, coordinator.serial_num)},
-        manufacturer=ATTR_MANUFACTURER,
-        model=coordinator.model,
-        name=coordinator.hostname,
-        sw_version=coordinator.firmware,
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, coordinator.serial_num)},
+            manufacturer=ATTR_MANUFACTURER,
+            model=coordinator.model,
+            name=coordinator.hostname,
+            sw_version=coordinator.firmware,
+        ),
     )
 
     @callback

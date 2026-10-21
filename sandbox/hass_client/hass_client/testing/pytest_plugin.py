@@ -119,9 +119,7 @@ class _InProcessSandboxProcess:
         """Best-effort: issue a shutdown call so the runtime exits cleanly."""
         # Lazy import: testing package must not pull the HA integration
         # tree at import time.
-        from homeassistant.components.sandbox.messages import (  # noqa: PLC0415
-            MSG_SHUTDOWN,
-        )
+        from homeassistant.components.sandbox.messages import MSG_SHUTDOWN  # noqa: PLC0415
 
         try:
             await asyncio.wait_for(
@@ -178,9 +176,7 @@ async def async_setup_inprocess_sandbox(
     # Lazy import to keep ``hass_client.testing`` import-time free of HA
     # integration code (the testing package may be imported even when
     # the integration isn't installed).
-    from homeassistant.components.sandbox.bridge import (  # noqa: PLC0415
-        async_create_bridge,
-    )
+    from homeassistant.components.sandbox.bridge import async_create_bridge  # noqa: PLC0415
     from homeassistant.components.sandbox.const import DATA_SANDBOX  # noqa: PLC0415
     from homeassistant.setup import async_setup_component  # noqa: PLC0415
 

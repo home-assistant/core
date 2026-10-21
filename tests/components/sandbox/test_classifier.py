@@ -1,6 +1,7 @@
 """Tests for the sandbox integration classifier."""
 
 import pytest
+from pytest_homeassistant.common import MockModule, mock_integration
 
 from homeassistant.components.sandbox.classifier import (
     GROUP_BUILT_IN,
@@ -14,8 +15,6 @@ from homeassistant.components.sandbox.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import Integration
-
-from tests.common import MockModule, mock_integration
 
 
 def _make_integration(

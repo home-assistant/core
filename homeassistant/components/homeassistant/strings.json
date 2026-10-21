@@ -108,6 +108,9 @@
     "platform_schema_validator_err": {
       "message": "Unknown error when validating config for {domain} from integration {p_name} - {error}."
     },
+    "platform_setup_failed": {
+      "message": "Failed to set up the {platform} {domain} platform."
+    },
     "scene_config_reload_failed": {
       "message": "Failed to reload the Home Assistant scene platform configuration - {error}"
     },
@@ -282,6 +285,18 @@
     "health_wellbeing": {
       "description": "Scales, toothbrushes, sleep and fitness tracking, glucose monitoring and baby care.",
       "name": "Health & wellbeing"
+    },
+    "helpers": {
+      "description": "Entities you create yourself, without a device behind them: toggles, numbers, timers and schedules, and values calculated from other entities.",
+      "name": "Helpers",
+      "subcategory": {
+        "calculate_value": {
+          "name": "Calculate a value"
+        },
+        "store_value": {
+          "name": "Store a value"
+        }
+      }
     },
     "hubs_protocols": {
       "description": "Smart home hubs and radio protocols that each bring in many kinds of devices.",

@@ -40,9 +40,7 @@ def make_inproc_channel_pair(*, group: str) -> tuple[Any, ClientChannel]:
     # tree. Importing it eagerly would couple the testing helper to a
     # component that may not be loaded.
     from hass_client.codec_protobuf import ProtobufCodec as ClientCodec  # noqa: PLC0415
-    from homeassistant.components.sandbox.channel import (  # noqa: PLC0415
-        Channel as MgrChannel,
-    )
+    from homeassistant.components.sandbox.channel import Channel as MgrChannel  # noqa: PLC0415
     from homeassistant.components.sandbox.codec_protobuf import (  # noqa: PLC0415
         ProtobufCodec as MgrCodec,
     )

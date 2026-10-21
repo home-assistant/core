@@ -578,10 +578,7 @@ class SandboxBridge:
         return platform
 
     async def _async_build_proxy(self, description: SandboxEntityDescription) -> Any:
-        from .entity import (  # noqa: PLC0415 — deliberate lazy import, see below
-            build_proxy,
-            proxy_class_for,
-        )
+        from .entity import build_proxy, proxy_class_for  # noqa: PLC0415 — deliberate lazy import, see below
 
         # First use of a domain imports its proxy module (and that domain's
         # component package) — do it off the event loop.

@@ -8,6 +8,7 @@ from aioesphomeapi import EntityInfo, SelectInfo, SelectState
 from homeassistant.components.assist_pipeline import (
     AssistPipelineSelect,
     VadSensitivitySelect,
+    indexed_select_key,
 )
 from homeassistant.components.assist_satellite import AssistSatelliteConfiguration
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -16,7 +17,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import restore_state
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, NO_WAKE_WORD
+from .const import (
+    DOMAIN,
+    NO_WAKE_WORD,
+    VOICE_ASSISTANT_SELECT_COUNT,
+    WAKE_WORD_SELECT_KEY,
+)
 from .entity import (
     EsphomeAssistEntity,
     EsphomeEntity,
@@ -45,19 +51,42 @@ async def async_setup_entry(
     )
 
     entry_data = entry.runtime_data
-    assert entry_data.device_info is not None
-    if entry_data.device_info.voice_assistant_feature_flags_compat(
-        entry_data.api_version
-    ):
-        async_add_entities(
-            [
-                EsphomeAssistPipelineSelect(hass, entry_data, index=0),
-                EsphomeAssistPipelineSelect(hass, entry_data, index=1),
-                EsphomeVadSensitivitySelect(hass, entry_data),
-                EsphomeAssistSatelliteWakeWordSelect(entry_data, index=0),
-                EsphomeAssistSatelliteWakeWordSelect(entry_data, index=1),
-            ]
-        )
+    added = False
+
+    @callback
+    def _async_add_voice_assistant_selects() -> None:
+        """Add the voice assistant selects while the device offers one."""
+        nonlocal added
+        if (device_info := entry_data.device_info) is None:
+            return
+        if not device_info.voice_assistant_feature_flags_compat(entry_data.api_version):
+            added = False
+            return
+        if not added:
+            added = True
+            async_add_entities(_voice_assistant_selects(hass, entry_data))
+
+    _async_add_voice_assistant_selects()
+    entry.async_on_unload(
+        entry_data.async_subscribe_device_updated(_async_add_voice_assistant_selects)
+    )
+
+
+def _voice_assistant_selects(
+    hass: HomeAssistant, entry_data: RuntimeEntryData
+) -> list[SelectEntity]:
+    """Build the selects that exist only while the device offers a voice assistant."""
+    return [
+        *(
+            EsphomeAssistPipelineSelect(hass, entry_data, index=index)
+            for index in range(VOICE_ASSISTANT_SELECT_COUNT)
+        ),
+        EsphomeVadSensitivitySelect(hass, entry_data),
+        *(
+            EsphomeAssistSatelliteWakeWordSelect(entry_data, index=index)
+            for index in range(VOICE_ASSISTANT_SELECT_COUNT)
+        ),
+    ]
 
 
 class EsphomeSelect(EsphomeEntity[SelectInfo, SelectState], SelectEntity):
@@ -115,7 +144,7 @@ class EsphomeAssistSatelliteWakeWordSelect(
     """Wake word selector for esphome devices."""
 
     entity_description = SelectEntityDescription(
-        key="wake_word",
+        key=WAKE_WORD_SELECT_KEY,
         translation_key="wake_word",
         entity_category=EntityCategory.CONFIG,
     )
@@ -128,7 +157,7 @@ class EsphomeAssistSatelliteWakeWordSelect(
         if index >= 1:
             self.entity_description = replace(
                 self.entity_description,
-                key=f"wake_word_{index + 1}",
+                key=indexed_select_key(WAKE_WORD_SELECT_KEY, index),
                 translation_key="wake_word_n",
                 translation_placeholders={"index": str(index + 1)},
             )

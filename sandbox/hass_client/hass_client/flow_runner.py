@@ -128,8 +128,8 @@ class FlowRunner:
             fr.async_load(hass),
             ir.async_load(hass),
             lr.async_load(hass),
+            hass.config_entries.async_initialize(),
         )
-        await hass.config_entries.async_initialize()
         return cls(hass)
 
     def register(self, channel: Channel) -> None:

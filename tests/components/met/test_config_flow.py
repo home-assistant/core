@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import ANY, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.met.const import (
@@ -20,8 +21,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import init_integration
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture(name="met_setup", autouse=True)
 def met_setup_fixture(request: pytest.FixtureRequest) -> Generator[Any]:
@@ -29,7 +28,7 @@ def met_setup_fixture(request: pytest.FixtureRequest) -> Generator[Any]:
     if "disable_autouse_fixture" in request.keywords:
         yield
     else:
-        with patch("homeassistant.components.met.async_setup_entry", return_value=True):
+        with patch("homeassistant.components.met.async_setup_entry", return_value=None):
             yield
 
 

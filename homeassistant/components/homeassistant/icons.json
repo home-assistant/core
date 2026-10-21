@@ -125,6 +125,17 @@
     "health_wellbeing": {
       "default": "mdi:heart-pulse"
     },
+    "helpers": {
+      "default": "mdi:tools",
+      "subcategory": {
+        "calculate_value": {
+          "default": "mdi:calculator-variant"
+        },
+        "store_value": {
+          "default": "mdi:form-textbox"
+        }
+      }
+    },
     "hubs_protocols": {
       "default": "mdi:hub",
       "subcategory": {

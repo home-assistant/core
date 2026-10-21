@@ -4,6 +4,7 @@ import asyncio
 from typing import cast
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.sandbox import SandboxData
 from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
@@ -20,8 +21,6 @@ from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from ._helpers import FakeSandboxManager, make_channel_pair
-
-from tests.common import MockConfigEntry
 
 _SANDBOX_ENTITY_ID = "light.kitchen"
 

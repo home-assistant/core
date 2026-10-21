@@ -93,9 +93,7 @@ class SubprocessSandbox:
     async def stop(self) -> None:
         """Issue a graceful shutdown, then SIGTERM/SIGKILL escalation."""
         # Stop the worker before hass teardown so failures are attributed to this fixture.
-        from homeassistant.components.sandbox.manager import (  # noqa: PLC0415
-            SandboxManager,
-        )
+        from homeassistant.components.sandbox.manager import SandboxManager  # noqa: PLC0415
 
         assert isinstance(self.manager, SandboxManager)
         await self.manager.async_graceful_shutdown_all(

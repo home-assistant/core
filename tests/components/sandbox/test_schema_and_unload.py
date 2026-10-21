@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockModule, mock_integration
 
 from homeassistant import data_entry_flow
 from homeassistant.components.sandbox import schema_bridge
@@ -24,8 +25,6 @@ from homeassistant.data_entry_flow import AbortFlow, FlowResultType
 from homeassistant.helpers import config_validation as cv, selector
 
 from ._helpers import FakeSandboxManager, make_channel_pair
-
-from tests.common import MockConfigEntry, MockModule, mock_integration
 
 
 class _SandboxStub:

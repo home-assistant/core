@@ -25,6 +25,7 @@ from bluetooth_adapters import (
 )
 from bluetooth_data_tools import monotonic_time_coarse as MONOTONIC_TIME
 from habluetooth import (
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     BaseHaRemoteScanner,
     BaseHaScanner,
     BluetoothReachabilityIntent,
@@ -89,7 +90,6 @@ from .const import (
     CONF_SOURCE_DOMAIN,
     CONF_SOURCE_MODEL,
     DOMAIN,
-    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     LINUX_FIRMWARE_LOAD_FALLBACK_SECONDS,
     SOURCE_LOCAL,
 )
@@ -103,6 +103,7 @@ if TYPE_CHECKING:
     from homeassistant.helpers.typing import ConfigType
 
 __all__ = [
+    "DOMAIN",
     "FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS",
     "MONOTONIC_TIME",
     "SOURCE_LOCAL",
@@ -337,14 +338,16 @@ async def async_update_device(
                     device.id, new_connections=connections
                 )
                 break
-    device_entry = device_registry.async_get_or_create(
+    device_entry = device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        name=adapter_human_name(adapter, address),
-        connections=connections,
-        manufacturer=details[ADAPTER_MANUFACTURER],
-        model=adapter_model(details),
-        sw_version=details.get(ADAPTER_SW_VERSION),
-        hw_version=details.get(ADAPTER_HW_VERSION),
+        device_info=dr.DeviceInfo(
+            name=adapter_human_name(adapter, address),
+            connections=connections,
+            manufacturer=details[ADAPTER_MANUFACTURER],
+            model=adapter_model(details),
+            sw_version=details.get(ADAPTER_SW_VERSION),
+            hw_version=details.get(ADAPTER_HW_VERSION),
+        ),
     )
     if via_device_id and (
         split_devices := device_registry.async_get_devices_for_composite_device_id(

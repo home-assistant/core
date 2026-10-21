@@ -5,6 +5,7 @@ from typing import Any
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
 from homeassistant.components.sandbox.bridge import _CONTEXT_CACHE_MAX, SandboxBridge
@@ -23,8 +24,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from ._helpers import make_channel_pair
-
-from tests.common import MockConfigEntry
 
 
 async def _wire(

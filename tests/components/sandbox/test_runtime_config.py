@@ -9,6 +9,7 @@ from textwrap import dedent
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.sandbox import SandboxData
 from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
@@ -25,8 +26,6 @@ from homeassistant.components.sandbox.router import SandboxFlowRouter
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 DOMAIN = "sandbox_runtime_test"
 

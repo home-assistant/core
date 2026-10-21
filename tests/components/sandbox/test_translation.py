@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockModule, mock_integration
 
 from homeassistant.components.sandbox import SandboxData
 from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
@@ -16,8 +17,6 @@ from homeassistant.components.sandbox.translation import SandboxTranslationProvi
 from homeassistant.core import HomeAssistant
 
 from ._helpers import FakeSandboxManager, make_channel_pair
-
-from tests.common import MockConfigEntry, MockModule, mock_integration
 
 _CUSTOM_STRINGS: dict[str, Any] = {
     "title": "My Custom",

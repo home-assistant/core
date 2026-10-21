@@ -10,6 +10,7 @@ from hass_client.entry_sync import EntrySync as ClientEntrySync
 from hass_client.flow_runner import FlowRunner
 from hass_client.testing._inproc import make_inproc_channel_pair
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
 from homeassistant.components.sandbox.entry_sync import EntrySync, entry_snapshot
@@ -18,8 +19,6 @@ from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.discovery_flow import DiscoveryKey
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

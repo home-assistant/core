@@ -56,9 +56,7 @@ def install_router_engagement_counter() -> Callable[[], None]:
     """Count every router-driven sandbox entry setup."""
     # Lazy import: the HA integration tree must not load at plugin
     # import time (same rule as the classifier import below).
-    from homeassistant.components.sandbox.router import (  # noqa: PLC0415
-        SandboxFlowRouter,
-    )
+    from homeassistant.components.sandbox.router import SandboxFlowRouter  # noqa: PLC0415
 
     if getattr(SandboxFlowRouter, "_sandbox_counter_patched", False):
         return lambda: None
@@ -105,7 +103,7 @@ def install_mock_config_entry_autotag() -> Callable[[], None]:
     Idempotent: calling twice is a no-op. Returns an unpatch callable.
     """
     # Core test helpers are available only when running inside the Core test suite.
-    from tests.common import MockConfigEntry  # noqa: PLC0415, TID251
+    from pytest_homeassistant.common import MockConfigEntry  # noqa: PLC0415
 
     if getattr(MockConfigEntry, "_sandbox_autotag_patched", False):
         return lambda: None

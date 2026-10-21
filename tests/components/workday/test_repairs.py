@@ -1,6 +1,12 @@
 """Test repairs for unifiprotect."""
 
 import pytest
+from pytest_homeassistant.common import ANY
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components.workday.const import CONF_REMOVE_HOLIDAYS, DOMAIN
 from homeassistant.const import CONF_COUNTRY
@@ -15,10 +21,6 @@ from . import (
     TEST_CONFIG_REMOVE_NAMED,
     init_integration,
 )
-
-from tests.common import ANY
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 async def test_bad_country(

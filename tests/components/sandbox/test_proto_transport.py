@@ -5,6 +5,7 @@ from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
 from homeassistant.components.sandbox.bridge import _CONTEXT_TTL, SandboxBridge
@@ -19,8 +20,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant
 
 from ._helpers import make_channel_pair
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="entry")

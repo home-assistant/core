@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import asyncio
 import dataclasses
-import datetime
+import datetime as dt
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.calendar import CalendarEvent
 from homeassistant.components.media_player import (
@@ -36,8 +37,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from ._helpers import make_channel_pair
-
-from tests.common import MockConfigEntry
 
 
 async def _wire(hass: HomeAssistant) -> tuple[SandboxBridge, Channel, Channel]:
@@ -94,8 +93,8 @@ async def _register(
     [
         pytest.param(
             CalendarEvent(
-                start=datetime.datetime(2026, 5, 23, 10, 0, tzinfo=datetime.UTC),
-                end=datetime.datetime(2026, 5, 23, 11, 0, tzinfo=datetime.UTC),
+                start=dt.datetime(2026, 5, 23, 10, 0, tzinfo=dt.UTC),
+                end=dt.datetime(2026, 5, 23, 11, 0, tzinfo=dt.UTC),
                 summary="Lunch",
                 description="With the team",
                 location="Cafe",
@@ -104,16 +103,16 @@ async def _register(
         ),
         pytest.param(
             CalendarEvent(
-                start=datetime.date(2026, 5, 23),
-                end=datetime.date(2026, 5, 24),
+                start=dt.date(2026, 5, 23),
+                end=dt.date(2026, 5, 24),
                 summary="Holiday",
             ),
             id="all_day",
         ),
         pytest.param(
             CalendarEvent(
-                start=datetime.datetime(2026, 5, 23, 9, 0, tzinfo=datetime.UTC),
-                end=datetime.datetime(2026, 5, 23, 9, 30, tzinfo=datetime.UTC),
+                start=dt.datetime(2026, 5, 23, 9, 0, tzinfo=dt.UTC),
+                end=dt.datetime(2026, 5, 23, 9, 30, tzinfo=dt.UTC),
                 summary="Standup",
                 uid="abc-123",
                 recurrence_id="20260523T090000",
@@ -183,8 +182,8 @@ async def test_calendar_get_events_proxy(
         return result
 
     sandbox_channel.register("sandbox/call_service", _on_call)
-    start = datetime.datetime(2026, 5, 23, 9, 0, tzinfo=datetime.UTC)
-    end = datetime.datetime(2026, 5, 23, 12, 0, tzinfo=datetime.UTC)
+    start = dt.datetime(2026, 5, 23, 9, 0, tzinfo=dt.UTC)
+    end = dt.datetime(2026, 5, 23, 12, 0, tzinfo=dt.UTC)
     try:
         proxy = await _register(
             bridge, sandbox_channel, entry, "calendar", sandbox_entity_id

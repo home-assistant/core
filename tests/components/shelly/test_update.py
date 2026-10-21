@@ -7,6 +7,7 @@ from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_PLUS_2PM
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, mock_restore_cache
 
 from homeassistant.components.shelly.const import (
     BLU_TRV_UPDATE_CHECK_INTERVAL,
@@ -48,8 +49,6 @@ from . import (
     register_entity,
 )
 from .conftest import MOCK_BLU_TRV_AVAILABLE_FIRMWARE
-
-from tests.common import async_fire_time_changed, mock_restore_cache
 
 
 @pytest.fixture(autouse=True)

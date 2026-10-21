@@ -47,6 +47,11 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
     event_bus.notify(LifeSpanEvent(LifeSpan.SIDE_BRUSH, 40, 20 * 60))
     event_bus.notify(LifeSpanEvent(LifeSpan.CLEANING_SOLUTION, 100, 100))
     event_bus.notify(LifeSpanEvent(LifeSpan.SEWAGE_BOX, 75, 2700))
+    event_bus.notify(LifeSpanEvent(LifeSpan.DUST_BUCKET, 90, 5400))
+    event_bus.notify(LifeSpanEvent(LifeSpan.DUST_CONTAINER_FILTER, 70, 4200))
+    event_bus.notify(LifeSpanEvent(LifeSpan.HEAVY_DUTY_CLEANING_SOLUTION, 60, 3600))
+    event_bus.notify(LifeSpanEvent(LifeSpan.MOP_WASHING_TRAY, 50, 3000))
+    event_bus.notify(LifeSpanEvent(LifeSpan.STRAINER, 30, 1800))
     event_bus.notify(ErrorEvent(0, "NoError: Robot is operational"))
     event_bus.notify(station.StationEvent(station.State.EMPTYING_DUSTBIN))
     await block_till_done(hass, event_bus)
@@ -135,8 +140,36 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
                 "sensor.t80_omni_error",
             ],
         ),
+        (
+            "twunby",
+            [
+                "sensor.t90_pro_omni_area_cleaned",
+                "sensor.t90_pro_omni_cleaning_duration",
+                "sensor.t90_pro_omni_total_area_cleaned",
+                "sensor.t90_pro_omni_total_cleaning_duration",
+                "sensor.t90_pro_omni_total_cleanings",
+                "sensor.t90_pro_omni_battery",
+                "sensor.t90_pro_omni_ip_address",
+                "sensor.t90_pro_omni_wi_fi_rssi",
+                "sensor.t90_pro_omni_wi_fi_ssid",
+                "sensor.t90_pro_omni_station_state",
+                "sensor.t90_pro_omni_main_brush_lifespan",
+                "sensor.t90_pro_omni_cleaning_solution_lifespan",
+                "sensor.t90_pro_omni_dust_bag_lifespan",
+                "sensor.t90_pro_omni_dust_bucket_lifespan",
+                "sensor.t90_pro_omni_dust_container_filter_lifespan",
+                "sensor.t90_pro_omni_filter_lifespan",
+                "sensor.t90_pro_omni_heavy_duty_cleaning_solution_lifespan",
+                "sensor.t90_pro_omni_mop_washing_tray_lifespan",
+                "sensor.t90_pro_omni_round_mop_lifespan",
+                "sensor.t90_pro_omni_side_brush_lifespan",
+                "sensor.t90_pro_omni_strainer_lifespan",
+                "sensor.t90_pro_omni_unit_care_lifespan",
+                "sensor.t90_pro_omni_error",
+            ],
+        ),
     ],
-    ids=["yna5x1", "5xu9h3", "qhe2o2", "9eamof"],
+    ids=["yna5x1", "5xu9h3", "qhe2o2", "9eamof", "twunby"],
 )
 async def test_sensors(
     hass: HomeAssistant,

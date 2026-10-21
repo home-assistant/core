@@ -1,6 +1,7 @@
 """Tests for the main-side integration-source resolver registry."""
 
 import pytest
+from pytest_homeassistant.common import MockModule, mock_integration
 
 from homeassistant.components.sandbox.sources import (
     IntegrationSourceDict,
@@ -9,8 +10,6 @@ from homeassistant.components.sandbox.sources import (
     async_resolve_integration_source,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockModule, mock_integration
 
 
 async def test_resolve_builtin_returns_builtin_kind(hass: HomeAssistant) -> None:

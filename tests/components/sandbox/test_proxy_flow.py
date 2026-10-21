@@ -8,6 +8,7 @@ from typing import cast
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockModule, mock_integration
 
 from homeassistant.components.sandbox import proxy_flow as proxy_flow_module
 from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
@@ -23,8 +24,6 @@ from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from ._helpers import FakeSandboxManager, make_channel_pair
-
-from tests.common import MockConfigEntry, MockModule, mock_integration
 
 
 class _SandboxStub:

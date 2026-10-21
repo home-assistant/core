@@ -131,11 +131,8 @@ def test_inprocess_plugin_injects_sandbox_into_hass_tests() -> None:
 
 def test_autotag_sets_mock_config_entry_sandbox() -> None:
     """``install_mock_config_entry_autotag`` sets ``entry.sandbox`` on ``add_to_hass``."""
-    from hass_client.testing._autotag import (  # noqa: PLC0415
-        install_mock_config_entry_autotag,
-    )
-
-    from tests.common import MockConfigEntry  # noqa: PLC0415
+    from hass_client.testing._autotag import install_mock_config_entry_autotag  # noqa: PLC0415
+    from pytest_homeassistant.common import MockConfigEntry  # noqa: PLC0415
 
     fake_hass = MagicMock()
     fake_hass.config_entries._entries = {}

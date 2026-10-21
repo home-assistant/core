@@ -8,6 +8,7 @@ from datetime import date, datetime
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
 from homeassistant.components.sandbox.bridge import SandboxBridge
@@ -22,8 +23,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from ._helpers import make_channel_pair
-
-from tests.common import MockConfigEntry
 
 
 async def _wire(
