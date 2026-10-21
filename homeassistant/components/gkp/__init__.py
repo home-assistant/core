@@ -92,7 +92,7 @@ def _handle_new_devices(
     async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_new_device")
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: GkpConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GkpConfigEntry) -> None:
     """Set up GKP from a config entry."""
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -130,9 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GkpConfigEntry) -> bool:
         )
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: GkpConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GkpConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

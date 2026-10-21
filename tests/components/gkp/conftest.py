@@ -50,6 +50,19 @@ def frozen_time(freezer: FrozenDateTimeFactory) -> None:
     freezer.move_to(NOW)
 
 
+@pytest.fixture(name="skip_cloud", autouse=True)
+def skip_cloud_fixture():
+    """Skip setting up cloud.
+
+    Cloud already has its own tests for account link.
+
+    We do not need to test it here as we only need to test our
+    usage of the oauth2 helpers.
+    """
+    with patch("homeassistant.components.cloud.async_setup", return_value=True):
+        yield
+
+
 @pytest.fixture(autouse=True)
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Ensure the application credentials are registered for each test."""
