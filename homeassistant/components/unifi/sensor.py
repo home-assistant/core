@@ -74,31 +74,31 @@ type WanName = Literal["WAN", "WAN2", "WAN3"]
 @callback
 def async_bandwidth_sensor_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
+    if not hub.config.option_allow_bandwidth_sensors:
+        return False
     if obj_id in hub.config.option_supported_clients:
         return True
     client = hub.api.clients[obj_id]
-    if (
+    return not (
         hub.config.option_ignore_local_mac
         and not client.is_wired
         and is_locally_administered_mac(client.mac)
-    ):
-        return False
-    return hub.config.option_allow_bandwidth_sensors
+    )
 
 
 @callback
 def async_uptime_sensor_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
+    if not hub.config.option_allow_uptime_sensors:
+        return False
     if obj_id in hub.config.option_supported_clients:
         return True
     client = hub.api.clients[obj_id]
-    if (
+    return not (
         hub.config.option_ignore_local_mac
         and not client.is_wired
         and is_locally_administered_mac(client.mac)
-    ):
-        return False
-    return hub.config.option_allow_uptime_sensors
+    )
 
 
 @callback
@@ -453,7 +453,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_client_device_info_fn,
         is_connected_fn=async_client_is_connected_fn,
         object_fn=lambda api, obj_id: api.clients[obj_id],
-        supported_fn=lambda hub, _: hub.config.option_allow_bandwidth_sensors,
         unique_id_fn=lambda hub, obj_id: f"rx-{obj_id}",
         value_fn=async_client_rx_value_fn,
     ),
@@ -469,7 +468,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_client_device_info_fn,
         is_connected_fn=async_client_is_connected_fn,
         object_fn=lambda api, obj_id: api.clients[obj_id],
-        supported_fn=lambda hub, _: hub.config.option_allow_bandwidth_sensors,
         unique_id_fn=lambda hub, obj_id: f"tx-{obj_id}",
         value_fn=async_client_tx_value_fn,
     ),
@@ -568,7 +566,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         api_handler_fn=lambda api: api.clients,
         device_info_fn=async_client_device_info_fn,
         object_fn=lambda api, obj_id: api.clients[obj_id],
-        supported_fn=lambda hub, _: hub.config.option_allow_uptime_sensors,
         unique_id_fn=lambda hub, obj_id: f"uptime-{obj_id}",
         value_fn=async_client_uptime_value_fn,
         value_changed_fn=async_uptime_value_changed_fn,

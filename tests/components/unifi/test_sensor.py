@@ -695,6 +695,44 @@ async def test_bandwidth_sensors(
     assert hass.states.get("sensor.wired_client_tx")
 
 
+@pytest.mark.parametrize(
+    "config_entry_options",
+    [
+        {
+            CONF_ALLOW_BANDWIDTH_SENSORS: True,
+            CONF_ALLOW_UPTIME_SENSORS: True,
+            CONF_CLIENT_SOURCE: [WIRED_CLIENT["mac"]],
+        }
+    ],
+)
+@pytest.mark.parametrize("client_payload", [[WIRED_CLIENT]])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_selected_client_sensors_follow_options(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry_setup: MockConfigEntry,
+    config_entry_options: MappingProxyType[str, Any],
+) -> None:
+    """Sensors of selected clients are removed when their option is disabled."""
+    entity_ids = (
+        "sensor.wired_client_rx",
+        "sensor.wired_client_tx",
+        "sensor.wired_client_uptime",
+    )
+    for entity_id in entity_ids:
+        assert hass.states.get(entity_id)
+
+    options = deepcopy(config_entry_options)
+    options[CONF_ALLOW_BANDWIDTH_SENSORS] = False
+    options[CONF_ALLOW_UPTIME_SENSORS] = False
+    hass.config_entries.async_update_entry(config_entry_setup, options=options)
+    await hass.async_block_till_done()
+
+    for entity_id in entity_ids:
+        assert hass.states.get(entity_id) is None
+        assert entity_registry.async_get(entity_id) is None
+
+
 @pytest.mark.parametrize("client_payload", [[WIRED_CLIENT]])
 @pytest.mark.usefixtures("config_entry_setup")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -1446,9 +1484,15 @@ async def test_device_system_stats(
     assert hass.states.get("sensor.device_cpu_utilization").state == "7.7"
     assert hass.states.get("sensor.device_memory_utilization").state == "33.3"
 
-    # A restarting device reports no stats for a while
+    # A restarting device reports empty stats, then none for a while
     device["system-stats"] = {"cpu": "", "mem": "", "uptime": ""}
     mock_websocket_message(message=MessageKey.DEVICE, data=device)
+
+    assert hass.states.get("sensor.device_cpu_utilization").state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get("sensor.device_memory_utilization").state == STATE_UNAVAILABLE
+    )
+
     del device["system-stats"]
     mock_websocket_message(message=MessageKey.DEVICE, data=device)
 

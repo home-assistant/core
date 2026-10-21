@@ -250,7 +250,7 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
 
         description = self.entity_description
         if not description.supported_fn(self.hub, self._obj_id):
-            # Data can be missing for a while, e.g. while a device restarts
+            # Keep the entity, data like device stats can return after a restart
             self._attr_available = False
             self.async_write_ha_state()
             return
