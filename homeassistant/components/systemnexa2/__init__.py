@@ -13,14 +13,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: SystemNexa2ConfigEntry) 
     await coordinator.async_setup()
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, coordinator.data.unique_id)},
-        manufacturer=MANUFACTURER,
-        name=coordinator.data.info_data.name,
-        model=coordinator.data.info_data.model,
-        sw_version=coordinator.data.info_data.sw_version,
-        hw_version=str(coordinator.data.info_data.hw_version),
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, coordinator.data.unique_id)},
+            manufacturer=MANUFACTURER,
+            name=coordinator.data.info_data.name,
+            model=coordinator.data.info_data.model,
+            sw_version=coordinator.data.info_data.sw_version,
+            hw_version=str(coordinator.data.info_data.hw_version),
+        ),
     )
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

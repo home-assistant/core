@@ -126,8 +126,10 @@ class EntityConditionBase(Condition):
         # Entities whose `for:` anchor is currently being resolved from recorder
         # history. While an entity is here the live listener leaves its anchor to
         # the priming, except that an invalidation removes it (the run broke, so
-        # the in-flight history is stale and live tracking takes over).
-        self._priming: set[str] = set()
+        # the in-flight history is stale and live tracking takes over). Mapped to
+        # a token of the priming pass that owns the entity: when passes for an
+        # entity overlap, only the most recent one applies its result.
+        self._priming: dict[str, object] = {}
 
     def entity_filter(self, entities: set[str]) -> set[str]:
         """Filter entities matching any of the domain specs."""
@@ -180,7 +182,7 @@ class EntityConditionBase(Condition):
         else:
             # An invalidation breaks the run, so any history being loaded for the
             # entity is now stale; stop priming it and let live tracking own it.
-            self._priming.discard(entity_id)
+            self._priming.pop(entity_id, None)
             self._valid_since.pop(entity_id, None)
 
     @property
@@ -283,7 +285,7 @@ class EntityConditionBase(Condition):
         changes.
         """
         for entity_id in removed:
-            self._priming.discard(entity_id)
+            self._priming.pop(entity_id, None)
             self._valid_since.pop(entity_id, None)
         await self._async_prime_valid_since(added)
 
@@ -303,7 +305,10 @@ class EntityConditionBase(Condition):
         While loading, an entity is held in `_priming`. A live change that keeps
         it valid is ignored (the run is unbroken, history is accurate), but an
         invalidation removes it from `_priming` so that we do not apply now-stale
-        history over the live tracking that observed the break.
+        history over the live tracking that observed the break. If a later pass
+        takes over the entity, e.g. because it left the target and came back
+        while this one loaded, this pass leaves the entity to the later one: its
+        history may predate a break that went unobserved while untracked.
         """
         # Conservative anchor from the live state for each currently-valid entity.
         anchors = {
@@ -316,7 +321,8 @@ class EntityConditionBase(Condition):
         if not anchors:
             return
 
-        self._priming.update(anchors)
+        token = object()
+        self._priming.update(dict.fromkeys(anchors, token))
         try:
             if "recorder" in self._hass.config.components:
                 await self._async_refine_anchors_from_history(anchors)
@@ -324,10 +330,13 @@ class EntityConditionBase(Condition):
                 # Skip entities a live change invalidated mid-load: they were
                 # removed from `_priming`, the run broke, and live tracking (which
                 # saw the break) owns them — applying this history would be stale.
-                if entity_id in self._priming:
+                # Also skip those a later pass took over.
+                if self._priming.get(entity_id) is token:
                     self._valid_since[entity_id] = anchor
         finally:
-            self._priming.difference_update(anchors)
+            for entity_id in anchors:
+                if self._priming.get(entity_id) is token:
+                    del self._priming[entity_id]
 
     async def _async_refine_anchors_from_history(
         self, anchors: dict[str, datetime]
