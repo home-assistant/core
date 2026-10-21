@@ -52,9 +52,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZinvoltConfigEntry) -> N
     # sub-devices can resolve their via_device_id parent.
     device_registry = dr.async_get(hass)
     for coordinator in coordinators.values():
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, coordinator.data.battery.serial_number)},
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, coordinator.data.battery.serial_number)}
+            ),
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)

@@ -1,6 +1,7 @@
 {
   "domain": "lg_netcast",
   "name": "LG Netcast",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@Drafteed", "@splinter98"],
   "config_flow": true,
   "dependencies": ["network"],

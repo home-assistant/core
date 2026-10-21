@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.sia.config_flow import ACCOUNT_SCHEMA, HUB_SCHEMA
@@ -22,8 +23,6 @@ from homeassistant.const import CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 BASIS_CONFIG_ENTRY_ID = 1
 BASIC_CONFIG = {
@@ -120,7 +119,7 @@ async def entry_with_basic_config(
     hass: HomeAssistant, flow_at_user_step: ConfigFlowResult
 ) -> ConfigFlowResult:
     """Return a entry with a basic config."""
-    with patch("homeassistant.components.sia.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.sia.async_setup_entry", return_value=None):
         return await hass.config_entries.flow.async_configure(
             flow_at_user_step["flow_id"], BASIC_CONFIG
         )
@@ -141,7 +140,7 @@ async def entry_with_additional_account_config(
     hass: HomeAssistant, flow_at_add_account_step: ConfigFlowResult
 ) -> ConfigFlowResult:
     """Return a entry with a two account config."""
-    with patch("homeassistant.components.sia.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.sia.async_setup_entry", return_value=None):
         return await hass.config_entries.flow.async_configure(
             flow_at_add_account_step["flow_id"], ADDITIONAL_ACCOUNT
         )
@@ -248,7 +247,7 @@ async def test_validation_errors_user(
     assert result_err["type"] is FlowResultType.FORM
     assert result_err["errors"] == {"base": error}
 
-    with patch("homeassistant.components.sia.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.sia.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(flow_id, BASIC_CONFIG)
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -282,7 +281,7 @@ async def test_validation_errors_account(
     assert result_err["type"] is FlowResultType.FORM
     assert result_err["errors"] == {"base": error}
 
-    with patch("homeassistant.components.sia.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.sia.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             flow_id, ADDITIONAL_ACCOUNT
         )
@@ -305,7 +304,7 @@ async def test_unknown_user(
         assert result_err["errors"] == {"base": "unknown"}
         assert result_err["data_schema"] == HUB_SCHEMA
 
-    with patch("homeassistant.components.sia.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.sia.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(flow_id, config)
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -329,7 +328,7 @@ async def test_unknown_account(
         assert result_err["errors"] == {"base": "unknown"}
         assert result_err["data_schema"] == ACCOUNT_SCHEMA
 
-    with patch("homeassistant.components.sia.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.sia.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(flow_id, config)
     assert result["type"] is FlowResultType.CREATE_ENTRY
 

@@ -5,6 +5,7 @@ from unittest import mock
 from unittest.mock import PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from subarulink.exceptions import InvalidCredentials, InvalidPIN, SubaruException
 
 from homeassistant import config_entries
@@ -31,8 +32,6 @@ from .conftest import (
     TEST_PIN,
     TEST_USERNAME,
 )
-
-from tests.common import MockConfigEntry
 
 ASYNC_SETUP_ENTRY = "homeassistant.components.subaru.async_setup_entry"
 MOCK_2FA_CONTACTS = {

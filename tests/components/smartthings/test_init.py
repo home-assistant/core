@@ -15,6 +15,7 @@ from pysmartthings import (
     Subscription,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -52,8 +53,6 @@ from . import (
     setup_integration,
     trigger_update,
 )
-
-from tests.common import MockConfigEntry, async_load_fixture
 
 
 async def test_fixtures() -> None:

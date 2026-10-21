@@ -1,0 +1,9 @@
+{
+  "model": "S2101",
+  "f_port": 2,
+  "payload": "010110645f0000010210305b01001ced",
+  "expected": {
+    "temperature": 24.42,
+    "humidity": 88.88
+  }
+}

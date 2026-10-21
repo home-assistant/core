@@ -25,6 +25,7 @@ from aioesphomeapi import (
     VoiceAssistantFeature,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from zeroconf import Zeroconf
 
 from homeassistant.components.esphome import dashboard
@@ -41,8 +42,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import DASHBOARD_HOST, DASHBOARD_PORT, DASHBOARD_SLUG
-
-from tests.common import MockConfigEntry
 
 if TYPE_CHECKING:
     from aioesphomeapi.api_pb2 import SubscribeLogsResponse
@@ -792,9 +791,17 @@ async def reconnect_with_updated_entity_info(
     device: MockESPHomeDevice,
     entity_info: list[EntityInfo],
     states: list[EntityState] | None = None,
+    device_info: dict[str, Any] | None = None,
 ) -> None:
-    """Reconnect the mock device with updated entity info."""
+    """Reconnect the mock device with updated entity info.
+
+    device_info is merged into the device info the device reports back.
+    """
     mock_client = device.client
+    if device_info is not None:
+        device.device_info = DeviceInfo(
+            **{**device.device_info.to_dict(), **device_info}
+        )
     mock_client.list_entities_services = AsyncMock(return_value=(entity_info, []))
     mock_client.device_info_and_list_entities = AsyncMock(
         return_value=(device.device_info, entity_info, [])

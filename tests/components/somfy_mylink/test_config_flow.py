@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from pysomfymylink import Shade, SomfyMyLinkApiError, SomfyMyLinkConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.somfy_mylink.const import (
@@ -17,8 +18,6 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {
     CONF_HOST: "1.1.1.1",
@@ -37,7 +36,7 @@ def _patch_success() -> Generator[None]:
         ),
         patch(
             "homeassistant.components.somfy_mylink.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield
@@ -59,7 +58,7 @@ async def test_form_user(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.somfy_mylink.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -104,7 +103,7 @@ async def test_form_user_already_configured(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.somfy_mylink.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -292,7 +291,7 @@ async def test_form_user_already_configured_from_dhcp(hass: HomeAssistant) -> No
         ),
         patch(
             "homeassistant.components.somfy_mylink.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -353,7 +352,7 @@ async def test_dhcp_discovery(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.somfy_mylink.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(

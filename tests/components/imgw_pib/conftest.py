@@ -7,10 +7,9 @@ from unittest.mock import AsyncMock, patch
 
 from imgw_pib import Alert, HydrologicalData, SensorData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.imgw_pib.const import DOMAIN
-
-from tests.common import MockConfigEntry
 
 HYDROLOGICAL_DATA = HydrologicalData(
     station="Station Name",
