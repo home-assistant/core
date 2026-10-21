@@ -33,7 +33,7 @@ PERMISSION_ID_PATTERN = re.compile(r"^(.+:\*:)[a-f0-9]{24}$")
 # Keys that should be redacted for security
 REDACT_KEYS = {"accessKey"}
 # Keys that contain anonymized names (need normalization) - pattern-matched
-NAME_KEYS = {"name", "firstName", "lastName"}
+NAME_KEYS = {"name", "firstName", "lastName", "customMessages"}
 # Keys that always need normalization (not pattern-matched)
 ALWAYS_REDACT_KEYS = {"localUsername"}
 
@@ -52,7 +52,7 @@ def _normalize_diagnostics(data: Any, parent_key: str | None = None) -> Any:
             if k != "repr"  # Remove repr fields with memory addresses
         }
     if isinstance(data, list):
-        return [_normalize_diagnostics(item) for item in data]
+        return [_normalize_diagnostics(item, parent_key) for item in data]
     if isinstance(data, str):
         # Redact sensitive keys
         if parent_key in REDACT_KEYS:

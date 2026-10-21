@@ -1,23 +1,50 @@
 """Tests for the switchbot select platform."""
 
 from collections.abc import Callable
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+from bleak_retry_connector import BleakConnectionError
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
-from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.bluetooth import (
+    inject_bluetooth_service_info,
+    inject_bluetooth_service_info_bleak,
+)
 from switchbot import NightLightState
 
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    EVENT_HOMEASSISTANT_STARTED,
+    STATE_UNKNOWN,
+)
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
-from . import DOMAIN, STANDING_FAN_SERVICE_INFO, WOMETERTHPC_SERVICE_INFO
+from . import (
+    DOMAIN,
+    STANDING_FAN_SERVICE_INFO,
+    WOMETERTHPC_SERVICE_INFO,
+    WOMETERTHPC_SERVICE_INFO_NOT_CONNECTABLE,
+)
+
+TIME_FORMAT_ENTITY_ID = "select.test_name_time_format"
+DEVICE_DATETIME_24H = {
+    "12h_mode": False,
+    "year": 2025,
+    "month": 1,
+    "day": 9,
+    "hour": 12,
+    "minute": 0,
+    "second": 0,
+}
 
 
 @pytest.mark.parametrize(
@@ -56,9 +83,142 @@ async def test_time_format_select_initial_state(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-        state = hass.states.get("select.test_name_time_format")
+        state = hass.states.get(TIME_FORMAT_ENTITY_ID)
         assert state is not None
         assert state.state == expected_state
+
+
+async def test_time_format_select_disabled_by_default(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test the time format entity does not connect while it is disabled."""
+    await async_setup_component(hass, DOMAIN, {})
+    inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
+
+    entry = mock_entry_factory("meter_pro_co2")
+    entry.add_to_hass(hass)
+
+    mock_get_datetime = AsyncMock(return_value=DEVICE_DATETIME_24H)
+    with patch("switchbot.SwitchbotMeterProCO2.get_datetime", mock_get_datetime):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_get_datetime.assert_not_awaited()
+    assert hass.states.get(TIME_FORMAT_ENTITY_ID) is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_time_format_select_waits_for_start(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test the time format is only read once Home Assistant has started."""
+    hass.set_state(CoreState.not_running)
+    await async_setup_component(hass, DOMAIN, {})
+    inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
+
+    entry = mock_entry_factory("meter_pro_co2")
+    entry.add_to_hass(hass)
+
+    mock_get_datetime = AsyncMock(return_value=DEVICE_DATETIME_24H)
+    with patch("switchbot.SwitchbotMeterProCO2.get_datetime", mock_get_datetime):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        # Setting up the platform must not reach out over Bluetooth.
+        mock_get_datetime.assert_not_awaited()
+        assert hass.states.get(TIME_FORMAT_ENTITY_ID).state == STATE_UNKNOWN
+
+        hass.set_state(CoreState.running)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert mock_get_datetime.await_count
+        assert hass.states.get(TIME_FORMAT_ENTITY_ID).state == "24h"
+
+
+@pytest.mark.parametrize(
+    ("service_info", "side_effect", "expected_await_count"),
+    [
+        pytest.param(
+            WOMETERTHPC_SERVICE_INFO_NOT_CONNECTABLE,
+            None,
+            0,
+            id="no_connectable_path",
+        ),
+        pytest.param(
+            WOMETERTHPC_SERVICE_INFO,
+            BleakConnectionError("no connectable Bluetooth adapters"),
+            1,
+            id="connection_fails",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_time_format_select_unreachable(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+    caplog: pytest.LogCaptureFixture,
+    service_info: BluetoothServiceInfoBleak,
+    side_effect: Exception | None,
+    expected_await_count: int,
+) -> None:
+    """Test an unreachable device leaves the entity added and unknown."""
+    await async_setup_component(hass, DOMAIN, {})
+    inject_bluetooth_service_info_bleak(hass, service_info)
+
+    entry = mock_entry_factory("meter_pro_co2")
+    entry.add_to_hass(hass)
+
+    mock_get_datetime = AsyncMock(
+        return_value=DEVICE_DATETIME_24H, side_effect=side_effect
+    )
+    with patch("switchbot.SwitchbotMeterProCO2.get_datetime", mock_get_datetime):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_get_datetime.await_count == expected_await_count
+    assert hass.states.get(TIME_FORMAT_ENTITY_ID).state == STATE_UNKNOWN
+    assert "Error on device update" not in caplog.text
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_time_format_select_recovers_on_next_poll(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test a failed first read of the time format is retried on the next poll."""
+    await async_setup_component(hass, DOMAIN, {})
+    inject_bluetooth_service_info(hass, WOMETERTHPC_SERVICE_INFO)
+
+    entry = mock_entry_factory("meter_pro_co2")
+    entry.add_to_hass(hass)
+
+    mock_get_datetime = AsyncMock(
+        side_effect=[
+            BleakConnectionError("no connectable Bluetooth adapters"),
+            DEVICE_DATETIME_24H,
+        ]
+    )
+    with (
+        patch("switchbot.SwitchbotMeterProCO2.get_datetime", mock_get_datetime),
+        patch(
+            "homeassistant.components.switchbot.select.SCAN_INTERVAL",
+            timedelta(minutes=1),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        mock_get_datetime.assert_awaited_once()
+        assert hass.states.get(TIME_FORMAT_ENTITY_ID).state == STATE_UNKNOWN
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_get_datetime.await_count == 2
+    assert hass.states.get(TIME_FORMAT_ENTITY_ID).state == "24h"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -112,15 +272,17 @@ async def test_set_time_format(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.test_name_time_format",
+                ATTR_ENTITY_ID: TIME_FORMAT_ENTITY_ID,
                 ATTR_OPTION: expected_state,
             },
             blocking=True,
         )
 
         mock_set_time_display_format.assert_awaited_once_with(origin_mode)
+        # The value is read back from the device after it has been set.
+        assert mock_get_datetime.await_count == 2
 
-        state = hass.states.get("select.test_name_time_format")
+        state = hass.states.get(TIME_FORMAT_ENTITY_ID)
         assert state is not None
         assert state.state == expected_state
 

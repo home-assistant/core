@@ -408,7 +408,13 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
     _, component, component_id = get_rpc_key(key)
 
     if custom_name := get_rpc_custom_name(device, key):
-        if component in (*VIRTUAL_COMPONENTS, "input", "presencezone", "script"):
+        if component in (
+            *VIRTUAL_COMPONENTS,
+            "camerazone",
+            "input",
+            "presencezone",
+            "script",
+        ):
             return custom_name
 
         return (
