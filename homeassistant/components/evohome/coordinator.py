@@ -138,9 +138,15 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
     async def call_client_api[_T](
         self,
         client_api: Awaitable[_T],
+        *,
         request_refresh: bool = True,
-    ) -> _T:
-        """Call a client API and update the Coordinator state if required."""
+        raise_on_error: bool = True,
+    ) -> _T | None:
+        """Call a client API and update the Coordinator state if required.
+
+        If the call fails, raise HomeAssistantError (e.g. for an action), unless
+        raise_on_error is False (e.g. for a background GET), when log it and return None.
+        """
 
         try:
             result = await client_api
@@ -149,6 +155,9 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             raise
 
         except ec2.ApiCallFailedError as err:
+            if not raise_on_error:
+                self.logger.warning(err)
+                return None
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="api_call_failed",

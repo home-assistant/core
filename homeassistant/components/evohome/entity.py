@@ -163,19 +163,22 @@ class EvoChild(EvoEntity):
 
         return self._setpoints
 
-    async def _update_schedule(self, force_refresh: bool = False) -> None:
-        """Get the latest schedule, if any."""
+    async def _update_schedule(
+        self, force_refresh: bool = False, *, raise_on_error: bool = True
+    ) -> None:
+        """Get the latest schedule, if any.
+
+        A GET made for an action (e.g. to find the next switchpoint) fails as the
+        action would, so raise_on_error should be False only for other GETs.
+        """
 
         async def get_schedule() -> None:
             try:
-                schedule = await self._evo_device.get_schedule()
-            except evo.AuthenticationFailedError:
-                raise
-            except evo.ApiCallFailedError as err:  # keep any schedule we already have
-                _LOGGER.warning(
-                    "%s: Unable to retrieve the schedule: %s", self._evo_device, err
+                schedule = await self.coordinator.call_client_api(
+                    self._evo_device.get_schedule(),
+                    request_refresh=False,
+                    raise_on_error=raise_on_error,
                 )
-                return
             except evo.InvalidScheduleError as err:
                 _LOGGER.warning(
                     "%s: Unable to retrieve a valid schedule: %s",
@@ -184,9 +187,11 @@ class EvoChild(EvoEntity):
                 )
                 self._schedule = []
                 return
-            else:
-                self._schedule = schedule
 
+            if schedule is None:  # the GET failed: keep any schedule we already have
+                return
+
+            self._schedule = schedule  # type: ignore[assignment]
             _LOGGER.debug("Schedule['%s'] = %s", self.name, schedule)
 
         if (
@@ -216,5 +221,5 @@ class EvoChild(EvoEntity):
     @override
     async def update_attrs(self) -> None:
         """Update the entity's extra state attrs."""
-        await self._update_schedule()
+        await self._update_schedule(raise_on_error=False)
         await super().update_attrs()
