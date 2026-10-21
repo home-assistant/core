@@ -2292,7 +2292,7 @@ pyhelty==0.2.0
 pyheos==1.0.6
 
 # homeassistant.components.hive
-pyhive-integration==1.0.9
+pyhive-integration==1.0.10
 
 # homeassistant.components.homematic
 pyhomematic==0.1.78
