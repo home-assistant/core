@@ -7,6 +7,7 @@ import functools
 import gc
 import logging
 import os
+import pickle
 import re
 import threading
 import time
@@ -1626,6 +1627,17 @@ def test_state_dict_conversion_with_wrong_data() -> None:
     )
     assert wrong_context is not None
     assert wrong_context.context.id == "123"
+
+
+@pytest.mark.parametrize("protocol", range(2, pickle.HIGHEST_PROTOCOL + 1))
+def test_state_pickle(protocol: int) -> None:
+    """Test a state with attributes survives a pickle round trip."""
+    state = ha.State("domain.hello", "world", {"some": "attr"})
+
+    restored = pickle.loads(pickle.dumps(state, protocol=protocol))  # noqa: S301
+
+    assert type(restored.attributes) is ReadOnlyDict
+    assert restored.as_dict() == state.as_dict()
 
 
 def test_state_repr() -> None:
