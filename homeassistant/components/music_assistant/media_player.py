@@ -42,7 +42,7 @@ from homeassistant.components.media_player import (
     async_process_play_media_url,
 )
 from homeassistant.const import ATTR_NAME, STATE_OFF, STATE_UNAVAILABLE, Platform
-from homeassistant.core import HomeAssistant, ServiceResponse, callback
+from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -733,7 +733,6 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             media_content_type,
         )
 
-    @callback
     def _linked_user(self) -> LinkedUser | None:
         """Return the Music Assistant user to act as for the current call."""
         ha_user_id = self._context.user_id if self._context is not None else None
