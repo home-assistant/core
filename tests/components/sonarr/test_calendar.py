@@ -1,12 +1,16 @@
 """The tests for Sonarr calendar platform."""
 
 from datetime import datetime
-import json
 from unittest.mock import MagicMock, patch
 
 from aiopyarr import SonarrCalendar
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_array_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.calendar import (
@@ -16,8 +20,6 @@ from homeassistant.components.calendar import (
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_load_fixture, snapshot_platform
 
 ENTITY_ID = "calendar.sonarr"
 
@@ -112,7 +114,7 @@ async def test_calendar_get_events_without_overview(
 ) -> None:
     """Test that episodes without an overview are handled (real Sonarr omits it)."""
     await hass.config.async_set_time_zone("UTC")
-    raw = json.loads(await async_load_fixture(hass, "calendar.json", "sonarr"))[0]
+    raw = (await async_load_json_array_fixture(hass, "calendar.json", "sonarr"))[0]
     raw.pop("overview")
     mock_sonarr.async_get_calendar.return_value = [SonarrCalendar(raw)]
 

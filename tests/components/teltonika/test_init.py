@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from teltasync import TeltonikaAuthenticationError, TeltonikaConnectionError
 
@@ -10,8 +11,6 @@ from homeassistant.components.teltonika.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_config_entry(
@@ -65,9 +64,12 @@ async def test_setup_errors(
 @pytest.mark.usefixtures("init_integration")
 async def test_device_registry_creation(
     device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test device registry creation."""
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "1234567890")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1234567890"), mock_config_entry.entry_id
+    )
     assert device is not None
     assert device == snapshot

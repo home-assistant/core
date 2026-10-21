@@ -4,8 +4,15 @@ from datetime import datetime, timedelta
 from unittest.mock import patch
 
 from freezegun import freeze_time
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    get_fixture_path,
+)
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
+from pytest_homeassistant.typing import RecorderInstanceGenerator
 
 from homeassistant import config as hass_config, core as ha
 from homeassistant.components.history_stats.const import (
@@ -32,10 +39,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed, get_fixture_path
-from tests.components.recorder.common import async_wait_recording_done
-from tests.typing import RecorderInstanceGenerator
 
 
 async def test_setup(recorder_mock: Recorder, hass: HomeAssistant) -> None:
@@ -136,7 +139,7 @@ async def test_setup_multiple_states(
 def test_setup_invalid_config(config) -> None:
     """Test the history statistics sensor setup with invalid config."""
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         SENSOR_SCHEMA(config)
 
 
@@ -2162,14 +2165,14 @@ async def test_device_id(
         device_id=source_device_entry.id,
     )
     await hass.async_block_till_done()
-    assert entity_registry.async_get("binary_sensor.test_source") is not None
+    assert entity_registry.async_get(source_entity.entity_id) is not None
 
     history_stats_config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
             CONF_NAME: DEFAULT_NAME,
-            CONF_ENTITY_ID: "binary_sensor.test_source",
+            CONF_ENTITY_ID: source_entity.entity_id,
             CONF_STATE: ["on"],
             CONF_TYPE: "count",
             CONF_START: "{{ as_timestamp(utcnow()) - 3600 }}",
@@ -2182,9 +2185,57 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(history_stats_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    history_stats_entity = entity_registry.async_get("sensor.history_stats")
+    history_stats_entity = entity_registry.async_get("sensor.mock_title_history_stats")
     assert history_stats_entity is not None
     assert history_stats_entity.device_id == source_entity.device_id
+
+
+async def test_device_id_yaml(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test no device is set for a YAML-configured History stats."""
+    source_config_entry = MockConfigEntry()
+    source_config_entry.add_to_hass(hass)
+    source_device_entry = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry.entry_id,
+        identifiers={("sensor", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    entity_registry.async_get_or_create(
+        "binary_sensor",
+        "test",
+        "source",
+        config_entry=source_config_entry,
+        device_id=source_device_entry.id,
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "history_stats",
+                "name": "History stats",
+                "entity_id": "binary_sensor.test_source",
+                "state": "on",
+                "type": "count",
+                "start": "{{ as_timestamp(utcnow()) - 3600 }}",
+                "end": "{{ utcnow() }}",
+                "unique_id": "history_stats_yaml",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    history_stats_entity = entity_registry.async_get("sensor.history_stats")
+    assert history_stats_entity is not None
+    assert history_stats_entity.device_id is None
+    assert "attempts to attach a device to an entity" not in caplog.text
 
 
 async def test_async_around_min_state_duration(
@@ -2614,3 +2665,66 @@ async def test_open_block_precision_same_second(
     assert hass.states.get("sensor.precision_count").state == "1"
     assert hass.states.get("sensor.precision_time").state == "0.0"
     assert hass.states.get("sensor.precision_ratio").state == "0.0"
+
+
+@pytest.mark.parametrize(
+    ("off_offset", "expected_ratio"),
+    [
+        pytest.param(timedelta(seconds=99, milliseconds=500), "99.5", id="before_end"),
+        pytest.param(timedelta(seconds=100), "100.0", id="at_end"),
+        pytest.param(
+            timedelta(seconds=100, milliseconds=500),
+            "100.0",
+            id="within_second_after_end",
+        ),
+        pytest.param(timedelta(seconds=101), "100.0", id="after_end"),
+    ],
+)
+async def test_state_change_just_after_period_end(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    off_offset: timedelta,
+    expected_ratio: str,
+) -> None:
+    """Test a state change less than a second after the period end is not counted."""
+    await hass.config.async_set_time_zone("UTC")
+    start_time = dt_util.utcnow().replace(microsecond=0) - timedelta(hours=1)
+
+    def _fake_states(*args, **kwargs) -> dict[str, list[ha.State]]:
+        return {
+            "binary_sensor.test_id": [
+                ha.State("binary_sensor.test_id", "on", last_changed=start_time),
+                ha.State(
+                    "binary_sensor.test_id",
+                    "off",
+                    last_changed=start_time + off_offset,
+                ),
+            ]
+        }
+
+    with patch(
+        "homeassistant.components.recorder.history.state_changes_during_period",
+        _fake_states,
+    ):
+        await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.test_id",
+                        "name": "sensor1",
+                        "state": "on",
+                        "start": start_time.isoformat(),
+                        "duration": {"seconds": 100},
+                        "type": "ratio",
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+        await async_update_entity(hass, "sensor.sensor1")
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.sensor1").state == expected_ratio

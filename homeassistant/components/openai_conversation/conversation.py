@@ -12,7 +12,7 @@ from . import OpenAIConfigEntry
 from .const import DOMAIN
 from .entity import OpenAIBaseLLMEntity
 
-# Max number of back and forth with the LLM to generate a response
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(

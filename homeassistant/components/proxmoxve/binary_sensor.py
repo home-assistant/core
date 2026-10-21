@@ -20,6 +20,7 @@ from .const import (
     STORAGE_ENABLED,
     STORAGE_SHARED,
     VM_CONTAINER_RUNNING,
+    ProxmoxPermission,
 )
 from .coordinator import ProxmoxConfigEntry, ProxmoxNodeData
 from .entity import (
@@ -28,6 +29,7 @@ from .entity import (
     ProxmoxStorageEntity,
     ProxmoxVMEntity,
 )
+from .helpers import is_granted
 
 PARALLEL_UPDATES = 0
 
@@ -51,6 +53,8 @@ class ProxmoxNodeBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Class to hold Proxmox node binary sensor description."""
 
     state_fn: Callable[[ProxmoxNodeData], bool | None]
+    permission: ProxmoxPermission = ProxmoxPermission.SYSAUDIT
+    permission_target: str = "nodes"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -67,6 +71,8 @@ NODE_SENSORS: tuple[ProxmoxNodeBinarySensorEntityDescription, ...] = (
         state_fn=lambda data: data.node["status"] == NODE_ONLINE,
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
+        permission=ProxmoxPermission.VMAUDIT,  # PVEVMUsers are allowed this node, through "/vms"
+        permission_target="vms",
     ),
     ProxmoxNodeBinarySensorEntityDescription(
         key="node_backup_status",
@@ -132,10 +138,17 @@ async def async_setup_entry(
 
     def _async_add_new_nodes(nodes: list[ProxmoxNodeData]) -> None:
         """Add new node binary sensors."""
+
         async_add_entities(
             ProxmoxNodeBinarySensor(coordinator, entity_description, node)
             for node in nodes
             for entity_description in NODE_SENSORS
+            if is_granted(
+                coordinator.permissions,
+                p_type=entity_description.permission_target,
+                p_id=node.node["node"],
+                permission=entity_description.permission,
+            )
         )
 
     def _async_add_new_vms(

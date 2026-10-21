@@ -4,7 +4,8 @@ from typing import Any, override
 
 from steamloop import ThermostatConnection, Zone
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -37,6 +38,7 @@ class TraneZoneEntity(TraneEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         conn: ThermostatConnection,
         entry_id: str,
         zone_id: str,
@@ -52,7 +54,9 @@ class TraneZoneEntity(TraneEntity):
             manufacturer=MANUFACTURER,
             name=zone_name,
             suggested_area=zone_name,
-            via_device=(DOMAIN, entry_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass, (DOMAIN, entry_id), config_entry_id=entry_id
+            ),
         )
 
     @property

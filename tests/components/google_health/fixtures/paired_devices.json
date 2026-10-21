@@ -1,0 +1,32 @@
+{
+  "pairedDevices": [
+    {
+      "name": "users/me/pairedDevices/watch_123",
+      "macAddress": "AA:BB:CC:DD:EE:FF",
+      "deviceType": "TRACKER",
+      "features": ["HEART_RATE", "STEPS"],
+      "lastSyncTime": "2026-07-18T15:30:00Z",
+      "batteryStatus": "NORMAL",
+      "batteryLevel": 85,
+      "deviceVersion": "Fitbit Charge 6"
+    },
+    {
+      "name": "users/me/pairedDevices/scale_456",
+      "macAddress": "11:22:33:44:55:66",
+      "deviceType": "SCALE",
+      "features": ["WEIGHT"],
+      "lastSyncTime": "2026-07-18T15:35:00Z",
+      "batteryStatus": "NORMAL",
+      "batteryLevel": 90
+    },
+    {
+      "name": "users/me/pairedDevices/device_789",
+      "macAddress": null,
+      "deviceType": null,
+      "features": [],
+      "lastSyncTime": "2026-07-18T15:40:00Z",
+      "batteryStatus": "NORMAL",
+      "batteryLevel": 95
+    }
+  ]
+}

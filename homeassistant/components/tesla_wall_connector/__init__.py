@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .const import CONF_SPLIT_PHASE, DEFAULT_SPLIT_PHASE
 from .coordinator import (
     WallConnectorConfigEntry,
     WallConnectorCoordinator,
@@ -19,11 +20,15 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: WallConnectorConfigEntry
-) -> bool:
+) -> None:
     """Set up Tesla Wall Connector from a config entry."""
     hostname = entry.data[CONF_HOST]
 
-    wall_connector = WallConnector(host=hostname, session=async_get_clientsession(hass))
+    wall_connector = WallConnector(
+        host=hostname,
+        session=async_get_clientsession(hass),
+        split_phase=entry.options.get(CONF_SPLIT_PHASE, DEFAULT_SPLIT_PHASE),
+    )
 
     try:
         version_data = await wall_connector.async_get_version()
@@ -44,11 +49,9 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: WallConnectorConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

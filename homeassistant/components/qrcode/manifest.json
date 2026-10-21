@@ -1,6 +1,7 @@
 {
   "domain": "qrcode",
   "name": "QR Code",
+  "categories": ["ai_voice.image_recognition"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/qrcode",
   "iot_class": "calculated",

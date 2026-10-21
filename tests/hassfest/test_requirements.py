@@ -12,9 +12,11 @@ from script.hassfest.requirements import (
     FORBIDDEN_PACKAGE_NAMES,
     PACKAGE_CHECK_PREPARE_UPDATE,
     PACKAGE_CHECK_VERSION_RANGE,
+    _load_requirement_file,
     _packages_checked_files_cache,
     check_dependency_files,
     check_dependency_version_range,
+    validate_custom_requirements,
     validate_requirements_format,
 )
 
@@ -332,3 +334,165 @@ def test_check_dependency_file_names(integration: Integration) -> None:
         assert check_dependency_files(integration, package, pkg, ()) is True
         assert mock_files.call_count == 1
         assert len(integration.errors) == 0
+
+
+@pytest.fixture
+def core_config(tmp_path: Path) -> Generator[Config]:
+    """Fixture for a Config pointing at a stubbed Home Assistant checkout."""
+    (tmp_path / "homeassistant").mkdir()
+    (tmp_path / "requirements.txt").write_text(
+        "# Home Assistant Core\n"
+        "-c homeassistant/package_constraints.txt\n"
+        "aiohttp==3.14.3\n"
+    )
+    (tmp_path / "requirements_all.txt").write_text(
+        "-r requirements.txt\n\n# homeassistant.components.modbus\npymodbus==3.13.1\n"
+    )
+    (tmp_path / "homeassistant" / "package_constraints.txt").write_text(
+        "pymodbus==3.13.1\n"
+        "aiofiles>=24.1.0\n"
+        "poetry==1000000000.0.0\n"
+        "tenacity!=8.4.0\n"
+        "auth0-python<5.0\n"
+        # Listed twice, as package_constraints.txt does for some packages
+        "dupe-package<2.0\n"
+        "dupe-package>=1.5\n"
+    )
+
+    _load_requirement_file.cache_clear()
+    yield Config(
+        root=tmp_path,
+        specific_integrations=None,
+        action="validate",
+        requirements=False,
+    )
+    _load_requirement_file.cache_clear()
+
+
+@pytest.fixture
+def custom_integration(core_config: Config) -> Integration:
+    """Fixture for a custom integration validated against a stubbed core."""
+    return Integration(
+        path=Path("custom_components/test").absolute(),
+        _config=core_config,
+        _manifest={
+            "domain": "test",
+            "documentation": "https://example.com",
+            "name": "test",
+            "codeowners": ["@awesome"],
+            "requirements": [],
+        },
+    )
+
+
+@pytest.mark.parametrize(
+    ("requirement", "error"),
+    [
+        pytest.param(
+            "aiohttp==3.14.3",
+            "Requirement aiohttp==3.14.3 is a dependency of Home Assistant itself "
+            "and must not be listed in the manifest of a custom integration.",
+            id="core_dependency",
+        ),
+        pytest.param(
+            "pymodbus==3.6.2",
+            "Requirement pymodbus==3.6.2 is incompatible with pymodbus==3.13.1, "
+            "which Home Assistant depends on.",
+            id="pinned_below_core",
+        ),
+        pytest.param(
+            "pymodbus>=3.20.0",
+            "Requirement pymodbus>=3.20.0 is incompatible with pymodbus==3.13.1, "
+            "which Home Assistant depends on.",
+            id="minimum_above_core",
+        ),
+        pytest.param(
+            "pymodbus==3.13.1",
+            "Requirement pymodbus==3.13.1 pins a package Home Assistant depends on "
+            '(pymodbus==3.13.1). Use a minimum version ("pymodbus>=3.13.1") instead, '
+            "so it can follow along when Home Assistant updates it.",
+            id="pinned_to_core_version",
+        ),
+        pytest.param(
+            "aiofiles<24.0.0",
+            "Requirement aiofiles<24.0.0 is incompatible with aiofiles>=24.1.0, "
+            "which Home Assistant's package constraints require.",
+            id="violates_package_constraint",
+        ),
+        pytest.param(
+            "poetry>=1",
+            "Requirement poetry>=1 is prohibited by Home Assistant, poetry must "
+            "not be installed.",
+            id="prohibited_package",
+        ),
+        pytest.param(
+            "pymodbus==3.6.2;platform_machine=='aarch64'",
+            "Requirement pymodbus==3.6.2;platform_machine=='aarch64' is "
+            "incompatible with pymodbus==3.13.1, which Home Assistant depends on.",
+            id="marker_applying_on_another_platform",
+        ),
+        pytest.param(
+            "tenacity==8.4.0",
+            "Requirement tenacity==8.4.0 is incompatible with tenacity!=8.4.0, "
+            "which Home Assistant's package constraints require.",
+            id="violates_excluded_version",
+        ),
+        pytest.param(
+            "dupe-package==3.0",
+            "Requirement dupe-package==3.0 is incompatible with "
+            "dupe-package<2.0,>=1.5, which Home Assistant's package constraints "
+            "require.",
+            id="violates_merged_constraints",
+        ),
+    ],
+)
+def test_validate_custom_requirements_invalid(
+    custom_integration: Integration,
+    core_config: Config,
+    requirement: str,
+    error: str,
+) -> None:
+    """Test custom integration requirements that clash with Home Assistant."""
+    custom_integration.manifest["requirements"] = [requirement]
+
+    assert not validate_custom_requirements(custom_integration, core_config)
+    assert [x.error for x in custom_integration.errors] == [error]
+
+
+@pytest.mark.parametrize(
+    "requirement",
+    [
+        pytest.param("pymodbus>=3.10.0", id="minimum_below_core"),
+        pytest.param("pymodbus>=3.13.1", id="minimum_equal_to_core"),
+        pytest.param("aiofiles>=25.0.0", id="within_package_constraint"),
+        pytest.param("unknown-package==1.2.3", id="unknown_package"),
+        pytest.param("pymodbus==3.6.2;python_version<'3.0'", id="marker_not_applying"),
+        pytest.param("aiofiles>25,<25.0.1", id="range_excluding_own_boundaries"),
+        pytest.param("pymodbus>3.13.0,<4", id="range_around_core_version"),
+        pytest.param("pymodbus==3.13.*", id="wildcard_matching_core_version"),
+        pytest.param("pymodbus~=3.13.1", id="compatible_release"),
+        pytest.param("tenacity>8.4.0,<9", id="range_around_excluded_version"),
+        pytest.param("auth0-python==4.9.0", id="pinned_package_we_only_constrain"),
+        pytest.param("dupe-package==1.7", id="within_merged_constraints"),
+        pytest.param("git+https://github.com/user/project.git@1.2.3", id="git_url"),
+    ],
+)
+def test_validate_custom_requirements_valid(
+    custom_integration: Integration, core_config: Config, requirement: str
+) -> None:
+    """Test custom integration requirements that Home Assistant is fine with."""
+    custom_integration.manifest["requirements"] = [requirement]
+
+    assert validate_custom_requirements(custom_integration, core_config)
+    assert not custom_integration.errors
+
+
+def test_validate_custom_requirements_skips_core(
+    custom_integration: Integration, core_config: Config
+) -> None:
+    """Test core integrations are exempt, they are what we validate against."""
+    custom_integration.path = core_config.root / "homeassistant/components/modbus"
+    custom_integration.manifest["requirements"] = ["pymodbus==3.13.1"]
+
+    assert validate_custom_requirements(custom_integration, core_config)
+    assert not custom_integration.errors

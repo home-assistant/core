@@ -1,5 +1,6 @@
 """Support for Tuya Fan."""
 
+from dataclasses import dataclass
 from typing import Any, override
 
 from tuya_device_handlers.definition.fan import FanDefinition, get_default_definition
@@ -19,15 +20,21 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity
+from .entity import TuyaEntity, TuyaEntityDescription
 
-FANS: dict[DeviceCategory, FanEntityDescription] = {
-    DeviceCategory.CS: FanEntityDescription(key=""),
-    DeviceCategory.FS: FanEntityDescription(key=""),
-    DeviceCategory.FSD: FanEntityDescription(key=""),
-    DeviceCategory.FSKG: FanEntityDescription(key=""),
-    DeviceCategory.KJ: FanEntityDescription(key=""),
-    DeviceCategory.KS: FanEntityDescription(key=""),
+
+@dataclass(frozen=True)
+class TuyaFanEntityDescription(TuyaEntityDescription, FanEntityDescription):
+    """Describes a Tuya fan entity."""
+
+
+FANS: dict[DeviceCategory, TuyaFanEntityDescription] = {
+    DeviceCategory.CS: TuyaFanEntityDescription(key=""),
+    DeviceCategory.FS: TuyaFanEntityDescription(key=""),
+    DeviceCategory.FSD: TuyaFanEntityDescription(key=""),
+    DeviceCategory.FSKG: TuyaFanEntityDescription(key=""),
+    DeviceCategory.KJ: TuyaFanEntityDescription(key=""),
+    DeviceCategory.KS: TuyaFanEntityDescription(key=""),
 }
 
 _TUYA_TO_HA_DIRECTION_MAPPINGS = {
@@ -75,7 +82,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
-        description: FanEntityDescription,
+        description: TuyaFanEntityDescription,
         definition: FanDefinition,
     ) -> None:
         """Init Tuya Fan Device."""
@@ -121,6 +128,11 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
     @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
+        # The speed wrappers have no off position, 0% has to hit the switch
+        if percentage == 0 and self._switch_wrapper is not None:
+            await self.async_turn_off()
+            return
+
         await self._async_send_wrapper_updates(self._speed_wrapper, percentage)
 
     @override

@@ -2,7 +2,7 @@
 
 from typing import Required, TypedDict, cast
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import (
@@ -17,9 +17,9 @@ from homeassistant.helpers import service
 from .const import DOMAIN, SERVICE_GET_FORECAST
 from .coordinator import StookwijzerConfigEntry
 
-SERVICE_GET_FORECAST_SCHEMA = vol.Schema(
+SERVICE_GET_FORECAST_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
     }
 )
 

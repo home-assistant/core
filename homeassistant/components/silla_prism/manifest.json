@@ -1,0 +1,15 @@
+{
+  "domain": "silla_prism",
+  "name": "Silla Prism",
+  "categories": ["energy.ev_charging"],
+  "codeowners": ["@ebaschiera"],
+  "config_flow": true,
+  "dependencies": ["mqtt"],
+  "documentation": "https://www.home-assistant.io/integrations/silla_prism",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "loggers": ["pysillaprism"],
+  "mqtt": ["prism/hello"],
+  "quality_scale": "bronze",
+  "requirements": ["pysillaprism==0.2.1"]
+}

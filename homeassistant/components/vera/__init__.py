@@ -2,7 +2,6 @@
 
 import asyncio
 from collections import defaultdict
-import logging
 
 import pyvera as veraApi
 from requests.exceptions import RequestException
@@ -26,12 +25,10 @@ from .common import (
 from .config_flow import fix_device_id_list, new_options
 from .const import CONF_CONTROLLER, DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
-
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: VeraConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: VeraConfigEntry) -> None:
     """Do setup of vera."""
     # Use options entered during initial config flow or provided from configuration.yml
     if entry.data.get(CONF_LIGHTS) or entry.data.get(CONF_EXCLUDE):
@@ -72,8 +69,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeraConfigEntry) -> bool
         )
     except RequestException as exception:
         # There was a network related error connecting to the Vera controller.
-        _LOGGER.exception("Error communicating with Vera API")
-        raise ConfigEntryNotReady from exception
+        raise ConfigEntryNotReady(
+            f"Error communicating with Vera API: {exception}"
+        ) from exception
 
     # Exclude devices unwanted by user.
     devices = [device for device in all_devices if device.device_id not in exclude_ids]
@@ -107,12 +105,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeraConfigEntry) -> bool
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_subscription)
     )
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: VeraConfigEntry
-) -> bool:
+) -> None:
     """Unload vera config entry."""
     controller_data = config_entry.runtime_data
     await asyncio.gather(
@@ -123,7 +119,6 @@ async def async_unload_entry(
             hass.async_add_executor_job(controller_data.controller.stop),
         )
     )
-    return True
 
 
 def map_vera_device(

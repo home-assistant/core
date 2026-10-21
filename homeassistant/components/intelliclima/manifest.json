@@ -1,11 +1,12 @@
 {
   "domain": "intelliclima",
   "name": "IntelliClima",
+  "categories": ["climate.fans_ventilation"],
   "codeowners": ["@dvdinth"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/intelliclima",
   "integration_type": "device",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["pyintelliclima==0.3.1"]
+  "requirements": ["pyintelliclima==0.5.0"]
 }

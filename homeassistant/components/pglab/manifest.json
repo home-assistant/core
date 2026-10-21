@@ -1,6 +1,7 @@
 {
   "domain": "pglab",
   "name": "PG LAB Electronics",
+  "categories": ["plugs_switches", "blinds_curtains"],
   "codeowners": ["@pglab-electronics"],
   "config_flow": true,
   "dependencies": ["mqtt"],

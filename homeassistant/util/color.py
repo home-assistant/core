@@ -280,8 +280,8 @@ def color_xy_brightness_to_RGB(
 
     Y = brightness
 
-    if vY == 0.0:
-        vY += 1e-11
+    # Avoid overflowing Y / vY to inf (and NaN below) for zero or tiny y.
+    vY = max(vY, 1e-11)
 
     X = (Y / vY) * vX
     Z = (Y / vY) * (1 - vX - vY)
@@ -317,7 +317,7 @@ def color_hsb_to_RGB(fH: float, fS: float, fB: float) -> tuple[int, int, int]:
         return fV, fV, fV
 
     r = g = b = 0
-    h = fH / 60
+    h = (fH % 360) / 60
     f = h - float(math.floor(h))
     p = fB * (1 - fS)
     q = fB * (1 - fS * f)
@@ -539,8 +539,12 @@ def color_temperature_to_rgbww(
     """
     max_mireds = color_temperature_kelvin_to_mired(min_kelvin)
     min_mireds = color_temperature_kelvin_to_mired(max_kelvin)
-    temperature = color_temperature_kelvin_to_mired(temperature)
-    mired_range = max_mireds - min_mireds
+    temperature = color_temperature_kelvin_to_mired(
+        min(max(temperature, min_kelvin), max_kelvin)
+    )
+    if not (mired_range := max_mireds - min_mireds):
+        # The range is a single color temperature, use the warm channel
+        return (0, 0, 0, 0, brightness)
     cold = ((max_mireds - temperature) / mired_range) * brightness
     warm = brightness - cold
     return (0, 0, 0, round(cold), round(warm))
@@ -728,21 +732,9 @@ def check_valid_gamut(Gamut: GamutType) -> bool:
     not_on_line = cross_product(v1, v2) > 0.0001
 
     # Check if all six coordinates of the gamut lie between 0 and 1.
-    red_valid = (
-        Gamut.red.x >= 0 and Gamut.red.x <= 1 and Gamut.red.y >= 0 and Gamut.red.y <= 1
-    )
-    green_valid = (
-        Gamut.green.x >= 0
-        and Gamut.green.x <= 1
-        and Gamut.green.y >= 0
-        and Gamut.green.y <= 1
-    )
-    blue_valid = (
-        Gamut.blue.x >= 0
-        and Gamut.blue.x <= 1
-        and Gamut.blue.y >= 0
-        and Gamut.blue.y <= 1
-    )
+    red_valid = 0 <= Gamut.red.x <= 1 and 0 <= Gamut.red.y <= 1
+    green_valid = 0 <= Gamut.green.x <= 1 and 0 <= Gamut.green.y <= 1
+    blue_valid = 0 <= Gamut.blue.x <= 1 and 0 <= Gamut.blue.y <= 1
 
     return not_on_line and red_valid and green_valid and blue_valid
 

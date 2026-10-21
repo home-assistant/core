@@ -1,6 +1,6 @@
 """Helpers for Google Time Travel integration."""
 
-import datetime
+import datetime as dt
 import logging
 
 from google.api_core.client_options import ClientOptions
@@ -24,7 +24,7 @@ from google.maps.routing_v2 import (
 )
 from google.protobuf import timestamp_pb2
 from google.type import latlng_pb2
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -57,13 +57,13 @@ def convert_time(time_str: str) -> timestamp_pb2.Timestamp:
     if parsed_time is None:
         raise ValueError(f"Invalid time format: {time_str}")
     start_of_day = dt_util.start_of_local_day()
-    combined = datetime.datetime.combine(
+    combined = dt.datetime.combine(
         start_of_day,
         parsed_time,
         start_of_day.tzinfo,
     )
     if combined < dt_util.now():
-        combined = combined + datetime.timedelta(days=1)
+        combined = combined + dt.timedelta(days=1)
     timestamp = timestamp_pb2.Timestamp()
     timestamp.FromDatetime(dt=combined)
     return timestamp
@@ -79,8 +79,8 @@ def convert_to_waypoint(hass: HomeAssistant, location: str) -> Waypoint | None:
         return None
     try:
         formatted_coordinates = coordinates.split(",")
-        vol.Schema(cv.gps(formatted_coordinates))
-    except AttributeError, vol.Invalid:
+        probatio.Schema(cv.gps(formatted_coordinates))
+    except AttributeError, probatio.Invalid:
         return Waypoint(address=location)
     return Waypoint(
         location=Location(
@@ -142,6 +142,7 @@ def create_routes_api_disabled_issue(hass: HomeAssistant, entry: ConfigEntry) ->
         hass,
         DOMAIN,
         f"routes_api_disabled_{entry.entry_id}",
+        config_entry_id=entry.entry_id,
         learn_more_url="https://www.home-assistant.io/integrations/google_travel_time#setup",
         is_fixable=False,
         severity=IssueSeverity.ERROR,

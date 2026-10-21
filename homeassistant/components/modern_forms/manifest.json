@@ -1,12 +1,13 @@
 {
   "domain": "modern_forms",
   "name": "Modern Forms",
+  "categories": ["climate.fans_ventilation", "lighting.bulbs_lamps"],
   "codeowners": ["@wonderslug"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/modern_forms",
   "iot_class": "local_polling",
   "loggers": ["aiomodernforms"],
-  "requirements": ["aiomodernforms==0.1.8"],
+  "requirements": ["aiomodernforms==0.3.1"],
   "zeroconf": [
     {
       "name": "wac*",

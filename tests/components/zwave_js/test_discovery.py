@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
@@ -45,8 +46,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_aeon_smart_switch_6_state(
@@ -137,6 +136,17 @@ async def test_inovelli_lzw36(
 
     state = hass.states.get("fan.family_room_combo_2")
     assert state
+
+
+async def test_leviton_vrf01(
+    hass: HomeAssistant, client, leviton_vrf01, integration
+) -> None:
+    """Test Leviton VRF01 multilevel switch is discovered as a fan, not a light."""
+    node = leviton_vrf01
+    assert node.device_class.specific.label == "Multilevel Scene Switch"
+
+    assert hass.states.get("fan.fan")
+    assert not hass.states.get("light.fan")
 
 
 async def test_vision_security_zl7432(
@@ -683,8 +693,9 @@ async def test_fibaro_fgms001_unknown_firmware_setup(
     """
     assert integration.state is ConfigEntryState.LOADED
 
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, fibaro_fgms001_unknown_firmware)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, fibaro_fgms001_unknown_firmware),
+        integration.entry_id,
     )
     assert device is not None
 
@@ -717,8 +728,8 @@ async def test_fibaro_fgms001_v2_8_motion_discovery(
     or be misclassified, so we assert that exactly one binary_sensor entity
     with device_class=motion is created and no light entity exists.
     """
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, fibaro_fgms001_v2_8)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, fibaro_fgms001_v2_8), integration.entry_id
     )
     assert device is not None
 

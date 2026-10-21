@@ -1,15 +1,15 @@
 """Provides device triggers for Select."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import (
     DEVICE_TRIGGER_BASE_SCHEMA,
     async_get_entity_registry_entry_or_raise,
 )
 from homeassistant.components.homeassistant.triggers.state import (
-    CONF_FOR,
     CONF_FROM,
     CONF_TO,
+    StateTriggerArgument,
     async_attach_trigger as async_attach_state_trigger,
     async_validate_trigger_config as async_validate_state_trigger_config,
 )
@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
+    CONF_FOR,
     CONF_PLATFORM,
     CONF_TYPE,
 )
@@ -33,11 +34,11 @@ TRIGGER_TYPES = {"current_option_changed"}
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
-        vol.Optional(CONF_TO): vol.Any(vol.Coerce(str)),
-        vol.Optional(CONF_FROM): vol.Any(vol.Coerce(str)),
-        vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Required(CONF_TYPE): probatio.In(TRIGGER_TYPES),
+        probatio.Optional(CONF_TO): probatio.Any(probatio.Coerce(str)),
+        probatio.Optional(CONF_FROM): probatio.Any(probatio.Coerce(str)),
+        probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
 
@@ -67,19 +68,19 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    state_config = {
-        CONF_PLATFORM: "state",
-        CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+    state_config: ConfigType = {
+        StateTriggerArgument.PLATFORM: "state",
+        StateTriggerArgument.ENTITY_ID: config[CONF_ENTITY_ID],
     }
 
     if CONF_TO in config:
-        state_config[CONF_TO] = config[CONF_TO]
+        state_config[StateTriggerArgument.TO] = config[CONF_TO]
 
     if CONF_FROM in config:
-        state_config[CONF_FROM] = config[CONF_FROM]
+        state_config[StateTriggerArgument.FROM] = config[CONF_FROM]
 
     if CONF_FOR in config:
-        state_config[CONF_FOR] = config[CONF_FOR]
+        state_config[StateTriggerArgument.FOR] = config[CONF_FOR]
 
     state_config = await async_validate_state_trigger_config(hass, state_config)
     return await async_attach_state_trigger(
@@ -89,7 +90,7 @@ async def async_attach_trigger(
 
 async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List trigger capabilities."""
 
     try:
@@ -104,11 +105,11 @@ async def async_get_trigger_capabilities(
         options = []
 
     return {
-        "extra_fields": vol.Schema(
+        "extra_fields": probatio.Schema(
             {
-                vol.Optional(CONF_FROM): vol.In(options),
-                vol.Optional(CONF_TO): vol.In(options),
-                vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+                probatio.Optional(CONF_FROM): probatio.In(options),
+                probatio.Optional(CONF_TO): probatio.In(options),
+                probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
             }
         )
     }

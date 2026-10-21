@@ -2,8 +2,8 @@
 
 from unittest.mock import MagicMock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.zoneminder.const import DOMAIN
 from homeassistant.const import ATTR_ID, ATTR_NAME
@@ -88,7 +88,7 @@ async def test_set_run_state_missing_fields_rejected(
     assert await async_setup_component(hass, DOMAIN, single_server_config)
     await hass.async_block_till_done()
 
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         await hass.services.async_call(
             DOMAIN,
             "set_run_state",
