@@ -92,6 +92,7 @@ STRICT_SETTINGS: Final[list[str]] = [
     "warn_unreachable",
     # TODO: turn these on, address issues
     # "disallow_any_generics",
+    # "no_implicit_reexport",
 ]
 
 # Strict settings are already applied for core files.
