@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from PyTado.interface import Tado
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.tado import CONF_REFRESH_TOKEN, TadoDataUpdateCoordinator
 from homeassistant.components.tado.const import (
@@ -17,8 +18,6 @@ from homeassistant.components.tado.helper import decide_duration, decide_overlay
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

@@ -5,6 +5,7 @@ from unittest.mock import Mock
 from urllib.error import HTTPError, URLError
 
 from panasonic_viera import SOAPError
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
@@ -27,8 +28,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
 from .conftest import MOCK_CONFIG_DATA, MOCK_DEVICE_INFO, MOCK_INPUTS
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = "media_player.panasonic_viera_tv"
 

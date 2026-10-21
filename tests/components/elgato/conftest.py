@@ -13,12 +13,12 @@ from elgato import (
     State,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_fixture_path, load_fixture
 
 from homeassistant.components.elgato.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, get_fixture_path, load_fixture
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
@@ -52,7 +52,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.elgato.async_setup_entry", return_value=True
+        "homeassistant.components.elgato.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 

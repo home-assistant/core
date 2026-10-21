@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_load_json_array_fixture, snapshot_platform
 from switchbot_api import Device
 from syrupy.assertion import SnapshotAssertion
 
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import configure_integration
-
-from tests.common import async_load_json_array_fixture, snapshot_platform
 
 SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES_WITHOUT_RELAY_SWITCH_2PM = (
     SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES.copy()

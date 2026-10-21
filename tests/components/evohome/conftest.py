@@ -10,6 +10,10 @@ from evohomeasync2 import ControlSystem, EvohomeClient, HotWater, Zone
 from evohomeasync2.auth import AbstractTokenManager, Auth
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.evohome.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -21,8 +25,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonArrayType, JsonObjectType
 
 from .const import ACCESS_TOKEN, REFRESH_TOKEN, SESSION_ID, USERNAME
-
-from tests.common import load_json_array_fixture, load_json_object_fixture
 
 
 def user_account_config_fixture(install: str) -> JsonObjectType:
@@ -209,10 +211,18 @@ async def evohome(
 
 
 def _tcs_for_config(evo: EvohomeClient, config: ConfigType) -> ControlSystem:
-    """Return the configured location's TCS; evo.tcs only supports one location."""
+    """Return the TCS of the configured location."""
 
-    loc_idx: int = config.get("location_idx", 0)
-    return evo.locations[loc_idx].gateways[0].systems[0]
+    tcs = evo.locations[config.get("location_idx", 0)].tcs
+    assert tcs is not None, "Fixture has no TCS"
+    return tcs
+
+
+@pytest.fixture
+def tcs(evohome: MagicMock, config: ConfigType) -> ControlSystem:
+    """Return the TCS of the configured location."""
+
+    return _tcs_for_config(evohome.return_value, config)
 
 
 @pytest.fixture

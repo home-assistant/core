@@ -9,6 +9,16 @@ from unittest.mock import Mock
 from freezegun import freeze_time
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    mock_platform,
+)
+from pytest_homeassistant.components.recorder.common import (
+    async_recorder_block_till_done,
+    async_wait_recording_done,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant import core as ha
 from homeassistant.components import logbook, recorder
@@ -58,13 +68,6 @@ from .common import (
     setup_thermostat_context_test_entities,
     simulate_thermostat_context_chain,
 )
-
-from tests.common import MockConfigEntry, async_capture_events, mock_platform
-from tests.components.recorder.common import (
-    async_recorder_block_till_done,
-    async_wait_recording_done,
-)
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 EMPTY_CONFIG = logbook.CONFIG_SCHEMA({logbook.DOMAIN: {}})
 

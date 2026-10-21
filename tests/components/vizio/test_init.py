@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from vizaio import (
     ChargingStatus,
     DeviceType,
@@ -61,8 +62,6 @@ from .const import (
     VOLUME_STEP,
     state_extended,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("vizio_connect", "vizio_update")

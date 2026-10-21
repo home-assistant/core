@@ -4,6 +4,8 @@ from http import HTTPStatus
 from unittest.mock import Mock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from zigpy.application import ControllerApplication
 import zigpy.backups
 from zigpy.exceptions import NetworkSettingsInconsistent
@@ -28,9 +30,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
 
 SKYCONNECT_DEVICE = (
     "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0"

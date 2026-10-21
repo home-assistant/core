@@ -133,7 +133,7 @@ def get_device_capabilities(
                     "port_type": (
                         proxy.port_type.name if proxy.port_type is not None else None
                     ),
-                    "url": str(build_url(entry.entry_id, proxy.name)),
+                    "url": str(build_url(entry.entry_id, port_name=proxy.name)),
                 }
                 for proxy in device_info.serial_proxies
             ],

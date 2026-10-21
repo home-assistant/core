@@ -16,18 +16,17 @@ from pyintelliclima.intelliclima_types import (
     IntelliClimaModelType,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.intelliclima.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.intelliclima.async_setup_entry", return_value=True
+        "homeassistant.components.intelliclima.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 

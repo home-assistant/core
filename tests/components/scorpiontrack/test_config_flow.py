@@ -10,6 +10,7 @@ from pyscorpiontrack import (
     ScorpionTrackShareUnavailableError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant.components.scorpiontrack.const import (
     CONF_SHARE_TOKEN,
@@ -19,8 +20,6 @@ from homeassistant.components.scorpiontrack.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 async def _async_start_user_flow(hass: HomeAssistant) -> FlowResult:

@@ -3,14 +3,13 @@
 from unittest.mock import call, patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.broadlink.heartbeat import BroadlinkHeartbeat
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import get_device
-
-from tests.common import async_fire_time_changed
 
 DEVICE_PING = "homeassistant.components.broadlink.heartbeat.blk.ping"
 
