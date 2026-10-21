@@ -3,6 +3,7 @@
 from datetime import timedelta
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import (
     MockConfigEntry,
@@ -1388,6 +1389,42 @@ async def test_delta_values_repeated_reading(
     state = hass.states.get("sensor.energy_bill")
     assert state is not None
     assert state.state == expected
+
+
+async def test_non_delta_values_ignore_repeated_reading(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test a meter without delta_values ignores an unchanged source state."""
+    assert await async_setup_component(
+        hass, DOMAIN, {DOMAIN: {"energy_bill": {"source": "sensor.energy"}}}
+    )
+    await hass.async_block_till_done()
+
+    for reading in ("3", "5"):
+        hass.states.async_set(
+            "sensor.energy",
+            reading,
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_bill")
+    assert state is not None
+    assert state.state == "2"
+    last_reported = state.last_reported
+
+    freezer.tick(timedelta(seconds=30))
+    hass.states.async_set(
+        "sensor.energy",
+        "5",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_bill")
+    assert state is not None
+    assert state.state == "2"
+    assert state.last_reported == last_reported
 
 
 @pytest.mark.parametrize(
