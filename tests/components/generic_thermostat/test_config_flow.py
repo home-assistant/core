@@ -47,7 +47,7 @@ async def test_config_flow(hass: HomeAssistant, snapshot: SnapshotAssertion) -> 
     """Test the config flow."""
     with patch(
         "homeassistant.components.generic_thermostat.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -153,7 +153,7 @@ async def test_config_flow_preset_accepts_float(
     """Test the config flow with preset is a float."""
     with patch(
         "homeassistant.components.generic_thermostat.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -199,7 +199,7 @@ async def test_config_flow_with_keep_alive(hass: HomeAssistant) -> None:
     """Test the config flow when keep_alive is set."""
     with patch(
         "homeassistant.components.generic_thermostat.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}

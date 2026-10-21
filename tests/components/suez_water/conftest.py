@@ -43,7 +43,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry(recorder_mock: Recorder) -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.suez_water.async_setup_entry", return_value=True
+        "homeassistant.components.suez_water.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
