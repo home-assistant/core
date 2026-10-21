@@ -21,6 +21,7 @@ description: Everything you need to know to build, test and review Home Assistan
 - Bump dependencies in a standalone PR that contains only the compatibility adjustments the bump requires. Features that need the new version go in a follow-up PR.
 
 The following platforms have extra guidelines:
+- **Device tracker**: [`platform-device_tracker.md`](platform-device_tracker.md) for replacing legacy device trackers
 - **Diagnostics**: [`platform-diagnostics.md`](platform-diagnostics.md) for diagnostic data collection
 - **Repairs**: [`platform-repairs.md`](platform-repairs.md) for user-actionable repair issues
 
