@@ -281,16 +281,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> No
     device_registry = dr.async_get(hass)
     port = entry.data.get(CONF_PORT, DEFAULT_PORT)
     main_device_info = get_bsblan_device_info(device, info, entry.data[CONF_HOST], port)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers=main_device_info.identifiers,
-        connections=main_device_info.connections,
-        name=main_device_info.name,
-        manufacturer=main_device_info.manufacturer,
-        model=main_device_info.model,
-        model_id=main_device_info.model_id,
-        sw_version=main_device_info.sw_version,
-        configuration_url=main_device_info.configuration_url,
+        device_info=dr.DeviceInfo(
+            identifiers=main_device_info.identifiers,
+            connections=main_device_info.connections,
+            name=main_device_info.name,
+            manufacturer=main_device_info.manufacturer,
+            model=main_device_info.model,
+            model_id=main_device_info.model_id,
+            sw_version=main_device_info.sw_version,
+            configuration_url=main_device_info.configuration_url,
+        ),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

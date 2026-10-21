@@ -5,6 +5,7 @@ from typing import Any
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, patch
 
 from homeassistant.components import device_tracker, mikrotik
 from homeassistant.const import STATE_UNAVAILABLE
@@ -29,8 +30,6 @@ from .const import (
     UPDATE_DATA,
     WIRELESS_DATA,
 )
-
-from tests.common import async_fire_time_changed, patch
 
 
 @pytest.fixture

@@ -15,7 +15,7 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL, CONF_PROMPT
 from homeassistant.core import callback
 from homeassistant.helpers import llm
 from homeassistant.helpers.selector import (
@@ -27,7 +27,7 @@ from homeassistant.helpers.selector import (
 )
 
 from . import _create_client, _validate_api_key
-from .const import CONF_PROMPT, DOMAIN, RECOMMENDED_CONVERSATION_OPTIONS
+from .const import DOMAIN, RECOMMENDED_CONVERSATION_OPTIONS
 
 _LOGGER = logging.getLogger(__name__)
 

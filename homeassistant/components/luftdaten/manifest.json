@@ -1,6 +1,7 @@
 {
   "domain": "luftdaten",
   "name": "Sensor.Community",
+  "categories": ["weather_alerts.air_quality_pollen"],
   "codeowners": ["@fabaff", "@frenck"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/luftdaten",

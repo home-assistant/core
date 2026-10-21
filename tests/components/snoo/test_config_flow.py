@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from python_snoo.exceptions import InvalidSnooAuth, SnooAuthException
 
 from homeassistant import config_entries
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import create_entry
-
-from tests.common import MockConfigEntry
 
 
 async def test_config_flow_success(

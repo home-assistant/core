@@ -7,11 +7,13 @@ from typing import override
 from ritualsgenie import Attribute, RitualsGenie, RitualsGenieHub
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import RitualsConfigEntry
-from .entity import DiffuserEntity
+from .entity import DiffuserEntity, async_add_diffusers, rituals_action
 
 PARALLEL_UPDATES = 1
 
@@ -48,11 +50,15 @@ async def async_setup_entry(
     """Set up the diffuser numbers."""
     hubs = config_entry.runtime_data.hubs
 
-    async_add_entities(
-        RitualsNumberEntity(hubs, hublot, description)
-        for hublot in hubs.data
-        for description in ENTITY_DESCRIPTIONS
-    )
+    @callback
+    def add_diffusers(hublots: list[str]) -> None:
+        async_add_entities(
+            RitualsNumberEntity(hubs, hublot, description)
+            for hublot in hublots
+            for description in ENTITY_DESCRIPTIONS
+        )
+
+    async_add_diffusers(config_entry, add_diffusers)
 
 
 class RitualsNumberEntity(DiffuserEntity, NumberEntity):
@@ -67,10 +73,15 @@ class RitualsNumberEntity(DiffuserEntity, NumberEntity):
         return self.entity_description.value_fn(self.hub)
 
     @override
+    @rituals_action
     async def async_set_native_value(self, value: float) -> None:
         """Change to new number value."""
         if not value.is_integer():
-            raise ValueError(f"Can't set value to {value}. Value must be an integer.")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="perfume_amount_not_whole",
+                translation_placeholders={"value": str(value)},
+            )
         await self.entity_description.set_value_fn(
             self.coordinator.client, self.hub.hash, int(value)
         )

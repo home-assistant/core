@@ -2,6 +2,7 @@
   "domain": "motioneye",
   "name": "motionEye",
   "after_dependencies": ["media_source"],
+  "categories": ["security_safety.cameras"],
   "codeowners": ["@dermotduffy"],
   "config_flow": true,
   "dependencies": ["http", "webhook"],

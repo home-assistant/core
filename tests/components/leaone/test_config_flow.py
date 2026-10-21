@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.leaone.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IGNORE
@@ -9,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import SCALE_SERVICE_INFO
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_step_user_no_devices_found(hass: HomeAssistant) -> None:

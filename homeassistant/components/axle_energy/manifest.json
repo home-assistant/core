@@ -1,6 +1,7 @@
 {
   "domain": "axle_energy",
   "name": "Axle Energy",
+  "categories": ["energy"],
   "codeowners": ["@Herbertmt978"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/axle_energy",
