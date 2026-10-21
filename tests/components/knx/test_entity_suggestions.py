@@ -16,6 +16,7 @@ from homeassistant.components.knx.storage.entity_suggestions.const import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import KnxEntityGenerator, KnxSuggestionGetter
 from .conftest import KNXTestKit
@@ -128,6 +129,38 @@ async def test_ws_get_entity_suggestions_existing_entities(
     by_id = {suggestion["id"]: suggestion for suggestion in result["suggestions"]}
     assert by_id["stub_configured"]["existing_entity_ids"] == [entity.entity_id]
     assert by_id["stub_light"]["existing_entity_ids"] == []
+
+
+async def test_ws_get_entity_suggestions_disabled_existing_entity(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    entity_registry: er.EntityRegistry,
+    create_ui_entity: KnxEntityGenerator,
+    get_entity_suggestions: KnxSuggestionGetter,
+) -> None:
+    """Test a disabled entity still counts as using its group addresses."""
+    await knx.setup_integration()
+    entity = await create_ui_entity(
+        Platform.SWITCH, {"ga_switch": {"write": CONFIGURED_ADDRESS}}
+    )
+    entity_registry.async_update_entity(
+        entity.entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity.entity_id) is None
+
+    with patch(
+        "homeassistant.components.knx.storage.entity_suggestions.SUGGESTION_PROVIDERS",
+        [_StubProvider()],
+    ):
+        result = await get_entity_suggestions()
+        unconfigured = await get_entity_suggestions(include_configured=False)
+
+    by_id = {suggestion["id"]: suggestion for suggestion in result["suggestions"]}
+    assert by_id["stub_configured"]["existing_entity_ids"] == [entity.entity_id]
+    assert "stub_configured" not in [
+        suggestion["id"] for suggestion in unconfigured["suggestions"]
+    ]
 
 
 async def test_ws_get_entity_suggestions_without_providers(
