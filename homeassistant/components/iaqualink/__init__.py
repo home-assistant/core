@@ -146,12 +146,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
             ) from svc_exception
 
         device_registry = dr.async_get(hass)
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            name=system.name,
-            identifiers={(DOMAIN, system.serial)},
-            manufacturer="Jandy",
-            serial_number=system.serial,
+            device_info=dr.DeviceInfo(
+                name=system.name,
+                identifiers={(DOMAIN, system.serial)},
+                manufacturer="Jandy",
+                serial_number=system.serial,
+            ),
         )
 
         for dev in devices.values():

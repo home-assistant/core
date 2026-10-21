@@ -9,6 +9,7 @@ from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 from hdate.translator import get_language, set_language
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
@@ -32,8 +33,6 @@ from homeassistant.util import dt as dt_util
 
 from . import GetCalendarEvents, TimeValue
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
 
 class _LocationData(NamedTuple):
     timezone: str
@@ -53,7 +52,7 @@ LOCATIONS = {
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.jewish_calendar.async_setup_entry", return_value=True
+        "homeassistant.components.jewish_calendar.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

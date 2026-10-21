@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from homematicip.base.enums import WaterSupplyState
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.valve import (
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .helper import HomeFactory, async_manipulate_test_data, get_and_check_entity_basics
-
-from tests.common import snapshot_platform
 
 
 async def test_watering_valve(

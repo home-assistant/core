@@ -6,6 +6,7 @@ import os
 from unittest.mock import call, patch
 
 import pytest
+from pytest_homeassistant.common import MockModule, mock_integration
 
 from homeassistant import loader, setup
 from homeassistant.core import HomeAssistant
@@ -19,8 +20,6 @@ from homeassistant.requirements import (
     async_get_integration_with_requirements,
     async_process_requirements,
 )
-
-from .common import MockModule, mock_integration
 
 
 def env_without_wheel_links():

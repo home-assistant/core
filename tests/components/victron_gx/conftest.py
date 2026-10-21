@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from victron_mqtt import Hub as VictronVenusHub
 from victron_mqtt.testing import create_mocked_hub
 
@@ -24,14 +25,12 @@ from homeassistant.core import HomeAssistant
 
 from .const import MOCK_HOST, MOCK_INSTALLATION_ID, MOCK_MODEL, MOCK_SERIAL
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.victron_gx.async_setup_entry", return_value=True
+        "homeassistant.components.victron_gx.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

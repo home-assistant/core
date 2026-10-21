@@ -13,6 +13,7 @@ from opendisplay import (
     OpenDisplayError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
@@ -29,8 +30,6 @@ from . import (
     VALID_SERVICE_INFO,
     make_service_info,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 UNSUPPORTED_SERVICE_INFOS = [
     pytest.param(make_service_info(name="Other Device"), id="wrong_name"),
@@ -50,7 +49,7 @@ def mock_setup_entry() -> Generator[None]:
     """Prevent the integration from actually setting up after config flow."""
     with patch(
         "homeassistant.components.opendisplay.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         yield
 

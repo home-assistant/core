@@ -16,6 +16,7 @@ from aioshelly.exceptions import (
     RpcCallError,
 )
 from aioshelly.rpc_device import RpcDevice, RpcUpdateType
+from aioshelly.rpc_device.models import ShellyLedStripEffect
 from aioshelly.rpc_device.utils import bluetooth_mac_from_primary_mac
 from propcache.api import cached_property
 
@@ -98,6 +99,7 @@ class ShellyEntryData:
     rpc_poll: ShellyRpcPollingCoordinator | None = None
     rpc_blu_trv_update: ShellyBluTrvUpdateCoordinator | None = None
     rpc_script_events: dict[int, list[str]] | None = None
+    rpc_ledstrip_effects: dict[str, ShellyLedStripEffect] | None = None
     rpc_supports_scripts: bool | None = None
     rpc_zigbee_firmware: bool | None = None
 
@@ -187,17 +189,19 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
         """Set up the coordinator."""
         self._pending_platforms = pending_platforms
         dev_reg = dr.async_get(self.hass)
-        device_entry = dev_reg.async_get_or_create(
+        device_entry = dev_reg.async_get_or_create_device(
             config_entry_id=self.config_entry.entry_id,
-            name=self.name,
-            connections={(CONNECTION_NETWORK_MAC, self.mac)},
-            identifiers={(DOMAIN, self.mac)},
-            manufacturer="Shelly",
-            model=self.model_name,
-            model_id=self.model,
-            sw_version=self.sw_version,
-            hw_version=f"gen{get_device_entry_gen(self.config_entry)}",
-            configuration_url=self.configuration_url,
+            device_info=dr.DeviceInfo(
+                name=self.name,
+                connections={(CONNECTION_NETWORK_MAC, self.mac)},
+                identifiers={(DOMAIN, self.mac)},
+                manufacturer="Shelly",
+                model=self.model_name,
+                model_id=self.model,
+                sw_version=self.sw_version,
+                hw_version=f"gen{get_device_entry_gen(self.config_entry)}",
+                configuration_url=self.configuration_url,
+            ),
         )
         # We want to use the main device area as the suggested area for sub-devices.
         if (area_id := device_entry.area_id) is not None:

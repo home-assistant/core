@@ -11,6 +11,7 @@ from unittest.mock import MagicMock, Mock, PropertyMock, patch
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from requests import Response
 from requests.exceptions import HTTPError
 
@@ -35,8 +36,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .conftest import MockSoCo, SoCoMockFactory, SonosMockEvent
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_creating_entry_sets_up_media_player(
@@ -73,7 +72,7 @@ async def test_configuring_sonos_creates_entry(hass: HomeAssistant) -> None:
     """Test that specifying config will create an entry."""
     with patch(
         "homeassistant.components.sonos.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         await async_setup_component(
             hass,
@@ -89,7 +88,7 @@ async def test_not_configuring_sonos_not_creates_entry(hass: HomeAssistant) -> N
     """Test that no config will not create an entry."""
     with patch(
         "homeassistant.components.sonos.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         await async_setup_component(hass, sonos.DOMAIN, {})
         await hass.async_block_till_done()

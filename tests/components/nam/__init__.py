@@ -2,10 +2,10 @@
 
 from unittest.mock import AsyncMock, Mock, patch
 
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
+
 from homeassistant.components.nam.const import DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 INCOMPLETE_NAM_DATA = {
     "software_version": "NAMF-2020-36",

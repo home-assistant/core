@@ -11,6 +11,26 @@ from typing import Any
 from unittest.mock import ANY, AsyncMock, call, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    async_capture_events,
+    async_fire_mqtt_message,
+    async_get_device_automations,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
+from pytest_homeassistant.components.mqtt.common import (
+    MOCK_NOTIFY_SUBENTRY_DATA_MULTI,
+    help_all_subscribe_calls,
+    help_test_unload_config_entry,
+)
+from pytest_homeassistant.typing import (
+    MqttMockHAClientGenerator,
+    MqttMockPahoClient,
+    WebSocketGenerator,
+)
 
 from homeassistant import config_entries
 from homeassistant.components import mqtt
@@ -52,29 +72,8 @@ from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util.signal_type import SignalTypeFormat
 
-from .common import (
-    MOCK_NOTIFY_SUBENTRY_DATA_MULTI,
-    help_all_subscribe_calls,
-    help_test_unload_config_entry,
-)
 from .conftest import ENTRY_DEFAULT_BIRTH_MESSAGE
 from .test_tag import DEFAULT_TAG_ID, DEFAULT_TAG_SCAN
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    async_capture_events,
-    async_fire_mqtt_message,
-    async_get_device_automations,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
-from tests.typing import (
-    MqttMockHAClientGenerator,
-    MqttMockPahoClient,
-    WebSocketGenerator,
-)
 
 
 def _get_device_for_config_entry(
@@ -2786,7 +2785,7 @@ async def test_mqtt_discovery_flow_starts_once(
     and after an entry was removed, to trigger re-discovery.
     """
     mock_integration(
-        hass, MockModule(domain="comp", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule(domain="comp", async_setup_entry=AsyncMock(return_value=None))
     )
     mock_platform(hass, "comp.config_flow", None)
 
@@ -2924,7 +2923,7 @@ async def test_mqtt_discovery_flow_subscribes_atr_configured_qos(
 ) -> None:
     """Check MQTT integration discovery subscribes at the configured QoS."""
     mock_integration(
-        hass, MockModule(domain="comp", async_setup_entry=AsyncMock(return_value=True))
+        hass, MockModule(domain="comp", async_setup_entry=AsyncMock(return_value=None))
     )
     mock_platform(hass, "comp.config_flow", None)
 

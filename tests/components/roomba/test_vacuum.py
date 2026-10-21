@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from roombapy import RoombaConnectionError, RoombaScopeError
 
 from homeassistant.components.vacuum import (
@@ -24,8 +25,6 @@ from homeassistant.components.vacuum import (
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-
-from tests.common import MockConfigEntry
 
 ENTITY_ID = "vacuum.test_roomba"
 
