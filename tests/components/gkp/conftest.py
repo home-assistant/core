@@ -5,14 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from gkphomepython import (
-    GkpAuthError,
-    GkpError,
-    GkpRateLimitError,
-    Installation,
-    Thermostat,
-    ThermostatsResult,
-)
+from gkphomepython import Installation, Thermostat, ThermostatsResult
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -39,6 +32,8 @@ TEST_EXPIRES_AT = 9999999999
 
 LIVING_ROOM_ID = "AABBCCDDEE01"
 BEDROOM_ID = "AABBCCDDEE02"
+LIVING_ROOM_ENTITY_ID = "climate.living_room"
+BEDROOM_ENTITY_ID = "climate.bedroom"
 
 # Shortly after the last report of the devices in the fixtures
 NOW = "2026-09-30T12:06:00+00:00"
@@ -122,25 +117,21 @@ def mock_gkp_client(
                 device_id, installation, device_contents[device_id]
             )
 
-        client.get_installations.side_effect = get_installations
-        client.get_thermostat.side_effect = get_thermostat
-
         async def get_thermostats(
             installations: Iterable[Installation],
         ) -> ThermostatsResult:
-            result = ThermostatsResult()
-            for installation in installations:
-                for device_id in installation.device_ids:
-                    try:
-                        result.thermostats[device_id] = await client.get_thermostat(
-                            device_id, installation
-                        )
-                    except GkpAuthError, GkpRateLimitError:
-                        raise
-                    except GkpError as err:
-                        result.errors[device_id] = err
-            return result
+            return ThermostatsResult(
+                thermostats={
+                    device_id: Thermostat.from_content(
+                        device_id, installation, device_contents[device_id]
+                    )
+                    for installation in installations
+                    for device_id in installation.device_ids
+                }
+            )
 
+        client.get_installations.side_effect = get_installations
+        client.get_thermostat.side_effect = get_thermostat
         client.get_thermostats.side_effect = get_thermostats
 
         yield client

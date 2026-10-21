@@ -45,13 +45,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
-from .conftest import BEDROOM_ID, LIVING_ROOM_ID
+from . import advance_time, setup_integration
+from .conftest import (
+    BEDROOM_ENTITY_ID,
+    BEDROOM_ID,
+    LIVING_ROOM_ENTITY_ID,
+    LIVING_ROOM_ID,
+)
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-
-LIVING_ROOM_ENTITY_ID = "climate.living_room"
-BEDROOM_ENTITY_ID = "climate.bedroom"
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("mock_gkp_client")
@@ -71,7 +73,7 @@ async def test_entities(
     ("mode", "heating", "expected"),
     [
         pytest.param(
-            0,
+            GkpMode.OFF.value,
             1,
             {
                 "state": HVACMode.OFF,
@@ -82,7 +84,7 @@ async def test_entities(
             id="off",
         ),
         pytest.param(
-            1,
+            GkpMode.ECO.value,
             0,
             {
                 "state": HVACMode.HEAT,
@@ -93,7 +95,7 @@ async def test_entities(
             id="eco",
         ),
         pytest.param(
-            2,
+            GkpMode.AUTO.value,
             1,
             {
                 "state": HVACMode.AUTO,
@@ -104,7 +106,7 @@ async def test_entities(
             id="auto",
         ),
         pytest.param(
-            4,
+            GkpMode.DEFROST.value,
             0,
             {
                 "state": HVACMode.HEAT,
@@ -115,7 +117,7 @@ async def test_entities(
             id="defrost",
         ),
         pytest.param(
-            5,
+            GkpMode.BOOST.value,
             1,
             {
                 "state": HVACMode.HEAT,
@@ -200,8 +202,8 @@ async def test_set_temperature(
 @pytest.mark.parametrize(
     ("mode", "temperature"),
     [
-        pytest.param(0, 20.0, id="off"),
-        pytest.param(4, 7.0, id="defrost"),
+        pytest.param(GkpMode.OFF.value, 20.0, id="off"),
+        pytest.param(GkpMode.DEFROST.value, 7.0, id="defrost"),
         pytest.param(None, 20.0, id="unknown"),
     ],
 )
@@ -302,7 +304,7 @@ async def test_turn_on(
     device_contents: dict[str, dict[str, Any]],
 ) -> None:
     """Test turning on a device that is off."""
-    device_contents[LIVING_ROOM_ID]["Cm"]["value"] = 0
+    device_contents[LIVING_ROOM_ID]["Cm"]["value"] = GkpMode.OFF.value
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -325,9 +327,7 @@ async def test_fast_polling(
     """Test a command triggers fast polling that stops after a minute."""
     await setup_integration(hass, mock_config_entry)
     # Let the hub read the answer to the initial wake up first
-    freezer.tick(USER_CONNECTED_REPORT_DELAY)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await advance_time(hass, freezer, USER_CONNECTED_REPORT_DELAY)
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -335,12 +335,10 @@ async def test_fast_polling(
         {ATTR_ENTITY_ID: LIVING_ROOM_ENTITY_ID, ATTR_PRESET_MODE: PRESET_ECO},
         blocking=True,
     )
-    device_contents[LIVING_ROOM_ID]["Cm"]["value"] = 1
+    device_contents[LIVING_ROOM_ID]["Cm"]["value"] = GkpMode.ECO.value
     mock_gkp_client.get_thermostat.reset_mock()
 
-    freezer.tick(FAST_POLLING_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await advance_time(hass, freezer, FAST_POLLING_INTERVAL)
 
     mock_gkp_client.get_thermostat.assert_called_once()
     assert mock_gkp_client.get_thermostat.call_args.args[0] == LIVING_ROOM_ID
@@ -349,14 +347,10 @@ async def test_fast_polling(
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_ECO
 
     # Fast polling ends after one minute
-    freezer.tick(timedelta(seconds=56))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await advance_time(hass, freezer, timedelta(minutes=1))
     mock_gkp_client.get_thermostat.reset_mock()
 
-    freezer.tick(FAST_POLLING_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await advance_time(hass, freezer, FAST_POLLING_INTERVAL)
 
     mock_gkp_client.get_thermostat.assert_not_called()
 

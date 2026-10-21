@@ -1,6 +1,6 @@
 """Test the GKP integration initialization."""
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -39,22 +39,28 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 
-from . import setup_integration
-from .conftest import BEDROOM_ID, LIVING_ROOM_ID
+from . import advance_time, setup_integration
+from .conftest import (
+    BEDROOM_ENTITY_ID,
+    BEDROOM_ID,
+    LIVING_ROOM_ENTITY_ID,
+    LIVING_ROOM_ID,
+)
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
-LIVING_ROOM_ENTITY_ID = "climate.living_room"
-BEDROOM_ENTITY_ID = "climate.bedroom"
+RETRY_AFTER = 120
 
 
-async def _tick(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, delta: timedelta
-) -> None:
-    """Move time forward and run the scheduled updates."""
-    freezer.tick(delta)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+def _all_devices_failing(installations: Iterable[Installation]) -> ThermostatsResult:
+    """Return a result where no device could be read."""
+    return ThermostatsResult(
+        errors={
+            device_id: GkpConnectionError("lost")
+            for installation in installations
+            for device_id in installation.device_ids
+        }
+    )
 
 
 async def test_setup_entry_success(
@@ -68,7 +74,7 @@ async def test_setup_entry_success(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_gkp_client.get_installations.assert_called_once()
     mock_gkp_client.notify_user_connected.assert_called_once_with("installation-1")
-    assert mock_gkp_client.get_thermostat.call_count == 2
+    mock_gkp_client.get_thermostats.assert_called_once()
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -119,7 +125,7 @@ async def test_setup_entry_all_devices_failing(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setup is retried when no device can be read."""
-    mock_gkp_client.get_thermostat.side_effect = GkpConnectionError("lost")
+    mock_gkp_client.get_thermostats.side_effect = _all_devices_failing
 
     await setup_integration(hass, mock_config_entry)
 
@@ -139,27 +145,27 @@ async def test_setup_entry_without_devices(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_gkp_client.notify_user_connected.assert_not_called()
-    mock_gkp_client.get_thermostat.assert_not_called()
+    assert not hass.states.async_entity_ids()
 
 
-async def test_user_connected_interval(
+async def test_wake_up_interval(
     hass: HomeAssistant,
     mock_gkp_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test devices are woken up every user connected interval only."""
+    """Test devices are woken up every wake up interval only."""
     await setup_integration(hass, mock_config_entry)
     assert mock_gkp_client.notify_user_connected.call_count == 1
 
-    await _tick(hass, freezer, USER_CONNECTED_INTERVAL - UPDATE_INTERVAL)
+    await advance_time(hass, freezer, USER_CONNECTED_INTERVAL - UPDATE_INTERVAL)
     assert mock_gkp_client.notify_user_connected.call_count == 1
 
-    await _tick(hass, freezer, UPDATE_INTERVAL)
+    await advance_time(hass, freezer, UPDATE_INTERVAL)
     assert mock_gkp_client.notify_user_connected.call_count == 2
 
 
-async def test_refresh_after_user_connected(
+async def test_refresh_after_wake_up(
     hass: HomeAssistant,
     mock_gkp_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -167,14 +173,14 @@ async def test_refresh_after_user_connected(
 ) -> None:
     """Test the devices are read again shortly after being woken up."""
     await setup_integration(hass, mock_config_entry)
-    assert mock_gkp_client.get_thermostat.call_count == 2
+    assert mock_gkp_client.get_thermostats.call_count == 1
 
-    await _tick(hass, freezer, USER_CONNECTED_REPORT_DELAY)
-    assert mock_gkp_client.get_thermostat.call_count == 4
+    await advance_time(hass, freezer, USER_CONNECTED_REPORT_DELAY)
+    assert mock_gkp_client.get_thermostats.call_count == 2
 
     # Back to the regular interval once the answer was read
-    await _tick(hass, freezer, USER_CONNECTED_REPORT_DELAY)
-    assert mock_gkp_client.get_thermostat.call_count == 4
+    await advance_time(hass, freezer, USER_CONNECTED_REPORT_DELAY)
+    assert mock_gkp_client.get_thermostats.call_count == 2
 
 
 @pytest.mark.usefixtures("mock_gkp_client")
@@ -192,19 +198,19 @@ async def test_available_until_first_report_timeout(
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
 
-    await _tick(hass, freezer, FIRST_REPORT_TIMEOUT)
+    await advance_time(hass, freezer, FIRST_REPORT_TIMEOUT)
     state = hass.states.get(LIVING_ROOM_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
     # Later wake ups do not make a silent device available again
-    await _tick(hass, freezer, USER_CONNECTED_INTERVAL)
+    await advance_time(hass, freezer, USER_CONNECTED_INTERVAL)
     state = hass.states.get(LIVING_ROOM_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
     device_contents[LIVING_ROOM_ID]["Dd"]["value"] = "30/9/2026 14:18:00"
-    await _tick(hass, freezer, USER_CONNECTED_REPORT_DELAY)
+    await advance_time(hass, freezer, USER_CONNECTED_REPORT_DELAY)
     state = hass.states.get(LIVING_ROOM_ENTITY_ID)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
@@ -217,7 +223,7 @@ async def test_available_until_first_report_timeout(
         (GkpConnectionError("lost"), False),
     ],
 )
-async def test_user_connected_errors(
+async def test_wake_up_errors(
     hass: HomeAssistant,
     mock_gkp_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -228,16 +234,16 @@ async def test_user_connected_errors(
     """Test failures to wake up the devices."""
     await setup_integration(hass, mock_config_entry)
     mock_gkp_client.notify_user_connected.side_effect = exception
-    mock_gkp_client.get_thermostat.reset_mock()
+    mock_gkp_client.get_thermostats.reset_mock()
 
-    await _tick(hass, freezer, USER_CONNECTED_INTERVAL)
+    await advance_time(hass, freezer, USER_CONNECTED_INTERVAL)
 
     assert (
         any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
         == has_reauth_flow
     )
     # A failed wake up does not prevent reading the devices
-    assert mock_gkp_client.get_thermostat.called is not has_reauth_flow
+    assert mock_gkp_client.get_thermostats.called is not has_reauth_flow
 
 
 @pytest.mark.usefixtures("mock_gkp_client")
@@ -263,7 +269,7 @@ async def test_dynamic_device_creation(
     )
     device_contents["AABBCCDDEE03"] = device_contents[LIVING_ROOM_ID]
 
-    await _tick(hass, freezer, DISCOVERY_INTERVAL)
+    await advance_time(hass, freezer, DISCOVERY_INTERVAL)
 
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, "AABBCCDDEE03"), mock_config_entry.entry_id
@@ -289,7 +295,7 @@ async def test_stale_device_removal(
 
     installations_data[0]["rooms"] = installations_data[0]["rooms"][:1]
 
-    await _tick(hass, freezer, DISCOVERY_INTERVAL)
+    await advance_time(hass, freezer, DISCOVERY_INTERVAL)
 
     assert (
         device_registry.async_get_device_by_identifier(
@@ -313,7 +319,7 @@ async def test_periodic_discovery_error(
     await setup_integration(hass, mock_config_entry)
     mock_gkp_client.get_installations.side_effect = GkpConnectionError("lost")
 
-    await _tick(hass, freezer, DISCOVERY_INTERVAL)
+    await advance_time(hass, freezer, DISCOVERY_INTERVAL)
 
     assert device_registry.async_get_device_by_identifier(
         (DOMAIN, BEDROOM_ID), mock_config_entry.entry_id
@@ -324,10 +330,10 @@ async def test_periodic_discovery_error(
 
 
 @pytest.mark.parametrize(
-    ("exception", "has_reauth_flow"),
+    ("side_effect", "has_reauth_flow"),
     [
-        (GkpAuthError("expired"), True),
-        (GkpConnectionError("lost"), False),
+        pytest.param(GkpAuthError("expired"), True, id="auth_error"),
+        pytest.param(_all_devices_failing, False, id="all_devices_failing"),
     ],
 )
 async def test_update_errors(
@@ -335,14 +341,14 @@ async def test_update_errors(
     mock_gkp_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    exception: Exception,
+    side_effect: Exception | Callable[[Iterable[Installation]], ThermostatsResult],
     has_reauth_flow: bool,
 ) -> None:
     """Test errors during a regular update keep the last known state."""
     await setup_integration(hass, mock_config_entry)
-    mock_gkp_client.get_thermostat.side_effect = exception
+    mock_gkp_client.get_thermostats.side_effect = side_effect
 
-    await _tick(hass, freezer, UPDATE_INTERVAL)
+    await advance_time(hass, freezer, UPDATE_INTERVAL)
 
     # The entities keep their last known state when the hub update fails
     state = hass.states.get(LIVING_ROOM_ENTITY_ID)
@@ -377,7 +383,7 @@ async def test_single_device_error_keeps_others(
     mock_gkp_client.get_thermostats.side_effect = fail_for_bedroom
     device_contents[LIVING_ROOM_ID]["At"]["value"] = "734"
 
-    await _tick(hass, freezer, UPDATE_INTERVAL)
+    await advance_time(hass, freezer, UPDATE_INTERVAL)
 
     living_room = hass.states.get(LIVING_ROOM_ENTITY_ID)
     bedroom = hass.states.get(BEDROOM_ENTITY_ID)
@@ -401,7 +407,7 @@ async def test_device_offline_when_not_reporting(
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
 
-    await _tick(hass, freezer, OFFLINE_AFTER)
+    await advance_time(hass, freezer, OFFLINE_AFTER)
 
     state = hass.states.get(LIVING_ROOM_ENTITY_ID)
     assert state is not None
@@ -409,21 +415,11 @@ async def test_device_offline_when_not_reporting(
 
     # A new report brings the device back
     device_contents[LIVING_ROOM_ID]["Dd"]["value"] = "30/9/2026 14:36:00"
-    await _tick(hass, freezer, UPDATE_INTERVAL)
+    await advance_time(hass, freezer, UPDATE_INTERVAL)
 
     state = hass.states.get(LIVING_ROOM_ENTITY_ID)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
-
-
-async def _set_temperature(hass: HomeAssistant) -> None:
-    """Send a temperature command, which starts fast polling."""
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: LIVING_ROOM_ENTITY_ID, ATTR_TEMPERATURE: 23.5},
-        blocking=True,
-    )
 
 
 async def test_refresh_after_command_error(
@@ -434,10 +430,16 @@ async def test_refresh_after_command_error(
 ) -> None:
     """Test a device is unavailable when it cannot be read after a command."""
     await setup_integration(hass, mock_config_entry)
-    await _set_temperature(hass)
+    # A command starts fast polling of the device
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: LIVING_ROOM_ENTITY_ID, ATTR_TEMPERATURE: 23.5},
+        blocking=True,
+    )
 
     mock_gkp_client.get_thermostat.side_effect = GkpConnectionError("lost")
-    await _tick(hass, freezer, FAST_POLLING_INTERVAL)
+    await advance_time(hass, freezer, FAST_POLLING_INTERVAL)
 
     state = hass.states.get(LIVING_ROOM_ENTITY_ID)
     assert state is not None
@@ -452,18 +454,20 @@ async def test_rate_limited(
 ) -> None:
     """Test the next update waits for the delay requested by the API."""
     await setup_integration(hass, mock_config_entry)
-    await _tick(hass, freezer, USER_CONNECTED_REPORT_DELAY)
-    mock_gkp_client.get_thermostat.side_effect = GkpRateLimitError("limited", 120)
+    await advance_time(hass, freezer, USER_CONNECTED_REPORT_DELAY)
+    mock_gkp_client.get_thermostats.side_effect = GkpRateLimitError(
+        "limited", RETRY_AFTER
+    )
 
-    await _tick(hass, freezer, UPDATE_INTERVAL)
+    await advance_time(hass, freezer, UPDATE_INTERVAL)
 
     state = hass.states.get(LIVING_ROOM_ENTITY_ID)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
-    mock_gkp_client.get_thermostat.reset_mock()
+    mock_gkp_client.get_thermostats.reset_mock()
 
-    await _tick(hass, freezer, timedelta(seconds=119))
-    mock_gkp_client.get_thermostat.assert_not_called()
+    await advance_time(hass, freezer, timedelta(seconds=RETRY_AFTER - 1))
+    mock_gkp_client.get_thermostats.assert_not_called()
 
-    await _tick(hass, freezer, timedelta(seconds=1))
-    assert mock_gkp_client.get_thermostat.called
+    await advance_time(hass, freezer, timedelta(seconds=1))
+    assert mock_gkp_client.get_thermostats.called

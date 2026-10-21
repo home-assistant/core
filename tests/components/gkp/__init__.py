@@ -1,8 +1,12 @@
 """Tests for the GKP integration."""
 
+from datetime import timedelta
+
+from freezegun.api import FrozenDateTimeFactory
+
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def setup_integration(
@@ -13,3 +17,12 @@ async def setup_integration(
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def advance_time(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, delta: timedelta
+) -> None:
+    """Move time forward and run the scheduled updates."""
+    freezer.tick(delta)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
