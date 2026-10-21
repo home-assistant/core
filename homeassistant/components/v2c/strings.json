@@ -20,9 +20,6 @@
   },
   "entity": {
     "binary_sensor": {
-      "charging": {
-        "name": "Charging"
-      },
       "connected": {
         "name": "Connected"
       },

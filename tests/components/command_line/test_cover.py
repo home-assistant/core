@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant import setup
 from homeassistant.components.command_line import DOMAIN
@@ -33,8 +34,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import mock_asyncio_subprocess_run
-
-from tests.common import async_fire_time_changed
 
 
 async def test_no_poll_when_cover_has_no_command_state(hass: HomeAssistant) -> None:

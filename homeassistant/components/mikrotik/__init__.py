@@ -37,7 +37,7 @@ def _call_api(data: dict[str, Any]) -> Api:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: MikrotikConfigEntry
-) -> bool:
+) -> None:
     """Set up the Mikrotik component."""
     api = await hass.async_add_executor_job(_call_api, dict(config_entry.data))
 
@@ -48,13 +48,15 @@ async def async_setup_entry(
     config_entry.runtime_data = coordinator
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, coordinator.serial_num)},
-        manufacturer=ATTR_MANUFACTURER,
-        model=coordinator.model,
-        name=coordinator.hostname,
-        sw_version=coordinator.firmware,
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, coordinator.serial_num)},
+            manufacturer=ATTR_MANUFACTURER,
+            model=coordinator.model,
+            name=coordinator.hostname,
+            sw_version=coordinator.firmware,
+        ),
     )
 
     @callback
@@ -87,16 +89,10 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: MikrotikConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-    if unload_ok:
-        await hass.async_add_executor_job(config_entry.runtime_data.api.api.close)
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
+    await hass.async_add_executor_job(config_entry.runtime_data.api.api.close)

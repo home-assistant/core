@@ -25,7 +25,7 @@ from .coordinator import (
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LidarrConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LidarrConfigEntry) -> None:
     """Set up Lidarr from a config entry."""
     host_configuration = PyArrHostConfiguration(
         api_token=entry.data[CONF_API_KEY],
@@ -50,20 +50,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: LidarrConfigEntry) -> bo
         coordinator = getattr(data, field.name)
         await coordinator.async_config_entry_first_refresh()
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        configuration_url=entry.data[CONF_URL],
-        entry_type=DeviceEntryType.SERVICE,
-        identifiers={(DOMAIN, entry.entry_id)},
-        manufacturer=DEFAULT_NAME,
-        sw_version=data.status.data,
+        device_info=dr.DeviceInfo(
+            configuration_url=entry.data[CONF_URL],
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, entry.entry_id)},
+            manufacturer=DEFAULT_NAME,
+            sw_version=data.status.data,
+        ),
     )
     entry.runtime_data = data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: LidarrConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LidarrConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

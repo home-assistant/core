@@ -39,7 +39,6 @@ BUTTON_TYPES: tuple[OpenEVSEButtonDescription, ...] = (
     ),
     OpenEVSEButtonDescription(
         key="restart_evse",
-        translation_key="restart",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda ev: ev.restart_evse(),

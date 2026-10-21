@@ -16,7 +16,7 @@ from aiounifi.models.api import ApiItem
 from aiounifi.models.client import Client
 
 from homeassistant.const import Platform
-from homeassistant.core import callback
+from homeassistant.core import async_noop, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -40,10 +40,7 @@ class UnifiEntityLoader:
     def __init__(self, hub: UnifiHub) -> None:
         """Initialize the UniFi entity loader."""
         self.hub = hub
-        self._startup_only_api_updaters = (
-            hub.api.clients_all.update,
-            hub.api.sites.update,
-        )
+        self._startup_only_api_updaters = (hub.api.clients_all.update,)
         self.wireless_clients = hub.hass.data[UNIFI_WIRELESS_CLIENTS]
 
         self._data_coordinators: dict[int, UnifiDataUpdateCoordinator[Any]] = {
@@ -76,7 +73,7 @@ class UnifiEntityLoader:
         }
         for coordinator in self._data_coordinators.values():
             self.hub.config.entry.async_on_unload(
-                coordinator.async_add_listener(lambda: None)
+                coordinator.async_add_listener(async_noop)
             )
 
         self.platforms: list[
@@ -94,12 +91,13 @@ class UnifiEntityLoader:
     async def initialize(self) -> None:
         """Initialize API data and extra client support."""
         try:
+            await self.hub.api.sites.update()
             await self.hub.api.system_information.update()
         except NOT_READY_ERRORS as err:
             raise ConfigEntryNotReady("UniFi Network application is not ready") from err
         except aiounifi.AiounifiException as err:
-            # The application answers, the account may not see system information
-            LOGGER.debug("UniFi Network answered system information with: %s", err)
+            # The application answers, the account may not see all of it
+            LOGGER.debug("UniFi Network rejected a setup request: %s", err)
 
         await asyncio.gather(
             self._refresh_data(self._startup_only_api_updaters),

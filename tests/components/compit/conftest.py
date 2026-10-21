@@ -5,13 +5,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from compit_inext_api import PARAMS, CompitParameter
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.compit.const import DOMAIN
 from homeassistant.const import CONF_EMAIL
 
 from .consts import CONFIG_INPUT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -68,6 +67,7 @@ def mock_connector():
         MagicMock(code="__aerokonfbypass", value="off"),
         MagicMock(code="__rd_alarmwent", value="no_alarm"),
         MagicMock(code="__rd_co2", value="normal"),
+        MagicMock(code="__rd_filtrwent", value="dirty"),
         MagicMock(code="__rd_pm10", value="warning"),
         MagicMock(code="__rr_wietrzenie", value="on"),
         MagicMock(code="__tempzadkomf", value=21),  # Target temperature comfort

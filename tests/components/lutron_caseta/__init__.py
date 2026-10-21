@@ -8,6 +8,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from pylutron_caseta.color_value import ColorMode as LutronColorMode, WarmCoolColorValue
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lutron_caseta import DOMAIN
 from homeassistant.components.lutron_caseta.const import (
@@ -17,8 +18,6 @@ from homeassistant.components.lutron_caseta.const import (
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -205,13 +204,15 @@ class MockBridge:
     async def set_warm_dim(
         self,
         device_id: str,
+        enabled: bool,
         value: int | None = None,
         fade_time: timedelta | None = None,
     ) -> None:
         """Mock changing the warm dim state and invoke callbacks."""
-        if device_id in self.devices and value is not None:
-            self.devices[device_id]["current_state"] = value
-            self.devices[device_id]["warm_dim"] = True
+        if device_id in self.devices:
+            self.devices[device_id]["warm_dim"] = enabled
+            if value is not None:
+                self.devices[device_id]["current_state"] = value
         self.call_subscribers(device_id)
 
     def load_devices(self):

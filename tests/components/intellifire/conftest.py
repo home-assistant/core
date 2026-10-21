@@ -10,6 +10,7 @@ from intellifire4py.model import (
     IntelliFireUserData,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.intellifire.const import (
     API_MODE_LOCAL,
@@ -28,8 +29,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture

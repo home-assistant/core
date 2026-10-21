@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from bring_api import BringNotificationType, BringRequestException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bring.const import DOMAIN
 from homeassistant.components.bring.services import (
@@ -15,8 +16,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-
-from tests.common import MockConfigEntry
 
 
 async def test_send_notification(

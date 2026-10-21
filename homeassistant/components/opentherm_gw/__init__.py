@@ -33,6 +33,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CLIMATE,
+    Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -54,7 +55,7 @@ async def options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
     async_dispatcher_send(hass, gateway.options_update_signal, entry)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Set up the OpenTherm Gateway component."""
     if DATA_OPENTHERM_GW not in hass.data:
         hass.data[DATA_OPENTHERM_GW] = {DATA_GATEWAYS: {}}
@@ -75,15 +76,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Cleanup and disconnect from gateway."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    gateway = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][entry.data[CONF_ID]]
-    await gateway.cleanup()
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    finally:
+        gateway = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][entry.data[CONF_ID]]
+        await gateway.cleanup()
 
 
 class OpenThermGatewayHub:
@@ -104,6 +104,7 @@ class OpenThermGatewayHub:
     async def cleanup(self, event=None) -> None:
         """Reset overrides on the gateway."""
         await self.gateway.set_control_setpoint(0)
+        await self.gateway.set_control_setpoint_2(0)
         await self.gateway.set_max_relative_mod("-")
         await self.gateway.disconnect()
 
@@ -119,30 +120,38 @@ class OpenThermGatewayHub:
             "Connected to OpenTherm Gateway %s at %s", self.gw_version, self.device_path
         )
         dev_reg = dr.async_get(self.hass)
-        gw_dev = dev_reg.async_get_or_create(
+        gw_dev = dev_reg.async_get_or_create_device(
             config_entry_id=self.config_entry_id,
-            identifiers={
-                (DOMAIN, f"{self.hub_id}-{OpenThermDeviceIdentifier.GATEWAY}")
-            },
-            manufacturer="Schelte Bron",
-            model="OpenTherm Gateway",
-            translation_key="gateway_device",
-            sw_version=self.gw_version,
+            device_info=dr.DeviceInfo(
+                identifiers={
+                    (DOMAIN, f"{self.hub_id}-{OpenThermDeviceIdentifier.GATEWAY}")
+                },
+                manufacturer="Schelte Bron",
+                model="OpenTherm Gateway",
+                translation_key="gateway_device",
+                sw_version=self.gw_version,
+            ),
         )
         if gw_dev.sw_version != self.gw_version:
             dev_reg.async_update_device(gw_dev.id, sw_version=self.gw_version)
 
-        boiler_device = dev_reg.async_get_or_create(
+        boiler_device = dev_reg.async_get_or_create_device(
             config_entry_id=self.config_entry_id,
-            identifiers={(DOMAIN, f"{self.hub_id}-{OpenThermDeviceIdentifier.BOILER}")},
-            translation_key="boiler_device",
+            device_info=dr.DeviceInfo(
+                identifiers={
+                    (DOMAIN, f"{self.hub_id}-{OpenThermDeviceIdentifier.BOILER}")
+                },
+                translation_key="boiler_device",
+            ),
         )
-        thermostat_device = dev_reg.async_get_or_create(
+        thermostat_device = dev_reg.async_get_or_create_device(
             config_entry_id=self.config_entry_id,
-            identifiers={
-                (DOMAIN, f"{self.hub_id}-{OpenThermDeviceIdentifier.THERMOSTAT}")
-            },
-            translation_key="thermostat_device",
+            device_info=dr.DeviceInfo(
+                identifiers={
+                    (DOMAIN, f"{self.hub_id}-{OpenThermDeviceIdentifier.THERMOSTAT}")
+                },
+                translation_key="thermostat_device",
+            ),
         )
 
         self.hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self.cleanup)

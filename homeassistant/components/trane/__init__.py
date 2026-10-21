@@ -17,7 +17,7 @@ from .types import TraneConfigEntry
 PLATFORMS = [Platform.CLIMATE, Platform.SWITCH]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TraneConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TraneConfigEntry) -> None:
     """Set up Trane Local from a config entry."""
     conn = ThermostatConnection(
         entry.data[CONF_HOST],
@@ -44,20 +44,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: TraneConfigEntry) -> boo
     entry.runtime_data = conn
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.entry_id)},
-        manufacturer=MANUFACTURER,
-        translation_key="thermostat",
-        translation_placeholders={"host": entry.data[CONF_HOST]},
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+            manufacturer=MANUFACTURER,
+            translation_key="thermostat",
+            translation_placeholders={"host": entry.data[CONF_HOST]},
+        ),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: TraneConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TraneConfigEntry) -> None:
     """Unload a Trane Local config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    await entry.runtime_data.disconnect()
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    finally:
+        await entry.runtime_data.disconnect()

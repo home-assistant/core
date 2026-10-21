@@ -1,19 +1,13 @@
 """UniFi Network abstraction."""
 
 from datetime import datetime
+import re
 from typing import TYPE_CHECKING
 
 import aiounifi
 
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import (
     DeviceEntry,
@@ -22,7 +16,7 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from ..const import ATTR_MANUFACTURER, CONF_SITE_ID, DOMAIN, PLATFORMS
+from ..const import ATTR_MANUFACTURER, CONF_SITE_ID, DOMAIN, LOGGER, PLATFORMS
 from .config import UnifiConfig
 from .connection import UnifiConnectionManager
 from .entity_helper import UnifiEntityHelper
@@ -31,6 +25,9 @@ from .websocket import UnifiWebsocket
 
 if TYPE_CHECKING:
     from .. import UnifiConfigEntry
+
+OBJECT_ID = re.compile(r"[0-9a-f]{24}")
+UUID = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
 
 
 class UnifiHub:
@@ -104,16 +101,47 @@ class UnifiHub:
     async def initialize(self) -> None:
         """Set up a UniFi Network instance."""
         await self.entity_loader.initialize()
-        self._entity_helper.initialize()
 
-        assert self.config.entry.unique_id is not None
-        if (site := self.api.sites.get(self.config.entry.unique_id)) is None:
-            raise ConfigEntryNotReady("UniFi site information is not available")
-        self.is_admin = site.role == "admin"
+        unique_id = self.config.entry.unique_id
+        assert unique_id is not None
+        if unique_id not in self.api.sites:
+            unique_id = self._async_update_site_unique_id(unique_id)
+        self.is_admin = self.api.sites[unique_id].role == "admin"
+
+        # Only start the heartbeat once setup can no longer fail
+        self._entity_helper.initialize()
 
         self.config.entry.async_on_unload(
             self.config.entry.add_update_listener(self.async_config_entry_updated)
         )
+
+    @callback
+    def _async_update_site_unique_id(self, old_id: str) -> str:
+        """Move the entry from the ObjectId to the UUID UniFi Network 11 gives sites.
+
+        The site name is kept and is unique per controller.
+        """
+        if not OBJECT_ID.fullmatch(old_id):
+            return old_id
+        site_ids = {site.name: site.site_id for site in self.api.sites.values()}
+        new_id = site_ids.get(self.site)
+        if new_id is None or not UUID.fullmatch(new_id):
+            return old_id
+        if self.hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, new_id):
+            return old_id
+
+        LOGGER.info("UniFi site %s changed ID from %s to %s", self.site, old_id, new_id)
+        device_registry = dr.async_get(self.hass)
+        for domain in (DOMAIN, SWITCH_DOMAIN):
+            device = device_registry.async_get_device_by_identifier(
+                (domain, old_id), self.config.entry.entry_id
+            )
+            if device:
+                device_registry.async_update_device(
+                    device.id, new_identifiers={(domain, new_id)}
+                )
+        self.hass.config_entries.async_update_entry(self.config.entry, unique_id=new_id)
+        return new_id
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -137,41 +165,19 @@ class UnifiHub:
     def async_update_device_registry(self) -> DeviceEntry:
         """Update device registry."""
         device_registry = dr.async_get(self.hass)
-        return device_registry.async_get_or_create(
-            config_entry_id=self.config.entry.entry_id, **self.device_info
+        return device_registry.async_get_or_create_device(
+            config_entry_id=self.config.entry.entry_id, device_info=self.device_info
         )
 
     @staticmethod
     async def async_config_entry_updated(
         hass: HomeAssistant, config_entry: UnifiConfigEntry
     ) -> None:
-        """Handle signals of config entry being updated.
+        """Apply updated options to the hub.
 
-        If config entry is updated due to reauth flow
-        the entry might already have been reset and thus is not available.
+        Config flows reload the entry after they change its data.
         """
         hub = config_entry.runtime_data
-        check_keys = {
-            CONF_HOST: "host",
-            CONF_PORT: "port",
-            CONF_USERNAME: "username",
-            CONF_PASSWORD: "password",
-            CONF_SITE_ID: "site",
-            CONF_VERIFY_SSL: "ssl_context",
-        }
-        for key, value in check_keys.items():
-            if key == CONF_VERIFY_SSL:
-                # ssl_context is either False or a SSLContext
-                # object, so we need to compare it differently
-                if config_entry.data[CONF_VERIFY_SSL] != bool(
-                    getattr(hub.config, value)
-                ):
-                    hass.config_entries.async_schedule_reload(config_entry.entry_id)
-                    return
-            if config_entry.data[key] != getattr(hub.config, value):
-                hass.config_entries.async_schedule_reload(config_entry.entry_id)
-                return
-
         hub.config = UnifiConfig.from_config_entry(config_entry)
         async_dispatcher_send(hass, hub.signal_options_update)
 

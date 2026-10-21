@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from munch import Munch
 from packaging.version import Version
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.plugwise.const import DOMAIN
 from homeassistant.const import (
@@ -18,8 +19,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_fixture
 
 
 def build_smile(**attrs):
