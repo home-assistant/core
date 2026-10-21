@@ -177,33 +177,37 @@ async def test_create_auth_password_unusable_until_linked(
     await auth_provider.async_validate_login("test-user2", "test-pass")
 
 
-async def test_create_auth_unlinks_when_the_password_isnt_added(
+async def test_create_auth_unlinks_when_the_password_isnt_saved(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     auth_provider: prov_ha.HassAuthProvider,
 ) -> None:
-    """Test credentials linked for a password that can't be added are removed."""
+    """Test a password that can't be saved leaves nothing behind, so a retry works."""
     client = await hass_ws_client(hass)
     user = MockUser().add_to_hass(hass)
+    create = {
+        "type": "config/auth_provider/homeassistant/create",
+        "user_id": user.id,
+        "username": "test-user2",
+        "password": "test-pass",
+    }
 
+    # Every save fails, also the one that would remove the password again.
     with patch.object(
-        auth_provider, "async_add_hashed_auth", side_effect=OSError("Disk full")
+        prov_ha.Data, "async_save", side_effect=PermissionError("Storage denied")
     ):
-        await client.send_json(
-            {
-                "id": 5,
-                "type": "config/auth_provider/homeassistant/create",
-                "user_id": user.id,
-                "username": "test-user2",
-                "password": "test-pass",
-            }
-        )
+        await client.send_json({"id": 5, **create})
         result = await client.receive_json()
 
     assert not result["success"], result
     assert user.credentials == []
     with pytest.raises(prov_ha.InvalidAuth):
         await auth_provider.async_validate_login("test-user2", "test-pass")
+
+    await client.send_json({"id": 6, **create})
+    result = await client.receive_json()
+    assert result["success"], result
+    await auth_provider.async_validate_login("test-user2", "test-pass")
 
 
 async def test_create_auth_concurrent(

@@ -339,7 +339,12 @@ class HassAuthProvider(AuthProvider):
             assert self.data is not None
 
         self.data.add_hashed_auth(username, hashed_password)
-        await self.data.async_save()
+        try:
+            await self.data.async_save()
+        except BaseException:
+            # Not kept either, so removing it again doesn't depend on saving.
+            self.data.async_remove_auth(username)
+            raise
 
     async def async_remove_auth(self, username: str) -> None:
         """Call remove_auth on data."""
