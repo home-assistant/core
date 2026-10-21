@@ -16,6 +16,10 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 _LOGGER = logging.getLogger(__name__)
 
+_TOKEN_RETRY_DELAY = 60
+# Leaves room for the device request in the coordinator's 10 second update.
+_TOKEN_REQUEST_TIMEOUT = 5
+
 
 def _parse_token_response(payload: Any) -> dict[str, Any]:
     """Return the token of a successful token response, or raise."""
@@ -121,6 +125,9 @@ class UACAuth(YoLinkAuthMgr):
                 # A cached token outlives a transient failure of the token endpoint.
                 if cached is None or time.time() >= cached["expires_at"]:
                     raise
+                cached["refresh_at"] = min(
+                    time.time() + _TOKEN_RETRY_DELAY, cached["expires_at"]
+                )
                 _LOGGER.debug(
                     "UAC token refresh failed, keeping the cached token: %s",
                     err.message,
@@ -145,7 +152,7 @@ class UACAuth(YoLinkAuthMgr):
                     "client_id": self._client_id,
                     "client_secret": self._client_secret,
                 },
-                timeout=ClientTimeout(total=10),
+                timeout=ClientTimeout(total=_TOKEN_REQUEST_TIMEOUT),
             ) as resp:
                 if resp.status >= HTTPStatus.BAD_REQUEST:
                     try:

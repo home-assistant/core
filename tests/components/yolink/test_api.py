@@ -211,10 +211,20 @@ async def test_uac_token_request_is_single_flight(
     assert aioclient_mock.call_count == 1
 
 
+@pytest.mark.parametrize(
+    "failure",
+    [
+        pytest.param(
+            {"status": 500, "text": "<html>Bad gateway</html>"}, id="server_error"
+        ),
+        pytest.param({"exc": TimeoutError()}, id="timeout"),
+    ],
+)
 async def test_uac_failed_refresh_keeps_cached_token(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     freezer: FrozenDateTimeFactory,
+    failure: dict[str, Any],
 ) -> None:
     """Test a failing refresh keeps serving the cached token until it expires."""
     aioclient_mock.post(
@@ -225,14 +235,18 @@ async def test_uac_failed_refresh_keeps_cached_token(
     assert await auth.check_and_refresh_token() == "token-1"
 
     aioclient_mock.clear_requests()
-    aioclient_mock.post(OAUTH2_TOKEN, status=500, text="<html>Bad gateway</html>")
+    aioclient_mock.post(OAUTH2_TOKEN, **failure)
 
     freezer.tick(3601)
     assert await auth.check_and_refresh_token() == "token-1"
     assert auth.access_token() == "token-1"
     assert aioclient_mock.call_count == 1
 
-    freezer.tick(3598)
+    # Callers right after a failed refresh use the cached token without retrying.
+    assert await auth.check_and_refresh_token() == "token-1"
+    assert aioclient_mock.call_count == 1
+
+    freezer.tick(60)
     assert await auth.check_and_refresh_token() == "token-1"
     assert aioclient_mock.call_count == 2
 
@@ -241,6 +255,7 @@ async def test_uac_failed_refresh_keeps_cached_token(
         OAUTH2_TOKEN, json={"access_token": "token-2", "expires_in": 7200}
     )
 
+    freezer.tick(60)
     assert await auth.check_and_refresh_token() == "token-2"
     assert auth.access_token() == "token-2"
 
