@@ -81,7 +81,7 @@
       'last_discovery': '2026-09-30T12:06:00+00:00',
       'last_exception': None,
       'last_update_success': True,
-      'last_user_connected': '2026-09-30T12:06:00+00:00',
+      'last_wake_up': '2026-09-30T12:06:00+00:00',
       'total_devices': 2,
     }),
     'installations': dict({

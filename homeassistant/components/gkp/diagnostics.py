@@ -10,6 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import GkpConfigEntry
+from .coordinator import GkpDeviceCoordinator
 
 TO_REDACT = ("refresh_token", "id_token", "profile_info", "unique_id")
 
@@ -19,6 +20,16 @@ def _isoformat(timestamp: float | None) -> str | None:
     if timestamp is None:
         return None
     return dt_util.utc_from_timestamp(timestamp).isoformat()
+
+
+def _active_fast_polling_until(
+    coordinator: GkpDeviceCoordinator, now: float
+) -> str | None:
+    """Return when fast polling ends, if it is active."""
+    until = coordinator.fast_polling_until
+    if until is None or until <= now:
+        return None
+    return _isoformat(until)
 
 
 async def async_get_config_entry_diagnostics(
@@ -42,7 +53,7 @@ async def async_get_config_entry_diagnostics(
                     else None
                 ),
                 "last_discovery": _isoformat(hub_coordinator.last_discovery),
-                "last_user_connected": _isoformat(hub_coordinator.last_user_connected),
+                "last_wake_up": _isoformat(hub_coordinator.last_wake_up),
                 "total_devices": len(hub_coordinator.data),
             },
             "installations": {
@@ -53,12 +64,7 @@ async def async_get_config_entry_diagnostics(
                 device_id: {
                     "thermostat": dataclasses.asdict(coordinator.data.thermostat),
                     "last_update_success": coordinator.last_update_success,
-                    "fast_polling_until": _isoformat(
-                        coordinator.fast_polling_until
-                        if coordinator.fast_polling_until is not None
-                        and coordinator.fast_polling_until > now
-                        else None
-                    ),
+                    "fast_polling_until": _active_fast_polling_until(coordinator, now),
                 }
                 for device_id, coordinator in device_coordinators.items()
             },

@@ -61,8 +61,8 @@ class GkpHubCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
         self.client = client
         self.installations: dict[str, Installation] = {}
         self.last_discovery = 0.0
-        self.first_user_connected: datetime | None = None
-        self.last_user_connected: float | None = None
+        self.first_wake_up: datetime | None = None
+        self.last_wake_up: float | None = None
 
     @override
     async def _async_setup(self) -> None:
@@ -87,8 +87,8 @@ class GkpHubCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
                 _LOGGER.warning("Periodic discovery failed: %s", err)
 
         if (
-            self.last_user_connected is None
-            or now - self.last_user_connected >= USER_CONNECTED_INTERVAL.total_seconds()
+            self.last_wake_up is None
+            or now - self.last_wake_up >= USER_CONNECTED_INTERVAL.total_seconds()
         ):
             await self._async_wake_up_devices(now)
             # Read the state the devices report in answer to the wake up
@@ -134,9 +134,9 @@ class GkpHubCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
                     err,
                 )
 
-        if self.first_user_connected is None:
-            self.first_user_connected = dt_util.utcnow()
-        self.last_user_connected = now
+        if self.first_wake_up is None:
+            self.first_wake_up = dt_util.utcnow()
+        self.last_wake_up = now
 
     async def _async_fetch_thermostats(self) -> dict[str, Thermostat]:
         """Fetch all thermostats, keeping the last state of failing ones."""

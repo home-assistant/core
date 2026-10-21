@@ -41,5 +41,5 @@ class GkpEntity(CoordinatorEntity[GkpDeviceCoordinator]):
     def available(self) -> bool:
         """Return True if the device reported recently."""
         return super().available and self.thermostat.is_online(
-            dt_util.utcnow(), self.coordinator.hub_coordinator.first_user_connected
+            dt_util.utcnow(), self.coordinator.hub_coordinator.first_wake_up
         )

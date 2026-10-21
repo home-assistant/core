@@ -194,6 +194,7 @@ class GkpClimate(GkpEntity, ClimateEntity):
                 },
             )
 
+        # Round up so the boost lasts at least the requested duration
         duration_minutes, remainder = divmod(duration, timedelta(minutes=1))
         if remainder:
             duration_minutes += 1
