@@ -92,7 +92,7 @@ async def test_turn_on_without_parameters(
     """A bare turn-on must not overwrite retained settings with cached values."""
     await setup_integration(hass, mock_config_entry)
 
-    device = mock_config_entry.runtime_data.data[1111]
+    device = mock_config_entry.runtime_data.data["1000-2"]
     device.update_state(False, brightness=brightness, color_temp=device_mode)
     with (
         patch.object(device, "turn_on") as turn_on,
