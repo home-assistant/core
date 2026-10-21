@@ -4,7 +4,7 @@ from contextlib import ExitStack
 from datetime import timedelta
 import threading
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -19,7 +19,9 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.vicare.const import DEFAULT_CACHE_DURATION
-from homeassistant.const import Platform
+from homeassistant.components.vicare.sensor import _build_entities
+from homeassistant.components.vicare.types import ViCareDevice
+from homeassistant.const import Platform, UnitOfRatio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
@@ -65,6 +67,36 @@ async def test_all_entities(
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+def test_ash_level_sensor_is_created_when_supported() -> None:
+    """Test the ash-level sensor is created for pellet boilers that support it."""
+
+    class MockPelletsBoiler:
+        def getAshLevel(self) -> float:
+            return 18.2
+
+    device_config = MagicMock()
+    device_config.getConfig.return_value.serial = "gateway-serial"
+    device_config.getId.return_value = "0"
+    device_config.getModel.return_value = "Vitoligno_300-C"
+    device = ViCareDevice(
+        config=device_config,
+        api=MockPelletsBoiler(),
+        serial="boiler-serial",
+        coordinator=MagicMock(),
+    )
+
+    entities = _build_entities([device])
+    ash_level_sensor = next(
+        entity for entity in entities if entity.entity_description.key == "ash_level"
+    )
+
+    assert (
+        ash_level_sensor.entity_description.native_unit_of_measurement
+        == UnitOfRatio.PERCENTAGE
+    )
+    assert ash_level_sensor.entity_description.value_getter(device.api) == 18.2
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
