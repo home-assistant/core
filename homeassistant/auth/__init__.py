@@ -36,6 +36,7 @@ from .const import (
     LOGIN_FLOW_EXPIRATION,
     MAX_LOGIN_FLOWS,
     MAX_LOGIN_FLOWS_PER_SOURCE,
+    MFA_SESSION_EXPIRATION,
     REFRESH_TOKEN_EXPIRATION,
 )
 from .mfa_modules import MultiFactorAuthModule, auth_mfa_module_from_config
@@ -158,7 +159,13 @@ def _async_login_flow_evictable(flow: FlowHandler[Any, Any, Any]) -> bool:
 @callback
 def _async_login_flow_expired(flow: LoginFlow[Any], now: float) -> bool:
     """Return if a login flow is too old to continue."""
-    return now - flow.created_at > LOGIN_FLOW_EXPIRATION.total_seconds()
+    # A flow waiting for MFA can't finish after the shorter MFA window.
+    expiration = (
+        MFA_SESSION_EXPIRATION
+        if isinstance(flow, MfaLoginFlow) and flow.user is not None
+        else LOGIN_FLOW_EXPIRATION
+    )
+    return now - flow.created_at > expiration.total_seconds()
 
 
 class AuthManagerFlowManager(

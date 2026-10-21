@@ -1172,6 +1172,13 @@ async def test_login_flow_limit_keeps_mfa_flows(
     with pytest.raises(TooManyRequestsError):
         await manager.login_flow.async_init(("insecure_example", None))
 
+    # Once their MFA window is over they can't finish, so they make room.
+    freezer.tick(MFA_SESSION_EXPIRATION)
+    step = await manager.login_flow.async_init(("insecure_example", None))
+    assert [flow["flow_id"] for flow in manager.login_flow.async_progress()] == [
+        step["flow_id"]
+    ]
+
 
 @patch("homeassistant.auth.MAX_LOGIN_FLOWS", 3)
 @patch("homeassistant.auth.MAX_LOGIN_FLOWS_PER_SOURCE", 2)
