@@ -18,7 +18,7 @@ CREDENTIALS = Credentials(UUID, "ab" * 32, "cd" * 32)
 def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Add an entry containing synthetic pairing data."""
     entry = MockConfigEntry(
-        domain="terrestream_local",
+        domain="terrestream",
         unique_id=UUID,
         title="Terrestream",
         data={
@@ -38,16 +38,12 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
 @pytest.fixture
 def mock_client() -> Generator[MagicMock]:
     """Mock the published client at the HA boundary."""
-    with patch(
-        "homeassistant.components.terrestream_local.Client", autospec=True
-    ) as factory:
+    with patch("homeassistant.components.terrestream.Client", autospec=True) as factory:
         client = factory.return_value
         client.credentials = CREDENTIALS
         client.identity = AsyncMock(return_value={"paired": True})
         client.confirm = AsyncMock()
         client.command = AsyncMock(return_value={"ok": True})
-        client.measurement_remaining.return_value = 60.0
-        client.measurement_available.return_value = True
         values = {
             "co2": 500,
             "pm1": 1,
@@ -72,5 +68,8 @@ def mock_client() -> Generator[MagicMock]:
                     for key, value in values.items()
                 },
             }
+        )
+        client.measurement_available.side_effect = lambda key: (
+            client.refresh.return_value["measurements"][key]["available"]
         )
         yield client

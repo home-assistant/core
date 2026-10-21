@@ -7,6 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from terrestream_local.models import Snapshot
 
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -16,7 +17,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
     "target",
     [
         pytest.param(
-            "homeassistant.components.terrestream_local.Client.return_value.refresh",
+            "homeassistant.components.terrestream.Client.return_value.refresh",
             id="first-refresh",
         ),
         pytest.param(
@@ -59,7 +60,7 @@ async def test_unload_waits_for_in_flight_refresh(
     mock_client: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Finish polling and clock synchronization before releasing the lease."""
+    """Stop an active poll before releasing the controller lease."""
     freezer.move_to("2026-01-01T00:00:00.500000+00:00")
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -68,12 +69,21 @@ async def test_unload_waits_for_in_flight_refresh(
     finish_refresh = asyncio.Event()
     shutdown_started = asyncio.Event()
     snapshot: Snapshot = mock_client.refresh.return_value
+    events: list[str] = []
 
     async def blocked_refresh() -> Snapshot:
         refresh_started.set()
-        await finish_refresh.wait()
+        try:
+            await finish_refresh.wait()
+        finally:
+            events.append("refresh stopped")
         return snapshot
 
+    async def command(name: str) -> dict[str, bool]:
+        events.append(name)
+        return {"ok": True}
+
+    mock_client.command.side_effect = command
     coordinator = config_entry.runtime_data
     shutdown = coordinator.async_shutdown
 
@@ -98,7 +108,24 @@ async def test_unload_waits_for_in_flight_refresh(
             assert await unload_task
             await hass.async_block_till_done()
 
-    assert mock_client.command.await_args_list == [
-        call("time", epoch=1767225660, uncertainty_ms=1000),
-        call("release"),
-    ]
+    assert events == ["refresh stopped", "release"]
+    mock_client.command.assert_awaited_once_with("release")
+
+
+async def test_failed_unload_keeps_controller_lease(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Keep the controller while its platform remains loaded."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
+        return_value=False,
+    ):
+        assert not await hass.config_entries.async_unload(config_entry.entry_id)
+    mock_client.command.assert_not_awaited()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    mock_client.command.assert_awaited_once_with("release")

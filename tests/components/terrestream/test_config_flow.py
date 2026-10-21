@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry
 async def test_user_form(hass: HomeAssistant) -> None:
     """Show a pairing form without contacting the sensor."""
     result = await hass.config_entries.flow.async_init(
-        "terrestream_local", context={"source": "user"}
+        "terrestream", context={"source": "user"}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -27,16 +27,16 @@ async def test_pairing(hass: HomeAssistant) -> None:
     """Persist authenticated identity and preserve leading zeros."""
     with (
         patch(
-            "homeassistant.components.terrestream_local.config_flow.pair_device",
+            "homeassistant.components.terrestream.config_flow.pair_device",
             return_value=(CREDENTIALS, AsyncMock()),
         ) as pair,
         patch(
-            "homeassistant.components.terrestream_local.async_setup_entry",
+            "homeassistant.components.terrestream.async_setup_entry",
             return_value=True,
         ),
     ):
         result = await hass.config_entries.flow.async_init(
-            "terrestream_local",
+            "terrestream",
             context={"source": "user"},
             data={"host": "sensor.local", "code": "00123456"},
         )
@@ -60,11 +60,11 @@ async def test_pairing_error(
 ) -> None:
     """Keep pairing failures recoverable in the form."""
     with patch(
-        "homeassistant.components.terrestream_local.config_flow.pair_device",
+        "homeassistant.components.terrestream.config_flow.pair_device",
         side_effect=error,
     ):
         result = await hass.config_entries.flow.async_init(
-            "terrestream_local",
+            "terrestream",
             context={"source": "user"},
             data={"host": "sensor.local", "code": "00123456"},
         )
@@ -73,11 +73,11 @@ async def test_pairing_error(
 
     with (
         patch(
-            "homeassistant.components.terrestream_local.config_flow.pair_device",
+            "homeassistant.components.terrestream.config_flow.pair_device",
             return_value=(CREDENTIALS, AsyncMock()),
         ),
         patch(
-            "homeassistant.components.terrestream_local.async_setup_entry",
+            "homeassistant.components.terrestream.async_setup_entry",
             return_value=True,
         ),
     ):
@@ -95,11 +95,11 @@ async def test_pairing_error(
 async def test_duplicate(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Do not create two entries for the same authenticated UUID."""
     with patch(
-        "homeassistant.components.terrestream_local.config_flow.pair_device",
+        "homeassistant.components.terrestream.config_flow.pair_device",
         return_value=(CREDENTIALS, AsyncMock()),
     ):
         result = await hass.config_entries.flow.async_init(
-            "terrestream_local",
+            "terrestream",
             context={"source": "user"},
             data={"host": "sensor.local", "code": "00123456"},
         )

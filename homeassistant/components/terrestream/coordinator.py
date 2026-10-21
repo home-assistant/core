@@ -1,10 +1,7 @@
 """Retrieve local measurements and maintain the controller lease."""
 
-from collections.abc import Mapping
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
-import time
 from typing import override
 
 from terrestream_local import Client
@@ -22,20 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 type TerrestreamConfigEntry = ConfigEntry[TerrestreamCoordinator]
 
 
-@dataclass(frozen=True, slots=True)
-class TerrestreamData:
-    """A single published snapshot and its acquisition deadlines."""
-
-    snapshot: Snapshot
-    deadlines: Mapping[str, float]
-
-    def measurement_remaining(self, key: str) -> float:
-        """Count elapsed time against this snapshot's original lifetime."""
-        return max(0.0, self.deadlines.get(key, 0.0) - time.monotonic())
-
-
-class TerrestreamCoordinator(DataUpdateCoordinator[TerrestreamData]):
-    """Poll the sensor without extending acquisition freshness."""
+class TerrestreamCoordinator(DataUpdateCoordinator[Snapshot]):
+    """Poll the sensor for its latest measurements."""
 
     def __init__(
         self, hass: HomeAssistant, entry: TerrestreamConfigEntry, client: Client
@@ -46,29 +31,14 @@ class TerrestreamCoordinator(DataUpdateCoordinator[TerrestreamData]):
             _LOGGER,
             name=DOMAIN,
             config_entry=entry,
-            update_interval=timedelta(seconds=15),
+            update_interval=timedelta(seconds=30),
         )
         self.client = client
-        self._next_clock = 0.0
 
     @override
-    async def _async_update_data(self) -> TerrestreamData:
+    async def _async_update_data(self) -> Snapshot:
         try:
             snapshot = await self.client.refresh()
-            # Commands may refresh the client's mutable snapshot while awaiting I/O.
-            now = time.monotonic()
-            data = TerrestreamData(
-                snapshot=snapshot,
-                deadlines={
-                    key: now + self.client.measurement_remaining(key)
-                    for key in snapshot["measurements"]
-                },
-            )
-            if time.monotonic() >= self._next_clock:
-                await self.client.command(
-                    "time", epoch=int(time.time()), uncertainty_ms=1000
-                )
-                self._next_clock = time.monotonic() + 60
         except AuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="pairing_revoked"
@@ -77,7 +47,16 @@ class TerrestreamCoordinator(DataUpdateCoordinator[TerrestreamData]):
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="cannot_connect"
             ) from err
-        return data
+        return {
+            **snapshot,
+            "measurements": {
+                key: {
+                    **measurement,
+                    "available": self.client.measurement_available(key),
+                }
+                for key, measurement in snapshot["measurements"].items()
+            },
+        }
 
     async def async_release(self) -> None:
         """Release the lease after stopping polling; offline leases expire."""

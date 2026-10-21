@@ -1,3 +1,3 @@
 """Constants for Terrestream."""
 
-DOMAIN = "terrestream_local"
+DOMAIN = "terrestream"

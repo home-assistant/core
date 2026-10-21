@@ -6,13 +6,11 @@ from terrestream_local.errors import AuthenticationError, ClientError
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 from .coordinator import TerrestreamConfigEntry, TerrestreamCoordinator
 
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [Platform.SENSOR]
 
 
@@ -37,12 +35,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TerrestreamConfigEntry) 
         ) from err
     coordinator = TerrestreamCoordinator(hass, entry, client)
     entry.runtime_data = coordinator
-    try:
-        await coordinator.async_config_entry_first_refresh()
-        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    except BaseException:
-        await coordinator.async_release()
-        raise
+    entry.async_on_unload(coordinator.async_release)
+    await coordinator.async_config_entry_first_refresh()
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def release_on_stop(event: Event) -> None:
         await coordinator.async_release()
@@ -57,7 +52,4 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: TerrestreamConfigEntry
 ) -> bool:
     """Unload entities and release controller ownership."""
-    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        return False
-    await entry.runtime_data.async_release()
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

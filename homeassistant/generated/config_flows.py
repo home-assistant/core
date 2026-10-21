@@ -802,7 +802,7 @@ FLOWS = {
         "teleinfo",
         "tellduslive",
         "teltonika",
-        "terrestream_local",
+        "terrestream",
         "tesla_fleet",
         "tesla_wall_connector",
         "teslemetry",
