@@ -493,7 +493,7 @@ aiousbwatcher==1.1.2
 aiovitesy==1.4.4
 
 # homeassistant.components.vlc_telnet
-aiovlc==0.5.1
+aiovlc==0.8.0
 
 # homeassistant.components.vodafone_station
 aiovodafone==3.3.5
