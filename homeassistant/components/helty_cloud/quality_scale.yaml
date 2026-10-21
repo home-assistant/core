@@ -68,9 +68,7 @@ rules:
   entity-category:
     status: exempt
     comment: The fan is the primary entity of the device.
-  entity-device-class:
-    status: exempt
-    comment: The fan platform has no device classes.
+  entity-device-class: done
   entity-disabled-by-default:
     status: exempt
     comment: The only entity is the primary feature of the device.
