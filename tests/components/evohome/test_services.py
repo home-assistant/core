@@ -239,6 +239,7 @@ async def test_set_zone_override_advance_schedule_fetch_failed(
 
     zone_entity = entities[zone_id]
     assert isinstance(zone_entity, EvoZone)
+
     zone_entity._schedule = None  # so the schedule must be fetched
     zone_entity._setpoints = {}
 
