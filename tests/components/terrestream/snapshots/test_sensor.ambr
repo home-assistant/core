@@ -63,7 +63,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'co2',
+    'translation_key': None,
     'unique_id': '00000000-0000-4000-8000-000000000001_co2',
     'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
@@ -172,7 +172,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'humidity',
+    'translation_key': None,
     'unique_id': '00000000-0000-4000-8000-000000000001_humidity',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
@@ -227,7 +227,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'illuminance',
+    'translation_key': None,
     'unique_id': '00000000-0000-4000-8000-000000000001_illuminance',
     'unit_of_measurement': 'lx',
   })
@@ -335,7 +335,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pm1',
+    'translation_key': None,
     'unique_id': '00000000-0000-4000-8000-000000000001_pm1',
     'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
@@ -390,7 +390,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pm10',
+    'translation_key': None,
     'unique_id': '00000000-0000-4000-8000-000000000001_pm10',
     'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
@@ -445,7 +445,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pm25',
+    'translation_key': None,
     'unique_id': '00000000-0000-4000-8000-000000000001_pm25',
     'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
@@ -616,7 +616,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'temperature',
+    'translation_key': None,
     'unique_id': '00000000-0000-4000-8000-000000000001_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })

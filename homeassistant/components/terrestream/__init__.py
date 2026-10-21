@@ -14,7 +14,7 @@ from .coordinator import TerrestreamConfigEntry, TerrestreamCoordinator
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TerrestreamConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TerrestreamConfigEntry) -> None:
     """Authenticate the sensor before loading entities."""
     client = Client(
         async_get_clientsession(hass),
@@ -45,11 +45,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TerrestreamConfigEntry) 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, release_on_stop)
     )
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: TerrestreamConfigEntry
-) -> bool:
+) -> None:
     """Unload entities and release controller ownership."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

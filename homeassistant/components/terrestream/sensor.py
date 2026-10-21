@@ -28,19 +28,16 @@ PARALLEL_UPDATES = 0
 SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="co2",
-        translation_key="co2",
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
     ),
     SensorEntityDescription(
         key="pm1",
-        translation_key="pm1",
         device_class=SensorDeviceClass.PM1,
         native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),
     SensorEntityDescription(
         key="pm25",
-        translation_key="pm25",
         device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),
@@ -52,19 +49,16 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="pm10",
-        translation_key="pm10",
         device_class=SensorDeviceClass.PM10,
         native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),
     SensorEntityDescription(
         key="temperature",
-        translation_key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     SensorEntityDescription(
         key="humidity",
-        translation_key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     ),
@@ -76,7 +70,6 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="illuminance",
-        translation_key="illuminance",
         device_class=SensorDeviceClass.ILLUMINANCE,
         native_unit_of_measurement=LIGHT_LUX,
     ),

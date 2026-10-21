@@ -24,38 +24,14 @@
   },
   "entity": {
     "sensor": {
-      "co2": {
-        "name": "Carbon dioxide"
-      },
       "computed_epa_aqi": {
         "name": "Computed EPA particulate AQI"
-      },
-      "humidity": {
-        "name": "Humidity"
-      },
-      "illuminance": {
-        "name": "Illuminance"
       },
       "nox_index": {
         "name": "NOx index"
       },
-      "pm1": {
-        "name": "PM1"
-      },
-      "pm10": {
-        "name": "PM10"
-      },
-      "pm25": {
-        "name": "PM2.5"
-      },
-      "pm4": {
-        "name": "PM4"
-      },
       "pressure": {
         "name": "Pressure"
-      },
-      "temperature": {
-        "name": "Temperature"
       },
       "voc_index": {
         "name": "VOC index"
