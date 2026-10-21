@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Callable, Coroutine, Generator
 from datetime import timedelta
+import json
 from types import MappingProxyType
 from typing import Any, Protocol
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -15,6 +16,7 @@ from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.unifi import STORAGE_KEY, STORAGE_VERSION
 from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN
+from homeassistant.components.unifi.hub.connection import RETRY_DELAYS, RETRY_JITTER
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -27,19 +29,22 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
-# Reconnect attempts wait 15, 30 and then 60 seconds, each spread by 20 %
-RETRY_DELAYS = (15, 30, 60)
-
 
 def retry_window(attempt: int) -> tuple[float, float]:
     """Return the earliest and latest delay of a retry, jitter included."""
     delay = RETRY_DELAYS[min(attempt, len(RETRY_DELAYS) - 1)]
-    return delay * 0.8, delay * 1.2
+    return delay * (1 - RETRY_JITTER), delay * (1 + RETRY_JITTER)
 
 
 # Fires any pending retry, whatever the attempt number and jitter
 MAX_RETRY_DELAY = retry_window(len(RETRY_DELAYS))[1]
 FIRST_RETRY_DELAY = retry_window(0)[1]
+
+
+def invalid_json() -> json.JSONDecodeError:
+    """Return what aiounifi raises for a body that is not JSON."""
+    return json.JSONDecodeError("Expecting value", "", 0)
+
 
 DEFAULT_CONFIG_ENTRY_ID = "1"
 DEFAULT_HOST = "1.2.3.4"

@@ -18,7 +18,7 @@ from aiounifi.models.client import Client
 
 from homeassistant.const import Platform
 from homeassistant.core import async_noop, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -27,7 +27,7 @@ from homeassistant.util import dt as dt_util
 from ..const import CLIENT_RESTORE_MAX_AGE, LOGGER, UNIFI_WIRELESS_CLIENTS
 from ..coordinator import UPDATE_TIMEOUT, UnifiDataUpdateCoordinator
 from ..entity import UnifiEntity, UnifiEntityDescription
-from .connection import NOT_READY_ERRORS, REQUEST_TIMEOUT
+from .connection import LOGIN_ERRORS, NOT_READY_ERRORS, REQUEST_TIMEOUT
 
 if TYPE_CHECKING:
     from .hub import UnifiHub
@@ -110,11 +110,13 @@ class UnifiEntityLoader:
         try:
             async with asyncio.timeout(REQUEST_TIMEOUT):
                 await self.hub.api.system_information.update()
-        except NOT_READY_ERRORS as err:
+        except (*NOT_READY_ERRORS, aiounifi.AuthenticationRateLimitError) as err:
             raise ConfigEntryNotReady("UniFi Network application is not ready") from err
+        except LOGIN_ERRORS as err:
+            raise ConfigEntryAuthFailed from err
         except aiounifi.AiounifiException as err:
-            # The application answers, the account may not see system information
-            LOGGER.debug("UniFi Network rejected system information: %s", err)
+            # The application answers, other data can still be loaded
+            LOGGER.debug("UniFi Network answered system information with: %r", err)
 
         await asyncio.gather(
             self._refresh_data(self._startup_only_api_updaters),
