@@ -1287,6 +1287,16 @@ TARGET_FIELDS: VolDictType = {
     probatio.Optional(CONF_EXCLUDE): probatio.Schema(TARGET_ID_FIELDS),
 }
 
+ENTITY_SERVICE_EXCLUDE_SCHEMA = probatio.Schema(
+    {
+        probatio.Optional(ATTR_ENTITY_ID): entity_ids,
+        probatio.Optional(ATTR_DEVICE_ID): probatio.All(ensure_list, [str]),
+        probatio.Optional(ATTR_AREA_ID): probatio.All(ensure_list, [str]),
+        probatio.Optional(ATTR_FLOOR_ID): probatio.All(ensure_list, [str]),
+        probatio.Optional(ATTR_LABEL_ID): probatio.All(ensure_list, [str]),
+    }
+)
+
 ENTITY_SERVICE_FIELDS: VolDictType = {
     probatio.Optional(ATTR_ENTITY_ID): comp_entity_ids,
     probatio.Optional(ATTR_DEVICE_ID): probatio.Any(
@@ -1305,15 +1315,7 @@ ENTITY_SERVICE_FIELDS: VolDictType = {
         ENTITY_MATCH_NONE,
         probatio.All(ensure_list, [str]),
     ),
-    probatio.Optional(CONF_EXCLUDE): probatio.Schema(
-        {
-            probatio.Optional(ATTR_ENTITY_ID): entity_ids,
-            probatio.Optional(ATTR_DEVICE_ID): probatio.All(ensure_list, [str]),
-            probatio.Optional(ATTR_AREA_ID): probatio.All(ensure_list, [str]),
-            probatio.Optional(ATTR_FLOOR_ID): probatio.All(ensure_list, [str]),
-            probatio.Optional(ATTR_LABEL_ID): probatio.All(ensure_list, [str]),
-        }
-    ),
+    probatio.Optional(CONF_EXCLUDE): ENTITY_SERVICE_EXCLUDE_SCHEMA,
 }
 
 TARGET_SERVICE_FIELDS: VolDictType = {

@@ -319,9 +319,7 @@ def async_prepare_call_from_config(
                 f"Template rendered invalid entity IDs: {target[CONF_ENTITY_ID]}"
             ) from ex
 
-        if isinstance(exclude := target.get(CONF_EXCLUDE), dict) and (
-            CONF_ENTITY_ID in exclude
-        ):
+        if (exclude := target.get(CONF_EXCLUDE)) and CONF_ENTITY_ID in exclude:
             try:
                 registry = entity_registry.async_get(hass)
                 excluded_entity_ids = [
