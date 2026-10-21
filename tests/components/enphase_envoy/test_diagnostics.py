@@ -2,10 +2,15 @@
 
 from unittest.mock import AsyncMock
 
+from aiohttp import ClientConnectionError, ClientResponseError
+from aiohttp.client import RequestInfo
 from freezegun.api import FrozenDateTimeFactory
 from pyenphase.exceptions import EnvoyError
 from pyenphase.models.meters import CtType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.enphase_envoy.const import (
@@ -16,10 +21,6 @@ from homeassistant.components.enphase_envoy.coordinator import MAC_VERIFICATION_
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 # Fields to exclude from snapshot as they change each run
 TO_EXCLUDE = {
@@ -93,6 +94,49 @@ async def test_entry_diagnostics_with_fixtures_with_error(
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry_options
     ) == snapshot(exclude=limit_diagnostic_attrs)
+
+
+async def test_entry_diagnostics_with_fixtures_with_clientresponse_error(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry_options: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    mock_envoy: AsyncMock,
+) -> None:
+    """Test diagnostics test fixtures with client errors."""
+    await setup_integration(hass, config_entry_options)
+    mock_envoy.request.side_effect = ClientResponseError(
+        RequestInfo(
+            url="http://example.com",
+            method="GET",
+            headers={
+                "Host": "www.example.com",
+                "Connection": "keep-alive",
+                "secret": "very secret secret",
+            },
+            real_url="http://example.com",
+        ),
+        None,
+        status=0,
+    )
+    diagnostics = await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry_options
+    )
+    assert diagnostics["fixtures"]["/info_log"] == {"Error": "Aiohttp Client error 0"}
+
+    mock_envoy.request.side_effect = EnvoyError("Test")
+    diagnostics = await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry_options
+    )
+    assert diagnostics["fixtures"]["/info_log"] == {"Error": "EnvoyError('Test')"}
+
+    mock_envoy.request.side_effect = ClientConnectionError
+    diagnostics = await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry_options
+    )
+    assert diagnostics["fixtures"]["/info_log"] == {
+        "Error": "Aiohttp Client error ClientConnectionError"
+    }
 
 
 @pytest.mark.parametrize(

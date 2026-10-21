@@ -6,7 +6,7 @@ description: Reviews Home Assistant code changes and provides constructive feedb
 # Review Code Changes
 
 ## Scope:
-- Unless instructed otherwise, review the full branch changes against the target branch. Resolve the base to an available ref (prefer `upstream/<base>`, then `origin/<base>`, then local `<base>`) and review `git diff "$(git merge-base "$BASE_REF" HEAD)"..HEAD`; use `dev` as the default base.
+- Unless instructed otherwise, review the full changes (the ones from the branch plus uncommitted ones) against the target branch. Resolve the base to an available ref (prefer `upstream/<base>`, then `origin/<base>`, then local `<base>`) and review `git diff "$(git merge-base "$BASE_REF" HEAD)"`; use `dev` as the default base.
 
 ## Analyze the code changes for:
 - Code quality and style consistency
@@ -15,9 +15,16 @@ description: Reviews Home Assistant code changes and provides constructive feedb
 - Security concerns
 - Test coverage
 - Documentation updates if needed
+- Values that reach new code from existing code. Read the producing side, including its fallbacks and defaults, not only the diff.
+- State added to an entity or coordinator. Check where it is reset, for example on reconnect or reload.
+
+## Quality scale:
+- If the changes include a `quality_scale.yaml` file, run a subagent to verify all the added or modified rules, following the `ha-quality-scale-verify` skill.
+- Include the verification results in the final review comments.
 
 ## Verification:
 - After the review, run parallel subagents for each finding to double-check it.
+- When a finding suggests a change, also check that the suggested change is valid, for example that it does not violate one of the Home Assistant pylint plugin rules.
 - Spawn up to a maximum of 10 parallel subagents at a time.
 - Gather the results from the subagents and summarize them in the final review comments.
 
@@ -34,8 +41,10 @@ description: Reviews Home Assistant code changes and provides constructive feedb
   - Example output:
     ```
     Overall assessment: request changes.
-    - [CRITICAL] sensor.py:143 - Memory leak
-    - [PROBLEM] data_processing.py:87 - Inefficient algorithm
-    - [SUGGESTION] test_init.py:45 - Improve x variable name
+    1. [CRITICAL] sensor.py:143 - Memory leak
+    2. [PROBLEM] data_processing.py:87 - Inefficient algorithm
+    3. [SUGGESTION] test_init.py:45 - Improve x variable name
+    4. [NIT][PRE-EXISTING] const.py:12 - Unused constant
     ```
   - Make sure to include the file and line number when possible in the bullet points.
+  - Flag findings with `[PRE-EXISTING]` after the category when the issue already exists on the base branch and the change only touches, moves or sits next to that code. Confirm against the base branch before flagging. Pre-existing findings should not on their own make the overall assessment "request changes".

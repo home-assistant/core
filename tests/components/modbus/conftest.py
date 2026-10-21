@@ -10,6 +10,7 @@ from unittest import mock
 from freezegun.api import FrozenDateTimeFactory
 from pymodbus.exceptions import ModbusException
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, mock_restore_cache
 
 from homeassistant.components.modbus.const import DOMAIN, TCP
 from homeassistant.const import (
@@ -24,8 +25,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
-
-from tests.common import async_fire_time_changed, mock_restore_cache
 
 TEST_MODBUS_NAME = "modbusTest"
 TEST_ENTITY_NAME = "test entity"
@@ -168,7 +167,7 @@ async def mock_modbus_fixture(
     assert hub.event_connected.is_set()
     freezer.tick(timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     return mock_pymodbus
 
 
@@ -218,7 +217,7 @@ async def mock_do_cycle_fixture(
     """Trigger update call with time_changed event."""
     freezer.tick(timedelta(seconds=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     return freezer
 
 
@@ -228,7 +227,7 @@ async def do_next_cycle(
     """Trigger update call with time_changed event."""
     freezer.tick(timedelta(seconds=cycle))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 @pytest.fixture(name="mock_test_state")

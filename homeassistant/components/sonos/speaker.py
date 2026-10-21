@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Callable, Collection, Coroutine
 import contextlib
-import datetime
+import datetime as dt
 from functools import partial
 import logging
 import time
@@ -147,7 +147,7 @@ class SonosSpeaker:
 
         # Battery
         self.battery_info: dict[str, Any] = {}
-        self._last_battery_event: datetime.datetime | None = None
+        self._last_battery_event: dt.datetime | None = None
         self._battery_poll_timer: Callable | None = None
 
         # Volume / Sound
@@ -684,7 +684,7 @@ class SonosSpeaker:
             self.hass.async_create_task(self.async_subscribe(), eager_start=True)
 
     @callback
-    def async_check_activity(self, now: datetime.datetime) -> None:
+    def async_check_activity(self, now: dt.datetime) -> None:
         """Validate availability of the speaker based on recent activity."""
         if not self.available:
             return
@@ -835,7 +835,7 @@ class SonosSpeaker:
             return self.power_source != "BATTERY"
         return None
 
-    async def async_poll_battery(self, now: datetime.datetime | None = None) -> None:
+    async def async_poll_battery(self, now: dt.datetime | None = None) -> None:
         """Poll the device for the current battery state."""
         if not self.available:
             return
@@ -1313,8 +1313,9 @@ class SonosSpeaker:
                 translation_key="announcement_connection_error",
                 translation_placeholders={"error": "websocket not available"},
             )
+        announcement_id = self.last_announce_id
         try:
-            response, _ = await self.websocket.cancel_clip(self.last_announce_id)
+            response, _ = await self.websocket.cancel_clip(announcement_id)
         except SonosWebsocketError as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -1327,7 +1328,8 @@ class SonosSpeaker:
                 translation_key="cancel_announcement_error",
                 translation_placeholders={"response": str(response)},
             )
-        self.last_announce_id = None
+        if announcement_id == self.last_announce_id:
+            self.last_announce_id = None
 
     #
     # Media and playback state handlers

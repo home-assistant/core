@@ -230,7 +230,7 @@
     'platform': 'reolink',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <CameraEntityFeature: 2>,
+    'supported_features': 0,
     'translation_key': 'ptz_auto',
     'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_ptz_auto',
     'unit_of_measurement': None,
@@ -240,7 +240,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam PTZ continuous rotation',
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
     'entity_id': 'button.test_reolink_cam_ptz_continuous_rotation',
@@ -283,7 +282,7 @@
     'suggested_object_id': None,
     'supported_features': <CameraEntityFeature: 2>,
     'translation_key': 'ptz_down',
-    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_ptz_down',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_sub01_ptz_down',
     'unit_of_measurement': None,
   })
 # ---
@@ -334,7 +333,7 @@
     'suggested_object_id': None,
     'supported_features': <CameraEntityFeature: 2>,
     'translation_key': 'ptz_left',
-    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_ptz_left',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_sub01_ptz_left',
     'unit_of_measurement': None,
   })
 # ---
@@ -383,7 +382,7 @@
     'platform': 'reolink',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <CameraEntityFeature: 2>,
+    'supported_features': 0,
     'translation_key': 'ptz_left_down',
     'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_ptz_left_down',
     'unit_of_measurement': None,
@@ -393,7 +392,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam PTZ left down',
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
     'entity_id': 'button.test_reolink_cam_ptz_left_down',
@@ -434,7 +432,7 @@
     'platform': 'reolink',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <CameraEntityFeature: 2>,
+    'supported_features': 0,
     'translation_key': 'ptz_left_up',
     'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_ptz_left_up',
     'unit_of_measurement': None,
@@ -444,7 +442,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam PTZ left up',
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
     'entity_id': 'button.test_reolink_cam_ptz_left_up',
@@ -487,7 +484,7 @@
     'suggested_object_id': None,
     'supported_features': <CameraEntityFeature: 2>,
     'translation_key': 'ptz_right',
-    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_ptz_right',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_sub01_ptz_right',
     'unit_of_measurement': None,
   })
 # ---
@@ -536,7 +533,7 @@
     'platform': 'reolink',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <CameraEntityFeature: 2>,
+    'supported_features': 0,
     'translation_key': 'ptz_right_down',
     'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_ptz_right_down',
     'unit_of_measurement': None,
@@ -546,7 +543,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam PTZ right down',
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
     'entity_id': 'button.test_reolink_cam_ptz_right_down',
@@ -587,7 +583,7 @@
     'platform': 'reolink',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <CameraEntityFeature: 2>,
+    'supported_features': 0,
     'translation_key': 'ptz_right_up',
     'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_ptz_right_up',
     'unit_of_measurement': None,
@@ -597,7 +593,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam PTZ right up',
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
     'entity_id': 'button.test_reolink_cam_ptz_right_up',
@@ -640,7 +635,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ptz_stop',
-    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_ptz_stop',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_sub01_ptz_stop',
     'unit_of_measurement': None,
   })
 # ---
@@ -690,7 +685,7 @@
     'suggested_object_id': None,
     'supported_features': <CameraEntityFeature: 2>,
     'translation_key': 'ptz_up',
-    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_ptz_up',
+    'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_sub01_ptz_up',
     'unit_of_measurement': None,
   })
 # ---
@@ -739,7 +734,7 @@
     'platform': 'reolink',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <CameraEntityFeature: 2>,
+    'supported_features': 0,
     'translation_key': 'ptz_zoom_in',
     'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_ptz_zoom_in',
     'unit_of_measurement': None,
@@ -749,7 +744,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam PTZ zoom in',
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
     'entity_id': 'button.test_reolink_cam_ptz_zoom_in',
@@ -790,7 +784,7 @@
     'platform': 'reolink',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <CameraEntityFeature: 2>,
+    'supported_features': 0,
     'translation_key': 'ptz_zoom_out',
     'unique_id': 'ABC1234567D89EFG_DEF7654321D89GHT_ptz_zoom_out',
     'unit_of_measurement': None,
@@ -800,7 +794,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam PTZ zoom out',
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
     'entity_id': 'button.test_reolink_cam_ptz_zoom_out',
@@ -906,6 +899,56 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.test_reolink_name_restart',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[button.test_reolink_name_synchronize_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.test_reolink_name_synchronize_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Synchronize time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Synchronize time',
+    'platform': 'reolink',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sync_time',
+    'unique_id': 'ABC1234567D89EFG_sync_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[button.test_reolink_name_synchronize_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_name Synchronize time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_reolink_name_synchronize_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

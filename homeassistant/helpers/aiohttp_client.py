@@ -16,6 +16,7 @@ from aiohttp import ClientMiddlewareType, hdrs, web
 from aiohttp.hdrs import CONTENT_TYPE, USER_AGENT
 from aiohttp.web_exceptions import HTTPBadGateway, HTTPGatewayTimeout
 from aiohttp_asyncmdnsresolver.api import AsyncDualMDNSResolver
+from multidict import CIMultiDict
 from yarl import URL
 
 from homeassistant import config_entries
@@ -300,8 +301,10 @@ def _async_create_clientsession(
     # It's important that we identify as Home Assistant
     # If a package requires a different user agent, override it by passing a headers
     # dictionary to the request method.
+    default_headers = CIMultiDict(clientsession.headers)
+    default_headers[USER_AGENT] = SERVER_SOFTWARE
     clientsession._default_headers = MappingProxyType(  # type: ignore[assignment]  # noqa: SLF001
-        {USER_AGENT: SERVER_SOFTWARE},
+        default_headers
     )
 
     clientsession.close = warn_use(  # type: ignore[method-assign]

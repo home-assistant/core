@@ -4,6 +4,13 @@ from datetime import timedelta
 import time
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.bluetooth import (
+    inject_bluetooth_service_info,
+    inject_bluetooth_service_info_bleak,
+    patch_all_discovered_devices,
+    patch_bluetooth_time,
+)
 
 from homeassistant.components.bluetooth import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
@@ -16,19 +23,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import (
+    ORALB_IO_POST_BRUSHING_SMART_ADAPT_SERVICE_INFO,
     ORALB_IO_SERIES_4_SERVICE_INFO,
     ORALB_IO_SERIES_6_SERVICE_INFO,
     ORALB_IO_SIX_SECTORS_LAST_SECTOR_SERVICE_INFO,
     ORALB_IO_SIX_SECTORS_SECTOR_5_SERVICE_INFO,
     ORALB_SERVICE_INFO,
-)
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.bluetooth import (
-    inject_bluetooth_service_info,
-    inject_bluetooth_service_info_bleak,
-    patch_all_discovered_devices,
-    patch_bluetooth_time,
 )
 
 
@@ -183,6 +183,33 @@ async def test_sector_sensor_six_sectors(hass: HomeAssistant) -> None:
 
     sector_sensor = hass.states.get("sensor.io_series_48be_sector")
     assert sector_sensor.state == "sector_6"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors_post_brushing_smart_adapt(hass: HomeAssistant) -> None:
+    """Test the post-brushing statistics state and the Smart Adapt mode."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=ORALB_IO_POST_BRUSHING_SMART_ADAPT_SERVICE_INFO.address,
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    inject_bluetooth_service_info(hass, ORALB_IO_POST_BRUSHING_SMART_ADAPT_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    toothbrush_sensor = hass.states.get("sensor.io_series_48be")
+    assert toothbrush_sensor.state == "post_brushing_statistics"
+    assert "post_brushing_statistics" in toothbrush_sensor.attributes[ATTR_OPTIONS]
+
+    mode_sensor = hass.states.get("sensor.io_series_48be_brushing_mode")
+    assert mode_sensor.state == "smart_adapt"
+    assert "smart_adapt" in mode_sensor.attributes[ATTR_OPTIONS]
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

@@ -5,8 +5,10 @@ from unittest.mock import patch
 import aiohttp
 from aiohttp import WSMsgType, web
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
+from homeassistant.components.http.const import DATA_SUPERVISOR_USER
 from homeassistant.components.websocket_api import DOMAIN
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
@@ -25,7 +27,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
 from tests.test_util import mock_real_ip
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
@@ -436,8 +437,8 @@ async def test_unix_socket_auth_bypass(
     hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
     """Test that Unix socket connections skip websocket auth phase."""
-    # Create the Supervisor system user
-    await hass.auth.async_create_system_user(
+    # Create the Supervisor system user, as the hassio integration would
+    hass.data[DATA_SUPERVISOR_USER] = await hass.auth.async_create_system_user(
         HASSIO_USER_NAME, group_ids=["system-admin"]
     )
 

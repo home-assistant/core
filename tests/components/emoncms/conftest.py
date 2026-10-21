@@ -5,11 +5,10 @@ import copy
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.emoncms.const import CONF_ONLY_INCLUDE_FEEDID, DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_URL
-
-from tests.common import MockConfigEntry
 
 UNITS = ["kWh", "Wh", "W", "V", "A", "VA", "°C", "°F", "K", "Hz", "hPa", ""]
 
@@ -104,7 +103,7 @@ def config_single_feed() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.emoncms.async_setup_entry", return_value=True
+        "homeassistant.components.emoncms.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from unittest.mock import DEFAULT, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from screenlogicpy import ScreenLogicError, ScreenLogicGateway
 from screenlogicpy.const.common import ScreenLogicConnectionError
 
@@ -24,8 +25,6 @@ from . import (
     MOCK_ADAPTER_NAME,
     stub_async_connect,
 )
-
-from tests.common import MockConfigEntry
 
 
 @dataclass

@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from trmnl.exceptions import TRMNLAuthenticationError
 
@@ -14,8 +15,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_load_unload_entry(
@@ -44,8 +43,8 @@ async def test_device(
     """Test the TRMNL device."""
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device(
-        connections={(CONNECTION_NETWORK_MAC, "B0:A6:04:AA:BB:CC")}
+    device = device_registry.async_get_device_by_connection(
+        (CONNECTION_NETWORK_MAC, "B0:A6:04:AA:BB:CC"), mock_config_entry.entry_id
     )
     assert device
     assert device == snapshot
@@ -61,8 +60,8 @@ async def test_stale_device_removed(
     """Test that a device is removed from the device registry when it disappears."""
     await setup_integration(hass, mock_config_entry)
 
-    assert device_registry.async_get_device(
-        connections={(CONNECTION_NETWORK_MAC, "B0:A6:04:AA:BB:CC")}
+    assert device_registry.async_get_device_by_connection(
+        (CONNECTION_NETWORK_MAC, "B0:A6:04:AA:BB:CC"), mock_config_entry.entry_id
     )
 
     mock_trmnl_client.get_devices.return_value = []
@@ -70,8 +69,8 @@ async def test_stale_device_removed(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert not device_registry.async_get_device(
-        connections={(CONNECTION_NETWORK_MAC, "B0:A6:04:AA:BB:CC")}
+    assert not device_registry.async_get_device_by_connection(
+        (CONNECTION_NETWORK_MAC, "B0:A6:04:AA:BB:CC"), mock_config_entry.entry_id
     )
 
 

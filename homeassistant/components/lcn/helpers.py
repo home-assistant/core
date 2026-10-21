@@ -192,12 +192,14 @@ def register_lcn_host_device(hass: HomeAssistant, config_entry: LcnConfigEntry) 
     """Register LCN host for given config_entry in device registry."""
     device_registry = dr.async_get(hass)
 
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, config_entry.entry_id)},
-        manufacturer="Issendorff",
-        name=config_entry.title,
-        model="LCN-PCHK",
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, config_entry.entry_id)},
+            manufacturer="Issendorff",
+            name=config_entry.title,
+            model="LCN-PCHK",
+        ),
     )
 
 
@@ -211,7 +213,9 @@ def register_lcn_address_devices(
     """
     device_registry = dr.async_get(hass)
 
-    host_identifiers = (DOMAIN, config_entry.entry_id)
+    host_device_id = dr.async_get_device_id_by_identifier(
+        hass, (DOMAIN, config_entry.entry_id), config_entry_id=config_entry.entry_id
+    )
 
     for device_config in config_entry.data[CONF_DEVICES]:
         address = device_config[CONF_ADDRESS]
@@ -230,14 +234,16 @@ def register_lcn_address_devices(
             device_model = f"{hardware_name}"
             sw_version = f"{device_config[CONF_SOFTWARE_SERIAL]:06X}"
 
-        device_entry = device_registry.async_get_or_create(
+        device_entry = device_registry.async_get_or_create_device(
             config_entry_id=config_entry.entry_id,
-            identifiers=identifiers,
-            via_device=host_identifiers,
-            manufacturer="Issendorff",
-            sw_version=sw_version,
-            name=device_name,
-            model=device_model,
+            device_info=dr.DeviceInfo(
+                identifiers=identifiers,
+                via_device_id=host_device_id,
+                manufacturer="Issendorff",
+                sw_version=sw_version,
+                name=device_name,
+                model=device_model,
+            ),
         )
 
         config_entry.runtime_data.device_connections[device_entry.id] = (

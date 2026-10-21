@@ -17,13 +17,14 @@ OAUTH2_TOKEN = "https://visionlogin.b2clogin.com/visionlogin.onmicrosoft.com/B2C
 OAUTH2_SCOPES = [
     "openid",
     "offline_access",
-    "https://visionlogin.onmicrosoft.com/homeassistant-api/homeassistant.read",
+    "https://visionlogin.onmicrosoft.com/vision/homeassistant.read",
+    "https://visionlogin.onmicrosoft.com/vision/brand.watts",
 ]
 
 # Update intervals
 UPDATE_INTERVAL_SECONDS = 30
 FAST_POLLING_INTERVAL_SECONDS = 5
-DISCOVERY_INTERVAL_MINUTES = 15
+DISCOVERY_INTERVAL_SECONDS = 15 * 60
 
 # Mapping from Watts Vision+ modes to Home Assistant HVAC modes
 THERMOSTAT_MODE_TO_HVAC: dict[ThermostatMode, HVACMode] = {

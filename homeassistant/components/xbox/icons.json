@@ -1,9 +1,6 @@
 {
   "entity": {
     "binary_sensor": {
-      "has_game_pass": {
-        "default": "mdi:microsoft-xbox"
-      },
       "in_game": {
         "default": "mdi:microsoft-xbox-controller"
       },

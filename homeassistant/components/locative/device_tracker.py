@@ -1,20 +1,18 @@
 """Support for the Locative platform."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from typing import override
 
 from homeassistant.components.device_tracker import TrackerEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, TRACKER_UPDATE
+from . import TRACKER_UPDATE, LocativeConfigEntry
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: LocativeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Configure a dispatcher connection based on a config entry."""
@@ -22,16 +20,14 @@ async def async_setup_entry(
     @callback
     def _receive_data(device, location, location_name):
         """Receive set location."""
-        if device in hass.data[DOMAIN]["devices"]:
+        if device in entry.runtime_data:
             return
 
-        hass.data[DOMAIN]["devices"].add(device)
+        entry.runtime_data.add(device)
 
         async_add_entities([LocativeEntity(device, location, location_name)])
 
-    hass.data[DOMAIN]["unsub_device_tracker"][entry.entry_id] = (
-        async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data)
-    )
+    entry.async_on_unload(async_dispatcher_connect(hass, TRACKER_UPDATE, _receive_data))
 
 
 class LocativeEntity(TrackerEntity):

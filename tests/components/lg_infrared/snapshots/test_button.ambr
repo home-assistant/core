@@ -1,5 +1,455 @@
 # serializer version: 1
-# name: test_entities[button.lg_tv_back-entry]
+# name: test_entities[ac][button.lg_ac_ai_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.lg_ac_ai_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'AI mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'AI mode',
+    'platform': 'lg_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ai_convertible',
+    'unique_id': '01JTEST0000000000000000000_ai_convertible',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[ac][button.lg_ac_ai_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG AC AI mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.lg_ac_ai_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[ac][button.lg_ac_diagnose-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.lg_ac_diagnose',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Diagnose',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Diagnose',
+    'platform': 'lg_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'diagnose',
+    'unique_id': '01JTEST0000000000000000000_diagnose',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[ac][button.lg_ac_diagnose-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG AC Diagnose',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.lg_ac_diagnose',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[ac][button.lg_ac_eco_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.lg_ac_eco_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Eco mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Eco mode',
+    'platform': 'lg_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'eco',
+    'unique_id': '01JTEST0000000000000000000_eco',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[ac][button.lg_ac_eco_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG AC Eco mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.lg_ac_eco_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[ac][button.lg_ac_jet_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.lg_ac_jet_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Jet mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Jet mode',
+    'platform': 'lg_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'jet',
+    'unique_id': '01JTEST0000000000000000000_jet',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[ac][button.lg_ac_jet_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG AC Jet mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.lg_ac_jet_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[ac][button.lg_ac_start_wi_fi_pairing-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.lg_ac_start_wi_fi_pairing',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Start Wi-Fi pairing',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Start Wi-Fi pairing',
+    'platform': 'lg_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi',
+    'unique_id': '01JTEST0000000000000000000_wifi',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[ac][button.lg_ac_start_wi_fi_pairing-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG AC Start Wi-Fi pairing',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.lg_ac_start_wi_fi_pairing',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[ac][button.lg_ac_toggle_beep-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.lg_ac_toggle_beep',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Toggle beep',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Toggle beep',
+    'platform': 'lg_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'audio',
+    'unique_id': '01JTEST0000000000000000000_audio',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[ac][button.lg_ac_toggle_beep-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG AC Toggle beep',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.lg_ac_toggle_beep',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[ac][button.lg_ac_toggle_light-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.lg_ac_toggle_light',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Toggle light',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Toggle light',
+    'platform': 'lg_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'light',
+    'unique_id': '01JTEST0000000000000000000_light',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[ac][button.lg_ac_toggle_light-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG AC Toggle light',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.lg_ac_toggle_light',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[ac][button.lg_ac_toggle_vertical_swing-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.lg_ac_toggle_vertical_swing',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Toggle vertical swing',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Toggle vertical swing',
+    'platform': 'lg_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'swing_v_toggle',
+    'unique_id': '01JTEST0000000000000000000_swing_v_toggle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[ac][button.lg_ac_toggle_vertical_swing-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG AC Toggle vertical swing',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.lg_ac_toggle_vertical_swing',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[ac][button.lg_ac_viraat_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.lg_ac_viraat_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Viraat mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Viraat mode',
+    'platform': 'lg_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'viraat',
+    'unique_id': '01JTEST0000000000000000000_viraat',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[ac][button.lg_ac_viraat_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG AC Viraat mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.lg_ac_viraat_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[tv][button.lg_tv_back-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -36,7 +486,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.lg_tv_back-state]
+# name: test_entities[tv][button.lg_tv_back-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Back',
@@ -49,7 +499,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.lg_tv_down-entry]
+# name: test_entities[tv][button.lg_tv_down-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -86,7 +536,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.lg_tv_down-state]
+# name: test_entities[tv][button.lg_tv_down-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Down',
@@ -99,7 +549,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.lg_tv_exit-entry]
+# name: test_entities[tv][button.lg_tv_exit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -136,7 +586,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.lg_tv_exit-state]
+# name: test_entities[tv][button.lg_tv_exit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Exit',
@@ -149,7 +599,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.lg_tv_guide-entry]
+# name: test_entities[tv][button.lg_tv_guide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -186,7 +636,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.lg_tv_guide-state]
+# name: test_entities[tv][button.lg_tv_guide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Guide',
@@ -199,7 +649,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.lg_tv_hdmi_1-entry]
+# name: test_entities[tv][button.lg_tv_hdmi_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -236,7 +686,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.lg_tv_hdmi_1-state]
+# name: test_entities[tv][button.lg_tv_hdmi_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV HDMI 1',
@@ -249,7 +699,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.lg_tv_hdmi_2-entry]
+# name: test_entities[tv][button.lg_tv_hdmi_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -286,7 +736,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.lg_tv_hdmi_2-state]
+# name: test_entities[tv][button.lg_tv_hdmi_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV HDMI 2',
@@ -299,7 +749,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.lg_tv_hdmi_3-entry]
+# name: test_entities[tv][button.lg_tv_hdmi_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -336,7 +786,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.lg_tv_hdmi_3-state]
+# name: test_entities[tv][button.lg_tv_hdmi_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV HDMI 3',
@@ -349,7 +799,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.lg_tv_hdmi_4-entry]
+# name: test_entities[tv][button.lg_tv_hdmi_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -386,7 +836,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.lg_tv_hdmi_4-state]
+# name: test_entities[tv][button.lg_tv_hdmi_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV HDMI 4',
@@ -399,7 +849,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.lg_tv_home-entry]
+# name: test_entities[tv][button.lg_tv_home-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -436,7 +886,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.lg_tv_home-state]
+# name: test_entities[tv][button.lg_tv_home-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Home',
@@ -449,7 +899,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.lg_tv_info-entry]
+# name: test_entities[tv][button.lg_tv_info-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -486,7 +936,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.lg_tv_info-state]
+# name: test_entities[tv][button.lg_tv_info-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Info',
@@ -499,7 +949,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.lg_tv_input-entry]
+# name: test_entities[tv][button.lg_tv_input-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -536,7 +986,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.lg_tv_input-state]
+# name: test_entities[tv][button.lg_tv_input-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Input',
@@ -549,7 +999,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.lg_tv_left-entry]
+# name: test_entities[tv][button.lg_tv_left-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -586,7 +1036,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.lg_tv_left-state]
+# name: test_entities[tv][button.lg_tv_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Left',
@@ -599,7 +1049,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.lg_tv_menu-entry]
+# name: test_entities[tv][button.lg_tv_menu-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -636,7 +1086,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.lg_tv_menu-state]
+# name: test_entities[tv][button.lg_tv_menu-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Menu',
@@ -649,7 +1099,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.lg_tv_number_0-entry]
+# name: test_entities[tv][button.lg_tv_number_0-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -686,7 +1136,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.lg_tv_number_0-state]
+# name: test_entities[tv][button.lg_tv_number_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Number 0',
@@ -699,7 +1149,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.lg_tv_number_1-entry]
+# name: test_entities[tv][button.lg_tv_number_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -736,7 +1186,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.lg_tv_number_1-state]
+# name: test_entities[tv][button.lg_tv_number_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Number 1',
@@ -749,7 +1199,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.lg_tv_number_2-entry]
+# name: test_entities[tv][button.lg_tv_number_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -786,7 +1236,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.lg_tv_number_2-state]
+# name: test_entities[tv][button.lg_tv_number_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Number 2',
@@ -799,7 +1249,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.lg_tv_number_3-entry]
+# name: test_entities[tv][button.lg_tv_number_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -836,7 +1286,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.lg_tv_number_3-state]
+# name: test_entities[tv][button.lg_tv_number_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Number 3',
@@ -849,7 +1299,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.lg_tv_number_4-entry]
+# name: test_entities[tv][button.lg_tv_number_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -886,7 +1336,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.lg_tv_number_4-state]
+# name: test_entities[tv][button.lg_tv_number_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Number 4',
@@ -899,7 +1349,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.lg_tv_number_5-entry]
+# name: test_entities[tv][button.lg_tv_number_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -936,7 +1386,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.lg_tv_number_5-state]
+# name: test_entities[tv][button.lg_tv_number_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Number 5',
@@ -949,7 +1399,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.lg_tv_number_6-entry]
+# name: test_entities[tv][button.lg_tv_number_6-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -986,7 +1436,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.lg_tv_number_6-state]
+# name: test_entities[tv][button.lg_tv_number_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Number 6',
@@ -999,7 +1449,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.lg_tv_number_7-entry]
+# name: test_entities[tv][button.lg_tv_number_7-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1036,7 +1486,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.lg_tv_number_7-state]
+# name: test_entities[tv][button.lg_tv_number_7-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Number 7',
@@ -1049,7 +1499,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.lg_tv_number_8-entry]
+# name: test_entities[tv][button.lg_tv_number_8-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1086,7 +1536,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.lg_tv_number_8-state]
+# name: test_entities[tv][button.lg_tv_number_8-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Number 8',
@@ -1099,7 +1549,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.lg_tv_number_9-entry]
+# name: test_entities[tv][button.lg_tv_number_9-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1136,7 +1586,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.lg_tv_number_9-state]
+# name: test_entities[tv][button.lg_tv_number_9-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Number 9',
@@ -1149,7 +1599,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.lg_tv_ok-entry]
+# name: test_entities[tv][button.lg_tv_ok-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1186,7 +1636,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.lg_tv_ok-state]
+# name: test_entities[tv][button.lg_tv_ok-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV OK',
@@ -1199,7 +1649,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.lg_tv_power-entry]
+# name: test_entities[tv][button.lg_tv_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1236,7 +1686,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.lg_tv_power-state]
+# name: test_entities[tv][button.lg_tv_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Power',
@@ -1249,7 +1699,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.lg_tv_power_off-entry]
+# name: test_entities[tv][button.lg_tv_power_off-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1286,7 +1736,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.lg_tv_power_off-state]
+# name: test_entities[tv][button.lg_tv_power_off-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Power off',
@@ -1299,7 +1749,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.lg_tv_power_on-entry]
+# name: test_entities[tv][button.lg_tv_power_on-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1336,7 +1786,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.lg_tv_power_on-state]
+# name: test_entities[tv][button.lg_tv_power_on-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Power on',
@@ -1349,7 +1799,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.lg_tv_right-entry]
+# name: test_entities[tv][button.lg_tv_right-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1386,7 +1836,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.lg_tv_right-state]
+# name: test_entities[tv][button.lg_tv_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Right',
@@ -1399,7 +1849,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entities[button.lg_tv_up-entry]
+# name: test_entities[tv][button.lg_tv_up-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1436,7 +1886,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.lg_tv_up-state]
+# name: test_entities[tv][button.lg_tv_up-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Up',
