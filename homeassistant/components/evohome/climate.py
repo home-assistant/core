@@ -189,7 +189,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
         if duration is None:
             until = None  # indefinitely
         elif duration.total_seconds() == 0:
-            await self._update_schedule()
+            await self.coordinator.async_ensure_schedule(self._evo_device)
             until = self.setpoints.get("next_sp_from")
         else:
             until = dt_util.now() + duration
@@ -260,7 +260,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
             if self._evo_device.mode == EvoZoneMode.TEMPORARY_OVERRIDE:
                 until = self._evo_device.until
             if self._evo_device.mode == EvoZoneMode.FOLLOW_SCHEDULE:
-                await self._update_schedule()
+                await self.coordinator.async_ensure_schedule(self._evo_device)
                 until = self.setpoints.get("next_sp_from")
 
         until = dt_util.as_utc(until) if until else None
@@ -303,7 +303,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
             return
 
         if evo_preset_mode == EvoZoneMode.TEMPORARY_OVERRIDE:
-            await self._update_schedule()
+            await self.coordinator.async_ensure_schedule(self._evo_device)
             until = self.setpoints.get("next_sp_from")
         else:  # EvoZoneMode.PERMANENT_OVERRIDE
             until = None

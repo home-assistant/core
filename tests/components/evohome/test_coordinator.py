@@ -210,27 +210,22 @@ async def test_action_api_call_failed(
     assert exc_info.value.translation_key == "api_call_failed"
 
 
-async def test_setup_tolerates_failed_schedule_fetch(
+async def test_no_schedule_fetch_at_setup(
     hass: HomeAssistant,
     config: dict[str, str],
 ) -> None:
-    """Test a failed schedule fetch (a GET) is logged, not raised, so setup completes."""
+    """Test no schedule is fetched during setup (only config & status are)."""
 
     with (
-        patch.object(
-            Zone,
-            "get_schedule",
-            side_effect=evo_exc.ApiCallFailedError("API call failed"),
-        ),
-        patch.object(
-            HotWater,
-            "get_schedule",
-            side_effect=evo_exc.ApiCallFailedError("API call failed"),
-        ),
+        patch.object(Zone, "get_schedule") as mock_zon,
+        patch.object(HotWater, "get_schedule") as mock_dhw,
     ):
         async for _ in setup_evohome(hass, config, install="default"):
             assert hass.states.async_entity_ids(CLIMATE_DOMAIN)
             assert hass.states.async_entity_ids(WATER_HEATER_DOMAIN)
+
+    mock_zon.assert_not_awaited()
+    mock_dhw.assert_not_awaited()
 
 
 @pytest.mark.parametrize("install", ["default"])
