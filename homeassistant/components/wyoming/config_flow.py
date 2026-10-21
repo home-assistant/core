@@ -8,6 +8,7 @@ import probatio
 
 from homeassistant.config_entries import SOURCE_HASSIO, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -59,6 +60,49 @@ class WyomingConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=name, data=user_input)
 
         return self.async_abort(reason="no_services")
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the host and port."""
+        entry = self._get_reconfigure_entry()
+        # Host and port of app services are managed by the Supervisor.
+        if entry.source == SOURCE_HASSIO:
+            return self.async_abort(reason="reconfigure_not_supported_for_app")
+
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+            )
+            service = await WyomingService.create(
+                user_input[CONF_HOST], user_input[CONF_PORT]
+            )
+            if service is None:
+                errors["base"] = "cannot_connect"
+            elif not service.has_services():
+                errors["base"] = "no_services"
+            else:
+                # Satellite entries own a device keyed by the entry id.
+                was_satellite = (
+                    dr.async_get(self.hass).async_get_device_by_identifier(
+                        (DOMAIN, entry.entry_id), entry.entry_id
+                    )
+                    is not None
+                )
+                if was_satellite != (service.info.satellite is not None):
+                    return self.async_abort(reason="service_type_mismatch")
+                return self.async_update_reload_and_abort(
+                    entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input or entry.data
+            ),
+            errors=errors,
+        )
 
     @override
     async def async_step_hassio(

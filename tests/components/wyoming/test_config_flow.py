@@ -12,6 +12,7 @@ from homeassistant import config_entries
 from homeassistant.components.wyoming.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -37,7 +38,10 @@ ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     properties={},
 )
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+OLD_DATA = {"host": "1.1.1.1", "port": 1234}
+NEW_DATA = {"host": "2.2.2.2", "port": 5678}
+
+pytestmark = pytest.mark.usefixtures("mock_setup_entry", "mock_unload_entry")
 
 
 async def test_form_stt(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -368,3 +372,179 @@ async def test_bad_config_entry(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
         assert result.get("type") is FlowResultType.FORM
+
+
+@pytest.fixture
+def reconfigure_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Return a config entry to reconfigure."""
+    entry = MockConfigEntry(domain=DOMAIN, data=OLD_DATA, title="Test")
+    entry.add_to_hass(hass)
+    return entry
+
+
+@pytest.fixture
+def satellite_device(
+    reconfigure_entry: MockConfigEntry, device_registry: dr.DeviceRegistry
+) -> dr.DeviceEntry:
+    """Mark the config entry as a satellite by adding its device."""
+    return device_registry.async_get_or_create(
+        config_entry_id=reconfigure_entry.entry_id,
+        identifiers={(DOMAIN, reconfigure_entry.entry_id)},
+    )
+
+
+@pytest.mark.parametrize(
+    "info",
+    [
+        pytest.param(STT_INFO, id="stt"),
+        pytest.param(TTS_INFO, id="tts"),
+    ],
+)
+async def test_reconfigure(
+    hass: HomeAssistant, reconfigure_entry: MockConfigEntry, info: Info
+) -> None:
+    """Test reconfiguring a service to a new host and port."""
+    result = await reconfigure_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=info,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], NEW_DATA
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert reconfigure_entry.data == NEW_DATA
+
+
+@pytest.mark.usefixtures("satellite_device")
+async def test_reconfigure_satellite(
+    hass: HomeAssistant, reconfigure_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring a satellite to a new host and port."""
+    result = await reconfigure_entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=SATELLITE_INFO,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], NEW_DATA
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert reconfigure_entry.data == NEW_DATA
+
+
+@pytest.mark.parametrize(
+    ("info", "error"),
+    [
+        pytest.param(None, "cannot_connect", id="cannot_connect"),
+        pytest.param(EMPTY_INFO, "no_services", id="no_services"),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    reconfigure_entry: MockConfigEntry,
+    info: Info | None,
+    error: str,
+) -> None:
+    """Test reconfigure errors and recovery."""
+    result = await reconfigure_entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=info,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], NEW_DATA
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=STT_INFO,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], NEW_DATA
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert reconfigure_entry.data == NEW_DATA
+
+
+async def test_reconfigure_already_configured(
+    hass: HomeAssistant, reconfigure_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring to the host and port of another entry aborts."""
+    MockConfigEntry(domain=DOMAIN, data=NEW_DATA).add_to_hass(hass)
+    result = await reconfigure_entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], NEW_DATA)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert reconfigure_entry.data == OLD_DATA
+
+
+async def test_reconfigure_service_to_satellite(
+    hass: HomeAssistant, reconfigure_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring a service to a satellite aborts."""
+    result = await reconfigure_entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=SATELLITE_INFO,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], NEW_DATA
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "service_type_mismatch"
+    assert reconfigure_entry.data == OLD_DATA
+
+
+@pytest.mark.usefixtures("satellite_device")
+async def test_reconfigure_satellite_to_service(
+    hass: HomeAssistant, reconfigure_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring a satellite to a non-satellite service aborts."""
+    result = await reconfigure_entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=STT_INFO,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], NEW_DATA
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "service_type_mismatch"
+    assert reconfigure_entry.data == OLD_DATA
+
+
+async def test_reconfigure_app_entry(hass: HomeAssistant) -> None:
+    """Test reconfiguring an entry provided by an app aborts."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"host": "mock-piper", "port": 10200},
+        source=config_entries.SOURCE_HASSIO,
+        unique_id="1234",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_not_supported_for_app"

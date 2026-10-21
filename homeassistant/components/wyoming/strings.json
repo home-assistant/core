@@ -3,19 +3,36 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "no_port": "No port for endpoint",
-      "no_services": "No services found at endpoint"
+      "no_services": "No services found at endpoint",
+      "reconfigure_not_supported_for_app": "This service is provided by an app. Its host and port are managed by the Supervisor and cannot be reconfigured.",
+      "service_type_mismatch": "The service at the new host and port is a different type of Wyoming service. A satellite can only be replaced by a satellite, and other services only by non-satellite services."
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_services": "[%key:component::wyoming::config::abort::no_services%]"
     },
     "step": {
       "hassio_confirm": {
         "description": "Do you want to configure Home Assistant to connect to the Wyoming service provided by the app: {addon}?"
       },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "[%key:component::wyoming::config::step::user::data_description::host%]",
+          "port": "[%key:component::wyoming::config::step::user::data_description::port%]"
+        }
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Wyoming service.",
+          "port": "The port of the Wyoming service."
         }
       },
       "zeroconf_confirm": {

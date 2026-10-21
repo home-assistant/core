@@ -46,6 +46,15 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_unload_entry() -> Generator[AsyncMock]:
+    """Override async_unload_entry."""
+    with patch(
+        "homeassistant.components.wyoming.async_unload_entry", return_value=True
+    ) as mock_unload_entry:
+        yield mock_unload_entry
+
+
+@pytest.fixture
 def stt_config_entry(hass: HomeAssistant) -> ConfigEntry:
     """Create a config entry."""
     entry = MockConfigEntry(
