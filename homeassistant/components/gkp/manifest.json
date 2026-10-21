@@ -1,7 +1,7 @@
 {
   "domain": "gkp",
   "name": "GKP Home",
-  "codeowners": ["@theobld-ww"],
+  "codeowners": ["@theobld-ww", "@AnthonyPerrier-FRRO"],
   "config_flow": true,
   "dependencies": ["application_credentials", "cloud"],
   "documentation": "https://www.home-assistant.io/integrations/gkp",
