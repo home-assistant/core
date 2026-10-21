@@ -1,11 +1,15 @@
 """The GTFS integration."""
 
+import datetime as dt
 from functools import partial
 import threading
 
 from homeassistant.const import CONF_URL, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.event import async_track_time_change
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_DATABASE, DOMAIN
 from .feed import (
@@ -40,9 +44,50 @@ async def async_setup_entry(hass: HomeAssistant, entry: GtfsConfigEntry) -> None
                 translation_placeholders={"error": str(err)},
             ) from err
     entry.runtime_data = await hass.async_add_executor_job(open_feed, db_path)
+    last_date = entry.runtime_data.last_service_date
+    _async_check_expired(hass, entry, last_date)
+
+    @callback
+    def _async_check_expired_daily(now: dt.datetime) -> None:
+        _async_check_expired(hass, entry, last_date)
+
+    entry.async_on_unload(
+        async_track_time_change(
+            hass, _async_check_expired_daily, hour=0, minute=0, second=0
+        )
+    )
+    entry.async_on_unload(
+        partial(ir.async_delete_issue, hass, DOMAIN, _expired_issue_id(entry))
+    )
     # Route subentry changes only fire update listeners.
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+
+def _expired_issue_id(entry: GtfsConfigEntry) -> str:
+    return f"feed_expired_{entry.entry_id}"
+
+
+@callback
+def _async_check_expired(
+    hass: HomeAssistant, entry: GtfsConfigEntry, last_date: dt.date | None
+) -> None:
+    """Raise an issue once the feed has no service left."""
+    if last_date is None or last_date >= dt_util.now().date():
+        ir.async_delete_issue(hass, DOMAIN, _expired_issue_id(entry))
+        return
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        _expired_issue_id(entry),
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="feed_expired",
+        translation_placeholders={
+            "title": entry.title,
+            "last_date": last_date.isoformat(),
+        },
+    )
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: GtfsConfigEntry) -> None:

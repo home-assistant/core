@@ -3,6 +3,7 @@
 import asyncio
 import csv
 from dataclasses import dataclass, field
+import datetime as dt
 from functools import partial
 import io
 from pathlib import Path
@@ -12,8 +13,8 @@ import zipfile
 
 from aiohttp import ClientError, ClientResponseError, ClientTimeout
 import pygtfs
-from pygtfs.gtfs_entities import Stop
-from sqlalchemy import or_
+from pygtfs.gtfs_entities import Service, ServiceException, Stop
+from sqlalchemy import func, or_
 from sqlalchemy.exc import IntegrityError
 
 from homeassistant.config_entries import ConfigEntry
@@ -31,6 +32,7 @@ _REQUIRED_FILES = frozenset(
 _CALENDAR_FILES = frozenset({"calendar.txt", "calendar_dates.txt"})
 # A stop or platform; trips only stop at these.
 LOCATION_TYPE_STOP = 0
+SERVICE_ADDED = 1
 
 type GtfsConfigEntry = ConfigEntry[GtfsFeed]
 
@@ -51,6 +53,7 @@ class GtfsFeed:
     # The schedule's SQLAlchemy session is not thread-safe and calendars read
     # from executor threads.
     lock: threading.Lock = field(default_factory=threading.Lock)
+    last_service_date: dt.date | None = None
 
 
 def feed_database_path(hass: HomeAssistant, database: str) -> Path:
@@ -196,7 +199,9 @@ def import_feed(zip_path: Path, db_path: Path, cancelled: threading.Event) -> No
 
 def open_feed(db_path: Path) -> GtfsFeed:
     """Open an imported feed for calendars reading from executor threads."""
-    return GtfsFeed(pygtfs.Schedule(f"{db_path}?check_same_thread=False"))
+    feed = GtfsFeed(pygtfs.Schedule(f"{db_path}?check_same_thread=False"))
+    feed.last_service_date = _last_service_date(feed.schedule)
+    return feed
 
 
 def close_feed(feed: GtfsFeed) -> None:
@@ -224,3 +229,15 @@ def list_stops(feed: GtfsFeed) -> dict[str, str]:
             .all()
         )
     return {stop_id: stop_name or stop_id for stop_id, stop_name in stops}
+
+
+def _last_service_date(schedule: pygtfs.Schedule) -> dt.date | None:
+    """Return the last date the feed's calendars run any service."""
+    session = schedule.session
+    last_regular = session.query(func.max(Service.end_date)).scalar()
+    last_added = (
+        session.query(func.max(ServiceException.date))
+        .filter(ServiceException.exception_type == SERVICE_ADDED)
+        .scalar()
+    )
+    return max(filter(None, (last_regular, last_added)), default=None)

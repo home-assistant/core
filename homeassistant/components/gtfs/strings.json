@@ -66,5 +66,11 @@
     "invalid_feed": {
       "message": "The downloaded file is not a valid GTFS feed: {error}"
     }
+  },
+  "issues": {
+    "feed_expired": {
+      "description": "The GTFS feed {title} has no service after {last_date}, so its route calendars stay empty. If the agency has published a new timetable, reconfigure the feed to download it again, entering a new URL if it has moved.",
+      "title": "GTFS feed {title} has expired"
+    }
   }
 }
