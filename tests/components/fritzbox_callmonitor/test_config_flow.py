@@ -115,7 +115,7 @@ def _patch_one_phonebook() -> Generator[None]:
         ),
         patch(
             "homeassistant.components.fritzbox_callmonitor.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield
@@ -159,7 +159,7 @@ async def test_setup_one_phonebook(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.fritzbox_callmonitor.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -221,7 +221,7 @@ async def test_setup_multiple_phonebooks(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.fritzbox_callmonitor.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -346,7 +346,7 @@ async def test_reauth_successful(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.fritzbox_callmonitor.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -424,7 +424,7 @@ async def test_options_flow_correct_prefixes(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.fritzbox_callmonitor.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -453,7 +453,7 @@ async def test_options_flow_incorrect_prefixes(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.fritzbox_callmonitor.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -487,7 +487,7 @@ async def test_options_flow_no_prefixes(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.fritzbox_callmonitor.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)

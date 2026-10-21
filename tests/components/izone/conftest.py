@@ -298,7 +298,7 @@ async def async_load_yaml_exclude(hass: HomeAssistant, *uids: str) -> None:
     with (
         patch(
             "homeassistant.components.izone.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.izone.discovery.async_ensure_discovery",
@@ -317,11 +317,11 @@ def mock_entry_setup() -> Generator[None]:
     with (
         patch(
             "homeassistant.components.izone.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.izone.async_unload_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield

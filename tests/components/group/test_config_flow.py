@@ -140,6 +140,7 @@ async def test_config_flow(
     [
         ("binary_sensor", {"all": False}),
         ("button", {}),
+        ("calendar", {}),
         ("cover", {}),
         ("event", {}),
         ("fan", {}),
@@ -392,6 +393,7 @@ async def test_all_options(
     [
         ("binary_sensor", {"all": False}),
         ("button", {}),
+        ("calendar", {}),
         ("cover", {}),
         ("event", {}),
         ("fan", {}),

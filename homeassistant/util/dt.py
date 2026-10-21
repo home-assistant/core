@@ -26,7 +26,7 @@ DATETIME_RE = re.compile(
     r"(?P<year>\d{4})-(?P<month>\d{1,2})-(?P<day>\d{1,2})"
     r"[T ](?P<hour>\d{1,2}):(?P<minute>\d{1,2})"
     r"(?::(?P<second>\d{1,2})(?:\.(?P<microsecond>\d{1,6})\d{0,6})?)?"
-    r"(?P<tzinfo>Z|[+-]\d{2}(?::?\d{2})?)?$"
+    r"(?P<tzinfo>Z|[+-]\d{2}(?::?\d{2}(?::?\d{2})?)?)?$"
 )
 
 # Copyright (c) Django Software Foundation and individual contributors.
@@ -101,7 +101,8 @@ def get_time_zone(time_zone_str: str) -> zoneinfo.ZoneInfo | None:
     """
     try:
         return zoneinfo.ZoneInfo(time_zone_str)
-    except zoneinfo.ZoneInfoNotFoundError:
+    # Malformed keys raise ValueError, overlong ones OSError
+    except zoneinfo.ZoneInfoNotFoundError, ValueError, OSError:
         return None
 
 
@@ -112,7 +113,8 @@ async def async_get_time_zone(time_zone_str: str) -> zoneinfo.ZoneInfo | None:
     """
     try:
         return await _async_get_time_zone(time_zone_str)
-    except zoneinfo.ZoneInfoNotFoundError:
+    # Malformed keys raise ValueError, overlong ones OSError
+    except zoneinfo.ZoneInfoNotFoundError, ValueError, OSError:
         return None
 
 
@@ -250,9 +252,12 @@ def parse_datetime(dt_str: str, *, raise_on_error: bool = False) -> dt.datetime 
     if tzinfo_str == "Z":
         tzinfo = UTC
     elif tzinfo_str is not None:
-        offset_mins = int(tzinfo_str[-2:]) if len(tzinfo_str) > 3 else 0
-        offset_hours = int(tzinfo_str[1:3])
-        offset = dt.timedelta(hours=offset_hours, minutes=offset_mins)
+        offset_digits = tzinfo_str[1:].replace(":", "")
+        offset = dt.timedelta(
+            hours=int(offset_digits[:2]),
+            minutes=int(offset_digits[2:4] or 0),
+            seconds=int(offset_digits[4:] or 0),
+        )
         if tzinfo_str[0] == "-":
             offset = -offset
         tzinfo = dt.timezone(offset)
@@ -311,8 +316,9 @@ def parse_time(time_str: str) -> dt.time | None:
         minute = int(parts[1])
         second = int(parts[2]) if len(parts) > 2 else 0
         return dt.time(hour, minute, second)
-    except ValueError:
-        # ValueError if value cannot be converted to an int or not in range
+    except ValueError, OverflowError:
+        # ValueError if value cannot be converted to an int or not in range,
+        # OverflowError if it does not even fit in a C int
         return None
 
 
@@ -451,12 +457,23 @@ def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> lis
     return res
 
 
-def _dst_offset_diff(dattim: dt.datetime) -> dt.timedelta:
-    """Return the offset when crossing the DST barrier."""
-    delta = dt.timedelta(hours=24)
-    return (dattim + delta).utcoffset() - (  # type: ignore[operator]
-        dattim - delta
-    ).utcoffset()
+def _second_fold_start(dattim: dt.datetime) -> dt.datetime:
+    """Return the first wall time of the second fold of an ambiguous datetime.
+
+    The result has fold=1. The transition is searched in UTC, between the
+    first and second fold readings of dattim, to the second.
+    """
+    tzinfo = dattim.tzinfo
+    low = dattim.replace(microsecond=0, fold=0).astimezone(UTC)
+    first_fold_offset = low.astimezone(tzinfo).utcoffset()
+    high = dattim.replace(microsecond=0, fold=1).astimezone(UTC)
+    while (gap := int((high - low).total_seconds())) > 1:
+        middle = low + dt.timedelta(seconds=gap // 2)
+        if middle.astimezone(tzinfo).utcoffset() == first_fold_offset:
+            low = middle
+        else:
+            high = middle
+    return high.astimezone(tzinfo).replace(fold=1)
 
 
 def _lower_bound(arr: list[int], cmp: int) -> int | None:
@@ -575,15 +592,14 @@ def find_next_time_expression_time(
             # longer matches within the fold).
             #   -> Check if result matches in the next fold. If so, emit that match
 
-            # Turn back the time by the DST offset, effectively run the algorithm on
-            # the first fold. If it matches on the first fold, that means it will also
-            # match on the second one.
+            # Run the algorithm from the start of the second fold. The whole second
+            # fold comes after `now`, so its first match is the next one.
 
             # Example: 2021.10.31 02:45:00+02:00 with pattern 02:30
             #   -> 2021.10.31 02:30:00+01:00
 
             check_result = find_next_time_expression_time(
-                now + _dst_offset_diff(now), seconds, minutes, hours
+                _second_fold_start(now), seconds, minutes, hours
             )
             if _datetime_ambiguous(check_result):
                 return check_result.replace(fold=1)

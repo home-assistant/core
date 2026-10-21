@@ -864,9 +864,9 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry and async_unload_entry."""
     with (
         patch(
-            "homeassistant.components.shelly.async_setup_entry", return_value=True
+            "homeassistant.components.shelly.async_setup_entry", return_value=None
         ) as mock_setup_entry,
-        patch("homeassistant.components.shelly.async_unload_entry", return_value=True),
+        patch("homeassistant.components.shelly.async_unload_entry", return_value=None),
     ):
         yield mock_setup_entry
 
