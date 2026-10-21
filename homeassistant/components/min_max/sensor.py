@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONF_ENTITIES,
     CONF_NAME,
     CONF_PLATFORM,
+    CONF_SCAN_INTERVAL,
     CONF_TYPE,
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
@@ -124,6 +125,7 @@ async def yaml_deprecation_notice(hass: HomeAssistant, config: ConfigType) -> No
     platform_config[CONF_ENTITIES] = platform_config.pop(CONF_ENTITY_IDS)
     platform_config.pop(CONF_ROUND_DIGITS)
     platform_config.pop(CONF_PLATFORM)
+    platform_config.pop(CONF_SCAN_INTERVAL, None)
     # Min/Max sum is unknown if any input is unavailable, other types skip it
     if platform_config[CONF_TYPE] != "sum":
         platform_config[CONF_IGNORE_NON_NUMERIC] = True
