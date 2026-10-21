@@ -71,32 +71,32 @@ async def test_all_entities(
 
 def test_ash_level_sensor_is_created_when_supported() -> None:
     """Test the ash-level sensor is created for pellet boilers that support it."""
+    mock_vicare = MockPyViCare([Fixture(set(), "vicare/Vitodens300W.json")])
+    device_config = mock_vicare.devices[0]
+    device_config.device_model = "Vitoligno_300-C"
+    api = device_config.asAutoDetectDevice()
 
-    class MockPelletsBoiler:
-        def getAshLevel(self) -> float:
-            return 18.2
+    with patch(
+        "PyViCare.PyViCarePelletsBoiler.PelletsBoiler.getAshLevel", return_value=18.2
+    ):
+        device = ViCareDevice(
+            config=device_config,
+            api=api,
+            serial="boiler-serial",
+            coordinator=MagicMock(),
+        )
+        entities = _build_entities([device])
+        ash_level_sensor = next(
+            entity
+            for entity in entities
+            if entity.entity_description.key == "ash_level"
+        )
 
-    device_config = MagicMock()
-    device_config.getConfig.return_value.serial = "gateway-serial"
-    device_config.getId.return_value = "0"
-    device_config.getModel.return_value = "Vitoligno_300-C"
-    device = ViCareDevice(
-        config=device_config,
-        api=MockPelletsBoiler(),
-        serial="boiler-serial",
-        coordinator=MagicMock(),
-    )
-
-    entities = _build_entities([device])
-    ash_level_sensor = next(
-        entity for entity in entities if entity.entity_description.key == "ash_level"
-    )
-
-    assert (
-        ash_level_sensor.entity_description.native_unit_of_measurement
-        == UnitOfRatio.PERCENTAGE
-    )
-    assert ash_level_sensor.entity_description.value_getter(device.api) == 18.2
+        assert (
+            ash_level_sensor.entity_description.native_unit_of_measurement
+            == UnitOfRatio.PERCENTAGE
+        )
+        assert ash_level_sensor.entity_description.value_getter(device.api) == 18.2
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
