@@ -4,9 +4,13 @@ from datetime import UTC, datetime
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
+from bizkaibus import BizkaibusParseError
+import pytest
+
 from homeassistant.components.bizkaibus.const import CONF_STOP_ID, DOMAIN
 from homeassistant.components.bizkaibus.coordinator import BizkaibusUpdateCoordinator
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
 
@@ -53,6 +57,22 @@ async def test_coordinator_returns_empty_data_without_timetable(
 
     assert coordinator.last_update_success
     assert coordinator.data == []
+
+
+async def test_coordinator_raises_update_failed_on_parse_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test a timetable parse error is reported as an update failure."""
+    parse_error = BizkaibusParseError()
+    api = SimpleNamespace(get_timetable=AsyncMock(side_effect=parse_error))
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_STOP_ID: "1234"})
+    entry.add_to_hass(hass)
+    coordinator = BizkaibusUpdateCoordinator(hass, api, entry)
+
+    with pytest.raises(UpdateFailed) as err:
+        await coordinator._async_update_data()
+
+    assert err.value.__cause__ is parse_error
 
 
 async def test_coordinator_skips_arrivals_without_nearest_arrival(

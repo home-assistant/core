@@ -5,11 +5,11 @@ from datetime import datetime, timedelta
 import logging
 from typing import override
 
-from bizkaibus import BizkaibusAPI, BizkaibusArrivalTime
+from bizkaibus import BizkaibusAPI, BizkaibusArrivalTime, BizkaibusParseError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_STOP_ID, DOMAIN, SCAN_INTERVAL
@@ -61,7 +61,10 @@ class BizkaibusUpdateCoordinator(DataUpdateCoordinator[list[ArrivalData]]):
     @override
     async def _async_update_data(self) -> list[ArrivalData]:
         """Async update wrapper."""
-        timetable = await self.api.get_timetable()
+        try:
+            timetable = await self.api.get_timetable()
+        except BizkaibusParseError as err:
+            raise UpdateFailed from err
 
         if timetable is None:
             return []
