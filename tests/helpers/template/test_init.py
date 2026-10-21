@@ -1110,6 +1110,22 @@ async def test_parse_result_cyclic_container_raises(hass: HomeAssistant) -> None
 
 
 @pytest.mark.parametrize(
+    "operator",
+    [
+        pytest.param("+", id="add"),
+        pytest.param("-", id="subtract"),
+        pytest.param("*", id="multiply"),
+    ],
+)
+async def test_parse_result_long_expression_returns_string(
+    hass: HomeAssistant, operator: str
+) -> None:
+    """A result too deeply nested for literal_eval is returned as a string."""
+    text = "1" + f" {operator} 1" * 60_000
+    assert render(hass, "{{ x }}", {"x": text}) == text
+
+
+@pytest.mark.parametrize(
     "template_string",
     [
         "{{ no_such_variable }}",
