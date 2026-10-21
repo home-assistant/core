@@ -25,6 +25,7 @@ from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
     SOURCE_USER,
+    ConfigEntryDisabler,
     ConfigEntryState,
     ConfigFlowResult,
 )
@@ -2374,3 +2375,38 @@ async def test_reconfigure_uses_runtime_identity_for_an_unrecorded_legacy_serial
     assert flow._pending_data[CONF_SERIAL] == SERIAL
     assert CONF_SERIAL not in mock_config_entry.data
     hass.config_entries.flow.async_abort(result["flow_id"])
+
+
+async def test_legacy_startup_rejects_another_configured_transport(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_besen_client: Mock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Do not load an unidentified legacy entry for another entry's charger."""
+    mock_config_entry.add_to_hass(hass)
+    other = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=f"lan:{SERIAL}",
+        disabled_by=ConfigEntryDisabler.USER,
+        data={
+            CONF_ADDRESS: f"lan:{SERIAL}",
+            CONF_HOST: HOST,
+            CONF_PIN: FIXTURE_PIN,
+            CONF_SERIAL: SERIAL,
+            CONF_TRANSPORT: "lan",
+        },
+    )
+    other.add_to_hass(hass)
+    mock_besen_client.state = mock_besen_client.state.updated(
+        info=mock_besen_client.state.info.updated(serial=SERIAL)
+    )
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hasattr(mock_config_entry, "runtime_data")
+    assert (
+        dr.async_entries_for_config_entry(device_registry, mock_config_entry.entry_id)
+        == []
+    )
+    mock_besen_client.async_stop.assert_awaited_once()

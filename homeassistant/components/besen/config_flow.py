@@ -24,7 +24,7 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, selector
+from homeassistant.helpers import selector
 
 from .const import (
     CONF_SERIAL,
@@ -37,6 +37,7 @@ from .coordinator import (
     BesenConnectionState,
     async_get_connection_state,
     async_get_known_serial,
+    async_is_serial_configured,
 )
 from .lan import async_acquire_udp_hub, async_release_udp_hub
 
@@ -53,35 +54,6 @@ _LOGGER = logging.getLogger(__name__)
 
 class _AlreadyConfigured(Exception):
     """The charger already has an entry using another transport."""
-
-
-def _serial_is_configured(
-    hass: HomeAssistant,
-    serial: str,
-    *,
-    address: str | None = None,
-    exclude_entry_id: str | None = None,
-) -> bool:
-    """Match serial identity even when a charger is currently unloaded."""
-    registry = dr.async_get(hass)
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.entry_id == exclude_entry_id or (
-            address is not None and entry.data.get(CONF_ADDRESS) == address
-        ):
-            continue
-        runtime = getattr(entry, "runtime_data", None)
-        if (
-            entry.data.get(CONF_SERIAL) == serial
-            or (runtime and runtime.client.state.info.serial == serial)
-            or any(
-                (DOMAIN, serial) in device.identifiers or device.serial_number == serial
-                for device in dr.async_entries_for_config_entry(
-                    registry, entry.entry_id
-                )
-            )
-        ):
-            return True
-    return False
 
 
 def _normalize_address(address: str) -> str:
@@ -169,7 +141,7 @@ async def _async_validate_input(
         info = client.state.info
     finally:
         await connection.async_cleanup()
-    if info.serial and _serial_is_configured(hass, info.serial, address=address):
+    if info.serial and async_is_serial_configured(hass, info.serial, address=address):
         raise _AlreadyConfigured
     return info.model or name or address, info.serial
 
@@ -568,7 +540,7 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ) and serial != expected_serial:
                     self._operation_error = "wrong_device"
                     return
-                if _serial_is_configured(self.hass, serial, address=address):
+                if async_is_serial_configured(self.hass, serial, address=address):
                     self._operation_error = "already_configured"
                     return
                 self._pending_data[CONF_HOST] = candidate.host
@@ -651,7 +623,7 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self._connection_error_form({"base": self._operation_error})
         entry = self._current_entry()
         serial = self._pending_data.get(CONF_SERIAL)
-        if serial and _serial_is_configured(
+        if serial and async_is_serial_configured(
             self.hass, serial, exclude_entry_id=entry.entry_id if entry else None
         ):
             return self.async_abort(reason="already_configured")

@@ -14,6 +14,7 @@ from besen.exceptions import CannotConnect, CommandFailed
 from besen.models import BesenData
 
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -40,6 +41,36 @@ def async_get_known_serial(hass: HomeAssistant, entry: BesenConfigEntry) -> str 
         if device.serial_number:
             return device.serial_number
     return None
+
+
+@callback
+def async_is_serial_configured(
+    hass: HomeAssistant,
+    serial: str,
+    *,
+    address: str | None = None,
+    exclude_entry_id: str | None = None,
+) -> bool:
+    """Match serial identity even when a charger is currently unloaded."""
+    registry = dr.async_get(hass)
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.entry_id == exclude_entry_id or (
+            address is not None and entry.data.get(CONF_ADDRESS) == address
+        ):
+            continue
+        runtime = getattr(entry, "runtime_data", None)
+        if (
+            entry.data.get(CONF_SERIAL) == serial
+            or (runtime and runtime.client.state.info.serial == serial)
+            or any(
+                (DOMAIN, serial) in device.identifiers or device.serial_number == serial
+                for device in dr.async_entries_for_config_entry(
+                    registry, entry.entry_id
+                )
+            )
+        ):
+            return True
+    return False
 
 
 @dataclass
@@ -178,6 +209,10 @@ class BesenCoordinator(DataUpdateCoordinator[BesenData]):
             self.client.state.info.serial != serial
         ):
             raise CannotConnect("Charger identity does not match the saved entry")
+        if (serial := self.client.state.info.serial) and async_is_serial_configured(
+            self.hass, serial, exclude_entry_id=self.config_entry.entry_id
+        ):
+            raise CannotConnect("Charger is already configured in another entry")
 
     @override
     async def async_shutdown(self) -> None:
