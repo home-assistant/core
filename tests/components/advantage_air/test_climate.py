@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from advantage_air import ApiError
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.advantage_air.climate import ADVANTAGE_AIR_MYAUTO
@@ -31,8 +32,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import add_mock_config
-
-from tests.common import snapshot_platform
 
 
 @pytest.fixture(autouse=True)

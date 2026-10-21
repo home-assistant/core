@@ -7,6 +7,7 @@ from homeassistant.components.homeassistant.triggers import (
     numeric_state as numeric_state_trigger,
     state as state_trigger,
 )
+from homeassistant.components.homeassistant.triggers.state import StateTriggerArgument
 from homeassistant.const import (
     CONF_ABOVE,
     CONF_BELOW,
@@ -36,14 +37,14 @@ POSITION_TRIGGER_SCHEMA = probatio.All(
             probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
             probatio.Required(CONF_TYPE): probatio.In(POSITION_TRIGGER_TYPES),
             probatio.Optional(CONF_ABOVE): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=0, max=100)
+                probatio.Coerce(int), probatio.Percentage()
             ),
             probatio.Optional(CONF_BELOW): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=0, max=100)
+                probatio.Coerce(int), probatio.Percentage()
             ),
         }
     ),
-    cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
+    probatio.AtLeastOne(CONF_BELOW, CONF_ABOVE),
 )
 
 STATE_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
@@ -54,7 +55,17 @@ STATE_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     }
 )
 
-TRIGGER_SCHEMA = probatio.Any(POSITION_TRIGGER_SCHEMA, STATE_TRIGGER_SCHEMA)
+TRIGGER_SCHEMA = probatio.TaggedUnion(
+    CONF_TYPE,
+    {
+        "position": POSITION_TRIGGER_SCHEMA,
+        "tilt_position": POSITION_TRIGGER_SCHEMA,
+        "opened": STATE_TRIGGER_SCHEMA,
+        "closed": STATE_TRIGGER_SCHEMA,
+        "opening": STATE_TRIGGER_SCHEMA,
+        "closing": STATE_TRIGGER_SCHEMA,
+    },
+)
 
 
 async def async_get_triggers(
@@ -123,10 +134,10 @@ async def async_get_trigger_capabilities(
         "extra_fields": probatio.Schema(
             {
                 probatio.Optional(CONF_ABOVE, default=0): probatio.All(
-                    probatio.Coerce(int), probatio.Range(min=0, max=100)
+                    probatio.Coerce(int), probatio.Percentage()
                 ),
                 probatio.Optional(CONF_BELOW, default=100): probatio.All(
-                    probatio.Coerce(int), probatio.Range(min=0, max=100)
+                    probatio.Coerce(int), probatio.Percentage()
                 ),
             }
         )
@@ -150,13 +161,13 @@ async def async_attach_trigger(
         elif config[CONF_TYPE] == "closing":
             to_state = CoverState.CLOSING
 
-        state_config = {
-            CONF_PLATFORM: "state",
-            CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-            state_trigger.CONF_TO: to_state,
+        state_config: ConfigType = {
+            StateTriggerArgument.PLATFORM: "state",
+            StateTriggerArgument.ENTITY_ID: config[CONF_ENTITY_ID],
+            StateTriggerArgument.TO: to_state,
         }
         if CONF_FOR in config:
-            state_config[CONF_FOR] = config[CONF_FOR]
+            state_config[StateTriggerArgument.FOR] = config[CONF_FOR]
         state_config = await state_trigger.async_validate_trigger_config(
             hass, state_config
         )

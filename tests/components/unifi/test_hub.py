@@ -1,18 +1,27 @@
 """Test UniFi Network."""
 
 from http import HTTPStatus
+import logging
 from types import MappingProxyType
 from typing import Any
 from unittest.mock import patch
 
 import aiounifi
+from aiounifi import EndpointNotFound
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.models.message import MessageKey
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.unifi.const import CONF_BLOCK_CLIENT, DOMAIN
-from homeassistant.components.unifi.coordinator import POLL_INTERVAL
-from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
+from homeassistant.components.unifi.coordinator import IDLE_POLL_INTERVAL, POLL_INTERVAL
+from homeassistant.components.unifi.errors import (
+    AuthenticationRequired,
+    CannotConnect,
+    MfaRequired,
+)
 from homeassistant.components.unifi.hub import get_unifi_api
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, EVENT_STATE_REPORTED, Platform
@@ -25,9 +34,6 @@ from .conftest import (
     WebsocketMessageMock,
     WebsocketStateManager,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_hub_setup(
@@ -84,7 +90,7 @@ async def test_coordinators_preserve_handler_update_sources(
         api.traffic_routes,
     ):
         coordinator = loader.get_data_update_coordinator(handler)
-        assert coordinator.update_interval == POLL_INTERVAL
+        assert coordinator.update_interval == IDLE_POLL_INTERVAL
 
 
 async def test_get_data_update_coordinator_requires_registered_handler(
@@ -109,6 +115,12 @@ async def test_polling_coordinator_refreshes_after_interval(
         api.object_oriented_network_configs
     )
 
+    assert coordinator.update_interval == IDLE_POLL_INTERVAL
+
+    with patch.object(coordinator.handler, "items", return_value=[("id", object())]):
+        async_fire_time_changed(hass, dt_util.utcnow() + IDLE_POLL_INTERVAL)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
     assert coordinator.update_interval == POLL_INTERVAL
 
     with patch.object(
@@ -120,6 +132,50 @@ async def test_polling_coordinator_refreshes_after_interval(
         await hass.async_block_till_done()
 
     assert mock_update.call_count >= 1
+
+
+async def test_endpoint_not_found_disables_object_oriented_network_config_polling(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Ensure an unavailable optional endpoint stops polling after one warning."""
+    loader = config_entry_setup.runtime_data.entity_loader
+    api = config_entry_setup.runtime_data.api
+    coordinator = loader.get_data_update_coordinator(
+        api.object_oriented_network_configs
+    )
+    traffic_rules_coordinator = loader.get_data_update_coordinator(api.traffic_rules)
+
+    with patch.object(
+        coordinator.handler,
+        "update",
+        side_effect=EndpointNotFound("endpoint not found"),
+    ) as mock_update:
+        async_fire_time_changed(hass, dt_util.utcnow() + IDLE_POLL_INTERVAL)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert coordinator.update_interval is None
+        assert coordinator.last_update_success is False
+        assert mock_update.call_count == 1
+
+        async_fire_time_changed(hass, dt_util.utcnow() + POLL_INTERVAL)
+        await hass.async_block_till_done()
+
+        assert mock_update.call_count == 1
+
+        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+
+    assert mock_update.call_count == 2
+    assert traffic_rules_coordinator.update_interval == IDLE_POLL_INTERVAL
+    assert (
+        caplog.text.count(
+            "UniFi ObjectOrientedNetworkConfigs endpoint is unavailable; disabling polling"
+        )
+        == 1
+    )
 
 
 @pytest.mark.parametrize(
@@ -166,16 +222,16 @@ async def test_entity_unavailable_on_polling_coordinator_failure(
         "update",
         side_effect=RuntimeError("Polling error"),
     ):
-        await coordinator.async_refresh()
-        await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + POLL_INTERVAL)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert coordinator.last_update_success is False
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "unavailable"
 
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + POLL_INTERVAL)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert coordinator.last_update_success is True
     state = hass.states.get(entity_id)
@@ -362,6 +418,87 @@ async def test_coordinator_update_only_refreshes_changed_entity(
     assert other_entity_id not in written_entity_ids
 
 
+OLD_SITE_ID = "5f0a1b2c3d4e5f6a7b8c9d0e"
+NEW_SITE_ID = "0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d"
+
+
+def site(name: str, site_id: str) -> list[dict[str, Any]]:
+    """Return a site payload."""
+    return [{"desc": "Site name", "name": name, "role": "admin", "_id": site_id}]
+
+
+@pytest.mark.parametrize("site_payload", [site("site_id", NEW_SITE_ID)])
+async def test_site_id_changed(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Follow a site from its ObjectId to the UUID UniFi Network 11 gives it."""
+    hass.config_entries.async_update_entry(config_entry, unique_id=OLD_SITE_ID)
+    devices = {
+        domain: device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id, identifiers={(domain, OLD_SITE_ID)}
+        )
+        for domain in (DOMAIN, SWITCH_DOMAIN)
+    }
+
+    await config_entry_factory()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.unique_id == NEW_SITE_ID
+    for domain, device in devices.items():
+        assert device_registry.async_get_device_by_identifier(
+            (domain, NEW_SITE_ID), config_entry.entry_id
+        ) == device_registry.async_get(device.id)
+
+
+@pytest.mark.parametrize(
+    ("unique_id", "site_payload", "other_entry_unique_id"),
+    [
+        pytest.param(
+            OLD_SITE_ID,
+            site("other", NEW_SITE_ID),
+            "2",
+            id="no_site_with_configured_name",
+        ),
+        pytest.param(
+            OLD_SITE_ID,
+            site("site_id", NEW_SITE_ID),
+            NEW_SITE_ID,
+            id="new_id_already_configured",
+        ),
+        pytest.param(
+            "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d",
+            site("site_id", NEW_SITE_ID),
+            "2",
+            id="old_id_not_object_id",
+        ),
+        pytest.param(
+            OLD_SITE_ID,
+            site("site_id", "6f0a1b2c3d4e5f6a7b8c9d0e"),
+            "2",
+            id="new_id_not_uuid",
+        ),
+    ],
+)
+async def test_site_id_changed_not_followed(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
+    unique_id: str,
+    other_entry_unique_id: str,
+) -> None:
+    """Keep the entry untouched unless it is the ObjectId to UUID site change."""
+    hass.config_entries.async_update_entry(config_entry, unique_id=unique_id)
+    MockConfigEntry(domain=DOMAIN, unique_id=other_entry_unique_id).add_to_hass(hass)
+
+    await config_entry_factory()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.unique_id == unique_id
+
+
 async def test_reset_after_successful_setup(
     hass: HomeAssistant, config_entry_setup: MockConfigEntry
 ) -> None:
@@ -384,6 +521,7 @@ async def test_reset_fails(
     ):
         assert not await hass.config_entries.async_unload(config_entry_setup.entry_id)
         assert config_entry_setup.state is ConfigEntryState.FAILED_UNLOAD
+        assert config_entry_setup.reason == "Failed to unload UniFi Network"
 
 
 @pytest.mark.usefixtures("mock_device_registry")
@@ -475,6 +613,7 @@ async def test_reconnect_mechanism_exceptions(
         (aiounifi.ServiceUnavailable, CannotConnect),
         (aiounifi.RequestError, CannotConnect),
         (aiounifi.ResponseError, CannotConnect),
+        (aiounifi.AuthenticationRateLimitError, CannotConnect),
         (aiounifi.Unauthorized, AuthenticationRequired),
         (aiounifi.LoginRequired, AuthenticationRequired),
         (aiounifi.AiounifiException, AuthenticationRequired),
@@ -492,3 +631,20 @@ async def test_get_unifi_api_fails_to_connect(
         pytest.raises(raised_exception),
     ):
         await get_unifi_api(hass, config_entry_data)
+
+
+async def test_get_unifi_api_mfa_required(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    config_entry_data: MappingProxyType[str, Any],
+) -> None:
+    """Check that a login requiring MFA is reported as such without a traceback."""
+    with (
+        patch("aiounifi.Controller.login", side_effect=aiounifi.TwoFaTokenRequired),
+        pytest.raises(MfaRequired),
+    ):
+        await get_unifi_api(hass, config_entry_data)
+    (record,) = [r for r in caplog.records if r.name.startswith("homeassistant")]
+    assert record.levelno == logging.WARNING
+    assert record.exc_info is None
+    assert "requires multi-factor authentication" in record.getMessage()

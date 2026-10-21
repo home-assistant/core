@@ -13,8 +13,7 @@ from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AutomowerConfigEntry
-from .coordinator import AutomowerDataUpdateCoordinator
+from .coordinator import AutomowerConfigEntry, AutomowerDataUpdateCoordinator
 from .entity import (
     AutomowerControlEntity,
     WorkAreaControlEntity,

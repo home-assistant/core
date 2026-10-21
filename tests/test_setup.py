@@ -7,6 +7,14 @@ from unittest.mock import ANY, AsyncMock, Mock, patch
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    assert_setup_component,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant import config_entries, loader, setup
 from homeassistant.config_entries import ConfigEntry
@@ -25,15 +33,6 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.issue_registry import IssueRegistry
 from homeassistant.helpers.typing import ConfigType
-
-from .common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    assert_setup_component,
-    mock_integration,
-    mock_platform,
-)
 
 
 @pytest.fixture
@@ -335,6 +334,63 @@ async def test_component_not_setup_twice_if_loaded_during_other_setup(
     await hass.async_add_executor_job(thread.join)
 
     assert len(result) == 1
+
+
+async def test_component_setup_concurrent_waiter_cancelled(
+    hass: HomeAssistant,
+) -> None:
+    """Test cancelling a concurrent setup caller does not break the setup."""
+    setup_started = asyncio.Event()
+    setup_stall = asyncio.Event()
+
+    async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+        setup_started.set()
+        await setup_stall.wait()
+        return True
+
+    mock_integration(hass, MockModule("comp", async_setup=async_setup))
+
+    setup_task1 = asyncio.create_task(setup.async_setup_component(hass, "comp", {}))
+    await setup_started.wait()
+    setup_future = hass.data[setup._DATA_SETUP]["comp"]
+    setup_task2 = asyncio.create_task(setup.async_setup_component(hass, "comp", {}))
+    await asyncio.sleep(0)
+    setup_task2.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await setup_task2
+    setup_stall.set()
+
+    assert await setup_task1 is True
+    assert setup_future.result() is True
+
+
+async def test_component_setup_dependency_waiter_cancelled(
+    hass: HomeAssistant,
+) -> None:
+    """Test cancelling a component setup does not break its dependency setup."""
+    setup_started = asyncio.Event()
+    setup_stall = asyncio.Event()
+
+    async def async_setup_dep(hass: HomeAssistant, config: ConfigType) -> bool:
+        setup_started.set()
+        await setup_stall.wait()
+        return True
+
+    mock_integration(hass, MockModule("dep", async_setup=async_setup_dep))
+    mock_integration(hass, MockModule("comp", dependencies=["dep"]))
+
+    dep_task = asyncio.create_task(setup.async_setup_component(hass, "dep", {}))
+    await setup_started.wait()
+    setup_future = hass.data[setup._DATA_SETUP]["dep"]
+    comp_task = asyncio.create_task(setup.async_setup_component(hass, "comp", {}))
+    await hass.async_block_till_done()
+    comp_task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await comp_task
+    setup_stall.set()
+
+    assert await dep_task is True
+    assert setup_future.result() is True
 
 
 async def test_component_not_setup_missing_dependencies(hass: HomeAssistant) -> None:
@@ -1449,3 +1505,30 @@ async def test_async_wait_component(hass: HomeAssistant) -> None:
     # Clear the event, then call again to make sure we don't block
     setup_stall.clear()
     assert await setup.async_wait_component(hass, "test") is True
+
+
+async def test_async_wait_component_waiter_cancelled(hass: HomeAssistant) -> None:
+    """Test cancelling async_wait_component does not break the setup."""
+    setup_started = asyncio.Event()
+    setup_stall = asyncio.Event()
+
+    async def mock_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+        setup_started.set()
+        await setup_stall.wait()
+        return True
+
+    mock_integration(hass, MockModule("test", async_setup=mock_setup))
+    setup.async_set_domains_to_be_loaded(hass, {"test"})
+    setup_done_future = hass.data[setup._DATA_SETUP_DONE]["test"]
+
+    setup_task = asyncio.create_task(setup.async_setup_component(hass, "test", {}))
+    await setup_started.wait()
+    wait_task = asyncio.create_task(setup.async_wait_component(hass, "test"))
+    await asyncio.sleep(0)
+    wait_task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await wait_task
+    setup_stall.set()
+
+    assert await setup_task is True
+    assert setup_done_future.result() is True

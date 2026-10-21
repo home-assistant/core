@@ -10,6 +10,7 @@ from pyzonneplan import (
     Zonneplan,
     ZonneplanConnectionError,
     ZonneplanInvalidOtpError,
+    ZonneplanRateLimitError,
     ZonneplanTimeoutError,
 )
 
@@ -67,6 +68,8 @@ class ZonneplanConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"base": "cannot_connect"}
         except ZonneplanTimeoutError:
             return {"base": "timeout_connect"}
+        except ZonneplanRateLimitError:
+            return {"base": "rate_limited"}
         except Exception:
             LOGGER.exception("Unexpected exception")
             return {"base": "unknown"}
@@ -104,6 +107,8 @@ class ZonneplanConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except ZonneplanTimeoutError:
                 errors["base"] = "timeout_connect"
+            except ZonneplanRateLimitError:
+                errors["base"] = "rate_limited"
             except Exception:
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"

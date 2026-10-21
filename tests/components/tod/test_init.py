@@ -1,12 +1,11 @@
 """Test the Times of the Day integration."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.tod.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.freeze_time("2022-03-16 17:37:00", tz_offset=-7)

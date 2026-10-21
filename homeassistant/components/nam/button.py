@@ -66,7 +66,7 @@ class NAMButton(CoordinatorEntity[NAMDataUpdateCoordinator], ButtonEntity):
         """Triggers the restart."""
         try:
             await self.coordinator.nam.async_restart()
-        except (ApiError, ClientError) as err:
+        except (ApiError, ClientError, TimeoutError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_communication_action_error",

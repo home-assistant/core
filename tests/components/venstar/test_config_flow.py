@@ -3,6 +3,8 @@
 import logging
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.venstar.const import DOMAIN
 from homeassistant.const import (
@@ -16,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import VenstarColorTouchMock
-
-from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.venstar.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -79,6 +79,24 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    with (
+        patch(
+            "homeassistant.components.venstar.config_flow.VenstarColorTouch.update_info",
+            new=VenstarColorTouchMock.update_info,
+        ),
+        patch(
+            "homeassistant.components.venstar.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            TEST_DATA,
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_unknown_error(hass: HomeAssistant) -> None:
     """Test we handle unknown error."""
@@ -97,6 +115,24 @@ async def test_unknown_error(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+    with (
+        patch(
+            "homeassistant.components.venstar.config_flow.VenstarColorTouch.update_info",
+            new=VenstarColorTouchMock.update_info,
+        ),
+        patch(
+            "homeassistant.components.venstar.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            TEST_DATA,
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_already_configured(hass: HomeAssistant) -> None:
@@ -117,7 +153,7 @@ async def test_already_configured(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.venstar.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(

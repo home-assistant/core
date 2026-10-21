@@ -1,11 +1,19 @@
 """Provides the constants needed for component."""
 
 from enum import IntFlag, StrEnum
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 import probatio
 
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.entity_component import EntityComponent
+
+    from .entity import HumidifierEntity
+
 DOMAIN: Final = "humidifier"
+DATA_COMPONENT: HassKey[EntityComponent[HumidifierEntity]] = HassKey(DOMAIN)
 
 MODE_NORMAL = "normal"
 MODE_ECO = "eco"
@@ -77,3 +85,20 @@ class HumidifierDeviceClass(StrEnum):
 DEVICE_CLASSES_SCHEMA = probatio.All(
     probatio.Lower, probatio.Coerce(HumidifierDeviceClass)
 )
+
+
+class HumidifierService(StrEnum):
+    """Store keys for humidifier services."""
+
+    SET_HUMIDITY = "set_humidity"
+    SET_MODE = "set_mode"
+    TOGGLE = "toggle"
+    TURN_OFF = "turn_off"
+    TURN_ON = "turn_on"
+
+
+class HumidifierServiceArgument(StrEnum):
+    """Store keys for humidifier service arguments."""
+
+    HUMIDITY = "humidity"
+    MODE = "mode"

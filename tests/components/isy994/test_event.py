@@ -17,6 +17,11 @@ from pyisy.constants import (
 from pyisy.helpers import NodeProperty
 from pyisy.nodes import NodeChangedEvent
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.isy994.const import EVENT_ISY994_CONTROL
@@ -24,8 +29,6 @@ from homeassistant.components.isy994.event import _sub_button_name
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, async_capture_events, snapshot_platform
 
 SWITCH_ENTITY_ID = "switch.garage_relay"
 

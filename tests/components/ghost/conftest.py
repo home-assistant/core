@@ -4,14 +4,13 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ghost.const import (
     CONF_ADMIN_API_KEY,
     CONF_API_URL,
     DOMAIN,
 )
-
-from tests.common import MockConfigEntry
 
 API_URL = "https://test.ghost.io"
 API_KEY = (
@@ -107,6 +106,6 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setup entry."""
     with patch(
         "homeassistant.components.ghost.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         yield mock_setup

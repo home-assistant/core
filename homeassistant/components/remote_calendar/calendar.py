@@ -7,15 +7,18 @@ from typing import override
 from ical.event import Event, EventStatus
 from ical.timeline import Timeline, materialize_timeline
 
-from homeassistant.components.calendar import CalendarEntity, CalendarEvent
+from homeassistant.components.calendar import (
+    CalendarEntity,
+    CalendarEvent,
+    CalendarEventStatus,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from . import RemoteCalendarConfigEntry
 from .const import CONF_CALENDAR_NAME
-from .coordinator import RemoteCalendarDataUpdateCoordinator
+from .coordinator import RemoteCalendarConfigEntry, RemoteCalendarDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +42,7 @@ async def async_setup_entry(
     """Set up the remote calendar platform."""
     coordinator = entry.runtime_data
     entity = RemoteCalendarEntity(coordinator, entry)
-    async_add_entities([entity], True)
+    async_add_entities([entity])
 
 
 class RemoteCalendarEntity(
@@ -170,4 +173,10 @@ def _get_calendar_event(event: Event) -> CalendarEvent:
         rrule=event.rrule.as_rrule_str() if event.rrule else None,
         recurrence_id=event.recurrence_id,
         location=event.location,
+        # Callers drop cancelled events, the one status CalendarEventStatus lacks.
+        status=(
+            CalendarEventStatus(event.status.value.lower())
+            if event.status is not None
+            else None
+        ),
     )

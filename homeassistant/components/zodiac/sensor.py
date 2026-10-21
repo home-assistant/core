@@ -176,6 +176,7 @@ class ZodiacSensor(SensorEntity):
         SIGN_VIRGO,
     ]
     _attr_translation_key = "sign"
+    # Legacy format, kept as migrating existing unique IDs is not worth the risk
     _attr_unique_id = DOMAIN  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
     def __init__(self, entry_id: str) -> None:

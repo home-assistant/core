@@ -54,15 +54,17 @@ def process_service_info(
         address = service_info.device.address
         for device_key, event in update.events.items():
             sensor_device_info = update.devices[device_key.device_id]
-            device = device_registry.async_get_or_create(
+            device = device_registry.async_get_or_create_device(
                 config_entry_id=entry.entry_id,
-                connections={(CONNECTION_BLUETOOTH, address)},
-                identifiers={(BLUETOOTH_DOMAIN, address)},
-                manufacturer=sensor_device_info.manufacturer,
-                model=sensor_device_info.model,
-                name=sensor_device_info.name,
-                sw_version=sensor_device_info.sw_version,
-                hw_version=sensor_device_info.hw_version,
+                device_info=dr.DeviceInfo(
+                    connections={(CONNECTION_BLUETOOTH, address)},
+                    identifiers={(BLUETOOTH_DOMAIN, address)},
+                    manufacturer=sensor_device_info.manufacturer,
+                    model=sensor_device_info.model,
+                    name=sensor_device_info.name,
+                    sw_version=sensor_device_info.sw_version,
+                    hw_version=sensor_device_info.hw_version,
+                ),
             )
             # event_class may be postfixed with a number, ie 'button_2'
             # but if there is only one button then it will be 'button'
@@ -118,7 +120,7 @@ def format_discovered_event_class(address: str) -> str:
     return f"{DOMAIN}_discovered_event_class_{address}"
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up Xiaomi BLE device from a config entry."""
     address = entry.unique_id
     assert address is not None
@@ -183,9 +185,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     # only start after all platforms have had a chance to subscribe
     entry.async_on_unload(coordinator.async_start())
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: XiaomiBLEConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: XiaomiBLEConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

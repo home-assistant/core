@@ -16,10 +16,18 @@ from homeassistant.helpers import device_registry as dr
 from .const import CONF_SSL_CERTIFICATE, CONF_SSL_KEY, DOMAIN
 
 PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CLIMATE,
     Platform.COVER,
+    Platform.EVENT,
+    Platform.LIGHT,
+    Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.VALVE,
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,7 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 type BoschConfigEntry = ConfigEntry[SHCSession]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> None:
     """Set up Bosch SHC from a config entry."""
     data = entry.data
 
@@ -56,14 +64,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> boo
     entry.runtime_data = session
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, shc_info.unique_id)},
-        identifiers={(DOMAIN, shc_info.unique_id)},
-        manufacturer="Bosch",
-        name=entry.title,
-        model="SmartHomeController",
-        sw_version=shc_info.version,
+        device_info=dr.DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, shc_info.unique_id)},
+            identifiers={(DOMAIN, shc_info.unique_id)},
+            manufacturer="Bosch",
+            name=entry.title,
+            model="SmartHomeController",
+            sw_version=shc_info.version,
+        ),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -77,11 +87,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> boo
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_polling)
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> None:
     """Unload a config entry."""
     await hass.async_add_executor_job(entry.runtime_data.stop_polling)
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
