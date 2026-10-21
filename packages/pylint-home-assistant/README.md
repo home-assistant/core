@@ -171,6 +171,8 @@ Every check has a code following the
 | `W7450` | [`home-assistant-log-and-raise`](#w7450-home-assistant-log-and-raise) | Don't log an error that is raised to Home Assistant, which already reports it |
 | `W7452` | [`home-assistant-action-registered-outside-services-module`](#w7452-home-assistant-action-registered-outside-services-module) | Actions should be registered from `async_setup_services` or `setup_services` in `services.py` |
 | `W7453` | [`home-assistant-invalid-setup-services`](#w7453-home-assistant-invalid-setup-services) | `async_setup_services` / `setup_services` should be synchronous and only take `hass` |
+| `W7454` | [`home-assistant-unit-raw-string`](#w7454-home-assistant-unit-raw-string) | Use the unit constant instead of a raw string for an entity with a device class |
+| `W7455` | [`home-assistant-unit-invalid-for-device-class`](#w7455-home-assistant-unit-invalid-for-device-class) | Unit is not valid for the entity's device class |
 
 ## `home_assistant_logger` checker
 
@@ -969,6 +971,48 @@ another translation references with `[%key:...%]`.
 
 Other platforms, such as `switch`, don't fall back to the device class name,
 so they are not checked.
+
+
+## `home_assistant_device_class_unit` checker
+
+Detects sensor and number entity descriptions and entity classes with a
+`device_class` whose unit of measurement is a raw string. Only units in the
+`native_unit_of_measurement`, `suggested_unit_of_measurement` and
+`unit_of_measurement` fields, and their `_attr_` counterparts set in an
+entity class body, are checked.
+
+The units a device class accepts come from `DEVICE_CLASS_UNITS` in
+`homeassistant/components/sensor/const.py` and
+`homeassistant/components/number/const.py`. Entities without a device class,
+or with one that accepts any unit (such as `monetary`), are not checked, as a
+raw string is often the only option there.
+
+### `W7454`: `home-assistant-unit-raw-string`
+
+The unit is a raw string that is available as a constant. Use the constant
+instead:
+
+```python
+# Bad
+SensorEntityDescription(
+    key="temperature",
+    device_class=SensorDeviceClass.TEMPERATURE,
+    native_unit_of_measurement="°C",
+)
+
+# Good
+SensorEntityDescription(
+    key="temperature",
+    device_class=SensorDeviceClass.TEMPERATURE,
+    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+)
+```
+
+### `W7455`: `home-assistant-unit-invalid-for-device-class`
+
+The unit is a raw string that the device class does not accept, such as
+`"min"` for a temperature sensor. Use one of the units the device class
+accepts, or remove the device class if none of them fit.
 
 
 ## `home_assistant_duplicate_const` checker
