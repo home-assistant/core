@@ -23,6 +23,7 @@ from pytest_homeassistant.common import (
     mock_config_flow,
     mock_platform,
 )
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import paths
 
@@ -1641,3 +1642,45 @@ async def test_search_media_acts_as_calling_user(
         )
 
     assert search.call_args.kwargs["user"] == expected_user
+
+
+async def test_websocket_search_media_acts_as_calling_user(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that a UI search does not run as the user of a previous service call."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    MockUser(id=MOCK_USER_ID, is_owner=True).add_to_hass(hass)
+    client = await hass_ws_client(hass)
+
+    with patch.object(
+        music_assistant_client.music, "search", return_value=SearchResults()
+    ) as search:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_SEARCH_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.test_player_1",
+                ATTR_MEDIA_SEARCH_QUERY: "artist a",
+            },
+            blocking=True,
+            return_response=True,
+            context=Context(user_id=MOCK_USER_ID),
+        )
+        await client.send_json_auto_id(
+            {
+                "type": "media_player/search_media",
+                "entity_id": "media_player.test_player_1",
+                "search_query": "artist a",
+            }
+        )
+        msg = await client.receive_json()
+
+    assert msg["success"]
+    assert search.call_args.kwargs["user"] == LinkedUser(
+        provider=AuthProviderType.HOME_ASSISTANT,
+        user_id=hass_admin_user.id,
+        required=False,
+    )
