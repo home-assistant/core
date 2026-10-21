@@ -3,6 +3,7 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.knx.const import DOMAIN, KNX_ADDRESS, KNX_MODULE_KEY
 from homeassistant.const import STATE_UNKNOWN, EntityCategory, Platform
@@ -10,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import KNXTestKit
-
-from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.parametrize(
