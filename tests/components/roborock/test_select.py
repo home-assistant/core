@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from roborock import CleanTypeMapping, RoborockCommand
 from roborock.data import (
     CleanPathPreferenceMapping,
@@ -30,8 +31,6 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import FakeDevice
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def platforms() -> list[Platform]:
@@ -53,6 +52,18 @@ def platforms() -> list[Platform]:
             "mild",
             RoborockCommand.SET_WATER_BOX_CUSTOM_MODE,
             [201],
+        ),
+        (
+            "select.roborock_s7_maxv_dock_empty_mode",
+            "light",
+            RoborockCommand.SET_DUST_COLLECTION_MODE,
+            {"mode": 1},
+        ),
+        (
+            "select.roborock_s7_maxv_dock_empty_mode",
+            "smart",
+            RoborockCommand.SET_DUST_COLLECTION_MODE,
+            {"mode": RoborockDockDustCollectionModeCode.as_dict()["smart"]},
         ),
     ],
 )

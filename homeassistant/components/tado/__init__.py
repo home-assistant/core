@@ -104,14 +104,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> None
     for device in coordinator.data["device"].values():
         if device["deviceType"] in TADO_BRIDGE_MODELS:
             _LOGGER.debug("Pre-registering Tado bridge: %s", device["shortSerialNo"])
-            device_registry.async_get_or_create(
+            device_registry.async_get_or_create_device(
                 config_entry_id=entry.entry_id,
-                identifiers={(DOMAIN, device["shortSerialNo"])},
-                manufacturer="Tado",
-                model=device["deviceType"],
-                name=device["serialNo"],
-                sw_version=device["currentFwVersion"],
-                configuration_url=f"https://app.tado.com/en/main/settings/rooms-and-devices/device/{device['serialNo']}",
+                device_info=dr.DeviceInfo(
+                    identifiers={(DOMAIN, device["shortSerialNo"])},
+                    manufacturer="Tado",
+                    model=device["deviceType"],
+                    name=device["serialNo"],
+                    sw_version=device["currentFwVersion"],
+                    configuration_url=f"https://app.tado.com/en/main/settings/rooms-and-devices/device/{device['serialNo']}",
+                ),
             )
 
     entry.runtime_data = coordinator

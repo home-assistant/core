@@ -1,6 +1,7 @@
 {
   "domain": "hddtemp",
   "name": "hddtemp",
+  "categories": ["computers_network.monitoring"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/hddtemp",
   "iot_class": "local_polling",

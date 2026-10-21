@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from subarulink import InvalidCredentials, SubaruException
 
 from homeassistant.components.homeassistant import (
@@ -30,8 +31,6 @@ from .conftest import (
     TEST_ENTITY_ID,
     setup_subaru_config_entry,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_with_no_config(hass: HomeAssistant) -> None:

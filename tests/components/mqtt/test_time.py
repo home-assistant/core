@@ -5,13 +5,8 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-
-from homeassistant.components import time
-from homeassistant.components.mqtt.const import DOMAIN
-from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-
-from .common import (
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.components.mqtt.common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -40,9 +35,12 @@ from .common import (
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
 )
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
-from tests.common import async_fire_mqtt_message
-from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
+from homeassistant.components import time
+from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 
 DEFAULT_CONFIG = {
     DOMAIN: {time.DOMAIN: {"name": "test", "command_topic": "test-topic"}}

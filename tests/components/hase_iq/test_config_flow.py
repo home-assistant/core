@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from pyhaseiq import ConnectionFailedError, ProtocolError, ResponseTimeoutError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hase_iq.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import MOCK_HOST
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_client")

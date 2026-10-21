@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from pyzonneplan import (
     Account,
     BatteryInstallation,
@@ -20,8 +21,6 @@ from pyzonneplan.const import PriceChart
 from homeassistant.components.zonneplan.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_TOKEN
 
-from tests.common import MockConfigEntry, load_json_object_fixture
-
 MOCK_EMAIL = "user@example.com"
 MOCK_USER_INPUT = {CONF_EMAIL: MOCK_EMAIL}
 MOCK_ACCOUNT = Account.from_dict(load_json_object_fixture("get_account.json", DOMAIN))
@@ -31,7 +30,7 @@ MOCK_ACCOUNT = Account.from_dict(load_json_object_fixture("get_account.json", DO
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.zonneplan.async_setup_entry", return_value=True
+        "homeassistant.components.zonneplan.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

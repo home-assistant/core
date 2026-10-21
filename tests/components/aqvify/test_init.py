@@ -7,6 +7,11 @@ from aiohttp import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
 from pyaqvify import AqvifyAuthException, AqvifyDevices
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_array_fixture,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.aqvify.const import DOMAIN
@@ -16,12 +21,6 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.device_registry as dr
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_array_fixture,
-)
 
 WATER_LEVEL_SENSOR = "sensor.device_1_level_from_top"
 IN_FLOW_SENSOR = "sensor.device_1_inflow"
