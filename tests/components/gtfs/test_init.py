@@ -58,6 +58,27 @@ async def test_existing_database_is_reused(
     assert mock_feed_download.call_count == 1
 
 
+async def test_missing_database_is_downloaded_again(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_feed_download: AiohttpClientMocker,
+) -> None:
+    """Test setup downloads the feed again when the cached database is gone.
+
+    The cache folder is left out of backups, so this is what a restore looks like.
+    """
+    await setup_integration(hass, mock_config_entry)
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    feed_database_path(hass, TEST_DATABASE).unlink()
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_feed_download.call_count == 2
+    assert gtfs_files(hass) == [TEST_DATABASE]
+
+
 @pytest.mark.usefixtures("mock_feed_download")
 async def test_removing_route_reloads_entry(
     hass: HomeAssistant,

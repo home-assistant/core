@@ -20,6 +20,7 @@ from homeassistant.components.gtfs.const import (
     CONF_DATABASE,
     CONF_DESTINATION,
     CONF_ORIGIN,
+    DEFAULT_PATH,
     DOMAIN,
     SUBENTRY_TYPE_ROUTE,
 )
@@ -121,7 +122,10 @@ async def test_user_flow(
     await hass.async_block_till_done()
     db_path = feed_database_path(hass, result["data"][CONF_DATABASE])
     assert db_path.is_file()
+    assert db_path.parent == Path(hass.config.cache_path(DOMAIN))
     assert sorted(path.name for path in db_path.parent.iterdir()) == [db_path.name]
+    # YAML users keep their feeds in config/gtfs; the flow never writes there.
+    assert not Path(hass.config.path(DEFAULT_PATH)).exists()
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

@@ -19,7 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_PATH
+from .const import DOMAIN
 
 # National feeds run to hundreds of megabytes, so only stalls are capped.
 DOWNLOAD_TIMEOUT = ClientTimeout(total=None, sock_connect=30, sock_read=60)
@@ -51,8 +51,11 @@ class GtfsFeed:
 
 
 def feed_database_path(hass: HomeAssistant, database: str) -> Path:
-    """Return the path of a feed's SQLite database."""
-    return Path(hass.config.path(DEFAULT_PATH, database))
+    """Return the path of a config entry feed's SQLite database.
+
+    The cache folder is left out of backups; setup downloads a missing feed again.
+    """
+    return Path(hass.config.cache_path(DOMAIN, database))
 
 
 def _open_destination(destination: Path) -> BinaryIO:
