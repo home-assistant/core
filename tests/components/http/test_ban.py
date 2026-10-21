@@ -467,12 +467,22 @@ async def test_failed_login_attempts_counter(
 
 
 @pytest.mark.parametrize(
-    ("signed_path", "expiration", "signature_suffix", "failed_attempts"),
+    ("signed_path", "expiration", "signature_suffix", "headers", "failed_attempts"),
     [
-        pytest.param("/auth", timedelta(seconds=-5), "", 0, id="expired"),
-        pytest.param("/auth", timedelta(seconds=-5), "x", 1, id="expired_invalid"),
-        pytest.param("/other", timedelta(seconds=-5), "", 1, id="expired_other_path"),
-        pytest.param("/auth", timedelta(seconds=5), "x", 1, id="invalid"),
+        pytest.param("/auth", timedelta(seconds=-5), "", {}, 0, id="expired"),
+        pytest.param("/auth", timedelta(seconds=-5), "x", {}, 1, id="expired_invalid"),
+        pytest.param(
+            "/other", timedelta(seconds=-5), "", {}, 1, id="expired_other_path"
+        ),
+        pytest.param(
+            "/auth",
+            timedelta(seconds=-5),
+            "",
+            {"Authorization": "Bearer invalid"},
+            1,
+            id="expired_with_invalid_token",
+        ),
+        pytest.param("/auth", timedelta(seconds=5), "x", {}, 1, id="invalid"),
     ],
 )
 async def test_expired_signed_path_not_counted_as_failed_login(
@@ -481,6 +491,7 @@ async def test_expired_signed_path_not_counted_as_failed_login(
     signed_path: str,
     expiration: timedelta,
     signature_suffix: str,
+    headers: dict[str, str],
     failed_attempts: int,
 ) -> None:
     """Test an expired but genuine signed path is rejected without a ban strike."""
@@ -508,7 +519,8 @@ async def test_expired_signed_path_not_counted_as_failed_login(
 
     resp = await client.get(
         async_sign_path(hass, signed_path, expiration).replace(signed_path, "/auth")
-        + signature_suffix
+        + signature_suffix,
+        headers=headers,
     )
     assert resp.status == HTTPStatus.UNAUTHORIZED
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == failed_attempts

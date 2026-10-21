@@ -133,8 +133,9 @@ def _async_validate_signed_request(hass: HomeAssistant, request: Request) -> boo
         return False
 
     if expired:
-        # A URL we issued, so not a login attempt
-        request[KEY_EXPIRED_SIGNED_REQUEST] = True
+        # A URL we issued is not a login attempt, unless a token was sent too
+        if hdrs.AUTHORIZATION not in request.headers:
+            request[KEY_EXPIRED_SIGNED_REQUEST] = True
         return False
 
     refresh_token = hass.auth.async_get_refresh_token(claims["iss"])
