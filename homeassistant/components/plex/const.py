@@ -37,6 +37,7 @@ PLEX_UPDATE_SENSOR_SIGNAL = "plex_update_sensor_signal.{}"
 CONF_SERVER = "server"
 CONF_SERVER_IDENTIFIER = "server_id"
 CONF_USE_EPISODE_ART = "use_episode_art"
+CONF_FUZZY_SEARCH = "fuzzy_search"
 CONF_IGNORE_NEW_SHARED_USERS = "ignore_new_shared_users"
 CONF_IGNORE_PLEX_WEB_CLIENTS = "ignore_plex_web_clients"
 CONF_MONITORED_USERS = "monitored_users"
@@ -50,6 +51,8 @@ X_PLEX_PRODUCT = "Home Assistant"
 X_PLEX_VERSION = __version__
 
 SERVICE_REFRESH_LIBRARY = "refresh_library"
+SERVICE_ON_DECK = "on_deck"
+SERVICE_SEARCH = "search"
 
 PLEX_URI_SCHEME = "plex://"
 

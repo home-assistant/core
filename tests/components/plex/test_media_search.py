@@ -1,5 +1,6 @@
 """Tests for Plex server."""
 
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from plexapi.exceptions import BadRequest, NotFound
@@ -15,6 +16,11 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.plex.const import DOMAIN
 from homeassistant.components.plex.errors import MediaNotFound
+from homeassistant.components.plex.media_search import (
+    fuzzy_search,
+    normalize_title,
+    title_score,
+)
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
@@ -389,3 +395,138 @@ async def test_media_lookups(
             True,
         )
     assert "Must specify 'playlist_name' for this search" in str(excinfo.value)
+
+
+def test_title_score_keeps_non_latin_titles() -> None:
+    """Test titles in other scripts are compared and not reduced to nothing."""
+    query = normalize_title("Шерлок")
+    assert query == "шерлок"
+    assert title_score(query, "Шерлок") == 1.0
+    assert title_score(query, "Шерлок Холмс") > title_score(query, "Мастер")
+    assert normalize_title("Amélie") == "amelie"
+
+
+def test_title_score_ignores_word_order() -> None:
+    """Test a title is found when the words are said in another order."""
+    query = normalize_title("Reloaded Matrix")
+    assert title_score(query, "Matrix Reloaded") > 0.9
+    assert title_score(query, "Inception") < 0.6
+
+
+def test_title_score_finds_titles_that_sound_alike() -> None:
+    """Test misspelled titles that sound the same are found."""
+    assert title_score(normalize_title("cary"), "Carrie") > 0.9
+    assert title_score(normalize_title("fone booth"), "Phone Booth") > 0.9
+    assert title_score(normalize_title("avatar"), "Inception") < 0.6
+
+
+def test_title_score_prefers_closer_spelling_among_sound_alikes() -> None:
+    """Test titles that sound alike are ranked by their spelling."""
+    query = normalize_title("carry")
+    assert title_score(query, "Carrie") > title_score(query, "Gary")
+    assert title_score(query, "Gary") >= 0.6
+
+
+def test_normalize_title_folds_letters() -> None:
+    """Test letters without an accented form are turned into plain letters."""
+    assert normalize_title("Ørnen") == "ornen"
+    assert normalize_title("Straße") == "strasse"
+    assert title_score(normalize_title("ornen"), "Ørnen") == 1.0
+    assert title_score(normalize_title("gooise vrouwen"), "Gooische Vrouwen") > 0.8
+
+
+def _media(title: str, rating_key: int, media_type: str) -> SimpleNamespace:
+    """Return a stand-in for a Plex media item."""
+    return SimpleNamespace(title=title, ratingKey=rating_key, type=media_type)
+
+
+def _section(
+    section_type: str, native: list, items_by_type: dict, calls: list
+) -> SimpleNamespace:
+    """Return a stand-in for a Plex library."""
+
+    def search(**kwargs):
+        calls.append(kwargs)
+        if "title" in kwargs:
+            return native
+        return items_by_type.get(kwargs.get("libtype"), [])
+
+    return SimpleNamespace(type=section_type, search=search)
+
+
+def _server(sections=(), playlists=(), native=()) -> SimpleNamespace:
+    """Return a stand-in for a Plex server."""
+    return SimpleNamespace(
+        search=lambda query, mediatype=None: list(native),
+        playlists=lambda: list(playlists),
+        library=SimpleNamespace(sections=lambda: list(sections)),
+    )
+
+
+def test_title_score_ignores_titles_without_sound() -> None:
+    """Test unrelated titles without a sound key do not match each other."""
+    assert title_score(normalize_title("шерлок холмс"), "Игра престолов") < 0.6
+    assert title_score(normalize_title("12 34"), "56 78") < 0.6
+
+
+def test_fuzzy_search_finds_playlists() -> None:
+    """Test misspelled playlists are found, but not in a single library."""
+    party = _media("Party Mix", 500, "playlist")
+    other = _media("Workout", 501, "playlist")
+    server = _server(playlists=[party, other])
+
+    assert fuzzy_search(server, "party mx", "playlist") == [party]
+    assert (
+        fuzzy_search(server, "party mx", "playlist", _section("movie", [], {}, []))
+        == []
+    )
+
+
+def test_fuzzy_search_compares_albums_but_not_episodes_without_type() -> None:
+    """Test child titles are only compared when they are cheap to list."""
+    calls: list = []
+    album = _media("Discovery", 11, "album")
+    episode = _media("Hello Ms Cobel", 21, "episode")
+    music = _section(
+        "artist",
+        [],
+        {"artist": [_media("Daft Punk", 10, "artist")], "album": [album]},
+        calls,
+    )
+    shows = _section(
+        "show",
+        [],
+        {"show": [_media("Severance", 20, "show")], "episode": [episode]},
+        calls,
+    )
+    server = _server(sections=[music, shows])
+
+    assert fuzzy_search(server, "discovry") == [album]
+    assert {"libtype": "episode"} not in calls
+
+    # An explicit media type lists the episodes
+    assert fuzzy_search(server, "hello ms cobl", "episode") == [episode]
+
+
+def test_fuzzy_search_ranks_library_results_and_falls_back() -> None:
+    """Test results of a library search are ranked and weak ones trigger the fallback."""
+    partial = _media("Carrie Goes Home", 1, "movie")
+    exact = _media("Carrie", 2, "movie")
+    movies = _section("movie", [partial, exact], {}, [])
+    server = _server(sections=[movies])
+
+    assert fuzzy_search(server, "carrie", None, movies) == [exact, partial]
+
+    weak = _media("Zzzzzz", 3, "movie")
+    wanted = _media("Carrie", 2, "movie")
+    movies = _section("movie", [weak], {"movie": [weak, wanted]}, [])
+    server = _server(sections=[movies])
+
+    assert fuzzy_search(server, "cary", None, movies) == [wanted, weak]
+
+
+def test_title_score_tells_numbers_apart() -> None:
+    """Test sequels are not mixed up, even when their titles sound alike."""
+    query = normalize_title("rocky 3")
+    assert title_score(query, "Rocky 3") > title_score(query, "Rocky 4")
+    assert title_score(query, "Rocky 3") > title_score(query, "Rocky 2")

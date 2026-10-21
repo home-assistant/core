@@ -21,6 +21,7 @@ from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
+    CONF_FUZZY_SEARCH,
     CONF_IGNORE_NEW_SHARED_USERS,
     CONF_IGNORE_PLEX_WEB_CLIENTS,
     CONF_MONITORED_USERS,
@@ -577,6 +578,11 @@ class PlexServer:
         return self.options[MP_DOMAIN].get(CONF_IGNORE_NEW_SHARED_USERS, False)
 
     @property
+    def option_fuzzy_search(self) -> bool:
+        """Return fuzzy_search option."""
+        return self.options[MP_DOMAIN].get(CONF_FUZZY_SEARCH, False)
+
+    @property
     def option_use_episode_art(self):
         """Return use_episode_art option."""
         return self.options[MP_DOMAIN].get(CONF_USE_EPISODE_ART, False)
@@ -619,6 +625,16 @@ class PlexServer:
     def fetch_item(self, item):
         """Fetch item from Plex server."""
         return self._plex_server.fetchItem(item)
+
+    def continue_watching(self):
+        """Return the items in the Continue Watching hub."""
+        return self._plex_server.continueWatching()
+
+    def search(self, query, mediatype=None, limit=None, **kwargs):
+        """Search the entire Plex server using the hub search endpoint."""
+        return self._plex_server.search(
+            query, mediatype=mediatype, limit=limit, **kwargs
+        )
 
     def lookup_media(self, media_type, **kwargs):
         """Lookup a piece of media."""

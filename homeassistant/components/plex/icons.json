@@ -7,8 +7,14 @@
     }
   },
   "services": {
+    "on_deck": {
+      "service": "mdi:play-circle-outline"
+    },
     "refresh_library": {
       "service": "mdi:refresh"
+    },
+    "search": {
+      "service": "mdi:magnify"
     }
   }
 }
