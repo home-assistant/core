@@ -38,7 +38,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_capacity',
-    'unique_id': 'abrp-test-sub_941349991303_battery_capacity',
+    'unique_id': 'abrp-test-sub_123456789012_battery_capacity',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -95,7 +95,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_temperature',
-    'unique_id': 'abrp-test-sub_941349991303_battery_temperature',
+    'unique_id': 'abrp-test-sub_123456789012_battery_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -153,7 +153,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'calibrated_ref_cons',
-    'unique_id': 'abrp-test-sub_941349991303_calibrated_ref_cons',
+    'unique_id': 'abrp-test-sub_123456789012_calibrated_ref_cons',
     'unit_of_measurement': <UnitOfEnergyDistance.WATT_HOUR_PER_KM: 'Wh/km'>,
   })
 # ---
@@ -214,7 +214,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_state',
-    'unique_id': 'abrp-test-sub_941349991303_charging_state',
+    'unique_id': 'abrp-test-sub_123456789012_charging_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -280,7 +280,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'odometer',
-    'unique_id': 'abrp-test-sub_941349991303_odometer',
+    'unique_id': 'abrp-test-sub_123456789012_odometer',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -338,7 +338,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'abrp-test-sub_941349991303_power',
+    'unique_id': 'abrp-test-sub_123456789012_power',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -399,7 +399,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'range',
-    'unique_id': 'abrp-test-sub_941349991303_range',
+    'unique_id': 'abrp-test-sub_123456789012_range',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -457,7 +457,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'soc',
-    'unique_id': 'abrp-test-sub_941349991303_soc',
+    'unique_id': 'abrp-test-sub_123456789012_soc',
     'unit_of_measurement': '%',
   })
 # ---
@@ -518,7 +518,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'soe',
-    'unique_id': 'abrp-test-sub_941349991303_soe',
+    'unique_id': 'abrp-test-sub_123456789012_soe',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -576,7 +576,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'soh',
-    'unique_id': 'abrp-test-sub_941349991303_soh',
+    'unique_id': 'abrp-test-sub_123456789012_soh',
     'unit_of_measurement': '%',
   })
 # ---
@@ -633,7 +633,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'abrp-test-sub_941349991303_voltage',
+    'unique_id': 'abrp-test-sub_123456789012_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
