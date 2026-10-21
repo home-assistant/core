@@ -171,6 +171,42 @@ async def test_last_bill_electricity_rate(
             )
             for identifier in ("EXPORTED", "GENERATED", "RECEIVED")
         ),
+        pytest.param(
+            45.0,
+            [
+                BillServiceQuantity(UnitOfMeasure.KWH, "NET_USAGE", 100.0),
+                BillServiceQuantity(UnitOfMeasure.KWH, "NET_USAGE", None),
+            ],
+            False,
+            id="missing_net_usage_value",
+        ),
+        pytest.param(
+            45.0,
+            [
+                BillServiceQuantity(UnitOfMeasure.KWH, "NET_USAGE", 100.0),
+                BillServiceQuantity(None, "NET_USAGE", 50.0),
+            ],
+            False,
+            id="unknown_net_usage_unit",
+        ),
+        pytest.param(
+            45.0,
+            [
+                BillServiceQuantity(UnitOfMeasure.KWH, "NET_USAGE", 100.0),
+                BillServiceQuantity(UnitOfMeasure.KWH, "EXPORTED", None),
+            ],
+            False,
+            id="missing_export_value",
+        ),
+        pytest.param(
+            45.0,
+            [
+                BillServiceQuantity(UnitOfMeasure.KWH, "NET_USAGE", 100.0),
+                BillServiceQuantity(None, "EXPORTED", 50.0),
+            ],
+            False,
+            id="unknown_export_unit",
+        ),
     ],
 )
 async def test_last_bill_electricity_rate_newest_bill_unusable(

@@ -76,13 +76,18 @@ def _bill_electricity_rate(bill: Bill) -> float | None:
     for quantity in (
         quantity for segment in bill.segments for quantity in segment.service_quantities
     ):
+        identifier = quantity.service_quantity_identifier
+        if identifier != "NET_USAGE" and identifier not in _EXPORT_QUANTITY_IDENTIFIERS:
+            continue
+        # Opower keeps missing values and unrecognized units as None.
+        if quantity.unit_of_measure is None or quantity.value is None:
+            return None
         if quantity.unit_of_measure is not UnitOfMeasure.KWH or not quantity.value:
             continue
         # A tiny positive net usage after export would produce a meaningless rate.
-        if quantity.service_quantity_identifier in _EXPORT_QUANTITY_IDENTIFIERS:
+        if identifier in _EXPORT_QUANTITY_IDENTIFIERS:
             return None
-        if quantity.service_quantity_identifier == "NET_USAGE":
-            net_usage += quantity.value
+        net_usage += quantity.value
     return bill.usage_charges / net_usage if net_usage > 0 else None
 
 
@@ -186,7 +191,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
 
         try:
             bills = await self.api.async_get_bills()
-        except (ApiException, CannotConnect) as err:
+        except (ApiException, CannotConnect, TimeoutError) as err:
             _LOGGER.warning("Error getting completed bills: %s", err)
             bills = []
         last_bill_electricity_rates = _last_bill_electricity_rates(bills)

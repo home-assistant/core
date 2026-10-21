@@ -109,6 +109,7 @@ async def test_get_accounts_error(
     [
         ApiException(message="completed bills error", url=""),
         CannotConnect(),
+        TimeoutError(),
     ],
 )
 async def test_get_bills_error(
