@@ -42,7 +42,7 @@ async def async_setup_entry(
     # Register the main device up front so child devices can resolve their
     # via_device_id link during concurrent platform setup.
     dr.async_get(hass).async_get_or_create_device(
-        config_entry_id=entry.entry_id, device_info=async_device_info(coordinator, main)
+        config_entry_id=entry.entry_id, device_info=async_main_device_info(coordinator)
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

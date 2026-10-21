@@ -114,7 +114,7 @@ class EheimDigitalUpdateCoordinator(DataUpdateCoordinator[None]):
         if (main := self.hub.main) is not None and not main.is_missing_data:
             self.main_device_complete_event.set()
 
-    async def _async_receive_callback(self) -> None:
+    async def _async_receive_callback(self, device: str, msg_title: MsgTitle) -> None:
         self._async_check_main_device_complete()
         if any(self.incomplete_devices):
             for device_address in self.incomplete_devices.copy():
