@@ -78,7 +78,7 @@ async def test_last_bill_electricity_rate(
     mock_config_entry: MockConfigEntry,
     mock_opower_api: AsyncMock,
 ) -> None:
-    """Test repeated segments and only NET_USAGE quantities are counted."""
+    """Test repeated segments and only NET_USAGE kWh quantities are counted."""
     account = mock_opower_api.async_get_accounts.return_value[0]
     bill = _bill(
         account,
@@ -86,6 +86,7 @@ async def test_last_bill_electricity_rate(
         quantities=[
             BillServiceQuantity(UnitOfMeasure.KWH, "NET_USAGE", 100.0),
             BillServiceQuantity(UnitOfMeasure.KWH, "DELIVERED", 900.0),
+            BillServiceQuantity(UnitOfMeasure.THERM, "NET_USAGE", 5.0),
         ],
     )
     bill.segments.append(
@@ -111,6 +112,31 @@ async def test_last_bill_electricity_rate(
     data = await coordinator._async_update_data()
 
     assert data["111111"].last_bill_electricity_rate == pytest.approx(0.3)
+    assert data["111111"].last_bill_received
+
+
+async def test_last_bill_electricity_rate_segment_without_net_usage(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+) -> None:
+    """Test a segment missing its quantities makes the bill unusable."""
+    account = mock_opower_api.async_get_accounts.return_value[0]
+    bill = _bill(
+        account,
+        usage_charges=45.0,
+        quantities=[BillServiceQuantity(UnitOfMeasure.KWH, "NET_USAGE", 100.0)],
+    )
+    bill.segments.append(
+        BillSegment(account=account, current_amount=20.0, service_quantities=[])
+    )
+    mock_opower_api.async_get_bills.return_value = [bill]
+
+    coordinator = OpowerCoordinator(hass, mock_config_entry)
+    data = await coordinator._async_update_data()
+
+    assert data["111111"].last_bill_electricity_rate is None
     assert data["111111"].last_bill_received
 
 

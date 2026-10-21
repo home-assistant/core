@@ -73,21 +73,29 @@ def _bill_electricity_rate(bill: Bill) -> float | None:
         return None
 
     net_usage = 0.0
-    for quantity in (
-        quantity for segment in bill.segments for quantity in segment.service_quantities
-    ):
-        identifier = quantity.service_quantity_identifier
-        if identifier != "NET_USAGE" and identifier not in _EXPORT_QUANTITY_IDENTIFIERS:
-            continue
-        # Opower keeps missing values and unrecognized units as None.
-        if quantity.unit_of_measure is None or quantity.value is None:
+    for segment in bill.segments:
+        segment_has_net_usage = False
+        for quantity in segment.service_quantities:
+            identifier = quantity.service_quantity_identifier
+            if (
+                identifier != "NET_USAGE"
+                and identifier not in _EXPORT_QUANTITY_IDENTIFIERS
+            ):
+                continue
+            # Opower keeps missing values and unrecognized units as None.
+            if quantity.unit_of_measure is None or quantity.value is None:
+                return None
+            if quantity.unit_of_measure is not UnitOfMeasure.KWH:
+                continue
+            if identifier == "NET_USAGE":
+                segment_has_net_usage = True
+                net_usage += quantity.value
+            # A tiny positive net usage after export would produce a meaningless rate.
+            elif quantity.value:
+                return None
+        # Opower keeps segments whose quantities are missing, with an empty list.
+        if not segment_has_net_usage:
             return None
-        if quantity.unit_of_measure is not UnitOfMeasure.KWH or not quantity.value:
-            continue
-        # A tiny positive net usage after export would produce a meaningless rate.
-        if identifier in _EXPORT_QUANTITY_IDENTIFIERS:
-            return None
-        net_usage += quantity.value
     return bill.usage_charges / net_usage if net_usage > 0 else None
 
 
