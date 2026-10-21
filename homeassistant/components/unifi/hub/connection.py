@@ -241,6 +241,10 @@ class UnifiConnectionManager:
         self._login_rejections = 0
         self._rate_limited = False
         self._rate_limit_pause = 0
+        if self._retry_handle is not None:
+            # This attempt answers failures reported while it ran
+            self._retry_handle.cancel()
+            self._retry_handle = None
         if self._reauth_required:
             self._end_reauth()
         self._recovering = True

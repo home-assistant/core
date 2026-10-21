@@ -1607,6 +1607,46 @@ async def test_rate_limit_seen_while_reconnecting_ends_with_it(
     probe.assert_called_once()
 
 
+async def test_failure_during_reconnect_attempt_needs_no_second_attempt(
+    hass: HomeAssistant,
+    hub: UnifiHub,
+    mock_websocket_state: WebsocketStateManager,
+) -> None:
+    """A failure reported while an attempt runs is answered by that attempt."""
+    probe_started = asyncio.Event()
+    probe_release = asyncio.Event()
+    calls = 0
+
+    async def slow_first_probe() -> None:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            probe_started.set()
+            await probe_release.wait()
+
+    with (
+        patch.object(
+            hub.api.system_information, "update", side_effect=slow_first_probe
+        ),
+        patch.object(hub.entity_loader, "async_resync") as resync,
+    ):
+        hub.connection.report_failure()
+        _fire(hass, MAX_RETRY_DELAY)
+        await _wait(probe_started)
+        # The websocket drops while the probe of the attempt is in flight
+        mock_websocket_state.set()
+        await hass.async_block_till_done()
+        probe_release.set()
+        mock_websocket_state.clear()
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert _available(hass)
+
+        await _advance(hass, MAX_RETRY_DELAY)
+        await _advance(hass, MAX_RETRY_DELAY)
+    assert calls == 1
+    resync.assert_awaited_once()
+
+
 @PARAMETRIZE_STOP
 async def test_session_check_in_flight_at_stop_is_cancelled(
     hass: HomeAssistant,
