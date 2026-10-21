@@ -1601,10 +1601,9 @@ async def test_media_image_falls_back_to_queue_item(
 
 
 @pytest.mark.parametrize(
-    ("schema_version", "user_id", "expected_user"),
+    ("user_id", "expected_user"),
     [
         pytest.param(
-            44,
             MOCK_USER_ID,
             LinkedUser(
                 provider=AuthProviderType.HOME_ASSISTANT,
@@ -1613,24 +1612,17 @@ async def test_media_image_falls_back_to_queue_item(
             ),
             id="calling user",
         ),
-        pytest.param(44, None, None, id="no calling user"),
-        pytest.param(43, MOCK_USER_ID, None, id="server without user support"),
+        pytest.param(None, None, id="no calling user"),
     ],
 )
 async def test_search_media_acts_as_calling_user(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
-    schema_version: int,
     user_id: str | None,
     expected_user: LinkedUser | None,
 ) -> None:
-    """Test that a search is performed on behalf of the user that asked for it.
-
-    A provider-link user reference needs a schema 44 server; being soft
-    (required=False), an older server is simply searched without impersonation.
-    """
+    """Test that a search is performed on behalf of the user that asked for it."""
     await setup_integration_from_fixtures(hass, music_assistant_client)
-    music_assistant_client.server_info.schema_version = schema_version
     MockUser(id=MOCK_USER_ID, is_owner=True).add_to_hass(hass)
 
     with patch.object(

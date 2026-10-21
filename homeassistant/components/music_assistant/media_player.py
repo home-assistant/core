@@ -63,7 +63,6 @@ from .const import (
     ATTR_REPEAT_MODE,
     ATTR_SHUFFLE_ENABLED,
     DOMAIN,
-    LINKED_USER_SCHEMA_VERSION,
     LOGGER,
 )
 from .entity import MusicAssistantDashboardEntity, MusicAssistantEntity
@@ -747,15 +746,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
     @override
     async def async_search_media(self, query: SearchMediaQuery) -> SearchMedia:
         """Search media."""
-        server_info = self.mass.server_info
-        return await async_search_media(
-            self.mass,
-            query,
-            self._linked_user()
-            if server_info is not None
-            and server_info.schema_version >= LINKED_USER_SCHEMA_VERSION
-            else None,
-        )
+        return await async_search_media(self.mass, query, self._linked_user())
 
     def _update_media_image_url(self, player: Player) -> None:
         """Update image URL."""
