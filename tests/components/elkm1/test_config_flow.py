@@ -2390,7 +2390,7 @@ async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:
         _patch_discovery(),
         _patch_elk(mocked_elk),
         patch(f"{MODULE}.async_setup", return_value=True),
-        patch(f"{MODULE}.async_setup_entry", return_value=True),
+        patch(f"{MODULE}.async_setup_entry", return_value=None),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
