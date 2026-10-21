@@ -136,6 +136,7 @@ FLOWS = {
         "chacon_dio",
         "chef_iq",
         "chess_com",
+        "chirpstack",
         "cielo_home",
         "cloudflare",
         "cloudflare_r2",

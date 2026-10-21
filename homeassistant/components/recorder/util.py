@@ -1003,6 +1003,50 @@ PERIOD_SCHEMA = probatio.Schema(
 )
 
 
+def _utc_offset_change(low: datetime, high: datetime) -> datetime:
+    """Return when the local UTC offset changes between two UTC times.
+
+    Assumes a single change, after low and no later than high.
+    """
+    offset = dt_util.as_local(high).utcoffset()
+    while high - low > timedelta(seconds=1):
+        middle = low + (high - low) / 2
+        if dt_util.as_local(middle).utcoffset() == offset:
+            high = middle
+        else:
+            low = middle
+    # Offset changes happen on whole seconds
+    return high.replace(microsecond=0)
+
+
+def _start_of_local_hour(utc_time: datetime) -> datetime:
+    """Return the start of the local calendar hour containing a UTC time.
+
+    A calendar hour starts at the top of a local hour or at a UTC offset change,
+    so DST changes of half an hour give half-hour calendar hours.
+    """
+    local_time = dt_util.as_local(utc_time)
+    start = utc_time - timedelta(
+        minutes=local_time.minute,
+        seconds=local_time.second,
+        microseconds=local_time.microsecond,
+    )
+    if dt_util.as_local(start).utcoffset() != local_time.utcoffset():
+        return _utc_offset_change(start, utc_time)
+    return start
+
+
+def _start_of_next_local_hour(start: datetime) -> datetime:
+    """Return the start of the local calendar hour after the one starting at start."""
+    next_start = _start_of_local_hour(start + timedelta(hours=1))
+    if (
+        dt_util.as_local(start).utcoffset()
+        != dt_util.as_local(next_start - timedelta(microseconds=1)).utcoffset()
+    ):
+        return _utc_offset_change(start, next_start - timedelta(microseconds=1))
+    return next_start
+
+
 def resolve_period(
     period_def: StatisticPeriod,
 ) -> tuple[datetime | None, datetime | None]:
@@ -1015,9 +1059,14 @@ def resolve_period(
         start_of_day = dt_util.start_of_local_day()
         cal_offset = period_def["calendar"].get("offset", 0)
         if calendar_period == "hour":
-            start_time = dt_util.now().replace(minute=0, second=0, microsecond=0)
-            start_time += timedelta(hours=cal_offset)
-            end_time = start_time + timedelta(hours=1)
+            start_time = _start_of_local_hour(dt_util.utcnow())
+            for _ in range(-cal_offset):
+                start_time = _start_of_local_hour(
+                    start_time - timedelta(microseconds=1)
+                )
+            for _ in range(cal_offset):
+                start_time = _start_of_next_local_hour(start_time)
+            end_time = _start_of_next_local_hour(start_time)
         elif calendar_period == "day":
             start_time = start_of_day
             start_time += timedelta(days=cal_offset)

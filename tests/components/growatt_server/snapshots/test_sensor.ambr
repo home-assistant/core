@@ -8670,7 +8670,7 @@
     'supported_features': 0,
     'translation_key': 'storage_load_consumption_solar_storage',
     'unique_id': 'STO123456-storage_load_consumption_solar_storage',
-    'unit_of_measurement': 'VA',
+    'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
 # name: test_sensors_classic_api[storage][sensor.sto123456_load_consumption_solar_storage-state]
@@ -8678,7 +8678,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'STO123456 Load consumption (solar + storage)',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'VA',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sto123456_load_consumption_solar_storage',

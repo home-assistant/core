@@ -3,11 +3,13 @@
 from dataclasses import asdict, replace
 from typing import Any
 
+from librehardwaremonitor_api.model import LibreHardwareMonitorData
+
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .coordinator import LibreHardwareMonitorConfigEntry, LibreHardwareMonitorData
+from .coordinator import LibreHardwareMonitorConfigEntry
 
 TO_REDACT = {CONF_USERNAME, CONF_PASSWORD}
 
