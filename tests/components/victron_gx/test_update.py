@@ -131,7 +131,7 @@ async def test_install_firmware_update_service(
         assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 42
 
     with patch.object(
-        config_entry.runtime_data,
+        victron_hub,
         "install_firmware_update",
         new=AsyncMock(side_effect=install_firmware_update),
     ) as install:
@@ -167,7 +167,7 @@ async def test_install_propagates_translated_failure_and_clears_progress(
 
     with (
         patch.object(
-            config_entry.runtime_data,
+            victron_hub,
             "install_firmware_update",
             new=AsyncMock(
                 side_effect=FirmwareUpdateError(
