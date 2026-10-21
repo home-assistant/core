@@ -56,6 +56,8 @@ class MockPyViCare:
                     service,
                     "Vitovalor"
                     if fixture.data_file.endswith("VitoValor.json")
+                    else "Vitoligno300C"
+                    if fixture.data_file.endswith("Vitoligno300C.json")
                     else f"model{idx}",
                     "Online" if fixture.online else "Offline",
                     roles=list(fixture.roles),
