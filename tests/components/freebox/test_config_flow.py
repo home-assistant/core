@@ -11,14 +11,14 @@ from freebox_api.exceptions import (
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.freebox.const import DOMAIN
+from homeassistant.components.freebox.const import CONF_REGISTRATION_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import MOCK_HOST, MOCK_PORT
+from .const import MOCK_HOST, MOCK_PORT, MOCK_REGISTRATION_NAME
 
 MOCK_ZEROCONF_DATA = ZeroconfServiceInfo(
     ip_address=ip_address("192.168.0.254"),
@@ -70,7 +70,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     assert result["step_id"] == "link"
 
 
-async def internal_test_link(hass: HomeAssistant) -> None:
+async def internal_test_link(hass: HomeAssistant, router: MagicMock) -> None:
     """Test linking internal, common to both router modes."""
     with patch(
         "homeassistant.components.freebox.async_setup_entry",
@@ -94,29 +94,61 @@ async def internal_test_link(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={},
+            user_input={CONF_REGISTRATION_NAME: MOCK_REGISTRATION_NAME},
         )
         await hass.async_block_till_done()
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["result"].unique_id == MOCK_HOST
         assert result["title"] == MOCK_HOST
-        assert result["data"][CONF_HOST] == MOCK_HOST
-        assert result["data"][CONF_PORT] == MOCK_PORT
+        assert result["data"] == {
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: MOCK_PORT,
+            CONF_REGISTRATION_NAME: MOCK_REGISTRATION_NAME,
+        }
 
         assert len(mock_setup_entry.mock_calls) == 1
 
+    # The chosen name is the one registered on the Freebox
+    assert router.call_args.args[0]["device_name"] == MOCK_REGISTRATION_NAME
+
+
+async def test_link(hass: HomeAssistant, router: MagicMock) -> None:
+    """Test link with standard router mode."""
+    await internal_test_link(hass, router)
+
+
+async def test_link_bridge_mode(
+    hass: HomeAssistant, router_bridge_mode: MagicMock
+) -> None:
+    """Test linking for a freebox in bridge mode."""
+    await internal_test_link(hass, router_bridge_mode)
+
 
 @pytest.mark.usefixtures("router")
-async def test_link(hass: HomeAssistant) -> None:
-    """Test link with standard router mode."""
-    await internal_test_link(hass)
+async def test_link_default_registration_name(hass: HomeAssistant) -> None:
+    """Test the device name defaults to the hostname."""
+    with patch(
+        "homeassistant.components.freebox.config_flow.socket.gethostname",
+        return_value=MOCK_REGISTRATION_NAME,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT}
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "link"
 
-
-@pytest.mark.usefixtures("router_bridge_mode")
-async def test_link_bridge_mode(hass: HomeAssistant) -> None:
-    """Test linking for a freebox in bridge mode."""
-    await internal_test_link(hass)
+    with patch(
+        "homeassistant.components.freebox.async_setup_entry",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == MOCK_HOST
+    assert result["data"][CONF_REGISTRATION_NAME] == MOCK_REGISTRATION_NAME
 
 
 async def test_link_bridge_mode_error(

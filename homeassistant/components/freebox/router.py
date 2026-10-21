@@ -65,7 +65,7 @@ def _unlink_if_exists(path: Path) -> None:
     path.unlink(missing_ok=True)
 
 
-async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
+async def get_api(hass: HomeAssistant, host: str, registration_name: str) -> Freepybox:
     """Get the Freebox API."""
     freebox_path = Store(hass, STORAGE_VERSION, STORAGE_KEY).path
 
@@ -74,7 +74,9 @@ async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
 
     token_file = _get_token_file(hass, host)
 
-    return Freepybox(APP_DESC, token_file, API_VERSION)
+    return Freepybox(
+        {**APP_DESC, "device_name": registration_name}, token_file, API_VERSION
+    )
 
 
 def is_invalid_token_error(error: Exception) -> bool:
