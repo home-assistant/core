@@ -19,7 +19,7 @@ from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.google_weather.const import DOMAIN
-from homeassistant.components.google_weather.services import SERVICE_GET_MINUTE_FORECAST
+from homeassistant.components.google_weather.services import GoogleWeatherService
 from homeassistant.components.google_weather.weather import (
     _CONDITION_MAP,
     _PRECIPITATION_INTENSITY_MAP,
@@ -250,7 +250,7 @@ async def test_minute_forecast_service(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_MINUTE_FORECAST,
+        GoogleWeatherService.GET_MINUTE_FORECAST,
         {ATTR_ENTITY_ID: "weather.home"},
         blocking=True,
         return_response=True,
@@ -275,7 +275,7 @@ async def test_minute_forecast_service_error(
     with pytest.raises(HomeAssistantError, match="Error fetching minute forecast"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_MINUTE_FORECAST,
+            GoogleWeatherService.GET_MINUTE_FORECAST,
             {ATTR_ENTITY_ID: "weather.home"},
             blocking=True,
             return_response=True,
