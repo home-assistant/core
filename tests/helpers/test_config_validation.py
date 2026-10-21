@@ -152,6 +152,7 @@ def test_url() -> None:
     "value",
     [
         pytest.param("http://exa mple.com", id="space_in_host"),
+        pytest.param("http://user:pass@exa mple.com", id="space_in_host_with_userinfo"),
         pytest.param("http://example.com\x00", id="nul"),
         pytest.param("http://exam\tple.com", id="tab_in_host"),
         pytest.param("http://exam\nple.com", id="newline_in_host"),
@@ -189,10 +190,13 @@ def test_url_strips_surrounding_whitespace(value: str) -> None:
         pytest.param(
             "http://example.com/?file=snapshot image.jpg", id="space_in_query"
         ),
+        pytest.param("http://example.com/#snapshot image", id="space_in_fragment"),
+        pytest.param("http://user:pa ss@example.com/", id="space_in_password"),
+        pytest.param("http://us er@example.com/", id="space_in_username"),
     ],
 )
-def test_url_allows_spaces_after_host(value: str) -> None:
-    """Test spaces in the path and query are kept, since HTTP clients encode them."""
+def test_url_allows_spaces_outside_host(value: str) -> None:
+    """Test spaces outside the host are kept, since HTTP clients encode them."""
     assert probatio.Schema(cv.url)(value) == value
 
 
