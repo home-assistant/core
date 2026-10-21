@@ -91,10 +91,23 @@ class MyPVFirmwareUpdate(MyPVBaseEntity, UpdateEntity):
         """Return True if there is an update available."""
         return self.coordinator.device.firmware_update_available
 
+    @override
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+
+        self._update_progress()
+
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
+        self._update_progress()
+        super()._handle_coordinator_update()
+
+    @callback
+    def _update_progress(self) -> None:
+        """Update the firmware update progress from the device."""
         if (
             update_progress := self.coordinator.device.firmware_update_progress
         ) is not None:
@@ -103,5 +116,3 @@ class MyPVFirmwareUpdate(MyPVBaseEntity, UpdateEntity):
         else:
             self._attr_in_progress = False
             self._attr_update_percentage = None
-
-        self.async_write_ha_state()

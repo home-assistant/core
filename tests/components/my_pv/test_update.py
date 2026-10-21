@@ -148,6 +148,39 @@ async def test_update_install(
     assert state.attributes.get(ATTR_UPDATE_PERCENTAGE) is None
 
 
+async def test_update_in_progress_on_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_my_pv_client: AsyncMock,
+) -> None:
+    """Test a firmware update that is already in progress when the entity is added."""
+
+    mock_my_pv_client.latest_firmware_version = "e0002201"
+    mock_my_pv_client.firmware_update_available = True
+    mock_my_pv_client.firmware_update_progress = 40
+
+    with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.UPDATE]):
+        mock_config_entry.add_to_hass(hass)
+
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("update.my_pv_ac_elwa_2_firmware")
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_IN_PROGRESS)
+    assert state.attributes.get(ATTR_UPDATE_PERCENTAGE) == 40
+
+    # A second install is rejected while the update is in progress
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {"entity_id": "update.my_pv_ac_elwa_2_firmware"},
+            blocking=True,
+        )
+    mock_my_pv_client.update_firmware.assert_not_awaited()
+
+
 async def test_update_press_update_firmware_returns_false(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
