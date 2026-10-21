@@ -15,7 +15,8 @@ from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SwitchbotCloudConfigEntry, SwitchBotCoordinator
+from . import SwitchbotCloudConfigEntry
+from .coordinator import SwitchBotCoordinator
 from .entity import SwitchBotCloudEntity
 
 # The cloud camel cases these when polled and upper cases them over the
