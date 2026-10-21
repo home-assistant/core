@@ -255,6 +255,29 @@ SWITCH_TYPE_DESCRIPTION = SHCSelectEntityDescription[SHCMicromoduleRelay](
 )
 
 
+def _output_mode_select_option(device: SHCMicromoduleRelay, option: str) -> None:
+    """Write the relay's output mode."""
+    device.output_mode = SwitchConfiguration.OutputMode[option.upper()]
+
+
+OUTPUT_MODE_DESCRIPTION = SHCSelectEntityDescription[SHCMicromoduleRelay](
+    key="output_mode",
+    translation_key="output_mode",
+    entity_category=EntityCategory.CONFIG,
+    options=[
+        "attached",
+        "detached",
+        "detached_short_press",
+        "detached_long_press",
+        "unsupported",
+    ],
+    current_option_fn=lambda device, options: (
+        value.name.lower() if (value := device.output_mode) else None
+    ),
+    select_option_fn=_output_mode_select_option,
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BoschConfigEntry,
@@ -413,6 +436,17 @@ async def async_setup_entry(
         )
         for relay in session.device_helper.micromodule_relays
         if relay.supports_switch_configuration and relay.switch_type is not None
+    )
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=relay,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=OUTPUT_MODE_DESCRIPTION,
+        )
+        for relay in session.device_helper.micromodule_relays
+        if relay.supports_switch_configuration and relay.output_mode is not None
     )
 
     async_add_entities(entities)
