@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+import json
 import socket
 from typing import Any
 from unittest.mock import patch
@@ -254,7 +255,10 @@ SITES_UPDATE = "aiounifi.interfaces.sites.Sites.update"
         # Without a side effect the patched update leaves the site list empty
         pytest.param(SITES_UPDATE, None, "service_unavailable", id="sites_empty"),
         pytest.param(
-            SITES_UPDATE, ValueError, "service_unavailable", id="sites_invalid_json"
+            SITES_UPDATE,
+            json.JSONDecodeError("", "", 0),
+            "service_unavailable",
+            id="sites_invalid_json",
         ),
         pytest.param(
             SITES_UPDATE,
@@ -470,9 +474,11 @@ async def test_flow_site_request_timeout(hass: HomeAssistant) -> None:
         patch("homeassistant.components.unifi.config_flow.SITE_REQUEST_TIMEOUT", 0),
         patch(SITES_UPDATE, side_effect=hang),
     ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=user_input
-        )
+        # Fail instead of hanging if the flow does not time out
+        async with asyncio.timeout(1):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input=user_input
+            )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "service_unavailable"}

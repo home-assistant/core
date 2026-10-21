@@ -9,6 +9,7 @@ Configuration of options through options flow.
 import asyncio
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
+import json
 import operator
 import socket
 from types import MappingProxyType
@@ -63,10 +64,10 @@ from .errors import AuthenticationRequired, CannotConnect, MfaRequired
 from .hub import UnifiHub, get_unifi_api
 
 DEFAULT_HOST = "unifi"
-SITE_REQUEST_TIMEOUT = 10
 DEFAULT_PORT = 443
 DEFAULT_SITE_ID = "default"
 DEFAULT_VERIFY_SSL = False
+SITE_REQUEST_TIMEOUT = 10
 
 
 class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -291,13 +292,13 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
             aiounifi.Unauthorized,
         ) as err:
             LOGGER.warning(
-                "UniFi Network at %s rejected the site request: %r",
+                "UniFi Network at %s rejected the site request: %s",
                 data[CONF_HOST],
-                err,
+                type(err).__name__,
             )
             raise AuthenticationRequired from err
-        # aiounifi 97 can raise a JSON decode error, which is a ValueError
-        except (TimeoutError, ValueError, aiounifi.AiounifiException) as err:
+        # aiounifi 97 does not wrap JSON decode errors, newer releases do
+        except (TimeoutError, json.JSONDecodeError, aiounifi.AiounifiException) as err:
             LOGGER.warning(
                 "Error fetching sites from UniFi Network at %s: %r",
                 data[CONF_HOST],
@@ -305,8 +306,8 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
             )
             raise CannotConnect from err
         if not hub.sites.values():
-            # aiounifi 97 returns no sites for an HTML answer, as a console
-            # without the Network application or a starting one gives
+            # aiounifi 97 returns no sites when the console answers with HTML,
+            # as it does while the Network application is missing or starting
             LOGGER.warning("No sites found on UniFi Network at %s", data[CONF_HOST])
             raise CannotConnect
         return hub.sites
