@@ -47,10 +47,11 @@ class ImageUnusableError(HomeAssistantError):
 
 
 @dataclass(slots=True)
-class ClassifyImageResult:
+class ClassifyImageTaskResult:
     """The label an image shows, with an estimate when the model has one."""
 
-    # None when the model does not commit to a label.
+    # The most likely label; None only without probabilities, when the model
+    # does not commit to one.
     label: str | None
     # A distribution over all labels, None when the model has no estimate.
     probabilities: dict[str, float] | None = None
@@ -115,20 +116,22 @@ LABELS_SCHEMA = probatio.Schema(
 )
 
 
-def validate_result(result: ClassifyImageResult, labels: dict[str, Any]) -> bool:
-    """Return whether a result names a label and, if given, a distribution."""
+def validate_result(result: ClassifyImageTaskResult, labels: dict[str, Any]) -> bool:
+    """Return whether a result names a label and, if given, a distribution.
+
+    With probabilities the label is the most likely one, so the threshold
+    stays with the caller. Only a model without them may leave it empty.
+    """
     if result.label is not None and result.label not in labels:
         return False
     if (probabilities := result.probabilities) is None:
         return True
     return (
-        probabilities.keys() == labels.keys()
+        result.label is not None
+        and probabilities.keys() == labels.keys()
         and all(0 <= value <= 1 for value in probabilities.values())
         and abs(sum(probabilities.values()) - 1) <= PROBABILITY_SUM_TOLERANCE
-        and (
-            result.label is None
-            or probabilities[result.label] == max(probabilities.values())
-        )
+        and probabilities[result.label] == max(probabilities.values())
     )
 
 

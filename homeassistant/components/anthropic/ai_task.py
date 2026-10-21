@@ -130,7 +130,7 @@ class AnthropicTaskEntity(
     @override
     async def _async_classify_image(
         self, task: ai_task.ClassifyImageTask
-    ) -> ai_task.ClassifyImageResult:
+    ) -> ai_task.ClassifyImageTaskResult:
         """Classify an image by the examples of each label."""
         image_count = 1 + sum(len(label.examples) for label in task.labels.values())
         max_images = (
@@ -247,12 +247,12 @@ class AnthropicTaskEntity(
                 translation_domain=DOMAIN, translation_key="classification_not_found"
             )
         if unsure:
-            return ai_task.ClassifyImageResult(label=None)
+            return ai_task.ClassifyImageTaskResult(label=None)
         if not isinstance(label := data.get("label"), str) or label not in task.labels:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="classification_not_found"
             )
-        return ai_task.ClassifyImageResult(label=label)
+        return ai_task.ClassifyImageTaskResult(label=label)
 
 
 def _classification_content(
@@ -282,7 +282,11 @@ def _classification_content(
         content.extend(image_block(example) for example in label.examples)
     if cache_examples:
         # The examples stay the same between calls, only the image changes
-        content[-1]["cache_control"] = CacheControlEphemeralParam(type="ephemeral")
+        # Callers like the image classification helper classify every few
+        # minutes, longer than the default lifetime of 5 minutes.
+        content[-1]["cache_control"] = CacheControlEphemeralParam(
+            type="ephemeral", ttl="1h"
+        )
     content.append(TextBlockParam(type="text", text="Image to classify:"))
     content.append(image_block(task.image))
     return content

@@ -23,8 +23,8 @@ from .classification import (
     IMAGE_SCHEMA,
     LABELS_SCHEMA,
     REGION_SCHEMA,
-    ClassifyImageResult,
     ClassifyImageTask,
+    ClassifyImageTaskResult,
     ImageLabel,
     Region,
 )
@@ -437,7 +437,7 @@ async def async_classify_image(
     instructions: str | None = None,
     entity_id: str | None = None,
     context: Context | None = None,
-) -> ClassifyImageResult:
+) -> ClassifyImageTaskResult:
     """Classify an image by the example images of each label.
 
     Examples are media sources, or image files as attachments for an

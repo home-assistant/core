@@ -644,7 +644,7 @@ async def test_classify_image(
         region=region,
         instructions=instructions,
     )
-    assert result == ai_task.ClassifyImageResult(label="car", probabilities=None)
+    assert result == ai_task.ClassifyImageTaskResult(label="car", probabilities=None)
     assert classify_stream.call_args.kwargs == snapshot
     assert [call.args[1] for call in mock_crop_image.call_args_list] == [
         expected_region
@@ -696,7 +696,7 @@ async def test_classify_image_label(
         image=CLASSIFY_IMAGE,
         labels=labels,
     )
-    assert result == ai_task.ClassifyImageResult(label=label, probabilities=None)
+    assert result == ai_task.ClassifyImageTaskResult(label=label, probabilities=None)
 
 
 @pytest.mark.usefixtures("mock_crop_image")

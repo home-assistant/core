@@ -31,6 +31,7 @@
           }),
           dict({
             'cache_control': dict({
+              'ttl': '1h',
               'type': 'ephemeral',
             }),
             'source': dict({
@@ -118,6 +119,7 @@
           }),
           dict({
             'cache_control': dict({
+              'ttl': '1h',
               'type': 'ephemeral',
             }),
             'source': dict({

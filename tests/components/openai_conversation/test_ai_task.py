@@ -1019,7 +1019,7 @@ async def test_classify_image(
         region=region,
         instructions=instructions,
     )
-    assert result == ai_task.ClassifyImageResult(
+    assert result == ai_task.ClassifyImageTaskResult(
         label="car", probabilities={"empty": 0.08, "car": 0.92}
     )
     assert classify_decisions.call_args.kwargs == snapshot

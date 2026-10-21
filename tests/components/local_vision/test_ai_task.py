@@ -38,7 +38,7 @@ def examples(media: dict[str, bytes]) -> dict[str, dict]:
 
 async def _classify(
     hass: HomeAssistant, labels: dict[str, dict], **kwargs: object
-) -> ai_task.ClassifyImageResult:
+) -> ai_task.ClassifyImageTaskResult:
     return await ai_task.async_classify_image(
         hass,
         task_name="Bay",

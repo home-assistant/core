@@ -10,8 +10,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
 from .classification import (
-    ClassifyImageResult,
     ClassifyImageTask,
+    ClassifyImageTaskResult,
     ImageLabel,
     ImageUnusableError,
     Region,
@@ -51,8 +51,8 @@ __all__ = [
     "AITaskEntityFeature",
     "ChoiceAnswer",
     "ChoiceQuestion",
-    "ClassifyImageResult",
     "ClassifyImageTask",
+    "ClassifyImageTaskResult",
     "EvaluationAnswer",
     "EvaluationQuestion",
     "EvaluationTask",

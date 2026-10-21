@@ -96,7 +96,7 @@ class FakeClassifier(ai_task.AITaskEntity):
     @override
     async def _async_classify_image(
         self, task: ai_task.ClassifyImageTask
-    ) -> ai_task.ClassifyImageResult:
+    ) -> ai_task.ClassifyImageTaskResult:
         """Record the task and return the set answer."""
         self.tasks.append(task)
         # The camera frame is a temporary file, removed after the task.
@@ -106,8 +106,8 @@ class FakeClassifier(ai_task.AITaskEntity):
         if self.error is not None:
             raise self.error
         if self.probabilities is None:
-            return ai_task.ClassifyImageResult(label=self.label)
-        return ai_task.ClassifyImageResult(
+            return ai_task.ClassifyImageTaskResult(label=self.label)
+        return ai_task.ClassifyImageTaskResult(
             label=max(self.probabilities, key=self.probabilities.__getitem__),
             probabilities=dict(self.probabilities),
         )

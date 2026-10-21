@@ -69,11 +69,13 @@ class LocalVisionTaskEntity(ai_task.AITaskEntity):
     @override
     async def _async_classify_image(
         self, task: ai_task.ClassifyImageTask
-    ) -> ai_task.ClassifyImageResult:
+    ) -> ai_task.ClassifyImageTaskResult:
         """Classify the image in the executor."""
         return await self.hass.async_add_executor_job(self._classify, task)
 
-    def _classify(self, task: ai_task.ClassifyImageTask) -> ai_task.ClassifyImageResult:
+    def _classify(
+        self, task: ai_task.ClassifyImageTask
+    ) -> ai_task.ClassifyImageTaskResult:
         region = task.region
         roi = (
             FULL_FRAME
@@ -92,9 +94,10 @@ class LocalVisionTaskEntity(ai_task.AITaskEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="unreadable_image"
             ) from err
-        # Unsure when the best state does not beat the others by the margin.
-        return ai_task.ClassifyImageResult(
-            label=result.state, probabilities=dict(result.probabilities)
+        probabilities = dict(result.probabilities)
+        return ai_task.ClassifyImageTaskResult(
+            label=max(probabilities, key=probabilities.__getitem__),
+            probabilities=probabilities,
         )
 
     def _taught_detector(

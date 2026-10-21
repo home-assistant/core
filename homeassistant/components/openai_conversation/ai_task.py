@@ -348,7 +348,7 @@ class OpenAIEvaluationEntity(ai_task.AITaskEntity, OpenAIBaseLLMEntity):
     @override
     async def _async_classify_image(
         self, task: ai_task.ClassifyImageTask
-    ) -> ai_task.ClassifyImageResult:
+    ) -> ai_task.ClassifyImageTaskResult:
         """Classify an image by the examples of each label using the Decisions API."""
         image_count = 1 + sum(len(label.examples) for label in task.labels.values())
         if image_count > MAX_DECISION_IMAGES:
@@ -404,7 +404,7 @@ class OpenAIEvaluationEntity(ai_task.AITaskEntity, OpenAIBaseLLMEntity):
         if answer.type != "choice":
             raise HomeAssistantError("OpenAI returned an unsupported answer type")
         probabilities = _choice_answer(answer).probabilities
-        return ai_task.ClassifyImageResult(
+        return ai_task.ClassifyImageTaskResult(
             # A missing label fails the core validation of the probabilities
             label=max(task.labels, key=lambda label: probabilities.get(label, 0.0)),
             probabilities=probabilities,

@@ -42,7 +42,7 @@ LABELS = {
     },
     "car": {"examples": [_example("car_1")]},
 }
-ANSWER = ai_task.ClassifyImageResult(
+ANSWER = ai_task.ClassifyImageTaskResult(
     label="car", probabilities={"empty": 0.08, "car": 0.92}
 )
 
@@ -83,7 +83,9 @@ async def test_classify_image(hass: HomeAssistant, mock_classify: AsyncMock) -> 
     """Pass the image, every example per label and the region to the entity."""
     seen: dict[str, list[str]] = {}
 
-    async def classify(task: ai_task.ClassifyImageTask) -> ai_task.ClassifyImageResult:
+    async def classify(
+        task: ai_task.ClassifyImageTask,
+    ) -> ai_task.ClassifyImageTaskResult:
         seen["image"] = [await _content(hass, task.image)]
         for label_id, label in task.labels.items():
             seen[label_id] = [await _content(hass, e) for e in label.examples]
@@ -279,8 +281,12 @@ async def test_example_permission(
     mock_classify.assert_not_called()
 
 
-def _result(label: str | None, **probabilities: float) -> ai_task.ClassifyImageResult:
-    return ai_task.ClassifyImageResult(label=label, probabilities=probabilities or None)
+def _result(
+    label: str | None, **probabilities: float
+) -> ai_task.ClassifyImageTaskResult:
+    return ai_task.ClassifyImageTaskResult(
+        label=label, probabilities=probabilities or None
+    )
 
 
 @pytest.mark.usefixtures("init_components")
@@ -288,7 +294,6 @@ def _result(label: str | None, **probabilities: float) -> ai_task.ClassifyImageR
     "result",
     [
         pytest.param(_result("car", empty=0.1, car=0.9), id="both"),
-        pytest.param(_result(None, empty=0.45, car=0.55), id="unsure_with_estimate"),
         pytest.param(_result("car"), id="label_only"),
         pytest.param(_result(None), id="nothing_committed"),
     ],
@@ -296,7 +301,7 @@ def _result(label: str | None, **probabilities: float) -> ai_task.ClassifyImageR
 async def test_valid_result(
     hass: HomeAssistant,
     mock_classify: AsyncMock,
-    result: ai_task.ClassifyImageResult,
+    result: ai_task.ClassifyImageTaskResult,
 ) -> None:
     """Pass results with or without a label and an estimate through."""
     mock_classify.return_value = result
@@ -326,12 +331,13 @@ async def test_valid_result(
         pytest.param(_result("van", empty=0.5, car=0.5), id="unknown_label"),
         pytest.param(_result("van"), id="unknown_label_only"),
         pytest.param(_result("car", empty=0.4, car=0.9), id="not_a_distribution"),
+        pytest.param(_result(None, empty=0.45, car=0.55), id="estimate_without_label"),
     ],
 )
 async def test_invalid_result(
     hass: HomeAssistant,
     mock_classify: AsyncMock,
-    result: ai_task.ClassifyImageResult,
+    result: ai_task.ClassifyImageTaskResult,
 ) -> None:
     """Reject results that break the result contract."""
     mock_classify.return_value = result

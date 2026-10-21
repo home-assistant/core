@@ -19,7 +19,7 @@ from homeassistant.helpers.chat_session import ChatSession
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
-from .classification import ClassifyImageResult, ClassifyImageTask, validate_result
+from .classification import ClassifyImageTask, ClassifyImageTaskResult, validate_result
 from .const import DEFAULT_SYSTEM_PROMPT, DOMAIN, AITaskEntityFeature
 from .evaluation import EvaluationTask, EvaluationTaskResult
 from .task import GenDataTask, GenDataTaskResult, GenImageTask, GenImageTaskResult
@@ -162,7 +162,7 @@ class AITaskEntity(RestoreEntity):
     @final
     async def internal_async_classify_image(
         self, task: ClassifyImageTask, context: Context | None = None
-    ) -> ClassifyImageResult:
+    ) -> ClassifyImageTaskResult:
         """Run an image classification task."""
         if context is not None:
             self.async_set_context(context)
@@ -179,6 +179,6 @@ class AITaskEntity(RestoreEntity):
 
     async def _async_classify_image(
         self, task: ClassifyImageTask
-    ) -> ClassifyImageResult:
+    ) -> ClassifyImageTaskResult:
         """Handle an image classification task."""
         raise NotImplementedError
