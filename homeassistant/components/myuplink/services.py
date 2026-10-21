@@ -1,5 +1,6 @@
 """Action services for the myUplink integration."""
 
+from enum import StrEnum
 from typing import cast
 
 from aiohttp import ClientError
@@ -18,17 +19,27 @@ from homeassistant.helpers.service import (
 from .const import DOMAIN
 from .coordinator import MyUplinkConfigEntry
 
-ATTR_DATAPOINT_ID = "datapoint_id"
-ATTR_VALUE = "value"
 
-SERVICE_SET_DATAPOINT = "set_datapoint"
+class MyUplinkService(StrEnum):
+    """Store keys for myUplink services."""
+
+    SET_DATAPOINT = "set_datapoint"
+
+
+class MyUplinkServiceArgument(StrEnum):
+    """Store keys for myUplink service arguments."""
+
+    DATAPOINT_ID = "datapoint_id"
+    VALUE = "value"
+
+
 SERVICE_SET_DATAPOINT_SCHEMA = probatio.Schema(
     {
         probatio.Required(ATTR_DEVICE_ID): str,
-        probatio.Required(ATTR_DATAPOINT_ID): probatio.All(
+        probatio.Required(MyUplinkServiceArgument.DATAPOINT_ID): probatio.All(
             cv.positive_int, probatio.Range(min=1, max=99999)
         ),
-        probatio.Required(ATTR_VALUE): cv.string,
+        probatio.Required(MyUplinkServiceArgument.VALUE): cv.string,
     },
 )
 
@@ -61,8 +72,8 @@ async def _get_myuplink_device_id(
 async def async_set_datapoint(call: ServiceCall) -> None:
     """Handle the set_datapoint service call."""
 
-    datapoint_id: str = call.data.get(ATTR_DATAPOINT_ID, "")
-    value: str = call.data.get(ATTR_VALUE, "")
+    datapoint_id: str = call.data.get(MyUplinkServiceArgument.DATAPOINT_ID, "")
+    value: str = call.data.get(MyUplinkServiceArgument.VALUE, "")
     config_entry: MyUplinkConfigEntry
 
     device_entry, config_entry = async_get_device_and_config_entry(
@@ -95,7 +106,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_SET_DATAPOINT,
+        MyUplinkService.SET_DATAPOINT,
         async_set_datapoint,
         schema=SERVICE_SET_DATAPOINT_SCHEMA,
     )

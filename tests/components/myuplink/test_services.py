@@ -5,12 +5,12 @@ from unittest.mock import MagicMock, Mock
 from aiohttp import ClientResponseError
 from probatio import MultipleInvalid
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.myuplink.const import DOMAIN
 from homeassistant.components.myuplink.services import (
-    ATTR_DATAPOINT_ID,
-    ATTR_VALUE,
-    SERVICE_SET_DATAPOINT,
+    MyUplinkService,
+    MyUplinkServiceArgument,
 )
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant
@@ -18,8 +18,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceRegistry
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 TEST_DEVICE = "robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff"
 
@@ -38,11 +36,11 @@ async def test_services(
     )
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SET_DATAPOINT,
+        MyUplinkService.SET_DATAPOINT,
         {
             ATTR_DEVICE_ID: device.id,
-            ATTR_DATAPOINT_ID: 99999,
-            ATTR_VALUE: "value",
+            MyUplinkServiceArgument.DATAPOINT_ID: 99999,
+            MyUplinkServiceArgument.VALUE: "value",
         },
         blocking=True,
     )
@@ -70,8 +68,12 @@ async def test_get_service_api_errors(
     with pytest.raises(HomeAssistantError, match="Failed to set new value"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_DATAPOINT,
-            {ATTR_DEVICE_ID: device.id, ATTR_DATAPOINT_ID: 12345, ATTR_VALUE: "test"},
+            MyUplinkService.SET_DATAPOINT,
+            {
+                ATTR_DEVICE_ID: device.id,
+                MyUplinkServiceArgument.DATAPOINT_ID: 12345,
+                MyUplinkServiceArgument.VALUE: "test",
+            },
             blocking=True,
         )
     mock_myuplink_client.async_set_device_points.assert_called_once()
@@ -94,7 +96,7 @@ async def test_service_validation_errors(
     with pytest.raises(MultipleInvalid, match="required key not provided"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_DATAPOINT,
+            MyUplinkService.SET_DATAPOINT,
             {ATTR_DEVICE_ID: device.id},
             blocking=True,
         )
@@ -104,11 +106,11 @@ async def test_service_validation_errors(
     with pytest.raises(ServiceValidationError, match="Device with ID invalid_device"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_DATAPOINT,
+            MyUplinkService.SET_DATAPOINT,
             {
                 ATTR_DEVICE_ID: "invalid_device",
-                ATTR_DATAPOINT_ID: 12345,
-                ATTR_VALUE: "test",
+                MyUplinkServiceArgument.DATAPOINT_ID: 12345,
+                MyUplinkServiceArgument.VALUE: "test",
             },
             blocking=True,
         )
