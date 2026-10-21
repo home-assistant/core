@@ -45,9 +45,6 @@
     "invalid_notification_image": {
       "message": "Invalid image data provided. Got {type}"
     },
-    "media_not_readable": {
-      "message": "Failed to read media attachment contents from file {name}"
-    },
     "media_source_not_supported": {
       "message": "Media source currently not supported"
     },

@@ -4,6 +4,7 @@ import logging
 from unittest.mock import DEFAULT, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from screenlogicpy import ScreenLogicGateway
 from screenlogicpy.device_const.heat import HEAT_MODE
 
@@ -27,8 +28,6 @@ from . import (
     MOCK_ADAPTER_NAME,
     stub_async_connect,
 )
-
-from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

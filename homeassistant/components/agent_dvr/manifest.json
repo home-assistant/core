@@ -1,6 +1,7 @@
 {
   "domain": "agent_dvr",
   "name": "Agent DVR",
+  "categories": ["security_safety.cameras"],
   "codeowners": ["@ispysoftware"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/agent_dvr",

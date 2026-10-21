@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from bleak import BleakError
 from led_ble import CharacteristicMissingError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.led_ble.const import DOMAIN
@@ -17,8 +18,6 @@ from . import (
     NOT_LED_BLE_DISCOVERY_INFO,
     UNSUPPORTED_LED_BLE_DISCOVERY_INFO,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_step_success(hass: HomeAssistant) -> None:
@@ -40,7 +39,7 @@ async def test_user_step_success(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.led_ble.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -129,7 +128,7 @@ async def test_user_step_cannot_connect(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.led_ble.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -184,7 +183,7 @@ async def test_user_step_unknown_exception(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.led_ble.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -250,7 +249,7 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.led_ble.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -310,7 +309,7 @@ async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.led_ble.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(

@@ -9,6 +9,8 @@ from adb_shell.exceptions import TcpTimeoutException as AdbShellTimeoutException
 from androidtv.constants import APPS as ANDROIDTV_APPS, KEYS
 from androidtv.exceptions import LockNotAcquiredException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.androidtv.const import (
     CONF_APPS,
@@ -77,9 +79,6 @@ from .common import (
     setup_mock_entry,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import ClientSessionGenerator
-
 MSG_RECONNECT = {
     patchers.KEY_PYTHON: (
         f"ADB connection to {TEST_HOST_NAME}:{DEFAULT_PORT} successfully established"
@@ -115,7 +114,7 @@ async def test_reconnect(
     "Handles device/service unavailable. Log a warning once when
     unavailable, log once when reconnected."
 
-    https://developers.home-assistant.io/docs/en/integration_quality_scale_index.html
+    https://contributors.home-assistant.io/core/quality-scale/
     """
     patch_key, entity_id, config_entry = _setup(config)
     config_entry.add_to_hass(hass)

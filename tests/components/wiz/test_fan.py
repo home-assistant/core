@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from pywizlight import BulbType
 from pywizlight.exceptions import WizLightConnectionError
 from syrupy.assertion import SnapshotAssertion
@@ -39,8 +40,6 @@ from . import (
     async_push_update,
     async_setup_integration,
 )
-
-from tests.common import snapshot_platform
 
 ENTITY_ID = "fan.mock_title"
 

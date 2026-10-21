@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyotgw.vars import OTGW, OTGW_ABOUT
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.opentherm_gw import DOMAIN
 from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_NAME
-
-from tests.common import MockConfigEntry
 
 VERSION_TEST = "4.2.5"
 MINIMAL_STATUS = {OTGW: {OTGW_ABOUT: f"OpenTherm Gateway {VERSION_TEST}"}}
@@ -21,7 +20,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.opentherm_gw.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -35,6 +34,7 @@ def mock_pyotgw() -> Generator[MagicMock]:
             return_value=MagicMock(
                 connect=AsyncMock(return_value=MINIMAL_STATUS),
                 set_control_setpoint=AsyncMock(),
+                set_control_setpoint_2=AsyncMock(),
                 set_max_relative_mod=AsyncMock(),
                 disconnect=AsyncMock(),
             ),

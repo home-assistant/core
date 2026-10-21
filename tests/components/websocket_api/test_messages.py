@@ -1,6 +1,7 @@
 """Test Websocket API messages module."""
 
 import pytest
+from pytest_homeassistant.common import async_capture_events
 
 from homeassistant.components.websocket_api.messages import (
     _partial_cached_event_message as lru_event_cache,
@@ -11,8 +12,6 @@ from homeassistant.components.websocket_api.messages import (
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import Context, Event, HomeAssistant, State, callback
 from homeassistant.util.json import json_loads
-
-from tests.common import async_capture_events
 
 
 async def test_cached_event_message(hass: HomeAssistant) -> None:

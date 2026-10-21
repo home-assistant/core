@@ -1,11 +1,13 @@
 {
   "domain": "trafikverket_camera",
   "name": "Trafikverket Camera",
+  "categories": ["vehicles_transport"],
   "codeowners": ["@gjohansson-ST"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/trafikverket_camera",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["pytrafikverket"],
+  "quality_scale": "bronze",
   "requirements": ["pytrafikverket==2.0.0"]
 }

@@ -1,6 +1,7 @@
 {
   "domain": "syncthing",
   "name": "Syncthing",
+  "categories": ["computers_network.nas_servers"],
   "codeowners": ["@zhulik"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/syncthing",

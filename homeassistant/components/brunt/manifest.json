@@ -1,6 +1,7 @@
 {
   "domain": "brunt",
   "name": "Brunt Blind Engine",
+  "categories": ["blinds_curtains"],
   "codeowners": ["@eavanvalkenburg"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/brunt",
