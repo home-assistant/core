@@ -25,6 +25,7 @@ from homeassistant.components.abetterrouteplanner.sensor import (
     CHARGING_STATE_OPTIONS,
     SENSORS,
 )
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -39,6 +40,7 @@ from .conftest import (
     build_vehicle_model_display,
     fire_connection,
     fire_frame,
+    flow_sources,
 )
 
 SOC_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_soc"
@@ -292,7 +294,8 @@ async def test_availability_follows_stream_auth_not_connection(
     assert [
         record.levelno for record in caplog.records if "auth failed" in record.message
     ] == [logging.WARNING]
-    assert not hass.config_entries.flow.async_progress()
+    # The repeated AUTH_FAILED starts a single reauth flow.
+    assert flow_sources(hass) == [SOURCE_REAUTH]
 
     fire_connection(
         mock_telemetry_stream,
