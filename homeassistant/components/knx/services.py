@@ -40,7 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class KnxService(StrEnum):
-    """Service names."""
+    """Store keys for KNX services."""
 
     EVENT_REGISTER = "event_register"
     EXPOSURE_REGISTER = "exposure_register"
@@ -50,7 +50,7 @@ class KnxService(StrEnum):
 
 
 class KnxServiceArgument(StrEnum):
-    """Service argument names."""
+    """Store keys for KNX service arguments."""
 
     ADDRESS = "address"
     PAYLOAD = "payload"
