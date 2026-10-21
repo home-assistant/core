@@ -18,7 +18,8 @@ from homeassistant.helpers.llm import (
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonObjectType
 
-from . import DOMAIN, LogErrorHandler
+from . import LogErrorHandler
+from .const import DOMAIN
 
 _LOG_LEVELS = ["error", "warning", "critical"]
 _DEFAULT_LIMIT = 25
