@@ -1,6 +1,6 @@
 """Test the my-PV update platform."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from my_pv.exceptions import (
@@ -36,8 +36,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-PLATFORMS = [Platform.UPDATE]
-
 pytestmark = pytest.mark.usefixtures("entity_registry_enabled_by_default")
 
 
@@ -57,10 +55,11 @@ async def test_update_not_available(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test successful setup of an update platform when no newer firmware is available."""
-    mock_my_pv_client.latest_firmware_version = "e0002200"
-    mock_my_pv_client.firmware_update_available = False
+    with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.UPDATE]):
+        mock_my_pv_client.latest_firmware_version = "e0002200"
+        mock_my_pv_client.firmware_update_available = False
 
-    await setup_integration(hass, mock_config_entry, PLATFORMS)
+        await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -73,7 +72,8 @@ async def test_update_available(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test successful setup of an update platform when newer firmware is available."""
-    await setup_integration(hass, mock_config_entry, PLATFORMS)
+    with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.UPDATE]):
+        await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -86,7 +86,7 @@ async def test_update_unavailable_not_connected(
     """Test if an update is unavailable when not connected."""
     mock_my_pv_client.connected = False
 
-    await setup_integration(hass, mock_config_entry, PLATFORMS)
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("update.my_pv_ac_elwa_2_firmware")
     assert state.state == STATE_UNAVAILABLE
@@ -99,7 +99,7 @@ async def test_update_install(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a successful firmware update with progress."""
-    await setup_integration(hass, mock_config_entry, PLATFORMS)
+    await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
@@ -158,7 +158,7 @@ async def test_update_in_progress_on_setup(
     """Test a firmware update that is already in progress when the entity is added."""
     mock_my_pv_client.firmware_update_progress = 40
 
-    await setup_integration(hass, mock_config_entry, PLATFORMS)
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("update.my_pv_ac_elwa_2_firmware")
     assert state.state == STATE_ON
@@ -182,7 +182,7 @@ async def test_update_install_firmware_returns_false(
     mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test for HomeAssistantError when update_firmware returns False."""
-    await setup_integration(hass, mock_config_entry, PLATFORMS)
+    await setup_integration(hass, mock_config_entry)
 
     mock_my_pv_client.update_firmware.return_value = False
     with pytest.raises(HomeAssistantError):
@@ -221,7 +221,7 @@ async def test_update_install_firmware_raises_error(
     expected_ha_error: type[HomeAssistantError],
 ) -> None:
     """Test for HomeAssistantError when update_firmware raises an error."""
-    await setup_integration(hass, mock_config_entry, PLATFORMS)
+    await setup_integration(hass, mock_config_entry)
 
     mock_my_pv_client.update_firmware.side_effect = error
     with pytest.raises(expected_ha_error):

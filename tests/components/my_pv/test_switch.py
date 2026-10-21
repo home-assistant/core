@@ -1,7 +1,7 @@
 """Test the my-PV switch platform."""
 
 from typing import Any
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 from my_pv.exceptions import (
     MyPVAuthenticationError,
@@ -30,8 +30,6 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-PLATFORMS = [Platform.SWITCH]
 
 pytestmark = pytest.mark.usefixtures("entity_registry_enabled_by_default")
 
@@ -63,7 +61,8 @@ async def test_switch(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test successful setup of a switch."""
-    await setup_integration(hass, mock_config_entry, PLATFORMS)
+    with patch("homeassistant.components.my_pv.PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -74,7 +73,7 @@ async def test_water_heater_switch_no_temp_sensor(
     mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test if a switch for the water heater is created when there is no temperature sensor installed."""
-    await setup_integration(hass, mock_config_entry, PLATFORMS)
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("switch.my_pv_ac_elwa_2")
     assert state.state == STATE_ON
@@ -88,7 +87,7 @@ async def test_water_heater_switch_temp_sensor(
     """Test that no switch for the water heater is created when there is a temperature sensor installed."""
     mock_my_pv_client.current_temperature = 30
 
-    await setup_integration(hass, mock_config_entry, PLATFORMS)
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("switch.my_pv_ac_elwa_2")
     assert state is None
@@ -107,7 +106,7 @@ async def test_switch_unavailable_not_connected(
     """Test if a switch is unavailable when not connected."""
     mock_my_pv_client.connected = False
 
-    await setup_integration(hass, mock_config_entry, PLATFORMS)
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get(entity)
     assert state.state == STATE_UNAVAILABLE
@@ -121,7 +120,7 @@ async def test_switch_unavailable_setup_value_none(
     """Test if a switch is unavailable when setup value is None."""
     mock_my_pv_client.get_setup_value = Mock(return_value=None)
 
-    await setup_integration(hass, mock_config_entry, PLATFORMS)
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("switch.my_pv_ac_elwa_2_boost_mode")
     assert state.state == STATE_UNAVAILABLE
@@ -163,7 +162,7 @@ async def test_switch_turn_on_off(
     mock_my_pv_client.get_setup_value.side_effect = None
     mock_my_pv_client.get_setup_value.return_value = initial_state
 
-    await setup_integration(hass, mock_config_entry, PLATFORMS)
+    await setup_integration(hass, mock_config_entry)
 
     client_method = getattr(mock_my_pv_client, method)
 
@@ -196,7 +195,7 @@ async def test_switch_toggle(
     """Test toggle."""
     mock_my_pv_client.is_on = False
 
-    await setup_integration(hass, mock_config_entry, PLATFORMS)
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get(entity)
     assert state.state == STATE_OFF
@@ -232,7 +231,7 @@ async def test_switch_toggle_returns_false(
     """Test for HomeAssistantError when toggle method returns false."""
     mock_my_pv_client.is_on = False
 
-    await setup_integration(hass, mock_config_entry, PLATFORMS)
+    await setup_integration(hass, mock_config_entry)
 
     client_method = getattr(mock_my_pv_client, method)
     client_method.return_value = False
@@ -324,7 +323,7 @@ async def test_switch_toggle_raises_error(
     expected_state: str,
 ) -> None:
     """Test for HomeAssistantError when method raises error."""
-    await setup_integration(hass, mock_config_entry, PLATFORMS)
+    await setup_integration(hass, mock_config_entry)
 
     client_method = getattr(mock_my_pv_client, method)
     client_method.side_effect = error
