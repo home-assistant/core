@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 from aioautomower.const import API_BASE_URL
+from aioautomower.exceptions import AuthError
 from aioautomower.session import AutomowerEndpoint
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
@@ -18,7 +19,7 @@ from homeassistant.components.husqvarna_automower.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import config_entry_oauth2_flow, issue_registry as ir
 
 from . import setup_integration
 from .const import CLIENT_ID, USER_ID
@@ -154,8 +155,18 @@ async def test_config_non_unique_profile(
 @pytest.mark.parametrize(
     ("scope", "step_id", "reason", "new_scope"),
     [
-        ("iam:read amc:api", "reauth_confirm", "reauth_successful", "iam:read amc:api"),
-        ("iam:read", "missing_scope", "reauth_successful", "iam:read amc:api"),
+        (
+            "iam:read amc:api",
+            "reauth_confirm",
+            "reauth_successful",
+            "iam:read amc:api",
+        ),
+        (
+            "iam:read",
+            "missing_scope",
+            "reauth_successful",
+            "iam:read amc:api",
+        ),
         ("iam:read", "missing_scope", "missing_amc_scope", "iam:read"),
     ],
 )
@@ -231,6 +242,78 @@ async def test_reauth(
     # Verify access token is refreshed
     assert mock_config_entry.data["token"].get("access_token") == "mock-updated-token"
     assert mock_config_entry.data["token"].get("refresh_token") == "mock-refresh-token"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_reauth_retries_failed_migration(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    legacy_mock_config_entry: MockConfigEntry,
+    mock_automower_client: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test successful reauthentication retries a failed migration."""
+    legacy_mock_config_entry.add_to_hass(hass)
+    mock_automower_client.get_status.side_effect = AuthError
+    await hass.config_entries.async_setup(legacy_mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        legacy_mock_config_entry.state
+        is config_entries.ConfigEntryState.MIGRATION_ERROR
+    )
+
+    mock_automower_client.get_status.side_effect = None
+    legacy_mock_config_entry.async_start_reauth(hass)
+    await hass.async_block_till_done()
+    result = hass.config_entries.flow.async_progress()[0]
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+    client = await hass_client_no_auth()
+    response = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert response.status == 200
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "access_token": "mock-updated-token",
+            "scope": "iam:read amc:api",
+            "expires_in": 86399,
+            "refresh_token": "mock-refresh-token",
+            "provider": "husqvarna",
+            "user_id": legacy_mock_config_entry.unique_id,
+            "token_type": "Bearer",
+            "expires_at": 1697753347,
+        },
+    )
+
+    with patch(
+        "homeassistant.components.husqvarna_automower.async_setup_entry",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert legacy_mock_config_entry.minor_version == 2
+    assert legacy_mock_config_entry.state is config_entries.ConfigEntryState.LOADED
+    assert (
+        legacy_mock_config_entry.data["token"]["access_token"] == "mock-updated-token"
+    )
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN,
+            f"migrate_could_not_auth_{legacy_mock_config_entry.entry_id}",
+        )
+        is None
+    )
 
 
 @pytest.mark.parametrize(

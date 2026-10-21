@@ -1,6 +1,7 @@
 """The Husqvarna Automower integration."""
 
 from aioautomower.exceptions import ApiError, AuthError
+from aioautomower.model import MowerDictionary
 from aioautomower.session import AutomowerSession
 
 from homeassistant.const import Platform
@@ -16,12 +17,16 @@ from homeassistant.helpers import (
     config_validation as cv,
     entity_registry as er,
 )
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from . import api
-from .const import DOMAIN
+from .const import DOMAIN, MIGRATION_AUTH_ISSUE_ID_PREFIX
 from .coordinator import AutomowerConfigEntry, AutomowerDataUpdateCoordinator
 from .services import async_setup_services
 
@@ -46,7 +51,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) -> None:
     """Migrate config entry."""
     if entry.minor_version < 2:
         implementation = (
@@ -72,35 +77,52 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) 
             async_create_issue(
                 hass,
                 DOMAIN,
-                f"migrate_could_not_auth_{entry.entry_id}",
+                f"{MIGRATION_AUTH_ISSUE_ID_PREFIX}{entry.entry_id}",
                 is_fixable=True,
-                is_persistent=False,
+                is_persistent=True,
                 severity=IssueSeverity.ERROR,
                 translation_key="migrate_could_not_auth",
                 translation_placeholders={"title": entry.title},
                 data={"entry_id": entry.entry_id},
+                config_entry_id=entry.entry_id,
             )
             raise ConfigEntryError(
-                translation_key="migrate_could_not_auth", translation_domain=DOMAIN
+                translation_key="migrate_could_not_auth",
+                translation_domain=DOMAIN,
             ) from exc
 
-        entity_registry = er.async_get(hass)
-        for mower_id, mower_data in data.items():
-            for work_area_id, work_area in (mower_data.work_areas or {}).items():
-                if not work_area.use_global_cutting_height:
-                    continue
-                if entity_id := entity_registry.async_get_entity_id(
-                    Platform.NUMBER,
-                    DOMAIN,
-                    f"{mower_id}_{work_area_id}_cutting_height_work_area",
-                ):
-                    entity_registry.async_remove(entity_id)
+        _async_remove_global_cutting_height_entities(hass, entry, data)
         hass.config_entries.async_update_entry(entry, minor_version=2)
-    return True
+        async_delete_issue(
+            hass,
+            DOMAIN,
+            f"{MIGRATION_AUTH_ISSUE_ID_PREFIX}{entry.entry_id}",
+        )
+
+
+def _async_remove_global_cutting_height_entities(
+    hass: HomeAssistant,
+    entry: AutomowerConfigEntry,
+    data: MowerDictionary,
+) -> None:
+    """Remove legacy work area numbers that cannot control global cutting height."""
+    registry = er.async_get(hass)
+    global_height_unique_ids = {
+        f"{mower_id}_{work_area_id}_cutting_height_work_area"
+        for mower_id, mower_data in data.items()
+        for work_area_id, work_area in (mower_data.work_areas or {}).items()
+        if work_area.use_global_cutting_height
+    }
+    for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
+        if (
+            entity.domain == Platform.NUMBER
+            and entity.platform == DOMAIN
+            and entity.unique_id in global_height_unique_ids
+        ):
+            registry.async_remove(entity.entity_id)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) -> None:
-
     """Set up this integration using UI."""
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
