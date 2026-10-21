@@ -1241,7 +1241,10 @@ async def test_get_triggers_endpoint_child_device(
     the child device_id back to the node when attaching.
     """
     child_device = device_registry.async_get_child_device_by_identifier(
-        get_device_id(client.driver, climate_heatit_z_trm3, 2), integration.entry_id
+        get_endpoint_device_id(
+            client.driver, climate_heatit_z_trm3, climate_heatit_z_trm3.endpoints[2]
+        ),
+        integration.entry_id,
     )
     assert child_device
     expected_zwave_trigger = {
@@ -1271,7 +1274,7 @@ async def test_get_triggers_endpoint_child_device(
         ),
         pytest.param(
             lambda reg, driver, node, entry: reg.async_get_child_device_by_identifier(
-                get_device_id(driver, node, 2), entry
+                get_endpoint_device_id(driver, node, node.endpoints[2]), entry
             ),
             id="child_device",
         ),
@@ -1396,7 +1399,10 @@ async def test_validate_value_updated_endpoint_child_device(
     could listen to an unrelated endpoint while reporting the child device's id.
     """
     child_device = device_registry.async_get_child_device_by_identifier(
-        get_device_id(client.driver, climate_heatit_z_trm3, 2), integration.entry_id
+        get_endpoint_device_id(
+            client.driver, climate_heatit_z_trm3, climate_heatit_z_trm3.endpoints[2]
+        ),
+        integration.entry_id,
     )
     assert child_device
 
@@ -1925,7 +1931,10 @@ async def test_get_trigger_capabilities_value_updated_value_child_device(
 ) -> None:
     """Test the endpoint is pinned for a value_updated trigger on a child device."""
     child_device = device_registry.async_get_child_device_by_identifier(
-        get_device_id(client.driver, climate_heatit_z_trm3, 2), integration.entry_id
+        get_endpoint_device_id(
+            client.driver, climate_heatit_z_trm3, climate_heatit_z_trm3.endpoints[2]
+        ),
+        integration.entry_id,
     )
     assert child_device
     capabilities = await device_trigger.async_get_trigger_capabilities(
@@ -1949,6 +1958,14 @@ async def test_get_trigger_capabilities_value_updated_value_child_device(
     # The endpoint is required and restricted to the child device's own endpoint.
     assert endpoint_field["required"] is True
     assert [option[0] for option in endpoint_field["options"]] == ["2"]
+    # The command classes come from the child's own endpoint (endpoint 2), which carries
+    # Multilevel Sensor (its air temperature value), not just the root endpoint's.
+    command_class_field = next(
+        field for field in fields if field["name"] == "command_class"
+    )
+    assert str(CommandClass.SENSOR_MULTILEVEL.value) in [
+        option[0] for option in command_class_field["options"]
+    ]
 
 
 async def test_get_trigger_capabilities_value_updated_value_group_child_device(

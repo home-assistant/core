@@ -314,7 +314,8 @@ async def test_zwave_js_value_updated_child_device(
     )
     assert node_device
     child_device = device_registry.async_get_child_device_by_identifier(
-        get_device_id(client.driver, node, 2), integration.entry_id
+        get_endpoint_device_id(client.driver, node, node.endpoints[2]),
+        integration.entry_id,
     )
     assert child_device
 
@@ -406,7 +407,10 @@ async def test_zwave_js_value_updated_child_device_unavailable_target(
     trigger_type = f"{DOMAIN}.value_updated"
     reachable_node = climate_heatit_z_trm3
     reachable_child = device_registry.async_get_child_device_by_identifier(
-        get_device_id(client.driver, reachable_node, 2), integration.entry_id
+        get_endpoint_device_id(
+            client.driver, reachable_node, reachable_node.endpoints[2]
+        ),
+        integration.entry_id,
     )
     assert reachable_child
     unavailable_child = device_registry.async_get_child_device_by_identifier(
@@ -487,10 +491,12 @@ async def test_zwave_js_value_updated_multiple_child_targets(
     trigger_type = f"{DOMAIN}.value_updated"
     node = climate_heatit_z_trm3
     room_child = device_registry.async_get_child_device_by_identifier(
-        get_device_id(client.driver, node, 2), integration.entry_id
+        get_endpoint_device_id(client.driver, node, node.endpoints[2]),
+        integration.entry_id,
     )
     external_child = device_registry.async_get_child_device_by_identifier(
-        get_device_id(client.driver, node, 3), integration.entry_id
+        get_endpoint_device_id(client.driver, node, node.endpoints[3]),
+        integration.entry_id,
     )
     assert room_child
     assert external_child
@@ -570,7 +576,8 @@ async def test_zwave_js_value_updated_child_devices_across_networks(
     # Network 1 is the heatit node from the integration fixture.
     node1 = climate_heatit_z_trm3
     child1 = device_registry.async_get_child_device_by_identifier(
-        get_device_id(client.driver, node1, 2), integration.entry_id
+        get_endpoint_device_id(client.driver, node1, node1.endpoints[2]),
+        integration.entry_id,
     )
     assert child1
 
@@ -600,7 +607,7 @@ async def test_zwave_js_value_updated_child_devices_across_networks(
     )
     child2 = device_registry.async_get_or_create_child(
         config_entry_id=entry2.entry_id,
-        identifiers={get_device_id(client2.driver, node2, 2)},
+        identifiers={get_endpoint_device_id(client2.driver, node2, node2.endpoints[2])},
         parent_device_id=parent2.id,
     )
     assert child2.id != child1.id

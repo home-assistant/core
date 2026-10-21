@@ -240,19 +240,9 @@ def get_unique_id(driver: Driver, value_id: str) -> str:
     return f"{driver.controller.home_id}.{value_id}"
 
 
-def get_device_id(
-    driver: Driver, node: ZwaveNode, endpoint: int | None = None
-) -> tuple[str, str]:
-    """Get device registry identifier for Z-Wave node.
-
-    When an endpoint is given (and not the root endpoint 0), the identifier
-    refers to the endpoint child device of the node. Endpoint 0 and ``None`` both
-    map to the main node device.
-    """
-    device_id = (DOMAIN, f"{driver.controller.home_id}-{node.node_id}")
-    if endpoint:
-        return (device_id[0], f"{device_id[1]}-{endpoint}")
-    return device_id
+def get_device_id(driver: Driver, node: ZwaveNode) -> tuple[str, str]:
+    """Get device registry identifier for Z-Wave node."""
+    return (DOMAIN, f"{driver.controller.home_id}-{node.node_id}")
 
 
 def get_endpoint_device_id(
@@ -563,15 +553,12 @@ def async_get_nodes_from_area_id(
             if entity.platform == DOMAIN and entity.device_id is not None
         }
     )
-    # Add devices in an area that are Z-Wave JS devices. Child devices are skipped
-    # since a child device is not a Z-Wave JS node.
+    # Add devices in an area that are Z-Wave JS devices, including endpoint child devices
+    # (async_get_node_from_device_id resolves a child device to its node).
     nodes.update(
         async_get_node_from_device_id(hass, device.id)
         for device in dr.async_entries_for_area(dev_reg, area_id)
-        if not isinstance(device, dr.ChildDeviceEntry)
-        and (
-            config_entry := hass.config_entries.async_get_entry(device.config_entry_id)
-        )
+        if (config_entry := hass.config_entries.async_get_entry(device.config_entry_id))
         is not None
         and config_entry.domain == DOMAIN
     )
@@ -785,10 +772,13 @@ def get_device_info(
         )
 
     assert parent_device_id is not None
+    name: str | None
     if isinstance(endpoint_device, EndpointGroup):
         name = endpoint_device.label
     else:
-        name = endpoint_device.endpoint_label or f"Endpoint {endpoint_device.index}"
+        # A value is only placed on a per-endpoint child device when the endpoint has a
+        # label (see endpoint_devices), so endpoint_label is always set here.
+        name = endpoint_device.endpoint_label
     return ChildDeviceInfo(
         identifiers={get_endpoint_device_id(driver, node, endpoint_device)},
         name=name,

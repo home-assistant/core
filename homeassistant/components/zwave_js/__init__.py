@@ -884,7 +884,13 @@ class NodeEvents:
                 for entity_entry in er.async_entries_for_device(
                     self.ent_reg, child_device.id
                 ):
-                    if entity_entry.unique_id in rediscovered_unique_ids:
+                    # Some platforms append a suffix to the base value unique id (a state
+                    # key or property key), so match those entities by their base id too.
+                    entry_unique_id = entity_entry.unique_id
+                    if entry_unique_id in rediscovered_unique_ids or any(
+                        entry_unique_id.startswith((f"{unique_id}.", f"{unique_id}_"))
+                        for unique_id in rediscovered_unique_ids
+                    ):
                         self.ent_reg.async_update_entity(
                             entity_entry.entity_id, device_id=device.id
                         )

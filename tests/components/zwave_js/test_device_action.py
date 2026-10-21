@@ -549,7 +549,7 @@ async def test_reset_meter_action(
         ),
         pytest.param(
             lambda reg, driver, node, entry: reg.async_get_child_device_by_identifier(
-                get_device_id(driver, node, 2), entry
+                get_endpoint_device_id(driver, node, node.endpoints[2]), entry
             ),
             id="child_device",
         ),
@@ -692,7 +692,7 @@ async def test_reset_meter_action_endpoint_child_device(
         ),
         pytest.param(
             lambda reg, driver, node, entry: reg.async_get_child_device_by_identifier(
-                get_device_id(driver, node, 2), entry
+                get_endpoint_device_id(driver, node, node.endpoints[2]), entry
             ),
             id="child_device",
         ),

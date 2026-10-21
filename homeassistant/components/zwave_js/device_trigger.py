@@ -590,33 +590,41 @@ async def async_get_trigger_capabilities(
         }
 
     if trigger_type == VALUE_VALUE_UPDATED:
-        # Only show command classes on this node and exclude Configuration CC since it
-        # is already covered
+        # On an endpoint child device, restrict the command classes and endpoint to the
+        # endpoint(s) the child covers, so a trigger created there matches the child's own
+        # values and can't be retargeted at the node's root or an unrelated endpoint.
+        device = dr.async_get(hass).async_get(config[CONF_DEVICE_ID])
+        if isinstance(device, dr.ChildDeviceEntry) and (
+            endpoints := get_endpoint_indices_from_child_device(device, node)
+        ):
+            command_classes = {
+                command_class
+                for endpoint in endpoints
+                for command_class in node.endpoints[endpoint].command_classes
+            }
+            endpoint_field: Any = probatio.Required(ATTR_ENDPOINT)
+            endpoint_schema: Any = probatio.In(
+                [str(endpoint) for endpoint in endpoints]
+            )
+        else:
+            command_classes = set(node.command_classes)
+            endpoint_field = probatio.Optional(ATTR_ENDPOINT)
+            endpoint_schema = cv.string
+        # Exclude Configuration CC since it is already covered by its own trigger.
         extra_fields: dict[Any, Any] = {
             probatio.Required(ATTR_COMMAND_CLASS): probatio.In(
                 {
                     str(CommandClass(cc.id).value): cc.name
-                    for cc in sorted(node.command_classes, key=lambda cc: cc.name)
+                    for cc in sorted(command_classes, key=lambda cc: cc.name)
                     if cc.id != CommandClass.CONFIGURATION
                 }
             ),
             probatio.Required(ATTR_PROPERTY): cv.string,
             probatio.Optional(ATTR_PROPERTY_KEY): cv.string,
+            endpoint_field: endpoint_schema,
+            probatio.Optional(ATTR_FROM): cv.string,
+            probatio.Optional(ATTR_TO): cv.string,
         }
-        # On an endpoint child device, pin the endpoint to the endpoint(s) the child
-        # covers so a trigger created there can't be retargeted at the node's root or an
-        # unrelated endpoint.
-        device = dr.async_get(hass).async_get(config[CONF_DEVICE_ID])
-        if isinstance(device, dr.ChildDeviceEntry) and (
-            endpoints := get_endpoint_indices_from_child_device(device, node)
-        ):
-            extra_fields[probatio.Required(ATTR_ENDPOINT)] = probatio.In(
-                [str(endpoint) for endpoint in endpoints]
-            )
-        else:
-            extra_fields[probatio.Optional(ATTR_ENDPOINT)] = cv.string
-        extra_fields[probatio.Optional(ATTR_FROM)] = cv.string
-        extra_fields[probatio.Optional(ATTR_TO)] = cv.string
         return {"extra_fields": probatio.Schema(extra_fields)}
 
     return {}

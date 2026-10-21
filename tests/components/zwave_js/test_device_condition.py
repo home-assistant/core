@@ -17,6 +17,7 @@ from homeassistant.components.device_automation import (
 from homeassistant.components.zwave_js import DOMAIN, device_condition
 from homeassistant.components.zwave_js.helpers import (
     get_device_id,
+    get_endpoint_device_id,
     get_zwave_value_from_config,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -99,7 +100,10 @@ async def test_get_conditions_endpoint_child_device(
     duplicate the parent node device's list if exposed on child devices.
     """
     child_device = device_registry.async_get_child_device_by_identifier(
-        get_device_id(client.driver, climate_heatit_z_trm3, 2), integration.entry_id
+        get_endpoint_device_id(
+            client.driver, climate_heatit_z_trm3, climate_heatit_z_trm3.endpoints[2]
+        ),
+        integration.entry_id,
     )
     assert child_device
     conditions = await async_get_device_automations(
@@ -465,7 +469,7 @@ async def test_value_state(
         ),
         pytest.param(
             lambda reg, driver, node, entry: reg.async_get_child_device_by_identifier(
-                get_device_id(driver, node, 2), entry
+                get_endpoint_device_id(driver, node, node.endpoints[2]), entry
             ),
             id="child_device",
         ),

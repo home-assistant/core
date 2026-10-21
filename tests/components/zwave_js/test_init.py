@@ -542,7 +542,7 @@ async def test_new_entity_on_value_added(
     """Test we create a new entity if a value is added after the fact."""
     node: Node = multisensor_6
 
-    # Add a value for a property that doesn't exist yet on this node.
+    # Add a value on a random endpoint so we can be sure we should get a new entity
     event = Event(
         type="value added",
         data={
@@ -552,16 +552,15 @@ async def test_new_entity_on_value_added(
             "args": {
                 "commandClassName": "Multilevel Sensor",
                 "commandClass": 49,
-                "endpoint": 0,
-                "property": "Power",
-                "propertyName": "Power",
+                "endpoint": 10,
+                "property": "Ultraviolet",
+                "propertyName": "Ultraviolet",
                 "metadata": {
                     "type": "number",
                     "readable": True,
                     "writeable": False,
-                    "label": "Power",
-                    "unit": "W",
-                    "ccSpecific": {"sensorType": 4, "scale": 0},
+                    "label": "Ultraviolet",
+                    "ccSpecific": {"sensorType": 27, "scale": 0},
                 },
                 "value": 0,
             },
@@ -569,7 +568,7 @@ async def test_new_entity_on_value_added(
     )
     node.receive_event(event)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.multisensor_6_power") is not None
+    assert hass.states.get("sensor.multisensor_6_ultraviolet_10") is not None
 
 
 async def test_on_node_added_ready(
@@ -1010,9 +1009,7 @@ async def test_null_name(
 ) -> None:
     """Test that node without a name gets a generic node name."""
     node = null_name_check
-    # The switches live on endpoint child devices, but the node-level entities still
-    # reflect the generic node name.
-    assert hass.states.get(f"sensor.node_{node.node_id}_node_status")
+    assert hass.states.get(f"switch.node_{node.node_id}")
 
 
 @pytest.mark.usefixtures("addon_installed", "addon_info")
@@ -1686,7 +1683,8 @@ async def test_endpoint_child_device(
     child_devices: dict[int, dr.ChildDeviceEntry] = {}
     for endpoint, label in expected_labels.items():
         child_device = device_registry.async_get_child_device_by_identifier(
-            get_device_id(driver, node, endpoint), integration.entry_id
+            get_endpoint_device_id(driver, node, node.endpoints[endpoint]),
+            integration.entry_id,
         )
         assert child_device
         assert isinstance(child_device, dr.ChildDeviceEntry)
@@ -1836,7 +1834,7 @@ async def test_endpoint_child_device_pruned_on_reinterview(
     )
     assert node_device
     room_sensor_device = device_registry.async_get_child_device_by_identifier(
-        get_device_id(driver, node, 2), integration.entry_id
+        get_endpoint_device_id(driver, node, node.endpoints[2]), integration.entry_id
     )
     assert room_sensor_device
 
@@ -2036,6 +2034,96 @@ async def test_endpoint_child_device_regroup_stages_entity_on_parent(
     assert hass.states.get(entity_id) is not None
 
 
+async def test_endpoint_child_device_regroup_stages_suffixed_entity(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    aeotec_zw164_siren_state: NodeDataType,
+) -> None:
+    """Test a suffixed-unique-id entity is staged on the parent during a ready-only regroup.
+
+    Notification binary sensors append a state key to the base value unique id. When a
+    labeled endpoint child is pruned in a ready-only regroup, such an entity must still be
+    staged on the parent node device (matched by its base value id), not deleted with the
+    child device.
+    """
+    driver = client.driver
+
+    # Label endpoints 3-5 so their colliding "Battery maintenance status" notification
+    # sensors split into per-endpoint child devices.
+    setup_state = deepcopy(aeotec_zw164_siren_state)
+    setup_state["name"] = ""
+    setup_state["location"] = ""
+    labels = {3: "Doorbell 1", 4: "Doorbell 2", 5: "Doorbell 3"}
+    for endpoint in setup_state["endpoints"]:
+        if endpoint["index"] in labels:
+            endpoint["endpointLabel"] = labels[endpoint["index"]]
+    node = Node(client, deepcopy(setup_state))
+    driver.controller.nodes[node.node_id] = node
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"url": "ws://test.org"},
+        unique_id=str(driver.controller.home_id),
+    )
+    entry.add_to_hass(hass)
+    with patch("homeassistant.components.zwave_js.PLATFORMS", [Platform.BINARY_SENSOR]):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    node_device = device_registry.async_get_device_by_identifier(
+        get_device_id(driver, node), entry.entry_id
+    )
+    assert node_device
+    doorbell_1_device = device_registry.async_get_child_device_by_identifier(
+        get_endpoint_device_id(driver, node, node.endpoints[3]), entry.entry_id
+    )
+    assert doorbell_1_device
+    # The notification binary sensors on endpoint 3 have a state-key suffix
+    # ("...Battery maintenance status.10"), so their unique id carries a second ".".
+    suffixed_entity_ids = [
+        entry_.entity_id
+        for entry_ in er.async_entries_for_device(
+            entity_registry, doorbell_1_device.id, include_disabled_entities=True
+        )
+        if entry_.unique_id.count(".") > 1
+    ]
+    assert suffixed_entity_ids
+
+    # Re-interview (ready only) with endpoints 3-5 moved into a non-main endpoint group,
+    # so the per-endpoint children are pruned in favour of a single group child.
+    regrouped_state = deepcopy(setup_state)
+    regrouped_state["endpointGroups"] = [
+        {
+            "id": 1,
+            "label": "Doorbells",
+            "isMainDevice": False,
+            "endpointIndices": [3, 4, 5],
+        }
+    ]
+    node.receive_event(
+        Event(
+            "ready",
+            {
+                "source": "node",
+                "event": "ready",
+                "nodeId": node.node_id,
+                "nodeState": regrouped_state,
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    # The suffixed entities were staged on the parent node device, so their registry
+    # entries survive the pruning of the per-endpoint child instead of being deleted.
+    assert device_registry.async_get(doorbell_1_device.id) is None
+    for suffixed_entity_id in suffixed_entity_ids:
+        staged_entry = entity_registry.async_get(suffixed_entity_id)
+        assert staged_entry is not None
+        assert staged_entry.device_id == node_device.id
+
+
 async def test_endpoint_child_device_late_value(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -2052,7 +2140,8 @@ async def test_endpoint_child_device_late_value(
     """
     node = climate_heatit_z_trm3
     child_device = device_registry.async_get_child_device_by_identifier(
-        get_device_id(client.driver, node, 2), integration.entry_id
+        get_endpoint_device_id(client.driver, node, node.endpoints[2]),
+        integration.entry_id,
     )
     assert child_device
 
@@ -2107,14 +2196,14 @@ async def test_child_device_entity_metadata_rediscovery(
 ) -> None:
     """Test that entities on endpoint child devices are re-created after rediscovery.
 
-    The P1 bug: discovered_value_ids was keyed by the child device id instead of the
-    node device id, so the discard in _async_remove_and_rediscover was a no-op and
-    async_on_value_added early-returned, leaving the entity gone until reload.
+    A metadata update that triggers rediscovery must remove the entity and re-add it on
+    the same endpoint child device, rather than leaving it gone until the next reload.
     """
     node = climate_heatit_z_trm3
 
     room_sensor_device = device_registry.async_get_child_device_by_identifier(
-        get_device_id(client.driver, node, 2), integration.entry_id
+        get_endpoint_device_id(client.driver, node, node.endpoints[2]),
+        integration.entry_id,
     )
     assert room_sensor_device
 
@@ -2539,7 +2628,7 @@ async def test_replace_node_with_children(
     air_temperature_entity_id = "sensor.floor_thermostat_room_sensor_air_temperature"
 
     old_room_sensor_device = device_registry.async_get_child_device_by_identifier(
-        get_device_id(driver, node, 2), integration.entry_id
+        get_endpoint_device_id(driver, node, node.endpoints[2]), integration.entry_id
     )
     assert old_room_sensor_device
     assert entity_registry.async_get(air_temperature_entity_id)
@@ -2621,7 +2710,7 @@ async def test_replace_node_with_children(
     )
     assert new_node_device
     new_room_sensor_device = device_registry.async_get_child_device_by_identifier(
-        get_device_id(driver, node, 2), integration.entry_id
+        get_endpoint_device_id(driver, node, node.endpoints[2]), integration.entry_id
     )
     assert new_room_sensor_device
     assert new_room_sensor_device.id == old_room_sensor_device.id
@@ -2653,7 +2742,7 @@ async def test_replace_node_with_children_while_stopped(
     air_temperature_entity_id = "sensor.floor_thermostat_room_sensor_air_temperature"
 
     old_room_sensor_device = device_registry.async_get_child_device_by_identifier(
-        get_device_id(driver, node, 2), integration.entry_id
+        get_endpoint_device_id(driver, node, node.endpoints[2]), integration.entry_id
     )
     assert old_room_sensor_device
 
@@ -2685,7 +2774,7 @@ async def test_replace_node_with_children_while_stopped(
     )
     assert new_node_device
     new_room_sensor_device = device_registry.async_get_child_device_by_identifier(
-        get_device_id(driver, node, 2), integration.entry_id
+        get_endpoint_device_id(driver, node, node.endpoints[2]), integration.entry_id
     )
     assert new_room_sensor_device
     assert new_room_sensor_device.id == old_room_sensor_device.id

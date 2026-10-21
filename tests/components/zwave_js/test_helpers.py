@@ -20,6 +20,7 @@ from homeassistant.components.zwave_js.helpers import (
     endpoint_devices,
     format_home_id_for_display,
     get_device_id,
+    get_endpoint_device_id,
     get_home_and_node_id_from_device_entry,
     get_value_state_schema,
 )
@@ -59,28 +60,30 @@ async def test_async_get_nodes_from_area_id(
     assert not async_get_nodes_from_area_id(hass, area.id)
 
 
-async def test_async_get_nodes_from_area_id_skips_child_device(
+async def test_async_get_nodes_from_area_id_includes_child_device(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    climate_heatit_z_trm3: Node,
+    integration: MockConfigEntry,
 ) -> None:
-    """Test async_get_nodes_from_area_id skips child devices in the area."""
-    area = area_registry.async_create("test")
-    config_entry = MockConfigEntry(domain=DOMAIN)
-    config_entry.add_to_hass(hass)
-    parent = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, "parent")},
+    """Test async_get_nodes_from_area_id resolves an endpoint child device to its node."""
+    node = climate_heatit_z_trm3
+    area = area_registry.async_create("sensor area")
+    node_device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, node), integration.entry_id
     )
-    child = device_registry.async_get_or_create_child(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, "child")},
-        parent_device_id=parent.id,
+    assert node_device
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=integration.entry_id,
+        identifiers={get_endpoint_device_id(client.driver, node, node.endpoints[2])},
+        parent_device_id=node_device.id,
     )
-    device_registry.async_update_child_device(child.id, area_id=area.id)
+    device_registry.async_update_child_device(child_device.id, area_id=area.id)
 
-    # A child device is not a Z-Wave JS node; it is skipped rather than raising.
-    assert not async_get_nodes_from_area_id(hass, area.id)
+    # An area that contains only a child device still resolves to its node.
+    assert async_get_nodes_from_area_id(hass, area.id) == {node}
 
 
 async def test_get_value_state_schema_boolean_config_value(
@@ -176,26 +179,25 @@ async def test_async_get_provisioning_entry_from_device_id(
         assert result == provisioning_entry
 
 
-async def test_get_device_id_with_endpoint(
-    client: MagicMock, vision_security_zl7432: Node
+async def test_get_endpoint_device_id(
+    client: MagicMock, vision_security_zl7432: Node, aeotec_zwa046: Node
 ) -> None:
-    """Test get_device_id with an endpoint argument."""
+    """Test get_endpoint_device_id for endpoint and group child devices."""
     driver = client.driver
-    node = vision_security_zl7432
     home_id = driver.controller.home_id
 
-    node_device_id = get_device_id(driver, node)
-    assert node_device_id == (DOMAIN, f"{home_id}-{node.node_id}")
-
-    # Endpoint 0 and None map to the node device.
-    assert get_device_id(driver, node, 0) == node_device_id
-    assert get_device_id(driver, node, None) == node_device_id
-
-    # A non-root endpoint maps to a child device identifier.
-    assert get_device_id(driver, node, 2) == (
+    # A per-endpoint child device identifier includes the endpoint index.
+    node = vision_security_zl7432
+    assert get_endpoint_device_id(driver, node, node.endpoints[2]) == (
         DOMAIN,
         f"{home_id}-{node.node_id}-2",
     )
+
+    # An endpoint-group child device identifier includes the group id.
+    group_node = aeotec_zwa046
+    assert get_endpoint_device_id(
+        driver, group_node, group_node.endpoint_groups[1]
+    ) == (DOMAIN, f"{home_id}-{group_node.node_id}-g1")
 
 
 def _make_disc_info(node: Node, value: ZwaveValue) -> PlatformZwaveDiscoveryInfo:

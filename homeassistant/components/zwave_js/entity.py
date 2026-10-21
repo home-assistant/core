@@ -105,7 +105,7 @@ class ZWaveBaseEntity(Entity):
 
     @property
     @override
-    def device_info(self) -> DeviceInfo | ChildDeviceInfo | None:  # pylint: disable=home-assistant-return-type
+    def device_info(self) -> DeviceInfo | ChildDeviceInfo | None:
         """Return device info for this entity."""
         if (endpoint_device := self._endpoint_device) is None:
             return DeviceInfo(identifiers={get_device_id(self.driver, self.info.node)})
