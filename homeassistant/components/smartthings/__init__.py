@@ -616,12 +616,11 @@ def create_devices(
                 rooms.get(device.device.room_id) if device.device.room_id else None
             )
 
-        created_devices[device.device.device_id] = device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, device.device.device_id)},
-            configuration_url=SMARTTHINGS_ACCOUNT_URL,
-            name=device.device.label,
-            device_info=device_info
+        device_info.configuration_url = SMARTTHINGS_ACCOUNT_URL
+        created_devices[device.device.device_id] = (
+            device_registry.async_get_or_create_device(
+                config_entry_id=entry.entry_id, device_info=device_info
+            )
         )
 
     # Link child devices to their parent in a second pass, so registration is
