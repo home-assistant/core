@@ -148,7 +148,7 @@ async def test_reauthentication_flow(
     with (
         patch("homeassistant.components.point.api.AsyncConfigEntryAuth"),
         patch(
-            f"homeassistant.components.{DOMAIN}.async_setup_entry", return_value=True
+            f"homeassistant.components.{DOMAIN}.async_setup_entry", return_value=None
         ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
