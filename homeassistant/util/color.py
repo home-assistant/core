@@ -280,8 +280,8 @@ def color_xy_brightness_to_RGB(
 
     Y = brightness
 
-    if vY == 0.0:
-        vY += 1e-11
+    # Avoid overflowing Y / vY to inf (and NaN below) for zero or tiny y.
+    vY = max(vY, 1e-11)
 
     X = (Y / vY) * vX
     Z = (Y / vY) * (1 - vX - vY)
