@@ -131,7 +131,11 @@ def _decode_tool_arguments(arguments: str) -> Any:
     try:
         return json.loads(arguments)
     except json.JSONDecodeError as err:
-        raise HomeAssistantError(f"Unexpected tool argument response: {err}") from err
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="tool_args_parse_error",
+            translation_placeholders={"error": str(err)},
+        ) from err
 
 
 async def _transform_stream(
@@ -142,6 +146,7 @@ async def _transform_stream(
     has_choices = False
 
     tool_calls: dict[int, dict[str, str]] = {}
+    images: list[Any] = []
 
     async for chunk in chunks:
         if not chunk.choices:
@@ -196,12 +201,23 @@ async def _transform_stream(
                 for tool_call in completed_tool_calls
             ]
 
+        # OpenRouter returns generated images in a non-standard `images` field that
+        # the OpenAI SDK preserves as an extra attribute.
+        if delta_images := (choice.delta.model_extra or {}).get("images"):
+            images.extend(delta_images)
+
         if data:
             yield data
 
+    if images:
+        yield {"native": images}
+
     if not has_choices:
+        # pylint: disable-next=home-assistant-log-and-raise
         LOGGER.error("API returned empty choices")
-        raise HomeAssistantError("API returned empty response")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="empty_response"
+        )
 
 
 async def async_prepare_files_for_prompt(
@@ -217,15 +233,20 @@ async def async_prepare_files_for_prompt(
 
         for file_path, mime_type in files:
             if not file_path.exists():
-                raise HomeAssistantError(f"`{file_path}` does not exist")
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="file_not_found",
+                    translation_placeholders={"file_path": str(file_path)},
+                )
 
             if mime_type is None:
                 mime_type = guess_file_type(file_path)[0]
 
             if not mime_type or not mime_type.startswith(("image/", "application/pdf")):
                 raise HomeAssistantError(
-                    "Only images and PDF are supported by the OpenRouter API, "
-                    f"`{file_path}` is not an image file or PDF"
+                    translation_domain=DOMAIN,
+                    translation_key="unsupported_file_type",
+                    translation_placeholders={"file_path": str(file_path)},
                 )
 
             base64_file = base64.b64encode(file_path.read_bytes()).decode("utf-8")
@@ -263,12 +284,15 @@ class OpenRouterEntity(Entity):
         chat_log: conversation.ChatLog,
         structure_name: str | None = None,
         structure: probatio.Schema | None = None,
+        force_image: bool = False,
     ) -> None:
         """Generate an answer for the chat log."""
 
         model = self.model
 
         extra_body: dict[str, Any] = {"provider": {"require_parameters": True}}
+        if force_image:
+            extra_body["modalities"] = ["image", "text"]
 
         tools: list[ChatCompletionFunctionToolParam | dict[str, Any]] = []
         if chat_log.llm_api:
@@ -379,8 +403,13 @@ class OpenRouterEntity(Entity):
             try:
                 result = await client.chat.completions.create(**model_args, stream=True)
             except openai.OpenAIError as err:
+                # pylint: disable-next=home-assistant-log-and-raise
                 LOGGER.error("Error talking to API: %s", err)
-                raise HomeAssistantError("Error talking to API") from err
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                    translation_placeholders={"error": str(err)},
+                ) from err
 
             model_args["messages"].extend(
                 [

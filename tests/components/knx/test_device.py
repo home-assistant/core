@@ -4,6 +4,8 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.knx.const import DOMAIN, KNX_ADDRESS
 from homeassistant.components.knx.storage.config_store import (
@@ -15,9 +17,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import KNXTestKit, _patch_telegram_store
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def test_create_device(
@@ -114,6 +113,30 @@ async def test_remove_yaml_device_blocked(
     assert not response["success"]
     assert device_registry.async_get_device_by_identifier(
         (DOMAIN, "living_room"), knx.mock_config_entry.entry_id
+    )
+
+
+async def test_remove_interface_device_blocked(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """The KNX interface device can not be removed from the UI."""
+    assert await async_setup_component(hass, "config", {})
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+
+    interface_identifier = (DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")
+    device = device_registry.async_get_device_by_identifier(
+        interface_identifier, knx.mock_config_entry.entry_id
+    )
+    assert device is not None
+
+    response = await client.remove_device(device.id)
+    assert not response["success"]
+    assert device_registry.async_get_device_by_identifier(
+        interface_identifier, knx.mock_config_entry.entry_id
     )
 
 

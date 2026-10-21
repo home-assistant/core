@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import json_bytes
+from homeassistant.helpers.recorder import get_instance
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
@@ -63,7 +64,7 @@ from .statistics import (
     update_statistics_issues,
     validate_statistics,
 )
-from .util import PERIOD_SCHEMA, get_instance, resolve_period
+from .util import PERIOD_SCHEMA, resolve_period
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -394,6 +395,16 @@ async def ws_update_statistics_issues(
     {
         probatio.Required("type"): "recorder/clear_statistics",
         probatio.Required("statistic_ids"): [str],
+        probatio.Inclusive(
+            "start_time",
+            "time_range",
+            "start_time and end_time must be provided together",
+        ): cv.datetime,
+        probatio.Inclusive(
+            "end_time",
+            "time_range",
+            "start_time and end_time must be provided together",
+        ): cv.datetime,
     }
 )
 @websocket_api.async_response
@@ -402,16 +413,32 @@ async def ws_clear_statistics(
 ) -> None:
     """Clear statistics for a list of statistic_ids.
 
+    With a time range, only the statistics which overlap the range are cleared.
+
     Note: The WS call posts a job to the recorder's queue and then returns, it doesn't
     wait until the job is completed.
     """
+    start_time: dt | None = None
+    end_time: dt | None = None
+    if "start_time" in msg:
+        start_time = dt_util.as_utc(msg["start_time"])
+        end_time = dt_util.as_utc(msg["end_time"])
+        if start_time >= end_time:
+            connection.send_error(
+                msg["id"], "invalid_time_range", "start_time must be before end_time"
+            )
+            return
+
     done_event = asyncio.Event()
 
     def clear_statistics_done() -> None:
         hass.loop.call_soon_threadsafe(done_event.set)
 
     get_instance(hass).async_clear_statistics(
-        msg["statistic_ids"], on_done=clear_statistics_done
+        msg["statistic_ids"],
+        start_time=start_time,
+        end_time=end_time,
+        on_done=clear_statistics_done,
     )
     try:
         async with asyncio.timeout(CLEAR_STATISTICS_TIME_OUT):

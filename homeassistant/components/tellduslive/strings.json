@@ -42,5 +42,10 @@
         "name": "Wind gust"
       }
     }
+  },
+  "exceptions": {
+    "authentication_error": {
+      "message": "Authentication with Telldus Live failed"
+    }
   }
 }

@@ -6,16 +6,10 @@ import json
 import ssl
 from unittest.mock import MagicMock, patch
 
-import httpx
+import httpx2
 import pytest
-import respx
-
-from homeassistant.components import image
-from homeassistant.components.mqtt.const import DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-
-from .common import (
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.components.mqtt.common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -42,13 +36,17 @@ from .common import (
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
 )
-
-from tests.common import async_fire_mqtt_message
-from tests.typing import (
+from pytest_homeassistant.typing import (
     ClientSessionGenerator,
     MqttMockHAClientGenerator,
     MqttMockPahoClient,
 )
+import respx
+
+from homeassistant.components import image
+from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 
 DEFAULT_CONFIG = {DOMAIN: {image.DOMAIN: {"name": "test", "image_topic": "test_topic"}}}
 
@@ -414,8 +412,8 @@ async def test_image_from_url_content_type(
 @pytest.mark.parametrize(
     "side_effect",
     [
-        httpx.RequestError("server offline", request=MagicMock()),
-        httpx.TimeoutException,
+        httpx2.RequestError("server offline", request=MagicMock()),
+        httpx2.TimeoutException,
         ssl.SSLError,
     ],
 )
@@ -709,7 +707,11 @@ async def test_entity_id_update_subscriptions(
 ) -> None:
     """Test MQTT subscriptions are managed when entity_id is updated."""
     await help_test_entity_id_update_subscriptions(
-        hass, mqtt_mock_entry, image.DOMAIN, DEFAULT_CONFIG, ["test_topic"]
+        hass,
+        mqtt_mock_entry,
+        image.DOMAIN,
+        DEFAULT_CONFIG,
+        ["test_topic", "avty-topic"],
     )
 
 

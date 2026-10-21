@@ -6,7 +6,8 @@ import math
 import probatio
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback, split_entity_id
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -66,7 +67,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         hass,
         DOMAIN,
         SERVICE_CALIBRATE_METER,
-        entity_domain=Platform.SENSOR,
+        entity_domain=SENSOR_DOMAIN,
         func="async_calibrate",
         schema={probatio.Required(ATTR_VALUE): _validate_is_number},
     )

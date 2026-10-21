@@ -464,6 +464,19 @@ class BaseScannerEntity(BaseTrackerEntity):
 
     @callback
     @override
+    def async_internal_entity_id_changed(self, old_entity_id: str) -> None:
+        """Refresh the entity_id shown by an open associated-zone repair issue."""
+        super().async_internal_entity_id_changed(old_entity_id)
+        if (
+            ir.async_get(self.hass).async_get_issue(
+                DOMAIN, self._associated_zone_issue_id
+            )
+            is not None
+        ):
+            self._async_create_associated_zone_issue()
+
+    @callback
+    @override
     def async_registry_entry_updated(self) -> None:
         """Run when the entity registry entry has been updated."""
         self._async_read_entity_options()
@@ -710,11 +723,13 @@ class ScannerEntity(
         # Register our own device now that the tracked device is known to another
         # integration; matching the split of a pre-migration composite device prunes
         # the identifiers and connections copied from the composite.
-        device_entry = dr.async_get(self.hass).async_get_or_create(
+        device_entry = dr.async_get(self.hass).async_get_or_create_device(
             config_entry_id=self.platform.config_entry.entry_id,
             config_subentry_id=self.registry_entry.config_subentry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
-            name=self.hostname or self.mac_address,
+            device_info=dr.DeviceInfo(
+                connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
+                name=self.hostname or self.mac_address,
+            ),
         )
 
         # Link the entity's registry entry to the device

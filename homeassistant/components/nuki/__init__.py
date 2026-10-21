@@ -20,13 +20,19 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    issue_registry as ir,
+)
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import CONF_ENCRYPT_TOKEN, DEFAULT_TIMEOUT, DOMAIN
 from .coordinator import NukiConfigEntry, NukiCoordinator, NukiEntryData
 from .helpers import NukiWebhookException, parse_id
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -151,7 +157,16 @@ def _remove_webhook(bridge: NukiBridge, entry_id: str) -> None:
             bridge.callback_remove(item["id"])
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> bool:
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Nuki Bridge integration."""
+    async_setup_services(hass)
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> None:
     """Set up the Nuki entry."""
 
     # Migration of entry unique_id
@@ -178,14 +193,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> bool
     # Device registration for the bridge
     bridge_id = parse_id(info["ids"]["hardwareId"])
     dev_reg = dr.async_get(hass)
-    dev_reg.async_get_or_create(
+    dev_reg.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, bridge_id)},
-        manufacturer="Nuki Home Solutions GmbH",
-        name=f"Nuki Bridge {bridge_id}",
-        model="Hardware Bridge",
-        sw_version=info["versions"]["firmwareVersion"],
-        serial_number=parse_id(info["ids"]["hardwareId"]),
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, bridge_id)},
+            manufacturer="Nuki Home Solutions GmbH",
+            name=f"Nuki Bridge {bridge_id}",
+            model="Hardware Bridge",
+            sw_version=info["versions"]["firmwareVersion"],
+            serial_number=parse_id(info["ids"]["hardwareId"]),
+        ),
     )
 
     try:
@@ -225,10 +242,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> None:
     """Unload the Nuki entry."""
     webhook.async_unregister(hass, entry.entry_id)
 
@@ -248,4 +263,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> boo
             f"Unable to remove callback. Error communicating with Bridge: {err}"
         ) from err
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

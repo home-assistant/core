@@ -7,14 +7,15 @@ from requests.exceptions import RequestException
 
 from homeassistant.components.image import ImageEntity
 from homeassistant.const import EntityCategory, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util, slugify
 
 from .const import DOMAIN, LOGGER
 from .coordinator import AvmWrapper, FritzConfigEntry
-from .entity import FritzBoxBaseEntity
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -61,38 +62,38 @@ async def async_setup_entry(
     await _migrate_to_new_unique_id(hass, avm_wrapper, guest_wifi_info["NewSSID"])
 
     async_add_entities(
-        [
-            FritzGuestWifiQRImage(
-                hass, avm_wrapper, entry.title, guest_wifi_info["NewSSID"]
-            )
-        ]
+        [FritzGuestWifiQRImage(hass, avm_wrapper, guest_wifi_info["NewSSID"])]
     )
 
 
-class FritzGuestWifiQRImage(FritzBoxBaseEntity, ImageEntity):
+class FritzGuestWifiQRImage(CoordinatorEntity[AvmWrapper], ImageEntity):
     """Implementation of the FritzBox guest wifi QR code image entity."""
 
     _attr_content_type = "image/png"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_should_poll = True
+    _attr_has_entity_name = True
 
     def __init__(
         self,
         hass: HomeAssistant,
         avm_wrapper: AvmWrapper,
-        device_friendly_name: str,
         ssid: str,
     ) -> None:
         """Initialize the image entity."""
+        super().__init__(avm_wrapper)
+        ImageEntity.__init__(self, hass)
         self._attr_name = ssid
         self._attr_unique_id = f"{avm_wrapper.unique_id}-guest_wifi_qr_code"
+        self._attr_device_info = DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, avm_wrapper.mac)},
+            identifiers={(DOMAIN, avm_wrapper.unique_id)},
+        )
         self._current_qr_bytes: bytes | None = None
-        super().__init__(avm_wrapper, device_friendly_name)
-        ImageEntity.__init__(self, hass)
+        self._guest_wifi_fingerprint: int | None = None
 
     def _fetch_image(self) -> bytes:
         """Fetch the QR code from the Fritz!Box."""
-        qr_stream: BytesIO = self._avm_wrapper.fritz_guest_wifi.get_wifi_qr_code(
+        qr_stream: BytesIO = self.coordinator.fritz_guest_wifi.get_wifi_qr_code(
             "png", border=2
         )
         qr_bytes = qr_stream.getvalue()
@@ -102,30 +103,37 @@ class FritzGuestWifiQRImage(FritzBoxBaseEntity, ImageEntity):
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Fetch and set initial data and state."""
-        self._current_qr_bytes = await self.hass.async_add_executor_job(
-            self._fetch_image
-        )
-        self._attr_image_last_updated = dt_util.utcnow()
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(await self.coordinator.async_register_guest_wifi())
+        self._async_update_guest_wifi()
 
-    async def async_update(self) -> None:
-        """Update the image entity data."""
-        try:
-            qr_bytes = await self.hass.async_add_executor_job(self._fetch_image)
-        except RequestException:
-            self._current_qr_bytes = None
-            self._attr_image_last_updated = None
-            self.async_write_ha_state()
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._async_update_guest_wifi()
+        super()._handle_coordinator_update()
+
+    @callback
+    def _async_update_guest_wifi(self) -> None:
+        """Drop the cached QR code when the guest Wi-Fi changed."""
+        fingerprint = self.coordinator.data["guest_wifi"]
+        if fingerprint == self._guest_wifi_fingerprint:
             return
-
-        if self._current_qr_bytes != qr_bytes:
-            dt_now = dt_util.utcnow()
-            LOGGER.debug("qr code has changed, reset image last updated property")
-            self._attr_image_last_updated = dt_now
-            self._current_qr_bytes = qr_bytes
-            self.async_write_ha_state()
+        LOGGER.debug("qr code has changed, reset image last updated property")
+        self._guest_wifi_fingerprint = fingerprint
+        self._current_qr_bytes = None
+        self._attr_image_last_updated = dt_util.utcnow()
 
     @override
     async def async_image(self) -> bytes | None:
         """Return bytes of image."""
+        if self._current_qr_bytes is None:
+            try:
+                self._current_qr_bytes = await self.hass.async_add_executor_job(
+                    self._fetch_image
+                )
+            except RequestException:
+                return None
         return self._current_qr_bytes

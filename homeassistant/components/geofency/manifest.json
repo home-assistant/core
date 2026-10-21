@@ -1,6 +1,7 @@
 {
   "domain": "geofency",
   "name": "Geofency",
+  "categories": ["presence_location.phones_companion_apps"],
   "codeowners": [],
   "config_flow": true,
   "dependencies": ["webhook"],

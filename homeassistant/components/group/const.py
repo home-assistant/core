@@ -32,6 +32,7 @@ CONF_ALL = "all"
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.CALENDAR,
     Platform.COVER,
     Platform.FAN,
     Platform.LIGHT,

@@ -19,14 +19,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AirGradientConfigEntry
 from .const import (
     DISPLAY_BRIGHTNESS as DISPLAY_BRIGHTNESS_CONFIG,
     DOMAIN,
     MEASUREMENT_INTERVAL as MEASUREMENT_INTERVAL_CONFIG,
     supports_config,
 )
-from .coordinator import AirGradientCoordinator
+from .coordinator import AirGradientConfigEntry, AirGradientCoordinator
 from .entity import AirGradientEntity, exception_handler
 
 PARALLEL_UPDATES = 1

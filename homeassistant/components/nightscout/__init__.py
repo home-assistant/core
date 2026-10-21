@@ -19,7 +19,7 @@ _API_TIMEOUT = SLOW_UPDATE_WARNING - 1
 type NightscoutConfigEntry = ConfigEntry[NightscoutAPI]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NightscoutConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NightscoutConfigEntry) -> None:
     """Set up Nightscout from a config entry."""
     server_url = entry.data[CONF_URL]
     api_key = entry.data.get(CONF_API_KEY)
@@ -33,20 +33,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: NightscoutConfigEntry) -
     entry.runtime_data = api
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, server_url)},
-        manufacturer="Nightscout Foundation",
-        name=status.name,
-        sw_version=status.version,
-        entry_type=dr.DeviceEntryType.SERVICE,
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, server_url)},
+            manufacturer="Nightscout Foundation",
+            name=status.name,
+            sw_version=status.version,
+            entry_type=dr.DeviceEntryType.SERVICE,
+        ),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: NightscoutConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NightscoutConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -51,6 +51,7 @@ from .const import (
     ATTR_SEARCH_ARTIST,
     ATTR_SEARCH_NAME,
     ATTR_SOURCE_PLAYER,
+    ATTR_START_ITEM,
     ATTR_TRACKS,
     ATTR_TTS_ENTITY_ID,
     ATTR_URL,
@@ -92,7 +93,7 @@ PLAYER_ENTITY_DEVICE_CLASSES = [MediaPlayerDeviceClass.SPEAKER]
 
 
 @callback
-def register_actions(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register custom actions."""
     hass.services.async_register(
         DOMAIN,
@@ -151,6 +152,7 @@ def register_actions(hass: HomeAssistant) -> None:
             probatio.Optional(ATTR_ARTIST): cv.string,
             probatio.Optional(ATTR_ALBUM): cv.string,
             probatio.Optional(ATTR_RADIO_MODE): probatio.Coerce(bool),
+            probatio.Optional(ATTR_START_ITEM): cv.string,
             probatio.Optional(ATTR_USERNAME): cv.string,
         },
         func="_async_handle_play_media",

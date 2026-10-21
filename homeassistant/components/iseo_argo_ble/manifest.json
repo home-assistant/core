@@ -67,6 +67,7 @@
     { "service_uuid": "0000f03e-0000-1000-8000-00805f9b34fb" },
     { "service_uuid": "0000f03f-0000-1000-8000-00805f9b34fb" }
   ],
+  "categories": ["security_safety.locks_access"],
   "codeowners": ["@FezVrasta"],
   "config_flow": true,
   "dependencies": ["bluetooth", "bluetooth_adapters"],
