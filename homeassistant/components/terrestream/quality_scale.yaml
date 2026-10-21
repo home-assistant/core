@@ -9,10 +9,11 @@ rules:
       A shared snapshot is polled every 30 seconds, matching the default sensor
       interval and renewing the device's 60-second controller lease.
   brands:
-    status: todo
+    status: done
     comment: >-
-      Artwork is awaiting review and merge in
+      Artwork is submitted with passing image validation in
       https://github.com/home-assistant/brands/pull/11222.
+      Maintainer approval and merge are still pending.
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done

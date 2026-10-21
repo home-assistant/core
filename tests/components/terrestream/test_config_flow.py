@@ -35,9 +35,12 @@ async def test_pairing(hass: HomeAssistant) -> None:
         ),
     ):
         result = await hass.config_entries.flow.async_init(
-            "terrestream",
-            context={"source": "user"},
-            data={"host": "sensor.local", "code": "00123456"},
+            "terrestream", context={"source": "user"}
+        )
+        assert result["type"] is FlowResultType.FORM
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"host": "sensor.local", "code": "00123456"},
         )
         await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -63,9 +66,12 @@ async def test_pairing_error(
         side_effect=error,
     ):
         result = await hass.config_entries.flow.async_init(
-            "terrestream",
-            context={"source": "user"},
-            data={"host": "sensor.local", "code": "00123456"},
+            "terrestream", context={"source": "user"}
+        )
+        assert result["type"] is FlowResultType.FORM
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"host": "sensor.local", "code": "00123456"},
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected}
@@ -98,9 +104,12 @@ async def test_duplicate(hass: HomeAssistant, config_entry: MockConfigEntry) -> 
         return_value=(CREDENTIALS, AsyncMock()),
     ):
         result = await hass.config_entries.flow.async_init(
-            "terrestream",
-            context={"source": "user"},
-            data={"host": "sensor.local", "code": "00123456"},
+            "terrestream", context={"source": "user"}
+        )
+        assert result["type"] is FlowResultType.FORM
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"host": "sensor.local", "code": "00123456"},
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
