@@ -1,6 +1,6 @@
 """Helpers for config validation using probatio."""
 
-from collections.abc import Callable, Hashable, Mapping
+from collections.abc import Callable, Hashable, Iterable, Mapping
 import contextlib
 from contextvars import ContextVar
 from datetime import (
@@ -349,6 +349,8 @@ def _entity_ids(value: str | list, allow_uuid: bool) -> list[str]:
         raise probatio.Invalid("Entity IDs cannot be None")
     if isinstance(value, str):
         value = [ent_id.strip() for ent_id in value.split(",")]
+    elif not isinstance(value, Iterable):
+        raise probatio.Invalid("Entity IDs must be a string or a list")
 
     validator = entity_id_or_uuid if allow_uuid else entity_id
     return [validator(ent_id) for ent_id in value]
