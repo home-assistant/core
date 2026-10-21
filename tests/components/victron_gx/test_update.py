@@ -4,6 +4,7 @@ from collections.abc import Callable
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from victron_mqtt import (
     FirmwareUpdateError,
     FirmwareUpdateErrorReason,
@@ -34,8 +35,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .const import MOCK_INSTALLATION_ID
-
-from tests.common import MockConfigEntry
 
 
 async def _async_inject_firmware_versions(
