@@ -53,8 +53,8 @@ rules:
   discovery:
     status: exempt
     comment: |
-      The tank sensors only pair over Bluetooth with the Rotarex DIMES SRG
-      WAVE mobile app, which uploads their measurements to the Rotarex cloud.
+      The Dimes Wave tank sensors only pair over Bluetooth with the ROTAREX
+      DIMES mobile app, which uploads their measurements to the Rotarex cloud.
       They never join the home network, so they can't be discovered via
       DHCP, mDNS, or SSDP, and the integration never connects to them directly.
   docs-data-update: todo
