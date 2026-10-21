@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import httpx_client
 
-from .const import CONF_LEGACY_ENERGY, CONNECTION_ERRORS, DOMAIN
+from .const import CONNECTION_ERRORS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
 class IOTaWattConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for iotawatt."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         """Initialize."""
@@ -68,11 +68,7 @@ class IOTaWattConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(step_id="user", data_schema=schema)
 
         if not (errors := await validate_input(self.hass, user_input)):
-            return self.async_create_entry(
-                title=user_input[CONF_HOST],
-                data=user_input,
-                options={CONF_LEGACY_ENERGY: False},
-            )
+            return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
         if errors == {"base": "invalid_auth"}:
             self._data.update(user_input)
@@ -108,9 +104,7 @@ class IOTaWattConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="auth", data_schema=data_schema, errors=errors
             )
 
-        return self.async_create_entry(
-            title=data[CONF_HOST], data=data, options={CONF_LEGACY_ENERGY: False}
-        )
+        return self.async_create_entry(title=data[CONF_HOST], data=data)
 
 
 class CannotConnect(HomeAssistantError):

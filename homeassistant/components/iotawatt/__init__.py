@@ -12,7 +12,7 @@ PLATFORMS = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: IotawattConfigEntry) -> None:
     """Set up iotawatt from a config entry."""
-    if entry.options.get(CONF_LEGACY_ENERGY, True):
+    if entry.options.get(CONF_LEGACY_ENERGY):
         ir.async_create_issue(
             hass,
             DOMAIN,
@@ -31,6 +31,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: IotawattConfigEntry) -> 
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: IotawattConfigEntry) -> bool:
+    """Migrate a config entry."""
+    if entry.version > 2:
+        return False
+
+    if entry.version == 1:
+        # Entries from before the lifetime energy sensors keep the period sensors.
+        hass.config_entries.async_update_entry(
+            entry, options={**entry.options, CONF_LEGACY_ENERGY: True}, version=2
+        )
+
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: IotawattConfigEntry) -> None:

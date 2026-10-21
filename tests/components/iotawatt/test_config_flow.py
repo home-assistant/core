@@ -5,7 +5,7 @@ from unittest.mock import patch
 import httpx2
 
 from homeassistant import config_entries
-from homeassistant.components.iotawatt.const import CONF_LEGACY_ENERGY, DOMAIN
+from homeassistant.components.iotawatt.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -206,4 +206,5 @@ async def test_new_entry_defaults_to_lifetime_sensors(hass: HomeAssistant) -> No
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].options == {CONF_LEGACY_ENERGY: False}
+    assert result["result"].version == 2
+    assert result["result"].options == {}

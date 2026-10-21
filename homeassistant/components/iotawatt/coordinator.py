@@ -59,7 +59,7 @@ class IotawattUpdater(DataUpdateCoordinator):
                 includeNonTotalSensors=False,
                 includeLifetimeSensors=True,
                 includeTotalSensors=self.config_entry.options.get(
-                    CONF_LEGACY_ENERGY, True
+                    CONF_LEGACY_ENERGY, False
                 ),
             )
             try:

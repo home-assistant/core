@@ -59,11 +59,41 @@ async def test_setup_update_failed(
 
 
 @pytest.mark.parametrize(
+    ("version", "expected_state", "expected_version", "expected_options"),
+    [
+        pytest.param(
+            1, ConfigEntryState.LOADED, 2, {CONF_LEGACY_ENERGY: True}, id="v1"
+        ),
+        pytest.param(3, ConfigEntryState.MIGRATION_ERROR, 3, {}, id="future"),
+    ],
+)
+@pytest.mark.usefixtures("mock_iotawatt")
+async def test_migrate_entry(
+    hass: HomeAssistant,
+    version: int,
+    expected_state: ConfigEntryState,
+    expected_version: int,
+    expected_options: dict[str, Any],
+) -> None:
+    """Test entries from before the lifetime sensors keep the period sensors."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, title="Test Device", data={"host": "1.2.3.4"}, version=version
+    )
+    entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert entry.state is expected_state
+    assert entry.version == expected_version
+    assert entry.options == expected_options
+
+
+@pytest.mark.parametrize(
     ("entry_options", "issue_expected"),
     [
-        pytest.param({}, True, id="legacy"),
-        pytest.param({CONF_LEGACY_ENERGY: True}, True, id="legacy-explicit"),
+        pytest.param({CONF_LEGACY_ENERGY: True}, True, id="legacy"),
         pytest.param({CONF_LEGACY_ENERGY: False}, False, id="migrated"),
+        pytest.param({}, False, id="new"),
     ],
 )
 async def test_legacy_energy_issue(
@@ -105,8 +135,9 @@ async def test_legacy_entities_removed(
 @pytest.mark.parametrize(
     ("entry_options", "expected_total_sensors"),
     [
-        pytest.param({}, True, id="legacy"),
+        pytest.param({CONF_LEGACY_ENERGY: True}, True, id="legacy"),
         pytest.param({CONF_LEGACY_ENERGY: False}, False, id="migrated"),
+        pytest.param({}, False, id="new"),
     ],
 )
 async def test_api_energy_sensor_flags(

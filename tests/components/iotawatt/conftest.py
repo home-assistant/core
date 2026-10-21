@@ -25,6 +25,7 @@ def entry(hass: HomeAssistant, entry_options: dict[str, Any]) -> MockConfigEntry
         title="Test Device",
         data={"host": "1.2.3.4"},
         options=entry_options,
+        version=2,
     )
     entry.add_to_hass(hass)
     return entry

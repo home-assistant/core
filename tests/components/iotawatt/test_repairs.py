@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.components.repairs import (
     process_repair_fix_flow,
@@ -13,6 +14,8 @@ from homeassistant.components.iotawatt.const import CONF_LEGACY_ENERGY, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
+
+pytestmark = pytest.mark.parametrize("entry_options", [{CONF_LEGACY_ENERGY: True}])
 
 
 async def test_legacy_energy_fix_flow(
