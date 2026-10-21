@@ -36,6 +36,7 @@ from .helpers import convert_to_wav
 ATTR_STYLE = "style"
 
 VOICES_PAGE_SIZE = 1000
+VOICES_MAX_PAGES = 10
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -281,7 +282,7 @@ class GoogleGenerativeAITextToSpeechEntity(
         known_voice_ids = {voice.voice_id for voice in self._supported_voices}
         library_voices: dict[str, list[Voice]] = {}
         page_token = None
-        while True:
+        for _ in range(VOICES_MAX_PAGES):
             response = self._genai_client.voices.list(
                 page_size=VOICES_PAGE_SIZE, page_token=page_token, type_=["prebuilt"]
             )
@@ -297,7 +298,13 @@ class GoogleGenerativeAITextToSpeechEntity(
                     Voice(voice.id, name)
                 )
             if not (page_token := response.next_page_token):
-                return library_voices
+                break
+        else:
+            LOGGER.warning(
+                "Stopped loading the Google AI voice library after %s pages",
+                VOICES_MAX_PAGES,
+            )
+        return library_voices
 
     @cached_property
     @override

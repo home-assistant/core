@@ -279,6 +279,27 @@ async def test_tts_voice_library_error(
     assert len(entity.async_get_supported_voices("ko-KR")) == 30
 
 
+@pytest.mark.parametrize("setup", ["models/gemini-3.8-flash-tts"], indirect=True)
+@pytest.mark.usefixtures("setup")
+async def test_tts_voice_library_page_limit(
+    hass: HomeAssistant,
+    mock_genai_client: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the voice library stops paging when the API never ends the listing."""
+    voices_list = mock_genai_client.return_value.voices.list
+    voices_list.reset_mock()
+    voices_list.side_effect = None
+    voices_list.return_value = VoiceListResponse(
+        voices=[_library_voice("fr-fr-narrator-1", "fr-FR")],
+        next_page_token="again",
+    )
+    await _reload_entry(hass)
+
+    assert voices_list.call_count == 10
+    assert "Stopped loading the Google AI voice library after 10 pages" in caplog.text
+
+
 @pytest.mark.parametrize(
     "setup", ["gemini-3.1-flash-tts-preview", TEST_CHAT_MODEL], indirect=True
 )
