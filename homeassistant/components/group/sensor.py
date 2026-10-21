@@ -147,6 +147,8 @@ async def async_setup_entry(
     entities = er.async_validate_entity_ids(
         registry, config_entry.options[CONF_ENTITIES]
     )
+    # Only set when imported from a Min/Max helper
+    state_class = config_entry.options.get(CONF_STATE_CLASS)
     async_add_entities(
         [
             SensorGroup(
@@ -157,7 +159,7 @@ async def async_setup_entry(
                 config_entry.options.get(CONF_IGNORE_NON_NUMERIC, True),
                 config_entry.options[CONF_TYPE],
                 None,
-                None,
+                SensorStateClass(state_class) if state_class else None,
                 None,
             )
         ]

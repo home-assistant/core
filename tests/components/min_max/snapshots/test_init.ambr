@@ -17,6 +17,7 @@
       'hide_members': False,
       'ignore_non_numeric': True,
       'name': 'My min_max',
+      'state_class': 'measurement',
       'type': 'max',
     }),
     'pref_disable_new_entities': False,

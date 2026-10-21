@@ -11,6 +11,7 @@ import probatio
 
 from homeassistant.components.group import CONF_IGNORE_NON_NUMERIC
 from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
     DEVICE_CLASS_STATE_CLASSES,
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
@@ -126,6 +127,8 @@ async def yaml_deprecation_notice(hass: HomeAssistant, config: ConfigType) -> No
     # Min/Max sum is unknown if any input is unavailable, other types skip it
     if platform_config[CONF_TYPE] != "sum":
         platform_config[CONF_IGNORE_NON_NUMERIC] = True
+    # Min/Max always uses measurement, Group would infer it from the inputs
+    platform_config[CONF_STATE_CLASS] = SensorStateClass.MEASUREMENT.value
     if CONF_NAME not in platform_config:
         platform_config[CONF_NAME] = f"{platform_config[CONF_TYPE]} sensor".capitalize()
     yaml_config = yaml_util.dump(platform_config)

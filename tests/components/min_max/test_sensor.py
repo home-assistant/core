@@ -109,6 +109,7 @@ async def test_deprecation_yaml_keeps_unavailable_input_behavior(
     assert (
         "ignore_non_numeric: true" in issue.translation_placeholders["yaml_config"]
     ) is ignore_non_numeric
+    assert "state_class: measurement" in issue.translation_placeholders["yaml_config"]
 
 
 async def test_default_name_sensor(hass: HomeAssistant) -> None:

@@ -7,6 +7,7 @@ from typing import Any, cast, override
 import probatio
 
 from homeassistant.components import websocket_api
+from homeassistant.components.sensor import CONF_STATE_CLASS, SensorStateClass
 from homeassistant.const import CONF_ENTITIES, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
@@ -146,6 +147,9 @@ SENSOR_IMPORT_SCHEMA = probatio.Schema(
     {
         probatio.Required("old_config_entry_id"): selector.TextSelector(),
         probatio.Required(CONF_IGNORE_NON_NUMERIC): selector.BooleanSelector(),
+        probatio.Optional(CONF_STATE_CLASS): probatio.In(
+            [state_class.value for state_class in SensorStateClass]
+        ),
     }
 ).extend(SENSOR_CONFIG_SCHEMA.schema)
 

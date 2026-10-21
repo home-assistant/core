@@ -15,8 +15,9 @@ from syrupy.filters import props
 
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.min_max.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.components.sensor import SensorStateClass
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -95,6 +96,8 @@ async def test_setup_migrates_to_groups(
     assert len(hass.states.async_all()) == 3
     state = hass.states.get(min_max_entity_id)
     assert state.state == "20.0"
+    # The inputs have no state class, so it is kept from the Min/Max sensor
+    assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
 
     min_max_config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(min_max_config_entries) == 0
@@ -424,18 +427,14 @@ async def test_issue_is_aborted_on_could_not_start_group(
     assert not hass.config_entries.async_has_entries(GROUP_DOMAIN)
 
 
-async def test_issue_is_aborted_on_could_not_start_group_entry_remains(
+async def test_min_max_restored_when_group_setup_fails(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test migrating to group sensors fails when group setup fails.
-
-    Keep new Group entry in case of failure after min_max entry
-    has been removed.
-    """
+    """Test the Min/Max helper is restored when the group setup fails."""
     assert await async_setup_component(hass, "repairs", {})
     hass.states.async_set("sensor.input_one", "10")
     hass.states.async_set("sensor.input_two", "20")
@@ -484,10 +483,18 @@ async def test_issue_is_aborted_on_could_not_start_group_entry_remains(
     assert data["description_placeholders"] == {"title": "My min_max"}
     assert data["step_id"] == "migrate"
 
+    forward_entry_setups = hass.config_entries.async_forward_entry_setups
+
+    async def fail_group_setup(entry: ConfigEntry, platforms: list[Platform]) -> None:
+        if entry.domain == GROUP_DOMAIN:
+            raise ValueError
+        await forward_entry_setups(entry, platforms)
+
     with (
-        patch(
-            "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
-            side_effect=ValueError(),
+        patch.object(
+            hass.config_entries,
+            "async_forward_entry_setups",
+            side_effect=fail_group_setup,
         ) as mock_load_platforms,
         patch("homeassistant.components.min_max.repairs.asyncio.sleep"),
     ):
@@ -496,14 +503,18 @@ async def test_issue_is_aborted_on_could_not_start_group_entry_remains(
 
     assert mock_load_platforms.called
     assert data["type"] == FlowResultType.ABORT
+    assert data["reason"] == "could_not_start_group_entity"
 
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert not hass.config_entries.async_entries(GROUP_DOMAIN)
     entity = entity_registry.async_get(min_max_entity_id)
-    assert entity.config_entry_id is not None
-    assert entity.config_entry_id != config_entry.entry_id
-    assert entity.unique_id != config_entry.entry_id
-    assert entity.platform == GROUP_DOMAIN
-
-    assert not hass.config_entries.async_has_entries(DOMAIN)
+    assert entity.config_entry_id == config_entry.entry_id
+    assert entity.unique_id == config_entry.entry_id
+    assert entity.platform == DOMAIN
+    assert hass.states.get(min_max_entity_id).state == "20.0"
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"migrate_to_group_sensor-{config_entry.entry_id}"
+    )
 
 
 async def test_min_max_restored_when_entity_migration_fails(
