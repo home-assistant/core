@@ -1,5 +1,6 @@
 """Offer API to configure the Home Assistant auth provider."""
 
+import asyncio
 from typing import Any
 
 import probatio
@@ -9,11 +10,17 @@ from homeassistant.auth.providers import InvalidStepUpError, homeassistant as au
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
+from homeassistant.util.hass_dict import HassKey
+
+CREATE_LOCK: HassKey[asyncio.Lock] = HassKey(
+    "config_auth_provider_homeassistant_create_lock"
+)
 
 
 @callback
 def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Home Assistant views."""
+    hass.data[CREATE_LOCK] = asyncio.Lock()
     websocket_api.async_register_command(hass, websocket_create)
     websocket_api.async_register_command(hass, websocket_delete)
     websocket_api.async_register_command(hass, websocket_change_password)
@@ -55,35 +62,38 @@ async def websocket_create(
     if user.is_owner and not connection.user.is_owner:
         raise Unauthorized(context=connection.context(msg))
 
-    # Checked up front to not store a password that can't be linked.
-    if not hass.auth.async_can_link_credentials(user, provider):
-        connection.send_error(
-            msg["id"],
-            "credentials_exist",
-            "User already has credentials for this provider",
-        )
-        return
+    # Serialized, so a password that loses to a concurrent create is never
+    # stored, not even until it is removed again.
+    async with hass.data[CREATE_LOCK]:
+        # Checked up front to not store a password that can't be linked.
+        if not hass.auth.async_can_link_credentials(user, provider):
+            connection.send_error(
+                msg["id"],
+                "credentials_exist",
+                "User already has credentials for this provider",
+            )
+            return
 
-    await provider.async_add_auth(msg["username"], msg["password"])
+        await provider.async_add_auth(msg["username"], msg["password"])
 
-    # A password that isn't linked must not stay behind as a login of its own.
-    try:
-        credentials = await provider.async_get_or_create_credentials(
-            {"username": msg["username"]}
-        )
-        await hass.auth.async_link_user(user, credentials)
-    except CredentialsExistError:
-        # Another request linked a password first.
-        await provider.async_remove_auth(msg["username"])
-        connection.send_error(
-            msg["id"],
-            "credentials_exist",
-            "User already has credentials for this provider",
-        )
-        return
-    except BaseException:
-        await provider.async_remove_auth(msg["username"])
-        raise
+        # A password that isn't linked must not stay behind as a login of its own.
+        try:
+            credentials = await provider.async_get_or_create_credentials(
+                {"username": msg["username"]}
+            )
+            await hass.auth.async_link_user(user, credentials)
+        except CredentialsExistError:
+            # Linked by another way than this command in the meantime.
+            await provider.async_remove_auth(msg["username"])
+            connection.send_error(
+                msg["id"],
+                "credentials_exist",
+                "User already has credentials for this provider",
+            )
+            return
+        except BaseException:
+            await provider.async_remove_auth(msg["username"])
+            raise
 
     connection.send_result(msg["id"])
 

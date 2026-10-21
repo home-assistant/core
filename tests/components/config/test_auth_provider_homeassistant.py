@@ -1,6 +1,5 @@
 """Test config entries API."""
 
-import threading
 from typing import Any
 from unittest.mock import patch
 
@@ -152,61 +151,22 @@ async def test_create_auth_concurrent(
     """Test concurrent creates for the same user attach only one credential."""
     client = await hass_ws_client(hass)
     user = MockUser().add_to_hass(hass)
+    stored: list[str] = []
+    add_auth = auth_provider.async_add_auth
 
-    for msg_id, username in ((5, "test-user2"), (6, "test-user3")):
-        await client.send_json(
-            {
-                "id": msg_id,
-                "type": "config/auth_provider/homeassistant/create",
-                "user_id": user.id,
-                "username": username,
-                "password": "test-pass",
-            }
-        )
+    async def record_add_auth(username: str, password: str) -> None:
+        stored.append(username)
+        await add_auth(username, password)
 
-    results = {
-        result["id"]: result
-        for result in (await client.receive_json(), await client.receive_json())
-    }
-    # Either request can win, depending on which password is hashed first.
-    assert sorted(result["success"] for result in results.values()) == [False, True]
-    failed = next(result for result in results.values() if not result["success"])
-    assert failed["error"]["code"] == "credentials_exist"
-    assert len(user.credentials) == 1
-    (left_out,) = {"test-user2", "test-user3"} - {user.credentials[0].data["username"]}
-    # The password that lost doesn't stay behind as a login of its own.
-    with pytest.raises(prov_ha.InvalidAuth):
-        await auth_provider.async_validate_login(left_out, "test-pass")
-
-
-async def test_create_auth_concurrent_same_username(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    auth_provider: prov_ha.HassAuthProvider,
-) -> None:
-    """Test concurrent creates of the same username store only one password."""
-    client = await hass_ws_client(hass)
-    user = MockUser().add_to_hass(hass)
-    passwords = {5: "first-pass", 6: "second-pass"}
-    # Both passwords are hashed at the same time, as in the race.
-    both_hashing = threading.Barrier(2, timeout=5)
-    hash_password = prov_ha.Data.hash_password
-
-    def hash_together(
-        data: prov_ha.Data, password: str, for_storage: bool = False
-    ) -> bytes:
-        both_hashing.wait()
-        return hash_password(data, password, for_storage)
-
-    with patch.object(prov_ha.Data, "hash_password", hash_together):
-        for msg_id, password in passwords.items():
+    with patch.object(auth_provider, "async_add_auth", record_add_auth):
+        for msg_id, username in ((5, "test-user2"), (6, "test-user3")):
             await client.send_json(
                 {
                     "id": msg_id,
                     "type": "config/auth_provider/homeassistant/create",
                     "user_id": user.id,
-                    "username": "test-user2",
-                    "password": password,
+                    "username": username,
+                    "password": "test-pass",
                 }
             )
 
@@ -215,17 +175,15 @@ async def test_create_auth_concurrent_same_username(
             for result in (await client.receive_json(), await client.receive_json())
         }
     # Either request can win, depending on which password is hashed first.
-    (winner,) = (msg_id for msg_id, result in results.items() if result["success"])
-    (loser,) = set(passwords) - {winner}
-    assert results[loser]["error"]["translation_key"] == "username_already_exists"
+    assert sorted(result["success"] for result in results.values()) == [False, True]
+    failed = next(result for result in results.values() if not result["success"])
+    assert failed["error"]["code"] == "credentials_exist"
     assert len(user.credentials) == 1
-    assert auth_provider.data is not None
-    assert [stored["username"] for stored in auth_provider.data.users].count(
-        "test-user2"
-    ) == 1
-    await auth_provider.async_validate_login("test-user2", passwords[winner])
+    (left_out,) = {"test-user2", "test-user3"} - {user.credentials[0].data["username"]}
+    # The password that lost was never stored, so it couldn't log in meanwhile.
+    assert stored == [user.credentials[0].data["username"]]
     with pytest.raises(prov_ha.InvalidAuth):
-        await auth_provider.async_validate_login("test-user2", passwords[loser])
+        await auth_provider.async_validate_login(left_out, "test-pass")
 
 
 async def test_create_auth_owner_not_owner(
