@@ -18,7 +18,7 @@ from .const import API_VERSION, HARDWARE_MAC, MOCK_SERIAL_CONFIG, MOCK_TCP_CONFI
 def mock_setup_entry():
     """Prevent setup."""
     with patch(
-        "homeassistant.components.russound_rio.async_setup_entry", return_value=True
+        "homeassistant.components.russound_rio.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

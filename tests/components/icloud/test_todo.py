@@ -191,6 +191,41 @@ async def test_deleted_lists_skipped(
     assert [entity.entity_id for entity in entities] == [ENTITY_ID]
 
 
+async def test_list_entity_removed_when_list_disappears(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reminders: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that the entity of a list iCloud no longer returns is removed.
+
+    The duplicate of a shared list is registered as an ordinary entity, so
+    dropping it from the fetch has to remove that entity rather than leave an
+    unavailable empty list behind.
+    """
+    reminders.lists.return_value = [
+        _list("list1", "Groceries"),
+        _list("list2", "Family"),
+    ]
+    await _setup(hass, config_entry)
+    assert hass.states.get("todo.test_icloud_account_family") is not None
+
+    reminders.lists.return_value = [_list("list1", "Groceries")]
+    freezer.tick(REMINDERS_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    # The scheduled refresh runs as a background task of the config entry.
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("todo.test_icloud_account_family") is None
+    assert (
+        entity_registry.async_get_entity_id(
+            TODO_DOMAIN, DOMAIN, "test_account_id_list2"
+        )
+        is None
+    )
+
+
 async def test_subtasks_follow_their_parent(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

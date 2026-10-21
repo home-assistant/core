@@ -79,7 +79,7 @@ async def _complete_registration(
 ) -> ConfigFlowResult:
     """Submit a step that registers the domain and finish the flow."""
     with patch(
-        "homeassistant.components.tesla_fleet.async_setup_entry", return_value=True
+        "homeassistant.components.tesla_fleet.async_setup_entry", return_value=None
     ):
         result = await hass.config_entries.flow.async_configure(flow_id, user_input)
         assert result["step_id"] == "registration_complete"
@@ -297,7 +297,7 @@ async def test_full_flow_with_domain_registration(
             "homeassistant.components.tesla_fleet.config_flow.TeslaFleetApi"
         ) as mock_api_class,
         patch(
-            "homeassistant.components.tesla_fleet.async_setup_entry", return_value=True
+            "homeassistant.components.tesla_fleet.async_setup_entry", return_value=None
         ),
     ):
         mock_api = AsyncMock()
@@ -448,7 +448,7 @@ async def test_domain_input_invalid_domain(
         assert result["step_id"] == "registration_complete"
 
     with patch(
-        "homeassistant.components.tesla_fleet.async_setup_entry", return_value=True
+        "homeassistant.components.tesla_fleet.async_setup_entry", return_value=None
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -798,7 +798,7 @@ async def test_region_override(
             "homeassistant.components.tesla_fleet.config_flow.TeslaFleetApi"
         ) as mock_api_class,
         patch(
-            "homeassistant.components.tesla_fleet.async_setup_entry", return_value=True
+            "homeassistant.components.tesla_fleet.async_setup_entry", return_value=None
         ),
     ):
         mock_api = AsyncMock()
@@ -979,7 +979,7 @@ async def test_reauthentication(
     )
 
     with patch(
-        "homeassistant.components.tesla_fleet.async_setup_entry", return_value=True
+        "homeassistant.components.tesla_fleet.async_setup_entry", return_value=None
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -1025,7 +1025,7 @@ async def test_reauth_account_mismatch(
     )
 
     with patch(
-        "homeassistant.components.tesla_fleet.async_setup_entry", return_value=True
+        "homeassistant.components.tesla_fleet.async_setup_entry", return_value=None
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
