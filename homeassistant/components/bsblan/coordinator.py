@@ -169,12 +169,13 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
         """Re-read a single circuit after a write.
 
         Much faster than a full refresh, which reads every circuit, the
-        sensors and the hot water state one parameter at a time.
+        sensors and the hot water state one parameter at a time. If the read
+        fails, the next scheduled refresh catches up.
         """
         try:
             state = await self.client.state(include=STATE_INCLUDE, circuit=circuit)
-        except BSBLANError, TimeoutError:
-            await self.async_request_refresh()
+        except (BSBLANError, TimeoutError) as err:
+            LOGGER.debug("Failed to re-read circuit %d after a write: %s", circuit, err)
             return
         self.async_set_updated_data(
             replace(self.data, states={**self.data.states, circuit: state})
@@ -184,8 +185,8 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
         """Re-read the hot water state after a write."""
         try:
             dhw = await self.client.hot_water_state(include=DHW_STATE_INCLUDE)
-        except BSBLANError, TimeoutError:
-            await self.async_request_refresh()
+        except (BSBLANError, TimeoutError) as err:
+            LOGGER.debug("Failed to re-read hot water state after a write: %s", err)
             return
         self.async_set_updated_data(replace(self.data, dhw=dhw))
 

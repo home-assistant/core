@@ -29,7 +29,12 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -527,15 +532,14 @@ async def test_set_data_rereads_only_the_circuit(
     mock_bsblan.sensor.assert_not_called()
 
 
-async def test_set_data_falls_back_to_full_refresh(
+async def test_set_data_ignores_failed_reread(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test a failed circuit re-read after a write falls back to a full refresh."""
+    """Test a failed circuit re-read after a write leaves it to the next poll."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
-    state = mock_bsblan.state.return_value
-    mock_bsblan.state.side_effect = [BSBLANError("Test error"), state]
+    mock_bsblan.state.side_effect = BSBLANError("Test error")
     mock_bsblan.sensor.reset_mock()
 
     await hass.services.async_call(
@@ -545,5 +549,6 @@ async def test_set_data_falls_back_to_full_refresh(
         blocking=True,
     )
 
-    # The full refresh is the only one that also reads the sensors
-    mock_bsblan.sensor.assert_called_once()
+    mock_bsblan.thermostat.assert_called_once()
+    mock_bsblan.sensor.assert_not_called()
+    assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
