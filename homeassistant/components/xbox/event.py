@@ -74,10 +74,14 @@ class XboxAchievementEventEntity(
     @callback
     def _async_handle_event(self) -> None:
         """Handle newly unlocked achievements."""
-        if not (unlocks := self.coordinator.data.get(self.xuid)):
+        if (unlocks := self.coordinator.data.get(self.xuid)) is None:
             return
 
-        latest = max(unlock.time_unlocked for unlock in unlocks)
+        # Without any unlocks yet, there's no history to hold back.
+        latest = max(
+            (unlock.time_unlocked for unlock in unlocks),
+            default=datetime.min.replace(tzinfo=dt_util.UTC),
+        )
         if self.last_unlock is None:
             # Nothing to compare against yet, so all of it is history.
             self.last_unlock = latest
@@ -134,8 +138,12 @@ class XboxAchievementEventEntity(
         if (
             event_data := await self.async_get_last_event_data()
         ) and event_data.last_event_attributes:
-            self.last_unlock = dt_util.parse_datetime(
-                event_data.last_event_attributes["time_unlocked"]
+            time_unlocked = event_data.last_event_attributes["time_unlocked"]
+            # It's only a string when restored from storage, not after a reload.
+            self.last_unlock = (
+                time_unlocked
+                if isinstance(time_unlocked, datetime)
+                else dt_util.parse_datetime(time_unlocked)
             )
         self._async_handle_event()
 

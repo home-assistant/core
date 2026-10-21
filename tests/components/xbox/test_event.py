@@ -279,6 +279,65 @@ async def test_restored_last_unlock(
     assert unlocked(events) == ["Pork Chop"]
 
 
+@pytest.mark.freeze_time("2026-09-13T15:00:00+00:00")
+async def test_reload_keeps_last_unlock(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    xbox_live_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the last unlock survives a reload, and nothing is announced again."""
+    achievements = xbox_live_client.achievements
+    achievements.get_achievements_xboxone_recent_unlocks.return_value = xboxone(
+        "Complete Collection"
+    )
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
+
+    await setup_integration(hass, config_entry)
+
+    achievements.get_achievements_xboxone_recent_unlocks.return_value = xboxone(
+        "Pork Chop", "Cow Tipper", "Complete Collection"
+    )
+    await next_update(hass, freezer)
+
+    assert unlocked(events) == ["Cow Tipper", "Pork Chop"]
+    state = hass.states.get(ENTITY_ID)
+    assert state
+
+    freezer.tick(timedelta(seconds=1))
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Restored as it was, rather than announced again.
+    restored = hass.states.get(ENTITY_ID)
+    assert restored
+    assert restored.state == state.state
+    assert restored.attributes == state.attributes
+
+
+@pytest.mark.freeze_time("2026-09-13T15:00:00+00:00")
+async def test_first_unlock_without_history(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    xbox_live_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the first unlock of someone without any unlocks yet is announced."""
+    achievements = xbox_live_client.achievements
+    achievements.get_achievements_xboxone_recent_unlocks.return_value = xboxone()
+    achievements.get_achievements_xbox360_recent_unlocks.return_value = xbox360()
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
+
+    await setup_integration(hass, config_entry)
+
+    achievements.get_achievements_xboxone_recent_unlocks.return_value = xboxone(
+        "Pork Chop"
+    )
+    await next_update(hass, freezer)
+
+    assert unlocked(events) == ["Pork Chop"]
+
+
 async def test_polled_while_online(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
