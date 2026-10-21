@@ -798,6 +798,7 @@ async def test_wired_client_speed_sensor(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_ignore_local_mac_client_sensors(
     hass: HomeAssistant,
+    mock_websocket_message: WebsocketMessageMock,
     wireless_local_mac_has_sensors: bool,
 ) -> None:
     """Only Wi-Fi clients with private MACs are filtered when the option is enabled."""
@@ -814,6 +815,21 @@ async def test_ignore_local_mac_client_sensors(
     assert hass.states.get("sensor.wired_local_mac_client_uptime")
 
     # The Wi-Fi private-MAC client only keeps its sensors via the allowlist
+    for entity_id in (
+        "sensor.wireless_local_mac_client_rx",
+        "sensor.wireless_local_mac_client_tx",
+        "sensor.wireless_local_mac_client_uptime",
+    ):
+        assert (
+            hass.states.get(entity_id) is not None
+        ) == wireless_local_mac_has_sensors
+
+    # An offline client can be reported as wired, it stays as it was
+    mock_websocket_message(
+        message=MessageKey.CLIENT, data={**WIRELESS_LOCAL_MAC_CLIENT, "is_wired": True}
+    )
+    await hass.async_block_till_done()
+
     for entity_id in (
         "sensor.wireless_local_mac_client_rx",
         "sensor.wireless_local_mac_client_tx",
@@ -1330,6 +1346,7 @@ async def test_ups_battery_pool_late_field(
     for value in initial_readings:
         pool[field] = value
     await config_entry_factory()
+    device_payload[0] = original_device
 
     entity_id = f"sensor.{device_name}_{sensor}"
     assert hass.states.get(entity_id) is None
