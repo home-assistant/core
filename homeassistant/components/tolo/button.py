@@ -52,6 +52,6 @@ class ToloLampNextColorButton(ToloSaunaCoordinatorEntity, ButtonEntity):
         )
 
     @override
-    def press(self) -> None:
+    async def async_press(self) -> None:
         """Execute action when lamp change color button was pressed."""
-        self.coordinator.client.lamp_change_color()
+        await self._async_send_command(lambda client: client.lamp_change_color())

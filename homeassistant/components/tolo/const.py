@@ -10,6 +10,8 @@ DEFAULT_NAME = "TOLO Sauna"
 DEFAULT_RETRY_TIMEOUT = 1
 DEFAULT_RETRY_COUNT = 3
 
+REQUEST_REFRESH_COOLDOWN = 1
+
 
 class AromaTherapySlot(Enum):
     """Mapping to TOLO Aroma Therapy Slot."""

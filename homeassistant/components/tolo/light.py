@@ -43,11 +43,11 @@ class ToloLight(ToloSaunaCoordinatorEntity, LightEntity):
         return self.coordinator.data.status.lamp_on
 
     @override
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on TOLO Sauna lamp."""
-        self.coordinator.client.set_lamp_on(True)
+        await self._async_send_command(lambda client: client.set_lamp_on(True))
 
     @override
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off TOLO Sauna lamp."""
-        self.coordinator.client.set_lamp_on(False)
+        await self._async_send_command(lambda client: client.set_lamp_on(False))
