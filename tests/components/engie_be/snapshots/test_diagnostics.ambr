@@ -166,3 +166,75 @@
     }),
   })
 # ---
+# name: test_diagnostics_prices_failure
+  dict({
+    'entry': dict({
+      'data': dict({
+        'access_token': '**REDACTED**',
+        'email': '**REDACTED**',
+        'mfa_method': 'sms',
+        'refresh_token': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'engie_be',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+    'epex': None,
+    'households': dict({
+      '**REDACTED_27d6fbbe5c7d230a': dict({
+        'ean_count': None,
+        'energy_types': dict({
+        }),
+        'is_dynamic': False,
+        'last_update_success': False,
+        'slots': dict({
+        }),
+        'update_interval': '1:00:00',
+      }),
+    }),
+    'relations': dict({
+      'agreement_count': 1,
+      'last_update_success': True,
+      'update_interval': None,
+    }),
+  })
+# ---
+# name: test_diagnostics_setup_retry
+  dict({
+    'entry': dict({
+      'data': dict({
+        'access_token': '**REDACTED**',
+        'email': '**REDACTED**',
+        'mfa_method': 'sms',
+        'refresh_token': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'engie_be',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+  })
+# ---

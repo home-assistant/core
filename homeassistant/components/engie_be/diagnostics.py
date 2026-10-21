@@ -101,7 +101,8 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: EngieBeConfigEntry
 ) -> dict[str, Any]:
     """Return the diagnostics of a config entry."""
-    runtime_data = entry.runtime_data
+    if (runtime_data := getattr(entry, "runtime_data", None)) is None:
+        return async_redact_data({"entry": entry.as_dict()}, TO_REDACT)
     epex = runtime_data.epex
     relations = runtime_data.relations
     return async_redact_data(
