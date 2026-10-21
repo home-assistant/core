@@ -59,7 +59,7 @@ def _patch_fivem_success() -> Generator[None]:
             "fivem.fivem.FiveM.get_info_raw",
             return_value=_mock_fivem_info_success(),
         ),
-        patch("homeassistant.components.fivem.async_setup_entry", return_value=True),
+        patch("homeassistant.components.fivem.async_setup_entry", return_value=None),
     ):
         yield
 
@@ -89,7 +89,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.fivem.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
