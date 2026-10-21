@@ -171,6 +171,8 @@ Every check has a code following the
 | `W7450` | [`home-assistant-log-and-raise`](#w7450-home-assistant-log-and-raise) | Don't log an error that is raised to Home Assistant, which already reports it |
 | `W7452` | [`home-assistant-action-registered-outside-services-module`](#w7452-home-assistant-action-registered-outside-services-module) | Actions should be registered from `async_setup_services` or `setup_services` in `services.py` |
 | `W7453` | [`home-assistant-invalid-setup-services`](#w7453-home-assistant-invalid-setup-services) | `async_setup_services` / `setup_services` should be synchronous and only take `hass` |
+| `W7454` | [`home-assistant-action-name-not-enum`](#w7454-home-assistant-action-name-not-enum) | Action names should be members of the integration's `<Prefix>Service` StrEnum |
+| `W7455` | [`home-assistant-action-field-not-enum`](#w7455-home-assistant-action-field-not-enum) | Action fields should be members of the integration's `<Prefix>ServiceArgument` StrEnum |
 
 ## `home_assistant_logger` checker
 
@@ -1027,6 +1029,27 @@ functions may register actions too.
 `async_setup_services` should be a synchronous function decorated with
 `@callback`, and `setup_services` a synchronous function that is not, since
 it runs in the executor. Both should only take `hass`.
+
+
+## `home_assistant_actions_service_enums` checker
+
+Detects action names and fields in `services.py` that do not use the
+integration's `<Prefix>Service` and `<Prefix>ServiceArgument` StrEnums.
+
+### `W7454`: `home-assistant-action-name-not-enum`
+
+The action name passed to `hass.services.async_register` and the action
+registration helpers should be a member of the integration's
+`<Prefix>Service` StrEnum (singular), not a raw string or other constant.
+
+### `W7455`: `home-assistant-action-field-not-enum`
+
+The keys of the registered action schemas, and the `ServiceCall.data` lookups,
+should be members of the integration's `<Prefix>ServiceArgument` StrEnum.
+Shared selector fields such as `config_entry_id`, `device_id` and `entity_id`
+keep using the `homeassistant.const` constants. Keys of nested schemas, which
+describe the content of a field, and dynamic keys whose value cannot be
+inferred are not checked.
 
 
 ## `home_assistant_exception_translations` checker

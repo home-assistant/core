@@ -46,6 +46,8 @@ async def _async_handle_light_on_service(light: LightEntity, call: ServiceCall) 
 
     If brightness is set to 0, this service will turn the light off.
     """
+    # "params" is added by the light schema pre-processing, not an action field
+    # pylint: disable-next=home-assistant-action-field-not-enum
     params = process_turn_on_params(light.hass, light, call.data["params"])
 
     if (
@@ -61,6 +63,8 @@ async def _async_handle_light_off_service(
     light: LightEntity, call: ServiceCall
 ) -> None:
     """Handle turning off a light."""
+    # "params" is added by the light schema pre-processing, not an action field
+    # pylint: disable-next=home-assistant-action-field-not-enum
     params = process_turn_off_params(light.hass, light, call.data["params"])
 
     await light.async_turn_off(**filter_turn_off_params(light, params))
@@ -68,6 +72,8 @@ async def _async_handle_light_off_service(
 
 async def _async_handle_toggle_service(light: LightEntity, call: ServiceCall) -> None:
     """Handle toggling a light."""
+    # "params" is added by the light schema pre-processing, not an action field
+    # pylint: disable-next=home-assistant-action-field-not-enum
     await light.async_toggle(**call.data["params"])
 
 
