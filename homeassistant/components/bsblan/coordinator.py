@@ -37,7 +37,7 @@ STATE_INCLUDE = [
     "hvac_mode",
     "hvac_action",
 ]
-SENSOR_INCLUDE = ["current_temperature", "outside_temperature", "total_energy"]
+SENSOR_INCLUDE = ["outside_temperature", "total_energy"]
 DHW_STATE_INCLUDE = [
     "operating_mode",
     "nominal_setpoint",
