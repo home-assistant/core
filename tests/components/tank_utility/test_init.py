@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import requests
 
 from homeassistant.components.tank_utility.const import DOMAIN
@@ -15,8 +16,6 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .conftest import DEVICE_DATA, MOCK_DEVICE_ID, TEST_EMAIL, TEST_PASSWORD
-
-from tests.common import MockConfigEntry
 
 
 def _mock_http_error(status_code: int) -> requests.exceptions.HTTPError:

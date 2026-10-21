@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 import requests
 
 from homeassistant.components.sensor import SensorStateClass
@@ -32,8 +33,6 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 
 from .conftest import DEVICE_DATA, MOCK_DEVICE_ID, TEST_EMAIL, TEST_PASSWORD
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 YAML_CONFIG = {
     "sensor": {

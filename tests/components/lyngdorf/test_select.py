@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from lyngdorf import LyngdorfInvalidValueError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
@@ -17,8 +18,6 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import notify_receiver_update
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture

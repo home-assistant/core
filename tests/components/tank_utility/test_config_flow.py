@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import requests
 
 from homeassistant.components.tank_utility.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_EMAIL, TEST_PASSWORD
-
-from tests.common import MockConfigEntry
 
 
 def _mock_http_error(status_code: int) -> requests.exceptions.HTTPError:

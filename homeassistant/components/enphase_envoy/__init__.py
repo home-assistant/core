@@ -46,15 +46,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> N
     device_registry = dr.async_get(hass)
     if TYPE_CHECKING:
         assert envoy.serial_number
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, envoy.serial_number)},
-        manufacturer="Enphase",
-        name=coordinator.name,
-        model=envoy.envoy_model,
-        sw_version=str(envoy.firmware),
-        hw_version=envoy.part_number,
-        serial_number=envoy.serial_number,
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, envoy.serial_number)},
+            manufacturer="Enphase",
+            name=coordinator.name,
+            model=envoy.envoy_model,
+            sw_version=str(envoy.firmware),
+            hw_version=envoy.part_number,
+            serial_number=envoy.serial_number,
+        ),
     )
 
     envoy_data = coordinator.envoy.data
@@ -62,30 +64,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> N
     # register the ACB aggregate device before the individual batteries reference
     # it as via_device, so they nest under it in the device hierarchy
     if envoy_data and envoy_data.acb_inventory:
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, f"{envoy.serial_number}_acb")},
-            manufacturer="Enphase",
-            model="ACB",
-            name=f"ACB {envoy.serial_number}",
-            via_device_id=dr.async_get_device_id_by_identifier(
-                hass, (DOMAIN, envoy.serial_number), config_entry_id=entry.entry_id
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, f"{envoy.serial_number}_acb")},
+                manufacturer="Enphase",
+                model="ACB",
+                name=f"ACB {envoy.serial_number}",
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    hass, (DOMAIN, envoy.serial_number), config_entry_id=entry.entry_id
+                ),
             ),
         )
 
     # register the Enpower device before the dry contact relays reference it as
     # via_device, so they nest under it in the device hierarchy
     if envoy_data and (enpower := envoy_data.enpower):
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, enpower.serial_number)},
-            manufacturer="Enphase",
-            model="Enpower",
-            name=f"Enpower {enpower.serial_number}",
-            sw_version=str(enpower.firmware_version),
-            serial_number=enpower.serial_number,
-            via_device_id=dr.async_get_device_id_by_identifier(
-                hass, (DOMAIN, envoy.serial_number), config_entry_id=entry.entry_id
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, enpower.serial_number)},
+                manufacturer="Enphase",
+                model="Enpower",
+                name=f"Enpower {enpower.serial_number}",
+                sw_version=str(enpower.firmware_version),
+                serial_number=enpower.serial_number,
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    hass, (DOMAIN, envoy.serial_number), config_entry_id=entry.entry_id
+                ),
             ),
         )
 

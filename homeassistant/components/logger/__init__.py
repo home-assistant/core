@@ -6,13 +6,12 @@ from typing import override
 
 import probatio
 
-from homeassistant.const import EVENT_LOGGING_CHANGED  # noqa: F401
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
 from . import websocket_api
-from .const import (  # noqa: F401
+from .const import (
     DOMAIN,
     LOGGER_DEFAULT,
     LOGGER_FILTERS,
@@ -25,7 +24,6 @@ from .helpers import (
     VALID_LOG_LEVEL,
     LoggerDomainConfig,
     LoggerSettings,
-    _clear_logger_overwrites,  # noqa: F401
     set_default_log_level,
     set_log_levels,
 )
@@ -50,6 +48,12 @@ CONFIG_SCHEMA = probatio.Schema(
     },
     extra=probatio.ALLOW_EXTRA,
 )
+
+__all__ = [
+    "DOMAIN",
+    "LOGSEVERITY",
+    "SERVICE_SET_LEVEL",
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

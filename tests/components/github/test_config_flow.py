@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from aiogithubapi import GitHubException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.github.const import (
     CONF_REPOSITORY,
@@ -17,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, UnknownFlow
 
 from .const import MOCK_ACCESS_TOKEN
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

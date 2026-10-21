@@ -6,8 +6,7 @@ from typing import override
 
 import probatio
 
-from homeassistant.const import (  # noqa: F401
-    ATTR_EDITABLE,
+from homeassistant.const import (
     CONF_ICON,
     CONF_ID,
     CONF_NAME,
@@ -53,6 +52,15 @@ CONFIG_SCHEMA = probatio.Schema(
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
+
+__all__ = [
+    "DOMAIN",
+    "SERVICE_RELOAD",
+    "SERVICE_TOGGLE",
+    "SERVICE_TURN_OFF",
+    "SERVICE_TURN_ON",
+    "STORAGE_FIELDS",
+]
 
 
 class InputBooleanStorageCollection(collection.DictStorageCollection):

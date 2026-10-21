@@ -7,9 +7,7 @@ import re
 import subprocess
 from typing import Any
 
-from script.hassfest.translation_data import (
-    load_json_from_path as load_json_from_path,  # noqa: PLC0414
-)
+from script.hassfest.translation_data import load_json_from_path as load_json_from_path  # noqa: PLC0414
 
 from .error import ExitApp, MissingReference
 
