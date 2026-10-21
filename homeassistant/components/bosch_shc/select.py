@@ -255,6 +255,27 @@ SWITCH_TYPE_DESCRIPTION = SHCSelectEntityDescription[SHCMicromoduleRelay](
 )
 
 
+def _actuator_type_select_option(device: SHCMicromoduleRelay, option: str) -> None:
+    """Write the relay's actuator type."""
+    device.actuator_type = SwitchConfiguration.ActuatorType[option.upper()]
+
+
+ACTUATOR_TYPE_DESCRIPTION = SHCSelectEntityDescription[SHCMicromoduleRelay](
+    key="actuator_type",
+    translation_key="actuator_type",
+    entity_category=EntityCategory.CONFIG,
+    options=[
+        "normally_closed",
+        "normally_open",
+        "unsupported",
+    ],
+    current_option_fn=lambda device, options: (
+        value.name.lower() if (value := device.actuator_type) else None
+    ),
+    select_option_fn=_actuator_type_select_option,
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BoschConfigEntry,
@@ -413,6 +434,17 @@ async def async_setup_entry(
         )
         for relay in session.device_helper.micromodule_relays
         if relay.supports_switch_configuration and relay.switch_type is not None
+    )
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=relay,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=ACTUATOR_TYPE_DESCRIPTION,
+        )
+        for relay in session.device_helper.micromodule_relays
+        if relay.supports_switch_configuration and relay.actuator_type is not None
     )
 
     async_add_entities(entities)

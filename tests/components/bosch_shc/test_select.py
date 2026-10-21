@@ -683,3 +683,57 @@ async def test_relay_switch_type_unsupported(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get(SWITCH_TYPE_ENTITY_ID) is None
+
+
+ACTUATOR_TYPE_ENTITY_ID = "select.relay_actuator_type"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "micromodule_relays": [
+                micromodule_relay_device(
+                    supports_switch_configuration=True,
+                    actuator_type=SwitchConfiguration.ActuatorType.NORMALLY_CLOSED,
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_relay_actuator_type(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The relay actuator type is reported and written to the device."""
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.micromodule_relays[0]
+
+    assert hass.states.get(ACTUATOR_TYPE_ENTITY_ID).state == "normally_closed"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: ACTUATOR_TYPE_ENTITY_ID, "option": "normally_open"},
+        blocking=True,
+    )
+    assert device.actuator_type == SwitchConfiguration.ActuatorType.NORMALLY_OPEN
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"micromodule_relays": [micromodule_relay_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_relay_actuator_type_unsupported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No actuator type select is created without switch configuration support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(ACTUATOR_TYPE_ENTITY_ID) is None
