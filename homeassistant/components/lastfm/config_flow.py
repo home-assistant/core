@@ -426,6 +426,12 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 if _credentials_changed(entry.options, self._original_options):
                     return self.async_abort(reason="configuration_changed")
                 self._raise_if_removed()
+            if (
+                errors
+                and self.cur_step is not None
+                and self.cur_step["step_id"] != "reconfigure"
+            ):
+                return self.cur_step
             if not errors:
                 if CONF_API_SECRET in candidate:
                     if (
@@ -480,7 +486,11 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         assert self._original_options is not None
         if _credentials_changed(entry.options, self._original_options):
             return self.async_abort(reason="configuration_changed")
-        options = {**entry.options, CONF_API_KEY: self.data[CONF_API_KEY]}
+        options = {
+            **entry.options,
+            CONF_API_KEY: self.data[CONF_API_KEY],
+            CONF_MAIN_USER: self.data[CONF_MAIN_USER],
+        }
         if CONF_SESSION_KEY in self.data:
             options.update(self.data)
         else:
