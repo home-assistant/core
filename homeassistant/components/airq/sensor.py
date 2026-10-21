@@ -22,12 +22,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AirQConfigEntry, AirQCoordinator
+from . import AirQConfigEntry
 from .const import (
     ACTIVITY_BECQUEREL_PER_CUBIC_METER,
     LENGTH_MICROMETER,
     PARTICLE_COUNT_PER_100_MILLILITER,
 )
+from .coordinator import AirQCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -193,6 +193,15 @@ class MatterStartUpColorTemperatureNumber(MatterRangeNumber):
             send_value = min(send_value, physical_max or MATTER_MAX_MIREDS)
         await self.write_attribute(value=send_value)
 
+    @callback
+    @override
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        super()._update_from_device()
+        # A null start-up value means the previous color temperature is kept
+        if self._attr_native_value is None:
+            self._attr_native_value = 0
+
 
 class MatterLevelControlNumber(MatterEntity, NumberEntity):
     """Representation of a Matter Attribute as a Number entity."""
