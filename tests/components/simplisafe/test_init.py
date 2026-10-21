@@ -3,7 +3,7 @@
 import asyncio
 import copy
 import logging
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -232,29 +232,45 @@ async def test_websocket_retry_delay_resets_after_successful_listen(
     config_entry: MockConfigEntry,
     patch_simplisafe_api,
     websocket: Mock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test websocket retries restart at the initial delay after a successful listen."""
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    patch_simplisafe_api.stop()
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.simplisafe")
 
     websocket.async_connect.side_effect = [
         WebsocketError("first failure"),
         None,
         WebsocketError("second failure"),
+        WebsocketError("third failure"),
+        WebsocketError("fourth failure"),
     ]
-    with (
-        patch(
-            "homeassistant.components.simplisafe.asyncio.sleep",
-            new=AsyncMock(side_effect=[None, asyncio.CancelledError]),
-        ) as mock_sleep,
-        pytest.raises(asyncio.CancelledError),
-    ):
-        await config_entry.runtime_data._async_websocket_loop()
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    assert mock_sleep.await_args_list == [
-        ((WEBSOCKET_RETRY_DELAY,), {}),
-        ((WEBSOCKET_RETRY_DELAY,), {}),
+    for delay in (
+        WEBSOCKET_RETRY_DELAY,
+        WEBSOCKET_RETRY_DELAY,
+        WEBSOCKET_RETRY_DELAY * 2,
+        WEBSOCKET_RETRY_DELAY * 4,
+    ):
+        freezer.tick(delay)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert [
+        message for message in caplog.messages if message.startswith("Websocket error")
+    ] == [
+        f"Websocket error (1/3): first failure; retrying in {WEBSOCKET_RETRY_DELAY} seconds",
+        f"Websocket error (1/3): second failure; retrying in {WEBSOCKET_RETRY_DELAY} seconds",
+        f"Websocket error (2/3): third failure; retrying in {WEBSOCKET_RETRY_DELAY * 2} seconds",
+        f"Websocket error (3/3): fourth failure; retrying in {WEBSOCKET_RETRY_DELAY * 4} seconds",
     ]
+    assert (
+        "Websocket connection failed, task exiting (3/3): fourth failure"
+        in caplog.messages
+    )
 
 
 async def test_websocket_listener_failures_are_capped(
@@ -262,24 +278,31 @@ async def test_websocket_listener_failures_are_capped(
     config_entry: MockConfigEntry,
     patch_simplisafe_api,
     websocket: Mock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test repeated websocket listener failures stop after three attempts."""
+    patch_simplisafe_api.stop()
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.simplisafe")
+
+    websocket.async_listen.side_effect = WebsocketError("listener failure")
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    websocket.async_listen.side_effect = WebsocketError("listener failure")
+    for delay in (
+        WEBSOCKET_RETRY_DELAY,
+        WEBSOCKET_RETRY_DELAY * 2,
+        WEBSOCKET_RETRY_DELAY * 4,
+    ):
+        freezer.tick(delay)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.simplisafe.asyncio.sleep",
-        new=AsyncMock(side_effect=[None, None, None]),
-    ) as mock_sleep:
-        await config_entry.runtime_data._async_websocket_loop()
-
-    assert mock_sleep.await_args_list == [
-        ((WEBSOCKET_RETRY_DELAY,), {}),
-        ((WEBSOCKET_RETRY_DELAY * 2,), {}),
-        ((WEBSOCKET_RETRY_DELAY * 4,), {}),
-    ]
+    assert websocket.async_connect.await_count == 3
+    assert (
+        "Websocket connection failed, task exiting (3/3): listener failure"
+        in caplog.messages
+    )
 
 
 async def test_websocket_start_and_restart_are_logged(
