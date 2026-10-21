@@ -140,6 +140,14 @@ def _create_rfx(
     return rfx
 
 
+def _device_subentry_unique_ids(entry: ConfigEntry) -> frozenset[str | None]:
+    """Return the unique_id of every device subentry, to detect changes."""
+    return frozenset(
+        subentry.unique_id
+        for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_DEVICE)
+    )
+
+
 def _get_device_lookup(entry: ConfigEntry) -> dict[DeviceTuple, ConfigSubentry]:
     """Get a lookup structure for devices."""
     lookup: dict[DeviceTuple, ConfigSubentry] = {}
@@ -159,7 +167,7 @@ async def async_setup_internal(hass: HomeAssistant, entry: RfxtrxConfigEntry) ->
 
     # Setup some per device config
     devices = _get_device_lookup(entry)
-    devices_subentries = entry.subentries
+    devices_unique_ids = _device_subentry_unique_ids(entry)
     pt2262_devices: set[str] = set()
 
     device_registry = dr.async_get(hass)
@@ -196,7 +204,7 @@ async def async_setup_internal(hass: HomeAssistant, entry: RfxtrxConfigEntry) ->
     @callback
     def async_handle_receive(event: rfxtrxmod.RFXtrxEvent) -> None:
         """Handle received messages from RFXtrx gateway."""
-        nonlocal devices, devices_subentries
+        nonlocal devices, devices_unique_ids
 
         if isinstance(event, rfxtrxmod.ConnectionLost):
             _LOGGER.warning("Connection was lost, triggering reload")
@@ -220,9 +228,10 @@ async def async_setup_internal(hass: HomeAssistant, entry: RfxtrxConfigEntry) ->
 
         _LOGGER.debug("Receive RFXCOM event: %s", event_data)
 
-        if entry.subentries is not devices_subentries:
+        current_unique_ids = _device_subentry_unique_ids(entry)
+        if current_unique_ids != devices_unique_ids:
             devices = _get_device_lookup(entry)
-            devices_subentries = entry.subentries
+            devices_unique_ids = current_unique_ids
         data_bits = get_device_data_bits(event.device, devices)
         device_id = get_device_tuple_from_device(event.device, data_bits=data_bits)
 

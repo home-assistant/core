@@ -232,6 +232,44 @@ async def test_automatic_add_syncs_device_lookup_before_subentry_creation(
     assert len(mock_entry.subentries) == 1
 
 
+async def test_automatic_add_syncs_device_lookup_after_reconfigure(
+    hass: HomeAssistant, rfxtrx: Mock
+) -> None:
+    """Test packets around a reconfigure that changes a subentry's address.
+
+    async_update_subentry() mutates the subentry in place rather than
+    replacing entry.subentries, so the cached device lookup must be
+    invalidated by comparing subentry unique_ids, not object identity.
+    """
+    mock_entry = await setup_rfx_test_cfg(
+        hass,
+        automatic_add=True,
+        devices={"0b1100cd0213c7f230010f71": {}},
+    )
+    subentry = next(iter(mock_entry.subentries.values()))
+
+    with patch("homeassistant.config_entries.ConfigEntries.async_reload"):
+        hass.config_entries.async_update_subentry(
+            mock_entry,
+            subentry,
+            data=MappingProxyType({"event_code": ["0b1100100118cdea02010f70"]}),
+            unique_id="11_0_118cdea:2",
+        )
+        await hass.async_block_till_done()
+
+        # A packet for the replacement address doesn't duplicate-add it.
+        await rfxtrx.signal("0b1100100118cdea02010f70")
+        assert len(mock_entry.subentries) == 1
+
+        # A packet for the old address is a new, independent device,
+        # not merged into the reconfigured subentry.
+        await rfxtrx.signal("0b1100cd0213c7f230010f71")
+        assert len(mock_entry.subentries) == 2
+
+    updated_subentry = mock_entry.subentries[subentry.subentry_id]
+    assert updated_subentry.data["event_code"] == ["0b1100100118cdea02010f70"]
+
+
 @pytest.mark.parametrize("automatic_add", [True, False])
 async def test_rediscover_additional_entity_type(
     hass: HomeAssistant,
