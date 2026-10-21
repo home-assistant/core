@@ -19,8 +19,13 @@ from homeassistant.helpers.trigger import (
     NotTriggeredReasonReporter,
     TriggerConfig,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from ..const import DOMAIN, NODE_STATUSES
+from ..helpers import (
+    async_bypass_dynamic_config_validation,
+    async_get_node_from_device_id,
+)
 
 # Relative platform type should be <SUBMODULE_NAME>
 RELATIVE_PLATFORM_TYPE = f"{__name__.rsplit('.', maxsplit=1)[-1]}"
@@ -74,7 +79,36 @@ class NodeStatusTrigger(EntityTriggerBase):
 
     _domain_specs = {SENSOR_DOMAIN: DomainSpec()}
     _primary_entities_only = False
+    # A hidden node status sensor must still be watched.
+    _include_hidden_entities = True
     _schema = _TRIGGER_SCHEMA
+
+    @override
+    @classmethod
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        config = await super().async_validate_config(hass, config)
+        device_ids = config[CONF_OPTIONS][ATTR_DEVICE_ID]
+        if async_bypass_dynamic_config_validation(hass, {ATTR_DEVICE_ID: device_ids}):
+            return config
+
+        found_node = False
+        for device_id in device_ids:
+            try:
+                node = async_get_node_from_device_id(hass, device_id)
+            except ValueError:
+                continue
+            # The controller has no node status sensor to watch.
+            if node.is_controller_node:
+                raise probatio.Invalid(
+                    f"Device {device_id} is the controller, which has no node status"
+                )
+            found_node = True
+        if not found_node:
+            raise probatio.Invalid("No nodes found for the given devices")
+        return config
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize the trigger."""
@@ -86,6 +120,7 @@ class NodeStatusTrigger(EntityTriggerBase):
         )
         self._from_states = set(self._options.get(CONF_FROM, []))
         self._to_states = set(self._options.get(CONF_TO, []))
+        self._is_group = self._options[ATTR_BEHAVIOR] != BEHAVIOR_EACH
 
     @override
     def entity_filter(self, entities: set[str]) -> set[str]:
@@ -96,7 +131,7 @@ class NodeStatusTrigger(EntityTriggerBase):
             for entity_id in super().entity_filter(entities)
             if (entry := ent_reg.async_get(entity_id))
             and entry.platform == DOMAIN
-            and entry.translation_key == "node_status"
+            and entry.unique_id.endswith(".node_status")
         }
 
     @override
@@ -110,11 +145,11 @@ class NodeStatusTrigger(EntityTriggerBase):
 
     @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check the status changed from a wanted, not already matching, status."""
+        """Check the status changed from a wanted status."""
         return (
             from_state.state != to_state.state
-            # A status already satisfying the trigger must not satisfy it again:
-            # the first and all behaviors count matching states, not changes.
-            and from_state.state not in self._to_states
+            # The first and all behaviors count matching states, not changes, so
+            # a node already satisfying the trigger must not satisfy it again.
+            and not (self._is_group and from_state.state in self._to_states)
             and (not self._from_states or from_state.state in self._from_states)
         )

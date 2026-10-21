@@ -1659,6 +1659,11 @@ async def test_value_updated_command_class_options(hass: HomeAssistant) -> None:
             VALUE_UPDATED_OPTIONS_SCHEMA_DICT,
             id="value_updated",
         ),
+        pytest.param(
+            f"{DOMAIN}.node_status",
+            NODE_STATUS_OPTIONS_SCHEMA_DICT,
+            id="node_status",
+        ),
     ],
 )
 @pytest.mark.usefixtures("integration")
@@ -1671,8 +1676,15 @@ async def test_trigger_description_fields_match_schema(
     descriptions = await trigger.async_get_all_descriptions(hass)
     fields = descriptions[trigger_type]["fields"]
     assert set(fields) == {str(key) for key in options_schema}
-    assert {name for name, field in fields.items() if field["required"]} == {
-        str(key) for key in options_schema if isinstance(key, probatio.Required)
+    # A required field with a default is always filled in by the editor
+    assert {
+        name
+        for name, field in fields.items()
+        if field["required"] and "default" not in field
+    } == {
+        str(key)
+        for key in options_schema
+        if isinstance(key, probatio.Required) and key.default is probatio.UNDEFINED
     }
 
 
@@ -1756,6 +1768,12 @@ async def test_node_status_trigger_fires(
             {"from": "alive", "to": "dead"}, ["dead", "alive", "dead"], 2, id="scalar"
         ),
         pytest.param({"to": ["asleep"]}, ["dead", "alive"], 0, id="no_match"),
+        pytest.param(
+            {"from": ["awake"], "to": ["awake", "dead"]},
+            ["wake up", "dead"],
+            1,
+            id="overlapping",
+        ),
         pytest.param(None, ["dead"], 1, id="no_options"),
     ],
 )
@@ -1899,7 +1917,13 @@ async def test_node_status_trigger_from_only_for(
     assert len(service_calls) == expected_calls
 
 
-@pytest.mark.parametrize("behavior", ["each", "first"])
+@pytest.mark.parametrize(
+    ("behavior", "expected_calls"),
+    [
+        pytest.param("each", 2, id="each"),
+        pytest.param("first", 1, id="first"),
+    ],
+)
 async def test_node_status_trigger_within_to_statuses(
     hass: HomeAssistant,
     client: MagicMock,
@@ -1909,8 +1933,9 @@ async def test_node_status_trigger_within_to_statuses(
     device_registry: dr.DeviceRegistry,
     service_calls: list[ServiceCall],
     behavior: str,
+    expected_calls: int,
 ) -> None:
-    """Test moving between two wanted statuses does not fire the trigger again."""
+    """Test moving between two wanted statuses only fires each again."""
     device_ids = [
         device_registry.async_get_device_by_identifier(
             get_device_id(client.driver, node), integration.entry_id
@@ -1927,11 +1952,11 @@ async def test_node_status_trigger_within_to_statuses(
     await hass.async_block_till_done()
     assert len(service_calls) == 1
 
-    # The node leaves a wanted status for another one, so it was already
-    # satisfying the trigger and must not fire a second time
+    # The node was already satisfying the trigger, which first counts as a
+    # match rather than a change
     _node_event(lock_schlage_be469, "wake up")
     await hass.async_block_till_done()
-    assert len(service_calls) == 1
+    assert len(service_calls) == expected_calls
 
 
 async def test_node_status_trigger_ignores_other_entities(
@@ -2007,16 +2032,14 @@ async def test_node_status_trigger_group_behavior_needs_status(
         )
 
 
-async def test_node_status_trigger_ignores_controller(
+async def test_node_status_trigger_rejects_controller(
     hass: HomeAssistant,
     client: MagicMock,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    service_calls: list[ServiceCall],
 ) -> None:
-    """Test a targeted controller does not hold back the all behavior."""
+    """Test a targeted controller is rejected, even alongside a node."""
     lock_device = device_registry.async_get_device_by_identifier(
         get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
@@ -2027,32 +2050,106 @@ async def test_node_status_trigger_ignores_controller(
         integration.entry_id,
     )
     assert controller_device
-    await _setup_node_status_automation(
-        hass,
-        [lock_device.id, controller_device.id],
-        {"behavior": "all", "to": ["dead"]},
+    with pytest.raises(probatio.Invalid, match="is the controller"):
+        await trigger.async_validate_trigger_config(
+            hass,
+            [
+                {
+                    "platform": f"{DOMAIN}.node_status",
+                    "options": {
+                        "device_id": [lock_device.id, controller_device.id],
+                        "to": ["dead"],
+                    },
+                }
+            ],
+        )
+
+
+@pytest.mark.usefixtures("integration")
+async def test_node_status_trigger_rejects_unknown_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test devices which aren't Z-Wave nodes are rejected."""
+    other_entry = MockConfigEntry(domain="test")
+    other_entry.add_to_hass(hass)
+    other_device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id, identifiers={("test", "other")}
     )
+    with pytest.raises(probatio.Invalid, match="No nodes found"):
+        await trigger.async_validate_trigger_config(
+            hass,
+            [
+                {
+                    "platform": f"{DOMAIN}.node_status",
+                    "options": {"device_id": ["not_a_device", other_device.id]},
+                }
+            ],
+        )
+
+
+async def test_node_status_trigger_validation_bypassed_when_not_loaded(
+    hass: HomeAssistant,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test devices aren't checked while the config entry is not loaded."""
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
+    )
+    assert device
+    await hass.config_entries.async_unload(integration.entry_id)
+    assert integration.state is ConfigEntryState.NOT_LOADED
+
+    await trigger.async_validate_trigger_config(
+        hass,
+        [
+            {
+                "platform": f"{DOMAIN}.node_status",
+                "options": {"device_id": device.id},
+            }
+        ],
+    )
+
+
+async def test_node_status_trigger_hidden_sensor(
+    hass: HomeAssistant,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test a node whose status sensor is hidden still fires."""
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
+    )
+    assert device
+    entity_id = async_get_node_status_sensor_entity_id(
+        hass, device.id, entity_registry, device_registry
+    )
+    assert entity_id
+    entity_registry.async_update_entity(entity_id, hidden_by=er.RegistryEntryHider.USER)
+    await _setup_node_status_automation(hass, device.id, {"to": ["dead"]})
 
     _node_event(lock_schlage_be469, "dead")
     await hass.async_block_till_done()
 
-    # The controller has no node status sensor to watch, so the lock alone
-    # satisfies the behavior
     assert len(service_calls) == 1
-    assert service_calls[0].data["entity_id"] == async_get_node_status_sensor_entity_id(
-        hass, lock_device.id, entity_registry, device_registry
-    )
+    assert service_calls[0].data["entity_id"] == entity_id
 
 
 @pytest.mark.usefixtures("integration")
 async def test_node_status_trigger_description(hass: HomeAssistant) -> None:
-    """Test the described node status fields match the schema and statuses."""
+    """Test the described node status fields pick nodes and statuses."""
     descriptions = await trigger.async_get_all_descriptions(hass)
     description = descriptions[f"{DOMAIN}.node_status"]
     # Nodes are picked with a device selector field, not a target selector
     assert "target" not in description
     fields = description["fields"]
-    assert set(fields) == {str(key) for key in NODE_STATUS_OPTIONS_SCHEMA_DICT}
     selector = fields["device_id"]["selector"]["device"]
     assert selector["filter"] == [{"integration": DOMAIN}]
     assert selector["multiple"] is True
