@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from datetime import timedelta
 from http import HTTPStatus
+import json
 import logging
 from types import MappingProxyType
 from typing import Any
@@ -53,6 +54,9 @@ from .conftest import (
     WebsocketStateManager,
     retry_window,
 )
+
+# What aiounifi raises for a body that is not JSON
+INVALID_JSON = json.JSONDecodeError("Expecting value", "", 0)
 
 
 async def _advance(hass: HomeAssistant, seconds: float) -> None:
@@ -284,7 +288,7 @@ async def test_entity_unavailable_on_polling_coordinator_failure(
 
 @pytest.mark.parametrize(
     "exception",
-    [aiounifi.ServiceUnavailable, TimeoutError, aiounifi.LoginRequired, ValueError],
+    [aiounifi.ServiceUnavailable, TimeoutError, aiounifi.LoginRequired, INVALID_JSON],
 )
 async def test_setup_retries_when_network_application_not_ready(
     config_entry_factory: ConfigEntryFactoryType,
@@ -1002,12 +1006,13 @@ async def test_failed_setup_does_not_retry(
 
 
 @pytest.mark.parametrize(
-    "exception",
+    ("exception", "logins"),
     [
-        aiounifi.LoginRequired,
-        aiounifi.NoPermission,
-        aiounifi.TwoFaTokenRequired,
-        aiounifi.Unauthorized,
+        pytest.param(aiounifi.NoPermission, 1, id="no_permission"),
+        pytest.param(aiounifi.TwoFaTokenRequired, 1, id="two_factor"),
+        # A booting console can reject a login for a moment
+        pytest.param(aiounifi.LoginRequired, 3, id="login_required"),
+        pytest.param(aiounifi.Unauthorized, 3, id="unauthorized"),
     ],
 )
 async def test_rejected_login_starts_reauth_and_stops_retrying(
@@ -1015,18 +1020,41 @@ async def test_rejected_login_starts_reauth_and_stops_retrying(
     config_entry_setup: MockConfigEntry,
     mock_websocket_state: WebsocketStateManager,
     exception: type[Exception],
+    logins: int,
 ) -> None:
     """Only the user can fix rejected credentials, so stop logging in."""
     hub = config_entry_setup.runtime_data
 
     with patch.object(hub.api, "login", side_effect=exception) as login:
         await mock_websocket_state.disconnect()
-        await _advance(hass, MAX_RETRY_DELAY)
-        await _advance(hass, MAX_RETRY_DELAY)
+        for _ in range(logins + 1):
+            await _advance(hass, MAX_RETRY_DELAY)
 
-    login.assert_called_once()
+    assert login.call_count == logins
     assert not hub.available
     assert list(config_entry_setup.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+
+async def test_briefly_rejected_login_recovers_without_reauth(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_state: WebsocketStateManager,
+) -> None:
+    """A console that rejects logins while booting recovers on its own."""
+    hub = config_entry_setup.runtime_data
+
+    await mock_websocket_state.disconnect()
+    mock_websocket_state.clear()
+    with patch.object(
+        hub.api,
+        "login",
+        AsyncMock(side_effect=[aiounifi.Unauthorized(), aiounifi.Unauthorized(), None]),
+    ):
+        for _ in range(3):
+            await _advance(hass, MAX_RETRY_DELAY)
+
+    assert hub.available
+    assert not list(config_entry_setup.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
 
 @pytest.mark.parametrize(
@@ -1038,7 +1066,7 @@ async def test_rejected_login_starts_reauth_and_stops_retrying(
         pytest.param(aiounifi.LoginRequired, False, id="session_expired"),
         pytest.param(aiounifi.Unauthorized, False, id="unauthorized"),
         pytest.param(aiounifi.TwoFaTokenRequired, False, id="two_factor"),
-        pytest.param(ValueError, False, id="malformed_answer"),
+        pytest.param(INVALID_JSON, False, id="invalid_json"),
         pytest.param(KeyError, False, id="unexpected_error"),
         pytest.param(aiounifi.Forbidden, True, id="forbidden"),
         pytest.param(aiounifi.NoPermission, True, id="no_permission"),
@@ -1076,7 +1104,7 @@ async def test_readiness_probe_after_login(
         aiounifi.BadGateway,
         aiounifi.ServiceUnavailable,
         TimeoutError,
-        ValueError,
+        INVALID_JSON,
     ],
 )
 @pytest.mark.parametrize(
@@ -1274,7 +1302,7 @@ async def test_hanging_recovery_is_retried(
     "exception",
     [
         TimeoutError,
-        ValueError,
+        INVALID_JSON,
         aiounifi.RequestError,
         aiounifi.ResponseError,
         aiounifi.Forbidden,

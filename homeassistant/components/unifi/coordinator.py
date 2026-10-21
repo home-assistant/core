@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import timedelta
+import json
 from typing import TYPE_CHECKING, override
 
 import aiounifi
@@ -22,8 +23,8 @@ IDLE_POLL_INTERVAL = timedelta(minutes=10)
 # Large sites can take a while to list all clients
 UPDATE_TIMEOUT = 30
 
-# ValueError covers a half started application answering with invalid JSON
-TRANSPORT_ERRORS = (TimeoutError, ValueError, aiounifi.RequestError)
+# A half started application can answer with invalid JSON
+TRANSPORT_ERRORS = (TimeoutError, json.JSONDecodeError, aiounifi.RequestError)
 
 
 class UnifiDataUpdateCoordinator[HandlerT: APIHandler](

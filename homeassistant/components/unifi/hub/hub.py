@@ -8,6 +8,7 @@ import aiounifi
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import (
     DeviceEntry,
@@ -101,15 +102,16 @@ class UnifiHub:
     async def initialize(self) -> None:
         """Set up a UniFi Network instance."""
         await self.entity_loader.initialize()
+        self._entity_helper.initialize()
+        self.config.entry.async_on_unload(self._entity_helper.reset)
 
         unique_id = self.config.entry.unique_id
         assert unique_id is not None
         if unique_id not in self.api.sites:
             unique_id = self._async_update_site_unique_id(unique_id)
-        self.is_admin = self.api.sites[unique_id].role == "admin"
-
-        # Only start the heartbeat once setup can no longer fail
-        self._entity_helper.initialize()
+        if (site := self.api.sites.get(unique_id)) is None:
+            raise ConfigEntryError(f"UniFi site {unique_id} no longer exists")
+        self.is_admin = site.role == "admin"
 
         self.config.entry.async_on_unload(
             self.config.entry.add_update_listener(self.async_config_entry_updated)

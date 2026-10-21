@@ -3,7 +3,9 @@
 import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+import json
 import random
+import sys
 from typing import TYPE_CHECKING
 
 import aiounifi
@@ -21,22 +23,20 @@ REQUEST_TIMEOUT = 5
 RECOVERY_TIMEOUT = 60
 
 # The Network application is starting or the session expired, try again later.
-# ValueError covers a half started application answering with invalid JSON.
+# A half started application can answer with invalid JSON.
 NOT_READY_ERRORS = (
     TimeoutError,
-    ValueError,
+    json.JSONDecodeError,
     aiounifi.LoginRequired,
     aiounifi.RequestError,
     aiounifi.TwoFaTokenRequired,
     aiounifi.Unauthorized,
 )
-# Credentials or account settings changed, only the user can resolve it
-AUTH_ERRORS = (
-    aiounifi.LoginRequired,
-    aiounifi.NoPermission,
-    aiounifi.TwoFaTokenRequired,
-    aiounifi.Unauthorized,
-)
+# Account settings changed, only the user can resolve it
+ACCOUNT_ERRORS = (aiounifi.NoPermission, aiounifi.TwoFaTokenRequired)
+# Rejected credentials, which a booting console can also answer for a moment
+LOGIN_REJECTED_ERRORS = (aiounifi.LoginRequired, aiounifi.Unauthorized)
+LOGIN_REJECTIONS_BEFORE_REAUTH = 3
 
 
 @dataclass
@@ -91,7 +91,8 @@ class UnifiConnectionManager:
         self._recovery_callback: Callable[[], Awaitable[None]] | None = None
         self._reauth_required = False
         self._stopped = False
-        self._unexpected_error_logged = False
+        self._login_rejections = 0
+        self._logged_error: type[BaseException] | None = None
 
     @callback
     def set_recovery_callback(
@@ -153,7 +154,7 @@ class UnifiConnectionManager:
             LOGGER.debug("UniFi Network answered with '%s'", probe_err)
         except Exception:  # noqa: BLE001
             # A broken probe must not take down a hub that still delivers data
-            LOGGER.exception("Unexpected error while checking UniFi Network")
+            self._log_unexpected_error("Unexpected error while checking UniFi Network")
         else:
             LOGGER.debug("UniFi Network is reachable, request failed with '%s'", err)
 
@@ -194,15 +195,9 @@ class UnifiConnectionManager:
         try:
             await self._async_try_reconnect()
         except Exception as err:  # noqa: BLE001
-            # One traceback is enough while the same error repeats every retry
-            if self._unexpected_error_logged:
-                LOGGER.debug(
-                    "Unexpected error while reconnecting to UniFi Network",
-                    exc_info=True,
-                )
-            else:
-                self._unexpected_error_logged = True
-                LOGGER.exception("Unexpected error while reconnecting to UniFi Network")
+            self._log_unexpected_error(
+                "Unexpected error while reconnecting to UniFi Network"
+            )
             self.report_failure(err)
         finally:
             self._recovering = False
@@ -215,14 +210,20 @@ class UnifiConnectionManager:
         try:
             async with asyncio.timeout(REQUEST_TIMEOUT):
                 await self.api.login()
-        except AUTH_ERRORS as err:
-            LOGGER.debug("UniFi Network rejected the login: %s", err)
-            self._reauth_required = True
-            self.config_entry.async_start_reauth(self.hass)
+        except ACCOUNT_ERRORS as err:
+            self._start_reauth(err)
+            return
+        except LOGIN_REJECTED_ERRORS as err:
+            self._login_rejections += 1
+            if self._login_rejections >= LOGIN_REJECTIONS_BEFORE_REAUTH:
+                self._start_reauth(err)
+            else:
+                LOGGER.debug("UniFi Network rejected the login: %s", err)
             return
         except (TimeoutError, aiounifi.AiounifiException) as err:
             LOGGER.debug("UniFi Network login failed: %s", err)
             return
+        self._login_rejections = 0
 
         try:
             async with asyncio.timeout(REQUEST_TIMEOUT):
@@ -249,6 +250,21 @@ class UnifiConnectionManager:
                 CONNECTION_STABLE_PERIOD, self._async_connection_stable
             )
 
+    def _start_reauth(self, err: Exception) -> None:
+        """Stop retrying, only the user can fix the login."""
+        LOGGER.debug("UniFi Network rejected the login: %s", err)
+        self._reauth_required = True
+        self.config_entry.async_start_reauth(self.hass)
+
+    def _log_unexpected_error(self, message: str) -> None:
+        """Log a traceback once while the same error keeps repeating."""
+        error = sys.exc_info()[0]
+        if error is self._logged_error:
+            LOGGER.debug(message, exc_info=True)
+            return
+        self._logged_error = error
+        LOGGER.exception(message)
+
     @callback
     def _set_available(self, available: bool) -> None:
         """Update shared session availability and signal entities."""
@@ -257,7 +273,7 @@ class UnifiConnectionManager:
         self.available = available
         async_dispatcher_send(self.hass, self.signal)
         if available:
-            self._unexpected_error_logged = False
+            self._logged_error = None
             LOGGER.info("Connection to UniFi Network restored")
         else:
             LOGGER.info("Connection to UniFi Network lost")

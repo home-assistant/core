@@ -24,9 +24,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from ..const import CLIENT_RESTORE_MAX_AGE, LOGGER, UNIFI_WIRELESS_CLIENTS
-from ..coordinator import UnifiDataUpdateCoordinator
+from ..coordinator import UPDATE_TIMEOUT, UnifiDataUpdateCoordinator
 from ..entity import UnifiEntity, UnifiEntityDescription
-from .connection import NOT_READY_ERRORS
+from .connection import NOT_READY_ERRORS, REQUEST_TIMEOUT
 
 if TYPE_CHECKING:
     from .hub import UnifiHub
@@ -40,7 +40,7 @@ class UnifiEntityLoader:
     def __init__(self, hub: UnifiHub) -> None:
         """Initialize the UniFi entity loader."""
         self.hub = hub
-        self._startup_only_api_updaters = (hub.api.clients_all.update,)
+        self._startup_only_api_updaters = (self._async_update_clients_all,)
         self.wireless_clients = hub.hass.data[UNIFI_WIRELESS_CLIENTS]
 
         self._data_coordinators: dict[int, UnifiDataUpdateCoordinator[Any]] = {
@@ -91,13 +91,23 @@ class UnifiEntityLoader:
     async def initialize(self) -> None:
         """Initialize API data and extra client support."""
         try:
-            await self.hub.api.sites.update()
-            await self.hub.api.system_information.update()
+            async with asyncio.timeout(REQUEST_TIMEOUT):
+                await self.hub.api.sites.update()
+        except (*NOT_READY_ERRORS, aiounifi.AiounifiException) as err:
+            raise ConfigEntryNotReady(
+                "UniFi site information is not available"
+            ) from err
+        if not self.hub.api.sites:
+            raise ConfigEntryNotReady("UniFi Network has not listed any site yet")
+
+        try:
+            async with asyncio.timeout(REQUEST_TIMEOUT):
+                await self.hub.api.system_information.update()
         except NOT_READY_ERRORS as err:
             raise ConfigEntryNotReady("UniFi Network application is not ready") from err
         except aiounifi.AiounifiException as err:
-            # The application answers, the account may not see all of it
-            LOGGER.debug("UniFi Network rejected a setup request: %s", err)
+            # The application answers, the account may not see system information
+            LOGGER.debug("UniFi Network rejected system information: %s", err)
 
         await asyncio.gather(
             self._refresh_data(self._startup_only_api_updaters),
@@ -110,6 +120,11 @@ class UnifiEntityLoader:
         )
         self._restore_inactive_clients()
         self.wireless_clients.update_clients(set(self.hub.api.clients.values()))
+
+    async def _async_update_clients_all(self) -> None:
+        """Load all known clients to restore inactive ones."""
+        async with asyncio.timeout(UPDATE_TIMEOUT):
+            await self.hub.api.clients_all.update()
 
     async def async_resync(self) -> None:
         """Refetch all handler data after a connection is restored."""
