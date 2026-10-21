@@ -21,6 +21,7 @@ from synology_dsm.exceptions import (
 )
 
 from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
@@ -93,6 +94,17 @@ def _reauth_schema() -> probatio.Schema:
         {
             probatio.Required(CONF_USERNAME): str,
             probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+        }
+    )
+
+
+def _reconfigure_schema() -> probatio.Schema:
+    return probatio.Schema(
+        {
+            probatio.Required(CONF_HOST): str,
+            probatio.Optional(CONF_PORT): str,
+            probatio.Optional(CONF_SSL, default=DEFAULT_USE_SSL): bool,
+            probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
         }
     )
 
@@ -173,6 +185,10 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders = self.discovered_conf
         elif step_id == "reauth_confirm":
             data_schema = _reauth_schema()
+        elif step_id == "reconfigure":
+            data_schema = self.add_suggested_values_to_schema(
+                _reconfigure_schema(), user_input
+            )
         elif step_id == "user":
             data_schema = _user_schema_with_defaults(user_input)
 
@@ -214,6 +230,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
                 password,
                 use_ssl,
                 timeout=DEFAULT_TIMEOUT,
+                device_token=user_input.get(CONF_DEVICE_TOKEN),
             )
 
         errors = {}
@@ -229,7 +246,10 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             errors["base"] = "otp_enforced"
         except SynologyDSMLoginInvalidException as ex:
             _LOGGER.error(ex)
-            errors[CONF_USERNAME] = "invalid_auth"
+            # The reconfigure form has no username field
+            errors["base" if self.source == SOURCE_RECONFIGURE else CONF_USERNAME] = (
+                "invalid_auth"
+            )
         except SynologyDSMRequestException as ex:
             _LOGGER.error(ex)
             errors[CONF_HOST] = "cannot_connect"
@@ -244,6 +264,23 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         if errors:
             self.api = None
             return self._show_form(step_id, user_input, errors)
+
+        if self.source == SOURCE_RECONFIGURE:
+            await self.async_set_unique_id(serial)
+            self._abort_if_unique_id_mismatch()
+            data_updates = {
+                CONF_HOST: host,
+                CONF_PORT: port,
+                CONF_SSL: use_ssl,
+                CONF_VERIFY_SSL: verify_ssl,
+            }
+            if otp_code:
+                data_updates[CONF_DEVICE_TOKEN] = self.api.device_token
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(),
+                data_updates=data_updates,
+                reason="reconfigure_successful",
+            )
 
         with suppress(*SYNOLOGY_CONNECTION_EXCEPTIONS):
             self.shares = await self.api.file.get_shared_folders(only_writable=True)
@@ -400,6 +437,25 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         if not user_input:
             return self._show_form(step)
         user_input = {**self.reauth_conf, **user_input}
+        return await self.async_validate_input_create_entry(user_input, step_id=step)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the connection to the NAS."""
+        step = "reconfigure"
+        entry_data = self._get_reconfigure_entry().data
+        if not user_input:
+            return self._show_form(
+                step, {**entry_data, CONF_PORT: str(entry_data[CONF_PORT])}
+            )
+        # Credentials are changed via reauthentication
+        user_input = {
+            CONF_USERNAME: entry_data[CONF_USERNAME],
+            CONF_PASSWORD: entry_data[CONF_PASSWORD],
+            CONF_DEVICE_TOKEN: entry_data.get(CONF_DEVICE_TOKEN),
+            **user_input,
+        }
         return await self.async_validate_input_create_entry(user_input, step_id=step)
 
     async def async_step_2sa(
