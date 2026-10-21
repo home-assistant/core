@@ -36,7 +36,7 @@ The following platforms have extra guidelines:
 - Action names and action fields are defined in `<Prefix>Service` and `<Prefix>ServiceArgument` `StrEnum`s, using the integration's usual class prefix (for example `TadoService`, `AITaskServiceArgument`). Integrations define them in `services.py`, or in `const.py` when other modules need them; entity platforms define them in `const.py` and export them.
 - The members cover the registered actions and their fields as listed in `services.yaml`. Do not add members for actions that are not registered, such as stale `services.yaml` entries or description templates for legacy per-platform actions.
 - Use the members for action registration, schema keys and `call.data` lookups instead of raw strings or other string constants (whatever their prefix, for example `SERVICE_*`, `ATTR_*` or `CONF_*`). Shared selector fields such as `config_entry_id`, `device_id` and `entity_id` keep using the `homeassistant.const` constants.
-- Only request these enums, as a blocking change, when a PR adds a new `services.py`. Do not flag or suggest them for an integration that already has a `services.py`.
+- Only request these enums, as a blocking change, when a PR adds an integration's first actions (a new `services.yaml`). Do not flag or suggest them for an integration that already has actions.
 
 ## Integration Quality Scale
 
