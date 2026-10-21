@@ -4,8 +4,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FressnapfTrackerDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import FressnapfTrackerDataUpdateCoordinator
 
 
 class FressnapfTrackerBaseEntity(

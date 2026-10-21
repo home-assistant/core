@@ -1,6 +1,7 @@
 """Test UniFi Network."""
 
 from http import HTTPStatus
+import logging
 from types import MappingProxyType
 from typing import Any
 from unittest.mock import patch
@@ -16,7 +17,11 @@ from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.unifi.const import CONF_BLOCK_CLIENT, DOMAIN
 from homeassistant.components.unifi.coordinator import IDLE_POLL_INTERVAL, POLL_INTERVAL
-from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
+from homeassistant.components.unifi.errors import (
+    AuthenticationRequired,
+    CannotConnect,
+    MfaRequired,
+)
 from homeassistant.components.unifi.hub import get_unifi_api
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, EVENT_STATE_REPORTED, Platform
@@ -608,6 +613,7 @@ async def test_reconnect_mechanism_exceptions(
         (aiounifi.ServiceUnavailable, CannotConnect),
         (aiounifi.RequestError, CannotConnect),
         (aiounifi.ResponseError, CannotConnect),
+        (aiounifi.AuthenticationRateLimitError, CannotConnect),
         (aiounifi.Unauthorized, AuthenticationRequired),
         (aiounifi.LoginRequired, AuthenticationRequired),
         (aiounifi.AiounifiException, AuthenticationRequired),
@@ -625,3 +631,20 @@ async def test_get_unifi_api_fails_to_connect(
         pytest.raises(raised_exception),
     ):
         await get_unifi_api(hass, config_entry_data)
+
+
+async def test_get_unifi_api_mfa_required(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    config_entry_data: MappingProxyType[str, Any],
+) -> None:
+    """Check that a login requiring MFA is reported as such without a traceback."""
+    with (
+        patch("aiounifi.Controller.login", side_effect=aiounifi.TwoFaTokenRequired),
+        pytest.raises(MfaRequired),
+    ):
+        await get_unifi_api(hass, config_entry_data)
+    (record,) = [r for r in caplog.records if r.name.startswith("homeassistant")]
+    assert record.levelno == logging.WARNING
+    assert record.exc_info is None
+    assert "requires multi-factor authentication" in record.getMessage()

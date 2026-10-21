@@ -37,9 +37,8 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import BleBoxConfigEntry
 from .const import CO2_LEVEL, DOMAIN, OPEN_STATUS
-from .coordinator import BleBoxCoordinator
+from .coordinator import BleBoxConfigEntry, BleBoxCoordinator
 from .entity import BleBoxEntity
 
 PARALLEL_UPDATES = 0

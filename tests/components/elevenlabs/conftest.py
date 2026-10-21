@@ -108,6 +108,29 @@ def mock_async_client_api_key_id_error() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_async_client_invalid_key_code_error() -> Generator[AsyncMock]:
+    """Override async ElevenLabs client with an invalid key reported only by code."""
+    client_mock = _client_mock()
+    api_error = ApiError()
+    api_error.body = {
+        "detail": {
+            "type": "authentication_error",
+            "code": "invalid_api_key",
+            "status": "api_key_revoked",
+            "message": "API key has been revoked",
+        }
+    }
+    client_mock.models.list.side_effect = api_error
+    client_mock.voices.get_all.side_effect = api_error
+
+    with patch(
+        "homeassistant.components.elevenlabs.config_flow.AsyncElevenLabs",
+        return_value=client_mock,
+    ) as mock_async_client:
+        yield mock_async_client
+
+
+@pytest.fixture
 def mock_async_client_voices_error() -> Generator[AsyncMock]:
     """Override async ElevenLabs client with ApiError side effect."""
     client_mock = _client_mock()

@@ -493,7 +493,7 @@ aiousbwatcher==1.1.2
 aiovitesy==1.4.4
 
 # homeassistant.components.vlc_telnet
-aiovlc==0.5.1
+aiovlc==0.8.0
 
 # homeassistant.components.vodafone_station
 aiovodafone==3.3.5
@@ -787,6 +787,9 @@ chefiq-ble==1.0.1
 
 # homeassistant.components.chess_com
 chess-com-api==1.1.0
+
+# homeassistant.components.chirpstack
+chirpstack-api==4.19.0
 
 # homeassistant.components.cielo_home
 cielo-connect-api==1.0.6
@@ -1592,8 +1595,9 @@ london-tube-status==0.7
 # homeassistant.components.loqed
 loqedAPI==2.1.16
 
+# homeassistant.components.chirpstack
 # homeassistant.components.lorawan
-lorawan-connection==1.2.0
+lorawan-connection[chirpstack]==1.2.0
 
 # homeassistant.components.luftdaten
 luftdaten==0.7.4
@@ -2148,7 +2152,7 @@ pyatv==0.18.0
 pyaussiebb==0.1.5
 
 # homeassistant.components.myneomitis
-pyaxencoapi==1.0.7
+pyaxencoapi==1.0.7.post1
 
 # homeassistant.components.balboa
 pybalboa==1.1.3
