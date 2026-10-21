@@ -17,16 +17,17 @@ DOMAIN = "edifier_infrared"
 CONF_INFRARED_ENTITY_ID = "infrared_entity_id"
 CONF_COMMAND_SET = "command_set"
 SUPPORTED_COMMAND_SETS = [
-    EdifierCommandSet.R1700BT_PRE_2017,
-    EdifierCommandSet.R1700BT_2017,
-    EdifierCommandSet.R1700BTS,
     EdifierCommandSet.R1280DB,
     EdifierCommandSet.R1280T,
+    EdifierCommandSet.R1380DB,
+    EdifierCommandSet.R1700BTS,
+    EdifierCommandSet.R1700BT_2017,
+    EdifierCommandSet.R1700BT_PRE_2017,
     EdifierCommandSet.R2000DB,
     EdifierCommandSet.R2730DB,
-    EdifierCommandSet.S360DB,
     EdifierCommandSet.RC20G,
     EdifierCommandSet.S3000PRO,
+    EdifierCommandSet.S360DB,
 ]
 
 type EdifierCode = (
