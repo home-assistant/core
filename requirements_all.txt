@@ -1296,7 +1296,7 @@ hanna-cloud==0.0.7
 harbor-python==1.5.0
 
 # homeassistant.components.cloud
-hass-nabucasa==2.7.0
+hass-nabucasa==2.8.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.4
@@ -1627,7 +1627,7 @@ matrix-nio==0.26.0
 matter-ble-proxy==0.7.1
 
 # homeassistant.components.matter
-matter-python-client==1.5.0
+matter-python-client==1.5.2
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
@@ -2064,7 +2064,7 @@ py-sucks==0.9.11
 py-synologydsm-api==2.11.0
 
 # homeassistant.components.unifi_access
-py-unifi-access==1.6.1
+py-unifi-access==1.6.2
 
 # homeassistant.components.atome
 pyAtome==0.1.2
@@ -2692,7 +2692,7 @@ pysmarty2==0.10.3
 pysmartyplants==0.2.1
 
 # homeassistant.components.smhi
-pysmhi==2.0.0
+pysmhi==2.1.0
 
 # homeassistant.components.edl21
 pysml==0.1.8
@@ -2752,7 +2752,7 @@ python-awair==0.2.5
 python-blockchain-api==0.0.2
 
 # homeassistant.components.bsblan
-python-bsblan==6.1.10
+python-bsblan==6.1.11
 
 # homeassistant.components.citybikes
 python-citybikes==0.3.3
