@@ -548,7 +548,9 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         # An explicit username impersonates that Music Assistant user (the server rejects an
         # unknown name). When omitted, default playback to the Home Assistant user that made
         # the call.
-        user: str | LinkedUser | None = username or self._linked_user()
+        user: str | LinkedUser | None = (
+            username if username is not None else self._linked_user()
+        )
 
         media_uris: list[str] = []
         item: MediaItemType | ItemMapping | None = None
