@@ -609,7 +609,6 @@ async def test_reconnect_mechanism_exceptions(
         (aiounifi.RequestError, CannotConnect),
         (aiounifi.ResponseError, CannotConnect),
         (aiounifi.Unauthorized, AuthenticationRequired),
-        (aiounifi.TwoFaTokenRequired, AuthenticationRequired),
         (aiounifi.LoginRequired, AuthenticationRequired),
         (aiounifi.AiounifiException, AuthenticationRequired),
     ],
@@ -626,3 +625,18 @@ async def test_get_unifi_api_fails_to_connect(
         pytest.raises(raised_exception),
     ):
         await get_unifi_api(hass, config_entry_data)
+
+
+async def test_get_unifi_api_mfa_required(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    config_entry_data: MappingProxyType[str, Any],
+) -> None:
+    """Check that MFA without a TOTP secret is treated as rejected credentials."""
+    with (
+        patch("aiounifi.Controller.login", side_effect=aiounifi.TwoFaTokenRequired),
+        pytest.raises(AuthenticationRequired),
+    ):
+        await get_unifi_api(hass, config_entry_data)
+    assert "but not registered" in caplog.text
+    assert "Unknown UniFi Network communication error" not in caplog.text

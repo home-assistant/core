@@ -280,7 +280,7 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
         hub = await get_unifi_api(self.hass, MappingProxyType(data))
         try:
             await hub.sites.update()
-        except aiounifi.RequestError as err:
+        except (aiounifi.RequestError, aiounifi.ResponseError) as err:
             raise CannotConnect from err
         return hub.sites
 

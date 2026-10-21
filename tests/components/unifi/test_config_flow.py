@@ -232,7 +232,12 @@ async def test_flow_raise_already_configured(hass: HomeAssistant) -> None:
         ),
         (
             "aiounifi.interfaces.sites.Sites.update",
-            aiounifi.ApplicationNotReady,
+            aiounifi.RequestError,
+            "service_unavailable",
+        ),
+        (
+            "aiounifi.interfaces.sites.Sites.update",
+            aiounifi.ResponseError,
             "service_unavailable",
         ),
     ],
