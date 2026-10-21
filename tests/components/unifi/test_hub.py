@@ -262,6 +262,13 @@ async def test_entity_unavailable_on_polling_coordinator_failure(
             aiounifi.AuthenticationRateLimitError,
             id="rate_limited",
         ),
+        pytest.param(SYSTEM_INFORMATION_UPDATE, aiounifi.Forbidden, id="forbidden"),
+        pytest.param(
+            SYSTEM_INFORMATION_UPDATE, aiounifi.NoPermission, id="no_permission"
+        ),
+        pytest.param(
+            SYSTEM_INFORMATION_UPDATE, aiounifi.Unauthorized, id="unauthorized"
+        ),
         pytest.param(SITES_UPDATE, aiounifi.ServiceUnavailable, id="no_site_list"),
         pytest.param(SITES_UPDATE, invalid_json(), id="invalid_site_list"),
         pytest.param(SITES_UPDATE, aiounifi.Forbidden, id="site_list_rejected"),
@@ -281,22 +288,12 @@ async def test_setup_retries_when_network_application_not_ready(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-@pytest.mark.parametrize(
-    "exception",
-    [
-        pytest.param(aiounifi.Unauthorized, id="unauthorized"),
-        pytest.param(aiounifi.Forbidden, id="forbidden"),
-        pytest.param(aiounifi.NoPermission, id="no_permission"),
-        pytest.param(aiounifi.TwoFaTokenRequired, id="two_factor"),
-    ],
-)
-async def test_setup_asks_for_reauth_when_system_information_is_rejected(
+async def test_setup_asks_for_reauth_when_account_needs_mfa(
     hass: HomeAssistant,
     config_entry_factory: ConfigEntryFactoryType,
-    exception: type[Exception],
 ) -> None:
-    """Every account with access to the application can read system information."""
-    with patch(SYSTEM_INFORMATION_UPDATE, side_effect=exception):
+    """Only the user can resolve multi-factor authentication."""
+    with patch(SYSTEM_INFORMATION_UPDATE, side_effect=aiounifi.TwoFaTokenRequired):
         config_entry = await config_entry_factory()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR

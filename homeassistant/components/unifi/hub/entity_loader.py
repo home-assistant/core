@@ -27,7 +27,7 @@ from homeassistant.util import dt as dt_util
 from ..const import CLIENT_RESTORE_MAX_AGE, LOGGER, UNIFI_WIRELESS_CLIENTS
 from ..coordinator import UPDATE_TIMEOUT, UnifiDataUpdateCoordinator
 from ..entity import UnifiEntity, UnifiEntityDescription
-from .connection import LOGIN_ERRORS, NOT_READY_ERRORS, REQUEST_TIMEOUT
+from .connection import ACCOUNT_ERRORS, LOGIN_ERRORS, NOT_READY_ERRORS, REQUEST_TIMEOUT
 
 if TYPE_CHECKING:
     from .hub import UnifiHub
@@ -110,10 +110,12 @@ class UnifiEntityLoader:
         try:
             async with asyncio.timeout(REQUEST_TIMEOUT):
                 await self.hub.api.system_information.update()
-        except (*NOT_READY_ERRORS, aiounifi.AuthenticationRateLimitError) as err:
-            raise ConfigEntryNotReady("UniFi Network application is not ready") from err
-        except LOGIN_ERRORS as err:
+        except ACCOUNT_ERRORS as err:
             raise ConfigEntryAuthFailed from err
+        except (*NOT_READY_ERRORS, *LOGIN_ERRORS) as err:
+            # A booting console can reject a login for a moment, and the site
+            # list right before was readable
+            raise ConfigEntryNotReady("UniFi Network application is not ready") from err
         except aiounifi.AiounifiException as err:
             # The application answers, other data can still be loaded
             LOGGER.debug("UniFi Network answered system information with: %r", err)

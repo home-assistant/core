@@ -636,6 +636,7 @@ async def test_login_answer_of_readiness_probe_after_login(
             False,
             id="application_unreachable",
         ),
+        pytest.param(aiounifi.RequestError, TimeoutError, False, id="probe_times_out"),
         pytest.param(aiounifi.RequestError, None, True, id="application_answers"),
         pytest.param(aiounifi.RequestError, KeyError, True, id="probe_broken"),
         pytest.param(
@@ -1380,6 +1381,65 @@ async def test_successful_login_ends_rejections_in_a_row(
 
     assert login.call_count == 4
     assert not _reauth_requested(hass, config_entry_setup)
+
+
+async def test_working_session_ends_rejections_in_a_row(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_state: WebsocketStateManager,
+) -> None:
+    """Rejections before a session that works again don't count towards reauth."""
+    hub = config_entry_setup.runtime_data
+    # The login aiounifi tries on its own is rejected twice, then the session
+    # works again until the next outage
+    probe = AsyncMock(
+        side_effect=[
+            aiounifi.Forbidden(),
+            aiounifi.Forbidden(),
+            None,
+            aiounifi.Forbidden(),
+        ]
+    )
+    with (
+        patch.object(hub.api.system_information, "update", probe),
+        patch.object(hub.api, "login") as login,
+    ):
+        await mock_websocket_state.disconnect()
+        await _advance(hass, MAX_RETRY_DELAY)
+        await _advance(hass, MAX_RETRY_DELAY)
+        mock_websocket_state.clear()
+        await _advance(hass, MAX_RETRY_DELAY)
+        assert _available(hass)
+
+        await mock_websocket_state.disconnect()
+        await _advance(hass, MAX_RETRY_DELAY)
+
+    assert probe.call_count == 4
+    login.assert_not_called()
+    assert not _reauth_requested(hass, config_entry_setup)
+
+
+async def test_hanging_poll_checks_session(
+    hass: HomeAssistant,
+    hub: UnifiHub,
+    polled_coordinator: UnifiDataUpdateCoordinator,
+) -> None:
+    """A poll that never answers is given up and checks the session."""
+    started = asyncio.Event()
+    with (
+        patch.object(
+            polled_coordinator.handler, "update", side_effect=_hang_first_call(started)
+        ),
+        patch.object(
+            hub.api.system_information, "update", side_effect=aiounifi.RequestError
+        ),
+    ):
+        _fire(hass, IDLE_POLL_INTERVAL.total_seconds())
+        await _wait(started)
+        assert _available(hass)
+        await _advance(hass, UPDATE_TIMEOUT + 1)
+
+    assert not _available(hass)
 
 
 async def test_rate_limit_pause_outlasts_slow_reauth_retries(
