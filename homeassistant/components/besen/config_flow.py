@@ -33,7 +33,11 @@ from .const import (
     TRANSPORT_BLUETOOTH,
     TRANSPORT_LAN,
 )
-from .coordinator import BesenConnectionState, async_get_connection_state
+from .coordinator import (
+    BesenConnectionState,
+    async_get_connection_state,
+    async_get_known_serial,
+)
 from .lan import async_acquire_udp_hub, async_release_udp_hub
 
 if TYPE_CHECKING:
@@ -367,7 +371,7 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if len(pin) != 6 or not (pin.isascii() and pin.isdecimal()):
                 errors["base"] = "invalid_auth"
             else:
-                self._pending_data = {**entry.data, CONF_PIN: pin}
+                self._pending_data = {**self._entry_data(entry), CONF_PIN: pin}
                 self._operation_step = "reauth_confirm"
                 transport = (
                     TRANSPORT_LAN
@@ -389,6 +393,16 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self._get_reauth_entry()
         return None
 
+    def _entry_data(self, entry: BesenConfigEntry) -> dict[str, Any]:
+        """Keep saved or registered identity ahead of a live charger's report."""
+        data = dict(entry.data)
+        serial = async_get_known_serial(self.hass, entry)
+        if not serial and (runtime := getattr(entry, "runtime_data", None)):
+            serial = runtime.client.state.info.serial
+        if serial:
+            data[CONF_SERIAL] = serial
+        return data
+
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -396,19 +410,8 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         entry = self._get_reconfigure_entry()
         self._connection = async_get_connection_state(self.hass, entry.entry_id)
         await self.async_set_unique_id(entry.unique_id or entry.data[CONF_ADDRESS])
-        self._pending_data = dict(entry.data)
+        self._pending_data = self._entry_data(entry)
         self._pending_title = entry.title
-        if (runtime := getattr(entry, "runtime_data", None)) and (
-            serial := runtime.client.state.info.serial
-        ):
-            self._pending_data[CONF_SERIAL] = serial
-        elif not self._pending_data.get(CONF_SERIAL):
-            for device in dr.async_entries_for_config_entry(
-                dr.async_get(self.hass), entry.entry_id
-            ):
-                if device.serial_number:
-                    self._pending_data[CONF_SERIAL] = device.serial_number
-                    break
         return self.async_show_menu(
             step_id="reconfigure", menu_options=["lan", "use_bluetooth"]
         )
@@ -582,6 +585,13 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     name=self._pending_data.get(CONF_NAME),
                     connection=connection,
                 )
+                if (expected_serial := self._pending_data.get(CONF_SERIAL)) and (
+                    serial != expected_serial
+                ):
+                    self._operation_error = (
+                        "wrong_device" if serial else "cannot_connect"
+                    )
+                    return
                 if serial:
                     self._pending_data[CONF_SERIAL] = serial
             self._pending_data[CONF_TRANSPORT] = transport

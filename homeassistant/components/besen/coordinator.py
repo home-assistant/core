@@ -16,17 +16,30 @@ from besen.models import BesenData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import CONF_SERIAL, DOMAIN
 from .lan import async_release_udp_hub
 
 if TYPE_CHECKING:
     from . import BesenConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@callback
+def async_get_known_serial(hass: HomeAssistant, entry: BesenConfigEntry) -> str | None:
+    """Return the identity already associated with this entry and its history."""
+    serial: str | None = entry.data.get(CONF_SERIAL)
+    if serial:
+        return serial
+    for device in dr.async_entries_for_config_entry(dr.async_get(hass), entry.entry_id):
+        if device.serial_number:
+            return device.serial_number
+    return None
 
 
 @dataclass
@@ -147,6 +160,7 @@ class BesenCoordinator(DataUpdateCoordinator[BesenData]):
             self._client_stopped = False
             try:
                 await self.client.async_start()
+                self._async_validate_identity()
             except Exception:
                 if self._remove_listener is not None:
                     self._remove_listener()
@@ -156,6 +170,14 @@ class BesenCoordinator(DataUpdateCoordinator[BesenData]):
                 await self._async_release_listener()
                 raise
             self.async_set_updated_data(self.client.state)
+
+    @callback
+    def _async_validate_identity(self) -> None:
+        """Refuse a live charger that cannot match an existing identity."""
+        if (serial := async_get_known_serial(self.hass, self.config_entry)) and (
+            self.client.state.info.serial != serial
+        ):
+            raise CannotConnect("Charger identity does not match the saved entry")
 
     @override
     async def async_shutdown(self) -> None:

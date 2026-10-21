@@ -326,12 +326,16 @@ async def test_lan_only_entry_does_not_offer_unknown_bluetooth(
     ] == "bluetooth_address_unknown"
 
 
-@pytest.mark.usefixtures("mock_besen_client")
 async def test_bluetooth_switch_validates_before_saving(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_besen_client: Mock,
 ) -> None:
     """Test that bluetooth switch validates before saving."""
 
+    mock_besen_client.state = mock_besen_client.state.updated(
+        info=mock_besen_client.state.info.updated(serial=SERIAL)
+    )
     flow = flow_for(hass, mock_config_entry)
     assert (await flow.async_step_use_bluetooth())["type"] is FlowResultType.FORM
     await flow.async_step_use_bluetooth({CONF_PIN: FIXTURE_PIN})
@@ -2237,3 +2241,136 @@ async def test_new_host_retry_resets_provisional_charger_identity(
     assert first.async_stop.await_count == 2
     second.async_start.assert_awaited_once()
     second.async_stop.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("source", "inputs"),
+    [
+        pytest.param(SOURCE_REAUTH, [{CONF_PIN: "654321"}], id="reauth"),
+        pytest.param(
+            SOURCE_RECONFIGURE,
+            [{"next_step_id": "use_bluetooth"}, {CONF_PIN: "654321"}],
+            id="reconfigure",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("known_data", "registry_serial"),
+    [
+        pytest.param({CONF_SERIAL: SERIAL}, None, id="saved-identity"),
+        pytest.param({}, SERIAL, id="legacy-registry-identity"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("reported_serial", "expected_error"),
+    [
+        pytest.param("1122334455667788", "wrong_device", id="different-serial"),
+        pytest.param(None, "cannot_connect", id="missing-serial"),
+    ],
+)
+async def test_bluetooth_recovery_rejects_mismatched_known_serial(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_besen_client: Mock,
+    device_registry: dr.DeviceRegistry,
+    source: str,
+    inputs: list[dict[str, str]],
+    known_data: dict[str, str],
+    registry_serial: str | None,
+    reported_serial: str | None,
+    expected_error: str,
+) -> None:
+    """Preserve the saved charger binding when Bluetooth reports another serial."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={**mock_config_entry.data, **known_data}
+    )
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_BLUETOOTH, FIXTURE_ADDRESS)},
+        serial_number=registry_serial,
+    )
+    original = dict(mock_config_entry.data)
+    mock_besen_client.state = mock_besen_client.state.updated(
+        info=mock_besen_client.state.info.updated(serial=reported_serial)
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": source, "entry_id": mock_config_entry.entry_id},
+        data=mock_config_entry.data,
+    )
+    for user_input in inputs:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input
+        )
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
+    assert mock_config_entry.data == original
+    mock_besen_client.async_stop.assert_awaited_once()
+    hass.config_entries.flow.async_abort(result["flow_id"])
+
+
+@pytest.mark.parametrize(
+    ("known_data", "registry_serial"),
+    [
+        pytest.param({CONF_SERIAL: SERIAL}, None, id="saved-identity"),
+        pytest.param({}, SERIAL, id="legacy-registry-identity"),
+    ],
+)
+async def test_startup_rejects_mismatched_saved_serial(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_besen_client: Mock,
+    device_registry: dr.DeviceRegistry,
+    known_data: dict[str, str],
+    registry_serial: str | None,
+) -> None:
+    """Keep existing history unavailable instead of loading a different charger."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={**mock_config_entry.data, **known_data}
+    )
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_BLUETOOTH, FIXTURE_ADDRESS)},
+        serial_number=registry_serial,
+    )
+    mock_besen_client.state = mock_besen_client.state.updated(
+        info=mock_besen_client.state.info.updated(serial="1122334455667788")
+    )
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hasattr(mock_config_entry, "runtime_data")
+    assert dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    ) == [device]
+    assert device_registry.async_get(device.id).serial_number == registry_serial
+    mock_besen_client.async_stop.assert_awaited_once()
+
+
+async def test_reconfigure_uses_runtime_identity_for_an_unrecorded_legacy_serial(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_besen_client: Mock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Learn current identity when neither legacy data nor the registry has it."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    device = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )[0]
+    device_registry.async_update_device(device.id, serial_number=None)
+    mock_besen_client.state = mock_besen_client.state.updated(
+        info=mock_besen_client.state.info.updated(serial=SERIAL)
+    )
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    flow = hass.config_entries.flow._progress[result["flow_id"]]
+    assert isinstance(flow, BesenConfigFlow)
+    assert flow._pending_data[CONF_SERIAL] == SERIAL
+    assert CONF_SERIAL not in mock_config_entry.data
+    hass.config_entries.flow.async_abort(result["flow_id"])
