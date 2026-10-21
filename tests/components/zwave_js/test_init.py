@@ -1776,6 +1776,42 @@ async def test_endpoint_group_child_device(
     assert any("-50-7-" in entry.unique_id for entry in node_entities)
 
 
+async def test_endpoint_group_child_device_name_disambiguation(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    aeotec_zwa046: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test equivalent values on one group child device are disambiguated by label.
+
+    A Clamp group child device covers two endpoints whose "Reset accumulated values"
+    buttons would otherwise share a name. They are disambiguated using each endpoint's
+    label with the redundant group-label prefix removed (the child device is already
+    named by the group label).
+    """
+    node = aeotec_zwa046
+    clamp1_device = device_registry.async_get_child_device_by_identifier(
+        get_endpoint_device_id(client.driver, node, node.endpoint_groups[1]),
+        integration.entry_id,
+    )
+    assert clamp1_device
+
+    reset_names = {
+        entry.original_name
+        for entry in er.async_entries_for_device(
+            entity_registry, clamp1_device.id, include_disabled_entities=True
+        )
+        if entry.domain == Platform.BUTTON
+        and (entry.original_name or "").startswith("Reset accumulated values")
+    }
+    assert reset_names == {
+        "Reset accumulated values Consumption",
+        "Reset accumulated values Production",
+    }
+
+
 async def test_endpoint_child_device_pruned_on_reinterview(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -1855,21 +1891,18 @@ async def test_endpoint_child_device_regrouped_on_reinterview(
     aeotec_zwa046_state: NodeDataType,
     integration: MockConfigEntry,
 ) -> None:
-    """Test an entity whose endpoint child device changes keeps its registry entry.
+    """Test an entity whose endpoint child device changes moves to the new child device.
 
     When a re-interview changes the "Clamp 1" group's id, its endpoints move to a
-    different child device and the old child device is pruned. The surviving entity must
-    be staged on the parent node device before the old child is removed, so its entity
-    registry entry (entity_id and customizations) is preserved rather than deleted with
-    the child device.
+    different child device and the old child device is pruned. Across the full
+    re-interview sequence (interview started, then ready) the entity ends up on the new
+    child device while preserving its entity registry entry (entity_id, customizations):
+    the surviving entry is staged on the parent before the old child is removed, so it is
+    not deleted with the child device, and rediscovery then moves it to the new child.
     """
     node = aeotec_zwa046
     driver = client.driver
 
-    node_device = device_registry.async_get_device_by_identifier(
-        get_device_id(driver, node), integration.entry_id
-    )
-    assert node_device
     old_clamp1_device = device_registry.async_get_child_device_by_identifier(
         get_endpoint_device_id(driver, node, node.endpoint_groups[1]),
         integration.entry_id,
@@ -1881,6 +1914,20 @@ async def test_endpoint_child_device_regrouped_on_reinterview(
     assert clamp1_entries
     entity_id = clamp1_entries[0].entity_id
     entity_registry.async_update_entity(entity_id, name="Custom name")
+
+    # The interview-started event removes the live entities first, matching a real
+    # re-interview, so rediscovery on ready is not rejected as a duplicate.
+    node.receive_event(
+        Event(
+            "interview started",
+            {
+                "source": "node",
+                "event": "interview started",
+                "nodeId": node.node_id,
+            },
+        )
+    )
+    await hass.async_block_till_done()
 
     # Re-interview with the "Clamp 1" group's id changed from 1 to 5, so its endpoints
     # move to a different child device.
@@ -1906,9 +1953,82 @@ async def test_endpoint_child_device_regrouped_on_reinterview(
 
     # The old child device is pruned since its group id no longer exists.
     assert device_registry.async_get(old_clamp1_device.id) is None
-    # The entity was staged on the parent node device before the old child was removed,
-    # so its registry entry survives with the same entity_id and user customization
-    # instead of being deleted along with the child device.
+    # The entity moved to the new group's child device, keeping the same entity_id and
+    # user customization instead of being deleted along with the old child device.
+    new_clamp1_device = device_registry.async_get_child_device_by_identifier(
+        get_endpoint_device_id(driver, node, node.endpoint_groups[5]),
+        integration.entry_id,
+    )
+    assert new_clamp1_device
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    assert entry.device_id == new_clamp1_device.id
+    assert entry.name == "Custom name"
+    assert hass.states.get(entity_id) is not None
+
+
+async def test_endpoint_child_device_regroup_stages_entity_on_parent(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    aeotec_zwa046: Node,
+    aeotec_zwa046_state: NodeDataType,
+    integration: MockConfigEntry,
+) -> None:
+    """Test a surviving entity is staged on the parent before a stale child is removed.
+
+    This isolates the staging safety net: only a ready event is emitted (no interview
+    started), so the live entity is never removed and rediscovery cannot immediately
+    re-home it to the new child device. The entity registry entry must still be staged
+    on the parent node device so it survives the removal of the old child device with its
+    entity_id and customizations intact, rather than being deleted alongside it.
+    """
+    node = aeotec_zwa046
+    driver = client.driver
+
+    node_device = device_registry.async_get_device_by_identifier(
+        get_device_id(driver, node), integration.entry_id
+    )
+    assert node_device
+    old_clamp1_device = device_registry.async_get_child_device_by_identifier(
+        get_endpoint_device_id(driver, node, node.endpoint_groups[1]),
+        integration.entry_id,
+    )
+    assert old_clamp1_device
+    clamp1_entries = er.async_entries_for_device(
+        entity_registry, old_clamp1_device.id, include_disabled_entities=True
+    )
+    assert clamp1_entries
+    entity_id = clamp1_entries[0].entity_id
+    entity_registry.async_update_entity(entity_id, name="Custom name")
+
+    # Re-interview with the "Clamp 1" group's id changed from 1 to 5, emitting only
+    # ready, so the old child device is pruned while the live entity is still registered.
+    new_state = deepcopy(aeotec_zwa046_state)
+    # The ready event model requires string name/location (the fixture leaves them null).
+    new_state["name"] = new_state.get("name") or ""
+    new_state["location"] = new_state.get("location") or ""
+    for group in new_state["endpointGroups"]:
+        if group["id"] == 1:
+            group["id"] = 5
+    node.receive_event(
+        Event(
+            "ready",
+            {
+                "source": "node",
+                "event": "ready",
+                "nodeId": node.node_id,
+                "nodeState": new_state,
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    # The old child device is pruned since its group id no longer exists.
+    assert device_registry.async_get(old_clamp1_device.id) is None
+    # The entry was staged on the parent node device, so it survives with the same
+    # entity_id and user customization instead of being deleted with the old child.
     entry = entity_registry.async_get(entity_id)
     assert entry is not None
     assert entry.device_id == node_device.id

@@ -5,8 +5,8 @@
       'children': dict({
         '3245146787-39-g1': dict({
           'entities': dict({
-            'button.home_energy_meter_8_clamp_1_reset_accumulated_values': 'Reset accumulated values',
-            'button.home_energy_meter_8_clamp_1_reset_accumulated_values_2': 'Reset accumulated values',
+            'button.home_energy_meter_8_clamp_1_reset_accumulated_values_consumption': 'Reset accumulated values Consumption',
+            'button.home_energy_meter_8_clamp_1_reset_accumulated_values_production': 'Reset accumulated values Production',
             'button.home_energy_meter_8_clamp_1_reset_electric_consumption_kvah': 'Reset Electric Consumption [kVAh]',
             'button.home_energy_meter_8_clamp_1_reset_electric_consumption_kvarh': 'Reset Electric Consumption [kVarh]',
             'button.home_energy_meter_8_clamp_1_reset_electric_consumption_kwh': 'Reset Electric Consumption [kWh]',
@@ -34,8 +34,8 @@
         }),
         '3245146787-39-g2': dict({
           'entities': dict({
-            'button.home_energy_meter_8_clamp_2_reset_accumulated_values': 'Reset accumulated values',
-            'button.home_energy_meter_8_clamp_2_reset_accumulated_values_2': 'Reset accumulated values',
+            'button.home_energy_meter_8_clamp_2_reset_accumulated_values_consumption': 'Reset accumulated values Consumption',
+            'button.home_energy_meter_8_clamp_2_reset_accumulated_values_production': 'Reset accumulated values Production',
             'button.home_energy_meter_8_clamp_2_reset_electric_consumption_kvah': 'Reset Electric Consumption [kVAh]',
             'button.home_energy_meter_8_clamp_2_reset_electric_consumption_kvarh': 'Reset Electric Consumption [kVarh]',
             'button.home_energy_meter_8_clamp_2_reset_electric_consumption_kwh': 'Reset Electric Consumption [kWh]',
@@ -63,8 +63,8 @@
         }),
         '3245146787-39-g3': dict({
           'entities': dict({
-            'button.home_energy_meter_8_clamp_3_reset_accumulated_values': 'Reset accumulated values',
-            'button.home_energy_meter_8_clamp_3_reset_accumulated_values_2': 'Reset accumulated values',
+            'button.home_energy_meter_8_clamp_3_reset_accumulated_values_consumption': 'Reset accumulated values Consumption',
+            'button.home_energy_meter_8_clamp_3_reset_accumulated_values_production': 'Reset accumulated values Production',
             'button.home_energy_meter_8_clamp_3_reset_electric_consumption_kvah': 'Reset Electric Consumption [kVAh]',
             'button.home_energy_meter_8_clamp_3_reset_electric_consumption_kvarh': 'Reset Electric Consumption [kVarh]',
             'button.home_energy_meter_8_clamp_3_reset_electric_consumption_kwh': 'Reset Electric Consumption [kWh]',

@@ -182,14 +182,20 @@ async def async_attach_trigger(
         # When the trigger explicitly targets an endpoint child device, report that
         # child device in the payload. Node-, entity- and area-based targets keep
         # reporting the node (parent) device, so automations that targeted a value
-        # before it moved to a child device are not broken.
-        child_device_by_node_id: dict[int, dr.AnyDeviceEntry] = {
-            async_get_node_from_device_id(hass, device_id).node_id: device_entry
-            for device_id in options.get(ATTR_DEVICE_ID, [])
-            if isinstance(
+        # before it moved to a child device are not broken. Child targets whose node
+        # can't currently be resolved are skipped (like async_get_nodes_from_targets)
+        # so reachable targets still attach.
+        child_device_by_node_id: dict[int, dr.AnyDeviceEntry] = {}
+        for device_id in options.get(ATTR_DEVICE_ID, []):
+            if not isinstance(
                 device_entry := dev_reg.async_get(device_id), dr.ChildDeviceEntry
-            )
-        }
+            ):
+                continue
+            try:
+                target_node = async_get_node_from_device_id(hass, device_id)
+            except ValueError:
+                continue
+            child_device_by_node_id[target_node.node_id] = device_entry
         # Nodes list can come from different drivers and we will need to listen to
         # server connections for all of them.
         drivers: set[Driver] = set()

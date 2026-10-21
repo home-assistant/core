@@ -1,6 +1,6 @@
 """Generic Z-Wave Entity Class."""
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import Any, override
 
@@ -243,27 +243,58 @@ class ZWaveBaseEntity(Entity):
         if additional_info := [item for item in (additional_info or []) if item]:
             name = f"{name} {' '.join(additional_info)}"
 
-        # For entities that stay on the node device, append the endpoint to the name
-        # when an equivalent value exists on a lower endpoint, to disambiguate them.
-        # Entities moved to an endpoint child device get a clean name from that device.
-        if (
-            self._endpoint_device is None
-            and primary_value.endpoint is not None
-            and any(
+        # Disambiguate entities that would otherwise share a name because an equivalent
+        # value exists on another endpoint of the same device. On the node device a lower
+        # endpoint carrying the value appends a numeric suffix (the lowest endpoint stays
+        # unsuffixed). On a group child device every endpoint of the group that shares the
+        # value is labeled, since each endpoint's label is meaningful on its own. A
+        # per-endpoint child device holds a single endpoint, so its entities already get a
+        # clean name from that device.
+        endpoint = primary_value.endpoint
+        endpoint_device = self._endpoint_device
+        if endpoint:
+            if endpoint_device is None:
+                sibling_endpoints: Iterable[int] = range(endpoint)
+            elif isinstance(endpoint_device, EndpointGroup):
+                sibling_endpoints = [
+                    group_endpoint.index
+                    for group_endpoint in endpoint_device.endpoints
+                    if group_endpoint.index != endpoint
+                ]
+            else:
+                sibling_endpoints = ()
+            if any(
                 get_value_id_str(
                     self.info.node,
                     primary_value.command_class,
                     primary_value.property_,
-                    endpoint=endpoint_idx,
+                    endpoint=sibling_endpoint,
                     property_key=primary_value.property_key,
                 )
                 in self.info.node.values
-                for endpoint_idx in range(primary_value.endpoint)
-            )
-        ):
-            name += f" ({primary_value.endpoint})"
+                for sibling_endpoint in sibling_endpoints
+            ):
+                name = f"{name} {self._endpoint_name_suffix(endpoint)}".strip()
 
         return name.strip()
+
+    def _endpoint_name_suffix(self, endpoint: int) -> str:
+        """Return a suffix distinguishing an endpoint from its siblings on a device.
+
+        Inside an endpoint-group child device the endpoint's own label is more meaningful
+        than a number, so it is preferred, with the redundant group-label prefix removed
+        (the child device is already named by the group label). Falls back to the endpoint
+        index when no usable label is available.
+        """
+        if isinstance(self._endpoint_device, EndpointGroup) and (
+            label := self.info.node.endpoints[endpoint].endpoint_label
+        ):
+            group_label = self._endpoint_device.label
+            if group_label and label.startswith(group_label):
+                label = label[len(group_label) :].strip()
+            if label:
+                return label
+        return f"({endpoint})"
 
     @property
     @override

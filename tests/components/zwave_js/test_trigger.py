@@ -16,6 +16,7 @@ from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import (
     async_bypass_dynamic_config_validation,
     get_device_id,
+    get_endpoint_device_id,
 )
 from homeassistant.components.zwave_js.trigger import TRIGGERS
 from homeassistant.components.zwave_js.triggers.event import (
@@ -384,6 +385,88 @@ async def test_zwave_js_value_updated_child_device(
     assert child_events[0].data["device_id"] == child_device.id
     assert len(node_events) == 1
     assert node_events[0].data["device_id"] == node_device.id
+
+
+async def test_zwave_js_value_updated_child_device_unavailable_target(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    climate_heatit_z_trm3: Node,
+    aeotec_zwa046: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test attachment continues for a reachable child target when another is unavailable.
+
+    A value_updated trigger can target multiple child devices. If one target's node can't
+    be resolved (unloaded entry, unavailable driver), the reachable targets must still
+    attach instead of the whole trigger aborting.
+    """
+    trigger_type = f"{DOMAIN}.value_updated"
+    reachable_node = climate_heatit_z_trm3
+    reachable_child = device_registry.async_get_child_device_by_identifier(
+        get_device_id(client.driver, reachable_node, 2), integration.entry_id
+    )
+    assert reachable_child
+    unavailable_child = device_registry.async_get_child_device_by_identifier(
+        get_endpoint_device_id(
+            client.driver, aeotec_zwa046, aeotec_zwa046.endpoint_groups[1]
+        ),
+        integration.entry_id,
+    )
+    assert unavailable_child
+
+    # Make the second target's node unresolvable, as if its driver became unavailable.
+    del client.driver.controller.nodes[aeotec_zwa046.node_id]
+
+    events = async_capture_events(hass, "child_trigger")
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": trigger_type,
+                        "options": {
+                            "device_id": [reachable_child.id, unavailable_child.id],
+                            "command_class": CommandClass.SENSOR_MULTILEVEL.value,
+                            "property": "Air temperature",
+                            "endpoint": 2,
+                        },
+                    },
+                    "action": {
+                        "event": "child_trigger",
+                        "event_data": {"device_id": "{{ trigger.device_id }}"},
+                    },
+                },
+            ]
+        },
+    )
+
+    reachable_node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": reachable_node.node_id,
+                "args": {
+                    "commandClassName": "Multilevel Sensor",
+                    "commandClass": 49,
+                    "endpoint": 2,
+                    "property": "Air temperature",
+                    "propertyName": "Air temperature",
+                    "newValue": 25.5,
+                    "prevValue": 20.0,
+                },
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    # The reachable child target still attached and fired, reporting its child device id.
+    assert len(events) == 1
+    assert events[0].data["device_id"] == reachable_child.id
 
 
 async def test_zwave_js_value_updated_bypass_dynamic_validation(
