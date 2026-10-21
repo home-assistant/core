@@ -150,7 +150,7 @@ def mock_zone() -> MagicMock:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock async_setup_entry."""
     with patch(
-        "homeassistant.components.actron_air.async_setup_entry", return_value=True
+        "homeassistant.components.actron_air.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 

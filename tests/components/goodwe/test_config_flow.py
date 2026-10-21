@@ -34,7 +34,7 @@ async def test_manual_setup(hass: HomeAssistant, mock_inverter: MagicMock) -> No
 
     with (
         patch(
-            "homeassistant.components.goodwe.async_setup_entry", return_value=True
+            "homeassistant.components.goodwe.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -70,7 +70,7 @@ async def test_manual_setup_already_exists(
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    with patch("homeassistant.components.goodwe.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.goodwe.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: TEST_HOST}
         )
@@ -102,7 +102,7 @@ async def test_manual_setup_device_offline(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_HOST: "connection_error"}
 
-    with patch("homeassistant.components.goodwe.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.goodwe.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: TEST_HOST}
         )
