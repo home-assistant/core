@@ -329,9 +329,8 @@ async def test_queued_states_until_ready(
         ["test.recorder", "test.excluded", "test.unknown"]
     )
     assert queued is not None
-    assert queued.complete
-    assert list(queued.states) == ["test.recorder"]
-    assert [state and state.state for state in queued.states["test.recorder"]] == [
+    assert list(queued) == ["test.recorder"]
+    assert [state and state.state for state in queued["test.recorder"]] == [
         "on",
         None,
         "off",
@@ -351,7 +350,7 @@ async def test_queued_states_until_ready(
 async def test_queued_states_frozen_when_recording_stops(
     hass: HomeAssistant, async_setup_recorder_instance: RecorderInstanceGenerator
 ) -> None:
-    """Test the queued states are kept, but incomplete, when recording stops.
+    """Test the queued states are kept when recording stops.
 
     That happens when the queue grows too large; later changes are not queued,
     so they are missing from the index too.
@@ -363,13 +362,13 @@ async def test_queued_states_frozen_when_recording_stops(
     instance = get_instance(hass)
 
     hass.states.async_set("test.recorder", "on")
-    instance._async_stop_queue_watcher_and_event_listener()
+    with patch.object(instance, "_reached_max_backlog", return_value=True):
+        instance._async_check_queue()
     hass.states.async_set("test.recorder", "off")
 
     queued = instance.async_get_queued_states(["test.recorder"])
     assert queued is not None
-    assert not queued.complete
-    assert [state and state.state for state in queued.states["test.recorder"]] == ["on"]
+    assert [state and state.state for state in queued["test.recorder"]] == ["on"]
 
 
 async def test_saving_state(hass: HomeAssistant, setup_recorder: None) -> None:

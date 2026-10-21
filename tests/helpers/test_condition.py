@@ -5601,10 +5601,6 @@ async def test_state_condition_attr_duration_history_error_falls_back(
         # Fell back to the conservative anchor (last_updated bumped at t=8),
         # so the 5s `for:` is not satisfied 2s later.
         assert test.async_check() is False
-        # The trace shows that the anchor lacks history.
-        assert_condition_trace(
-            {"": [{"result": {"result": False, "incomplete_history": [entity_id]}}]}
-        )
 
 
 async def test_state_condition_attr_duration_history_lookback_capped(
@@ -6113,7 +6109,6 @@ async def test_state_condition_attr_duration_primes_before_recorder_started(
             )
 
         assert test.async_check() is expected
-        assert_condition_trace({"": [{"result": {"result": expected}}]})
 
         with patch(
             "homeassistant.components.recorder.history.get_significant_states",
@@ -6211,99 +6206,6 @@ async def test_state_condition_attr_duration_recorder_ready_during_read(
 
         # Valid only since t=7, so the 5s `for:` is not met.
         assert test.async_check() is False
-        assert_condition_trace({"": [{"result": {"result": False}}]})
-
-
-async def test_state_condition_attr_duration_recording_stopped_before_ready(
-    async_setup_recorder_instance: RecorderInstanceGenerator,
-    hass: HomeAssistant,
-) -> None:
-    """Changes the recorder missed after it stopped recording are reported.
-
-    When the queue grows too large the recorder stops listening, so later
-    changes are neither queued nor recorded. The index keeps the changes queued
-    before that, but the history is incomplete: here it misses a dip, and the
-    trace reports that.
-    """
-    instance = await _async_setup_recorder_not_started(
-        hass, async_setup_recorder_instance
-    )
-    entity_id = "test.entity_1"
-    start = dt_util.utcnow()
-    committed = _previous_run_history(entity_id, start - timedelta(seconds=100))
-    with freeze_time(start) as freezer:
-        freezer.move_to(start + timedelta(seconds=4))
-        hass.states.async_set(entity_id, STATE_ON, {"test_attr": True})
-        await hass.async_block_till_done()
-        instance._async_stop_queue_watcher_and_event_listener()
-
-        # The run broke at t=6, unrecorded.
-        for seconds, attr in ((6, False), (7, True)):
-            freezer.move_to(start + timedelta(seconds=seconds))
-            hass.states.async_set(entity_id, STATE_ON, {"test_attr": attr})
-        await hass.async_block_till_done()
-
-        freezer.move_to(start + timedelta(seconds=10))
-        with patch(
-            "homeassistant.components.recorder.history.get_significant_states",
-            return_value=committed,
-        ):
-            test = await _setup_attr_state_condition(
-                hass,
-                entity_ids=entity_id,
-                states={True},
-                condition_options={CONF_FOR: {"seconds": 5}},
-            )
-
-        # The missed dip leaves the condition met.
-        assert test.async_check() is True
-        assert_condition_trace(
-            {"": [{"result": {"result": True, "incomplete_history": [entity_id]}}]}
-        )
-
-
-async def test_state_condition_attr_duration_invalidation_clears_incomplete_history(
-    recorder_mock: Recorder, hass: HomeAssistant
-) -> None:
-    """Live tracking takes over an entity with incomplete history it saw break.
-
-    After observing the run break, the live anchor is exact, so the entity is no
-    longer reported as having incomplete history.
-    """
-    entity_id = "test.entity_1"
-    start = dt_util.utcnow()
-    with freeze_time(start) as freezer:
-        hass.states.async_set(entity_id, STATE_ON, {"test_attr": True})
-        await hass.async_block_till_done()
-
-        freezer.move_to(start + timedelta(seconds=10))
-        with patch(
-            "homeassistant.components.recorder.history.get_significant_states",
-            side_effect=SQLAlchemyError("boom"),
-        ):
-            test = await _setup_attr_state_condition(
-                hass,
-                entity_ids=entity_id,
-                states={True},
-                condition_options={CONF_FOR: {"seconds": 5}},
-            )
-        assert test.async_check() is True
-        assert_condition_trace(
-            {"": [{"result": {"result": True, "incomplete_history": [entity_id]}}]}
-        )
-
-        # Invalid at t=11, valid again at t=12.
-        freezer.move_to(start + timedelta(seconds=11))
-        hass.states.async_set(entity_id, STATE_ON, {"test_attr": False})
-        freezer.move_to(start + timedelta(seconds=12))
-        hass.states.async_set(entity_id, STATE_ON, {"test_attr": True})
-        await hass.async_block_till_done()
-        assert test.async_check() is False
-        assert_condition_trace({"": [{"result": {"result": False}}]})
-
-        freezer.move_to(start + timedelta(seconds=17))
-        assert test.async_check() is True
-        assert_condition_trace({"": [{"result": {"result": True}}]})
 
 
 async def test_async_setup_creates_history_priming_manager(

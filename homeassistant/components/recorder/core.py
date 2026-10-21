@@ -4,7 +4,6 @@ import asyncio
 from collections.abc import Callable, Iterable
 from concurrent.futures import CancelledError
 import contextlib
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 import queue
@@ -144,15 +143,6 @@ CONNECTIVITY_ERR = "Error in database connectivity during commit"
 MAX_DB_EXECUTOR_WORKERS = POOL_SIZE - 1
 
 
-@dataclass(slots=True, frozen=True)
-class QueuedStates:
-    """State changes queued in the recorder, by entity, oldest first."""
-
-    states: dict[str, list[State | None]]
-    # False if the recorder stopped listening, so later changes are missing
-    complete: bool
-
-
 class Recorder(threading.Thread):
     """A threaded recorder class."""
 
@@ -233,8 +223,6 @@ class Recorder(threading.Thread):
         # None once the recorder is ready.
         self._queued_states: dict[str, list[State | None]] | None = {}
         self._queued_states_listener: CALLBACK_TYPE | None = None
-        # False once the recorder stopped listening before it was ready
-        self._queued_states_complete = True
         self._queue_watcher: CALLBACK_TYPE | None = None
         self._keep_alive_listener: CALLBACK_TYPE | None = None
         self._commit_listener: CALLBACK_TYPE | None = None
@@ -432,7 +420,6 @@ class Recorder(threading.Thread):
         if self._queued_states_listener:
             self._queued_states_listener()
             self._queued_states_listener = None
-            self._queued_states_complete = False
 
     @callback
     def _async_drop_queued_states(self) -> None:
@@ -443,7 +430,9 @@ class Recorder(threading.Thread):
         self._queued_states = None
 
     @callback
-    def async_get_queued_states(self, entity_ids: Iterable[str]) -> QueuedStates | None:
+    def async_get_queued_states(
+        self, entity_ids: Iterable[str]
+    ) -> dict[str, list[State | None]] | None:
         """Return the state changes queued for `entity_ids`, oldest first.
 
         Until the recorder is ready it does not process its queue, so these are
@@ -452,14 +441,11 @@ class Recorder(threading.Thread):
         """
         if (queued_states := self._queued_states) is None:
             return None
-        return QueuedStates(
-            {
-                entity_id: list(states)
-                for entity_id in entity_ids
-                if (states := queued_states.get(entity_id))
-            },
-            self._queued_states_complete,
-        )
+        return {
+            entity_id: list(states)
+            for entity_id in entity_ids
+            if (states := queued_states.get(entity_id))
+        }
 
     @callback
     def _async_stop_listeners(self) -> None:
