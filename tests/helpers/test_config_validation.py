@@ -154,7 +154,10 @@ def test_url() -> None:
         pytest.param("http://example.com\x00", id="nul"),
         pytest.param("http://exam\tple.com", id="tab_in_host"),
         pytest.param("http://exam\nple.com", id="newline_in_host"),
-        pytest.param("https://example.com:8123/pa th", id="space_in_path"),
+        pytest.param("http://exam\u00a0ple.com", id="no_break_space_in_host"),
+        pytest.param("http://example.com/pa\tth", id="tab_in_path"),
+        pytest.param("http://example.com/?q=a\nb", id="newline_in_query"),
+        pytest.param("http://example.com/\x7f", id="delete_in_path"),
     ],
 )
 def test_url_rejects_whitespace_and_control_chars(
@@ -176,6 +179,20 @@ def test_url_rejects_whitespace_and_control_chars(
 def test_url_strips_surrounding_whitespace(value: str) -> None:
     """Test surrounding whitespace is stripped from URLs."""
     assert probatio.Schema(cv.url)(value) == "http://example.com"
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("http://example.com/snapshot image.jpg", id="space_in_path"),
+        pytest.param(
+            "http://example.com/?file=snapshot image.jpg", id="space_in_query"
+        ),
+    ],
+)
+def test_url_allows_spaces_after_host(value: str) -> None:
+    """Test spaces in the path and query are kept, since HTTP clients encode them."""
+    assert probatio.Schema(cv.url)(value) == value
 
 
 def test_configuration_url() -> None:
