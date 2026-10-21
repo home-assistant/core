@@ -25,7 +25,12 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import UndefinedType
 
 from .const import DOMAIN, FEATUREMAP_ATTRIBUTE_ID, ID_TYPE_DEVICE_ID
-from .helpers import MatterConfigEntry, get_device_id, get_discovery_key
+from .helpers import (
+    MatterConfigEntry,
+    get_device_id,
+    get_discovery_key,
+    get_entity_unique_id,
+)
 
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
@@ -119,12 +124,8 @@ class MatterEntity(Entity):
         server_info = cast(ServerInfoMessage, self.matter_client.server_info)
         # create unique_id based on "Operational Instance Name" and endpoint/device type
         node_device_id = get_device_id(server_info, endpoint)
-        self._attr_unique_id = (
-            f"{node_device_id}-"
-            f"{endpoint.endpoint_id}-"
-            f"{entity_info.entity_description.key}-"
-            f"{entity_info.primary_attribute.cluster_id}-"
-            f"{entity_info.primary_attribute.attribute_id}"
+        self._attr_unique_id = get_entity_unique_id(
+            node_device_id, endpoint, entity_info
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
