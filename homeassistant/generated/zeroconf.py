@@ -643,12 +643,6 @@ ZEROCONF = {
             "name": "igen_fw*",
         },
         {
-            "domain": "indi_allsky",
-            "properties": {
-                "path": "/indi-allsky",
-            },
-        },
-        {
             "domain": "lektrico",
             "name": "lektrico*",
         },
@@ -735,12 +729,6 @@ ZEROCONF = {
         {
             "domain": "grandstream_home",
             "name": "gsc_*",
-        },
-        {
-            "domain": "indi_allsky",
-            "properties": {
-                "path": "/indi-allsky",
-            },
         },
     ],
     "_hue._tcp.local.": [

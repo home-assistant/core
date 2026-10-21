@@ -13,18 +13,6 @@
   "zeroconf": [
     {
       "type": "_indi-allsky._tcp.local."
-    },
-    {
-      "properties": {
-        "path": "/indi-allsky"
-      },
-      "type": "_https._tcp.local."
-    },
-    {
-      "properties": {
-        "path": "/indi-allsky"
-      },
-      "type": "_http._tcp.local."
     }
   ]
 }

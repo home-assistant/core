@@ -206,15 +206,7 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery of an INDI Allsky server."""
         host = normalize_host(discovery_info.host)
-        if discovery_info.type == "_http._tcp.local.":
-            ssl = False
-        elif discovery_info.type == "_https._tcp.local.":
-            ssl = True
-        elif "ssl" in discovery_info.properties:
-            ssl = str(discovery_info.properties["ssl"]).lower() == "true"
-        else:
-            ssl = True
-
+        ssl = str(discovery_info.properties.get("ssl", "true")).lower() == "true"
         port = discovery_info.port or (443 if ssl else 80)
         mac = discovery_info.properties.get("mac")
 

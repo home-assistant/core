@@ -154,17 +154,10 @@ async def test_form_failures_and_recovery(
 
 async def test_form_already_configured(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test duplicate host and port configuration aborts."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="INDI Allsky (127.0.0.1)",
-        data={
-            CONF_HOST: "127.0.0.1",
-            CONF_PORT: 443,
-        },
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -289,9 +282,13 @@ def test_get_ssl_context() -> None:
                 ip_addresses=["192.168.1.50"],
                 port=8443,
                 hostname="indi-allsky.local.",
-                type="_https._tcp.local.",
-                name="INDI Allsky._https._tcp.local.",
-                properties={"path": "/indi-allsky", "mac": "AA-BB-CC-DD-EE-FF"},
+                type="_indi-allsky._tcp.local.",
+                name="INDI Allsky._indi-allsky._tcp.local.",
+                properties={
+                    "path": "/indi-allsky",
+                    "ssl": "true",
+                    "mac": "AA-BB-CC-DD-EE-FF",
+                },
             ),
             True,
             8443,
@@ -304,9 +301,9 @@ def test_get_ssl_context() -> None:
                 ip_addresses=["192.168.1.50"],
                 port=80,
                 hostname="indi-allsky.local.",
-                type="_http._tcp.local.",
-                name="INDI Allsky._http._tcp.local.",
-                properties={"path": "/indi-allsky"},
+                type="_indi-allsky._tcp.local.",
+                name="INDI Allsky._indi-allsky._tcp.local.",
+                properties={"path": "/indi-allsky", "ssl": "false"},
             ),
             False,
             80,
@@ -533,9 +530,9 @@ async def test_zeroconf_already_configured_without_mac(
         ip_addresses=["192.168.1.50"],
         port=443,
         hostname="indi-allsky.local.",
-        type="_https._tcp.local.",
-        name="INDI Allsky._https._tcp.local.",
-        properties={"path": "/indi-allsky"},
+        type="_indi-allsky._tcp.local.",
+        name="INDI Allsky._indi-allsky._tcp.local.",
+        properties={"path": "/indi-allsky", "ssl": "true"},
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -615,9 +612,9 @@ async def test_zeroconf_rejects_protocol_downgrade(
         ip_addresses=["192.168.1.50"],
         port=80,
         hostname="indi-allsky.local.",
-        type="_http._tcp.local.",
-        name="INDI Allsky._http._tcp.local.",
-        properties={"path": "/indi-allsky", "mac": "aa:bb:cc:dd:ee:ff"},
+        type="_indi-allsky._tcp.local.",
+        name="INDI Allsky._indi-allsky._tcp.local.",
+        properties={"path": "/indi-allsky", "ssl": "false", "mac": "aa:bb:cc:dd:ee:ff"},
     )
 
     result = await hass.config_entries.flow.async_init(
