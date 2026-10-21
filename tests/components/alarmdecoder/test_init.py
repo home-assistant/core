@@ -153,27 +153,60 @@ async def test_unload_during_reconnect_attempt(
     # function rather than a mock, so it runs in a worker thread like the real one.
     started, release = threading.Event(), threading.Event()
     attempts: list[int | None] = []
+    events: list[str] = []
 
     def slow_open(baud: int | None) -> None:
         attempts.append(baud)
         started.set()
         release.wait(5)
+        events.append("opened")
         if attempt_fails:
             raise NoDeviceError
 
     mock_controller.open = slow_open
+    mock_controller.close.side_effect = lambda: events.append("closed")
     mock_controller.on_close[0](None)
     assert await hass.async_add_executor_job(started.wait, 5)
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    # Closing now couldn't interrupt the connect.
+    assert events == []
 
     # The attempt finishes after the unload, and its socket then closes.
     release.set()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     for handler in mock_controller.on_close:
         handler(None)
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
 
     assert len(attempts) == 1
+    # Closed once the attempt finished, so a connection it made doesn't linger.
+    assert events == ["opened", "closed"]
+
+
+async def test_setup_timeout_during_connect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_controller: MagicMock,
+) -> None:
+    """Test a connect outlasting the setup timeout is closed when it finishes."""
+    release = threading.Event()
+    events: list[str] = []
+
+    def slow_open(baud: int | None) -> None:
+        release.wait(5)
+        events.append("opened")
+
+    mock_controller.open = slow_open
+    mock_controller.close.side_effect = lambda: events.append("closed")
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert events == []
+
+    release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert events == ["opened", "closed"]

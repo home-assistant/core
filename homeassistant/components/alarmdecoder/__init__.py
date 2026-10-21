@@ -5,6 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import Any
 
 from adext import AdExt
 from alarmdecoder.devices import SerialDevice, SocketDevice
@@ -62,6 +63,7 @@ class AlarmDecoderData:
     restart: bool
     cancel_retry: CALLBACK_TYPE | None = None
     shutdown: bool = False
+    opening: asyncio.Future[Any] | None = None
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -93,7 +95,9 @@ async def async_setup_entry(
         if data.shutdown:
             return
         try:
-            await hass.async_add_executor_job(controller.open, baud)
+            # Shielded so a setup timeout leaves it for shutdown to clean up.
+            data.opening = hass.async_add_executor_job(controller.open, baud)
+            await asyncio.shield(data.opening)
         except NoDeviceError:
             if data.shutdown:
                 return
@@ -193,6 +197,13 @@ async def _async_shutdown(hass: HomeAssistant, data: AlarmDecoderData) -> None:
         data.cancel_retry = None
     data.remove_update_listener()
     data.remove_stop_listener()
+    if data.opening is not None and not data.opening.done():
+        # close() can't interrupt a connect() in progress, which would then
+        # leave the connection open. Close once the attempt finishes instead.
+        data.opening.add_done_callback(
+            lambda _: hass.async_add_executor_job(data.client.close)
+        )
+        return
     await hass.async_add_executor_job(data.client.close)
 
 
