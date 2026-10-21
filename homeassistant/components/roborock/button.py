@@ -13,7 +13,7 @@ from roborock.roborock_message import RoborockZeoProtocol
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -305,7 +305,10 @@ class RoborockResolveDockErrorButtonEntity(RoborockCoordinatedEntityV1, ButtonEn
     async def async_press(self) -> None:
         """Press the button."""
         if not (dock_error := self._status.dock_error_status):
-            return
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_dock_error_to_resolve",
+            )
         try:
             # An explicit dock error prevents falling back to the robot error.
             await self._status.resolve_error(int(dock_error))

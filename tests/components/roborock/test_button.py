@@ -21,7 +21,7 @@ from homeassistant.components.button import SERVICE_PRESS
 from homeassistant.components.roborock.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import FakeDevice
@@ -596,12 +596,17 @@ async def test_resolve_dock_error_button_press_without_error(
     fake_vacuum: FakeDevice,
     dock_error: RoborockDockErrorCode | None,
 ) -> None:
-    """Test a missing dock error never falls back to a robot error."""
+    """Test a missing dock error raises and never resolves a robot error."""
     status = fake_vacuum.v1_properties.status
     status.dock_error_status = dock_error
     status.error_code = RoborockErrorCode.lidar_blocked
 
-    with patch.object(setup_entry.runtime_data.v1[0], "async_refresh") as refresh:
+    with (
+        patch.object(setup_entry.runtime_data.v1[0], "async_refresh") as refresh,
+        pytest.raises(
+            ServiceValidationError, match="There is no dock error to resolve"
+        ),
+    ):
         await hass.services.async_call(
             "button",
             SERVICE_PRESS,
