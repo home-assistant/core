@@ -6,6 +6,11 @@ from unittest.mock import MagicMock
 from aiomarstek import MarstekDeviceStatus
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -13,8 +18,6 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_DEVICE_INFO, MOCK_DEVICE_STATUS, TEST_HOST
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 BATTERY_LEVEL_ENTITY_ID = "sensor.marstek_venusa_v1_battery_level"
 BATTERY_POWER_ENTITY_ID = "sensor.marstek_venusa_v1_battery_power"

@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiomarstek import MarstekDeviceInfo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.marstek.const import (
@@ -31,8 +32,6 @@ from .conftest import (
     TEST_WIFI_MAC,
     TEST_WIFI_NAME,
 )
-
-from tests.common import MockConfigEntry
 
 
 def _data_schema(result: config_entries.ConfigFlowResult) -> config_entries.vol.Schema:

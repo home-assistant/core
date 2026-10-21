@@ -1,6 +1,7 @@
 {
   "domain": "marstek",
   "name": "Marstek",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@MarstekEnergy"],
   "config_flow": true,
   "dependencies": ["network"],

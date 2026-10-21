@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiomarstek import MarstekDeviceInfo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.marstek import async_create_udp_client
 from homeassistant.components.marstek.const import DOMAIN
@@ -19,8 +20,6 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 UNSUPPORTED_DEVICE_INFO = MarstekDeviceInfo(
     id=0,

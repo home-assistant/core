@@ -5,10 +5,9 @@ from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 
 from aiomarstek import MarstekDeviceInfo, MarstekDeviceStatus, MarstekUDPClient
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.marstek.const import DOMAIN
-
-from tests.common import MockConfigEntry
 
 TEST_HOST = "192.168.1.100"
 TEST_MAC = "AA:BB:CC:DD:EE:FF"
