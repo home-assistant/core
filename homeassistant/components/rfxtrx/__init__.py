@@ -159,6 +159,7 @@ async def async_setup_internal(hass: HomeAssistant, entry: RfxtrxConfigEntry) ->
 
     # Setup some per device config
     devices = _get_device_lookup(entry)
+    devices_subentries = entry.subentries
     pt2262_devices: set[str] = set()
 
     device_registry = dr.async_get(hass)
@@ -195,7 +196,7 @@ async def async_setup_internal(hass: HomeAssistant, entry: RfxtrxConfigEntry) ->
     @callback
     def async_handle_receive(event: rfxtrxmod.RFXtrxEvent) -> None:
         """Handle received messages from RFXtrx gateway."""
-        nonlocal devices
+        nonlocal devices, devices_subentries
 
         if isinstance(event, rfxtrxmod.ConnectionLost):
             _LOGGER.warning("Connection was lost, triggering reload")
@@ -219,7 +220,9 @@ async def async_setup_internal(hass: HomeAssistant, entry: RfxtrxConfigEntry) ->
 
         _LOGGER.debug("Receive RFXCOM event: %s", event_data)
 
-        devices = _get_device_lookup(entry)
+        if entry.subentries is not devices_subentries:
+            devices = _get_device_lookup(entry)
+            devices_subentries = entry.subentries
         data_bits = get_device_data_bits(event.device, devices)
         device_id = get_device_tuple_from_device(event.device, data_bits=data_bits)
 
