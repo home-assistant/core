@@ -25,6 +25,7 @@ from aioimmich.server.models import (
 from aioimmich.tags.models import ImmichTag
 from aioimmich.users.models import ImmichUserObject
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.immich.const import DOMAIN
 from homeassistant.components.media_source import PlayMedia
@@ -48,14 +49,12 @@ from .const import (
     MOCK_TAGS_ASSETS,
 )
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.immich.async_setup_entry", return_value=True
+        "homeassistant.components.immich.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -82,6 +81,7 @@ def mock_immich_albums() -> AsyncMock:
     """Mock the Immich server."""
     mock = AsyncMock(spec=ImmichAlbums)
     mock.async_get_all_albums.return_value = [ALBUM_DATA]
+    mock.async_get_album_info.return_value = ALBUM_DATA
     mock.async_add_assets_to_album.return_value = [
         ImmichAddAssetsToAlbumResponse.from_dict(
             {"id": "abcdef-0123456789", "success": True}
@@ -151,6 +151,7 @@ def mock_immich_people() -> AsyncMock:
             }
         ),
     ]
+    mock.async_get_person_by_id.return_value = mock.async_get_all_people.return_value[0]
     mock.async_get_person_thumbnail.return_value = b"yyyy"
     return mock
 
@@ -257,6 +258,7 @@ def mock_immich_tags() -> AsyncMock:
             },
         ),
     ]
+    mock.async_get_tag_by_id.return_value = mock.async_get_all_tags.return_value[0]
     return mock
 
 

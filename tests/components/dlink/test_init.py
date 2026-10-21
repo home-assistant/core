@@ -2,14 +2,14 @@
 
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.dlink.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import CONF_DATA, ComponentSetup, patch_setup
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_config_and_unload(
@@ -68,7 +68,9 @@ async def test_device_info(
     await setup_integration()
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
+    )
 
     assert device.connections == {("mac", "aa:bb:cc:dd:ee:ff")}
     assert device.identifiers == {(DOMAIN, entry.entry_id)}

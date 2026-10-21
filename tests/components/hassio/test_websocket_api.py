@@ -8,6 +8,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import HomeAssistantUpdateOptions, StoreAddonUpdate
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockUser, async_mock_signal
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup import BackupManagerError, ManagerBackup
@@ -31,10 +34,6 @@ from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, MockUser, async_mock_signal
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import WebSocketGenerator
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
@@ -375,14 +374,12 @@ async def test_websocket_non_admin_user(
     assert msg["error"]["message"] == "Unauthorized"
 
 
-async def test_websocket_store_reload_refreshes_update_entities(
+async def test_store_reloaded_event_refreshes_update_entities(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    aioclient_mock: AiohttpClientMocker,
     supervisor_client: AsyncMock,
     addons_list: AsyncMock,
 ) -> None:
-    """Test add-on update entities refresh after a store reload via the API proxy."""
+    """Test add-on update entities refresh on a Supervisor store_reloaded event."""
     addons_list.return_value = [
         replace(
             addons_list.return_value[0],
@@ -406,23 +403,43 @@ async def test_websocket_store_reload_refreshes_update_entities(
             version_latest="2.0.1",
         )
     ]
-    aioclient_mock.post(
-        "http://127.0.0.1/store/reload", json={"result": "ok", "data": {}}
-    )
 
-    websocket_client = await hass_ws_client(hass)
-    await websocket_client.send_json_auto_id(
-        {
-            WS_TYPE: WS_TYPE_API,
-            ATTR_ENDPOINT: "/store/reload",
-            ATTR_METHOD: "post",
-        }
+    async_dispatcher_send(
+        hass,
+        EVENT_SUPERVISOR_EVENT,
+        {"event": "store_reloaded", "data": {"repositories": ["core"]}},
     )
-    msg = await websocket_client.receive_json()
-    assert msg["success"]
+    await hass.async_block_till_done()
 
     assert hass.states.get("update.test_update").state == "on"
+    # Supervisor already reloaded the store, so we must not reload it again.
     supervisor_client.store.reload.assert_not_called()
+
+
+async def test_store_reloaded_event_ignored_without_listeners(
+    hass: HomeAssistant,
+    addons_list: AsyncMock,
+) -> None:
+    """Test a store_reloaded event does not refresh without add-on entities."""
+    addons_list.return_value = []
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(hass, DOMAIN, {"hassio": {}})
+    await hass.async_block_till_done()
+
+    # Without add-on entities the coordinator has no listeners,
+    # so the event must not trigger an add-on data fetch.
+    addons_list.reset_mock()
+    async_dispatcher_send(
+        hass,
+        EVENT_SUPERVISOR_EVENT,
+        {"event": "store_reloaded", "data": {"repositories": ["core"]}},
+    )
+    await hass.async_block_till_done()
+
+    addons_list.assert_not_called()
 
 
 async def test_update_addon(
@@ -1040,3 +1057,27 @@ async def test_read_update_config(
 
     await websocket_client.send_json_auto_id({"type": "hassio/update/config/info"})
     assert await websocket_client.receive_json() == snapshot
+
+
+@pytest.mark.usefixtures("hassio_env")
+async def test_update_config_keeps_other_options(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test updating the backup options keeps the other options."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={}, options={"core_auto_update": True}, unique_id=DOMAIN
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    websocket_client = await hass_ws_client(hass)
+
+    await websocket_client.send_json_auto_id(
+        {"type": "hassio/update/config/update", "core_backup_before_update": True}
+    )
+    assert (await websocket_client.receive_json())["success"]
+
+    assert config_entry.options["core_auto_update"] is True
+    assert config_entry.options["core_backup_before_update"] is True

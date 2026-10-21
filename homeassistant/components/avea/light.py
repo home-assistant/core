@@ -193,6 +193,7 @@ class AveaLight(LightEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_supported_color_modes = {ColorMode.HS}
+    _attr_device_info: DeviceInfo | None = None
 
     def __init__(self, light: avea.Bulb, address: str) -> None:
         """Initialize an AveaLight."""
@@ -217,13 +218,13 @@ class AveaLight(LightEntity):
         serial_number = _read_device_info_value(self._light.get_serial_number)
 
         if manufacturer:
-            device_info["manufacturer"] = manufacturer
+            device_info.manufacturer = manufacturer
         if hardware_revision:
-            device_info["hw_version"] = hardware_revision
+            device_info.hw_version = hardware_revision
         if firmware_version:
-            device_info["sw_version"] = firmware_version
+            device_info.sw_version = firmware_version
         if serial_number:
-            device_info["serial_number"] = serial_number
+            device_info.serial_number = serial_number
 
         self._device_info_updated = True
 

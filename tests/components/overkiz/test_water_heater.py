@@ -7,6 +7,7 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import OverkizState
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.water_heater import (
@@ -29,8 +30,6 @@ from .helpers import (
     device_state_changed_event,
 )
 
-from tests.common import snapshot_platform
-
 # Thermor Malicio 2 (io:AtlanticDomesticHotWaterProductionV2_CE_FLAT_C2_IOComponent)
 DHW_CE_FLAT_C2 = FixtureDevice(
     "setup/cloud_atlantic_cozytouch.json",
@@ -42,7 +41,7 @@ DHW_CE_FLAT_C2 = FixtureDevice(
 DHW_HITACHI_YUTAKI = FixtureDevice(
     "setup/cloud_atlantic_cozytouch.json",
     "modbus://1234-5678-5643/6381497/1#4",
-    "water_heater.yutaki_dhw",
+    "water_heater.somfy_tahoma_switch_yutaki_dhw",
 )
 
 # Thermor Aéromax 4 (io:AtlanticDomesticHotWaterProductionIOComponent)

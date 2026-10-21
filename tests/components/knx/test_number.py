@@ -4,10 +4,12 @@ import logging
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import mock_restore_cache_with_extra_data
 
 from homeassistant.components.knx.const import (
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
+    CONF_SYNC_STATE,
     KNX_ADDRESS,
 )
 from homeassistant.components.knx.schema import NumberSchema
@@ -17,8 +19,6 @@ from homeassistant.exceptions import ServiceValidationError
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
-
-from tests.common import mock_restore_cache_with_extra_data
 
 
 async def test_number_set_value(hass: HomeAssistant, knx: KNXTestKit) -> None:
@@ -139,6 +139,7 @@ async def test_number_state_restore(hass: HomeAssistant, knx: KNXTestKit) -> Non
                 KNX_ADDRESS: test_address,
                 CONF_STATE_ADDRESS: test_state_address,
                 CONF_TYPE: "illuminance",
+                CONF_SYNC_STATE: "init",
             }
         }
     )
@@ -229,7 +230,7 @@ async def test_number_yaml_attribute_validation(
                 "device_class": "temperature",  # from DPT
                 "unit_of_measurement": "°C",
                 "min": -273.0,
-                "max": 670760.0,
+                "max": 670433.28,
                 "step": 0.01,
             },
         ),
@@ -279,7 +280,7 @@ async def test_number_ui_load(knx: KNXTestKit) -> None:
     )
     knx.assert_state(
         "number.test_options",
-        "3000",
+        "3000.0",  # `min`, `max` and `step` are floats after validation
         unit_of_measurement="kW",
         device_class="power",
         min=3000,

@@ -69,39 +69,17 @@ class EheimDigitalEntity[_DeviceT: EheimDigitalDevice](
             # At this point at least one device is found
             # and so there is always a main device set
             assert isinstance(main, EheimDigitalDevice)
-        self._attr_device_info = async_device_info(coordinator)
-        if coordinator.data.mac_address != main.mac_address:
-            main_device = None
-            try:
-                main_device = dr.async_get_device_id_by_identifier(
-                    coordinator.hass,
-                    (DOMAIN, main.mac_address),
-                    config_entry_id=coordinator.main_coordinator.config_entry.entry_id,
-                )
-            except ValueError:
-                # If for some reason the main device is not yet created in the registry, create it here
-                main_device = (
-                    dr.async_get(coordinator.hass)
-                    .async_get_or_create(
-                        config_entry_id=coordinator.main_coordinator.config_entry.entry_id,
-                        **async_device_info(
-                            coordinator.main_coordinator.device_coordinators[
-                                main.mac_address
-                            ][MsgTitle.USRDTA]
-                        ),
-                    )
-                    .id
-                )
-            finally:
-                if main_device is not None:
-                    self._attr_device_info["via_device_id"] = main_device
-        self._device = coordinator.data
-        self._device_address = coordinator.data.mac_address
-
-    @override
-    async def async_update(self) -> None:
-        """Request an update from the hub."""
-        await self.coordinator.main_coordinator.async_request_refresh()
+        self._attr_device_info = async_device_info(coordinator, device)
+        if device.mac_address != main.mac_address:
+            # The main device is registered during setup, before the platforms
+            # are forwarded, so this link always resolves deterministically.
+            self._attr_device_info.via_device_id = dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, main.mac_address),
+                config_entry_id=coordinator.config_entry.entry_id,
+            )
+        self._device = device
+        self._device_address = device.mac_address
 
     @abstractmethod
     def _async_update_attrs(self) -> None: ...

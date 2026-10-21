@@ -1,17 +1,16 @@
 """The tests for the Alexa component."""
 
-import datetime
+import datetime as dt
 from http import HTTPStatus
 
 from aiohttp.test_utils import TestClient
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import alexa
 from homeassistant.components.alexa import const
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
-
-from tests.typing import ClientSessionGenerator
 
 SESSION_ID = "amzn1.echo-api.session.0000000-0000-0000-0000-00000000000"
 APPLICATION_ID = "amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00ebe"
@@ -112,10 +111,8 @@ async def test_flash_briefing_date_from_str(alexa_client) -> None:
     assert req.status == HTTPStatus.OK
     data = await req.json()
     assert isinstance(
-        datetime.datetime.strptime(
-            data[0].get(const.ATTR_UPDATE_DATE), const.DATE_FORMAT
-        ),
-        datetime.datetime,
+        dt.datetime.strptime(data[0].get(const.ATTR_UPDATE_DATE), const.DATE_FORMAT),
+        dt.datetime,
     )
 
 
@@ -136,10 +133,8 @@ async def test_flash_briefing_valid(alexa_client) -> None:
     assert req.status == HTTPStatus.OK
     json = await req.json()
     assert isinstance(
-        datetime.datetime.strptime(
-            json[0].get(const.ATTR_UPDATE_DATE), const.DATE_FORMAT
-        ),
-        datetime.datetime,
+        dt.datetime.strptime(json[0].get(const.ATTR_UPDATE_DATE), const.DATE_FORMAT),
+        dt.datetime,
     )
     json[0].pop(const.ATTR_UPDATE_DATE)
     data[0].pop(const.ATTR_UPDATE_DATE)

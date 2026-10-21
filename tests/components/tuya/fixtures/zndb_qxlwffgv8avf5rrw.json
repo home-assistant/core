@@ -1,0 +1,160 @@
+{
+  "endpoint": "https://apigw.tuyacn.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "测试无回路-多路计量cat.1",
+  "category": "zndb",
+  "product_id": "qxlwffgv8avf5rrw",
+  "product_name": "Test No Loop-Multi-Channel Metering Cat.1",
+  "online": true,
+  "sub": false,
+  "time_zone": "+8:00",
+  "function": {},
+  "status_range": {
+    "phase_s1": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "phase_s2": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "phase_s3": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "phase_s4": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "phase_s5": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "phase_s6": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "phase_s7": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "phase_s8": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "phase_s9": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "phase_s10": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "phase_s11": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "phase_s12": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "phase_s13": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "phase_s14": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "phase_s15": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "phase_s16": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "phase_s17": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "phase_s18": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "phase_s19": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "phase_s20": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    }
+  },
+  "status": {
+    "phase_s1": "020F08FD00044C0000D20000320000DC5F00",
+    "phase_s2": "020F08FE0008980001A40000640001B86000",
+    "phase_s3": "020F08FF000CE40002760000960002946100",
+    "phase_s4": "020F09000011300003480000C80003706200",
+    "phase_s5": "020F090100157C00041A0000FA00044C6300",
+    "phase_s6": "020F09020019C80004EC00012C0005285E00",
+    "phase_s7": "020F0903001E140005BE00015E0006045F00",
+    "phase_s8": "020F09040022600006900001900006E06000",
+    "phase_s9": "020F09050026AC0007620001C20007BC6100",
+    "phase_s10": "020F0906002AF80008340001F40008986200",
+    "phase_s11": "020F0907002F440009060002260009746300",
+    "phase_s12": "020F09080033900009D8000258000A505E00",
+    "phase_s13": "020F09090037DC000AAA00028A000B2C5F00",
+    "phase_s14": "020F090A003C28000B7C0002BC000C086000",
+    "phase_s15": "020F090B004074000C4E0002EE000CE46100",
+    "phase_s16": "020F090C0044C0000D20000320000DC06200",
+    "phase_s17": "020F090D00490C000DF2000352000E9C6300",
+    "phase_s18": "020F090E004D58000EC4000384000F785E00",
+    "phase_s19": "020F090D00490C000DF2000352000E9C6300",
+    "phase_s20": "020F090E004D58000EC4000384000F785E00"
+  },
+  "set_up": false,
+  "support_local": true
+}

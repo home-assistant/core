@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from requests import ConnectTimeout
 from syrupy.assertion import SnapshotAssertion
 
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from . import setup_with_selected_platforms
-
-from tests.common import MockConfigEntry
 
 
 async def test_reload(
@@ -43,8 +42,8 @@ async def test_service(
     """Test the Rova service."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
     )
     assert device_entry is not None
     assert device_entry == snapshot

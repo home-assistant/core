@@ -2,31 +2,21 @@
 
 from urllib.parse import urlparse
 
+from async_upnp_client.utils import async_get_local_ip
+
+from homeassistant.components.network import async_get_source_ip
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.network import NoURLAvailableError, get_url
-
-from .const import DOMAIN
 
 
-class InvalidHomeAssistantURLError(HomeAssistantError):
-    """Error to indicate Home Assistant does not expose a usable URL."""
-
-
-def get_homeassistant_local_host(hass: HomeAssistant) -> str:
-    """Return the Home Assistant hostname that WiiM devices should use."""
+async def async_get_event_callback_host(hass: HomeAssistant, upnp_location: str) -> str:
+    """Return the address a WiiM device should send UPnP events to."""
     try:
-        base_url = get_url(hass, prefer_external=False)
-    except NoURLAvailableError as err:
-        raise InvalidHomeAssistantURLError(
-            translation_domain=DOMAIN,
-            translation_key="missing_homeassistant_url",
-        ) from err
+        _, local_ip = await async_get_local_ip(upnp_location, hass.loop)
+    except OSError:
+        # No route to the device. Fall back to the address Home Assistant
+        # announces on, which is what zeroconf and ssdp use.
+        if host := urlparse(upnp_location).hostname:
+            return await async_get_source_ip(hass, target_ip=host)
+        return await async_get_source_ip(hass)
 
-    if local_host := urlparse(base_url).hostname:
-        return local_host
-
-    raise InvalidHomeAssistantURLError(
-        translation_domain=DOMAIN,
-        translation_key="missing_homeassistant_url",
-    )
+    return local_ip

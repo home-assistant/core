@@ -3,8 +3,9 @@
 from datetime import timedelta
 from unittest.mock import MagicMock, call
 
-from broadlink.exceptions import BroadlinkException
+from broadlink_async.exceptions import BroadlinkException
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from rf_protocols.commands.ook import OOKCommand
 
 from homeassistant.components import radio_frequency
@@ -23,8 +24,6 @@ from homeassistant.util import dt as dt_util
 
 from . import get_device
 
-from tests.common import async_fire_time_changed
-
 _FREQ_433 = 433_920_000
 _FREQ_315 = 315_000_000
 
@@ -35,8 +34,8 @@ async def _setup_rf_device(hass: HomeAssistant) -> tuple[MagicMock, str]:
     mock_setup = await device.setup_entry(hass)
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_setup.entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_setup.entry.unique_id), mock_setup.entry.entry_id
     )
     entries = er.async_entries_for_device(entity_registry, device_entry.id)
     rf_entity = next(e for e in entries if e.domain == Platform.RADIO_FREQUENCY)
@@ -61,8 +60,8 @@ async def test_radio_frequency_setup(
     """RF entity is created only for RF-capable devices."""
     device = get_device(device_name)
     mock_setup = await device.setup_entry(hass)
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_setup.entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_setup.entry.unique_id), mock_setup.entry.entry_id
     )
     entries = er.async_entries_for_device(entity_registry, device_entry.id)
     rf_entities = [e for e in entries if e.domain == Platform.RADIO_FREQUENCY]

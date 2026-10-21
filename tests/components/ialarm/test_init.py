@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, Mock, patch
 from uuid import uuid4
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ialarm.const import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="ialarm_api")
@@ -70,8 +69,8 @@ async def test_device_registry(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "00:00:54:12:34:56")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "00:00:54:12:34:56"), mock_config_entry.entry_id
     )
     assert device_entry == snapshot
 

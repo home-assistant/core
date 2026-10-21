@@ -3,7 +3,7 @@
 from typing import override
 
 from pyplaato.models.device import PlaatoDevice
-from pyplaato.plaato import PlaatoKeg
+from pyplaato.plaato import ATTR_TEMP, PlaatoKeg
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant, callback
@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import ATTR_TEMP, SENSOR_UPDATE
+from . import SENSOR_UPDATE
 from .const import CONF_USE_WEBHOOK, SENSOR_SIGNAL
 from .coordinator import PlaatoConfigEntry, PlaatoCoordinator, PlaatoData
 from .entity import PlaatoEntity
@@ -58,7 +58,9 @@ async def async_setup_entry(
                 async_dispatcher_send(hass, SENSOR_SIGNAL % (device_id, sensor_type))
 
     if entry.data[CONF_USE_WEBHOOK]:
-        async_dispatcher_connect(hass, SENSOR_UPDATE, _async_update_from_webhook)
+        entry.async_on_unload(
+            async_dispatcher_connect(hass, SENSOR_UPDATE, _async_update_from_webhook)
+        )
     else:
         coordinator = entry_data.coordinator
         assert coordinator is not None

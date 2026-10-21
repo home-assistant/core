@@ -6,6 +6,8 @@ from unittest.mock import AsyncMock
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from visionpluspython.exceptions import (
     WattsVisionAuthError,
     WattsVisionConnectionError,
@@ -33,9 +35,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_setup_entry_success(
@@ -203,10 +202,16 @@ async def test_dynamic_device_creation(
     """Test new devices are created dynamically."""
     await setup_integration(hass, mock_config_entry)
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "thermostat_123")})
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "thermostat_456")})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "thermostat_123"), mock_config_entry.entry_id
+    )
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "thermostat_456"), mock_config_entry.entry_id
+    )
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, "thermostat_789")})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "thermostat_789"), mock_config_entry.entry_id
+        )
         is None
     )
 
@@ -234,8 +239,8 @@ async def test_dynamic_device_creation(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    new_device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "thermostat_789")}
+    new_device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "thermostat_789"), mock_config_entry.entry_id
     )
     assert new_device_entry is not None
     assert new_device_entry.name == "Kitchen Thermostat"
@@ -254,11 +259,11 @@ async def test_stale_device_removal(
     """Test stale devices are removed dynamically."""
     await setup_integration(hass, mock_config_entry)
 
-    device_123 = device_registry.async_get_device(
-        identifiers={(DOMAIN, "thermostat_123")}
+    device_123 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "thermostat_123"), mock_config_entry.entry_id
     )
-    device_456 = device_registry.async_get_device(
-        identifiers={(DOMAIN, "thermostat_456")}
+    device_456 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "thermostat_456"), mock_config_entry.entry_id
     )
     assert device_123 is not None
     assert device_456 is not None
@@ -275,8 +280,8 @@ async def test_stale_device_removal(
     await hass.async_block_till_done()
 
     # Verify thermostat_456 has been removed
-    device_456_after_removal = device_registry.async_get_device(
-        identifiers={(DOMAIN, "thermostat_456")}
+    device_456_after_removal = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "thermostat_456"), mock_config_entry.entry_id
     )
     assert device_456_after_removal is None
 

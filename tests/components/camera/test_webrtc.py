@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 from webrtc_models import RTCIceCandidate, RTCIceCandidateInit, RTCIceServer
 
 from homeassistant.components.camera import (
@@ -27,8 +28,6 @@ from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
 
 from .common import STREAM_SOURCE, WEBRTC_ANSWER, SomeTestProvider
-
-from tests.typing import WebSocketGenerator
 
 WEBRTC_OFFER = "v=0\r\n"
 HLS_STREAM_SOURCE = "http://127.0.0.1/example.m3u"
@@ -516,8 +515,8 @@ async def test_ws_webrtc_candidate(
             {"sdpMLineIndex": 0},
             (
                 'Field "candidate" of type str is missing in'
-                " RTCIceCandidateInit instance for dictionary"
-                " value @ data['candidate']."
+                " RTCIceCandidateInit instance"
+                " at 'candidate'."
                 " Got {'sdpMLineIndex': 0}"
             ),
         ),
@@ -525,8 +524,8 @@ async def test_ws_webrtc_candidate(
             {"candidate": "candidate", "sdpMLineIndex": -1},
             (
                 "sdpMLineIndex must be greater than or equal"
-                " to 0 for dictionary value @"
-                " data['candidate']. Got {'candidate':"
+                " to 0 at 'candidate'."
+                " Got {'candidate':"
                 " 'candidate', 'sdpMLineIndex': -1}"
             ),
         ),

@@ -6,6 +6,7 @@ import logging
 from typing import Any, override
 
 from reolink_aio.api import (
+    AntiFlickerEnum,
     BinningModeEnum,
     Chime,
     ChimeToneEnum,
@@ -218,6 +219,19 @@ SELECT_ENTITIES = (
         method=lambda api, ch, name: api.set_exposure(ch, ExposureEnum[name].value),
     ),
     ReolinkSelectEntityDescription(
+        key="anti_flicker",
+        cmd_key="GetIsp",
+        translation_key="anti_flicker",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        get_options=[method.name for method in AntiFlickerEnum],
+        supported=lambda api, ch: api.supported(ch, "anti_flicker"),
+        value=lambda api, ch: AntiFlickerEnum(api.anti_flicker_mode(ch)).name,
+        method=lambda api, ch, name: api.set_anti_flicker(
+            ch, AntiFlickerEnum[name].value
+        ),
+    ),
+    ReolinkSelectEntityDescription(
         key="binning_mode",
         cmd_key="GetIsp",
         translation_key="binning_mode",
@@ -239,7 +253,9 @@ SELECT_ENTITIES = (
         entity_registry_enabled_default=False,
         unit_of_measurement=UnitOfFrequency.HERTZ,
         get_options=lambda api, ch: [str(v) for v in api.frame_rate_list(ch, "main")],
-        supported=lambda api, ch: api.supported(ch, "frame_rate"),
+        supported=lambda api, ch: (
+            api.supported(ch, "frame_rate") and api.supported(ch, "main")
+        ),
         value=lambda api, ch: str(api.frame_rate(ch, "main")),
         method=lambda api, ch, value: api.set_frame_rate(ch, int(value), "main"),
     ),
@@ -252,7 +268,9 @@ SELECT_ENTITIES = (
         entity_registry_enabled_default=False,
         unit_of_measurement=UnitOfFrequency.HERTZ,
         get_options=lambda api, ch: [str(v) for v in api.frame_rate_list(ch, "sub")],
-        supported=lambda api, ch: api.supported(ch, "frame_rate"),
+        supported=lambda api, ch: (
+            api.supported(ch, "frame_rate") and api.supported(ch, "sub")
+        ),
         value=lambda api, ch: str(api.frame_rate(ch, "sub")),
         method=lambda api, ch, value: api.set_frame_rate(ch, int(value), "sub"),
     ),
@@ -265,7 +283,9 @@ SELECT_ENTITIES = (
         entity_registry_enabled_default=False,
         unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         get_options=lambda api, ch: [str(v) for v in api.bit_rate_list(ch, "main")],
-        supported=lambda api, ch: api.supported(ch, "bit_rate"),
+        supported=lambda api, ch: (
+            api.supported(ch, "bit_rate") and api.supported(ch, "main")
+        ),
         value=lambda api, ch: str(api.bit_rate(ch, "main")),
         method=lambda api, ch, value: api.set_bit_rate(ch, int(value), "main"),
     ),
@@ -278,7 +298,9 @@ SELECT_ENTITIES = (
         entity_registry_enabled_default=False,
         unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         get_options=lambda api, ch: [str(v) for v in api.bit_rate_list(ch, "sub")],
-        supported=lambda api, ch: api.supported(ch, "bit_rate"),
+        supported=lambda api, ch: (
+            api.supported(ch, "bit_rate") and api.supported(ch, "sub")
+        ),
         value=lambda api, ch: str(api.bit_rate(ch, "sub")),
         method=lambda api, ch, value: api.set_bit_rate(ch, int(value), "sub"),
     ),
@@ -290,7 +312,9 @@ SELECT_ENTITIES = (
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         get_options=[val.name for val in EncodingEnum],
-        supported=lambda api, ch: api.supported(ch, "encoding"),
+        supported=lambda api, ch: (
+            api.supported(ch, "encoding") and api.supported(ch, "main")
+        ),
         value=lambda api, ch: api.encoding(ch, "main"),
         method=lambda api, ch, value: api.set_encoding(ch, value, "main"),
     ),
@@ -302,7 +326,9 @@ SELECT_ENTITIES = (
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         get_options=[val.name for val in EncodingEnum],
-        supported=lambda api, ch: api.supported(ch, "encoding"),
+        supported=lambda api, ch: (
+            api.supported(ch, "encoding") and api.supported(ch, "sub")
+        ),
         value=lambda api, ch: api.encoding(ch, "sub"),
         method=lambda api, ch, value: api.set_encoding(ch, value, "sub"),
     ),
@@ -331,6 +357,26 @@ SELECT_ENTITIES = (
         supported=lambda api, ch: api.supported(ch, "post_rec_time"),
         value=lambda api, ch: api.post_recording_time(ch),
         method=lambda api, ch, value: api.set_post_recording_time(ch, value),
+    ),
+    ReolinkSelectEntityDescription(
+        key="work_mode_battery",
+        cmd_key="626",
+        translation_key="work_mode_battery",
+        entity_category=EntityCategory.CONFIG,
+        get_options=lambda api, ch: api.work_mode_battery_list(ch),
+        supported=lambda api, ch: api.supported(ch, "work_mode_battery"),
+        value=lambda api, ch: api.work_mode_battery(ch),
+        method=lambda api, ch, value: api.baichuan.set_work_mode_battery(ch, value),
+    ),
+    ReolinkSelectEntityDescription(
+        key="work_mode_powered",
+        cmd_key="771",
+        translation_key="work_mode_powered",
+        entity_category=EntityCategory.CONFIG,
+        get_options=lambda api, ch: api.work_mode_powered_list(ch),
+        supported=lambda api, ch: api.supported(ch, "work_mode_powered"),
+        value=lambda api, ch: api.work_mode_powered(ch),
+        method=lambda api, ch, value: api.baichuan.set_work_mode_powered(ch, value),
     ),
 )
 

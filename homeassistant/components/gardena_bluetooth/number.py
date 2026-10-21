@@ -44,9 +44,9 @@ class GardenaBluetoothNumberEntityDescription(NumberEntityDescription):
     @property
     def context(self) -> set[str]:
         """Context needed for update coordinator."""
-        data = {self.char.uuid}
+        data = {self.char.unique_id}
         if self.connected_state:
-            data.add(self.connected_state.uuid)
+            data.add(self.connected_state.unique_id)
         return data
 
 
@@ -178,7 +178,8 @@ class GardenaBluetoothNumber(GardenaBluetoothDescriptorEntity, NumberEntity):
         else:
             self._attr_native_value = float(data) / self.entity_description.scale
 
-        if char := self.entity_description.connected_state:
+        char = self.entity_description.connected_state
+        if char and char.unique_id in self.coordinator.characteristics:
             self._attr_available = bool(self.coordinator.get_cached(char))
         else:
             self._attr_available = True
@@ -198,7 +199,7 @@ class GardenaBluetoothRemainingOpenSetNumber(GardenaBluetoothEntity, NumberEntit
     """Representation of a entity with remaining time."""
 
     _attr_translation_key = "remaining_open_set"
-    _attr_native_unit_of_measurement = "min"
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
     _attr_mode = NumberMode.BOX
     _attr_native_min_value = 0.0
     _attr_native_max_value = 24 * 60
@@ -210,7 +211,7 @@ class GardenaBluetoothRemainingOpenSetNumber(GardenaBluetoothEntity, NumberEntit
         coordinator: GardenaBluetoothCoordinator,
     ) -> None:
         """Initialize the remaining time entity."""
-        super().__init__(coordinator, {Valve.remaining_open_time.uuid})
+        super().__init__(coordinator, {Valve.remaining_open_time.unique_id})
         self._attr_unique_id = f"{coordinator.address}-remaining_open_set"
 
     @override

@@ -4,6 +4,8 @@ import asyncio
 from datetime import timedelta
 from typing import Any
 
+import probatio
+
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -11,7 +13,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from . import common_control
-from .const import DATA_CACHE, DOMAIN
+from .const import DATA_CACHE, DEFAULT_LIMIT, DOMAIN
 from .models import EntityUsageDataCache, EntityUsagePredictions
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -26,7 +28,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-@websocket_api.websocket_command({"type": f"{DOMAIN}/common_control"})
+@websocket_api.websocket_command(
+    {
+        probatio.Required("type"): f"{DOMAIN}/common_control",
+        probatio.Optional("limit", default=DEFAULT_LIMIT): probatio.All(
+            int, probatio.Range(min=1)
+        ),
+    }
+)
 @websocket_api.async_response
 async def ws_common_control(
     hass: HomeAssistant,
@@ -39,7 +48,7 @@ async def ws_common_control(
     connection.send_result(
         msg["id"],
         {
-            "entities": getattr(result, time_category),
+            "entities": getattr(result, time_category)[: msg["limit"]],
         },
     )
 

@@ -2,12 +2,12 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.color_extractor.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 async def test_full_user_flow(hass: HomeAssistant) -> None:
@@ -21,7 +21,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.color_extractor.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -42,7 +42,7 @@ async def test_single_instance_allowed(hass: HomeAssistant) -> None:
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result.get("type") is FlowResultType.ABORT

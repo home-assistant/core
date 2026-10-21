@@ -9,7 +9,7 @@ from pyfritzhome.devicetypes import FritzhomeTemplate, FritzhomeTrigger
 from requests.exceptions import ConnectionError as RequestConnectionError, HTTPError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -62,6 +62,7 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
             host=self.config_entry.data[CONF_HOST],
             user=self.config_entry.data[CONF_USERNAME],
             password=self.config_entry.data[CONF_PASSWORD],
+            ssl_verify=self.config_entry.data[CONF_VERIFY_SSL],
             timeout=20,
         )
 
@@ -210,14 +211,16 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
                     and device.device_and_unit_id[0] not in new_data.devices
                 )
             ):
-                dr.async_get(self.hass).async_get_or_create(
+                dr.async_get(self.hass).async_get_or_create_device(
                     config_entry_id=self.config_entry.entry_id,
-                    name=device.name,
-                    identifiers={(DOMAIN, device.device_and_unit_id[0])},
-                    manufacturer=device.manufacturer,
-                    model=device.productname,
-                    sw_version=device.fw_version,
-                    configuration_url=self.configuration_url,
+                    device_info=dr.DeviceInfo(
+                        name=device.name,
+                        identifiers={(DOMAIN, device.device_and_unit_id[0])},
+                        manufacturer=device.manufacturer,
+                        model=device.productname,
+                        sw_version=device.fw_version,
+                        configuration_url=self.configuration_url,
+                    ),
                 )
 
         if (

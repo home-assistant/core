@@ -10,7 +10,7 @@ from homeassistant.const import Platform
 
 DOMAIN = "webostv"
 LOGGER = logging.getLogger(__package__)
-PLATFORMS = [Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.SWITCH]
 DEFAULT_NAME = "LG webOS TV"
 
 ATTR_PAYLOAD = "payload"
