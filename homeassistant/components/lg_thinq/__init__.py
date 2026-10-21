@@ -16,12 +16,17 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import CONF_CONNECT_CLIENT_ID, DOMAIN, MQTT_SUBSCRIPTION_INTERVAL
+from .const import (
+    CONF_CONNECT_CLIENT_ID,
+    DOMAIN,
+    MQTT_SUBSCRIPTION_INTERVAL,
+    THINQ_AUTH_ERROR_CODES,
+)
 from .coordinator import DeviceDataUpdateCoordinator, async_setup_device_coordinator
 from .mqtt import ThinQMQTT
 
@@ -92,6 +97,11 @@ async def async_setup_coordinators(
     try:
         bridge_list = await async_get_ha_bridge_list(thinq_api)
     except ThinQAPIException as exc:
+        if exc.code in THINQ_AUTH_ERROR_CODES:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_token",
+            ) from exc
         raise ConfigEntryNotReady(exc.message) from exc
     except (ClientError, TimeoutError) as exc:
         raise ConfigEntryNotReady(

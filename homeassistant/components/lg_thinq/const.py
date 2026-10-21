@@ -3,6 +3,8 @@
 from datetime import timedelta
 from typing import Final
 
+from thinqconnect import ThinQAPIErrorCodes
+
 from homeassistant.const import UnitOfTemperature
 
 # Config flow
@@ -13,6 +15,11 @@ THINQ_DEFAULT_NAME: Final = "LG ThinQ"
 THINQ_PAT_URL: Final = "https://connect-pat.lgthinq.com"
 CLIENT_PREFIX: Final = "home-assistant"
 CONF_CONNECT_CLIENT_ID: Final = "connect_client_id"
+THINQ_AUTH_ERROR_CODES: Final = {
+    ThinQAPIErrorCodes.INVALID_TOKEN,
+    ThinQAPIErrorCodes.INVALID_TOKEN_AGAIN,
+    ThinQAPIErrorCodes.NOT_FOUND_TOKEN,
+}
 
 # MQTT
 MQTT_SUBSCRIPTION_INTERVAL: Final = timedelta(days=1)

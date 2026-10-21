@@ -7,7 +7,8 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from thinqconnect import ThinQAPIException
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.lg_thinq.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -170,3 +171,46 @@ async def test_mqtt_disconnected_on_unload_when_not_prepared(
     await hass.async_block_till_done()
 
     mock_thinq_mqtt_client.async_disconnect.assert_awaited_once()
+
+
+@pytest.mark.parametrize("code", ["1103", "1218", "1302"])
+async def test_auth_failed_bridge_list(
+    hass: HomeAssistant,
+    mock_thinq_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    code: str,
+) -> None:
+    """Test a rejected PAT during setup starts a reauth flow."""
+    with patch(
+        "homeassistant.components.lg_thinq.async_get_ha_bridge_list",
+        side_effect=ThinQAPIException(code=code, message="Invalid token", headers={}),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
+
+
+@pytest.mark.parametrize("device_fixture", ["air_conditioner"])
+async def test_auth_failed_coordinator(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a rejected PAT while fetching device data starts a reauth flow."""
+    devices.async_get_device_status.side_effect = ThinQAPIException(
+        code="1103", message="Invalid token", headers={}
+    )
+    with patch(
+        "homeassistant.components.lg_thinq.ThinQMQTT.async_connect",
+        return_value=True,
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id

@@ -13,6 +13,16 @@
       "token_unauthorized": "The token is invalid or unauthorized."
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "access_token": "[%key:component::lg_thinq::config::step::user::data::access_token%]"
+        },
+        "data_description": {
+          "access_token": "A new ThinQ Personal Access Token created with the same LG ThinQ account."
+        },
+        "description": "The Personal Access Token for your LG ThinQ account is no longer valid. Please enter a new [PAT(Personal Access Token)]({pat_url}).",
+        "title": "Reauthenticate with ThinQ"
+      },
       "user": {
         "data": {
           "access_token": "Personal Access Token",
@@ -1167,6 +1177,9 @@
     },
     "failed_to_connect_mqtt": {
       "message": "Failed to connect MQTT: {error}"
+    },
+    "invalid_token": {
+      "message": "The Personal Access Token is invalid or expired."
     }
   },
   "issues": {

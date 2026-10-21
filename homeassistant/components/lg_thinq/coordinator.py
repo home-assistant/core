@@ -10,12 +10,13 @@ from thinqconnect.integration import HABridge
 
 from homeassistant.const import EVENT_CORE_CONFIG_UPDATE
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 if TYPE_CHECKING:
     from . import ThinqConfigEntry
 
-from .const import DOMAIN, REVERSE_DEVICE_UNIT_TO_HA
+from .const import DOMAIN, REVERSE_DEVICE_UNIT_TO_HA, THINQ_AUTH_ERROR_CODES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -100,6 +101,11 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             return await self.api.fetch_data()
         except ThinQAPIException as e:
+            if e.code in THINQ_AUTH_ERROR_CODES:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_token",
+                ) from e
             raise UpdateFailed(e) from e
 
     def refresh_status(self) -> None:
