@@ -9,11 +9,7 @@
       "windowsPhoneProductId": null,
       "name": "Joy Ride Turbo",
       "type": "Game",
-      "devices": [
-        "Xbox360",
-        "XboxOne",
-        "XboxSeries"
-      ],
+      "devices": ["Xbox360", "XboxOne", "XboxSeries"],
       "displayImage": "http://store-images.s-microsoft.com/image/apps.55462.65697580773346286.de1a7dea-d35c-459d-a15c-a737811ee00f.6e8da1e2-791b-4bc8-aaf6-a2665f7cdc90",
       "mediaItemType": "XboxArcadeGame",
       "modernTitleId": "166838924",
@@ -124,9 +120,7 @@
               "Redeem"
             ],
             "AvailabilityId": "B178GX41Q522",
-            "Platforms": [
-              "Xbox"
-            ],
+            "Platforms": ["Xbox"],
             "SkuId": "0001"
           }
         ],

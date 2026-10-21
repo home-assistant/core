@@ -12,6 +12,7 @@ from pytest_homeassistant.common import (
     MockConfigEntry,
     async_capture_events,
     async_fire_time_changed,
+    async_load_json_object_fixture,
     load_json_object_fixture,
     mock_restore_cache_with_extra_data,
     snapshot_platform,
@@ -330,7 +331,9 @@ async def test_polled_once_after_going_offline(
 
     await setup_integration(hass, config_entry)
 
-    friends = load_json_object_fixture("people_friends_own.json", DOMAIN)
+    friends = await async_load_json_object_fixture(
+        hass, "people_friends_own.json", DOMAIN
+    )
     for friend in friends["people"]:
         friend["presenceState"] = "Offline"
     xbox_live_client.people.get_friends_own.return_value = PeopleResponse(**friends)
