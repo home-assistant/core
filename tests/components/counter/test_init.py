@@ -23,8 +23,8 @@ from homeassistant.components.counter import (
     DEFAULT_STEP,
     DOMAIN,
     SERVICE_SET_VALUE,
-    VALUE,
 )
+from homeassistant.components.counter.const import VALUE
 from homeassistant.const import (
     ATTR_EDITABLE,
     ATTR_ENTITY_ID,

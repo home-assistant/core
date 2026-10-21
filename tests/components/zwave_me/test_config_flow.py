@@ -32,7 +32,7 @@ async def test_form(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.zwave_me.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.zwave_me.helpers.get_uuid",
@@ -68,7 +68,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.zwave_me.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.zwave_me.helpers.get_uuid",
@@ -133,7 +133,7 @@ async def test_handle_error_user(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.zwave_me.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.zwave_me.helpers.get_uuid",
