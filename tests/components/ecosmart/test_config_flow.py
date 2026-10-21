@@ -199,6 +199,35 @@ async def test_reauth_flow_errors_then_recovers(
     assert mock_config_entry.data == NEW_KEY_INPUT
 
 
+async def test_reauth_flow_no_icps_then_recovers(
+    hass: HomeAssistant,
+    mock_ecosmart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a key with no connection points is refused and the old key is kept."""
+    mock_config_entry.add_to_hass(hass)
+    mock_ecosmart_client.me.return_value = load_identity("me_no_icps.json")
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], NEW_KEY_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": "no_icps"}
+    assert mock_config_entry.data == USER_INPUT
+
+    mock_ecosmart_client.me.return_value = load_identity()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], NEW_KEY_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == NEW_KEY_INPUT
+
+
 async def test_reauth_flow_other_account(
     hass: HomeAssistant,
     mock_ecosmart_client: AsyncMock,
