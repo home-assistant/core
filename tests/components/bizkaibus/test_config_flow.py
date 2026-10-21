@@ -645,9 +645,12 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
-    ) as mock_api_class:
+    with (
+        patch(
+            "homeassistant.components.bizkaibus.config_flow.BizkaibusAPI"
+        ) as mock_api_class,
+        patch.object(hass.config_entries, "async_reload", return_value=True),
+    ):
         mock_api = _mock_api(
             mock_api_class,
             lines=[
