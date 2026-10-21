@@ -80,7 +80,7 @@ async def test_classify(
 async def test_examples_extracted_once(
     hass: HomeAssistant, media: dict[str, bytes], examples: dict[str, dict]
 ) -> None:
-    """Reuse the detector and only extract examples that are new or relabeled."""
+    """Reuse detectors and extract each example of a region only once."""
     media[IMAGE] = scene(car=True, seed=50)
     with patch.object(
         StateDetector, "prepare", autospec=True, side_effect=StateDetector.prepare
@@ -91,9 +91,9 @@ async def test_examples_extracted_once(
         await _classify(hass, examples)
         assert prepare.call_count == 4
 
-        # empty_1 moves to car, car_1 is dropped.
+        # empty_1 moves to car, car_1 is dropped: a new detector, no extraction.
         answer = await _classify(hass, _labels(["empty_0"], ["car_0", "empty_1"]))
-        assert prepare.call_count == 5
+        assert prepare.call_count == 4
     assert set(answer.probabilities) == {"empty", "car"}
 
 
@@ -112,7 +112,8 @@ async def test_detectors_are_bounded(
         await _classify(hass, examples)
         await _classify(hass, examples, region={"left": 0.5})
         await _classify(hass, examples)
-    assert prepare.call_count == 12
+    # The extracted examples outlive the dropped detector.
+    assert prepare.call_count == 8
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -164,3 +165,45 @@ async def test_blank_image_is_unusable(
     media[IMAGE] = scene(car=True, seed=0, grey=True)
     with pytest.raises(ai_task.ImageUnusableError):
         await _classify(hass, examples)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_example_sets_do_not_mix(
+    hass: HomeAssistant, media: dict[str, bytes], examples: dict[str, dict]
+) -> None:
+    """Callers with other examples for the same region get their own answer."""
+    media[IMAGE] = scene(car=True, seed=50)
+    swapped = _labels(["car_0", "car_1"], ["empty_0", "empty_1"])
+
+    assert (await _classify(hass, examples)).choice == "car"
+    assert (await _classify(hass, swapped)).choice == "empty"
+    assert (await _classify(hass, examples)).choice == "car"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_examples_are_bounded(
+    hass: HomeAssistant, media: dict[str, bytes], examples: dict[str, dict]
+) -> None:
+    """Drop the extracted examples used longest ago."""
+    media[IMAGE] = scene(car=True, seed=50)
+    with (
+        patch("homeassistant.components.local_vision.ai_task.MAX_DETECTORS", 1),
+        patch("homeassistant.components.local_vision.ai_task.MAX_EXAMPLES", 1),
+        patch.object(
+            StateDetector, "prepare", autospec=True, side_effect=StateDetector.prepare
+        ) as prepare,
+    ):
+        await _classify(hass, examples)
+        await _classify(hass, examples, region={"left": 0.5})
+        await _classify(hass, examples)
+    assert prepare.call_count == 12
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_example_in_two_labels(
+    hass: HomeAssistant, media: dict[str, bytes], examples: dict[str, dict]
+) -> None:
+    """Reject the same image as an example of two labels."""
+    media[IMAGE] = scene(car=True, seed=50)
+    with pytest.raises(HomeAssistantError, match="example of two labels"):
+        await _classify(hass, _labels(["empty_0", "car_0"], ["car_0"]))

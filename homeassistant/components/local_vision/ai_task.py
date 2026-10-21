@@ -10,6 +10,7 @@ from tarsius import (
     BlankFrameError,
     BlankRegionError,
     ImageError,
+    Prepared,
     Roi,
     StateDetector,
 )
@@ -25,8 +26,10 @@ from .const import DOMAIN
 
 PARALLEL_UPDATES = 0
 
-# Detectors kept for the regions and labels asked for most recently.
+# Detectors kept for the example sets asked for most recently.
 MAX_DETECTORS = 16
+# Extracted examples kept across detectors, enough for a few helpers.
+MAX_EXAMPLES = 256
 
 
 async def async_setup_entry(
@@ -55,8 +58,12 @@ class LocalVisionTaskEntity(ai_task.AITaskEntity):
             entry_type=DeviceEntryType.SERVICE,
         )
         self._detectors: OrderedDict[
-            tuple[tuple[float, ...], tuple[str, ...]], StateDetector
+            tuple[tuple[float, ...], tuple[str, ...], frozenset[tuple[str, str]]],
+            StateDetector,
         ] = OrderedDict()
+        self._examples: OrderedDict[tuple[tuple[float, ...], str], Prepared] = (
+            OrderedDict()
+        )
         self._lock = threading.Lock()
 
     @override
@@ -94,35 +101,62 @@ class LocalVisionTaskEntity(ai_task.AITaskEntity):
     def _taught_detector(
         self, roi: Roi, task: ai_task.ClassifyImageTask
     ) -> StateDetector:
-        """Return a detector for the region with exactly the task's examples."""
-        key = (roi.as_tuple(), tuple(task.labels))
-        if (detector := self._detectors.get(key)) is None:
-            detector = StateDetector(roi, tuple(task.labels), backend=self._backend)
-            self._detectors[key] = detector
-            if len(self._detectors) > MAX_DETECTORS:
-                self._detectors.popitem(last=False)
-        self._detectors.move_to_end(key)
-        # Examples are keyed by content, so a detector only extracts new ones.
-        wanted: dict[str, tuple[str, bytes]] = {}
+        """Return a detector taught with exactly the task's examples.
+
+        A detector never changes after it is taught, so callers with other
+        examples for the same region never see each other's references.
+        """
+        examples: list[tuple[str, str, bytes]] = []
         for label_id, label in task.labels.items():
             for example in label.examples:
                 data = example.path.read_bytes()
-                wanted[hashlib.sha256(data).hexdigest()] = (label_id, data)
-        known = detector.references()
-        detector.remove([ref for ref in known if ref not in wanted])
-        for ref, (label_id, data) in wanted.items():
-            if known.get(ref) == label_id:
-                continue
-            try:
-                detector.add(ref, detector.prepare(data), state=label_id)
-            except BlankRegionError as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="blank_example",
-                    translation_placeholders={"label": label_id},
-                ) from err
-            except ImageError as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN, translation_key="unreadable_image"
-                ) from err
+                examples.append((hashlib.sha256(data).hexdigest(), label_id, data))
+        labels_of: dict[str, set[str]] = {}
+        for ref, label_id, _ in examples:
+            labels_of.setdefault(ref, set()).add(label_id)
+        if any(len(labels) > 1 for labels in labels_of.values()):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="example_in_two_labels"
+            )
+        key = (
+            roi.as_tuple(),
+            tuple(task.labels),
+            frozenset((ref, label_id) for ref, label_id, _ in examples),
+        )
+        if (detector := self._detectors.get(key)) is not None:
+            self._detectors.move_to_end(key)
+            return detector
+        detector = StateDetector(roi, tuple(task.labels), backend=self._backend)
+        for ref, label_id, data in examples:
+            detector.add(
+                ref, self._prepared(detector, roi, ref, label_id, data), state=label_id
+            )
+        self._detectors[key] = detector
+        if len(self._detectors) > MAX_DETECTORS:
+            self._detectors.popitem(last=False)
         return detector
+
+    def _prepared(
+        self, detector: StateDetector, roi: Roi, ref: str, label_id: str, data: bytes
+    ) -> Prepared:
+        """Return the extracted example, shared by detectors of the same region."""
+        key = (roi.as_tuple(), ref)
+        if (prepared := self._examples.get(key)) is not None:
+            self._examples.move_to_end(key)
+            return prepared
+        try:
+            prepared = detector.prepare(data)
+        except BlankRegionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="blank_example",
+                translation_placeholders={"label": label_id},
+            ) from err
+        except ImageError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="unreadable_image"
+            ) from err
+        self._examples[key] = prepared
+        if len(self._examples) > MAX_EXAMPLES:
+            self._examples.popitem(last=False)
+        return prepared

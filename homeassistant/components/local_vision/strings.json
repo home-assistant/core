@@ -16,6 +16,9 @@
     "blank_frame": {
       "message": "The image shows nothing, the camera may be offline."
     },
+    "example_in_two_labels": {
+      "message": "The same image is an example of two labels."
+    },
     "model_unavailable": {
       "message": "The image model could not be loaded: {error}"
     },
