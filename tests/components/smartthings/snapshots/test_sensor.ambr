@@ -7658,7 +7658,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_all_entities[da_ks_oven_0107x][sensor.kitchen_oven_meat_probe_temperature-entry]
@@ -7712,7 +7712,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_all_entities[da_ks_oven_0107x][sensor.kitchen_oven_oven_mode-entry]
@@ -8627,7 +8627,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-17.7777777777778',
+    'state': 'unavailable',
   })
 # ---
 # name: test_all_entities[da_ks_range_0101x][sensor.vulcan_meat_probe_temperature-entry]
@@ -8685,7 +8685,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-17.7777777777778',
+    'state': 'unavailable',
   })
 # ---
 # name: test_all_entities[da_ks_range_0101x][sensor.vulcan_operating_state-entry]
@@ -9834,7 +9834,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-17.7777777777778',
+    'state': 'unavailable',
   })
 # ---
 # name: test_all_entities[da_ks_walloven_0107x][sensor.four_meat_probe_temperature-entry]
@@ -9892,7 +9892,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-17.7777777777778',
+    'state': 'unavailable',
   })
 # ---
 # name: test_all_entities[da_ks_walloven_0107x][sensor.four_oven_mode-entry]

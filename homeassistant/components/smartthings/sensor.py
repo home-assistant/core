@@ -153,6 +153,11 @@ def power_attributes(status: dict[str, Any]) -> dict[str, Any]:
     return state
 
 
+def _meat_probe_connected(status: dict[Attribute | str, Status]) -> bool:
+    """Return if the meat probe is plugged in; it reports 0 °F when it isn't."""
+    return status[Attribute.STATUS].value == "connected"
+
+
 @dataclass(frozen=True, kw_only=True)
 class SmartThingsSensorEntityDescription(SensorEntityDescription):
     """Describe a SmartThings sensor entity."""
@@ -165,6 +170,7 @@ class SmartThingsSensorEntityDescription(SensorEntityDescription):
     translation_placeholders_fn: Callable[[str], dict[str, str]] | None = None
     component_fn: Callable[[str], bool] | None = None
     exists_fn: Callable[[Status], bool] | None = None
+    available_fn: Callable[[dict[Attribute | str, Status]], bool] | None = None
     use_temperature_unit: bool = False
     deprecated: Callable[[ComponentStatus], tuple[str, str] | None] | None = None
     component_translation_key: dict[str, str] | None = None
@@ -1225,6 +1231,7 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="meat_probe_temperature",
                 device_class=SensorDeviceClass.TEMPERATURE,
                 state_class=SensorStateClass.MEASUREMENT,
+                available_fn=_meat_probe_connected,
             )
         ],
         Attribute.TEMPERATURE_SETPOINT: [
@@ -1232,6 +1239,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.TEMPERATURE_SETPOINT,
                 translation_key="meat_probe_temperature_setpoint",
                 device_class=SensorDeviceClass.TEMPERATURE,
+                available_fn=_meat_probe_connected,
             )
         ],
     },
@@ -1490,6 +1498,14 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
             self._attr_translation_key = (
                 self.entity_description.component_translation_key.get(component)
             )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the entity is available."""
+        if (available_fn := self.entity_description.available_fn) is None:
+            return super().available
+        return super().available and available_fn(self._internal_state[self.capability])
 
     @property
     @override
