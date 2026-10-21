@@ -5,15 +5,14 @@ from unittest.mock import AsyncMock, patch
 from iaqualink.client import AqualinkClient
 from iaqualink.systems.iaqua.device import IaquaLightSwitch, IaquaSensor
 from iaqualink.systems.iaqua.system import IaquaSystem
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import get_diagnostics_for_config_entry
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 
 from .conftest import get_aqualink_device, get_aqualink_system
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_diagnostics(

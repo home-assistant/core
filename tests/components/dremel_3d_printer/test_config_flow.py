@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
 from requests.exceptions import ConnectTimeout
 
 from homeassistant.components.dremel_3d_printer.const import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import CONF_DATA, patch_async_setup_entry
-
-from tests.common import MockConfigEntry
 
 MOCK = "homeassistant.components.dremel_3d_printer.config_flow.Dremel3DPrinter"
 

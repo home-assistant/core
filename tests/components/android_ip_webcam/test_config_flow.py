@@ -4,6 +4,8 @@ from http import HTTPStatus
 from unittest.mock import Mock, patch
 
 import aiohttp
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant import config_entries
 from homeassistant.components.android_ip_webcam.const import DOMAIN
@@ -12,9 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .test_init import MOCK_CONFIG_DATA
-
-from tests.common import MockConfigEntry, async_load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_form(hass: HomeAssistant, aioclient_mock_fixture) -> None:
@@ -27,7 +26,7 @@ async def test_form(hass: HomeAssistant, aioclient_mock_fixture) -> None:
 
     with patch(
         "homeassistant.components.android_ip_webcam.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -107,7 +106,7 @@ async def test_form_invalid_auth(
     )
     with patch(
         "homeassistant.components.android_ip_webcam.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -155,7 +154,7 @@ async def test_form_cannot_connect(
     )
     with patch(
         "homeassistant.components.android_ip_webcam.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

@@ -183,9 +183,7 @@ class FibaroController:
             manufacturer = None
 
         self._device_infos[main_device.fibaro_id] = DeviceInfo(
-            # The identifiers should hold a string fibaro_id, which needs a migration.
-            # mypy can't see that fibaro_id is an int, as pyfibaro lacks a py.typed
-            identifiers={(DOMAIN, main_device.fibaro_id)},
+            identifiers={(DOMAIN, str(main_device.fibaro_id))},
             manufacturer=manufacturer,
             name=main_device.name,
         )
@@ -205,8 +203,7 @@ class FibaroController:
 
     def get_all_device_identifiers(self) -> list[set[tuple[str, str]]]:
         """Get all identifiers of fibaro integration."""
-        # The identifiers should hold a string fibaro_id, which needs a migration
-        return [{(DOMAIN, fibaro_id)} for fibaro_id in self._device_infos]  # type: ignore[arg-type]
+        return [{(DOMAIN, str(fibaro_id))} for fibaro_id in self._device_infos]
 
     def get_room_name(self, room_id: int) -> str | None:
         """Get the room name by room id."""
@@ -328,20 +325,42 @@ async def async_setup_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> No
     # register the hub device info separately as the hub has sometimes no entities
     fibaro_info = controller.read_fibaro_info()
     device_registry = dr.async_get(hass)
-    hub_device = device_registry.async_get_or_create(
+    hub_device = device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, controller.hub_serial)},
-        serial_number=controller.hub_serial,
-        manufacturer=fibaro_info.manufacturer_name,
-        name=fibaro_info.hc_name,
-        model=fibaro_info.model_name,
-        sw_version=fibaro_info.current_version,
-        configuration_url=controller.get_frontend_url(),
-        connections={(dr.CONNECTION_NETWORK_MAC, fibaro_info.mac_address)},
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, controller.hub_serial)},
+            serial_number=controller.hub_serial,
+            manufacturer=fibaro_info.manufacturer_name,
+            name=fibaro_info.hc_name,
+            model=fibaro_info.model_name,
+            sw_version=fibaro_info.current_version,
+            configuration_url=controller.get_frontend_url(),
+            connections={(dr.CONNECTION_NETWORK_MAC, fibaro_info.mac_address)},
+        ),
     )
     controller.link_main_devices_to_hub(hub_device.id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> None:
+    """Migrate device identifiers to use string Fibaro IDs."""
+    if entry.version == 1:
+        device_registry = dr.async_get(hass)
+        for device_entry in dr.async_entries_for_config_entry(
+            device_registry, entry.entry_id
+        ):
+            # Convert second identifier from int to string
+            # This fixes the device registry entry, it allows only string
+            new_identifiers = {
+                (DOMAIN, str(identifier[1])) if identifier[0] == DOMAIN else identifier
+                for identifier in device_entry.identifiers
+            }
+            device_registry.async_update_device(
+                device_entry.id, new_identifiers=new_identifiers
+            )
+
+        hass.config_entries.async_update_entry(entry, version=2)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> None:

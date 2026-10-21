@@ -28,8 +28,11 @@ from .const import (
     DEFAULT_LANGUAGE,
     DOMAIN,
 )
-from .coordinator import JewishCalendarData, JewishCalendarUpdateCoordinator
-from .entity import JewishCalendarConfigEntry
+from .coordinator import (
+    JewishCalendarConfigEntry,
+    JewishCalendarData,
+    JewishCalendarUpdateCoordinator,
+)
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)

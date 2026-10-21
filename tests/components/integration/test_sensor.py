@@ -1,13 +1,20 @@
 """The tests for the integration sensor platform."""
 
 from datetime import timedelta
+from decimal import Decimal
 from typing import Any
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.integration.const import DOMAIN
+from homeassistant.components.integration.sensor import IntegrationSensorExtraStoredData
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -36,12 +43,6 @@ from homeassistant.helpers import (
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    mock_restore_cache_with_extra_data,
-)
 
 DEFAULT_MAX_SUB_INTERVAL = {"minutes": 1}
 
@@ -300,6 +301,26 @@ async def test_restore_state_failed(hass: HomeAssistant, extra_attributes) -> No
     state = hass.states.get("sensor.integration")
     assert state
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "last_valid_state",
+    [
+        pytest.param(Decimal(0), id="zero"),
+        pytest.param(Decimal("12.5"), id="non_zero"),
+    ],
+)
+def test_extra_restore_state_data_roundtrip(last_valid_state: Decimal) -> None:
+    """Test the extra restore state data survives a roundtrip, including a 0 state."""
+    data = IntegrationSensorExtraStoredData(
+        last_valid_state, "kWh", "sensor.power", last_valid_state
+    )
+
+    restored = IntegrationSensorExtraStoredData.from_dict(data.as_dict())
+
+    assert restored is not None
+    assert restored.native_value == last_valid_state
+    assert restored.last_valid_state == last_valid_state
 
 
 @pytest.mark.parametrize("extra_config", [{}, {"max_sub_interval": {"minutes": 9999}}])

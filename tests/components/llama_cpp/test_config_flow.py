@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx2
 import openai
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.llama_cpp.const import (
@@ -25,8 +26,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import llm
 
-from tests.common import MockConfigEntry
-
 RECOMMENDED_OPTIONS = {
     CONF_RECOMMENDED: True,
     CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
@@ -38,7 +37,7 @@ RECOMMENDED_OPTIONS = {
 def mock_setup(hass: HomeAssistant) -> Generator[AsyncMock]:
     """Mock the setup of the integration."""
     with patch(
-        f"homeassistant.components.{DOMAIN}.async_setup_entry", return_value=True
+        f"homeassistant.components.{DOMAIN}.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pizone
 from pizone import ControllerEndpoint
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.izone import config_flow, discovery as izone_discovery
@@ -27,8 +28,6 @@ from .conftest import (
     endpoint_from_controller,
     patch_discovered_controllers,
 )
-
-from tests.common import MockConfigEntry
 
 
 def _make_homekit_info(md: str, host: str | None = None) -> SimpleNamespace:
@@ -1392,7 +1391,7 @@ async def test_async_migrate_entry_discovers_legacy_domain(
 
     with patch(
         "homeassistant.components.izone.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

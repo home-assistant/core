@@ -7,6 +7,7 @@ import functools
 import gc
 import logging
 import os
+import pickle
 import re
 import threading
 import time
@@ -16,6 +17,7 @@ from unittest.mock import MagicMock, patch
 from freezegun import freeze_time
 import probatio
 import pytest
+from pytest_homeassistant.common import async_capture_events, async_mock_service
 from pytest_unordered import unordered
 
 from homeassistant import core as ha
@@ -59,8 +61,6 @@ from homeassistant.helpers.json import json_dumps
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.read_only_dict import ReadOnlyDict
-
-from .common import async_capture_events, async_mock_service
 
 PST = dt_util.get_time_zone("America/Los_Angeles")
 
@@ -1612,6 +1612,17 @@ def test_state_dict_conversion() -> None:
     assert state.as_dict() == ha.State.from_dict(state.as_dict()).as_dict()
 
 
+def test_state_dict_conversion_keeps_context() -> None:
+    """Test conversion of dict keeps the full context."""
+    context = ha.Context(user_id="user", parent_id="parent", id="id")
+    state = ha.State("domain.hello", "world", context=context)
+
+    restored = ha.State.from_dict(state.as_dict())
+
+    assert restored.context.parent_id == "parent"
+    assert restored.as_dict() == state.as_dict()
+
+
 def test_state_dict_conversion_with_wrong_data() -> None:
     """Test conversion with wrong data."""
     assert ha.State.from_dict(None) is None
@@ -1627,6 +1638,17 @@ def test_state_dict_conversion_with_wrong_data() -> None:
     )
     assert wrong_context is not None
     assert wrong_context.context.id == "123"
+
+
+@pytest.mark.parametrize("protocol", range(2, pickle.HIGHEST_PROTOCOL + 1))
+def test_state_pickle(protocol: int) -> None:
+    """Test a state with attributes survives a pickle round trip."""
+    state = ha.State("domain.hello", "world", {"some": "attr"})
+
+    restored = pickle.loads(pickle.dumps(state, protocol=protocol))  # noqa: S301
+
+    assert type(restored.attributes) is ReadOnlyDict
+    assert restored.as_dict() == state.as_dict()
 
 
 def test_state_repr() -> None:
@@ -2323,6 +2345,7 @@ def test_valid_entity_id() -> None:
         "Light.kitchen",
         "light.Kitchen",
         "lightkitchen",
+        "light.kitchen\n",
     ):
         assert not ha.valid_entity_id(invalid), invalid
 
@@ -2352,6 +2375,7 @@ def test_valid_domain() -> None:
         "light.kitchen_yo_",
         "light.kitchen.",
         "Light",
+        "light\n",
     ):
         assert not ha.valid_domain(invalid), invalid
 
