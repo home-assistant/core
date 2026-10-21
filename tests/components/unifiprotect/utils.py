@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, Mock
 
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from uiprotect import EventChange, ProtectApiClient, ProtectEvent
+from uiprotect.anonymize import random_hex
 from uiprotect.api import RTSPSStreams
 from uiprotect.data import (
     Bootstrap,
@@ -59,7 +60,6 @@ from uiprotect.data.public_devices import (
     PublicWirelessConnectionState,
     SensorFeatureCapability,
 )
-from uiprotect.test_util.anonymize import random_hex
 from uiprotect.utils import to_js_time
 from uiprotect.websocket import WebsocketState
 

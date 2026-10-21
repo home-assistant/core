@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast, override
+from typing import Any, cast, override
 
 from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
@@ -25,6 +25,7 @@ from .const import TeslemetryState
 from .entity import (
     TeslemetryEnergyInfoEntity,
     TeslemetryEnergyLiveEntity,
+    TeslemetryEnergyLocalStatusEntity,
     TeslemetryRootEntity,
     TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
@@ -569,6 +570,82 @@ BLUETOOTH_SESSION_DESCRIPTION = TeslemetryBinarySensorEntityDescription(
 )
 
 
+def _status_bool(*path: str) -> Callable[[dict[str, Any]], bool | None]:
+    """Return a function reading a boolean at a path in the gateway status."""
+
+    def value_fn(data: dict[str, Any]) -> bool | None:
+        value: Any = data
+        for key in path:
+            if not isinstance(value, dict):
+                return None
+            value = value.get(key)
+        return value if isinstance(value, bool) else None
+
+    return value_fn
+
+
+@dataclass(frozen=True, kw_only=True)
+class TeslemetryLocalBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes a Teslemetry binary sensor read from the local gateway."""
+
+    value_fn: Callable[[dict[str, Any]], bool | None]
+
+
+_site_shut_down = _status_bool("control", "siteShutdown", "isShutDown")
+
+
+def _site_running(data: dict[str, Any]) -> bool | None:
+    """Return if the site is running, which the gateway reports as shut down."""
+    shut_down = _site_shut_down(data)
+    return None if shut_down is None else not shut_down
+
+
+ENERGY_LOCAL_STATUS_DESCRIPTIONS: tuple[
+    TeslemetryLocalBinarySensorEntityDescription, ...
+] = (
+    TeslemetryLocalBinarySensorEntityDescription(
+        key="grid_ok",
+        value_fn=_status_bool("control", "islanding", "gridOK"),
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TeslemetryLocalBinarySensorEntityDescription(
+        key="microgrid_ok",
+        value_fn=_status_bool("control", "islanding", "microGridOK"),
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TeslemetryLocalBinarySensorEntityDescription(
+        key="contactor_closed",
+        value_fn=_status_bool("control", "islanding", "contactorClosed"),
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TeslemetryLocalBinarySensorEntityDescription(
+        key="site_running",
+        value_fn=_site_running,
+        device_class=BinarySensorDeviceClass.RUNNING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TeslemetryLocalBinarySensorEntityDescription(
+        key="site_manager_running",
+        value_fn=_status_bool("system", "sitemanagerStatus", "isRunning"),
+        device_class=BinarySensorDeviceClass.RUNNING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TeslemetryLocalBinarySensorEntityDescription(
+        key="escan_firmware_updating",
+        value_fn=_status_bool("esCan", "firmwareUpdate", "isUpdating"),
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TeslemetryLocalBinarySensorEntityDescription(
+        key="pw3can_firmware_updating",
+        value_fn=_status_bool("pw3Can", "firmwareUpdate", "isUpdating"),
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TeslemetryConfigEntry,
@@ -619,6 +696,15 @@ async def async_setup_entry(
         for energysite in entry.runtime_data.energysites
         for description in ENERGY_INFO_DESCRIPTIONS
         if description.key in energysite.info_coordinator.data
+    )
+    entities.extend(
+        TeslemetryEnergyLocalBinarySensorEntity(energysite, description)
+        for energysite in entry.runtime_data.energysites
+        if (coordinator := energysite.local_status_coordinator)
+        for description in ENERGY_LOCAL_STATUS_DESCRIPTIONS
+        # Without a first status, add every sensor so they recover with the gateway.
+        if coordinator.data is None
+        or description.value_fn(coordinator.data) is not None
     )
 
     async_remove_stale_vehicle_entities(
@@ -849,3 +935,26 @@ class TeslemetryVehicleBluetoothSessionBinarySensorEntity(
         """Handle the Bluetooth session being established or lost."""
         self._attr_is_on = connected
         self.async_write_ha_state()
+
+
+class TeslemetryEnergyLocalBinarySensorEntity(
+    TeslemetryEnergyLocalStatusEntity, BinarySensorEntity
+):
+    """Teslemetry energy binary sensor read from the local gateway."""
+
+    entity_description: TeslemetryLocalBinarySensorEntityDescription
+
+    def __init__(
+        self,
+        data: TeslemetryEnergyData,
+        description: TeslemetryLocalBinarySensorEntityDescription,
+    ) -> None:
+        """Initialize the binary sensor."""
+        self.entity_description = description
+        super().__init__(data, description.key)
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        """Return the state of the binary sensor."""
+        return self.entity_description.value_fn(self.coordinator.data)

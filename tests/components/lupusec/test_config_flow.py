@@ -50,7 +50,7 @@ async def test_form_valid_input(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.lupusec.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.lupusec.config_flow.lupupy.Lupusec",
@@ -106,7 +106,7 @@ async def test_flow_user_init_data_error_and_recover(
     with (
         patch(
             "homeassistant.components.lupusec.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.lupusec.config_flow.lupupy.Lupusec",

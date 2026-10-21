@@ -29,7 +29,7 @@ def mock_setup_entry() -> Generator[None]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.discogs.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         yield
 

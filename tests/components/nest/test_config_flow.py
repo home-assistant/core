@@ -215,7 +215,7 @@ class OAuthFixture:
     ) -> FlowResult:
         """Finish the OAuth flow exchanging auth token for refresh token."""
         with patch(
-            "homeassistant.components.nest.async_setup_entry", return_value=True
+            "homeassistant.components.nest.async_setup_entry", return_value=None
         ) as mock_setup:
             new_result = await self.async_configure(result, user_input)
             assert len(mock_setup.mock_calls) == 1

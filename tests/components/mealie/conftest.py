@@ -7,6 +7,7 @@ from aiomealie import (
     About,
     Mealplan,
     MealplanResponse,
+    ParsedIngredient,
     Recipe,
     RecipesResponse,
     ShoppingItemsResponse,
@@ -30,7 +31,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.mealie.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -72,7 +73,9 @@ def mock_mealie_client() -> Generator[AsyncMock]:
         client.get_shopping_items.return_value = ShoppingItemsResponse.from_json(
             load_fixture("get_shopping_items.json", DOMAIN)
         )
-        client.parse_ingredient.return_value = None
+        client.parse_ingredient.return_value = ParsedIngredient.from_json(
+            load_fixture("parse_ingredient.json", DOMAIN)
+        )
         client.get_statistics.return_value = Statistics.from_json(
             load_fixture("statistics.json", DOMAIN)
         )
