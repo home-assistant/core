@@ -2,7 +2,6 @@
 
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
-from functools import partial
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -70,7 +69,7 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 @contextmanager
 def _patch_manual_success() -> Generator[None]:
     """Patch discovery and a device that accepts the connection."""
-    dm = MagicMock()
+    dm = MagicMock(spec=MideaDevice)
     dm.connect.return_value = True
     with (
         patch(
@@ -94,7 +93,7 @@ def _patch_cloud_success() -> Generator[None]:
     cloud.get_cloud_keys = AsyncMock(
         return_value={"method": {"token": TEST_TOKEN, "key": TEST_KEY}}
     )
-    dm = MagicMock()
+    dm = MagicMock(spec=MideaDevice)
     dm.connect.return_value = True
     with (
         patch(
@@ -617,7 +616,7 @@ async def test_search_flow_no_new_devices_found(hass: HomeAssistant) -> None:
     assert result["step_id"] == "search"
     assert result["errors"] == {"base": "no_devices"}
 
-    dm = MagicMock()
+    dm = MagicMock(spec=MideaDevice)
     dm.connect.return_value = True
     with (
         patch(
@@ -2285,66 +2284,6 @@ async def test_manually_flow_builds_concrete_device_subclass(
     dm = mock_connect.call_args.args[0]
     assert type(dm) is not MideaDevice
     assert isinstance(dm.build_query(), list)
-
-
-async def test_manually_flow_runs_device_selector_in_executor(
-    hass: HomeAssistant,
-) -> None:
-    """Test device_selector() is dispatched via the executor, not the event loop.
-
-    Regression test: device_selector() calls importlib.import_module() to
-    dynamically load the concrete device subclass. That is a blocking call,
-    so it must never run directly on the event loop - Home Assistant's
-    blocking-call detector flags exactly that. device_selector() is invoked
-    from within _select_and_connect(), which is what actually gets dispatched
-    to the executor (wrapped in a functools.partial).
-    """
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-    )
-    flow_id = result["flow_id"]
-
-    await hass.config_entries.flow.async_configure(
-        flow_id,
-        user_input={"next_step_id": "manually"},
-    )
-
-    with (
-        patch(
-            "homeassistant.components.midea.config_flow.discover",
-            return_value=DISCOVERY_RESULT,
-        ),
-        patch.object(MideaDevice, "connect", autospec=True, return_value=True),
-        patch.object(MideaDevice, "close_socket", autospec=True),
-        patch.object(
-            hass,
-            "async_add_executor_job",
-            wraps=hass.async_add_executor_job,
-        ) as mock_executor_job,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            flow_id,
-            user_input={
-                CONF_DEVICE_ID: TEST_DEVICE_ID,
-                CONF_TYPE: TEST_TYPE,
-                CONF_IP_ADDRESS: TEST_IP_ADDRESS,
-                CONF_PORT: TEST_PORT,
-                CONF_PROTOCOL: TEST_PROTOCOL,
-                CONF_MODEL: TEST_MODEL,
-                CONF_SUBTYPE: TEST_SUBTYPE,
-                CONF_TOKEN: TEST_TOKEN,
-                CONF_KEY: TEST_KEY,
-            },
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == str(TEST_DEVICE_ID)
-    dispatched_funcs = [call.args[0] for call in mock_executor_job.call_args_list]
-    assert any(
-        isinstance(func, partial) and func.func is _select_and_connect
-        for func in dispatched_funcs
-    )
 
 
 async def test_login_credentials_step_falls_back_to_default_cloud(

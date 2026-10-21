@@ -1,7 +1,6 @@
 """Switch for Midea."""
 
 from dataclasses import asdict, dataclass
-from functools import partial
 from typing import Any, override
 
 from midealocal.const import DeviceType
@@ -276,10 +275,4 @@ class MideaRestoreSwitch(MideaSwitch, RestoreEntity):
             not isinstance(is_on := last_extra_data.as_dict().get("is_on"), bool)
         ):
             return
-        await self.hass.async_add_executor_job(
-            partial(
-                self._device.set_attribute,
-                attr=self.entity_description.key,
-                value=is_on,
-            )
-        )
+        self._device.set_attribute(attr=self.entity_description.key, value=is_on)
