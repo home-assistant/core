@@ -127,3 +127,12 @@ def test_normalize_url() -> None:
         == "https://example.com/test"
     )
     assert network_util.normalize_url("/test/") == "/test"
+    assert (
+        network_util.normalize_url("https://example.com/?next=/")
+        == "https://example.com/?next=/"
+    )
+    assert (
+        network_util.normalize_url("https://example.com/test/#/")
+        == "https://example.com/test/#/"
+    )
+    assert network_util.normalize_url("https://example.com/?") == "https://example.com"

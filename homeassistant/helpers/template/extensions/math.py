@@ -502,4 +502,9 @@ class MathExtension(BaseTemplateExtension):
         if steps:
             normalized = round(normalized * steps) / steps
 
-        return out_min_num + (normalized * (out_max_num - out_min_num))
+        result = out_min_num + (normalized * (out_max_num - out_min_num))
+        if edges == "clamp":
+            # Rounding in the linear map can overshoot the output bounds.
+            low, high = sorted((out_min_num, out_max_num))
+            return max(low, min(high, result))
+        return result
