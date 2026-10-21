@@ -46,12 +46,6 @@
       }
     },
     "switch": {
-      "block_client": {
-        "default": "mdi:ethernet",
-        "state": {
-          "off": "mdi:ethernet-off"
-        }
-      },
       "dpi_restriction": {
         "default": "mdi:network",
         "state": {
@@ -60,6 +54,12 @@
       },
       "firewall_policy_control": {
         "default": "mdi:security-network"
+      },
+      "network_access": {
+        "default": "mdi:ethernet",
+        "state": {
+          "off": "mdi:ethernet-off"
+        }
       },
       "poe_port_control": {
         "default": "mdi:ethernet",
