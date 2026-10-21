@@ -1,6 +1,8 @@
 """Test the AlarmDecoder config flow."""
 
-from unittest.mock import patch
+from collections.abc import Generator
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from alarmdecoder.util import NoDeviceError
 import pytest
@@ -30,6 +32,7 @@ from homeassistant.components.alarmdecoder.const import (
     PROTOCOL_SOCKET,
 )
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -466,3 +469,168 @@ async def test_one_device_allowed(hass: HomeAssistant, protocol, connection) -> 
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.fixture
+def mock_controller() -> Generator[MagicMock]:
+    """Patch the controller the integration sets up with after a reload."""
+    with (
+        patch("homeassistant.components.alarmdecoder.AdExt") as mock_adext,
+        patch("homeassistant.components.alarmdecoder.PLATFORMS", []),
+    ):
+        mock_adext.return_value.is_init = AsyncMock(return_value=True)
+        yield mock_adext.return_value
+
+
+@pytest.mark.parametrize(
+    ("protocol", "old_title", "old", "new", "title"),
+    [
+        pytest.param(
+            PROTOCOL_SOCKET,
+            "alarmdecoder.local:10000",
+            {CONF_HOST: "alarmdecoder.local", CONF_PORT: 10000},
+            {CONF_HOST: "alarmdecoder.example.com", CONF_PORT: 10001},
+            "alarmdecoder.example.com:10001",
+            id="socket",
+        ),
+        pytest.param(
+            PROTOCOL_SERIAL,
+            "/dev/ttyUSB0",
+            {CONF_DEVICE_PATH: "/dev/ttyUSB0", CONF_DEVICE_BAUD: 115200},
+            {CONF_DEVICE_PATH: "/dev/ttyUSB1", CONF_DEVICE_BAUD: 115200},
+            "/dev/ttyUSB1",
+            id="serial",
+        ),
+    ],
+)
+async def test_reconfigure(
+    hass: HomeAssistant,
+    mock_controller: MagicMock,
+    protocol: str,
+    old_title: str,
+    old: dict[str, Any],
+    new: dict[str, Any],
+    title: str,
+) -> None:
+    """Test changing the connection settings keeps the entry and its options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=old_title,
+        data={CONF_PROTOCOL: protocol, **old},
+        options={OPTIONS_ZONES: {"1": {CONF_ZONE_NAME: "Front Door"}}},
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with (
+        patch("homeassistant.components.alarmdecoder.config_flow.AdExt.open"),
+        patch("homeassistant.components.alarmdecoder.config_flow.AdExt.close"),
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], new)
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {CONF_PROTOCOL: protocol, **new}
+    assert entry.title == title
+    assert entry.options == {OPTIONS_ZONES: {"1": {CONF_ZONE_NAME: "Front Door"}}}
+    assert entry.state is ConfigEntryState.LOADED
+    # Set up once, then reloaded exactly once.
+    assert mock_controller.open.call_count == 2
+
+
+async def test_reconfigure_keeps_custom_title(
+    hass: HomeAssistant, mock_controller: MagicMock
+) -> None:
+    """Test a title the user chose survives a reconfigure."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Alarm panel",
+        data={CONF_PROTOCOL: PROTOCOL_SOCKET, CONF_HOST: "old", CONF_PORT: 10000},
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    with (
+        patch("homeassistant.components.alarmdecoder.config_flow.AdExt.open"),
+        patch("homeassistant.components.alarmdecoder.config_flow.AdExt.close"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "new", CONF_PORT: 10000}
+        )
+        await hass.async_block_till_done()
+
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.title == "Alarm panel"
+    assert entry.data[CONF_HOST] == "new"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [(NoDeviceError, "cannot_connect"), (Exception, "unknown")],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    mock_controller: MagicMock,
+    side_effect: type[Exception],
+    error: str,
+) -> None:
+    """Test a failed connection test leaves the entry alone and can be retried."""
+    old = {CONF_PROTOCOL: PROTOCOL_SOCKET, CONF_HOST: "old", CONF_PORT: 10000}
+    entry = MockConfigEntry(domain=DOMAIN, title="old:10000", data=old)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    with (
+        patch(
+            "homeassistant.components.alarmdecoder.config_flow.AdExt.open",
+            side_effect=side_effect,
+        ),
+        patch("homeassistant.components.alarmdecoder.config_flow.AdExt.close"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "new", CONF_PORT: 10000}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+    assert entry.data == old
+
+    with (
+        patch("homeassistant.components.alarmdecoder.config_flow.AdExt.open"),
+        patch("homeassistant.components.alarmdecoder.config_flow.AdExt.close"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "new", CONF_PORT: 10000}
+        )
+        await hass.async_block_till_done()
+
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_HOST] == "new"
+
+
+async def test_reconfigure_to_other_entrys_device(hass: HomeAssistant) -> None:
+    """Test reconfiguring onto a device another entry already uses aborts."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_PROTOCOL: PROTOCOL_SOCKET, CONF_HOST: "taken", CONF_PORT: 10000},
+    ).add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_PROTOCOL: PROTOCOL_SOCKET, CONF_HOST: "mine", CONF_PORT: 10000},
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "taken", CONF_PORT: 10000}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == "mine"
