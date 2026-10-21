@@ -504,3 +504,46 @@ async def test_dual_circuit_climate_entities(
     # Circuit 2 entity should exist
     state2 = hass.states.get("climate.heating_circuit_2")
     assert state2 is not None
+
+
+async def test_set_data_rereads_only_the_circuit(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a write re-reads only the written circuit."""
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+    mock_bsblan.state.reset_mock()
+    mock_bsblan.sensor.reset_mock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 19},
+        blocking=True,
+    )
+
+    mock_bsblan.state.assert_called_once()
+    mock_bsblan.sensor.assert_not_called()
+
+
+async def test_set_data_falls_back_to_full_refresh(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a failed circuit re-read after a write falls back to a full refresh."""
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+    state = mock_bsblan.state.return_value
+    mock_bsblan.state.side_effect = [BSBLANError("Test error"), state]
+    mock_bsblan.sensor.reset_mock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 19},
+        blocking=True,
+    )
+
+    # The full refresh is the only one that also reads the sensors
+    mock_bsblan.sensor.assert_called_once()
