@@ -151,6 +151,7 @@ def _zbt2_port(entry_id: str) -> USBDevice:
         bcd_device=0x0101,
         interface_description=None,
         interface_num=0,
+        is_unique=True,
     )
 
 
@@ -189,12 +190,14 @@ async def test_scan_serial_ports_happy_path(
             serial_number="AABBCCDDEEFF-left_port",
             manufacturer="Espressif",
             description="ESP32 (Left Port)",
+            is_unique=True,
         ),
         SerialDevice(
             device=str(serial_proxy.build_url(entry_id, port_name="Right Port")),
             serial_number="AABBCCDDEEFF-right_port",
             manufacturer="Espressif",
             description="ESP32 (Right Port)",
+            is_unique=True,
         ),
     ]
 
@@ -227,6 +230,7 @@ async def test_scan_serial_ports_uses_project_info(
             serial_number="AABBCCDDEEFF-uart0",
             manufacturer="vendor",
             description="gadget (uart0)",
+            is_unique=True,
         )
     ]
 
@@ -258,6 +262,7 @@ async def test_scan_serial_ports_defaults_manufacturer(
             serial_number="AABBCCDDEEFF-uart0",
             manufacturer="espressif",
             description="ESP32 (uart0)",
+            is_unique=True,
         )
     ]
 
@@ -357,6 +362,7 @@ async def test_scan_serial_ports_usb_vendor_specific_interface(
             bcd_device=0x0100,
             interface_description=None,
             interface_num=0,
+            is_unique=True,
         )
     ]
 
@@ -405,6 +411,7 @@ async def test_scan_serial_ports_identity_without_usb_descriptor(
             description="ZBT-2",
             interface_description=None,
             interface_num=None,
+            is_unique=True,
         )
     ]
 
