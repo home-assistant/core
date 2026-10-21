@@ -17,7 +17,6 @@ from evohomeasync2.const import (
 from evohomeasync2.typedefs import EvoDhwScheduleDayOfWeekT, EvoZonScheduleDayOfWeekT
 
 from homeassistant.core import callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
@@ -169,10 +168,14 @@ class EvoChild(EvoEntity):
 
         async def get_schedule() -> None:
             try:
-                schedule = await self.coordinator.call_client_api(
-                    self._evo_device.get_schedule(),
-                    request_refresh=False,
+                schedule = await self._evo_device.get_schedule()
+            except evo.AuthenticationFailedError:
+                raise
+            except evo.ApiCallFailedError as err:  # keep any schedule we already have
+                _LOGGER.warning(
+                    "%s: Unable to retrieve the schedule: %s", self._evo_device, err
                 )
+                return
             except evo.InvalidScheduleError as err:
                 _LOGGER.warning(
                     "%s: Unable to retrieve a valid schedule: %s",
@@ -182,7 +185,7 @@ class EvoChild(EvoEntity):
                 self._schedule = []
                 return
             else:
-                self._schedule = schedule  # type: ignore[assignment]
+                self._schedule = schedule
 
             _LOGGER.debug("Schedule['%s'] = %s", self.name, schedule)
 
@@ -213,11 +216,5 @@ class EvoChild(EvoEntity):
     @override
     async def update_attrs(self) -> None:
         """Update the entity's extra state attrs."""
-        # a failed schedule fetch mustn't prevent the entity from being set up
-        try:
-            await self._update_schedule()
-        except HomeAssistantError as err:
-            _LOGGER.warning(
-                "%s: Unable to retrieve the schedule: %s", self._evo_device, err
-            )
+        await self._update_schedule()
         await super().update_attrs()

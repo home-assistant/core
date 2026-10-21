@@ -172,7 +172,7 @@ async def test_setup_tolerates_failed_schedule_fetch(
     hass: HomeAssistant,
     config: dict[str, str],
 ) -> None:
-    """Test a failed schedule fetch during setup is logged, not raised."""
+    """Test a failed schedule fetch (a GET) is logged, not raised, so setup completes."""
 
     with (
         patch.object(
