@@ -6,8 +6,9 @@ from http import HTTPStatus
 import logging
 from types import MappingProxyType
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, Mock, patch
 
+import aiohttp
 import aiounifi
 from aiounifi import EndpointNotFound
 from aiounifi.interfaces.api_handlers import ItemEvent
@@ -22,7 +23,7 @@ from homeassistant.components.unifi.hub.connection import (
     CONNECTION_STABLE_PERIOD,
     RECOVERY_TIMEOUT,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     EVENT_STATE_REPORTED,
@@ -31,9 +32,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, EventStateReportedData, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
+    MAX_RETRY_DELAY,
     ConfigEntryFactoryType,
     WebsocketMessageMock,
     WebsocketStateManager,
@@ -244,143 +247,6 @@ async def test_entity_unavailable_on_polling_coordinator_failure(
     assert state.state != "unavailable"
 
 
-TRANSPORT_ERRORS = [
-    aiounifi.RequestError,
-    aiounifi.BadGateway,
-    aiounifi.ServiceUnavailable,
-    TimeoutError,
-]
-
-
-@pytest.mark.parametrize("exception", TRANSPORT_ERRORS)
-@pytest.mark.parametrize(
-    ("probe_error", "available"),
-    [
-        pytest.param(aiounifi.RequestError, False, id="probe_unreachable"),
-        pytest.param(KeyError, True, id="probe_malformed"),
-    ],
-)
-async def test_polling_transport_failure_runs_readiness_probe(
-    hass: HomeAssistant,
-    config_entry_setup: MockConfigEntry,
-    exception: type[Exception],
-    probe_error: type[Exception],
-    available: bool,
-) -> None:
-    """Only an unreachable application marks the hub unavailable."""
-    hub = config_entry_setup.runtime_data
-    coordinator = hub.entity_loader.get_data_update_coordinator(
-        hub.api.object_oriented_network_configs
-    )
-
-    with (
-        patch.object(coordinator.handler, "update", side_effect=exception),
-        patch.object(hub.api.system_information, "update", side_effect=probe_error),
-    ):
-        assert coordinator.update_interval is not None
-        async_fire_time_changed(hass, dt_util.utcnow() + coordinator.update_interval)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert hub.available is available
-
-
-@pytest.mark.parametrize("exception", TRANSPORT_ERRORS)
-async def test_polling_transport_failure_of_one_endpoint(
-    hass: HomeAssistant,
-    config_entry_setup: MockConfigEntry,
-    exception: type[Exception],
-) -> None:
-    """Only fail the coordinator when the Network application still answers."""
-    hub = config_entry_setup.runtime_data
-    coordinator = hub.entity_loader.get_data_update_coordinator(
-        hub.api.object_oriented_network_configs
-    )
-
-    with patch.object(coordinator.handler, "update", side_effect=exception):
-        assert coordinator.update_interval is not None
-        async_fire_time_changed(hass, dt_util.utcnow() + coordinator.update_interval)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert hub.available
-    assert coordinator.last_update_success is False
-
-
-@pytest.mark.parametrize(
-    "exception",
-    [
-        aiounifi.LoginRequired,
-        aiounifi.Unauthorized,
-        aiounifi.Forbidden,
-        aiounifi.NoPermission,
-        aiounifi.ResponseError,
-    ],
-)
-async def test_polling_request_rejection_does_not_report_connection_failure(
-    config_entry_setup: MockConfigEntry,
-    exception: type[Exception],
-) -> None:
-    """Ensure rejected polling requests only fail the coordinator."""
-    hub = config_entry_setup.runtime_data
-    coordinator = hub.entity_loader.get_data_update_coordinator(
-        hub.api.object_oriented_network_configs
-    )
-
-    with (
-        patch.object(
-            coordinator.handler,
-            "update",
-            side_effect=exception,
-        ),
-        patch.object(
-            hub.connection,
-            "report_failure",
-            wraps=hub.connection.report_failure,
-        ) as report_failure,
-    ):
-        assert coordinator.update_interval is not None
-        async_fire_time_changed(
-            hub.hass, dt_util.utcnow() + coordinator.update_interval
-        )
-        await hub.hass.async_block_till_done()
-
-    report_failure.assert_not_called()
-    assert hub.available
-    assert coordinator.last_update_success is False
-
-
-async def test_connection_failure_reports_are_deduplicated(
-    caplog: pytest.LogCaptureFixture,
-    config_entry_setup: MockConfigEntry,
-) -> None:
-    """Ensure concurrent failure sources schedule only one retry."""
-    connection = config_entry_setup.runtime_data.connection
-
-    connection.report_failure()
-    retry_handle = connection._retry_handle
-    connection.report_failure()
-    connection._set_available(True)
-    connection._set_available(True)
-
-    assert connection._retry_handle is retry_handle
-    assert connection._attempt == 1
-    assert caplog.text.count("Connection to UniFi Network lost") == 1
-    assert caplog.text.count("Connection to UniFi Network restored") == 1
-
-
-async def test_connection_does_not_retry_after_stop(
-    config_entry_setup: MockConfigEntry,
-) -> None:
-    """Ensure late failures cannot schedule reconnect work after shutdown."""
-    connection = config_entry_setup.runtime_data.connection
-
-    connection.stop()
-    connection.report_failure()
-
-    assert connection.available
-    assert connection._retry_handle is None
-    assert connection._attempt == 0
-
-
 @pytest.mark.parametrize(
     "exception",
     [aiounifi.ServiceUnavailable, TimeoutError, aiounifi.LoginRequired, ValueError],
@@ -459,66 +325,6 @@ async def test_connection_recovery_does_not_restart_running_websocket(
     assert hub.websocket.ws_task is active_task
 
 
-@pytest.mark.parametrize(
-    "exception",
-    [aiounifi.ServiceUnavailable, aiounifi.Unauthorized, aiounifi.LoginRequired],
-)
-async def test_connection_waits_for_network_application_after_login(
-    hass: HomeAssistant,
-    config_entry_setup: MockConfigEntry,
-    mock_websocket_state: WebsocketStateManager,
-    exception: type[Exception],
-) -> None:
-    """Keep the hub unavailable until the Network application answers."""
-    hub = config_entry_setup.runtime_data
-    await mock_websocket_state.disconnect()
-    assert not hub.available
-
-    with (
-        patch.object(
-            hub.api.system_information,
-            "update",
-            side_effect=exception,
-        ),
-        patch.object(config_entry_setup, "async_start_reauth") as start_reauth,
-    ):
-        await mock_websocket_state.reconnect()
-
-    assert not hub.available
-    assert hub.connection._attempt == 2
-    start_reauth.assert_not_called()
-
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=40))
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert hub.available
-    assert hub.connection._attempt == 2
-
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=CONNECTION_STABLE_PERIOD + 30)
-    )
-    await hass.async_block_till_done()
-
-    assert hub.connection._attempt == 0
-
-
-async def test_backoff_grows_when_websocket_fails_after_login(
-    config_entry_setup: MockConfigEntry,
-    mock_websocket_state: WebsocketStateManager,
-) -> None:
-    """Keep backing off while a successful login is followed by a failing transport."""
-    connection = config_entry_setup.runtime_data.connection
-
-    await mock_websocket_state.disconnect()
-    assert connection._attempt == 1
-
-    await mock_websocket_state.reconnect(fail=True)
-    assert connection._attempt == 2
-
-    await mock_websocket_state.reconnect(fail=True)
-    assert connection._attempt == 3
-
-
 @pytest.mark.parametrize("request_suffix", ["/stat/sta", "/stat/device"])
 async def test_recovery_refetches_websocket_backed_handlers(
     aioclient_mock: AiohttpClientMocker,
@@ -541,75 +347,6 @@ async def test_recovery_refetches_websocket_backed_handlers(
     await mock_websocket_state.reconnect()
 
     assert request_count() == requests_before + 1
-
-
-async def test_failure_during_recovery_retries_after_recovery(
-    hass: HomeAssistant,
-    config_entry_setup: MockConfigEntry,
-    mock_websocket_state: WebsocketStateManager,
-) -> None:
-    """Ensure a failed resync is retried without a timer racing the recovery."""
-    hub = config_entry_setup.runtime_data
-    connection = hub.connection
-
-    async def failing_recovery() -> None:
-        connection.report_failure()
-
-    connection.set_recovery_callback(failing_recovery)
-    await mock_websocket_state.disconnect()
-    await mock_websocket_state.reconnect()
-
-    assert not hub.available
-
-    connection.set_recovery_callback(hub._async_connection_recovered)
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert hub.available
-
-
-async def test_websocket_handler_request_rejection_keeps_data_available(
-    config_entry_setup: MockConfigEntry,
-) -> None:
-    """Ensure a rejected resync request does not leave websocket data unavailable."""
-    hub = config_entry_setup.runtime_data
-    coordinator = hub.entity_loader.get_data_update_coordinator(hub.api.clients)
-
-    with patch.object(
-        coordinator.handler, "update", side_effect=aiounifi.ResponseError
-    ):
-        await hub.entity_loader.async_resync()
-
-    assert coordinator.last_update_success is True
-
-
-@pytest.mark.parametrize(
-    "exception",
-    [
-        aiounifi.LoginRequired,
-        aiounifi.NoPermission,
-        aiounifi.TwoFaTokenRequired,
-        aiounifi.Unauthorized,
-    ],
-)
-async def test_reconnect_auth_failure_starts_reauth(
-    config_entry_setup: MockConfigEntry,
-    mock_websocket_state: WebsocketStateManager,
-    exception: type[Exception],
-) -> None:
-    """Stop retrying and start reauthentication when login rejects credentials."""
-    hub = config_entry_setup.runtime_data
-    await mock_websocket_state.disconnect()
-
-    with (
-        patch.object(hub.api, "login", side_effect=exception),
-        patch.object(config_entry_setup, "async_start_reauth") as start_reauth,
-    ):
-        await mock_websocket_state.reconnect()
-
-    start_reauth.assert_called_once_with(hub.hass)
-    assert hub.connection._reauth_required
-    assert hub.connection._retry_handle is None
 
 
 async def test_websocket_updates_notify_coordinator(
@@ -935,173 +672,6 @@ WIRELESS_CLIENT = {
 }
 
 
-async def test_failure_during_slow_recovery_keeps_retrying(
-    hass: HomeAssistant,
-    config_entry_setup: MockConfigEntry,
-    mock_websocket_state: WebsocketStateManager,
-) -> None:
-    """Retry again when the application goes away while a resync is still running."""
-    hub = config_entry_setup.runtime_data
-    probe_calls = 0
-
-    async def system_information_update() -> None:
-        # The readiness probe passes, the check after the failed refetch does not
-        nonlocal probe_calls
-        probe_calls += 1
-        if probe_calls == 2:
-            raise aiounifi.RequestError
-
-    async def slow_device_update() -> None:
-        # The next retry falls due while this refetch is still in flight
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=45))
-        await asyncio.sleep(0)
-
-    await mock_websocket_state.disconnect()
-    with (
-        patch.object(
-            hub.api.system_information, "update", side_effect=system_information_update
-        ),
-        patch.object(hub.api.clients, "update", side_effect=aiounifi.RequestError),
-        patch.object(hub.api.devices, "update", side_effect=slow_device_update),
-    ):
-        await mock_websocket_state.reconnect()
-
-    assert not hub.available
-
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=2))
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert hub.available
-
-
-async def test_recovery_that_hangs_is_retried(
-    hass: HomeAssistant,
-    config_entry_setup: MockConfigEntry,
-    mock_websocket_state: WebsocketStateManager,
-) -> None:
-    """Give up on a resync that does not finish and try again."""
-    hub = config_entry_setup.runtime_data
-
-    async def hanging_update() -> None:
-        await asyncio.Event().wait()
-
-    await mock_websocket_state.disconnect()
-    with patch.object(hub.api.devices, "update", side_effect=hanging_update):
-        mock_websocket_state.clear()
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
-        await hass.async_block_till_done()
-        assert hub.available
-
-        async_fire_time_changed(
-            hass, dt_util.utcnow() + timedelta(seconds=RECOVERY_TIMEOUT + 1)
-        )
-        # block_till_done skips tasks that are being cancelled
-        for _ in range(5):
-            await asyncio.sleep(0)
-        assert not hub.available
-
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=2))
-    await hass.async_block_till_done(wait_background_tasks=True)
-    assert hub.available
-
-
-@pytest.mark.parametrize("client_payload", [[WIRELESS_CLIENT]])
-@pytest.mark.parametrize(
-    "exception", [aiounifi.ResponseError, aiounifi.Forbidden, aiounifi.NoPermission]
-)
-@pytest.mark.usefixtures("mock_device_registry")
-async def test_rejected_resync_keeps_pushed_data(
-    hass: HomeAssistant,
-    config_entry_setup: MockConfigEntry,
-    mock_websocket_state: WebsocketStateManager,
-    exception: type[Exception],
-) -> None:
-    """Keep websocket fed entities available when their refetch is rejected."""
-    hub = config_entry_setup.runtime_data
-    await mock_websocket_state.disconnect()
-
-    with patch.object(hub.api.clients, "update", side_effect=exception):
-        await mock_websocket_state.reconnect()
-
-    assert hub.available
-    assert hass.states.get("device_tracker.client_1").state != STATE_UNAVAILABLE
-
-
-@pytest.mark.parametrize(
-    "exception",
-    [aiounifi.Forbidden, aiounifi.NoPermission, aiounifi.ResponseError],
-)
-async def test_rejected_readiness_probe_still_recovers(
-    config_entry_setup: MockConfigEntry,
-    mock_websocket_state: WebsocketStateManager,
-    exception: type[Exception],
-) -> None:
-    """An application that answers the probe with a rejection is ready."""
-    hub = config_entry_setup.runtime_data
-    await mock_websocket_state.disconnect()
-
-    with patch.object(hub.api.system_information, "update", side_effect=exception):
-        await mock_websocket_state.reconnect()
-
-    assert hub.available
-
-
-@pytest.mark.parametrize(
-    "exception",
-    [
-        pytest.param(ValueError, id="malformed_answer"),
-        pytest.param(KeyError, id="unexpected_error"),
-    ],
-)
-async def test_failed_readiness_probe_keeps_retrying(
-    hass: HomeAssistant,
-    config_entry_setup: MockConfigEntry,
-    mock_websocket_state: WebsocketStateManager,
-    exception: type[Exception],
-) -> None:
-    """Retry after the readiness probe failed with a malformed answer."""
-    hub = config_entry_setup.runtime_data
-    await mock_websocket_state.disconnect()
-
-    with patch.object(hub.api.system_information, "update", side_effect=exception):
-        await mock_websocket_state.reconnect(fail=True)
-    assert not hub.available
-
-    await mock_websocket_state.reconnect()
-    assert hub.available
-
-
-async def test_no_polling_while_connection_is_down(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    config_entry_setup: MockConfigEntry,
-    mock_websocket_state: WebsocketStateManager,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Send no data requests and log no errors while the session is down."""
-    hub = config_entry_setup.runtime_data
-
-    def data_requests() -> int:
-        return sum(
-            1
-            for call in aioclient_mock.mock_calls
-            if "/stat/sysinfo" not in str(call[1])
-        )
-
-    with patch.object(hub.api, "login", side_effect=aiounifi.RequestError):
-        await mock_websocket_state.disconnect()
-        requests = data_requests()
-
-        async_fire_time_changed(hass, dt_util.utcnow() + IDLE_POLL_INTERVAL * 2)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert not hub.available
-    assert data_requests() == requests
-    assert not [
-        record for record in caplog.records if record.levelno >= logging.WARNING
-    ]
-
-
 async def test_unexpected_error_during_resync_keeps_retrying(
     hass: HomeAssistant,
     config_entry_setup: MockConfigEntry,
@@ -1119,70 +689,6 @@ async def test_unexpected_error_during_resync_keeps_retrying(
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hub.available
     assert not hub.websocket.ws_task.done()
-
-
-async def test_two_factor_prompt_from_readiness_probe_starts_reauth(
-    hass: HomeAssistant,
-    config_entry_setup: MockConfigEntry,
-    mock_websocket_state: WebsocketStateManager,
-) -> None:
-    """A session that now needs 2FA ends in reauthentication."""
-    hub = config_entry_setup.runtime_data
-    await mock_websocket_state.disconnect()
-
-    with (
-        patch.object(
-            hub.api.system_information,
-            "update",
-            side_effect=aiounifi.TwoFaTokenRequired,
-        ),
-        patch.object(config_entry_setup, "async_start_reauth") as start_reauth,
-    ):
-        await mock_websocket_state.reconnect()
-        assert not hub.available
-        start_reauth.assert_not_called()
-
-        with patch.object(hub.api, "login", side_effect=aiounifi.TwoFaTokenRequired):
-            async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
-            await hass.async_block_till_done(wait_background_tasks=True)
-
-    start_reauth.assert_called_once_with(hass)
-
-
-async def test_polled_coordinator_quiet_while_connection_is_down(
-    hass: HomeAssistant,
-    config_entry_setup: MockConfigEntry,
-    mock_websocket_state: WebsocketStateManager,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Pause polling during an outage and resume it after recovery."""
-    hub = config_entry_setup.runtime_data
-    coordinator = hub.entity_loader.get_data_update_coordinator(
-        hub.api.object_oriented_network_configs
-    )
-    calls: list[None] = []
-    coordinator.async_add_listener(lambda: calls.append(None))
-
-    with patch.object(hub.api, "login", side_effect=aiounifi.RequestError):
-        await mock_websocket_state.disconnect()
-        calls.clear()
-        async_fire_time_changed(hass, dt_util.utcnow() + IDLE_POLL_INTERVAL * 2)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert not calls
-    assert coordinator.last_update_success
-    assert "Fetching UniFi" not in caplog.text
-
-    mock_websocket_state.clear()
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=2))
-    await hass.async_block_till_done(wait_background_tasks=True)
-    assert hub.available
-    assert calls
-
-    calls.clear()
-    async_fire_time_changed(hass, dt_util.utcnow() + IDLE_POLL_INTERVAL)
-    await hass.async_block_till_done()
-    assert calls
 
 
 async def test_poll_in_flight_does_not_resume_polling_while_down(
@@ -1218,3 +724,521 @@ async def test_poll_in_flight_does_not_resume_polling_while_down(
 
     assert updates == 1
     assert "Error fetching" not in caplog.text
+
+
+async def _advance(hass: HomeAssistant, seconds: float) -> None:
+    """Fire timers due within the given number of seconds."""
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=seconds))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+
+async def test_reconnect_backoff_grows_caps_and_resets(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_state: WebsocketStateManager,
+) -> None:
+    """Retry later after each failed login and start over once stable."""
+    hub = config_entry_setup.runtime_data
+
+    with patch.object(hub.api, "login", side_effect=aiounifi.RequestError) as login:
+        await mock_websocket_state.disconnect()
+        # Jitter spreads each delay by 20 percent: 15 s, 30 s, then capped at 60 s
+        for earliest, latest, attempts in ((11, 18, 1), (23, 36, 2), (47, 72, 3)):
+            await _advance(hass, earliest)
+            assert login.call_count == attempts - 1
+            await _advance(hass, latest)
+            assert login.call_count == attempts
+        await _advance(hass, 47)
+        assert login.call_count == 3
+        await _advance(hass, 72)
+        assert login.call_count == 4
+
+    mock_websocket_state.clear()
+    await _advance(hass, MAX_RETRY_DELAY)
+    assert hub.available
+
+    # Only a connection that stayed up starts the backoff over
+    await _advance(hass, CONNECTION_STABLE_PERIOD)
+    with patch.object(hub.api, "login", side_effect=aiounifi.RequestError) as login:
+        await mock_websocket_state.disconnect()
+        await _advance(hass, 18)
+    login.assert_called_once()
+
+
+async def test_backoff_survives_flapping_connection(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_state: WebsocketStateManager,
+) -> None:
+    """A connection that drops again before it was stable keeps backing off."""
+    hub = config_entry_setup.runtime_data
+
+    with patch.object(hub.api, "login", side_effect=aiounifi.RequestError):
+        await mock_websocket_state.disconnect()
+        await _advance(hass, 18)
+    mock_websocket_state.clear()
+    with patch.object(hub.api, "login", AsyncMock()):
+        await _advance(hass, 36)
+    assert hub.available
+
+    with patch.object(hub.api, "login", side_effect=aiounifi.RequestError) as login:
+        await mock_websocket_state.disconnect()
+        # Also passes the stable period of the short lived recovery
+        await _advance(hass, MAX_RETRY_DELAY)
+        await _advance(hass, MAX_RETRY_DELAY)
+        assert login.call_count == 2
+        await _advance(hass, 47)
+    assert login.call_count == 2
+
+
+async def test_concurrent_failures_schedule_one_retry(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_state: WebsocketStateManager,
+) -> None:
+    """Several failure sources lead to a single login attempt."""
+    hub = config_entry_setup.runtime_data
+
+    with patch.object(hub.api, "login", side_effect=aiounifi.RequestError) as login:
+        await mock_websocket_state.disconnect()
+        hub.connection.report_failure()
+        hub.connection.report_failure()
+        await _advance(hass, 18)
+
+    login.assert_called_once()
+    assert caplog.text.count("Connection to UniFi Network lost") == 1
+
+
+async def test_no_retry_after_unload(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """A failure reported after unload neither retries nor changes state."""
+    hub = config_entry_setup.runtime_data
+    assert await hass.config_entries.async_unload(config_entry_setup.entry_id)
+
+    with patch.object(hub.api, "login") as login:
+        hub.connection.report_failure()
+        await _advance(hass, MAX_RETRY_DELAY)
+
+    login.assert_not_called()
+    assert hub.available
+
+
+async def test_unload_during_login_does_not_retry(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_state: WebsocketStateManager,
+) -> None:
+    """An attempt cancelled by unload does not schedule another one."""
+    hub = config_entry_setup.runtime_data
+    login_started = asyncio.Event()
+
+    async def hanging_login() -> None:
+        login_started.set()
+        await asyncio.Event().wait()
+
+    with patch.object(hub.api, "login", side_effect=hanging_login) as login:
+        await mock_websocket_state.disconnect()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=18))
+        await login_started.wait()
+
+        assert await hass.config_entries.async_unload(config_entry_setup.entry_id)
+        await _advance(hass, MAX_RETRY_DELAY)
+
+    login.assert_called_once()
+
+
+async def test_failed_setup_does_not_retry(
+    hass: HomeAssistant,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Nothing keeps logging in after setup failed."""
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
+        side_effect=RuntimeError,
+    ):
+        config_entry = await config_entry_factory()
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    with patch("aiounifi.Controller.login") as login:
+        config_entry.runtime_data.connection.report_failure()
+        await _advance(hass, MAX_RETRY_DELAY)
+
+    login.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        aiounifi.LoginRequired,
+        aiounifi.NoPermission,
+        aiounifi.TwoFaTokenRequired,
+        aiounifi.Unauthorized,
+    ],
+)
+async def test_rejected_login_starts_reauth_and_stops_retrying(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_state: WebsocketStateManager,
+    exception: type[Exception],
+) -> None:
+    """Only the user can fix rejected credentials, so stop logging in."""
+    hub = config_entry_setup.runtime_data
+
+    with patch.object(hub.api, "login", side_effect=exception) as login:
+        await mock_websocket_state.disconnect()
+        await _advance(hass, MAX_RETRY_DELAY)
+        await _advance(hass, MAX_RETRY_DELAY)
+
+    login.assert_called_once()
+    assert not hub.available
+    assert list(config_entry_setup.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+
+@pytest.mark.parametrize(
+    ("exception", "ready"),
+    [
+        pytest.param(aiounifi.ServiceUnavailable, False, id="starting"),
+        pytest.param(aiounifi.RequestError, False, id="unreachable"),
+        pytest.param(TimeoutError, False, id="timeout"),
+        pytest.param(aiounifi.LoginRequired, False, id="session_expired"),
+        pytest.param(aiounifi.Unauthorized, False, id="unauthorized"),
+        pytest.param(aiounifi.TwoFaTokenRequired, False, id="two_factor"),
+        pytest.param(ValueError, False, id="malformed_answer"),
+        pytest.param(KeyError, False, id="unexpected_error"),
+        pytest.param(aiounifi.Forbidden, True, id="forbidden"),
+        pytest.param(aiounifi.NoPermission, True, id="no_permission"),
+        pytest.param(aiounifi.ResponseError, True, id="response_error"),
+    ],
+)
+async def test_readiness_probe_after_login(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_state: WebsocketStateManager,
+    exception: type[Exception],
+    ready: bool,
+) -> None:
+    """Restore the session only once the Network application answers."""
+    hub = config_entry_setup.runtime_data
+
+    with (
+        patch.object(hub.api, "login", AsyncMock()),
+        patch.object(hub.api.system_information, "update", side_effect=exception),
+    ):
+        await mock_websocket_state.disconnect()
+        mock_websocket_state.clear()
+        await _advance(hass, MAX_RETRY_DELAY)
+        assert hub.available is ready
+
+    await _advance(hass, MAX_RETRY_DELAY)
+    assert hub.available
+    assert not list(config_entry_setup.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+
+@pytest.mark.parametrize(
+    "poll_error",
+    [
+        aiounifi.RequestError,
+        aiounifi.BadGateway,
+        aiounifi.ServiceUnavailable,
+        TimeoutError,
+    ],
+)
+@pytest.mark.parametrize(
+    ("probe_error", "available"),
+    [
+        pytest.param(None, True, id="application_answers"),
+        pytest.param(aiounifi.Forbidden, True, id="application_rejects"),
+        pytest.param(KeyError, True, id="probe_broken"),
+        pytest.param(aiounifi.RequestError, False, id="application_unreachable"),
+    ],
+)
+async def test_polling_transport_failure_checks_session(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    poll_error: type[Exception],
+    probe_error: type[Exception] | None,
+    available: bool,
+) -> None:
+    """A failing poll only takes the session down when the probe fails too."""
+    hub = config_entry_setup.runtime_data
+    coordinator = hub.entity_loader.get_data_update_coordinator(
+        hub.api.object_oriented_network_configs
+    )
+
+    with (
+        patch.object(coordinator.handler, "update", side_effect=poll_error),
+        patch.object(
+            hub.api.system_information, "update", AsyncMock(side_effect=probe_error)
+        ),
+    ):
+        assert coordinator.update_interval is not None
+        await _advance(hass, coordinator.update_interval.total_seconds())
+
+    assert hub.available is available
+    assert not coordinator.last_update_success
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        aiounifi.LoginRequired,
+        aiounifi.Unauthorized,
+        aiounifi.Forbidden,
+        aiounifi.NoPermission,
+        aiounifi.ResponseError,
+    ],
+)
+async def test_polling_request_rejection_only_fails_coordinator(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    exception: type[Exception],
+) -> None:
+    """A rejected poll needs no session check."""
+    hub = config_entry_setup.runtime_data
+    coordinator = hub.entity_loader.get_data_update_coordinator(
+        hub.api.object_oriented_network_configs
+    )
+
+    with (
+        patch.object(coordinator.handler, "update", side_effect=exception),
+        patch.object(hub.api.system_information, "update") as probe,
+    ):
+        assert coordinator.update_interval is not None
+        await _advance(hass, coordinator.update_interval.total_seconds())
+
+    probe.assert_not_called()
+    assert hub.available
+    assert not coordinator.last_update_success
+
+
+async def test_polling_paused_while_connection_is_down(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_state: WebsocketStateManager,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Send no requests and log nothing while down, resume after recovery."""
+    hub = config_entry_setup.runtime_data
+    coordinator = hub.entity_loader.get_data_update_coordinator(
+        hub.api.object_oriented_network_configs
+    )
+    calls: list[None] = []
+    coordinator.async_add_listener(lambda: calls.append(None))
+
+    with patch.object(hub.api, "login", side_effect=aiounifi.RequestError):
+        await mock_websocket_state.disconnect()
+        requests = aioclient_mock.call_count
+        calls.clear()
+        await _advance(hass, (IDLE_POLL_INTERVAL * 2).total_seconds())
+
+    assert aioclient_mock.call_count == requests
+    assert not calls
+    assert coordinator.last_update_success
+    assert not [
+        record for record in caplog.records if record.levelno >= logging.WARNING
+    ]
+
+    mock_websocket_state.clear()
+    await _advance(hass, MAX_RETRY_DELAY)
+    assert hub.available
+    assert calls
+
+    calls.clear()
+    await _advance(hass, IDLE_POLL_INTERVAL.total_seconds())
+    assert calls
+
+
+async def test_failure_during_recovery_retries_after_recovery(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_state: WebsocketStateManager,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Retry when the application goes away while the resync is still running."""
+    hub = config_entry_setup.runtime_data
+    resync_release = asyncio.Event()
+    went_down = asyncio.Event()
+
+    async def slow_update() -> None:
+        await resync_release.wait()
+
+    await mock_websocket_state.disconnect()
+
+    @callback
+    def _connection_changed() -> None:
+        if not hub.available:
+            went_down.set()
+
+    config_entry_setup.async_on_unload(
+        async_dispatcher_connect(hass, hub.signal_reachable, _connection_changed)
+    )
+    with (
+        patch.object(hub.api, "login", AsyncMock()),
+        # The readiness probe passes, the check after the failed refetch does not
+        patch.object(
+            hub.api.system_information,
+            "update",
+            AsyncMock(side_effect=[None, aiounifi.RequestError()]),
+        ),
+        patch.object(hub.api.clients, "update", side_effect=aiounifi.RequestError),
+        patch.object(hub.api.devices, "update", side_effect=slow_update),
+        patch.object(hub.api, "start_websocket") as start_websocket,
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=18))
+        await went_down.wait()
+        assert not hub.available
+
+        # The next retry falls due while the resync is still in flight
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=40))
+        resync_release.set()
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    start_websocket.assert_not_called()
+    assert "Error fetching" not in caplog.text
+
+    mock_websocket_state.clear()
+    await _advance(hass, MAX_RETRY_DELAY)
+    assert hub.available
+
+
+async def test_hanging_recovery_is_retried(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_state: WebsocketStateManager,
+) -> None:
+    """Give up on a resync that does not finish and try again."""
+    hub = config_entry_setup.runtime_data
+    resync_started = asyncio.Event()
+    connection_changed = asyncio.Event()
+
+    @callback
+    def _connection_changed() -> None:
+        connection_changed.set()
+
+    config_entry_setup.async_on_unload(
+        async_dispatcher_connect(hass, hub.signal_reachable, _connection_changed)
+    )
+
+    async def hanging_update() -> None:
+        resync_started.set()
+        await asyncio.Event().wait()
+
+    await mock_websocket_state.disconnect()
+    mock_websocket_state.clear()
+    with patch.object(hub.api.devices, "update", side_effect=hanging_update):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=18))
+        await resync_started.wait()
+        assert hub.available
+
+        # The timeout cancels the attempt, block_till_done skips cancelling tasks
+        connection_changed.clear()
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=RECOVERY_TIMEOUT + 1)
+        )
+        await connection_changed.wait()
+        assert not hub.available
+
+    await _advance(hass, MAX_RETRY_DELAY)
+    assert hub.available
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        TimeoutError,
+        aiounifi.RequestError,
+        aiounifi.ResponseError,
+        aiounifi.Forbidden,
+        aiounifi.NoPermission,
+    ],
+)
+@pytest.mark.parametrize("client_payload", [[WIRELESS_CLIENT]])
+@pytest.mark.usefixtures("mock_device_registry")
+async def test_failed_resync_of_reachable_application_keeps_session(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_state: WebsocketStateManager,
+    exception: type[Exception],
+) -> None:
+    """Keep pushed data when one refetch fails but the application answers."""
+    hub = config_entry_setup.runtime_data
+
+    await mock_websocket_state.disconnect()
+    mock_websocket_state.clear()
+    with (
+        patch.object(hub.api, "login", AsyncMock()),
+        patch.object(hub.api.clients, "update", side_effect=exception),
+    ):
+        await _advance(hass, MAX_RETRY_DELAY)
+
+    assert hub.available
+    assert hass.states.get("device_tracker.client_1").state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(aiounifi.WebsocketError, id="disconnected"),
+        pytest.param(
+            aiohttp.ClientConnectorError(Mock(), OSError()), id="connect_failed"
+        ),
+        pytest.param(aiohttp.WSServerHandshakeError(Mock(), ()), id="handshake_failed"),
+    ],
+)
+async def test_websocket_error_marks_session_down(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_state: WebsocketStateManager,
+    exception: Exception,
+) -> None:
+    """A websocket that fails after recovery takes the session down again."""
+    hub = config_entry_setup.runtime_data
+
+    await mock_websocket_state.disconnect()
+    with (
+        patch.object(hub.api, "login", AsyncMock()),
+        patch.object(hub.api, "start_websocket", side_effect=exception),
+    ):
+        await _advance(hass, MAX_RETRY_DELAY)
+
+    assert not hub.available
+
+
+async def test_simultaneous_polling_failures_check_session_once(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Several endpoints failing together share one session check."""
+    hub = config_entry_setup.runtime_data
+    probe_started = asyncio.Event()
+    probe_release = asyncio.Event()
+
+    async def slow_probe() -> None:
+        probe_started.set()
+        await probe_release.wait()
+
+    with (
+        patch.object(
+            hub.api.object_oriented_network_configs,
+            "update",
+            side_effect=aiounifi.RequestError,
+        ),
+        patch.object(
+            hub.api.traffic_rules, "update", side_effect=aiounifi.RequestError
+        ),
+        patch.object(
+            hub.api.system_information, "update", side_effect=slow_probe
+        ) as probe,
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + IDLE_POLL_INTERVAL)
+        await probe_started.wait()
+        await hass.async_block_till_done()
+        probe_release.set()
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    probe.assert_called_once()
+    assert hub.available

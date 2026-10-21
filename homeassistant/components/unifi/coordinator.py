@@ -110,7 +110,9 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
     async def async_resync(self) -> None:
         """Refetch handler data after the connection is restored."""
         if not self._supports_websocket:
-            await self.async_refresh()
+            # The session can drop again while other handlers resync
+            if self._connection.available:
+                await self.async_refresh()
             return
 
         # Pushed data stays valid if the refetch fails, the websocket resumes after it

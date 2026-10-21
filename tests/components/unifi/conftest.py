@@ -29,6 +29,9 @@ from homeassistant.util import dt as dt_util
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
+# Fires any pending retry, whatever the attempt number and jitter
+MAX_RETRY_DELAY = BackoffPolicy().maximum * (1 + BackoffPolicy().jitter)
+
 DEFAULT_CONFIG_ENTRY_ID = "1"
 DEFAULT_HOST = "1.2.3.4"
 DEFAULT_PORT = 1234
@@ -384,8 +387,6 @@ class WebsocketStateManager(asyncio.Event):
         self.hass = hass
         self.aioclient_mock = aioclient_mock
         self.mock_requests = mock_requests
-        self._backoff = BackoffPolicy()
-        self._attempt = 0
         super().__init__()
 
     async def waiter(self, input: Callable[[bytes], None]) -> None:
@@ -420,10 +421,7 @@ class WebsocketStateManager(asyncio.Event):
 
         if not fail:
             self.clear()
-        # Latest possible retry time, including jitter
-        delay = self._backoff.next_delay(self._attempt) * (1 + self._backoff.jitter)
-        self._attempt = self._attempt + 1 if fail else 0
-        new_time = dt_util.utcnow() + timedelta(seconds=delay)
+        new_time = dt_util.utcnow() + timedelta(seconds=MAX_RETRY_DELAY)
         async_fire_time_changed(self.hass, new_time)
         await self.hass.async_block_till_done(wait_background_tasks=True)
 
