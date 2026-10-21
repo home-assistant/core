@@ -103,8 +103,8 @@ VALIDATORS = {rule.name: rule.validator for rule in ALL_RULES if rule.validator}
 
 RULE_URL = (
     "Please check the documentation at "
-    "https://developers.home-assistant.io/docs/core/"
-    "integration-quality-scale/rules/{rule_name}/"
+    "https://contributors.home-assistant.io/core/"
+    "quality-scale/{rule_name}/"
 )
 
 INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
@@ -425,7 +425,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "hive",
     "hko",
     "hlk_sw16",
-    "holiday",
     "homekit",
     "homekit_controller",
     "homematic",
@@ -535,7 +534,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "london_air",
     "london_underground",
     "lookin",
-    "loqed",
     "luftdaten",
     "lupusec",
     "lutron",
@@ -712,7 +710,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "pushsafer",
     "pvpc_hourly_pricing",
     "qbittorrent",
-    "qingping",
     "qld_bushfire",
     "qnap",
     "qnap_qsw",
@@ -810,7 +807,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "smappee",
     "smart_meter_texas",
     "smarty",
-    "smhi",
     "sms",
     "snapcast",
     "snmp",
@@ -897,12 +893,9 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "tplink_lte",
     "traccar",
     "traccar_server",
-    "tractive",
     "tradfri",
-    "trafikverket_camera",
     "trafikverket_ferry",
     "trafikverket_train",
-    "trafikverket_weatherstation",
     "transport_nsw",
     "trend",
     "triggercmd",
@@ -1339,7 +1332,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "hive",
     "hko",
     "hlk_sw16",
-    "holiday",
     "homekit",
     "homekit_controller",
     "homematic",
@@ -1456,7 +1448,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "london_air",
     "london_underground",
     "lookin",
-    "loqed",
     "luftdaten",
     "lupusec",
     "lutron",
@@ -1642,7 +1633,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "pushsafer",
     "pvpc_hourly_pricing",
     "qbittorrent",
-    "qingping",
     "qld_bushfire",
     "qnap",
     "qnap_qsw",
@@ -1744,7 +1734,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "smart_meter_texas",
     "smarttub",
     "smarty",
-    "smhi",
     "sms",
     "snapcast",
     "snmp",
@@ -1839,12 +1828,9 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "tplink_lte",
     "traccar",
     "traccar_server",
-    "tractive",
     "tradfri",
-    "trafikverket_camera",
     "trafikverket_ferry",
     "trafikverket_train",
-    "trafikverket_weatherstation",
     "transport_nsw",
     "trend",
     "triggercmd",
@@ -1962,6 +1948,7 @@ NO_QUALITY_SCALE = [
     "config",
     "configurator",
     "counter",
+    "debug_console",
     "default_config",
     "device_automation",
     "device_tracker",
@@ -1997,6 +1984,7 @@ NO_QUALITY_SCALE = [
     "llm",
     "logbook",
     "logger",
+    "lorawan",
     "lovelace",
     "map_tiles",
     "media_source",

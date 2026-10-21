@@ -131,7 +131,8 @@ def validate_device_has_at_least_one_identifier(value: ConfigType) -> ConfigType
 
 
 MQTT_ENTITY_DEVICE_INFO_SCHEMA = probatio.All(
-    cv.deprecated(CONF_DEPRECATED_VIA_HUB, CONF_VIA_DEVICE),
+    # Remove in HA Core 2027.4, together with CONF_DEPRECATED_VIA_HUB
+    cv.removed(CONF_DEPRECATED_VIA_HUB, raise_if_present=False),
     probatio.Schema(
         {
             probatio.Optional(CONF_IDENTIFIERS, default=list): probatio.All(

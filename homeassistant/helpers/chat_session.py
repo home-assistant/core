@@ -154,10 +154,11 @@ def async_get_chat_session(
         LOGGER.debug("Creating new session %s", conversation_id)
         session = ChatSession(conversation_id)
 
-    current_session.set(session)
-    yield session
-    current_session.set(None)
-
-    session.last_updated = dt_util.utcnow()
-    all_sessions[conversation_id] = session
-    hass.data[DATA_CHAT_SESSION_CLEANUP].schedule()
+    token = current_session.set(session)
+    try:
+        yield session
+    finally:
+        current_session.reset(token)
+        session.last_updated = dt_util.utcnow()
+        all_sessions[conversation_id] = session
+        hass.data[DATA_CHAT_SESSION_CLEANUP].schedule()

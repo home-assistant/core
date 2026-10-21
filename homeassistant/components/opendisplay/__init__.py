@@ -80,7 +80,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) -> None:
     """Set up OpenDisplay from a config entry."""
     address = entry.unique_id
     if TYPE_CHECKING:
@@ -137,21 +137,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
         if display.screen_diagonal_inches is not None
         else f"{display.pixel_width}x{display.pixel_height}"
     )
-    dr.async_get(hass).async_get_or_create(
+    dr.async_get(hass).async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        connections={(CONNECTION_BLUETOOTH, address)},
-        manufacturer=manufacturer.manufacturer_name,
-        model=f"{size} {color_scheme}",
-        sw_version=f"{fw['major']}.{fw['minor']}.{fw['patch']}",
-        hw_version=(
-            f"{manufacturer.board_type_name or manufacturer.board_type}"
-            f" rev. {manufacturer.board_revision}"
-        )
-        if is_flex
-        else None,
-        configuration_url="https://opendisplay.org/firmware/config/"
-        if is_flex
-        else None,
+        device_info=dr.DeviceInfo(
+            connections={(CONNECTION_BLUETOOTH, address)},
+            manufacturer=manufacturer.manufacturer_name,
+            model=f"{size} {color_scheme}",
+            sw_version=f"{fw['major']}.{fw['minor']}.{fw['patch']}",
+            hw_version=(
+                f"{manufacturer.board_type_name or manufacturer.board_type}"
+                f" rev. {manufacturer.board_revision}"
+            )
+            if is_flex
+            else None,
+            configuration_url="https://opendisplay.org/firmware/config/"
+            if is_flex
+            else None,
+        ),
     )
 
     entry.runtime_data = OpenDisplayRuntimeData(
@@ -166,18 +168,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
     )
     entry.async_on_unload(coordinator.async_start())
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: OpenDisplayConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     if (task := entry.runtime_data.upload_task) and not task.done():
         task.cancel()
         with contextlib.suppress(asyncio.CancelledError):
             await task
 
-    return await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         entry, FLEX_PLATFORMS if entry.runtime_data.is_flex else BASE_PLATFORMS
     )

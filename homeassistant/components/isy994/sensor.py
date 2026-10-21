@@ -365,9 +365,9 @@ class ISYAuxSensorEntity(ISYSensorEntity):
         """Return the target value."""
         return None if self.target is None else self.target.value
 
+    @callback
     @override
-    # pylint: disable-next=home-assistant-missing-super-call
-    async def async_added_to_hass(self) -> None:
+    def _async_subscribe_to_events(self) -> None:
         """Subscribe to the node control change events.
 
         Overloads the default ISYNodeEntity updater to only update when

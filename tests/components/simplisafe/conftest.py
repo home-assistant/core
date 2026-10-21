@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from simplipy.system.v3 import SystemV3
 
 from homeassistant.components.simplisafe.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonObjectType
 
 from .common import REFRESH_TOKEN, USER_ID, USERNAME
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 CODE = "12345"
 PASSWORD = "password"

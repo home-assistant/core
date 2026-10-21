@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "unique_id_mismatch": "The provided credentials belong to a different ENGIE Belgium account. Please sign in with the account that was originally set up."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -19,6 +20,16 @@
         },
         "description": "Enter the 6-digit verification code that was sent to you."
       },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::engie_be::config::step::user::data_description::password%]"
+        },
+        "description": "The session for {email} has expired. Enter your ENGIE Belgium password to sign in again. A new verification code will be sent to you.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
@@ -35,6 +46,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "epex_tomorrow_available": {
+        "name": "EPEX tomorrow prices available"
+      }
+    },
     "sensor": {
       "electricity_price_injection": {
         "name": "Electricity injection price"
@@ -276,6 +292,30 @@
       "energy_price_offtake_with_ean": {
         "name": "Offtake price ({ean_suffix})"
       },
+      "epex_current_hour": {
+        "name": "EPEX current hour price"
+      },
+      "epex_current_quarter_hour": {
+        "name": "EPEX current quarter-hourly price"
+      },
+      "epex_high_today_hour": {
+        "name": "EPEX highest hour price today"
+      },
+      "epex_high_today_quarter_hour": {
+        "name": "EPEX highest quarter-hourly price today"
+      },
+      "epex_low_today_hour": {
+        "name": "EPEX lowest hour price today"
+      },
+      "epex_low_today_quarter_hour": {
+        "name": "EPEX lowest quarter-hourly price today"
+      },
+      "epex_next_hour": {
+        "name": "EPEX next hour price"
+      },
+      "epex_next_quarter_hour": {
+        "name": "EPEX next quarter-hourly price"
+      },
       "gas_price_offtake": {
         "name": "Gas offtake price"
       },
@@ -336,6 +376,14 @@
       "gas_price_offtake_with_ean": {
         "name": "Gas offtake price ({ean_suffix})"
       }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "There was a connection error connecting to the API. Try again later."
+    },
+    "invalid_auth": {
+      "message": "Authentication with ENGIE Belgium failed. Please reauthenticate."
     }
   },
   "selector": {

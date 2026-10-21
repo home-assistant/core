@@ -77,6 +77,8 @@ from .utils import (
     setup_public_light,
 )
 
+pytestmark = pytest.mark.usefixtures("mock_private_only_entities_registered")
+
 
 async def test_select_camera_remove(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, unadopted_camera: Camera

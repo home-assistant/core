@@ -183,9 +183,9 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         translation_key="alltime_upload",
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.DATA_SIZE,
-        native_unit_of_measurement="B",
+        native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_display_precision=2,
-        suggested_unit_of_measurement="TiB",
+        suggested_unit_of_measurement=UnitOfInformation.TEBIBYTES,
         value_fn=get_alltime_upload,
     ),
     QBittorrentSensorEntityDescription(

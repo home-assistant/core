@@ -9,12 +9,13 @@ import aiohttp
 import aiotractive
 import probatio
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import CLIENT_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +33,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
-    client = aiotractive.api.API(data[CONF_EMAIL], data[CONF_PASSWORD])
+    client = aiotractive.api.API(
+        data[CONF_EMAIL],
+        data[CONF_PASSWORD],
+        session=async_get_clientsession(hass),
+        client_id=CLIENT_ID,
+    )
     try:
         user_id = await client.user_id()
     except aiotractive.exceptions.UnauthorizedError as error:
@@ -44,8 +50,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         ):
             raise RateLimitExceeded from error
         raise CannotConnect from error
-    finally:
-        await client.close()
 
     return {"title": data[CONF_EMAIL], "user_id": user_id}
 
@@ -95,8 +99,26 @@ class TractiveConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
+        return await self._async_update_credentials(
+            self._get_reauth_entry(), "reauth_confirm", user_input
+        )
 
-        errors = {}
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        return await self._async_update_credentials(
+            self._get_reconfigure_entry(), "reconfigure", user_input
+        )
+
+    async def _async_update_credentials(
+        self,
+        entry: ConfigEntry,
+        step_id: str,
+        user_input: dict[str, Any] | None,
+    ) -> ConfigFlowResult:
+        """Validate new credentials and update the config entry."""
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             try:
@@ -111,15 +133,18 @@ class TractiveConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                existing_entry = await self.async_set_unique_id(info["user_id"])
-                if existing_entry:
-                    await self.hass.config_entries.async_reload(existing_entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
-                return self.async_abort(reason="reauth_failed_existing")
+                await self.async_set_unique_id(info["user_id"])
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    entry, data_updates=user_input
+                )
 
         return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=USER_DATA_SCHEMA,
+            step_id=step_id,
+            data_schema=self.add_suggested_values_to_schema(
+                USER_DATA_SCHEMA,
+                {CONF_EMAIL: entry.data[CONF_EMAIL]},
+            ),
             errors=errors,
         )
 
