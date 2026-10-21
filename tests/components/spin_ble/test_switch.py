@@ -1,5 +1,6 @@
 """Tests for the Spin EV Charger charging switch."""
 
+import asyncio
 from collections.abc import Generator
 from dataclasses import replace
 from unittest.mock import AsyncMock, patch
@@ -172,3 +173,53 @@ async def test_a_failed_command_raises(
 
     assert err.value.translation_key == translation_key
     assert mock_charger.async_disconnect.await_count == int(released)
+
+
+async def test_teardown_waits_for_a_command_in_flight(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_charger: AsyncMock
+) -> None:
+    """Unloading hands the link back only once a running command is done."""
+    await setup_persistent(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    order: list[str] = []
+
+    async def start_charging() -> None:
+        # Let the unload get as far as it can while the command still runs.
+        while not coordinator._shutdown_requested:
+            await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        order.append("start")
+
+    mock_charger.async_start_charging.side_effect = start_charging
+    mock_charger.async_disconnect.side_effect = lambda: order.append("disconnect")
+
+    command = hass.async_create_task(
+        hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: CHARGING_SWITCH},
+            blocking=True,
+        )
+    )
+    await asyncio.sleep(0)
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await command
+
+    assert order == ["start", "disconnect"]
+
+
+async def test_a_command_after_teardown_is_refused(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_charger: AsyncMock
+) -> None:
+    """A command that only gets the link after unloading never reconnects."""
+    await setup_persistent(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    mock_charger.async_connect.reset_mock()
+
+    with pytest.raises(HomeAssistantError) as err:
+        await coordinator.async_start_charging()
+
+    assert err.value.translation_key == "unloading"
+    mock_charger.async_connect.assert_not_awaited()
+    mock_charger.async_start_charging.assert_not_awaited()

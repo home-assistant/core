@@ -119,6 +119,12 @@ class SpinEvCoordinator(DataUpdateCoordinator[ChargerStatus]):
     ) -> None:
         """Send a command over the same link a poll uses, then refresh."""
         async with self._link:
+            # A command queued behind teardown would otherwise reconnect after
+            # the entry is gone and, when held, keep the slot claimed.
+            if self._shutdown_requested:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="unloading"
+                )
             charger = await self._async_charger()
             try:
                 await charger.async_connect()
@@ -139,6 +145,13 @@ class SpinEvCoordinator(DataUpdateCoordinator[ChargerStatus]):
                     await self.async_release()
 
         await self.async_request_refresh()
+
+    @override
+    async def async_shutdown(self) -> None:
+        """Stop polling, then drop the link once whatever holds it is done."""
+        await super().async_shutdown()
+        async with self._link:
+            await self.async_release()
 
     async def async_release(self) -> None:
         """Drop the link so another client can reach the charger."""

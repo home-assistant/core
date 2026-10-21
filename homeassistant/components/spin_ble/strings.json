@@ -66,6 +66,9 @@
     },
     "device_not_found": {
       "message": "Could not find the charger with address {address}. {reason}"
+    },
+    "unloading": {
+      "message": "The command was not sent because the integration is unloading."
     }
   },
   "options": {
