@@ -18,6 +18,7 @@ from electrolux_group_developer_sdk.client.failed_connection_exception import (
     FailedConnectionException,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.electrolux import ElectroluxData
@@ -34,8 +35,6 @@ from . import (
     load_appliance_state,
     setup_integration,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_setup_entry_success(
@@ -91,7 +90,9 @@ async def test_all_appliances(
     for appliance in appliance_list:
         appliance_id = appliance.appliance.applianceId
 
-        device = device_registry.async_get_device({(DOMAIN, appliance_id)})
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, appliance_id), mock_config_entry.entry_id
+        )
 
         assert device is not None
         assert device == snapshot(name=get_fixture_name(appliance_id))
@@ -128,8 +129,18 @@ async def test_check_for_dynamic_devices(
 
     await setup_integration(hass, mock_config_entry)
 
-    assert device_registry.async_get_device({(DOMAIN, old_appliance_id)}) is not None
-    assert device_registry.async_get_device({(DOMAIN, new_appliance_id)}) is None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, old_appliance_id), mock_config_entry.entry_id
+        )
+        is not None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, new_appliance_id), mock_config_entry.entry_id
+        )
+        is None
+    )
 
     set_appliance_fixture_mock(new_appliance_fixture)
 
@@ -142,8 +153,18 @@ async def test_check_for_dynamic_devices(
     for callback in callback_list:
         await callback()
 
-    assert device_registry.async_get_device({(DOMAIN, old_appliance_id)}) is None
-    assert device_registry.async_get_device({(DOMAIN, new_appliance_id)}) is not None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, old_appliance_id), mock_config_entry.entry_id
+        )
+        is None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, new_appliance_id), mock_config_entry.entry_id
+        )
+        is not None
+    )
 
 
 @pytest.mark.parametrize(

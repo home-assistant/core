@@ -205,14 +205,12 @@ async def _check_for_new_devices(
         coordinator.remove_client_listeners()
         on_livestream_opening_callback_list.remove(coordinator.async_refresh)
 
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, missing_id)}
+        device_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, missing_id), entry.entry_id
         )
 
         if device_entry:
-            device_registry.async_update_device(
-                device_entry.id, remove_config_entry_id=entry.entry_id
-            )
+            device_registry.async_remove_device(device_entry.id)
 
 
 async def fetch_appliance_data(client: ApplianceClient) -> list[ApplianceData]:
