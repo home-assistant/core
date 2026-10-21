@@ -14,6 +14,7 @@ from solyx_energy_api.exceptions import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -77,7 +78,7 @@ class SolyxEnergyCoordinator(DataUpdateCoordinator[dict[str, SolyxEnergyData]]):
             _LOGGER.debug("Retrieving data from Solyx Energy API")
             assets = await self.api_client.async_get_assets()
         except SolyxEnergyAuthError as err:
-            raise UpdateFailed(f"Auth error: {err}") from err
+            raise ConfigEntryAuthFailed(f"Auth error: {err}") from err
         except (SolyxEnergyTokenError, SolyxEnergyDataError) as err:
             raise UpdateFailed(f"API error: {err}") from err
 
