@@ -33,18 +33,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: IotawattConfigEntry) -> 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: IotawattConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: IotawattConfigEntry) -> None:
     """Migrate a config entry."""
-    if entry.version > 2:
-        return False
-
     if entry.version == 1:
         # Entries from before the lifetime energy sensors keep the period sensors.
         hass.config_entries.async_update_entry(
             entry, options={**entry.options, CONF_LEGACY_ENERGY: True}, version=2
         )
-
-    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: IotawattConfigEntry) -> None:
