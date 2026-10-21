@@ -37,6 +37,8 @@ def make_state(mode: VmcMode = VmcMode.SPEED_1) -> HeltyState:
         fan_supply=17,
         fan_exhaust=15,
         alarms="0000000000000000",
+        filter_partial_m3=61920,
+        filter_total_m3=234830,
         timestamp=int(dt_util.utcnow().timestamp() * 1000),
     )
 
