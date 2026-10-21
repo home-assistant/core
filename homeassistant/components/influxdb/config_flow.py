@@ -1,5 +1,6 @@
 """Config flow for InfluxDB integration."""
 
+from collections.abc import Mapping
 import logging
 from pathlib import Path
 import shutil
@@ -32,7 +33,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.storage import STORAGE_DIR
 
-from . import create_influx_url, get_influx_connection
+from . import InfluxDBAuthError, create_influx_url, get_influx_connection
 from .const import (
     API_VERSION_2,
     CONF_BUCKET,
@@ -84,6 +85,33 @@ INFLUXDB_V1_SCHEMA = probatio.Schema(
     }
 )
 
+REAUTH_V1_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.TEXT,
+                autocomplete="username",
+            ),
+        ),
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            ),
+        ),
+    }
+)
+
+REAUTH_V2_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(probatio.Secret(CONF_TOKEN)): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+            ),
+        ),
+    }
+)
+
 INFLUXDB_V2_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_URL, default="https://"): TextSelector(
@@ -128,6 +156,8 @@ async def _validate_influxdb_connection(
 
     try:
         await hass.async_add_executor_job(_test_connection)
+    except InfluxDBAuthError:
+        errors = {"base": "invalid_auth"}
     except ConnectionError as ex:
         _LOGGER.error(ex)
         if "SSLError" in ex.args[0]:
@@ -339,6 +369,43 @@ class InfluxDBConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure_v2",
             data_schema=self.add_suggested_values_to_schema(
                 INFLUXDB_V2_SCHEMA, entry.data | (user_input or {})
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication when the credentials are rejected."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication with new credentials."""
+        errors: dict[str, str] = {}
+        entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            errors = await _validate_influxdb_connection(
+                self.hass, entry.data | user_input
+            )
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    entry, data_updates=user_input
+                )
+
+        schema = (
+            REAUTH_V2_SCHEMA
+            if entry.data[CONF_API_VERSION] == API_VERSION_2
+            else REAUTH_V1_SCHEMA
+        )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                schema,
+                {CONF_USERNAME: entry.data.get(CONF_USERNAME)} | (user_input or {}),
             ),
             errors=errors,
         )

@@ -46,6 +46,20 @@
       "import": {
         "title": "Import configuration"
       },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "token": "[%key:common::config_flow::data::api_token%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The password of the InfluxDB user.",
+          "token": "The API token with write access to the bucket.",
+          "username": "The username of the InfluxDB user."
+        },
+        "description": "The credentials for your InfluxDB server were rejected. Enter new credentials to continue.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "reconfigure_v1": {
         "data": {
           "database": "[%key:component::influxdb::config::step::configure_v1::data::database%]",

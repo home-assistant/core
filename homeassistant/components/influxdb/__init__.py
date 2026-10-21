@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
+from http import HTTPStatus
 import logging
 import math
 import queue
@@ -44,7 +45,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, state as state_helper
 from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers.entityfilter import (
@@ -353,6 +354,10 @@ def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | No
     return event_to_json
 
 
+class InfluxDBAuthError(ConnectionError):
+    """Error to indicate the credentials were rejected."""
+
+
 @dataclass
 class InfluxClient:
     """An InfluxDB client wrapper for V1 or V2."""
@@ -400,6 +405,8 @@ def get_influx_connection(  # noqa: C901
             except ApiException as exc:
                 if exc.status == CODE_INVALID_INPUTS:
                     raise ValueError(WRITE_ERROR % (json, exc)) from exc
+                if exc.status == HTTPStatus.UNAUTHORIZED:
+                    raise InfluxDBAuthError(CLIENT_ERROR_V2 % exc) from exc
                 raise ConnectionError(CLIENT_ERROR_V2 % exc) from exc
 
         def query_v2(query, _=None):
@@ -476,6 +483,8 @@ def get_influx_connection(  # noqa: C901
         except exceptions.InfluxDBClientError as exc:
             if exc.code == CODE_INVALID_INPUTS:
                 raise ValueError(WRITE_ERROR % (json, exc)) from exc
+            if exc.code == HTTPStatus.UNAUTHORIZED:
+                raise InfluxDBAuthError(CLIENT_ERROR_V1 % exc) from exc
             raise ConnectionError(CLIENT_ERROR_V1 % exc) from exc
 
     def query_v1(query, database=None):
@@ -573,6 +582,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> 
 
     try:
         influx = await hass.async_add_executor_job(get_influx_connection, config, True)
+    except InfluxDBAuthError as err:
+        raise ConfigEntryAuthFailed(err) from err
     except ConnectionError as err:
         raise ConfigEntryNotReady(err) from err
 

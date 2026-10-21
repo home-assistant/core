@@ -14,7 +14,7 @@ from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import influxdb
 from homeassistant.components.influxdb.const import DEFAULT_BUCKET, DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     CONF_PATH,
     PERCENTAGE,
@@ -2058,6 +2058,52 @@ async def test_connection_failure_on_startup(
     await hass.async_block_till_done()
 
     assert mock_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    ("hass_config", "mock_client", "config_base", "get_write_api", "test_exception"),
+    [
+        pytest.param(
+            {"influxdb": {}},
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.exceptions.InfluxDBClientError("authorization failed", code=401),
+            id="v1",
+        ),
+        pytest.param(
+            {"influxdb": {}},
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.ApiException(status=401),
+            id="v2",
+        ),
+    ],
+    indirect=["mock_client"],
+)
+async def test_auth_failure_on_startup(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    config_base: dict[str, Any],
+    get_write_api: Callable[[MagicMock], MagicMock],
+    test_exception: Exception,
+) -> None:
+    """Test a reauth flow is started when the credentials are rejected on startup."""
+    get_write_api(mock_client).side_effect = test_exception
+
+    mock_entry = MockConfigEntry(domain=DOMAIN, data=config_base)
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_entry.entry_id
 
 
 @pytest.mark.parametrize(

@@ -1,6 +1,6 @@
 """Test the influxdb config flow."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
@@ -1220,3 +1220,135 @@ async def test_reconfigure_connection_error(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+
+@pytest.mark.parametrize(
+    ("mock_client", "entry_data", "user_input"),
+    [
+        pytest.param(
+            DEFAULT_API_VERSION,
+            BASE_V1_CONFIG | {CONF_USERNAME: "user", CONF_PASSWORD: "old_pass"},
+            {CONF_USERNAME: "new_user", CONF_PASSWORD: "new_pass"},
+            id="v1",
+        ),
+        pytest.param(
+            API_VERSION_2,
+            BASE_V2_CONFIG,
+            {CONF_TOKEN: "new_token"},
+            id="v2",
+        ),
+    ],
+    indirect=["mock_client"],
+)
+@pytest.mark.usefixtures("mock_setup_entry", "mock_client")
+async def test_reauth(
+    hass: HomeAssistant,
+    entry_data: dict[str, Any],
+    user_input: dict[str, Any],
+) -> None:
+    """Test reauthentication."""
+    mock_entry = MockConfigEntry(domain=DOMAIN, data=entry_data)
+    mock_entry.add_to_hass(hass)
+
+    result = await mock_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_entry.data == entry_data | user_input
+
+
+@pytest.mark.parametrize(
+    (
+        "mock_client",
+        "entry_data",
+        "user_input",
+        "get_write_api",
+        "test_exception",
+        "reason",
+    ),
+    [
+        pytest.param(
+            DEFAULT_API_VERSION,
+            BASE_V1_CONFIG | {CONF_USERNAME: "user", CONF_PASSWORD: "old_pass"},
+            {CONF_USERNAME: "user", CONF_PASSWORD: "new_pass"},
+            _get_write_api_mock_v1,
+            InfluxDBClientError("authorization failed", code=401),
+            "invalid_auth",
+            id="v1_invalid_auth",
+        ),
+        pytest.param(
+            DEFAULT_API_VERSION,
+            BASE_V1_CONFIG | {CONF_USERNAME: "user", CONF_PASSWORD: "old_pass"},
+            {CONF_USERNAME: "user", CONF_PASSWORD: "new_pass"},
+            _get_write_api_mock_v1,
+            InfluxDBServerError("server error"),
+            "cannot_connect",
+            id="v1_cannot_connect",
+        ),
+        pytest.param(
+            API_VERSION_2,
+            BASE_V2_CONFIG,
+            {CONF_TOKEN: "new_token"},
+            _get_write_api_mock_v2,
+            ApiException(status=401),
+            "invalid_auth",
+            id="v2_invalid_auth",
+        ),
+        pytest.param(
+            API_VERSION_2,
+            BASE_V2_CONFIG,
+            {CONF_TOKEN: "new_token"},
+            _get_write_api_mock_v2,
+            Exception("unexpected"),
+            "unknown",
+            id="v2_unknown",
+        ),
+    ],
+    indirect=["mock_client"],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_errors(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    entry_data: dict[str, Any],
+    user_input: dict[str, Any],
+    get_write_api: Callable[[MagicMock], MagicMock],
+    test_exception: Exception,
+    reason: str,
+) -> None:
+    """Test reauthentication handles errors and can recover."""
+    mock_entry = MockConfigEntry(domain=DOMAIN, data=entry_data)
+    mock_entry.add_to_hass(hass)
+
+    write_api = get_write_api(mock_client)
+    write_api.side_effect = test_exception
+
+    result = await mock_entry.start_reauth_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": reason}
+
+    write_api.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_entry.data == entry_data | user_input
