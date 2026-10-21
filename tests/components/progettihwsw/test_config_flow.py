@@ -47,7 +47,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.progettihwsw.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
@@ -96,7 +96,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.progettihwsw.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result3["flow_id"],
@@ -167,7 +167,7 @@ async def test_form_user_exception(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.progettihwsw.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result4 = await hass.config_entries.flow.async_configure(
             result3["flow_id"],
