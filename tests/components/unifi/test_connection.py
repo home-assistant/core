@@ -1758,6 +1758,24 @@ async def test_reauth_after_rate_limit_delays_queued_retry(
     assert calls > 1
 
 
+async def test_rate_limit_answered_after_outage_pauses_queued_retry(
+    hass: HomeAssistant,
+    hub: UnifiHub,
+    mock_websocket_state: WebsocketStateManager,
+) -> None:
+    """A request from before the outage that answers 429 late still pauses."""
+    await mock_websocket_state.disconnect()
+    assert not _available(hass)
+    with patch.object(hub.api.system_information, "update") as probe:
+        hub.connection.verify_session(aiounifi.AuthenticationRateLimitError())
+        await _advance(hass, MAX_RETRY_DELAY)
+        probe.assert_not_called()
+        mock_websocket_state.clear()
+        await _advance(hass, RATE_LIMIT_PAUSE + MAX_RETRY_DELAY)
+    probe.assert_called_once()
+    assert _available(hass)
+
+
 @PARAMETRIZE_STOP
 async def test_session_check_in_flight_at_stop_is_cancelled(
     hass: HomeAssistant,

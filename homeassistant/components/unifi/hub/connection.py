@@ -131,13 +131,16 @@ class UnifiConnectionManager:
         One endpoint can fail on its own, so only a failing readiness probe
         marks the whole session unavailable.
         """
-        # Reauth is only pending while the session is unavailable
-        if not self.available or self._stopped:
+        if self._stopped:
             return
         if isinstance(err, LOGIN_ONLY_ERRORS):
-            # aiounifi logged in on its own, a probe would log in again
+            # aiounifi logged in on its own, a probe would log in again. A
+            # request from before an outage can answer late, its pause applies
             self._handle_login_error(err)
             self.report_failure(err)
+            return
+        # Reauth is only pending while the session is unavailable
+        if not self.available:
             return
         if self._verify_task is not None and not self._verify_task.done():
             return
