@@ -2,6 +2,7 @@
 
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 import copy
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import probatio
@@ -9,7 +10,8 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_capture_events
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
-from zwave_js_server.model.node import Node
+from zwave_js_server.model.driver import Driver
+from zwave_js_server.model.node import Node, NodeDataType
 
 from homeassistant.components import automation
 from homeassistant.components.zwave_js import DOMAIN
@@ -544,6 +546,122 @@ async def test_zwave_js_value_updated_multiple_child_targets(
     # The endpoint 2 update reports the endpoint 2 child device, not the endpoint 3 one.
     assert len(events) == 1
     assert events[0].data["device_id"] == room_child.id
+
+
+async def test_zwave_js_value_updated_child_devices_across_networks(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    climate_heatit_z_trm3: Node,
+    climate_heatit_z_trm3_state: NodeDataType,
+    controller_state: dict[str, Any],
+    log_config_state: dict[str, Any],
+    integration: MockConfigEntry,
+) -> None:
+    """Test cross-network child targets report their own network's device.
+
+    Two Z-Wave networks can have nodes that share a node id. A value-updated trigger that
+    targets an endpoint child device on each network with the same endpoint must report
+    the child device of the network whose value actually updated, not whichever target
+    was processed last.
+    """
+    trigger_type = f"{DOMAIN}.value_updated"
+
+    # Network 1 is the heatit node from the integration fixture.
+    node1 = climate_heatit_z_trm3
+    child1 = device_registry.async_get_child_device_by_identifier(
+        get_device_id(client.driver, node1, 2), integration.entry_id
+    )
+    assert child1
+
+    # Network 2 is a second driver with a different home id, hosting a node that reuses
+    # the same node id and also has an endpoint 2 child device.
+    controller2_state = copy.deepcopy(controller_state)
+    controller2_state["controller"]["homeId"] = (
+        controller_state["controller"]["homeId"] + 1
+    )
+    client2 = MagicMock()
+    client2.driver = Driver(client2, controller2_state, copy.deepcopy(log_config_state))
+    node2 = Node(client2, copy.deepcopy(climate_heatit_z_trm3_state))
+    client2.driver.controller.nodes[node2.node_id] = node2
+    assert node2.node_id == node1.node_id
+
+    entry2 = MockConfigEntry(
+        domain=DOMAIN,
+        data={"url": "ws://test2.org"},
+        unique_id=str(client2.driver.controller.home_id),
+        state=ConfigEntryState.LOADED,
+    )
+    entry2.add_to_hass(hass)
+    entry2.runtime_data = MagicMock(client=client2)
+    parent2 = device_registry.async_get_or_create(
+        config_entry_id=entry2.entry_id,
+        identifiers={get_device_id(client2.driver, node2)},
+    )
+    child2 = device_registry.async_get_or_create_child(
+        config_entry_id=entry2.entry_id,
+        identifiers={get_device_id(client2.driver, node2, 2)},
+        parent_device_id=parent2.id,
+    )
+    assert child2.id != child1.id
+
+    events = async_capture_events(hass, "child_trigger")
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": trigger_type,
+                        "options": {
+                            # Network 2's child is listed last, so a node-id-only key
+                            # would overwrite network 1's mapping.
+                            "device_id": [child1.id, child2.id],
+                            "command_class": CommandClass.SENSOR_MULTILEVEL.value,
+                            "property": "Air temperature",
+                            "endpoint": 2,
+                        },
+                    },
+                    "action": {
+                        "event": "child_trigger",
+                        "event_data": {"device_id": "{{ trigger.device_id }}"},
+                    },
+                },
+            ]
+        },
+    )
+
+    def _value_updated_event(node: Node) -> Event:
+        return Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Multilevel Sensor",
+                    "commandClass": 49,
+                    "endpoint": 2,
+                    "property": "Air temperature",
+                    "propertyName": "Air temperature",
+                    "newValue": 25.5,
+                    "prevValue": 20.0,
+                },
+            },
+        )
+
+    # A value update on network 1 reports network 1's child device.
+    node1.receive_event(_value_updated_event(node1))
+    await hass.async_block_till_done()
+    assert len(events) == 1
+    assert events[0].data["device_id"] == child1.id
+
+    # A value update on network 2 reports network 2's child device.
+    node2.receive_event(_value_updated_event(node2))
+    await hass.async_block_till_done()
+    assert len(events) == 2
+    assert events[1].data["device_id"] == child2.id
 
 
 async def test_zwave_js_value_updated_bypass_dynamic_validation(

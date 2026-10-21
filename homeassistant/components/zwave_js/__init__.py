@@ -603,13 +603,8 @@ class ControllerEvents:
             )
             # We keep the parent device so its user customizations are preserved; it has
             # a hardware based identifier that distinguishes it from the replacement. Its
-            # child devices only have a node-id based identifier, so they would collide
-            # with the replacement node's child devices (reparenting is rejected), so we
-            # remove them to let the replacement's child devices be created.
-            for child_device in dr.async_entries_for_parent_device(
-                self.dev_reg, device.id
-            ):
-                self.remove_device(child_device)
+            # stale child devices are reconciled in async_register_node_in_dev_reg, which
+            # also covers a node replaced while Home Assistant was stopped.
             return
 
         if reason == RemoveNodeReason.RESET:
@@ -752,6 +747,15 @@ class ControllerEvents:
                 self.dev_reg.async_update_device(
                     node_id_device.id, new_identifiers=new_identifiers
                 )
+                # The old parent's child devices still hold node-id based identifiers
+                # that would collide with the replacement node's child devices
+                # (reparenting is rejected), so remove them to let the replacement's
+                # child devices be created. This also covers a node replaced while Home
+                # Assistant was stopped, where no node-removed event fires.
+                for child_device in dr.async_entries_for_parent_device(
+                    self.dev_reg, node_id_device.id
+                ):
+                    self.remove_device(child_device)
             # If there is an orphaned device that already exists with this hardware
             # based identifier, add the node ID based identifier to the orphaned
             # device.

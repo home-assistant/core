@@ -188,7 +188,9 @@ async def async_attach_trigger(
         # so reachable targets still attach. A node collapses to a single listener, so
         # only the child device that covers the configured endpoint is mapped; a child
         # targeting a different endpoint would otherwise report the wrong device id.
-        child_device_by_node_id: dict[int, dr.AnyDeviceEntry] = {}
+        # The mapping is keyed by the network-scoped node identifier (home id plus node
+        # id), since node ids repeat across networks.
+        child_device_by_node: dict[tuple[str, str], dr.AnyDeviceEntry] = {}
         for device_id in options.get(ATTR_DEVICE_ID, []):
             if not isinstance(
                 device_entry := dev_reg.async_get(device_id), dr.ChildDeviceEntry
@@ -201,7 +203,10 @@ async def async_attach_trigger(
             if endpoint in get_endpoint_indices_from_child_device(
                 device_entry, target_node
             ):
-                child_device_by_node_id[target_node.node_id] = device_entry
+                assert target_node.client.driver is not None
+                child_device_by_node[
+                    get_device_id(target_node.client.driver, target_node)
+                ] = device_entry
         # Nodes list can come from different drivers and we will need to listen to
         # server connections for all of them.
         drivers: set[Driver] = set()
@@ -209,9 +214,9 @@ async def async_attach_trigger(
             driver = node.client.driver
             assert driver is not None  # The node comes from the driver.
             drivers.add(driver)
-            if (device := child_device_by_node_id.get(node.node_id)) is None:
+            device_identifier = get_device_id(driver, node)
+            if (device := child_device_by_node.get(device_identifier)) is None:
                 entry = async_get_config_entry_from_node(hass, node)
-                device_identifier = get_device_id(driver, node)
                 device = dev_reg.async_get_device_by_identifier(
                     device_identifier, entry.entry_id
                 )
