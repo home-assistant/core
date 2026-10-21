@@ -18,6 +18,7 @@ from .coordinator import (
     OmadaDevicesCoordinator,
     OmadaGatewayCoordinator,
     OmadaSwitchPortCoordinator,
+    OmadaVpnPoliciesCoordinator,
 )
 
 
@@ -52,6 +53,9 @@ class OmadaSiteController:
         self._clients_coordinator = OmadaClientsCoordinator(
             hass, config_entry, omada_client
         )
+        self._vpn_policies_coordinator = OmadaVpnPoliciesCoordinator(
+            hass, config_entry, omada_client
+        )
 
     async def initialize_first_refresh(self) -> None:
         """Initialize the all coordinators, and perform first refresh."""
@@ -68,6 +72,7 @@ class OmadaSiteController:
             await self._gateway_coordinator.async_config_entry_first_refresh()
 
         await self.clients_coordinator.async_config_entry_first_refresh()
+        await self._vpn_policies_coordinator.async_config_entry_first_refresh()
 
     async def async_register_device_entities(
         self,
@@ -157,3 +162,8 @@ class OmadaSiteController:
     def clients_coordinator(self) -> OmadaClientsCoordinator:
         """Gets the coordinator for site's clients."""
         return self._clients_coordinator
+
+    @property
+    def vpn_policies_coordinator(self) -> OmadaVpnPoliciesCoordinator:
+        """Gets the coordinator for site's VPN policies."""
+        return self._vpn_policies_coordinator
