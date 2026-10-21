@@ -2,7 +2,13 @@
 
 from unittest.mock import AsyncMock
 
-from pysmartthings import Attribute, Capability, Command, SmartThingsQuotaExceededError
+from pysmartthings import (
+    Attribute,
+    Capability,
+    Command,
+    SmartThingsForbiddenError,
+    SmartThingsQuotaExceededError,
+)
 from pysmartthings.models import HealthStatus
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
@@ -13,6 +19,7 @@ from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.smartthings.const import DOMAIN, MAIN, MANAGE_PLANS_URL
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -101,6 +108,33 @@ async def test_command_quota_exceeded(
     assert exc_info.value.translation_placeholders == {
         "manage_plans_url": MANAGE_PLANS_URL
     }
+
+
+@pytest.mark.parametrize("device_fixture", ["c2c_arlo_pro_3_switch"])
+async def test_command_forbidden(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a forbidden command reports the entitlement error and starts reauth."""
+    await setup_integration(hass, mock_config_entry)
+    devices.execute_device_command.side_effect = SmartThingsForbiddenError
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.theater_2nd_floor_hallway"},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "entitlement_required"
+    await hass.async_block_till_done()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 @pytest.mark.parametrize("device_fixture", ["da_wm_wd_000001"])

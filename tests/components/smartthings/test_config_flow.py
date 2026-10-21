@@ -5,6 +5,12 @@ from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from pysmartthings import (
+    SmartThingsAuthenticationFailedError,
+    SmartThingsConnectionError,
+    SmartThingsForbiddenError,
+    SmartThingsQuotaExceededError,
+)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
@@ -25,6 +31,8 @@ from homeassistant.components.smartthings.const import (
     CONF_PAT_TOKEN,
     CONF_SUBSCRIPTION_ID,
     DOMAIN,
+    MANAGE_PLANS_URL,
+    PAT_TOKEN_URL,
 )
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_ID, CONF_TOKEN
@@ -41,6 +49,14 @@ REDIRECT_URI = "https://example.com/auth/external/callback"
 def use_cloud(hass: HomeAssistant) -> None:
     """Set up the cloud component."""
     hass.config.components.add("cloud")
+
+
+@pytest.fixture
+async def without_stored_credentials(hass: HomeAssistant) -> None:
+    """Remove stored credentials, so the flow prompts for a PAT."""
+    credentials = hass.data[APPLICATION_CREDENTIALS_DATA_COMPONENT]
+    for item in list(credentials.async_items()):
+        await credentials.async_delete_item(item[CONF_ID])
 
 
 @pytest.fixture
@@ -120,7 +136,7 @@ async def test_pat_flow_records_app_before_storing_credential(
     assert hass_storage[STORAGE_KEY]["data"]["apps"] == {"mock-app-id": REDIRECT_URI}
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "without_stored_credentials")
 @pytest.mark.parametrize(
     ("ledger_apps", "expected_app_id", "expected_client_id"),
     [
@@ -153,10 +169,6 @@ async def test_pat_flow_only_reuses_owned_app(
     expected_client_id: str,
 ) -> None:
     """Check an existing app is only reused if this instance provisioned it."""
-    # Without a stored credential the flow prompts for a PAT.
-    credentials = hass.data[APPLICATION_CREDENTIALS_DATA_COMPONENT]
-    for item in list(credentials.async_items()):
-        await credentials.async_delete_item(item[CONF_ID])
     hass_storage[STORAGE_KEY] = {
         "version": 1,
         "minor_version": 2,
@@ -183,6 +195,84 @@ async def test_pat_flow_only_reuses_owned_app(
     assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert f"client_id={expected_client_id}" in result["url"]
     assert hass_storage[STORAGE_KEY]["data"]["apps"][expected_app_id] == REDIRECT_URI
+
+
+@pytest.mark.usefixtures(
+    "current_request_with_host", "without_stored_credentials", "mock_setup_entry"
+)
+@pytest.mark.parametrize(
+    ("error", "expected_error"),
+    [
+        (SmartThingsAuthenticationFailedError("Invalid token"), "invalid_pat"),
+        (SmartThingsForbiddenError("Forbidden"), "entitlement_required"),
+        (SmartThingsConnectionError("Timeout"), "cannot_connect"),
+        (SmartThingsQuotaExceededError("Quota exceeded"), "quota_exceeded"),
+    ],
+)
+async def test_pat_provisioning_error_and_retry(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_smartthings: AsyncMock,
+    error: Exception,
+    expected_error: str,
+) -> None:
+    """Check provisioning errors are shown on the PAT form and can be retried."""
+    mock_smartthings.list_apps.side_effect = error
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["step_id"] == "pat"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PAT_TOKEN: "pat-token"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pat"
+    assert result["errors"] == {"base": expected_error}
+    assert result["description_placeholders"] == {
+        "token_url": PAT_TOKEN_URL,
+        "manage_plans_url": MANAGE_PLANS_URL,
+    }
+
+    mock_smartthings.list_apps.side_effect = None
+    mock_smartthings.list_apps.return_value = []
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PAT_TOKEN: "pat-token"}
+    )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert "client_id=mock-client-id" in result["url"]
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass, {"flow_id": result["flow_id"], "redirect_uri": REDIRECT_URI}
+    )
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == HTTPStatus.OK
+
+    aioclient_mock.post(
+        "https://auth-global.api.smartthings.com/oauth/token",
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "token_type": "Bearer",
+            "expires_in": 82806,
+            "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
+            "r:locations:* w:locations:* x:locations:* "
+            "r:scenes:* x:scenes:* r:rules:* w:rules:* sse",
+            "access_tier": 0,
+            "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"]["app_id"] == "mock-app-id"
 
 
 @pytest.mark.usefixtures("current_request_with_host", "with_generic_credential")
