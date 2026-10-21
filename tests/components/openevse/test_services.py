@@ -12,7 +12,8 @@ from openevsehttp.exceptions import (
 import pytest
 
 from homeassistant.components.openevse.const import DOMAIN
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_HOST
+from homeassistant.components.openevse.services import OpenEVSEService
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -23,9 +24,7 @@ from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
-SERVICE_SET_OVERRIDE = "set_override"
-SERVICE_CLEAR_OVERRIDE = "clear_override"
-SERVICE_GET_OVERRIDE = "get_override"
+SERVICE_SET_OVERRIDE = OpenEVSEService.SET_OVERRIDE
 
 
 @pytest.fixture
@@ -109,66 +108,6 @@ async def test_set_override_all_fields(
     )
 
 
-async def test_clear_override(
-    hass: HomeAssistant,
-    mock_charger: MagicMock,
-    device_entry: dr.DeviceEntry,
-) -> None:
-    """Test calling clear_override."""
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_CLEAR_OVERRIDE,
-        {ATTR_DEVICE_ID: device_entry.id},
-        blocking=True,
-    )
-
-    mock_charger.clear_override.assert_called_once()
-
-
-async def test_get_override(
-    hass: HomeAssistant,
-    mock_charger: MagicMock,
-    device_entry: dr.DeviceEntry,
-) -> None:
-    """Test calling get_override."""
-    response = await hass.services.async_call(
-        DOMAIN,
-        SERVICE_GET_OVERRIDE,
-        {ATTR_DEVICE_ID: device_entry.id},
-        blocking=True,
-        return_response=True,
-    )
-
-    mock_charger.get_override.assert_called_once()
-    assert response == {
-        "state": "active",
-        "charge_current": 32,
-        "max_current": 48,
-        "energy_limit": 10000,
-        "time_limit": 3600,
-        "auto_release": True,
-    }
-
-
-async def test_get_override_non_dict_response(
-    hass: HomeAssistant,
-    mock_charger: MagicMock,
-    device_entry: dr.DeviceEntry,
-) -> None:
-    """Test calling get_override when charger returns non-dict."""
-    mock_charger.get_override.return_value = ["item1", "item2"]
-
-    response = await hass.services.async_call(
-        DOMAIN,
-        SERVICE_GET_OVERRIDE,
-        {ATTR_DEVICE_ID: device_entry.id},
-        blocking=True,
-        return_response=True,
-    )
-
-    assert response == {"override": ["item1", "item2"]}
-
-
 async def test_set_override_with_entity_id(
     hass: HomeAssistant,
     mock_charger: MagicMock,
@@ -196,47 +135,6 @@ async def test_set_override_with_entity_id(
     )
 
 
-async def test_clear_override_with_entity_id(
-    hass: HomeAssistant,
-    mock_charger: MagicMock,
-    device_entry: dr.DeviceEntry,
-) -> None:
-    """Test calling clear_override with entity_id target."""
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_CLEAR_OVERRIDE,
-        {ATTR_ENTITY_ID: "switch.openevse_mock_config_manual_override"},
-        blocking=True,
-    )
-
-    mock_charger.clear_override.assert_called_once()
-
-
-async def test_get_override_with_entity_id(
-    hass: HomeAssistant,
-    mock_charger: MagicMock,
-    device_entry: dr.DeviceEntry,
-) -> None:
-    """Test calling get_override with entity_id target."""
-    response = await hass.services.async_call(
-        DOMAIN,
-        SERVICE_GET_OVERRIDE,
-        {ATTR_ENTITY_ID: "switch.openevse_mock_config_manual_override"},
-        blocking=True,
-        return_response=True,
-    )
-
-    mock_charger.get_override.assert_called_once()
-    assert response == {
-        "state": "active",
-        "charge_current": 32,
-        "max_current": 48,
-        "energy_limit": 10000,
-        "time_limit": 3600,
-        "auto_release": True,
-    }
-
-
 async def test_service_unknown_device(
     hass: HomeAssistant,
     setup_integration: None,
@@ -245,7 +143,7 @@ async def test_service_unknown_device(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CLEAR_OVERRIDE,
+            SERVICE_SET_OVERRIDE,
             {ATTR_DEVICE_ID: "unknown_device_id"},
             blocking=True,
         )
@@ -262,7 +160,7 @@ async def test_service_unknown_entity(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_CLEAR_OVERRIDE,
+            SERVICE_SET_OVERRIDE,
             {ATTR_ENTITY_ID: "switch.non_existent"},
             blocking=True,
         )
@@ -364,40 +262,3 @@ async def test_set_override_subsecond_duration(
         time_limit=1,
         auto_release=None,
     )
-
-
-async def test_get_override_multiple_targets(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    device_entry: dr.DeviceEntry,
-    device_registry: dr.DeviceRegistry,
-    mock_charger: MagicMock,
-) -> None:
-    """Test calling get_override with multiple targets raises ServiceValidationError."""
-    second_entry = MockConfigEntry(
-        title="openevse_mock_config_2",
-        domain=DOMAIN,
-        data={CONF_HOST: "192.168.1.101"},
-        entry_id="FAKE_2",
-        unique_id="deadbeeffeed2",
-    )
-    second_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(second_entry.entry_id)
-    await hass.async_block_till_done()
-
-    second_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, "deadbeeffeed2"), second_entry.entry_id
-    )
-    assert second_device is not None
-
-    with pytest.raises(ServiceValidationError) as exc_info:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_GET_OVERRIDE,
-            {ATTR_DEVICE_ID: [device_entry.id, second_device.id]},
-            blocking=True,
-            return_response=True,
-        )
-
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "multiple_target_entries"

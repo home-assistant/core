@@ -249,9 +249,6 @@
     "invalid_value": {
       "message": "Value {value} is invalid for the charger."
     },
-    "multiple_target_entries": {
-      "message": "Only a single OpenEVSE charger can be targeted for this action."
-    },
     "no_matching_target_entries": {
       "message": "No matching OpenEVSE chargers found for the specified target."
     },
@@ -268,14 +265,6 @@
     }
   },
   "services": {
-    "clear_override": {
-      "description": "Clears any active manual override, restoring automatic control.",
-      "name": "Clear manual override"
-    },
-    "get_override": {
-      "description": "Returns details of the current manual override status.",
-      "name": "Get manual override"
-    },
     "set_override": {
       "description": "Sets or updates the manual override on the charger.",
       "fields": {

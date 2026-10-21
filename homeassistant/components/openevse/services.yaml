@@ -45,13 +45,3 @@ set_override:
       required: false
       selector:
         boolean:
-
-clear_override:
-  target:
-    entity:
-      integration: openevse
-
-get_override:
-  target:
-    entity:
-      integration: openevse
