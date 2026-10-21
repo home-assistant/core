@@ -22,6 +22,17 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "location": "[%key:common::config_flow::data::location%]"
+        },
+        "data_description": {
+          "api_key": "The API key used to access Electricity Maps.",
+          "location": "The location to retrieve the carbon intensity for."
+        },
+        "description": "[%key:component::co2signal::config::step::user::description%]"
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
