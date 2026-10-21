@@ -1218,6 +1218,23 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ],
     },
+    Capability.SAMSUNG_CE_MEAT_PROBE: {
+        Attribute.TEMPERATURE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.TEMPERATURE,
+                translation_key="meat_probe_temperature",
+                device_class=SensorDeviceClass.TEMPERATURE,
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ],
+        Attribute.TEMPERATURE_SETPOINT: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.TEMPERATURE_SETPOINT,
+                translation_key="meat_probe_temperature_setpoint",
+                device_class=SensorDeviceClass.TEMPERATURE,
+            )
+        ],
+    },
     Capability.SAMSUNG_CE_WATER_CONSUMPTION_REPORT: {
         Attribute.WATER_CONSUMPTION: [
             SmartThingsSensorEntityDescription(

@@ -110,6 +110,14 @@ CAPABILITY_TO_SENSORS: dict[
             is_on_key="locked",
         )
     },
+    Capability.SAMSUNG_CE_MEAT_PROBE: {
+        Attribute.STATUS: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.STATUS,
+            translation_key="meat_probe",
+            device_class=BinarySensorDeviceClass.PLUG,
+            is_on_key="connected",
+        )
+    },
     Capability.MOTION_SENSOR: {
         Attribute.MOTION: SmartThingsBinarySensorEntityDescription(
             key=Attribute.MOTION,

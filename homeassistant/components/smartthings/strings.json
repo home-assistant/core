@@ -41,6 +41,9 @@
       "child_lock": {
         "name": "Child lock"
       },
+      "meat_probe": {
+        "name": "Meat probe"
+      },
       "cooktop_operating_state": {
         "name": "[%key:component::smartthings::entity::sensor::cooktop_operating_state::name%]"
       },
@@ -636,6 +639,12 @@
       },
       "manual_level": {
         "name": "Burner {burner_id} level"
+      },
+      "meat_probe_temperature": {
+        "name": "Meat probe temperature"
+      },
+      "meat_probe_temperature_setpoint": {
+        "name": "Meat probe setpoint"
       },
       "media_input_source": {
         "name": "Media input source",
