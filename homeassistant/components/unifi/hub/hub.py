@@ -111,7 +111,9 @@ class UnifiHub:
         if unique_id not in self.api.sites:
             unique_id = self._async_update_site_unique_id(unique_id)
         if (site := self.api.sites.get(unique_id)) is None:
-            raise ConfigEntryError(f"UniFi site {unique_id} no longer exists")
+            raise ConfigEntryError(
+                translation_domain=DOMAIN, translation_key="site_not_found"
+            )
         self.is_admin = site.role == "admin"
 
         await self.entity_loader.initialize()
