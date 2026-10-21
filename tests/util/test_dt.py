@@ -1,7 +1,7 @@
 """Test Home Assistant date util methods."""
 # pylint: disable=home-assistant-enforce-utcnow
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, time, timedelta
 
 import pytest
 
@@ -183,6 +183,22 @@ def test_parse_duration(
 ) -> None:
     """Test that parse_duration returns the expected result."""
     assert dt_util.parse_duration(duration_string) == expected_result
+
+
+@pytest.mark.parametrize(
+    ("time_string", "expected_result"),
+    [
+        pytest.param("12:34", time(12, 34), id="hours_minutes"),
+        pytest.param("12:34:56", time(12, 34, 56), id="hours_minutes_seconds"),
+        pytest.param("24:00", None, id="hour_out_of_range"),
+        pytest.param("0:2147483648", None, id="minute_overflows_c_int"),
+        pytest.param("2147483648:00", None, id="hour_overflows_c_int"),
+        pytest.param("0:0:99999999999999999999", None, id="second_overflows_c_long"),
+    ],
+)
+def test_parse_time(time_string: str, expected_result: time | None) -> None:
+    """Test that parse_time returns the expected result."""
+    assert dt_util.parse_time(time_string) == expected_result
 
 
 def test_get_age() -> None:

@@ -848,7 +848,12 @@ def test_time() -> None:
     """Test date validation."""
     schema = probatio.Schema(cv.time)
 
-    for value in ("Not a time", "2016-11-23", "2016-11-23T18:59:08"):
+    for value in (
+        "Not a time",
+        "2016-11-23",
+        "2016-11-23T18:59:08",
+        "0:2147483648",
+    ):
         with pytest.raises(probatio.Invalid):
             schema(value)
 
