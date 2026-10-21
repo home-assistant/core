@@ -17,7 +17,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import Control4ConfigEntry, Control4RuntimeData
@@ -179,19 +179,6 @@ async def async_setup_entry(
     async_add_entities(entity_list, True)
 
 
-class _RoomRestoreData(ExtraStoredData):
-    """Extra data stored for a Control4 room."""
-
-    def __init__(self, last_source_id: int | None) -> None:
-        """Initialize the restore data."""
-        self.last_source_id = last_source_id
-
-    @override
-    def as_dict(self) -> dict[str, Any]:
-        """Return the restore data as a dictionary."""
-        return {ATTR_LAST_SOURCE_ID: self.last_source_id}
-
-
 class Control4Room(Control4Entity, MediaPlayerEntity, RestoreEntity):
     """Control4 Room entity."""
 
@@ -238,8 +225,8 @@ class Control4Room(Control4Entity, MediaPlayerEntity, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Restore the last source, then let the current one take over."""
         await super().async_added_to_hass()
-        if (extra_data := await self.async_get_last_extra_data()) is not None:
-            last_source_id = extra_data.as_dict().get(ATTR_LAST_SOURCE_ID)
+        if (last_state := await self.async_get_last_state()) is not None:
+            last_source_id = last_state.attributes.get(ATTR_LAST_SOURCE_ID)
             if last_source_id in self._sources:
                 self._last_source_id = last_source_id
         self._remember_playing_source()
@@ -276,11 +263,7 @@ class Control4Room(Control4Entity, MediaPlayerEntity, RestoreEntity):
         return C4Room(self.runtime_data.director, self._idx)
 
     def _get_device_from_variable(self, var: str) -> int | None:
-        if (data := self.coordinator.data) is None:
-            # No poll has succeeded yet, so the room is unavailable and there
-            # is no variable to read until a later poll comes back.
-            return None
-        current_device = data[self._idx][var]
+        current_device = self.coordinator.data[self._idx][var]
         if current_device == 0:
             return None
 
@@ -300,8 +283,6 @@ class Control4Room(Control4Entity, MediaPlayerEntity, RestoreEntity):
 
     def _get_media_info(self) -> dict | None:
         """Get the Media Info Dictionary if populated."""
-        if self.coordinator.data is None:
-            return None
         media_info = self.coordinator.data[self._idx][CONTROL4_MEDIA_INFO]
         if "mediainfo" in media_info:
             return media_info["mediainfo"]
@@ -334,11 +315,6 @@ class Control4Room(Control4Entity, MediaPlayerEntity, RestoreEntity):
     @override
     def state(self) -> MediaPlayerState:
         """Return whether this room is on or off."""
-        if self.coordinator.data is None:
-            # A failed first poll leaves the room unavailable. The entity is
-            # still added so it can recover, and entity_picture() reads this
-            # property in that state, so it has to return something.
-            return MediaPlayerState.OFF
 
         if source_state := self._get_current_source_state():
             return source_state
@@ -353,18 +329,6 @@ class Control4Room(Control4Entity, MediaPlayerEntity, RestoreEntity):
     def extra_state_attributes(self) -> dict[str, int | None]:
         """Return the id of the source the room starts with when turned on."""
         return {ATTR_LAST_SOURCE_ID: self._last_source_id}
-
-    @property
-    @override
-    def extra_restore_state_data(self) -> ExtraStoredData | None:
-        """Return the last source so it survives a restart while unavailable.
-
-        Home Assistant drops ``extra_state_attributes`` for unavailable
-        entities, and restore storage saves the attributes in the state, so the
-        source has to be stored separately to outlive a restart that follows a
-        failed poll, when every room is unavailable.
-        """
-        return _RoomRestoreData(self._last_source_id)
 
     @property
     @override
