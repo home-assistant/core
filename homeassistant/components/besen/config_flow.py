@@ -40,6 +40,9 @@ if TYPE_CHECKING:
 
     from homeassistant.config_entries import ConfigFlowResult
 
+    from . import BesenConfigEntry
+    from .coordinator import BesenCoordinator
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -145,11 +148,11 @@ async def _async_validate_input(
     try:
         await client.async_start()
         info = client.state.info
-        if info.serial and _serial_is_configured(hass, info.serial, address=address):
-            raise _AlreadyConfigured
-        return info.model or name or address
     finally:
         await client.async_stop()
+    if info.serial and _serial_is_configured(hass, info.serial, address=address):
+        raise _AlreadyConfigured
+    return info.model or name or address
 
 
 class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -168,6 +171,8 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._operation_task: asyncio.Task[None] | None = None
         self._operation_error: str | None = None
         self._operation_step = "lan"
+        self._removed = False
+        self._reload_after_flow: tuple[BesenConfigEntry, BesenCoordinator] | None = None
 
     @override
     async def async_step_bluetooth(
@@ -363,7 +368,7 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    def _current_entry(self) -> config_entries.ConfigEntry | None:
+    def _current_entry(self) -> BesenConfigEntry | None:
         """Return the existing entry without changing its identity."""
         if self.source == config_entries.SOURCE_RECONFIGURE:
             return self._get_reconfigure_entry()
@@ -471,17 +476,13 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """
         entry = self._current_entry()
         runtime = getattr(entry, "runtime_data", None) if entry else None
-        current = runtime.client if runtime else None
         candidate: BesenUdpClient | None = None
         stopped = False
         acquired_hub = False
         try:
-            if current:
+            if runtime:
                 stopped = True
-                await current.async_stop()
-                if current.is_connected:
-                    self._operation_error = "cannot_connect"
-                    return
+                await runtime.async_pause_connection()
             address = self._pending_data.get(CONF_ADDRESS, "lan:pending")
             if transport == TRANSPORT_LAN:
                 hub = await async_acquire_udp_hub(self.hass)
@@ -545,15 +546,16 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     if acquired_hub:
                         await async_release_udp_hub(self.hass)
                 finally:
-                    if current and stopped:
+                    if runtime and stopped:
                         try:
-                            await current.async_start()
+                            await runtime.async_resume_connection()
                         except CannotConnect, InvalidAuth:
                             assert entry is not None
-                            self.hass.async_create_task(
-                                self.hass.config_entries.async_reload(entry.entry_id),
-                                "Restore Besen connection",
-                            )
+                            self._reload_after_flow = (entry, runtime)
+                            if self._removed:
+                                self._async_schedule_restore_reload()
+                        else:
+                            self._reload_after_flow = None
 
     async def async_step_connection_done(
         self, user_input: dict[str, Any] | None = None
@@ -564,6 +566,7 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._operation_error:
             return self._connection_error_form({"base": self._operation_error})
         if entry := self._current_entry():
+            self._reload_after_flow = None
             return self.async_update_reload_and_abort(
                 entry,
                 data=self._pending_data,
@@ -589,8 +592,28 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self._lan_form(errors)
 
     @callback
+    def _async_schedule_restore_reload(self) -> None:
+        """Reload a failed restoration after this flow has been removed."""
+        if self._reload_after_flow is None:
+            return
+        entry, runtime = self._reload_after_flow
+        self._reload_after_flow = None
+
+        @callback
+        def reload_if_current() -> None:
+            if (
+                entry.state is config_entries.ConfigEntryState.LOADED
+                and getattr(entry, "runtime_data", None) is runtime
+            ):
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
+
+        self.hass.loop.call_soon(reload_if_current)
+
+    @callback
     @override
     def async_remove(self) -> None:
         """Cancel validation and restore the saved connection on cancellation."""
+        self._removed = True
         if self._operation_task and not self._operation_task.done():
             self._operation_task.cancel()
+        self._async_schedule_restore_reload()

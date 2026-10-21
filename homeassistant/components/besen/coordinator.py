@@ -1,5 +1,6 @@
 """Coordinator for Besen push updates."""
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from contextlib import suppress
 from datetime import datetime, timedelta
@@ -7,7 +8,7 @@ import logging
 from typing import TYPE_CHECKING, override
 
 from besen.client import BesenClient
-from besen.exceptions import CommandFailed
+from besen.exceptions import CannotConnect, CommandFailed
 from besen.models import BesenData
 
 from homeassistant.config_entries import ConfigEntryState
@@ -49,7 +50,7 @@ class BesenCoordinator(DataUpdateCoordinator[BesenData]):
         self.client = client
         self._remove_listener: Callable[[], None] | None = None
         self._client_stopped = True
-        self._reauth_requested = False
+        self._connection_lock = asyncio.Lock()
         self._uses_lan = uses_lan
 
     async def async_start(self) -> None:
@@ -77,10 +78,28 @@ class BesenCoordinator(DataUpdateCoordinator[BesenData]):
         if self._remove_listener is not None:
             self._remove_listener()
             self._remove_listener = None
-        try:
+        async with self._connection_lock:
+            try:
+                await self._async_stop_client()
+            finally:
+                await self._async_release_listener()
+
+    async def async_pause_connection(self) -> None:
+        """Release the current client before validating another connection."""
+        async with self._connection_lock:
+            if self._shutdown_requested:
+                raise CannotConnect("Charger entry is unloading")
             await self._async_stop_client()
-        finally:
-            await self._async_release_listener()
+            if self.client.is_connected:
+                raise CannotConnect("Previous connection was not released")
+
+    async def async_resume_connection(self) -> None:
+        """Restore the saved connection only while this coordinator is active."""
+        async with self._connection_lock:
+            if self._shutdown_requested:
+                return
+            self._client_stopped = False
+            await self.client.async_start()
 
     async def _async_release_listener(self) -> None:
         """Release this entry's listener exactly once."""
@@ -100,16 +119,9 @@ class BesenCoordinator(DataUpdateCoordinator[BesenData]):
 
         self.async_set_updated_data(data)
         assert self.config_entry is not None
-        if (
-            data.auth_failed
-            and not self._reauth_requested
-            and self.config_entry.state is ConfigEntryState.LOADED
-        ):
+        if data.auth_failed and self.config_entry.state is ConfigEntryState.LOADED:
             # Setup failures are handled by ConfigEntryAuthFailed in __init__.py.
-            self._reauth_requested = True
             self.config_entry.async_start_reauth(self.hass)
-        elif data.authenticated:
-            self._reauth_requested = False
 
     async def async_start_charging(
         self, start: datetime | None = None, duration: timedelta | None = None
