@@ -2,6 +2,7 @@
 
 from contextlib import AbstractContextManager
 import json
+import logging
 from pathlib import Path
 import threading
 from typing import Any
@@ -207,6 +208,41 @@ async def test_user_flow_download_errors(
     flow_id = await _start_flow(hass)
 
     _assert_load_error(hass, await _submit_url(hass, flow_id), error)
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(FEED_URL, content=feed_zip)
+    await _assert_recovers(hass, flow_id)
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    "response",
+    [
+        pytest.param({"exc": ClientError(FEED_URL)}, id="connection_error"),
+        pytest.param({"status": 401}, id="server_error"),
+    ],
+)
+async def test_user_flow_download_error_not_logging_url(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+    feed_zip: bytes,
+    response: dict[str, Any],
+) -> None:
+    """Test a failed download is logged without the URL, which may hold a token."""
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.gtfs")
+    aioclient_mock.get(FEED_URL, **response)
+    flow_id = await _start_flow(hass)
+
+    _assert_load_error(hass, await _submit_url(hass, flow_id), "cannot_connect")
+
+    messages = [
+        record.getMessage()
+        for record in caplog.records
+        if record.name.startswith("homeassistant.components.gtfs")
+    ]
+    assert any("Could not download GTFS feed" in message for message in messages)
+    assert not any("example.com" in message for message in messages)
 
     aioclient_mock.clear_requests()
     aioclient_mock.get(FEED_URL, content=feed_zip)

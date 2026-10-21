@@ -30,7 +30,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: GtfsConfigEntry) -> None
                 hass, entry.data[CONF_URL], db_path, threading.Event()
             )
         except CannotConnect as err:
-            # The error text can include the feed URL, which may hold credentials.
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN, translation_key="cannot_connect"
             ) from err

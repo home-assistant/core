@@ -10,7 +10,7 @@ import threading
 from typing import BinaryIO
 import zipfile
 
-from aiohttp import ClientError, ClientTimeout
+from aiohttp import ClientError, ClientResponseError, ClientTimeout
 import pygtfs
 from pygtfs.gtfs_entities import Stop
 from sqlalchemy.exc import IntegrityError
@@ -80,8 +80,11 @@ async def _async_download_feed(
                     buffer.clear()
             if buffer:
                 await hass.async_add_executor_job(file.write, buffer)
+    # aiohttp error text includes the URL, which may hold credentials.
+    except ClientResponseError as err:
+        raise CannotConnect(f"HTTP status {err.status}") from err
     except (ClientError, TimeoutError) as err:
-        raise CannotConnect(str(err)) from err
+        raise CannotConnect(type(err).__name__) from err
     finally:
         await hass.async_add_executor_job(file.close)
 
