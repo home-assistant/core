@@ -1,6 +1,8 @@
 """The tests for the UniFi Network update platform."""
 
+from collections.abc import Callable
 from copy import deepcopy
+from typing import Any
 from unittest.mock import patch
 
 import aiounifi
@@ -25,6 +27,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -68,8 +71,24 @@ DEVICE_2 = {
     "version": "4.0.42.10433",
 }
 
+# Gateway with an IPS engine upgrade queued
+GATEWAY_IPS = {
+    "device_id": "mock-gateway-id",
+    "ip": "10.0.0.1",
+    "mac": "00:00:00:00:02:01",
+    "model": "UDMA6A8",
+    "name": "Gateway",
+    "state": 1,
+    "type": "udm",
+    "version": "5.0.16.30692",
+    "suricata_version": 6,
+    "supported_suricata_version": 8,
+    "suricata_upgrade_pending_target": 8,
+}
+IPS_ENGINE_ENTITY_ID = "update.gateway_ips_engine"
 
-@pytest.mark.parametrize("device_payload", [[DEVICE_1, DEVICE_2]])
+
+@pytest.mark.parametrize("device_payload", [[DEVICE_1, DEVICE_2, GATEWAY_IPS]])
 @pytest.mark.parametrize(
     "site_payload",
     [
@@ -199,3 +218,99 @@ async def test_install_request_failed(
         )
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == "action_request_failed"
+
+
+@pytest.mark.parametrize("device_payload", [[GATEWAY_IPS]])
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_ips_engine_updates(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_websocket_message: WebsocketMessageMock,
+) -> None:
+    """Test the IPS engine entity follows the gateway and is retained."""
+    assert hass.states.get(IPS_ENGINE_ENTITY_ID).state == STATE_ON
+    registry_entry = entity_registry.async_get(IPS_ENGINE_ENTITY_ID)
+
+    # Newer engine supported, but no upgrade queued
+    gateway = deepcopy(GATEWAY_IPS)
+    del gateway["suricata_upgrade_pending_target"]
+    mock_websocket_message(message=MessageKey.DEVICE, data=gateway)
+
+    state = hass.states.get(IPS_ENGINE_ENTITY_ID)
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "6"
+    assert state.attributes[ATTR_LATEST_VERSION] == "6"
+
+    # Queued engine upgrade applied
+    gateway["suricata_version"] = 8
+    mock_websocket_message(message=MessageKey.DEVICE, data=gateway)
+
+    state = hass.states.get(IPS_ENGINE_ENTITY_ID)
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "8"
+    assert state.attributes[ATTR_LATEST_VERSION] == "8"
+
+    # Engine no longer reported, the entity is retained
+    del gateway["suricata_version"]
+    del gateway["supported_suricata_version"]
+    mock_websocket_message(message=MessageKey.DEVICE, data=gateway)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(IPS_ENGINE_ENTITY_ID)
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_INSTALLED_VERSION] is None
+    assert state.attributes[ATTR_LATEST_VERSION] is None
+    assert entity_registry.async_get(IPS_ENGINE_ENTITY_ID) == registry_entry
+
+    # Engine reported again
+    mock_websocket_message(message=MessageKey.DEVICE, data=GATEWAY_IPS)
+
+    assert hass.states.get(IPS_ENGINE_ENTITY_ID).state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [[{key: value for key, value in GATEWAY_IPS.items() if "suricata" not in key}]],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_ips_engine_reported_after_setup(
+    hass: HomeAssistant,
+    mock_websocket_message: WebsocketMessageMock,
+) -> None:
+    """Test the IPS engine entity is added when a known gateway reports it."""
+    assert hass.states.get(IPS_ENGINE_ENTITY_ID) is None
+
+    mock_websocket_message(message=MessageKey.DEVICE, data=GATEWAY_IPS)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(IPS_ENGINE_ENTITY_ID).state == STATE_ON
+
+
+@pytest.mark.parametrize("device_payload", [[deepcopy(GATEWAY_IPS)]])
+async def test_ips_engine_restored_after_reload(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
+    mock_requests: Callable[[], None],
+    mock_websocket_message: WebsocketMessageMock,
+    device_payload: list[dict[str, Any]],
+) -> None:
+    """Test a registered IPS engine entity is restored while not reported."""
+    registry_entry = entity_registry.async_get(IPS_ENGINE_ENTITY_ID)
+
+    for key in list(device_payload[0]):
+        if "suricata" in key:
+            del device_payload[0][key]
+    aioclient_mock.clear_requests()
+    mock_requests()
+    await hass.config_entries.async_reload(config_entry_setup.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(IPS_ENGINE_ENTITY_ID).state == STATE_UNKNOWN
+    assert entity_registry.async_get(IPS_ENGINE_ENTITY_ID) == registry_entry
+
+    mock_websocket_message(message=MessageKey.DEVICE, data=GATEWAY_IPS)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(IPS_ENGINE_ENTITY_ID).state == STATE_ON
