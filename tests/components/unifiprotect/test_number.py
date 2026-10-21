@@ -44,6 +44,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.helpers.entity_platform import async_get_platforms
 
 from . import patch_ufp_method
 from .conftest import UNIFI_MAC
@@ -664,6 +665,13 @@ async def test_chime_ring_volume_setup(
     assert state is not None
     assert state.state == "75"
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
+    # Hybrid keeps the private chime's device info, which carries the firmware.
+    platform = next(
+        p for p in async_get_platforms(hass, DOMAIN) if p.domain == Platform.NUMBER
+    )
+    device_info = platform.entities[entity_id].device_info
+    assert device_info is not None
+    assert device_info["sw_version"] == chime.firmware_version
 
 
 async def test_chime_ring_volume_set_value(
@@ -829,6 +837,20 @@ async def test_chime_ring_volume_multiple_cameras(
             },
             "30",
             id="reads_public",
+        ),
+        pytest.param(
+            {
+                "ring_settings": [
+                    PublicRingSettings(
+                        camera_id="test-doorbell",
+                        repeat_times=1,
+                        ringtone_id="test-ringtone-id",
+                        volume=None,
+                    )
+                ]
+            },
+            STATE_UNAVAILABLE,
+            id="no_volume",
         ),
         pytest.param({"ring_settings": []}, STATE_UNAVAILABLE, id="unpaired"),
         pytest.param(

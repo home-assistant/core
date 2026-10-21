@@ -420,7 +420,7 @@ class ChimeRingVolumeNumber(
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new ring volume value."""
-        public = cast("PublicChime", self._ufp_set_target())
+        public = cast(PublicChime, self._ufp_set_target())
         try:
             await public.set_volume_for_camera(self._channel_id, int(value))
         except ChimeRingtoneNotSetError as err:

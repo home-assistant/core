@@ -447,7 +447,7 @@ class ProtectData:
                 and new_obj.id in self.api.public_bootstrap.relays
             ):
                 async_dispatcher_send(self._hass, self.relay_signal, new_obj)
-            # Only a pairing change can add ring volumes.
+            # Only an added chime or a pairing change can add ring volumes.
             if isinstance(new_obj, PublicChime) and (
                 message.action is WSAction.ADD
                 or "ringSettings" in message.changed_data
