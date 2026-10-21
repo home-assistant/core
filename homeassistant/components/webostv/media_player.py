@@ -5,6 +5,8 @@ from contextlib import suppress
 from http import HTTPStatus
 from typing import Any, cast, override
 
+from wakeonlan import send_magic_packet
+
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
@@ -255,7 +257,7 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
     @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
-        if self.coordinator.turn_on:
+        if self.coordinator.turn_on or self.coordinator.mac_addresses:
             return self._supported_features | MediaPlayerEntityFeature.TURN_ON
 
         return self._supported_features
@@ -269,7 +271,10 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
     @override
     async def async_turn_on(self) -> None:
         """Turn on media player."""
-        await self.coordinator.turn_on.async_run(self.hass, self._context)
+        if self.coordinator.turn_on:
+            await self.coordinator.turn_on.async_run(self.hass, self._context)
+        elif macs := self.coordinator.mac_addresses:
+            await self.hass.async_add_executor_job(send_magic_packet, *macs)
 
     @cmd
     @override
