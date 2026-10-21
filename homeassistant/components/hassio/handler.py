@@ -55,6 +55,7 @@ class HassIO:
         return_text: bool = False,
         *,
         params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
         source: str = "core.handler",
     ) -> Any:
         """Send API command to Hass.io.
@@ -78,6 +79,7 @@ class HassIO:
                 params=params,
                 json=payload,
                 headers={
+                    **(headers or {}),
                     aiohttp.hdrs.AUTHORIZATION: (
                         f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}"
                     ),

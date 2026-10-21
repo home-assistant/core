@@ -1,5 +1,6 @@
 """Tests for system_log LLM tools."""
 
+from datetime import datetime
 import logging
 from pathlib import Path
 from unittest.mock import patch
@@ -489,7 +490,13 @@ async def test_get_logs_merge_sources(
         dict.fromkeys((*logs, "other"), "a test log"), list(logs)
     )
 
-    async def _read_source(hass: HomeAssistant, source: str, lines: int) -> list[str]:
+    async def _read_source(
+        hass: HomeAssistant,
+        source: str,
+        start_time: datetime,
+        end_time: datetime,
+        lines: int,
+    ) -> list[str]:
         if isinstance(log := logs[source], HomeAssistantError):
             raise log
         return log

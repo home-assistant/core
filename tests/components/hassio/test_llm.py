@@ -98,10 +98,45 @@ async def test_get_logs_default(
             f"/{source}/logs",
             method="get",
             return_text=True,
-            params={"lines": 2000, "format": "plain", "no_colors": ""},
+            params={"format": "plain", "no_colors": ""},
+            headers={"Range": "realtime=:1792497600:-1999:2000"},
         )
         for source in ("core", "supervisor")
     ]
+
+
+@pytest.mark.parametrize(
+    ("end_time", "expected_range"),
+    [
+        pytest.param(
+            "2026-10-20T03:00:00+02:00",
+            "realtime=:1792458000:-1999:2000",
+            id="whole_second",
+        ),
+        pytest.param(
+            "2026-10-20T03:00:00.500+02:00",
+            "realtime=:1792458001:-1999:2000",
+            id="rounded_up",
+        ),
+    ],
+)
+async def test_get_logs_end_time(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    send_command: AsyncMock,
+    end_time: str,
+    expected_range: str,
+) -> None:
+    """Test the journal returns the newest lines before the end of the window."""
+    tool = SupervisorGetLogsTool({})
+
+    await tool.async_call(
+        hass,
+        llm.ToolInput(tool.name, {"source": ["host"], "end_time": end_time}),
+        llm_context,
+    )
+
+    assert send_command.mock_calls[0].kwargs["headers"] == {"Range": expected_range}
 
 
 async def test_get_logs_host_and_app(

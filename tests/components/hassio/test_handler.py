@@ -59,6 +59,38 @@ async def test_api_headers(
         assert received_request.headers[hdrs.CONTENT_TYPE] == "application/octet-stream"
 
 
+@pytest.mark.usefixtures("socket_enabled")
+async def test_api_extra_headers(
+    aiohttp_raw_server,  # 'aiohttp_raw_server' must be before 'hass'!
+    hass: HomeAssistant,
+) -> None:
+    """Test extra headers are sent without replacing the Supervisor headers."""
+    received_request = None
+
+    async def mock_handler(request):
+        """Return OK."""
+        nonlocal received_request
+        received_request = request
+        return web.json_response({"result": "ok", "data": None})
+
+    server = await aiohttp_raw_server(mock_handler)
+    hassio_handler = HassIO(
+        hass.loop,
+        async_get_clientsession(hass),
+        f"{server.host}:{server.port}",
+    )
+
+    await hassio_handler.send_command(
+        "/core/logs",
+        "GET",
+        headers={hdrs.RANGE: "entries=:-1:2", "X-Hass-Source": "other"},
+    )
+
+    assert received_request is not None
+    assert received_request.headers[hdrs.RANGE] == "entries=:-1:2"
+    assert received_request.headers["X-Hass-Source"] == "core.handler"
+
+
 @pytest.mark.usefixtures("hassio_stubs")
 async def test_send_command_invalid_command(hass: HomeAssistant) -> None:
     """Test send command fails when command is invalid."""

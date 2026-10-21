@@ -34,7 +34,7 @@ _LOG_LEVELS = ["error", "warning", "critical"]
 _DEFAULT_LIMIT = 25
 _MAX_LIMIT = 50
 
-# Newest lines read from each source, the time window can only cover these
+# Lines read from each source, the newest ones in the time window
 LOG_QUERY_READ_LINES = 2000
 _LOG_QUERY_DEFAULT_SPAN = timedelta(minutes=15)
 _LOG_QUERY_DEFAULT_LIMIT = 100
@@ -310,10 +310,17 @@ class SystemLogGetLogsTool(Tool):
         )
 
     async def async_read_source(
-        self, hass: HomeAssistant, source: str, lines: int
+        self,
+        hass: HomeAssistant,
+        source: str,
+        start_time: datetime,
+        end_time: datetime,
+        lines: int,
     ) -> list[str]:
-        """Return the newest lines of the log of a source.
+        """Return the newest lines of the log of a source in the time window.
 
+        Lines outside the time window are filtered out afterwards, so a source
+        that cannot select by time returns its newest lines.
         Raise HomeAssistantError when the log cannot be read.
         """
         return await hass.async_add_executor_job(
@@ -354,7 +361,9 @@ class SystemLogGetLogsTool(Tool):
         names: list[str] = args.get("source", self._default_sources)
         results = await asyncio.gather(
             *(
-                self.async_read_source(hass, name, LOG_QUERY_READ_LINES)
+                self.async_read_source(
+                    hass, name, start_time, end_time, LOG_QUERY_READ_LINES
+                )
                 for name in names
             ),
             return_exceptions=True,

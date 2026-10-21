@@ -1,6 +1,10 @@
 """LLM tools for the Hass.io integration."""
 
+from datetime import datetime
+import math
 from typing import override
+
+from aiohttp import hdrs
 
 from homeassistant.components.llm import LLMTools
 from homeassistant.components.system_log.llm import SystemLogGetLogsTool  # pylint: disable=home-assistant-component-root-import
@@ -48,7 +52,12 @@ class SupervisorGetLogsTool(SystemLogGetLogsTool):
 
     @override
     async def async_read_source(
-        self, hass: HomeAssistant, source: str, lines: int
+        self,
+        hass: HomeAssistant,
+        source: str,
+        start_time: datetime,
+        end_time: datetime,
+        lines: int,
     ) -> list[str]:
         """Return the newest lines of the log of a source from the Supervisor."""
         if source.startswith(APP_SOURCE_PREFIX):
@@ -61,10 +70,17 @@ class SupervisorGetLogsTool(SystemLogGetLogsTool):
                 method="get",
                 return_text=True,
                 params={
-                    "lines": lines,
                     # Verbose adds the timestamp and the process to each line
                     "format": "plain" if source in _PLAIN_SOURCES else "verbose",
                     "no_colors": "",
+                },
+                headers={
+                    # Without a start time, the journal returns the newest lines
+                    # before the end time, not the oldest after the start time
+                    hdrs.RANGE: (
+                        f"realtime=:{math.ceil(end_time.timestamp())}"
+                        f":-{lines - 1}:{lines}"
+                    )
                 },
             )
         except HassioAPIError as err:
