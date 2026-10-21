@@ -909,7 +909,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '25.0',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensor_entities[sensor.nrgkick_test_domestic_plug_2_temperature-entry]
@@ -967,7 +967,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '25.0',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensor_entities[sensor.nrgkick_test_error-entry]
@@ -1488,7 +1488,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '99.0',
   })
 # ---
 # name: test_sensor_entities[sensor.nrgkick_test_l1_reactive_power-entry]
@@ -1833,7 +1833,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '97.0',
   })
 # ---
 # name: test_sensor_entities[sensor.nrgkick_test_l2_reactive_power-entry]
@@ -2178,7 +2178,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '96.0',
   })
 # ---
 # name: test_sensor_entities[sensor.nrgkick_test_l3_reactive_power-entry]
@@ -2997,7 +2997,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '98.0',
   })
 # ---
 # name: test_sensor_entities[sensor.nrgkick_test_total_reactive_power-entry]
