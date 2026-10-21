@@ -6,7 +6,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 
-from . import ForecastSolarConfigEntry
+from .coordinator import ForecastSolarConfigEntry
 
 TO_REDACT = {
     CONF_API_KEY,
