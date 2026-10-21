@@ -47,7 +47,7 @@ async def test_full_flow(
 
     with (
         patch(
-            "homeassistant.components.google_mail.async_setup_entry", return_value=True
+            "homeassistant.components.google_mail.async_setup_entry", return_value=None
         ) as mock_setup,
         patch(
             "httplib2.Http.request",
@@ -148,7 +148,7 @@ async def test_reauth(
 
     with (
         patch(
-            "homeassistant.components.google_mail.async_setup_entry", return_value=True
+            "homeassistant.components.google_mail.async_setup_entry", return_value=None
         ) as mock_setup,
         patch(
             "httplib2.Http.request",

@@ -19,8 +19,11 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import LibreHardwareMonitorConfigEntry, LibreHardwareMonitorCoordinator
 from .const import DOMAIN, LEGACY_DATA_SIZE_UNIT_EQUIVALENTS
+from .coordinator import (
+    LibreHardwareMonitorConfigEntry,
+    LibreHardwareMonitorCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 

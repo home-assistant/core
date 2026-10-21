@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import timedelta
+import logging
 from types import MappingProxyType
 from typing import Any
 from unittest.mock import patch
@@ -21,7 +22,11 @@ from homeassistant.components.unifi.coordinator import (
     POLL_INTERVAL,
     UPDATE_TIMEOUT,
 )
-from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
+from homeassistant.components.unifi.errors import (
+    AuthenticationRequired,
+    CannotConnect,
+    MfaRequired,
+)
 from homeassistant.components.unifi.hub import get_unifi_api
 from homeassistant.components.unifi.hub.connection import REQUEST_TIMEOUT
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -670,6 +675,7 @@ async def test_site_id_changed_not_followed(
         (aiounifi.ServiceUnavailable, CannotConnect),
         (aiounifi.RequestError, CannotConnect),
         (aiounifi.ResponseError, CannotConnect),
+        (aiounifi.AuthenticationRateLimitError, CannotConnect),
         (aiounifi.Unauthorized, AuthenticationRequired),
         (aiounifi.LoginRequired, AuthenticationRequired),
         (aiounifi.AiounifiException, AuthenticationRequired),
@@ -712,3 +718,20 @@ async def test_reset_fails(
         assert not await hass.config_entries.async_unload(config_entry_setup.entry_id)
         assert config_entry_setup.state is ConfigEntryState.FAILED_UNLOAD
         assert config_entry_setup.reason == "Failed to unload UniFi Network"
+
+
+async def test_get_unifi_api_mfa_required(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    config_entry_data: MappingProxyType[str, Any],
+) -> None:
+    """Check that a login requiring MFA is reported as such without a traceback."""
+    with (
+        patch("aiounifi.Controller.login", side_effect=aiounifi.TwoFaTokenRequired),
+        pytest.raises(MfaRequired),
+    ):
+        await get_unifi_api(hass, config_entry_data)
+    (record,) = [r for r in caplog.records if r.name.startswith("homeassistant")]
+    assert record.levelno == logging.WARNING
+    assert record.exc_info is None
+    assert "requires multi-factor authentication" in record.getMessage()

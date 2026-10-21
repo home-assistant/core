@@ -934,7 +934,7 @@ async def test_auth_manual_invalid_token(
         patch("homeassistant.components.music_assistant.config_flow._test_connection"),
         patch(
             "homeassistant.components.music_assistant.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
