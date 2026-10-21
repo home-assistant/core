@@ -10,12 +10,14 @@ from besen.client import BesenClient
 from besen.exceptions import CommandFailed
 from besen.models import BesenData
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
+from .lan import async_release_udp_hub
 
 if TYPE_CHECKING:
     from . import BesenConfigEntry
@@ -33,6 +35,8 @@ class BesenCoordinator(DataUpdateCoordinator[BesenData]):
         hass: HomeAssistant,
         config_entry: BesenConfigEntry,
         client: BesenClient,
+        *,
+        uses_lan: bool = False,
     ) -> None:
         """Initialize the coordinator."""
 
@@ -45,6 +49,8 @@ class BesenCoordinator(DataUpdateCoordinator[BesenData]):
         self.client = client
         self._remove_listener: Callable[[], None] | None = None
         self._client_stopped = True
+        self._reauth_requested = False
+        self._uses_lan = uses_lan
 
     async def async_start(self) -> None:
         """Start listening to charger updates."""
@@ -59,6 +65,7 @@ class BesenCoordinator(DataUpdateCoordinator[BesenData]):
                 self._remove_listener = None
             with suppress(Exception):
                 await self._async_stop_client()
+            await self._async_release_listener()
             raise
         self.async_set_updated_data(self.client.state)
 
@@ -70,7 +77,16 @@ class BesenCoordinator(DataUpdateCoordinator[BesenData]):
         if self._remove_listener is not None:
             self._remove_listener()
             self._remove_listener = None
-        await self._async_stop_client()
+        try:
+            await self._async_stop_client()
+        finally:
+            await self._async_release_listener()
+
+    async def _async_release_listener(self) -> None:
+        """Release this entry's listener exactly once."""
+        if self._uses_lan:
+            self._uses_lan = False
+            await async_release_udp_hub(self.hass)
 
     @override
     async def _async_update_data(self) -> BesenData:
@@ -83,8 +99,17 @@ class BesenCoordinator(DataUpdateCoordinator[BesenData]):
         """Publish a client state update."""
 
         self.async_set_updated_data(data)
-        if data.auth_failed:
+        assert self.config_entry is not None
+        if (
+            data.auth_failed
+            and not self._reauth_requested
+            and self.config_entry.state is ConfigEntryState.LOADED
+        ):
+            # Setup failures are handled by ConfigEntryAuthFailed in __init__.py.
+            self._reauth_requested = True
             self.config_entry.async_start_reauth(self.hass)
+        elif data.authenticated:
+            self._reauth_requested = False
 
     async def async_start_charging(
         self, start: datetime | None = None, duration: timedelta | None = None

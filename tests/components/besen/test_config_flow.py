@@ -384,11 +384,11 @@ async def test_user_step_existing_device_aborts(
     assert result["reason"] == "already_configured"
 
 
-async def test_user_step_no_devices_found_aborts(
+async def test_user_step_without_bluetooth_still_offers_lan(
     hass: HomeAssistant,
     mock_discovered_service_info: Mock,
 ) -> None:
-    """Test manual setup aborts when no unconfigured chargers are discovered."""
+    """Test LAN setup is available without any discovered Bluetooth chargers."""
 
     mock_discovered_service_info.return_value = [_discovery("Other")]
 
@@ -397,8 +397,9 @@ async def test_user_step_no_devices_found_aborts(
         context={"source": SOURCE_USER},
     )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices_found"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
 
 @pytest.mark.usefixtures("mock_besen_client", "mock_setup_entry")
