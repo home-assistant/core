@@ -35,6 +35,7 @@ from homematicip.device import (
     TemperatureHumiditySensorOutdoor,
     TemperatureHumiditySensorWithoutDisplay,
     TiltVibrationSensor,
+    UltrasonicDistanceSensor,
     WateringActuator,
     WaterSupplyStop,
     WeatherSensor,
@@ -54,6 +55,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     UnitOfDensity,
     UnitOfEnergy,
+    UnitOfLength,
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfRatio,
@@ -416,6 +418,25 @@ TILT_TEMPERATURE_DESC = HmipSensorDescription[Device](
     channel_type=FunctionalChannelType.TEMPERATURE_SENSOR_CHANNEL,
 )
 
+DISTANCE_DESC = HmipSensorDescription[Device](
+    key="distance",
+    device_class=SensorDeviceClass.DISTANCE,
+    native_unit_of_measurement=UnitOfLength.CENTIMETERS,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=lambda d: d.distance,
+    channel=1,
+)
+
+HEIGHT_DESC = HmipSensorDescription[Device](
+    key="height",
+    translation_key="height",
+    device_class=SensorDeviceClass.DISTANCE,
+    native_unit_of_measurement=UnitOfLength.CENTIMETERS,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=lambda d: d.calculatedHeight,
+    channel=1,
+)
+
 
 WATER_FLOW_DESC = HmipSensorDescription[Device](
     key="water_flow",
@@ -468,6 +489,7 @@ SENSOR_DESCRIPTIONS_BY_DEVICE: dict[
         TEMPERATURE_EXTERNAL_DELTA_DESC,
     ),
     TiltVibrationSensor: (TILT_ANGLE_DESC, TILT_TEMPERATURE_DESC),
+    UltrasonicDistanceSensor: (DISTANCE_DESC, HEIGHT_DESC),
     WaterSupplyStop: (WATER_FLOW_DESC,),
     WeatherSensor: (
         TEMPERATURE_DESC,
