@@ -1046,6 +1046,41 @@ async def test_login_flow_limit(
     assert len(hass.auth.login_flow.async_progress()) == 1
 
 
+async def test_login_flow_removed_after_expiry(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test continuing an expired flow that a newer flow removed is no failed login."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    payload = {
+        "client_id": CLIENT_ID,
+        "handler": ["insecure_example", None],
+        "redirect_uri": CLIENT_REDIRECT_URI,
+    }
+    resp = await client.post("/auth/login_flow", json=payload)
+    expired_flow_id = (await resp.json())["flow_id"]
+
+    freezer.tick(LOGIN_FLOW_EXPIRATION + timedelta(seconds=1))
+    resp = await client.post("/auth/login_flow", json=payload)
+    assert resp.status == HTTPStatus.OK
+    with patch(
+        "homeassistant.components.http.ban.process_wrong_login"
+    ) as mock_process_wrong_login:
+        resp = await client.post(
+            f"/auth/login_flow/{expired_flow_id}",
+            json={
+                "client_id": CLIENT_ID,
+                "username": "test-user",
+                "password": "test-pass",
+            },
+        )
+
+    assert resp.status == HTTPStatus.NOT_FOUND
+    assert await resp.json() == {"message": "Invalid flow specified"}
+    mock_process_wrong_login.assert_not_called()
+
+
 async def test_login_flow_expired(
     hass: HomeAssistant,
     aiohttp_client: ClientSessionGenerator,
