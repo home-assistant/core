@@ -10,6 +10,7 @@ from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
 from homeassistant import config_entries
 from homeassistant.components.electrasmart.config_flow import ElectraApiError
 from homeassistant.components.electrasmart.const import (
+    CONF_IMEI,
     CONF_OTP,
     CONF_PHONE_NUMBER,
     DOMAIN,
@@ -435,18 +436,42 @@ async def test_reauth_invalid_otp(
 
 async def test_dhcp_discovery(hass: HomeAssistant) -> None:
     """Test a flow started by DHCP discovery."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_DHCP},
-        data=DhcpServiceInfo(
-            ip="192.0.2.10",
-            hostname="elrssid123456",
-            macaddress="aabbcc123456",
-        ),
-    )
+    async with _patch_success(hass):
+        with patch(
+            "homeassistant.components.electrasmart.config_flow.generate_imei",
+            return_value="123456789012345",
+        ):
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_DHCP},
+                data=DhcpServiceInfo(
+                    ip="192.0.2.10",
+                    hostname="elrssid123456",
+                    macaddress="aabbcc123456",
+                ),
+            )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+            assert result["type"] is FlowResultType.FORM
+            assert result["step_id"] == "user"
+
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                user_input={CONF_PHONE_NUMBER: "0521234567"},
+            )
+
+            assert result["step_id"] == CONF_OTP
+
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {CONF_OTP: "1234"}
+            )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "0521234567"
+    assert result["result"].data == {
+        CONF_TOKEN: "ec7a0db6c1f148ca8c0f48aabb5f8150",
+        CONF_IMEI: "123456789012345",
+        CONF_PHONE_NUMBER: "0521234567",
+    }
 
 
 async def test_dhcp_discovery_already_configured(hass: HomeAssistant) -> None:
@@ -500,34 +525,3 @@ async def test_dhcp_discovery_already_in_progress(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
-
-
-async def test_dhcp_discovery_sets_unique_id(hass: HomeAssistant) -> None:
-    """Test a discovered flow creates an entry with the phone number as ID."""
-    async with _patch_success(hass):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_DHCP},
-            data=DhcpServiceInfo(
-                ip="192.0.2.10",
-                hostname="elrssid123456",
-                macaddress="aabbcc123456",
-            ),
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "user"
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_PHONE_NUMBER: "0521234567"},
-        )
-
-        assert result["step_id"] == CONF_OTP
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_OTP: "1234"}
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == "0521234567"

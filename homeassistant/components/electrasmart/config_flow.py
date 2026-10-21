@@ -11,7 +11,6 @@ import probatio
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import CONF_IMEI, CONF_OTP, CONF_PHONE_NUMBER, DOMAIN
 
@@ -19,7 +18,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class ElectraSmartConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Electra Air Conditioner."""
+    """Handle a config flow for Electra Air Conditioner.
+
+    DHCP discovery is handled by the default `ConfigFlow.async_step_dhcp`, which
+    starts the regular user flow: a discovered device cannot be attributed to an
+    account, because entries are created per Electra account and its devices are
+    only known through the cloud API.
+    """
 
     VERSION = 1
 
@@ -32,17 +37,6 @@ class ElectraSmartConfigFlow(ConfigFlow, domain=DOMAIN):
         self._token: str | None = None
         self._api: ElectraAPI | None = None
         self._reauth_entry: ConfigEntry | None = None
-
-    @override
-    async def async_step_dhcp(
-        self, discovery_info: DhcpServiceInfo
-    ) -> ConfigFlowResult:
-        """Handle discovery by DHCP."""
-        # A discovered device cannot be attributed to an account: entries are
-        # created per Electra account, and its devices are only known through
-        # the cloud API. Discovery therefore only starts the normal setup flow.
-        await self._async_handle_discovery_without_unique_id()
-        return await self.async_step_user()
 
     @override
     async def async_step_user(
