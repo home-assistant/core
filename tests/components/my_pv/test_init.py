@@ -35,7 +35,9 @@ async def test_setup_entry_cannot_connect(
     """Test setup of a config entry when unable to connect."""
     mock_my_pv_client.connect.return_value = False
 
-    await setup_integration(hass, mock_config_entry)
+    mock_config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
@@ -48,7 +50,9 @@ async def test_setup_entry_unsupported_device(
     """Test setup of a config entry when device is not supported."""
     mock_my_pv_client.connect.side_effect = MyPVDeviceNotSupportedError()
 
-    await setup_integration(hass, mock_config_entry)
+    mock_config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     assert mock_config_entry.error_reason_translation_key == "unsupported_device"
@@ -62,7 +66,9 @@ async def test_setup_entry_auth_error(
     """Test setup of a config entry when authentication fails."""
     mock_my_pv_client.connect.side_effect = MyPVAuthenticationError()
 
-    await setup_integration(hass, mock_config_entry)
+    mock_config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
@@ -75,7 +81,9 @@ async def test_setup_entry_failed_first_refresh(
     """Test setup of a config entry when first refresh fails."""
     mock_my_pv_client.fetch_data.side_effect = MyPVConnectionError()
 
-    await setup_integration(hass, mock_config_entry)
+    mock_config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
