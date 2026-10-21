@@ -1,7 +1,20 @@
 """Test the OpenAI Conversation config flow."""
 
-from unittest.mock import AsyncMock, patch
+from collections.abc import Generator
+from contextlib import ExitStack
+from datetime import timedelta
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, patch
+from urllib.parse import parse_qsl, urlparse
 
+from chatgpt_plan_auth import (
+    CLIENT_ID_PREFIX,
+    DYNAMIC_AGENT_CLIENT,
+    PLAN_SCOPE,
+    REDIRECT_URI,
+    SUBSCRIPTION_MODEL_SUGGESTIONS,
+    TOKEN_URL,
+)
 import httpx2
 from openai import APIConnectionError, AuthenticationError, BadRequestError
 from openai.types.responses import Response, ResponseOutputMessage, ResponseOutputText
@@ -11,18 +24,26 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant import config_entries
 from homeassistant.components.openai_conversation.config_flow import (
     RECOMMENDED_CONVERSATION_OPTIONS,
+    OpenAIConfigFlow,
 )
 from homeassistant.components.openai_conversation.const import (
+    AUTH_METHOD_CHATGPT,
+    CONF_AUTH_METHOD,
+    CONF_CALLBACK_URL,
     CONF_CHAT_MODEL,
     CONF_CODE_INTERPRETER,
+    CONF_EXT_AGENT_HOST_ID,
+    CONF_ID_TOKEN,
     CONF_IMAGE_MODEL,
     CONF_MAX_TOKENS,
     CONF_PRO_MODE,
     CONF_REASONING_EFFORT,
     CONF_REASONING_SUMMARY,
     CONF_RECOMMENDED,
+    CONF_SCOPES,
     CONF_SERVICE_TIER,
     CONF_STORE_RESPONSES,
+    CONF_SUB,
     CONF_TEMPERATURE,
     CONF_TOP_P,
     CONF_TTS_SPEED,
@@ -50,9 +71,21 @@ from homeassistant.components.openai_conversation.const import (
     RECOMMENDED_TOP_P,
     RECOMMENDED_TTS_OPTIONS,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_PROMPT
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_API_KEY,
+    CONF_CLIENT_ID,
+    CONF_LLM_HASS_API,
+    CONF_PROMPT,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.helpers.selector import SelectSelector
+from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
+
+from . import create_chatgpt_id_token
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -67,8 +100,19 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+    # The method choice and the credential are separate steps: the menu must
+    # not show the API key field, and the API key step must not show the
+    # method.
+    assert set(result["menu_options"]) == {"api_key", "chatgpt"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "api_key"}
+    )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
+    assert result["step_id"] == "api_key"
+    assert set(result["data_schema"].schema) == {CONF_API_KEY}
 
     with (
         patch(
@@ -140,8 +184,12 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
-    assert not result["errors"]
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "api_key"}
+    )
+    assert result["step_id"] == "api_key"
 
     with patch(
         "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
@@ -692,6 +740,10 @@ async def test_form_invalid_auth(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "api_key"}
+    )
+    assert result["step_id"] == "api_key"
 
     with patch(
         "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
@@ -1790,8 +1842,11 @@ async def test_reauth(hass: HomeAssistant) -> None:
     mock_config_entry.add_to_hass(hass)
     result = await mock_config_entry.start_reauth_flow(hass)
 
+    # Reauthentication follows the method of the entry: an API key entry gets
+    # the same API key form as before.
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
+    assert set(result["data_schema"].schema) == {CONF_API_KEY}
 
     with (
         patch(
@@ -1825,6 +1880,7 @@ async def test_reconfigure(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
+    assert set(result["data_schema"].schema) == {CONF_API_KEY}
 
     with (
         patch(
@@ -1851,6 +1907,9 @@ async def test_reconfigure_invalid_auth(
 ) -> None:
     """Test an invalid API key is rejected during reconfiguration."""
     result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["step_id"] == "reconfigure"
+    assert set(result["data_schema"].schema) == {CONF_API_KEY}
 
     with patch(
         "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
@@ -1884,6 +1943,43 @@ async def test_reconfigure_invalid_auth(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+
+async def test_reconfigure_chatgpt_entry_switches_to_api_key(
+    hass: HomeAssistant,
+) -> None:
+    """Test a ChatGPT plan entry can be switched back to an API key."""
+    entry = _chatgpt_config_entry(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert set(result["data_schema"].schema) == {CONF_API_KEY}
+
+    with (
+        patch(
+            "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
+            new_callable=AsyncMock,
+        ),
+        patch("homeassistant.config_entries.ConfigEntries.async_reload"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_KEY: "new_api_key"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    # The whole data layout is replaced and the account scoped id is dropped.
+    assert entry.data == {CONF_API_KEY: "new_api_key"}
+    assert entry.unique_id is None
+
+    # The API key entry still sets up.
+    with patch("openai.resources.models.AsyncModels.list", new_callable=AsyncMock):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert entry.state is config_entries.ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize(
@@ -1939,3 +2035,1231 @@ async def test_reconfigure_conversation_subentry_llm_api_schema(
     assert [
         opt["value"] for opt in field_schema.config.get("options")
     ] == expected_options
+
+
+CHATGPT_CLIENT_ID = f"{CLIENT_ID_PREFIX}test123"
+CHATGPT_SCOPE = f"{PLAN_SCOPE} email offline_access openid profile resource.invoke"
+
+
+def _siwc_response(status_code: int = 200, json_data: Any = None) -> MagicMock:
+    """Create a mocked httpx response."""
+    response = MagicMock()
+    response.status_code = status_code
+    response.json = MagicMock(return_value=json_data if json_data is not None else {})
+    return response
+
+
+@pytest.fixture
+def mock_siwc_client() -> Generator[MagicMock]:
+    """Patch the httpx client used by the SIWC helpers."""
+    client = MagicMock()
+    client.post = AsyncMock()
+    client.get = AsyncMock()
+    # An AsyncMock's default return value is another AsyncMock, so a code path
+    # which uses the default response would call `response.json()` and leave an
+    # un-awaited coroutine behind. Give both methods a synchronous response.
+    client.get.return_value = _siwc_response(200, {})
+    client.post.return_value = _siwc_response(200, {})
+    with patch(
+        "homeassistant.components.openai_conversation.chatgpt_auth.get_async_client",
+        return_value=client,
+    ):
+        yield client
+
+
+def _chatgpt_entry_data(**kwargs: Any) -> dict[str, Any]:
+    """Create config entry data for a ChatGPT subscription entry."""
+    return {
+        CONF_AUTH_METHOD: AUTH_METHOD_CHATGPT,
+        CONF_CLIENT_ID: CHATGPT_CLIENT_ID,
+        CONF_EXT_AGENT_HOST_ID: "urn:uuid:00000000-0000-4000-8000-000000000000",
+        CONF_SUB: "chatgpt-user-1",
+        CONF_ACCESS_TOKEN: "access-1",
+        "refresh_token": "refresh-1",
+        CONF_ID_TOKEN: "id-1",
+        "expires_at": "2030-01-01T00:00:00+00:00",
+        CONF_SCOPES: CHATGPT_SCOPE.split(),
+        **kwargs,
+    }
+
+
+def _chatgpt_token_response(nonce: str, **kwargs: Any) -> dict[str, Any]:
+    """Create a token endpoint response for a successful sign in."""
+    token = {
+        "access_token": "access-1",
+        "refresh_token": "refresh-1",
+        "id_token": create_chatgpt_id_token(client_id=CHATGPT_CLIENT_ID, nonce=nonce),
+        "token_type": "Bearer",
+        "expires_in": 3600,
+        "scope": CHATGPT_SCOPE,
+    }
+    token.update(kwargs)
+    return token
+
+
+async def _async_start_chatgpt_flow(hass: HomeAssistant) -> dict[str, Any]:
+    """Start the config flow and pick the ChatGPT auth method."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "chatgpt"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "chatgpt"
+    return result
+
+
+def _mock_siwc_sign_in(client: MagicMock, nonce: str, **kwargs: Any) -> None:
+    """Make the SIWC token endpoint answer a successful sign in."""
+    client.post.return_value = _siwc_response(
+        200, _chatgpt_token_response(nonce, **kwargs)
+    )
+
+
+async def _finish_new_chatgpt_entry(
+    hass: HomeAssistant,
+    client: MagicMock,
+    form: dict[str, Any],
+) -> config_entries.ConfigFlowResult:
+    """Complete a new ChatGPT sign in after the user corrected the callback.
+
+    The corrected callback is exchanged, a model of the account catalog is
+    picked and the entry is created. Returns the ``CREATE_ENTRY`` result.
+    """
+    params = dict(
+        parse_qsl(urlparse(form["description_placeholders"]["auth_url"]).query)
+    )
+    _mock_siwc_sign_in(client, params["nonce"])
+    with (
+        patch(
+            "homeassistant.components.openai_conversation.async_setup_entry",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.openai_conversation.config_flow.async_get_subscription_models_for_credentials",
+            AsyncMock(return_value=CHATGPT_CATALOG),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            form["flow_id"],
+            {
+                CONF_CALLBACK_URL: (
+                    f"{REDIRECT_URI}?code=the-code&state={params['state']}"
+                    f"&client_id={CHATGPT_CLIENT_ID}"
+                )
+            },
+        )
+        await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+    return result
+
+
+async def test_chatgpt_flow(hass: HomeAssistant, mock_siwc_client: MagicMock) -> None:
+    """Test the complete Sign in with ChatGPT flow."""
+    form = await _async_start_chatgpt_flow(hass)
+
+    params = dict(
+        parse_qsl(urlparse(form["description_placeholders"]["auth_url"]).query)
+    )
+    assert params["client_id"] == DYNAMIC_AGENT_CLIENT
+    assert params["agent_name_hint"] == "Home Assistant"
+    assert params["ext_agent_host_id"].startswith("urn:uuid:")
+
+    mock_siwc_client.post.return_value = _siwc_response(
+        200,
+        _chatgpt_token_response(
+            params["nonce"],
+            earliest_refresh_at="2030-01-01T00:00:00+00:00",
+        ),
+    )
+
+    with (
+        patch(
+            "homeassistant.components.openai_conversation.async_setup_entry",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.openai_conversation.config_flow.async_get_subscription_models_for_credentials",
+            AsyncMock(return_value=CHATGPT_CATALOG),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            form["flow_id"],
+            {
+                CONF_CALLBACK_URL: (
+                    f"{REDIRECT_URI}?code=the-code&state={params['state']}"
+                    f"&scope=chatgpt.tokens.use.direct&client_id={CHATGPT_CLIENT_ID}"
+                )
+            },
+        )
+        await hass.async_block_till_done()
+
+        # The entry is not created before the user picked a model of the account.
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "chatgpt_model"
+        assert set(result["data_schema"].schema) == {CONF_CHAT_MODEL}
+        assert (
+            result["data_schema"].schema[CONF_CHAT_MODEL].config["options"]
+            == CHATGPT_CATALOG
+        )
+
+        # The first catalog entry is the default, so an empty submit picks it.
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "ChatGPT subscription"
+    # The host id is generated per installation, so compare it separately.
+    data = dict(result["data"])
+    host_id = data["ext_agent_host_id"]
+    assert host_id.startswith("urn:uuid:")
+    # The expiry is derived from the token response, so check it on its own.
+    issued_at = dt_util.utcnow()
+    expires_at = dt_util.parse_datetime(data.pop("expires_at"))
+    assert expires_at is not None
+    assert issued_at < expires_at < issued_at + timedelta(hours=2)
+    expected = _chatgpt_entry_data(
+        ext_agent_host_id=host_id,
+        id_token=mock_siwc_client.post.return_value.json.return_value["id_token"],
+        earliest_refresh_at="2030-01-01T00:00:00+00:00",
+        email="user@example.com",
+    )
+    expected.pop("expires_at")
+    assert data == expected
+    # The issued client id replaces `dynamic_agent_client` and is reused later.
+    assert mock_siwc_client.post.call_args.args[0] == TOKEN_URL
+    assert mock_siwc_client.post.call_args.kwargs["data"]["client_id"] == (
+        CHATGPT_CLIENT_ID
+    )
+    assert mock_siwc_client.post.call_args.kwargs["data"]["grant_type"] == (
+        "authorization_code"
+    )
+
+    # ChatGPT plan usage does not support speech to text or text to speech,
+    # and the plan route rejects the API default model.
+    assert result["subentries"] == [
+        {
+            "subentry_type": "conversation",
+            "data": {
+                **RECOMMENDED_CONVERSATION_OPTIONS,
+                CONF_CHAT_MODEL: CHATGPT_CATALOG[0],
+            },
+            "title": DEFAULT_CONVERSATION_NAME,
+            "unique_id": None,
+        },
+        {
+            "subentry_type": "ai_task_data",
+            "data": {
+                **RECOMMENDED_AI_TASK_OPTIONS,
+                CONF_CHAT_MODEL: CHATGPT_CATALOG[0],
+            },
+            "title": DEFAULT_AI_TASK_NAME,
+            "unique_id": None,
+        },
+        {
+            "subentry_type": "ai_task_evaluate",
+            "data": {
+                **RECOMMENDED_EVALUATION_OPTIONS,
+                CONF_CHAT_MODEL: CHATGPT_CATALOG[0],
+            },
+            "title": DEFAULT_EVALUATION_NAME,
+            "unique_id": None,
+        },
+    ]
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.unique_id == f"chatgpt-user-1:{CHATGPT_CLIENT_ID}"
+    assert entry.data[CONF_AUTH_METHOD] == AUTH_METHOD_CHATGPT
+    # The stored subentries carry a model of the account catalog, never the
+    # API default the plan route rejects.
+    assert all(
+        subentry.data[CONF_CHAT_MODEL] == CHATGPT_CATALOG[0]
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type in ("conversation", "ai_task_data")
+    )
+
+
+async def test_chatgpt_flow_catalog_unavailable(
+    hass: HomeAssistant, mock_siwc_client: MagicMock
+) -> None:
+    """Test the sign in offers a text field when the catalog cannot be read.
+
+    The catalog is not needed to complete the sign in (OpenAI answered a
+    transient 520 while this was written). The user types a model instead, and
+    the entry is still created with it.
+    """
+    form = await _async_start_chatgpt_flow(hass)
+    params = dict(
+        parse_qsl(urlparse(form["description_placeholders"]["auth_url"]).query)
+    )
+    mock_siwc_client.post.return_value = _siwc_response(
+        200, _chatgpt_token_response(params["nonce"])
+    )
+
+    with (
+        patch(
+            "homeassistant.components.openai_conversation.async_setup_entry",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.openai_conversation.config_flow.async_get_subscription_models_for_credentials",
+            AsyncMock(side_effect=HomeAssistantError("HTTP 520")),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            form["flow_id"],
+            {
+                CONF_CALLBACK_URL: (
+                    f"{REDIRECT_URI}?code=the-code&state={params['state']}"
+                    f"&client_id={CHATGPT_CLIENT_ID}"
+                )
+            },
+        )
+        await hass.async_block_till_done()
+
+        # The unreadable catalog does not fail the sign in: the model is chosen
+        # from the suggestions instead of the API default the plan rejects.
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "chatgpt_model"
+        assert set(result["data_schema"].schema) == {CONF_CHAT_MODEL}
+        selector = result["data_schema"].schema[CONF_CHAT_MODEL]
+        assert isinstance(selector, SelectSelector)
+        assert selector.config["options"] == SUBSCRIPTION_MODEL_SUGGESTIONS
+        assert selector.config["custom_value"] is True
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_CHAT_MODEL: CHATGPT_CATALOG[0]}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert all(
+        subentry["data"][CONF_CHAT_MODEL] == CHATGPT_CATALOG[0]
+        for subentry in result["subentries"]
+    )
+
+
+async def test_chatgpt_flow_catalog_auth_failure(
+    hass: HomeAssistant, mock_siwc_client: MagicMock
+) -> None:
+    """Test an authentication failure while reading the catalog fails the sign in.
+
+    `ConfigEntryAuthFailed` is a `HomeAssistantError`; degrading it to an
+    unreadable catalog would create an entry whose credentials OpenAI rejected.
+    """
+    form = await _async_start_chatgpt_flow(hass)
+    params = dict(
+        parse_qsl(urlparse(form["description_placeholders"]["auth_url"]).query)
+    )
+    _mock_siwc_sign_in(mock_siwc_client, params["nonce"])
+    callback = {
+        CONF_CALLBACK_URL: (
+            f"{REDIRECT_URI}?code=the-code&state={params['state']}"
+            f"&client_id={CHATGPT_CLIENT_ID}"
+        )
+    }
+
+    with (
+        patch(
+            "homeassistant.components.openai_conversation.async_setup_entry",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.openai_conversation.config_flow.async_get_subscription_models_for_credentials",
+            AsyncMock(side_effect=[ConfigEntryAuthFailed("rejected"), CHATGPT_CATALOG]),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            form["flow_id"], callback
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "chatgpt"
+        assert result["errors"] == {"base": "invalid_auth"}
+        assert not hass.config_entries.async_entries(DOMAIN)
+
+        # The user signs in again; the catalog answers this time and the sign in
+        # completes.
+        result = await hass.config_entries.flow.async_configure(
+            form["flow_id"], callback
+        )
+        await hass.async_block_till_done()
+        assert result["step_id"] == "chatgpt_model"
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_chatgpt_flow_already_configured(
+    hass: HomeAssistant, mock_siwc_client: MagicMock
+) -> None:
+    """Test that the same ChatGPT account cannot be added twice."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=f"chatgpt-user-1:{CHATGPT_CLIENT_ID}",
+        data=_chatgpt_entry_data(),
+    ).add_to_hass(hass)
+
+    form = await _async_start_chatgpt_flow(hass)
+    params = dict(
+        parse_qsl(urlparse(form["description_placeholders"]["auth_url"]).query)
+    )
+    mock_siwc_client.post.return_value = _siwc_response(
+        200, _chatgpt_token_response(params["nonce"])
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        form["flow_id"],
+        {
+            CONF_CALLBACK_URL: (
+                f"{REDIRECT_URI}?code=the-code&state={params['state']}"
+                f"&client_id={CHATGPT_CLIENT_ID}"
+            )
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("query", "error"),
+    [
+        ("?error=access_denied&state={state}", "access_denied"),
+        ("?error=server_error&state={state}", "unknown"),
+        ("?code=the-code&state=wrong-state", "invalid_state"),
+        ("?state={state}", "invalid_callback_url"),
+        (
+            f"?code=the-code&state={{state}}&error=&client_id={CHATGPT_CLIENT_ID}",
+            None,
+        ),
+    ],
+)
+async def test_chatgpt_flow_callback_errors(
+    hass: HomeAssistant,
+    mock_siwc_client: MagicMock,
+    query: str,
+    error: str | None,
+) -> None:
+    """Test invalid callbacks are reported instead of exchanging a code."""
+    form = await _async_start_chatgpt_flow(hass)
+    params = dict(
+        parse_qsl(urlparse(form["description_placeholders"]["auth_url"]).query)
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        form["flow_id"],
+        {CONF_CALLBACK_URL: f"{REDIRECT_URI}{query.format(state=params['state'])}"},
+    )
+
+    if error is None:
+        # `error=` is empty and therefore not an error: the code is exchanged.
+        # The rest of the sign in is covered by `test_chatgpt_flow`.
+        assert mock_siwc_client.post.call_count == 1
+    else:
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "chatgpt"
+        assert result["errors"] == {"base": error}
+        assert mock_siwc_client.post.call_count == 0
+
+        # The user corrects the callback and the sign in finishes.
+        result = await _finish_new_chatgpt_entry(hass, mock_siwc_client, form)
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_chatgpt_flow_registration_incomplete(
+    hass: HomeAssistant, mock_siwc_client: MagicMock
+) -> None:
+    """Test that a new registration without an issued client id fails."""
+    form = await _async_start_chatgpt_flow(hass)
+    params = dict(
+        parse_qsl(urlparse(form["description_placeholders"]["auth_url"]).query)
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        form["flow_id"],
+        {
+            CONF_CALLBACK_URL: (
+                f"{REDIRECT_URI}?code=the-code&state={params['state']}"
+                "&client_id=not_an_issued_client"
+            )
+        },
+    )
+
+    assert result["errors"] == {"base": "registration_incomplete"}
+    assert mock_siwc_client.post.call_count == 0
+
+    # A callback naming the issued client id finishes the sign in.
+    result = await _finish_new_chatgpt_entry(hass, mock_siwc_client, form)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_chatgpt_flow_plan_usage_not_granted(
+    hass: HomeAssistant, mock_siwc_client: MagicMock
+) -> None:
+    """Test that a sign in without the plan scope is aborted."""
+    form = await _async_start_chatgpt_flow(hass)
+    params = dict(
+        parse_qsl(urlparse(form["description_placeholders"]["auth_url"]).query)
+    )
+
+    mock_siwc_client.post.return_value = _siwc_response(
+        200,
+        {
+            "access_token": "access-1",
+            "refresh_token": "refresh-1",
+            "expires_in": 3600,
+            "scope": "email openid profile",
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        form["flow_id"],
+        {
+            CONF_CALLBACK_URL: (
+                f"{REDIRECT_URI}?code=the-code&state={params['state']}"
+                f"&client_id={CHATGPT_CLIENT_ID}"
+            )
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "plan_usage_not_granted"
+
+
+async def test_chatgpt_flow_invalid_id_token(
+    hass: HomeAssistant, mock_siwc_client: MagicMock
+) -> None:
+    """Test that an ID token for another nonce is rejected."""
+    form = await _async_start_chatgpt_flow(hass)
+    params = dict(
+        parse_qsl(urlparse(form["description_placeholders"]["auth_url"]).query)
+    )
+
+    mock_siwc_client.post.return_value = _siwc_response(
+        200, _chatgpt_token_response("other-nonce")
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        form["flow_id"],
+        {
+            CONF_CALLBACK_URL: (
+                f"{REDIRECT_URI}?code=the-code&state={params['state']}"
+                f"&client_id={CHATGPT_CLIENT_ID}"
+            )
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    # The next sign in returns an ID token for the current nonce.
+    result = await _finish_new_chatgpt_entry(hass, mock_siwc_client, form)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_chatgpt_flow_token_exchange_failed(
+    hass: HomeAssistant, mock_siwc_client: MagicMock
+) -> None:
+    """Test a failing code exchange."""
+    form = await _async_start_chatgpt_flow(hass)
+    params = dict(
+        parse_qsl(urlparse(form["description_placeholders"]["auth_url"]).query)
+    )
+    mock_siwc_client.post.return_value = _siwc_response(400, {"error": "invalid_grant"})
+
+    result = await hass.config_entries.flow.async_configure(
+        form["flow_id"],
+        {
+            CONF_CALLBACK_URL: (
+                f"{REDIRECT_URI}?code=the-code&state={params['state']}"
+                f"&client_id={CHATGPT_CLIENT_ID}"
+            )
+        },
+    )
+
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    # A later exchange succeeds and finishes the sign in.
+    result = await _finish_new_chatgpt_entry(hass, mock_siwc_client, form)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_api_key_is_required_for_api_key_auth(hass: HomeAssistant) -> None:
+    """Test the API key form still requires an API key."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "api_key"}
+    )
+    assert result["step_id"] == "api_key"
+
+    # A blank form field is submitted as an empty string, not as a missing key.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: ""}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "api_key"
+    assert result["errors"] == {CONF_API_KEY: "api_key_required"}
+
+    # A non-empty key finishes the flow.
+    with (
+        patch(
+            "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
+            new_callable=AsyncMock,
+        ),
+        patch(
+            "homeassistant.components.openai_conversation.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_KEY: "bla"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_chatgpt_entry_subentry_types(hass: HomeAssistant) -> None:
+    """Test which subentries a ChatGPT entry supports."""
+    entry = MockConfigEntry(domain=DOMAIN, data=_chatgpt_entry_data())
+    entry.add_to_hass(hass)
+
+    assert set(OpenAIConfigFlow.async_get_supported_subentry_types(entry)) == {
+        "conversation",
+        "ai_task_data",
+        "ai_task_evaluate",
+    }
+
+    api_key_entry = MockConfigEntry(domain=DOMAIN, data={CONF_API_KEY: "bla"})
+    api_key_entry.add_to_hass(hass)
+    assert set(OpenAIConfigFlow.async_get_supported_subentry_types(api_key_entry)) == {
+        "conversation",
+        "ai_task_data",
+        "ai_task_evaluate",
+        "stt",
+        "tts",
+    }
+
+
+async def test_chatgpt_reauth(hass: HomeAssistant, mock_siwc_client: MagicMock) -> None:
+    """Test that reauth reuses the saved registration."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=f"chatgpt-user-1:{CHATGPT_CLIENT_ID}",
+        data=_chatgpt_entry_data(),
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "chatgpt"
+
+    params = dict(
+        parse_qsl(urlparse(result["description_placeholders"]["auth_url"]).query)
+    )
+    assert params["client_id"] == CHATGPT_CLIENT_ID
+    assert params["id_token_hint"] == "id-1"
+    assert "agent_name_hint" not in params
+
+    mock_siwc_client.post.return_value = _siwc_response(
+        200,
+        _chatgpt_token_response(params["nonce"], access_token="access-2"),
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_CALLBACK_URL: (f"{REDIRECT_URI}?code=the-code&state={params['state']}")},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_ACCESS_TOKEN] == "access-2"
+
+
+# Catalog slugs the live route serves to a ChatGPT plan account.
+CHATGPT_CATALOG = ["gpt-6.1-sol", "gpt-6-astra", "gpt-6-sol"]
+
+
+def _chatgpt_config_entry(
+    hass: HomeAssistant, *, chat_model: str | None = None
+) -> MockConfigEntry:
+    """Create a ChatGPT subscription config entry with conversation subentries."""
+    conversation_data = dict(RECOMMENDED_CONVERSATION_OPTIONS)
+    if chat_model is not None:
+        conversation_data[CONF_CHAT_MODEL] = chat_model
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="ChatGPT subscription",
+        unique_id=f"chatgpt-user-1:{CHATGPT_CLIENT_ID}",
+        version=2,
+        minor_version=7,
+        data=_chatgpt_entry_data(),
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data=conversation_data,
+                subentry_type="conversation",
+                title=DEFAULT_CONVERSATION_NAME,
+                unique_id=None,
+            ),
+            config_entries.ConfigSubentryData(
+                data=RECOMMENDED_AI_TASK_OPTIONS,
+                subentry_type="ai_task_data",
+                title=DEFAULT_AI_TASK_NAME,
+                unique_id=None,
+            ),
+        ],
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+def _mock_catalog(models: list[str]) -> Any:
+    """Patch the model catalog both while setting up and in the flow."""
+    return (
+        patch(
+            "homeassistant.components.openai_conversation.async_get_subscription_models",
+            AsyncMock(return_value=models),
+        ),
+        patch(
+            "homeassistant.components.openai_conversation.config_flow.async_get_subscription_models",
+            AsyncMock(return_value=models),
+        ),
+    )
+
+
+async def test_chatgpt_subentry_chat_model_selector(hass: HomeAssistant) -> None:
+    """Test the chat model selector of a ChatGPT subscription subentry."""
+    entry = _chatgpt_config_entry(hass)
+    setup_patch, flow_patch = _mock_catalog(CHATGPT_CATALOG)
+
+    with setup_patch, flow_patch:
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+        assert entry.state is config_entries.ConfigEntryState.LOADED
+
+        subentry = next(iter(entry.subentries.values()))
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_RECOMMENDED: False}
+        )
+        assert result["step_id"] == "additional"
+
+        # The selector offers the catalog slugs.
+        field_schema = result["data_schema"].schema[CONF_CHAT_MODEL]
+        assert field_schema.config["options"] == CHATGPT_CATALOG
+
+        # The default is the first catalog slug.
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        assert result["step_id"] == "model"
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
+        assert subentry.data[CONF_CHAT_MODEL] == CHATGPT_CATALOG[0]
+
+
+async def test_chatgpt_subentry_model_not_supported(hass: HomeAssistant) -> None:
+    """Test a model outside the catalog is rejected."""
+    entry = _chatgpt_config_entry(hass)
+    setup_patch, flow_patch = _mock_catalog(CHATGPT_CATALOG)
+
+    with setup_patch, flow_patch:
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+        assert entry.state is config_entries.ConfigEntryState.LOADED
+
+        subentry = next(iter(entry.subentries.values()))
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_RECOMMENDED: False}
+        )
+        assert result["step_id"] == "additional"
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {CONF_CHAT_MODEL: "model_not_supported"}
+
+        # A model of the account catalog is accepted and the flow finishes.
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_CHAT_MODEL: CHATGPT_CATALOG[0]}
+        )
+        assert result["step_id"] == "model"
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+async def test_chatgpt_subentry_omits_service_tier(hass: HomeAssistant) -> None:
+    """Test the plan options do not offer the service tier.
+
+    `shape_request_for_subscription` removes the tier from every plan request,
+    so offering it would store a choice which the request silently drops.
+    """
+    entry = _chatgpt_config_entry(hass)
+    setup_patch, flow_patch = _mock_catalog(CHATGPT_CATALOG)
+
+    with setup_patch, flow_patch:
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+        assert entry.state is config_entries.ConfigEntryState.LOADED
+
+        subentry = next(iter(entry.subentries.values()))
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_RECOMMENDED: False}
+        )
+        assert result["step_id"] == "additional"
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_CHAT_MODEL: CHATGPT_CATALOG[0]}
+        )
+        assert result["step_id"] == "model"
+        # `gpt-6.1-sol` supports flex and priority, but a plan entry must not
+        # offer the tier at all.
+        assert CONF_SERVICE_TIER not in result["data_schema"].schema
+
+
+async def test_chatgpt_subentry_empty_catalog(hass: HomeAssistant) -> None:
+    """Test a successful but empty catalog falls back to the suggestions.
+
+    The model route can answer 200 without a usable slug; the flow must not
+    index the empty catalog.
+    """
+    entry = _chatgpt_config_entry(hass)
+    setup_patch, _ = _mock_catalog(CHATGPT_CATALOG)
+
+    with setup_patch:
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+        assert entry.state is config_entries.ConfigEntryState.LOADED
+
+    subentry = next(
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "conversation"
+    )
+
+    with patch(
+        "homeassistant.components.openai_conversation.config_flow.async_get_subscription_models",
+        AsyncMock(return_value=[]),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_RECOMMENDED: False}
+        )
+        assert result["step_id"] == "additional"
+
+        # The empty catalog is treated like an unreadable one and the
+        # suggestions are offered instead.
+        field = result["data_schema"].schema[CONF_CHAT_MODEL]
+        assert field.config["options"] == SUBSCRIPTION_MODEL_SUGGESTIONS
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_CHAT_MODEL: CHATGPT_CATALOG[0]}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "model"
+
+
+async def test_chatgpt_subentry_model_accepted_when_catalog_unavailable(
+    hass: HomeAssistant,
+) -> None:
+    """Test a model is accepted when the catalog cannot be read.
+
+    An unreadable catalog says nothing about the model the user submits, so
+    the model is stored instead of being rejected as unsupported.
+    """
+    entry = _chatgpt_config_entry(hass)
+    setup_patch, _ = _mock_catalog(CHATGPT_CATALOG)
+
+    with setup_patch:
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+        assert entry.state is config_entries.ConfigEntryState.LOADED
+
+    subentry = next(
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "conversation"
+    )
+
+    with patch(
+        "homeassistant.components.openai_conversation.config_flow.async_get_subscription_models",
+        AsyncMock(side_effect=HomeAssistantError("HTTP 520")),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_RECOMMENDED: False}
+        )
+        assert result["step_id"] == "additional"
+
+        # The unreadable catalog must not reject the submitted model.
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_CHAT_MODEL: CHATGPT_CATALOG[0]}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "model"
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert (
+        entry.subentries[subentry.subentry_id].data[CONF_CHAT_MODEL]
+        == CHATGPT_CATALOG[0]
+    )
+
+
+def _chatgpt_callback(form: dict[str, Any]) -> tuple[str, dict[str, str]]:
+    """Return the flow id and the callback URL of a started chatgpt step."""
+    params = dict(
+        parse_qsl(urlparse(form["description_placeholders"]["auth_url"]).query)
+    )
+    url = (
+        f"{REDIRECT_URI}?code=the-code&state={params['state']}"
+        f"&client_id={CHATGPT_CLIENT_ID}"
+    )
+    return form["flow_id"], {CONF_CALLBACK_URL: url}
+
+
+async def test_chatgpt_flow_callback_unexpected_error(
+    hass: HomeAssistant, mock_siwc_client: MagicMock
+) -> None:
+    """Test an unexpected failure while completing the sign in is shown."""
+    form = await _async_start_chatgpt_flow(hass)
+
+    with patch(
+        "homeassistant.components.openai_conversation.config_flow.async_token_request",
+        AsyncMock(side_effect=RuntimeError("boom")),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            *_chatgpt_callback(form)
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "chatgpt"
+    assert result["errors"] == {"base": "unexpected_error"}
+
+    # A later attempt completes the sign in.
+    result = await _finish_new_chatgpt_entry(hass, mock_siwc_client, form)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_chatgpt_flow_missing_id_token(
+    hass: HomeAssistant, mock_siwc_client: MagicMock
+) -> None:
+    """Test a plan sign in without an ID token is rejected."""
+    form = await _async_start_chatgpt_flow(hass)
+    mock_siwc_client.post.return_value = _siwc_response(
+        200,
+        {
+            "access_token": "access-1",
+            "refresh_token": "refresh-1",
+            "expires_in": 3600,
+            "scope": CHATGPT_SCOPE,
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(*_chatgpt_callback(form))
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    # The next sign in carries an ID token and finishes the sign in.
+    result = await _finish_new_chatgpt_entry(hass, mock_siwc_client, form)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_chatgpt_reauth_client_id_mismatch(
+    hass: HomeAssistant, mock_siwc_client: MagicMock
+) -> None:
+    """Test a callback naming another client id is rejected."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=f"chatgpt-user-1:{CHATGPT_CLIENT_ID}",
+        data=_chatgpt_entry_data(),
+    )
+    entry.add_to_hass(hass)
+
+    form = await entry.start_reauth_flow(hass)
+    params = dict(
+        parse_qsl(urlparse(form["description_placeholders"]["auth_url"]).query)
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        form["flow_id"],
+        {
+            CONF_CALLBACK_URL: (
+                f"{REDIRECT_URI}?code=the-code&state={params['state']}"
+                f"&client_id={CLIENT_ID_PREFIX}other"
+            )
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "client_id_mismatch"}
+    assert mock_siwc_client.post.call_count == 0
+
+    # The next callback names the client id of the entry and finishes.
+    _mock_siwc_sign_in(mock_siwc_client, params["nonce"])
+    result = await hass.config_entries.flow.async_configure(
+        form["flow_id"],
+        {
+            CONF_CALLBACK_URL: (
+                f"{REDIRECT_URI}?code=the-code&state={params['state']}"
+                f"&client_id={CHATGPT_CLIENT_ID}"
+            )
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
+async def test_chatgpt_reauth_wrong_account(
+    hass: HomeAssistant, mock_siwc_client: MagicMock
+) -> None:
+    """Test reauthenticating with another account is rejected."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=f"chatgpt-user-1:{CHATGPT_CLIENT_ID}",
+        data=_chatgpt_entry_data(),
+    )
+    entry.add_to_hass(hass)
+
+    form = await entry.start_reauth_flow(hass)
+    params = dict(
+        parse_qsl(urlparse(form["description_placeholders"]["auth_url"]).query)
+    )
+    mock_siwc_client.post.return_value = _siwc_response(
+        200,
+        _chatgpt_token_response(
+            params["nonce"],
+            id_token=create_chatgpt_id_token(
+                client_id=CHATGPT_CLIENT_ID,
+                nonce=params["nonce"],
+                sub="chatgpt-user-2",
+            ),
+        ),
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        form["flow_id"],
+        {
+            CONF_CALLBACK_URL: (
+                f"{REDIRECT_URI}?code=the-code&state={params['state']}"
+                f"&client_id={CHATGPT_CLIENT_ID}"
+            )
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "wrong_account"}
+
+    # Reauthenticating with the account of the entry finishes the flow.
+    _mock_siwc_sign_in(mock_siwc_client, params["nonce"])
+    result = await hass.config_entries.flow.async_configure(
+        form["flow_id"],
+        {
+            CONF_CALLBACK_URL: (
+                f"{REDIRECT_URI}?code=the-code&state={params['state']}"
+                f"&client_id={CHATGPT_CLIENT_ID}"
+            )
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
+async def test_chatgpt_reauth_aborts_on_known_account(
+    hass: HomeAssistant, mock_siwc_client: MagicMock
+) -> None:
+    """Test reauthenticating onto an account of another entry is aborted."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=f"legacy:{CHATGPT_CLIENT_ID}",
+        data=_chatgpt_entry_data(),
+    )
+    entry.add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=f"chatgpt-user-1:{CHATGPT_CLIENT_ID}",
+        data=_chatgpt_entry_data(),
+    ).add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["step_id"] == "chatgpt"
+
+    params = dict(
+        parse_qsl(urlparse(result["description_placeholders"]["auth_url"]).query)
+    )
+    mock_siwc_client.post.return_value = _siwc_response(
+        200, _chatgpt_token_response(params["nonce"])
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_CALLBACK_URL: (
+                f"{REDIRECT_URI}?code=the-code&state={params['state']}"
+                f"&client_id={CHATGPT_CLIENT_ID}"
+            )
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_reconfigure_loaded_chatgpt_entry_switches_to_api_key(
+    hass: HomeAssistant,
+) -> None:
+    """Test a loaded plan entry switches to an API key."""
+    entry = _chatgpt_config_entry(hass)
+    setup_patch, _ = _mock_catalog(CHATGPT_CATALOG)
+    with setup_patch:
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["step_id"] == "reconfigure"
+
+    with (
+        patch(
+            "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
+            new_callable=AsyncMock,
+        ),
+        patch("homeassistant.config_entries.ConfigEntries.async_reload"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_KEY: "new_api_key"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.unique_id is None
+
+
+async def _async_reach_subentry_model_step(
+    hass: HomeAssistant, entry: MockConfigEntry, *patches: Any
+) -> dict[str, Any]:
+    """Drive a conversation subentry reconfigure flow to the model step."""
+    with ExitStack() as stack:
+        for manager in patches:
+            stack.enter_context(manager)
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+        assert entry.state is config_entries.ConfigEntryState.LOADED
+
+        subentry = next(
+            sub
+            for sub in entry.subentries.values()
+            if sub.subentry_type == "conversation"
+        )
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry.subentry_id)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_RECOMMENDED: False}
+        )
+        assert result["step_id"] == "additional"
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        assert result["step_id"] == "model"
+        return result
+
+
+async def test_subentry_location_api_key_entry_not_loaded(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the location lookup of an API key entry which is no longer loaded."""
+    result = await _async_reach_subentry_model_step(
+        hass,
+        mock_config_entry,
+        patch("openai.resources.models.AsyncModels.list", new_callable=AsyncMock),
+    )
+
+    hass.states.async_set(
+        "zone.home", "0", {"latitude": 37.7749, "longitude": -122.4194}
+    )
+    hass.config.country = "US"
+    hass.config.time_zone = "America/Los_Angeles"
+    assert hass.states.get("zone.home") is not None
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert not hasattr(mock_config_entry, "runtime_data")
+
+    with (
+        patch("homeassistant.config_entries.ConfigEntries.async_reload"),
+        patch(
+            "openai.resources.responses.AsyncResponses.create",
+            new_callable=AsyncMock,
+        ) as mock_create,
+    ):
+        mock_create.return_value = Response(
+            object="response",
+            id="resp_A",
+            created_at=1700000000,
+            model="gpt-4o-mini",
+            parallel_tool_calls=True,
+            tool_choice="auto",
+            tools=[],
+            output=[
+                ResponseOutputMessage(
+                    type="message",
+                    id="msg_A",
+                    content=[
+                        ResponseOutputText(
+                            type="output_text",
+                            text='{"city": "San Francisco"}',
+                            annotations=[],
+                        )
+                    ],
+                    role="assistant",
+                    status="completed",
+                )
+            ],
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {
+                CONF_WEB_SEARCH: True,
+                CONF_WEB_SEARCH_CONTEXT_SIZE: "medium",
+                CONF_WEB_SEARCH_USER_LOCATION: True,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"

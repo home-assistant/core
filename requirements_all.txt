@@ -782,6 +782,9 @@ cached-ipaddress==1.1.2
 # homeassistant.components.caldav
 caldav==3.5.0a0
 
+# homeassistant.components.openai_conversation
+chatgpt-plan-auth==1.0.2
+
 # homeassistant.components.chef_iq
 chefiq-ble==1.0.1
 
