@@ -13,7 +13,11 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
 )
 from homeassistant.components.evohome import EvoData
-from homeassistant.components.evohome.const import DOMAIN, SCHEDULE_MAX_AGE
+from homeassistant.components.evohome.const import (
+    DOMAIN,
+    EVOHOME_DATA,
+    SCHEDULE_MAX_AGE,
+)
 from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -238,8 +242,8 @@ async def test_failed_schedule_poll_keeps_entities_available(
 ) -> None:
     """Test a failed background schedule GET is logged, not a failed update."""
 
-    evo_data: EvoData = hass.data.get(DOMAIN)  # type: ignore[assignment]
-    update_interval: timedelta = evo_data.coordinator.update_interval  # type: ignore[assignment]
+    update_interval = hass.data[EVOHOME_DATA].coordinator.update_interval
+    assert update_interval is not None
 
     with patch.object(
         Zone,
