@@ -19,7 +19,7 @@ class ConditionOperator(StrEnum):
     NOT_EXISTS = "not_exists"
 
 
-type ConditionValue = str | int | float | bool | None
+type ConditionValue = str | int | float | bool
 
 
 class FieldCondition(TypedDict):
@@ -30,7 +30,7 @@ class FieldCondition(TypedDict):
     value: typing.NotRequired[ConditionValue | list[ConditionValue]]
 
 
-_VALUE_SCHEMA = probatio.Any(str, int, float, bool, None)
+_VALUE_SCHEMA = probatio.Any(str, int, float, bool)
 
 CONDITION_SCHEMA = probatio.Any(
     probatio.Schema(
@@ -39,7 +39,7 @@ CONDITION_SCHEMA = probatio.Any(
             probatio.Optional("operator"): probatio.In(
                 [ConditionOperator.EQ, ConditionOperator.NOT_EQ]
             ),
-            probatio.Optional("value"): _VALUE_SCHEMA,
+            probatio.Required("value"): _VALUE_SCHEMA,
         }
     ),
     probatio.Schema(
@@ -69,9 +69,9 @@ def evaluate_condition(condition: FieldCondition, data: Mapping[str, Any]) -> bo
     actual = data.get(condition["field"])
     match condition.get("operator", ConditionOperator.EQ):
         case ConditionOperator.EQ:
-            return condition.get("value") == actual
+            return condition["value"] == actual
         case ConditionOperator.NOT_EQ:
-            return condition.get("value") != actual
+            return condition["value"] != actual
         case ConditionOperator.IN:
             return actual in cast(list[ConditionValue], condition["value"])
         case ConditionOperator.NOT_IN:

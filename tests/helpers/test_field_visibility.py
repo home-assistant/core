@@ -16,10 +16,6 @@ from homeassistant.helpers import field_visibility
         ({"field": "a", "operator": "eq", "value": "x"}, {"a": "x"}, True),
         ({"field": "a", "operator": "not_eq", "value": 1}, {"a": 2}, True),
         ({"field": "a", "operator": "not_eq", "value": 1}, {"a": 1}, False),
-        # a missing field reads as None
-        ({"field": "a", "value": None}, {}, True),
-        ({"field": "a"}, {"a": "x"}, False),
-        ({"field": "a", "operator": "not_eq"}, {"a": "x"}, True),
         ({"field": "a", "operator": "in", "value": [1, 2]}, {"a": 2}, True),
         ({"field": "a", "operator": "in", "value": [1, 2]}, {"a": 3}, False),
         ({"field": "a", "operator": "not_in", "value": [1, 2]}, {"a": 3}, True),
@@ -93,10 +89,9 @@ def test_get_hidden_fields(
 @pytest.mark.parametrize(
     "condition",
     [
-        {"field": "a"},
-        {"field": "a", "value": None},
+        {"field": "a", "value": "x"},
         {"field": "a", "operator": "not_eq", "value": 1.5},
-        {"field": "a", "operator": "in", "value": ["x", 1, True, None]},
+        {"field": "a", "operator": "in", "value": ["x", 1, True]},
         {"field": "a", "operator": "exists"},
     ],
 )
@@ -109,6 +104,9 @@ def test_condition_schema(condition: dict[str, Any]) -> None:
     "condition",
     [
         {"value": 1},
+        {"field": "a"},
+        {"field": "a", "value": None},
+        {"field": "a", "operator": "in", "value": ["x", None]},
         {"field": "a", "operator": "gt", "value": 1},
         {"field": "a", "value": ["x"]},
         {"field": "a", "value": {"x": 1}},
