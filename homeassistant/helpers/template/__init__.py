@@ -99,7 +99,7 @@ _ENVIRONMENT_STRICT: HassKey[TemplateEnvironment] = HassKey(
 _HASS_LOADER = "template.hass_loader"
 
 # Match "simple" ints and floats. -1.0, 1, +5, 5.0
-_IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?$")
+_IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?$", re.ASCII)
 
 EVAL_CACHE_SIZE = 512
 
@@ -274,7 +274,7 @@ def _cached_parse_result(render_result: str) -> Any:
     # render) so the recompile only happens once per distinct result.
     try:
         result = literal_eval(render_result)
-    except ValueError, TypeError, SyntaxError, MemoryError:
+    except ValueError, TypeError, SyntaxError, MemoryError, RecursionError:
         return render_result
     if type(result) in RESULT_WRAPPERS:
         result = RESULT_WRAPPERS[type(result)](result, render_result=render_result)

@@ -342,8 +342,9 @@ def _get_timestring(timediff: float, precision: int = 1) -> str:
         if current_precision == precision:
             months = (timediff % factors[0]) // factors[1]
             timediff += round(remainder / current_factor) * current_factor - remainder
-            # 12 months are 5 days short of a year, so rounding up to them ends the year
-            if months < 12 <= (timediff % factors[0]) // factors[1]:
+            rounded_months = (timediff % factors[0]) // factors[1]
+            # 12 months are 5 days short of a year, so rounding to them ends the year
+            if rounded_months >= 12 and (months < 12 or current_factor == factors[1]):
                 timediff += factors[0] - timediff % factors[0]
             break
         remainder %= current_factor
