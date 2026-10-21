@@ -1091,7 +1091,7 @@ _CAMERA_SWITCH_MIRRORS = (
             "mic_level",
             Platform.NUMBER,
             "mic_level",
-            "setting_mirror_deprecated",
+            "setting_mirror_deprecated_mic_level",
             id="mic_level",
         ),
         pytest.param(

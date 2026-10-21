@@ -459,10 +459,11 @@ _CAMERA_MIRROR_REPLACEMENTS: _MirrorReplacements = {
         "hdr_mode",
         "setting_mirror_deprecated_hdr_mode",
     ),
+    # The number is unavailable while the microphone is disabled.
     (Platform.SENSOR, "mic_level"): (
         Platform.NUMBER,
         "mic_level",
-        "setting_mirror_deprecated",
+        "setting_mirror_deprecated_mic_level",
     ),
     # The text entity falls back to the default message where the sensor is empty.
     (Platform.SENSOR, "doorbell_text"): (
