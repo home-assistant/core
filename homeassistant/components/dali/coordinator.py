@@ -4,7 +4,7 @@ import asyncio
 from dataclasses import dataclass, replace
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, override
+from typing import override
 
 from dali.address import GearShort
 from dali.driver.serial import DriverLubaRs232
@@ -18,6 +18,7 @@ from dali.gear.general import (
 from dali.gear.led import QueryDimmingCurve
 from dali.sequences import QueryDeviceTypes
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -30,8 +31,7 @@ from .const import (
     registry_identifier,
 )
 
-if TYPE_CHECKING:
-    from . import DaliConfigEntry
+type DaliConfigEntry = ConfigEntry[DaliCoordinator]
 
 SCAN_INTERVAL = timedelta(seconds=30)
 FULL_SCAN_INTERVAL = timedelta(minutes=5)

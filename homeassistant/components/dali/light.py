@@ -12,9 +12,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DaliConfigEntry
 from .const import DEVICE_TYPE_LED, DOMAIN
 from .coordinator import (
+    DaliConfigEntry,
     DaliCoordinator,
     DaliGearData,
     _brightness_to_dali_level,
