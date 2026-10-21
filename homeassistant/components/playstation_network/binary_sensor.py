@@ -14,10 +14,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import (
     PlaystationNetworkConfigEntry,
-    PlaystationNetworkData,
     PlaystationNetworkUserDataCoordinator,
 )
 from .entity import PlaystationNetworkServiceEntity
+from .helpers import PlaystationNetworkData
 
 PARALLEL_UPDATES = 0
 

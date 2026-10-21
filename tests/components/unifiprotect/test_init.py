@@ -648,7 +648,7 @@ async def test_migrate_entry_version_2(hass: HomeAssistant) -> None:
     """Test remove CONF_ALLOW_EA from options while migrating a 1 config entry to 2."""
     with (
         patch(
-            "homeassistant.components.unifiprotect.async_setup_entry", return_value=True
+            "homeassistant.components.unifiprotect.async_setup_entry", return_value=None
         ),
     ):
         entry = MockConfigEntry(

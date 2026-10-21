@@ -199,7 +199,7 @@ def patch_user(user: MockUser) -> MockUser:
 
 def patch_setup_entry() -> bool:
     """Patch interface."""
-    return patch("homeassistant.components.lastfm.async_setup_entry", return_value=True)
+    return patch("homeassistant.components.lastfm.async_setup_entry", return_value=None)
 
 
 def get_session_key_polling_task(

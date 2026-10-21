@@ -37,7 +37,7 @@ RECOMMENDED_OPTIONS = {
 def mock_setup(hass: HomeAssistant) -> Generator[AsyncMock]:
     """Mock the setup of the integration."""
     with patch(
-        f"homeassistant.components.{DOMAIN}.async_setup_entry", return_value=True
+        f"homeassistant.components.{DOMAIN}.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

@@ -6,7 +6,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
-from . import StiebelEltronConfigEntry
+from .coordinator import StiebelEltronConfigEntry
 
 TO_REDACT = {CONF_HOST}
 

@@ -62,7 +62,7 @@ async def test_user(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.tankerkoenig.async_setup_entry", return_value=True
+            "homeassistant.components.tankerkoenig.async_setup_entry", return_value=None
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig.nearby_stations",
@@ -156,7 +156,7 @@ async def test_user_errors(
 
     with (
         patch(
-            "homeassistant.components.tankerkoenig.async_setup_entry", return_value=True
+            "homeassistant.components.tankerkoenig.async_setup_entry", return_value=None
         ),
         patch(
             "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig.nearby_stations",
@@ -196,7 +196,7 @@ async def test_user_no_stations(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.tankerkoenig.async_setup_entry", return_value=True
+            "homeassistant.components.tankerkoenig.async_setup_entry", return_value=None
         ),
         patch(
             "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig.nearby_stations",
@@ -248,7 +248,7 @@ async def test_reauth(
 
     with (
         patch(
-            "homeassistant.components.tankerkoenig.async_setup_entry", return_value=True
+            "homeassistant.components.tankerkoenig.async_setup_entry", return_value=None
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig.nearby_stations",

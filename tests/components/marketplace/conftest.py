@@ -266,7 +266,7 @@ def stored_repositories(hass_storage: dict[str, Any], config_dir: Path) -> None:
 def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.marketplace.async_setup_entry", return_value=True
+        "homeassistant.components.marketplace.async_setup_entry", return_value=None
     ):
         yield
 
