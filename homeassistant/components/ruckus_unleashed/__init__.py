@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__package__)
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: RuckusUnleashedConfigEntry
-) -> bool:
+) -> None:
     """Set up Ruckus from a config entry."""
 
     ruckus = AjaxSession.async_create(
@@ -59,16 +59,18 @@ async def async_setup_entry(
     registry = dr.async_get(hass)
     for access_point in aps:
         _LOGGER.debug("AP [%s] %s", access_point[API_AP_MAC], entry.entry_id)
-        registry.async_get_or_create(
+        registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, access_point[API_AP_MAC])},
-            identifiers={(DOMAIN, access_point[API_AP_MAC])},
-            manufacturer=MANUFACTURER,
-            name=access_point[API_AP_DEVNAME],
-            model=access_point[API_AP_MODEL],
-            sw_version=access_point.get(
-                API_AP_FIRMWAREVERSION,
-                system_info[API_SYS_SYSINFO][API_SYS_SYSINFO_VERSION],
+            device_info=dr.DeviceInfo(
+                connections={(dr.CONNECTION_NETWORK_MAC, access_point[API_AP_MAC])},
+                identifiers={(DOMAIN, access_point[API_AP_MAC])},
+                manufacturer=MANUFACTURER,
+                name=access_point[API_AP_DEVNAME],
+                model=access_point[API_AP_MODEL],
+                sw_version=access_point.get(
+                    API_AP_FIRMWAREVERSION,
+                    system_info[API_SYS_SYSINFO][API_SYS_SYSINFO_VERSION],
+                ),
             ),
         )
 
@@ -76,11 +78,9 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: RuckusUnleashedConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

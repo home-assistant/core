@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from python_picnic_api2.models import SearchResult, SearchResultItem, User
 
 from homeassistant.components.picnic import CONF_COUNTRY_CODE, DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.components.picnic.services import PicnicServiceException
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-
-from tests.common import MockConfigEntry
 
 UNIQUE_ID = "295-6y3-1nf4"
 

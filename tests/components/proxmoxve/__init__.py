@@ -2,10 +2,10 @@
 
 from copy import deepcopy
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 # Example permissions dict with audit permissions granted for nodes and vms
 AUDIT_PERMISSIONS = {
@@ -36,15 +36,16 @@ POWER_PERMISSIONS = {
         "VM.PowerMgmt": 1,
     },
     "/vms": {"VM.PowerMgmt": 1},
-    "/vms/101": {"VM.PowerMgmt": 0},
+    "/vms/101": {"VM.Audit": 1},
 }
 
 SNAPSHOT_PERMISSIONS = {
     "/vms": {"VM.Snapshot": 1},
-    "/vms/101": {"VM.Snapshot": 0},
+    "/vms/101": {"VM.Audit": 1},
 }
 SYSMOD_PERMISSIONS = {
     "/": {"Sys.Modify": 1},
+    "/nodes": {"Sys.Modify": 1},
 }
 
 MERGED_PERMISSIONS = {

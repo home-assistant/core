@@ -34,10 +34,10 @@ from homeassistant.helpers.typing import StateType
 from .const import (
     DOMAIN,
     INVERTER_ERROR_CODES,
-    SOLAR_NET_DISCOVERY_NEW,
     InverterStatusCodeOption,
     MeterLocationCodeOption,
     OhmPilotStateCodeOption,
+    discovery_signal,
     get_inverter_status_message,
     get_meter_location_description,
     get_ohmpilot_state_message,
@@ -101,6 +101,8 @@ async def async_setup_entry(
     @callback
     def async_add_new_entities(coordinator: FroniusCoordinatorBase) -> None:
         """Add newly found inverter entities."""
+        if Platform.SENSOR not in coordinator.valid_descriptions:
+            return
         constructor = (
             ModbusInverterSensor
             if coordinator in solar_net.modbus_inverter_coordinators
@@ -113,7 +115,7 @@ async def async_setup_entry(
     config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
-            SOLAR_NET_DISCOVERY_NEW,
+            discovery_signal(config_entry.entry_id),
             async_add_new_entities,
         )
     )

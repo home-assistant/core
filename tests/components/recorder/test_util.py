@@ -1,5 +1,6 @@
 """Test util methods."""
 
+from collections.abc import Callable
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from datetime import UTC, datetime, timedelta
 import os
@@ -11,9 +12,20 @@ from unittest.mock import MagicMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_test_home_assistant
+from pytest_homeassistant.components.recorder.common import (
+    async_wait_recording_done,
+    corrupt_db_file,
+    run_information_with_session,
+)
+from pytest_homeassistant.typing import (
+    RecorderInstanceContextManager,
+    RecorderInstanceGenerator,
+)
 from sqlalchemy import lambda_stmt, text
 from sqlalchemy.engine.result import ChunkedIteratorResult
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import TextClause
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 
@@ -24,7 +36,7 @@ from homeassistant.components.recorder.const import (
     SQLITE_URL_PREFIX,
     SupportedDialect,
 )
-from homeassistant.components.recorder.db_schema import RecorderRuns
+from homeassistant.components.recorder.db_schema import RecorderRuns, StatesMeta
 from homeassistant.components.recorder.history import _get_single_entity_start_time_stmt
 from homeassistant.components.recorder.models import (
     UnsupportedDialect,
@@ -44,16 +56,8 @@ from homeassistant.components.recorder.util import (
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.recorder import SESSION_INFO_READ_ONLY
 from homeassistant.util import dt as dt_util
-
-from .common import (
-    async_wait_recording_done,
-    corrupt_db_file,
-    run_information_with_session,
-)
-
-from tests.common import async_test_home_assistant
-from tests.typing import RecorderInstanceContextManager, RecorderInstanceGenerator
 
 
 @pytest.fixture
@@ -79,6 +83,22 @@ async def test_session_scope_not_setup(
         util.session_scope(hass=hass),
     ):
         pass
+
+
+async def test_session_scope_read_only_marker_ends_with_scope(
+    hass: HomeAssistant,
+    setup_recorder: None,
+) -> None:
+    """Test a session is only marked read-only within a read-only scope.
+
+    Sessions are reused per thread, so a marker left behind would let a failed
+    query roll back a later session holding writes.
+    """
+    with util.session_scope(hass=hass, read_only=True) as session:
+        assert session.info[SESSION_INFO_READ_ONLY] is True
+    with util.session_scope(hass=hass) as reused_session:
+        assert reused_session is session
+        assert SESSION_INFO_READ_ONLY not in reused_session.info
 
 
 async def test_recorder_bad_execute(hass: HomeAssistant, setup_recorder: None) -> None:
@@ -430,27 +450,39 @@ def test_supported_mysql(caplog: pytest.LogCaptureFixture, mysql_version) -> Non
 
 
 @pytest.mark.parametrize(
-    ("pgsql_version", "message"),
+    ("pgsql_version", "pgsql_version_num", "message"),
     [
         (
             "11.12 (Debian 11.12-1.pgdg100+1)",
+            "110012",
             "Version 11.12 of PostgreSQL is not supported;"
             " minimum supported version is 12.0.",
         ),
         (
             "9.2.10",
+            "90210",
             "Version 9.2.10 of PostgreSQL is not supported;"
             " minimum supported version is 12.0.",
         ),
         (
+            "11beta3",
+            "110000",
+            "Version 11.0 of PostgreSQL is not supported;"
+            " minimum supported version is 12.0.",
+        ),
+        (
             "unexpected",
-            "Version unexpected of PostgreSQL is not supported;"
+            "110012",
+            "Version 11.12 of PostgreSQL is not supported;"
             " minimum supported version is 12.0.",
         ),
     ],
 )
 def test_fail_outdated_pgsql(
-    caplog: pytest.LogCaptureFixture, pgsql_version, message
+    caplog: pytest.LogCaptureFixture,
+    pgsql_version: str,
+    pgsql_version_num: str,
+    message: str,
 ) -> None:
     """Test setting up the connection for an outdated PostgreSQL version."""
     instance_mock = MagicMock()
@@ -463,9 +495,10 @@ def test_fail_outdated_pgsql(
 
     def fetchall_mock():
         nonlocal execute_args
-        if execute_args[-1] == "SHOW server_version":
-            return [[pgsql_version]]
-        return None
+        return {
+            "SHOW server_version": [[pgsql_version]],
+            "SHOW server_version_num": [[pgsql_version_num]],
+        }[execute_args[-1]]
 
     def _make_cursor_mock(*_):
         return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
@@ -481,10 +514,20 @@ def test_fail_outdated_pgsql(
 
 
 @pytest.mark.parametrize(
-    "pgsql_version",
-    ["14.0 (Debian 14.0-1.pgdg110+1)"],
+    ("pgsql_version", "pgsql_version_num", "expected_version"),
+    [
+        ("14.0 (Debian 14.0-1.pgdg110+1)", "140000", "14.0"),
+        ("19beta3", "190000", "19.0"),
+        ("19beta3 (Debian 19~beta3-1.pgdg14+1)", "190000", "19.0"),
+        ("19rc1", "190000", "19.0"),
+    ],
 )
-def test_supported_pgsql(caplog: pytest.LogCaptureFixture, pgsql_version) -> None:
+def test_supported_pgsql(
+    caplog: pytest.LogCaptureFixture,
+    pgsql_version: str,
+    pgsql_version_num: str,
+    expected_version: str,
+) -> None:
     """Test setting up the connection for a supported PostgreSQL version."""
     instance_mock = MagicMock()
     execute_args = []
@@ -496,9 +539,10 @@ def test_supported_pgsql(caplog: pytest.LogCaptureFixture, pgsql_version) -> Non
 
     def fetchall_mock():
         nonlocal execute_args
-        if execute_args[-1] == "SHOW server_version":
-            return [[pgsql_version]]
-        return None
+        return {
+            "SHOW server_version": [[pgsql_version]],
+            "SHOW server_version_num": [[pgsql_version_num]],
+        }[execute_args[-1]]
 
     def _make_cursor_mock(*_):
         return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
@@ -511,6 +555,7 @@ def test_supported_pgsql(caplog: pytest.LogCaptureFixture, pgsql_version) -> Non
 
     assert "minimum supported version" not in caplog.text
     assert database_engine is not None
+    assert str(database_engine.version) == expected_version
     assert database_engine.optimizer.slow_range_in_select is True
     assert database_engine.optimizer.slow_dependent_subquery is False
 
@@ -905,10 +950,10 @@ async def test_issue_for_not_supported_lts_version(
 @pytest.mark.parametrize(
     "server_version",
     [
-        "12.4.0-MariaDB",  # non-LTS MariaDB release newer than we know about
-        "13.4.0-MariaDB",  # LTS MariaDB release newer than we know about
-        "9.8.0",  # non-LTS MySQL release newer than we know about
-        "10.4.0",  # LTS MySQL release newer than we know about
+        # One major above the newest series in the generated version data, so these
+        # stay newer than we know about when endoflife.date reports new releases.
+        f"{util.SUPPORTED_MARIA_DB_LTS.latest_non_lts_series[0] + 1}.0.0-MariaDB",
+        f"{util.SUPPORTED_MYSQL_LTS.latest_non_lts_series[0] + 1}.0.0",
     ],
 )
 async def test_no_issue_for_future_database_version(
@@ -1145,6 +1190,142 @@ def test_build_mysqldb_conv() -> None:
     assert conv["DATETIME"]("2022-05-13T22:33:12.741") == datetime(
         2022, 5, 13, 22, 33, 12, 741000, tzinfo=None
     )
+
+
+@pytest.mark.parametrize("persistent_database", [True])
+@patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
+async def test_execute_recovers_after_lost_connection(
+    hass: HomeAssistant,
+    setup_recorder: None,
+) -> None:
+    """Test execute reconnects and returns rows after the connection is lost.
+
+    The database must survive the lost connection, which an in-memory SQLite
+    database does not.
+    """
+    instance = recorder.get_instance(hass)
+    hass.states.async_set("sensor.on", "on")
+    await async_wait_recording_done(hass)
+
+    def _query() -> None:
+        with session_scope(hass=hass, read_only=True) as session:
+            query = session.query(StatesMeta).limit(1)
+            # Simulate a lost connection: the session object stays intact and unaware
+            session.connection().invalidate()
+            assert len(util.execute(query)) == 1
+
+    await instance.async_add_executor_job(_query)
+
+
+@pytest.mark.parametrize("persistent_database", [True])
+@patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
+async def test_execute_stmt_lambda_element_recovers_after_lost_connection(
+    hass: HomeAssistant,
+    setup_recorder: None,
+) -> None:
+    """Test execute_stmt_lambda_element reconnects after the connection is lost."""
+    instance = recorder.get_instance(hass)
+    hass.states.async_set("sensor.on", "on")
+    new_state = hass.states.get("sensor.on")
+    await async_wait_recording_done(hass)
+
+    def _query() -> None:
+        with session_scope(hass=hass, read_only=True) as session:
+            metadata_id = instance.states_meta_manager.get("sensor.on", session, True)
+            start_time_ts = dt_util.utcnow().timestamp()
+            stmt = lambda_stmt(
+                lambda: _get_single_entity_start_time_stmt(
+                    start_time_ts, metadata_id, False, False, False
+                )
+            )
+            session.connection().invalidate()
+
+            rows = util.execute_stmt_lambda_element(session, stmt)
+            assert rows[0].state == new_state.state
+            assert rows[0].metadata_id == metadata_id
+
+    await instance.async_add_executor_job(_query)
+
+
+def _execute_failing_once(session: Session) -> Any:
+    """Run a query through execute which fails on the first attempt."""
+    query = MagicMock(session=session)
+    query.all.side_effect = [OperationalError("SELECT", {}, Exception()), ["row"]]
+    return util.execute(query)
+
+
+def _execute_stmt_lambda_element_failing_once(session: Session) -> Any:
+    """Run a statement through execute_stmt_lambda_element which fails once."""
+    result = MagicMock()
+    result.all.return_value = ["row"]
+    with patch.object(
+        session,
+        "execute",
+        side_effect=[OperationalError("SELECT", {}, Exception()), result],
+    ):
+        return util.execute_stmt_lambda_element(session, MagicMock())
+
+
+QUERIES_FAILING_ONCE = [
+    pytest.param(_execute_failing_once, id="execute"),
+    pytest.param(
+        _execute_stmt_lambda_element_failing_once, id="execute_stmt_lambda_element"
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    ("read_only", "pending_write_kept"),
+    [
+        pytest.param(True, False, id="read_only_session_rolled_back"),
+        pytest.param(False, True, id="write_session_not_rolled_back"),
+    ],
+)
+@pytest.mark.parametrize("run_query", QUERIES_FAILING_ONCE)
+@patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
+async def test_query_retry_only_rolls_back_read_only_session(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    run_query: Callable[[Session], Any],
+    read_only: bool,
+    pending_write_kept: bool,
+) -> None:
+    """Test a failed query only rolls back a read-only session before retrying.
+
+    A read-only session is never committed, so rolling it back loses nothing. A
+    session holding writes must not be rolled back, as the retry would then succeed
+    and the caller would go on to commit what is left of its unit of work.
+    """
+    with session_scope(hass=hass, read_only=read_only) as session:
+        pending_write = RecorderRuns(start=dt_util.utcnow())
+        session.add(pending_write)
+
+        run_query(session)
+
+        assert (pending_write in session.new) is pending_write_kept
+        # Don't commit the pending write when the scope ends
+        session.expunge_all()
+
+
+@pytest.mark.parametrize("run_query", QUERIES_FAILING_ONCE)
+@patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
+async def test_query_retry_continues_after_failed_rollback(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    caplog: pytest.LogCaptureFixture,
+    run_query: Callable[[Session], Any],
+) -> None:
+    """Test a rollback which fails neither replaces the query error nor ends the retries."""
+    with (
+        session_scope(hass=hass, read_only=True) as session,
+        patch.object(
+            session, "rollback", side_effect=SQLAlchemyError("rollback failed")
+        ),
+    ):
+        # The retry after the failed rollback returns the rows
+        assert run_query(session) == ["row"]
+
+    assert "rollback failed" in caplog.text
 
 
 @patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)

@@ -2,17 +2,18 @@
 
 from infrared_protocols.codes.samsung.tv import SamsungTVCode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.components.common import (
+    assert_availability_follows_source_entity,
+)
+from pytest_homeassistant.components.infrared import EMITTER_ENTITY_ID
+from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.common import assert_availability_follows_source_entity
-from tests.components.infrared import EMITTER_ENTITY_ID
-from tests.components.infrared.common import MockInfraredEmitterEntity
 
 
 @pytest.fixture
@@ -98,4 +99,6 @@ async def test_button_availability_follows_ir_entity(
 ) -> None:
     """Test button becomes unavailable when IR entity is unavailable."""
     entity_id = "button.samsung_tv_source"
-    await assert_availability_follows_source_entity(hass, entity_id, EMITTER_ENTITY_ID)
+    await assert_availability_follows_source_entity(
+        hass, entity_id, [EMITTER_ENTITY_ID]
+    )

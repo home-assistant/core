@@ -5,14 +5,13 @@ from unittest.mock import AsyncMock, patch
 
 from meteo_lt import Forecast, MeteoLtAPI, Place
 import pytest
-
-from homeassistant.components.meteo_lt.const import CONF_PLACE_CODE, DOMAIN
-
-from tests.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     load_json_array_fixture,
     load_json_object_fixture,
 )
+
+from homeassistant.components.meteo_lt.const import CONF_PLACE_CODE, DOMAIN
 
 
 @pytest.fixture(autouse=True)

@@ -3,6 +3,11 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    SnapshotAssertion,
+    snapshot_platform,
+)
 
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SERVICE_TURN_ON
 from homeassistant.const import ATTR_ENTITY_ID, Platform
@@ -10,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import trigger_availability_callback
-
-from tests.common import MockConfigEntry, SnapshotAssertion, snapshot_platform
 
 TEST_SCENE_1_ENTITY_ID = "scene.test_gateway_living_room_evening"
 TEST_SCENE_2_ENTITY_ID = "scene.test_gateway_kitchen_bright"

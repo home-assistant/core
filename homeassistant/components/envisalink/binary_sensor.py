@@ -1,6 +1,6 @@
 """Support for Envisalink zone states- represented as binary sensors."""
 
-import datetime
+import datetime as dt
 import logging
 from typing import Any, override
 
@@ -17,13 +17,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from . import (
+from . import ZONE_SCHEMA
+from .const import (
     CONF_ZONENAME,
     CONF_ZONES,
     CONF_ZONETYPE,
     DATA_EVL,
     SIGNAL_ZONE_UPDATE,
-    ZONE_SCHEMA,
 )
 from .entity import EnvisalinkEntity
 
@@ -48,8 +48,8 @@ async def async_setup_platform(
             zone_num,
             entity_config_data[CONF_ZONENAME],
             entity_config_data[CONF_ZONETYPE],
-            hass.data[DATA_EVL].alarm_state["zone"][zone_num],
-            hass.data[DATA_EVL],
+            hass.data[DATA_EVL].controller.alarm_state["zone"][zone_num],
+            hass.data[DATA_EVL].controller,
         )
         entities.append(entity)
 
@@ -101,7 +101,7 @@ class EnvisalinkBinarySensor(EnvisalinkEntity, BinarySensorEntity):
         seconds_ago = self._info["last_fault"]
         if seconds_ago < 65536 * 5:
             now = dt_util.now().replace(microsecond=0)
-            delta = datetime.timedelta(seconds=seconds_ago)
+            delta = dt.timedelta(seconds=seconds_ago)
             last_trip_time = (now - delta).isoformat()
         else:
             last_trip_time = None

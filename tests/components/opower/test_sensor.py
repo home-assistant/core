@@ -7,6 +7,11 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from opower import CostRead
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+)
 
 from homeassistant.components.opower.const import DOMAIN
 from homeassistant.components.recorder import Recorder
@@ -19,12 +24,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    mock_restore_cache_with_extra_data,
-)
 
 RATE_ENTITY_ID = "sensor.elec_account_111111_last_bill_electricity_rate"
 
@@ -311,6 +310,7 @@ async def test_dynamic_and_stale_devices(
     mock_opower_api: AsyncMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the dynamic addition and removal of Opower devices."""
     original_accounts = mock_opower_api.async_get_accounts.return_value
@@ -335,9 +335,9 @@ async def test_dynamic_and_stale_devices(
     mock_opower_api.async_get_accounts.return_value = [original_accounts[0]]
     mock_opower_api.async_get_forecast.return_value = [original_forecasts[0]]
 
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(timedelta(hours=12))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     devices = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
@@ -358,8 +358,9 @@ async def test_dynamic_and_stale_devices(
     mock_opower_api.async_get_accounts.return_value = original_accounts
     mock_opower_api.async_get_forecast.return_value = original_forecasts
 
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(timedelta(hours=12))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     devices = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id

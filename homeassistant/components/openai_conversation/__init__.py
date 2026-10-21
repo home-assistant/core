@@ -1,7 +1,6 @@
 """The OpenAI Conversation integration."""
 
 from types import MappingProxyType
-from typing import Any, cast
 
 import openai
 
@@ -21,12 +20,14 @@ from .const import (
     CONF_CHAT_MODEL,
     CONF_REASONING_SUMMARY,
     DEFAULT_AI_TASK_NAME,
+    DEFAULT_EVALUATION_NAME,
     DEFAULT_NAME,
     DEFAULT_STT_NAME,
     DEFAULT_TTS_NAME,
     DOMAIN,
     LOGGER,
     RECOMMENDED_AI_TASK_OPTIONS,
+    RECOMMENDED_EVALUATION_OPTIONS,
     RECOMMENDED_REASONING_SUMMARY,
     RECOMMENDED_STT_OPTIONS,
     RECOMMENDED_TTS_OPTIONS,
@@ -45,12 +46,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> None:
     """Set up OpenAI Conversation from a config entry."""
     client = openai.AsyncOpenAI(
         api_key=entry.data[CONF_API_KEY],
-        # Legacy HTTPX clients are supported at runtime only.
-        http_client=cast(Any, get_async_client(hass)),
+        http_client=get_async_client(hass),
     )
 
     # Cache current platform data which gets added to each request
@@ -70,12 +70,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bo
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> None:
     """Unload OpenAI."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_update_options(hass: HomeAssistant, entry: OpenAIConfigEntry) -> None:
@@ -181,7 +179,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             )
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> None:
     """Migrate entry."""
     LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
 
@@ -254,11 +252,25 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> 
                     )
         hass.config_entries.async_update_entry(entry, minor_version=7)
 
+    if entry.version == 2 and entry.minor_version == 7:
+        if not any(
+            subentry.subentry_type == "ai_task_evaluate"
+            for subentry in entry.subentries.values()
+        ):
+            hass.config_entries.async_add_subentry(
+                entry,
+                ConfigSubentry(
+                    data=MappingProxyType(RECOMMENDED_EVALUATION_OPTIONS),
+                    subentry_type="ai_task_evaluate",
+                    title=DEFAULT_EVALUATION_NAME,
+                    unique_id=None,
+                ),
+            )
+        hass.config_entries.async_update_entry(entry, minor_version=8)
+
     LOGGER.debug(
         "Migration to version %s:%s successful", entry.version, entry.minor_version
     )
-
-    return True
 
 
 def _add_ai_task_subentry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> None:

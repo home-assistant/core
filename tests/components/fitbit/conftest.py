@@ -1,13 +1,15 @@
 """Test fixtures for fitbit."""
 
 from collections.abc import Awaitable, Callable
-import datetime
+import datetime as dt
 from http import HTTPStatus
 import time
 from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from requests_mock.mocker import Mocker
 
 from homeassistant.components.application_credentials import (
@@ -19,9 +21,6 @@ from homeassistant.components.fitbit.const import DOMAIN, OAUTH_SCOPES
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -222,9 +221,7 @@ def mock_devices(
 
 def timeseries_response(resource: str, value: str) -> dict[str, Any]:
     """Create a timeseries response value."""
-    return {
-        resource: [{"dateTime": datetime.datetime.today().isoformat(), "value": value}]
-    }
+    return {resource: [{"dateTime": dt.datetime.today().isoformat(), "value": value}]}
 
 
 @pytest.fixture(name="register_timeseries")
