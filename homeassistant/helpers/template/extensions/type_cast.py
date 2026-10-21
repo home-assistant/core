@@ -69,7 +69,11 @@ class TypeCastExtension(BaseTemplateExtension):
     @staticmethod
     def forgiving_int(value: Any, default: Any = _SENTINEL, base: int = 10) -> Any:
         """Try to convert value to an int, and raise if it fails."""
-        result = jinja2.filters.do_int(value, default=default, base=base)
+        try:
+            result = jinja2.filters.do_int(value, default=default, base=base)
+        except OverflowError:
+            # Jinja's do_int doesn't catch this for an infinite float
+            result = default
         if result is _SENTINEL:
             raise_no_default("int", value)
         return result
