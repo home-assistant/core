@@ -19,7 +19,7 @@ def fixture_mock_setup_entry() -> Generator[AsyncMock]:
     """Fixture for config entry."""
 
     with patch(
-        "homeassistant.components.fjaraskupan.async_setup_entry", return_value=True
+        "homeassistant.components.fjaraskupan.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

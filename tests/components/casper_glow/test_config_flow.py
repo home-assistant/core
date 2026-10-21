@@ -185,7 +185,7 @@ async def test_user_step_error(
         patch("homeassistant.components.casper_glow.config_flow.CasperGlow.handshake"),
         patch(
             "homeassistant.components.casper_glow.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
