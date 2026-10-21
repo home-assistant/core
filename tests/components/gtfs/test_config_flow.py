@@ -502,6 +502,51 @@ async def test_add_route(
 
 
 @pytest.mark.usefixtures("mock_feed_download")
+@pytest.mark.parametrize(
+    "feed_zip",
+    [
+        pytest.param(
+            build_feed_zip(
+                replace={
+                    "stops.txt": (
+                        "stop_id,stop_name,stop_lat,stop_lon,"
+                        "location_type,parent_station\n"
+                        "S1,First Street,40.0,-75.0,,\n"
+                        "S2,Second Street,40.01,-75.01,0,\n"
+                        "S3,Third Street Platform,40.02,-75.02,0,STA\n"
+                        "STA,Third Street Station,40.02,-75.02,1,\n"
+                        "ENT,Third Street Entrance,40.02,-75.02,2,STA\n"
+                        "N1,Night Depot,40.1,-75.1,,\n"
+                        "N2,Night Terminal,40.11,-75.11,,\n"
+                    )
+                }
+            ),
+            id="stations",
+        )
+    ],
+)
+async def test_add_route_lists_only_stops(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test stations and entrances, which trips never stop at, are not offered."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_ROUTE),
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    options = result["data_schema"].schema[CONF_ORIGIN].config["options"]
+    assert [option["value"] for option in options] == ["S1", "N1", "N2", "S2", "S3"]
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], _route_input("S2", "S3")
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Second Street to Third Street Platform"
+
+
+@pytest.mark.usefixtures("mock_feed_download")
 async def test_add_route_same_stop(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:

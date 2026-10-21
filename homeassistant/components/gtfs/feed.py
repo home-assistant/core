@@ -13,6 +13,7 @@ import zipfile
 from aiohttp import ClientError, ClientResponseError, ClientTimeout
 import pygtfs
 from pygtfs.gtfs_entities import Stop
+from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 
 from homeassistant.config_entries import ConfigEntry
@@ -28,6 +29,8 @@ _REQUIRED_FILES = frozenset(
     {"agency.txt", "routes.txt", "stop_times.txt", "stops.txt", "trips.txt"}
 )
 _CALENDAR_FILES = frozenset({"calendar.txt", "calendar_dates.txt"})
+# A stop or platform; trips only stop at these.
+LOCATION_TYPE_STOP = 0
 
 type GtfsConfigEntry = ConfigEntry[GtfsFeed]
 
@@ -204,10 +207,19 @@ def close_feed(feed: GtfsFeed) -> None:
 
 
 def list_stops(feed: GtfsFeed) -> dict[str, str]:
-    """Return stop names keyed by stop ID, ordered by name."""
+    """Return stop names keyed by stop ID, ordered by name.
+
+    Stations, entrances and other locations trips don't stop at are left out.
+    """
     with feed.lock:
         stops = (
             feed.schedule.session.query(Stop.stop_id, Stop.stop_name)
+            .filter(
+                or_(
+                    Stop.location_type.is_(None),
+                    Stop.location_type == LOCATION_TYPE_STOP,
+                )
+            )
             .order_by(Stop.stop_name, Stop.stop_id)
             .all()
         )
