@@ -1,9 +1,15 @@
 """The tests for the utility_meter sensor platform."""
 
 from datetime import timedelta
+from decimal import Decimal
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+)
 
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
@@ -30,6 +36,7 @@ from homeassistant.components.utility_meter.sensor import (
     COLLECTING,
     PAUSED,
     UtilityMeterSensor,
+    UtilitySensorExtraStoredData,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -46,12 +53,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    mock_restore_cache_with_extra_data,
-)
 
 
 @pytest.fixture(autouse=True)
@@ -842,6 +843,29 @@ async def test_restore_state(
     for entity_id in ("sensor.energy_bill_tariff1",):
         state = hass.states.get(entity_id)
         assert state.attributes.get("status") == PAUSED
+
+
+@pytest.mark.parametrize(
+    "last_valid_state",
+    [
+        pytest.param(Decimal(0), id="zero"),
+        pytest.param(Decimal("12.5"), id="non_zero"),
+        pytest.param(None, id="none"),
+    ],
+)
+def test_extra_restore_state_data_roundtrip(last_valid_state: Decimal | None) -> None:
+    """Test the extra restore state data survives a roundtrip, including a 0 state."""
+    data = UtilitySensorExtraStoredData(
+        Decimal(3),
+        "kWh",
+        Decimal(1),
+        dt_util.utcnow(),
+        last_valid_state,
+        COLLECTING,
+        SensorDeviceClass.ENERGY,
+    )
+
+    assert UtilitySensorExtraStoredData.from_dict(data.as_dict()) == data
 
 
 @pytest.mark.parametrize(
@@ -1781,6 +1805,33 @@ async def test_self_reset_quarter_hourly_third_quarter(hass: HomeAssistant) -> N
     )
 
 
+@pytest.mark.parametrize(
+    ("offset", "next_reset"),
+    [
+        pytest.param(timedelta(0), "2024-01-03T13:00:00+00:00", id="no_offset"),
+        pytest.param(timedelta(minutes=5), "2024-01-03T13:05:00+00:00", id="5_min"),
+        pytest.param(timedelta(minutes=20), "2024-01-03T13:05:00+00:00", id="20_min"),
+        pytest.param(timedelta(minutes=50), "2024-01-03T13:05:00+00:00", id="50_min"),
+        pytest.param(
+            timedelta(hours=1, minutes=35), "2024-01-03T13:05:00+00:00", id="95_min"
+        ),
+    ],
+)
+@freeze_time("2024-01-03T12:52:00+00:00")
+async def test_quarter_hourly_offset(
+    hass: HomeAssistant, offset: timedelta, next_reset: str
+) -> None:
+    """Test a quarter-hourly meter with an offset of 15 minutes or more resets every quarter."""
+    assert await async_setup_component(
+        hass, DOMAIN, gen_config("quarter-hourly", offset)
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_bill")
+    assert state is not None
+    assert state.attributes.get("next_reset") == next_reset
+
+
 async def test_self_reset_hourly(hass: HomeAssistant) -> None:
     """Test hourly reset of meter."""
     await _test_self_reset(
@@ -1904,6 +1955,35 @@ async def test_self_reset_weekly(hass: HomeAssistant) -> None:
     await _test_self_reset(
         hass, gen_config("weekly"), "2017-12-31T23:59:00.000000+00:00"
     )
+
+
+@pytest.mark.parametrize(
+    ("offset", "next_reset"),
+    [
+        pytest.param(timedelta(0), "2024-01-08T00:00:00+00:00", id="no_offset"),
+        pytest.param(timedelta(days=6), "2024-01-07T00:00:00+00:00", id="6_days"),
+        pytest.param(timedelta(days=7), "2024-01-08T00:00:00+00:00", id="7_days"),
+        pytest.param(
+            timedelta(days=8, hours=2), "2024-01-09T02:00:00+00:00", id="8_days"
+        ),
+        pytest.param(
+            timedelta(days=27, hours=23, minutes=59),
+            "2024-01-07T23:59:00+00:00",
+            id="27_days",
+        ),
+    ],
+)
+@freeze_time("2024-01-03T12:00:00+00:00")
+async def test_weekly_offset(
+    hass: HomeAssistant, offset: timedelta, next_reset: str
+) -> None:
+    """Test a weekly meter with an offset of a week or more still resets weekly."""
+    assert await async_setup_component(hass, DOMAIN, gen_config("weekly", offset))
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_bill")
+    assert state is not None
+    assert state.attributes.get("next_reset") == next_reset
 
 
 async def test_self_reset_monthly(hass: HomeAssistant) -> None:

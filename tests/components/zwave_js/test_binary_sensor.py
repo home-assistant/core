@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
@@ -39,8 +40,6 @@ from .common import (
     TAMPER_SENSOR,
     NodeDataType,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 def _add_door_tilt_state_value(node_state: dict[str, Any]) -> dict[str, Any]:

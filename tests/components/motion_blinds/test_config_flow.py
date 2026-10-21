@@ -4,6 +4,7 @@ import socket
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.motion_blinds import const
@@ -12,8 +13,6 @@ from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-
-from tests.common import MockConfigEntry
 
 TEST_HOST = "1.2.3.4"
 TEST_HOST2 = "5.6.7.8"
@@ -121,7 +120,7 @@ def motion_blinds_connect_fixture():
         ),
         patch(
             "homeassistant.components.motion_blinds.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield
@@ -158,6 +157,7 @@ async def test_config_flow_manual_host_success(hass: HomeAssistant) -> None:
         CONF_API_KEY: TEST_API_KEY,
         const.CONF_INTERFACE: TEST_HOST_ANY,
     }
+    assert result["result"].unique_id == TEST_MAC
 
 
 async def test_config_flow_discovery_1_success(hass: HomeAssistant) -> None:
@@ -305,6 +305,21 @@ async def test_config_flow_discovery_fail(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "discovery_error"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "connect"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: TEST_API_KEY},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_config_flow_invalid_interface(hass: HomeAssistant) -> None:

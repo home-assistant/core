@@ -8,6 +8,7 @@ from fressnapftracker import (
     FressnapfTrackerInvalidTrackerResponseError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fressnapf_tracker.const import DOMAIN
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from .conftest import MOCK_SERIAL_NUMBER
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -119,7 +118,13 @@ async def test_invalid_tracker(
     assert len(issue_registry.issues) == 1
 
     issue_id = f"invalid_fressnapf_tracker_{MOCK_SERIAL_NUMBER}"
-    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.config_entry_id == mock_config_entry.entry_id
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 @pytest.mark.usefixtures("mock_auth_client", "mock_api_client_malformed_tracker")

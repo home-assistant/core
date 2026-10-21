@@ -173,7 +173,7 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
     """Define an Airzone Cloud climate."""
 
     _attr_name = None
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def _init_attributes(self) -> None:
         """Init common climate device attributes."""
@@ -200,7 +200,7 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Update climate attributes."""
-        self._attr_current_temperature = self.get_airzone_value(AZD_TEMP)
+        self._attr_native_current_temperature = self.get_airzone_value(AZD_TEMP)
         self._attr_current_humidity = self.get_airzone_value(AZD_HUMIDITY)
         self._attr_hvac_action = HVAC_ACTION_LIB_TO_HASS[
             self.get_airzone_value(AZD_ACTION)
@@ -217,17 +217,17 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
             self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             and self._attr_hvac_mode == HVACMode.HEAT_COOL
         ):
-            self._attr_target_temperature_high = self.get_airzone_value(
+            self._attr_native_target_temperature_high = self.get_airzone_value(
                 AZD_TEMP_SET_COOL_AIR
             )
-            self._attr_target_temperature_low = self.get_airzone_value(
+            self._attr_native_target_temperature_low = self.get_airzone_value(
                 AZD_TEMP_SET_HOT_AIR
             )
-            self._attr_target_temperature = None
+            self._attr_native_target_temperature = None
         else:
-            self._attr_target_temperature_high = None
-            self._attr_target_temperature_low = None
-            self._attr_target_temperature = self.get_airzone_value(AZD_TEMP_SET)
+            self._attr_native_target_temperature_high = None
+            self._attr_native_target_temperature_low = None
+            self._attr_native_target_temperature = self.get_airzone_value(AZD_TEMP_SET)
 
 
 class AirzoneDeviceClimate(AirzoneClimate):

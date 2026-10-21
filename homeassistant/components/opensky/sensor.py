@@ -50,6 +50,7 @@ class OpenSkySensor(CoordinatorEntity[OpenSkyDataUpdateCoordinator], SensorEntit
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{config_entry.entry_id}_opensky"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{coordinator.config_entry.entry_id}")},

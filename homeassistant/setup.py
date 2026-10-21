@@ -30,7 +30,7 @@ from .exceptions import DependencyError, HomeAssistantError
 from .helpers import issue_registry as ir, singleton, translation
 from .helpers.issue_registry import IssueSeverity, async_create_issue
 from .helpers.typing import ConfigType
-from .util.async_ import create_eager_task
+from .util.async_ import create_eager_task, wait_shared_future
 from .util.hass_dict import HassKey
 
 current_setup_group: contextvars.ContextVar[tuple[str, str | None] | None] = (
@@ -159,7 +159,7 @@ async def async_setup_component(
     setup_done_futures = hass.data.setdefault(_DATA_SETUP_DONE, {})
 
     if existing_setup_future := setup_futures.get(domain):
-        return await existing_setup_future
+        return await wait_shared_future(existing_setup_future)
 
     setup_future = hass.loop.create_future()
     setup_futures[domain] = setup_future
@@ -199,19 +199,23 @@ async def _async_process_dependencies(
     """
     setup_futures = hass.data.setdefault(_DATA_SETUP, {})
 
-    dependencies_tasks: dict[str, asyncio.Future[bool]] = {}
+    dependencies_tasks: dict[str, Awaitable[bool]] = {}
+
+    def _dependency_awaitable(dep: str, kind: str) -> Awaitable[bool] | None:
+        """Return an awaitable for the setup of dep, or None if already set up."""
+        if (shared_fut := setup_futures.get(dep)) is not None:
+            return wait_shared_future(shared_fut)
+        if dep in hass.config.components:
+            return None
+        return create_eager_task(
+            async_setup_component(hass, dep, config),
+            name=f"setup {dep} as {kind} of {integration.domain}",
+            loop=hass.loop,
+        )
 
     for dep in integration.dependencies:
-        fut = setup_futures.get(dep)
-        if fut is None:
-            if dep in hass.config.components:
-                continue
-            fut = create_eager_task(
-                async_setup_component(hass, dep, config),
-                name=f"setup {dep} as dependency of {integration.domain}",
-                loop=hass.loop,
-            )
-        dependencies_tasks[dep] = fut
+        if (fut := _dependency_awaitable(dep, "dependency")) is not None:
+            dependencies_tasks[dep] = fut
 
     to_be_loaded = hass.data.get(_DATA_SETUP_DONE, {})
     # We don't want to just wait for the futures from `to_be_loaded` here.
@@ -221,16 +225,8 @@ async def _async_process_dependencies(
     for dep in integration.after_dependencies:
         if dep not in to_be_loaded or dep in dependencies_tasks:
             continue
-        fut = setup_futures.get(dep)
-        if fut is None:
-            if dep in hass.config.components:
-                continue
-            fut = create_eager_task(
-                async_setup_component(hass, dep, config),
-                name=f"setup {dep} as after dependency of {integration.domain}",
-                loop=hass.loop,
-            )
-        dependencies_tasks[dep] = fut
+        if (fut := _dependency_awaitable(dep, "after dependency")) is not None:
+            dependencies_tasks[dep] = fut
 
     if not dependencies_tasks:
         return []
@@ -837,5 +833,5 @@ async def async_wait_component(hass: HomeAssistant, domain: str) -> bool:
     """Wait until a component is set up if pending, then return if it is set up."""
     setup_done = hass.data.get(_DATA_SETUP_DONE, {})
     if setup_future := setup_done.get(domain):
-        await setup_future
+        await wait_shared_future(setup_future)
     return domain in hass.config.components

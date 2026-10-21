@@ -4,10 +4,16 @@ from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+from aiohttp import ClientConnectionError
 from freezegun.api import FrozenDateTimeFactory
 from pydactyl.responses import PaginatedResponse
 import pytest
-from requests.exceptions import ConnectionError
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
@@ -15,13 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-    snapshot_platform,
-)
 
 
 @pytest.mark.usefixtures("mock_pterodactyl")
@@ -54,7 +53,7 @@ async def test_binary_sensor_update(
 
     freezer.tick(timedelta(seconds=90))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(hass.states.async_all(Platform.BINARY_SENSOR)) == 4
     assert (
@@ -154,7 +153,7 @@ async def test_binary_sensor_suspended_server_transition_runtime(
     server_data["1"] = server_1_data_suspended
     freezer.tick(timedelta(seconds=90))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
         hass.states.get(f"{Platform.BINARY_SENSOR}.test_server_1_status").state == "off"
@@ -169,7 +168,7 @@ async def test_binary_sensor_suspended_server_transition_runtime(
     server_data["1"] = server_1_data
     freezer.tick(timedelta(seconds=90))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
         hass.states.get(f"{Platform.BINARY_SENSOR}.test_server_1_status").state
@@ -191,7 +190,7 @@ async def test_binary_sensor_update_failure(
     """Test failed binary sensor update."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_pterodactyl.client.servers.get_server.side_effect = ConnectionError(
+    mock_pterodactyl.client.servers.get_server.side_effect = ClientConnectionError(
         "Simulated connection error"
     )
 

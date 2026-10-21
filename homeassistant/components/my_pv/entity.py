@@ -50,3 +50,17 @@ class MyPVDataEntity(MyPVBaseEntity):
             and self.coordinator.device.get_data_value(self.entity_description.key)
             is not None
         )
+
+
+class MyPVSetupEntity(MyPVBaseEntity):
+    """The my-PV data entity."""
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return (
+            super().available
+            and self.coordinator.device.get_setup_value(self.entity_description.key)
+            is not None
+        )
