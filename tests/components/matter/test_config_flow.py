@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from ipaddress import ip_address
-from unittest.mock import AsyncMock, MagicMock, call, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, call, patch
 from uuid import uuid4
 
 from aiohasupervisor import SupervisorError
@@ -15,9 +15,16 @@ from homeassistant import config_entries
 from homeassistant.components.matter.const import ADDON_SLUG, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+COMPRESSED_FABRIC_ID = 1234
+NODE_DEVICE_IDENTIFIER = "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice"
+BRIDGED_DEVICE_IDENTIFIER = "deviceid_00000000000004D2-0000000000000002-3"
+OTHER_FABRIC_DEVICE_IDENTIFIER = (
+    "deviceid_0000000000001234-0000000000000001-MatterNodeDevice"
+)
 ADDON_DISCOVERY_INFO = {
     "addon": "Matter Server",
     "host": "host1",
@@ -81,6 +88,17 @@ def client_connect_fixture() -> Generator[AsyncMock]:
         "homeassistant.components.matter.config_flow.MatterClient.connect"
     ) as client_connect:
         yield client_connect
+
+
+@pytest.fixture(name="server_info")
+def server_info_fixture() -> Generator[PropertyMock]:
+    """Mock the server info of the Matter Server."""
+    with patch(
+        "homeassistant.components.matter.config_flow.MatterClient.server_info",
+        new_callable=PropertyMock,
+        return_value=MagicMock(compressed_fabric_id=COMPRESSED_FABRIC_ID),
+    ) as server_info:
+        yield server_info
 
 
 @pytest.fixture(name="supervisor")
@@ -1659,3 +1677,153 @@ async def test_addon_not_installed_already_configured(
     assert entry.data["url"] == "ws://host1:5581/ws"
     assert entry.title == "Matter"
     assert setup_entry.call_count == 1
+
+
+@pytest.fixture(name="manual_entry")
+def manual_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
+    """Return a config entry connected to a manually configured Matter Server."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "url": "ws://host1:5581/ws",
+            "use_addon": False,
+            "integration_created_addon": False,
+        },
+        title="Matter",
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+@pytest.mark.usefixtures("server_info")
+@pytest.mark.parametrize(
+    "identifiers",
+    [
+        pytest.param([], id="no_devices"),
+        pytest.param(
+            [NODE_DEVICE_IDENTIFIER, BRIDGED_DEVICE_IDENTIFIER], id="same_fabric"
+        ),
+        pytest.param(["serial_1234"], id="no_fabric_identifier"),
+    ],
+)
+async def test_reconfigure(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client_connect: AsyncMock,
+    setup_entry: AsyncMock,
+    manual_entry: MockConfigEntry,
+    identifiers: list[str],
+) -> None:
+    """Test reconfigure flow updates the Matter Server URL."""
+    for identifier in identifiers:
+        device_registry.async_get_or_create(
+            config_entry_id=manual_entry.entry_id,
+            identifiers={(DOMAIN, identifier)},
+        )
+
+    result = await manual_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"url": "ws://localhost:5580/ws"}
+    )
+    await hass.async_block_till_done()
+
+    assert client_connect.call_count == 1
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert manual_entry.data == {
+        "url": "ws://localhost:5580/ws",
+        "use_addon": False,
+        "integration_created_addon": False,
+    }
+    assert setup_entry.call_count == 1
+
+
+@pytest.mark.usefixtures("server_info")
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(
+            CannotConnect(Exception("Boom")), "cannot_connect", id="cannot_connect"
+        ),
+        pytest.param(
+            InvalidServerVersion("Invalid version"),
+            "invalid_server_version",
+            id="invalid_server_version",
+        ),
+        pytest.param(Exception("Unknown boom"), "unknown", id="unknown"),
+    ],
+)
+async def test_reconfigure_errors(
+    hass: HomeAssistant,
+    client_connect: AsyncMock,
+    manual_entry: MockConfigEntry,
+    side_effect: Exception,
+    error: str,
+) -> None:
+    """Test reconfigure flow errors and recovery."""
+    result = await manual_entry.start_reconfigure_flow(hass)
+
+    client_connect.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"url": "ws://localhost:5580/ws"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    client_connect.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"url": "ws://localhost:5580/ws"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert manual_entry.data["url"] == "ws://localhost:5580/ws"
+
+
+@pytest.mark.usefixtures("server_info")
+async def test_reconfigure_different_fabric(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    manual_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow aborts when the new server uses another fabric."""
+    device_registry.async_get_or_create(
+        config_entry_id=manual_entry.entry_id,
+        identifiers={(DOMAIN, OTHER_FABRIC_DEVICE_IDENTIFIER)},
+    )
+
+    result = await manual_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"url": "ws://localhost:5580/ws"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "different_fabric"
+    assert manual_entry.data["url"] == "ws://host1:5581/ws"
+
+
+async def test_reconfigure_addon_managed(hass: HomeAssistant) -> None:
+    """Test reconfigure flow aborts when the add-on manages the connection."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "url": "ws://host1:5581/ws",
+            "use_addon": True,
+            "integration_created_addon": False,
+        },
+        title="Matter",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "addon_managed"

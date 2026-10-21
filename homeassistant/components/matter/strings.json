@@ -8,9 +8,11 @@
       "addon_get_discovery_info_failed": "Failed to get Matter Server app discovery info.",
       "addon_info_failed": "Failed to get Matter Server app info.",
       "addon_install_failed": "Failed to install the Matter Server app.",
+      "addon_managed": "The connection is managed by the Matter Server app and can't be reconfigured.",
       "addon_start_failed": "Failed to start the Matter Server app.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "different_fabric": "The Matter Server at this URL uses a different fabric than the configured one. Make sure you connect to the same Matter Server.",
       "not_matter_addon": "Discovered app is not the official Matter Server app.",
       "reconfiguration_successful": "Successfully reconfigured the Matter integration."
     },
@@ -42,6 +44,14 @@
         },
         "description": "Do you want to use the official Matter Server Supervisor app?\n\nIf you are already running the Matter Server in another app, in a custom container, natively etc., then do not select this option.",
         "title": "Select connection method"
+      },
+      "reconfigure": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "url": "The WebSocket URL of the Matter Server, for example `ws://localhost:5580/ws`."
+        }
       },
       "start_addon": {
         "title": "Starting app."

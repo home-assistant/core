@@ -5,6 +5,7 @@ from typing import Any, override
 
 from matter_server.client import MatterClient
 from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
+from matter_server.common.models import ServerInfoMessage
 import probatio
 
 from homeassistant.components.hassio import (
@@ -19,7 +20,7 @@ from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -30,6 +31,7 @@ from .const import (
     CONF_INTEGRATION_CREATED_ADDON,
     CONF_USE_ADDON,
     DOMAIN,
+    ID_TYPE_DEVICE_ID,
     LOGGER,
 )
 
@@ -48,10 +50,27 @@ def get_manual_schema(user_input: dict[str, Any]) -> probatio.Schema:
     return probatio.Schema({probatio.Required(CONF_URL, default=default_url): str})
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
+RECONFIGURE_SCHEMA = probatio.Schema({probatio.Required(CONF_URL): str})
+
+
+async def validate_input(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> ServerInfoMessage | None:
     """Validate the user input allows us to connect."""
     client = MatterClient(data[CONF_URL], aiohttp_client.async_get_clientsession(hass))
     await client.connect()
+    return client.server_info
+
+
+def get_entry_fabric_ids(hass: HomeAssistant, entry_id: str) -> set[str]:
+    """Return the compressed fabric ids of the devices of a config entry."""
+    prefix = f"{ID_TYPE_DEVICE_ID}_"
+    return {
+        identifier.removeprefix(prefix).split("-", 1)[0]
+        for device in dr.async_entries_for_config_entry(dr.async_get(hass), entry_id)
+        for domain, identifier in device.identifiers
+        if domain == DOMAIN and identifier.startswith(prefix)
+    }
 
 
 def build_ws_address(host: str, port: int) -> str:
@@ -233,6 +252,46 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="manual", data_schema=get_manual_schema(user_input), errors=errors
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the Matter Server URL."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        if reconfigure_entry.data.get(CONF_USE_ADDON):
+            return self.async_abort(reason="addon_managed")
+
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                server_info = await validate_input(self.hass, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidServerVersion:
+                errors["base"] = "invalid_server_version"
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                assert server_info is not None
+                fabric_ids = get_entry_fabric_ids(self.hass, reconfigure_entry.entry_id)
+                if (
+                    fabric_ids
+                    and f"{server_info.compressed_fabric_id:016X}" not in fabric_ids
+                ):
+                    return self.async_abort(reason="different_fabric")
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates={CONF_URL: user_input[CONF_URL]},
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                RECONFIGURE_SCHEMA, user_input or reconfigure_entry.data
+            ),
+            errors=errors,
         )
 
     @override
