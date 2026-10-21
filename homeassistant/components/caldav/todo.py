@@ -90,15 +90,22 @@ def _todo_item(resource: CalendarObjectResource) -> TodoItem | None:
             due = dt_util.as_local(due_value)
         elif isinstance(due_value, date):
             due = due_value
+    status = TODO_STATUS_MAP.get(
+        get_attr_value(todo, "status") or "",
+        TodoItemStatus.NEEDS_ACTION,
+    )
+    completed: datetime | None = None
+    if status == TodoItemStatus.COMPLETED and isinstance(
+        completed_value := get_attr_value(todo, "completed"), datetime
+    ):
+        completed = dt_util.as_local(completed_value)
     return TodoItem(
         uid=uid,
         summary=summary,
-        status=TODO_STATUS_MAP.get(
-            get_attr_value(todo, "status") or "",
-            TodoItemStatus.NEEDS_ACTION,
-        ),
+        status=status,
         due=due,
         description=get_attr_value(todo, "description"),
+        completed=completed,
     )
 
 
