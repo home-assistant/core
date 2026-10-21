@@ -240,7 +240,7 @@ async def test_failed_schedule_poll_keeps_entities_available(
     freezer: FrozenDateTimeFactory,
     zone_id: str,
 ) -> None:
-    """Test a failed background schedule GET is logged, not a failed update."""
+    """Test a failed background schedule GET is logged (and retried), not a failure."""
 
     update_interval = hass.data[EVOHOME_DATA].coordinator.update_interval
     assert update_interval is not None
@@ -258,3 +258,11 @@ async def test_failed_schedule_poll_keeps_entities_available(
 
     state = hass.states.get(zone_id)
     assert state is not None and state.state != STATE_UNAVAILABLE
+
+    # a failed GET is retried at the next poll, rather than after SCHEDULE_MAX_AGE
+    with patch.object(Zone, "get_schedule") as mock_fcn:
+        freezer.tick(update_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    mock_fcn.assert_awaited()
