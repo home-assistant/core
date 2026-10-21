@@ -24,7 +24,7 @@ from homeassistant.components.gree_infrared.const import (
     MODEL_YAP1F,
 )
 from homeassistant.components.infrared import DATA_COMPONENT
-from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
