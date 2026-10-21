@@ -162,9 +162,15 @@ async def _async_fetch_devices(
             )
         }
     except SmartThingsAuthenticationFailedError as err:
-        raise ConfigEntryAuthFailed from err
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="authentication_failed"
+        ) from err
     except SmartThingsConnectionError as err:
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"error": str(err)},
+        ) from err
     except SmartThingsQuotaExceededError as err:
         raise _quota_exceeded_not_ready() from err
     except SmartThingsForbiddenError as err:
@@ -174,7 +180,7 @@ async def _async_fetch_devices(
     return rooms, device_status, scenes
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) -> None:
     """Initialize config entry which represents an installed SmartApp."""
     # The oauth smartthings entry will have a token, older ones are version 3
     # after migration but still require reauthentication
@@ -228,7 +234,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         try:
             await client.delete_subscription(old_identifier)
         except SmartThingsConnectionError as err:
-            raise ConfigEntryNotReady("Could not delete old subscription") from err
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="delete_subscription_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
         except SmartThingsQuotaExceededError as err:
             raise _quota_exceeded_not_ready() from err
 
@@ -539,7 +549,7 @@ def create_devices(
     for device in devices.values():
         device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, device.device.device_id)},
-            configuration_url="https://account.smartthings.com",
+            configuration_url=SMARTTHINGS_ACCOUNT_URL,
             name=device.device.label,
         )
         connections: set[tuple[str, str]] = set()
@@ -615,13 +625,10 @@ def create_devices(
             device_info.suggested_area = (
                 rooms.get(device.device.room_id) if device.device.room_id else None
             )
-
-        created_devices[device.device.device_id] = device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, device.device.device_id)},
-            configuration_url=SMARTTHINGS_ACCOUNT_URL,
-            name=device.device.label,
-            device_info=device_info
+        created_devices[device.device.device_id] = (
+            device_registry.async_get_or_create_device(
+                config_entry_id=entry.entry_id, device_info=device_info
+            )
         )
 
     # Link child devices to their parent in a second pass, so registration is

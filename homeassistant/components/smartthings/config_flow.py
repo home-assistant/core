@@ -177,8 +177,16 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         ledger = await async_get_app_ledger(self.hass)
 
         apps = await client.list_apps()
+        # Apps from another instance on the same account must not be reused, as
+        # regenerating their OAuth credentials would break that instance.
         existing_app = next(
-            (app for app in apps if app.app_name.startswith(APP_NAME_PREFIX)), None
+            (
+                app
+                for app in apps
+                if app.app_name.startswith(APP_NAME_PREFIX)
+                and ledger.is_reusable(app.app_id, redirect_uri)
+            ),
+            None,
         )
 
         if existing_app is not None:
@@ -202,7 +210,7 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         auth_domain = app_auth_domain(self._app_id)
 
-        await ledger.async_record(self._app_id)
+        await ledger.async_record(self._app_id, redirect_uri)
 
         created_at = dt_util.now().strftime("%b %d, %Y at %H:%M")
         await ledger.async_replace_credential(

@@ -14,7 +14,7 @@ SMARTTHINGS_API_URL = "https://api.smartthings.com"
 SMARTTHINGS_AUTH_URL = "https://auth-global.api.smartthings.com"
 SMARTTHINGS_ACCOUNT_URL = "https://account.smartthings.com"
 PAT_TOKEN_URL = SMARTTHINGS_ACCOUNT_URL + "/tokens"
-DEVELOPER_CENTER_URL = "https://developer.stacceptance.com/console"
+DEVELOPER_CENTER_URL = "https://developer.smartthings.com/console"
 MANAGE_PLANS_URL = DEVELOPER_CENTER_URL + "/service-integrations/manage-plans"
 
 SCOPES = [

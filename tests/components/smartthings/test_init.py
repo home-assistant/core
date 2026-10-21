@@ -236,11 +236,16 @@ async def test_create_subscription(
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 @pytest.mark.parametrize(
-    "error",
+    ("error", "translation_key"),
     [
-        SmartThingsSinkError("Sink error"),
-        SmartThingsConnectionError("Timeout occurred while connecting to SmartThings"),
-        SmartThingsQuotaExceededError("Quota exceeded"),
+        (SmartThingsSinkError("Sink error"), "create_subscription_error"),
+        (
+            SmartThingsConnectionError(
+                "Timeout occurred while connecting to SmartThings"
+            ),
+            "create_subscription_error",
+        ),
+        (SmartThingsQuotaExceededError("Quota exceeded"), "quota_exceeded"),
     ],
 )
 async def test_create_subscription_error(
@@ -249,6 +254,7 @@ async def test_create_subscription_error(
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     error: Exception,
+    translation_key: str,
 ) -> None:
     """Test handling an error when creating a subscription."""
     assert CONF_SUBSCRIPTION_ID not in mock_config_entry.data
@@ -260,7 +266,7 @@ async def test_create_subscription_error(
     devices.subscribe.assert_not_called()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert mock_config_entry.error_reason_translation_key == "create_subscription_error"
+    assert mock_config_entry.error_reason_translation_key == translation_key
     assert CONF_SUBSCRIPTION_ID not in mock_config_entry.data
 
 
@@ -276,10 +282,15 @@ async def test_create_subscription_error(
     ],
 )
 @pytest.mark.parametrize(
-    "error",
+    ("error", "translation_key"),
     [
-        SmartThingsConnectionError("Timeout occurred while connecting to SmartThings"),
-        SmartThingsQuotaExceededError("Quota exceeded"),
+        (
+            SmartThingsConnectionError(
+                "Timeout occurred while connecting to SmartThings"
+            ),
+            "cannot_connect",
+        ),
+        (SmartThingsQuotaExceededError("Quota exceeded"), "quota_exceeded"),
     ],
 )
 async def test_initial_fetch_error(
@@ -288,6 +299,7 @@ async def test_initial_fetch_error(
     mock_config_entry: MockConfigEntry,
     call: str,
     error: Exception,
+    translation_key: str,
 ) -> None:
     """Test retrying setup when fetching fails with a retryable error."""
     getattr(devices, call).side_effect = error
@@ -295,6 +307,7 @@ async def test_initial_fetch_error(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == translation_key
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
@@ -316,7 +329,7 @@ async def test_delete_stale_subscription_quota_exceeded(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert mock_config_entry.error_reason_translation_key == "cannot_connect"
+    assert mock_config_entry.error_reason_translation_key == "quota_exceeded"
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])

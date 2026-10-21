@@ -11,6 +11,7 @@ from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.application_credentials import (
+    DATA_COMPONENT as APPLICATION_CREDENTIALS_DATA_COMPONENT,
     ClientCredential,
     async_import_client_credential,
 )
@@ -26,12 +27,14 @@ from homeassistant.components.smartthings.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, ConfigEntryState
-from homeassistant.const import CONF_TOKEN
+from homeassistant.const import CONF_ID, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+
+REDIRECT_URI = "https://example.com/auth/external/callback"
 
 
 @pytest.fixture
@@ -114,7 +117,72 @@ async def test_pat_flow_records_app_before_storing_credential(
                 result["flow_id"], {CONF_PAT_TOKEN: "pat-token"}
             )
 
-    assert hass_storage[STORAGE_KEY]["data"]["app_ids"] == ["mock-app-id"]
+    assert hass_storage[STORAGE_KEY]["data"]["apps"] == {"mock-app-id": REDIRECT_URI}
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    ("ledger_apps", "expected_app_id", "expected_client_id"),
+    [
+        pytest.param(
+            {"existing-app-id": REDIRECT_URI},
+            "existing-app-id",
+            "regenerated-client-id",
+            id="owned_app_reused",
+        ),
+        pytest.param(
+            {},
+            "mock-app-id",
+            "mock-client-id",
+            id="app_of_other_instance_not_reused",
+        ),
+        pytest.param(
+            {"existing-app-id": "https://old.example.com/auth/external/callback"},
+            "mock-app-id",
+            "mock-client-id",
+            id="redirect_uri_changed",
+        ),
+    ],
+)
+async def test_pat_flow_only_reuses_owned_app(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_smartthings: AsyncMock,
+    ledger_apps: dict[str, str],
+    expected_app_id: str,
+    expected_client_id: str,
+) -> None:
+    """Check an existing app is only reused if this instance provisioned it."""
+    # Without a stored credential the flow prompts for a PAT.
+    credentials = hass.data[APPLICATION_CREDENTIALS_DATA_COMPONENT]
+    for item in list(credentials.async_items()):
+        await credentials.async_delete_item(item[CONF_ID])
+    hass_storage[STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 2,
+        "key": STORAGE_KEY,
+        "data": {"apps": ledger_apps},
+    }
+    mock_smartthings.list_apps.return_value = [
+        SimpleNamespace(app_id="existing-app-id", app_name="homeassistant.existing")
+    ]
+    mock_smartthings.regenerate_oauth.return_value = SimpleNamespace(
+        client_id="regenerated-client-id",
+        client_secret="regenerated-client-secret",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["step_id"] == "pat"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PAT_TOKEN: "pat-token"}
+    )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert f"client_id={expected_client_id}" in result["url"]
+    assert hass_storage[STORAGE_KEY]["data"]["apps"][expected_app_id] == REDIRECT_URI
 
 
 @pytest.mark.usefixtures("current_request_with_host", "with_generic_credential")
