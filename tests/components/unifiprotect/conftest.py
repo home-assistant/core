@@ -242,6 +242,19 @@ def mock_ufp_client(bootstrap: Bootstrap):
     return client
 
 
+def _subscribe_public_resync(
+    ufp: MockUFPFixture,
+) -> Callable[[Callable[[bool], None]], Mock]:
+    """Capture the public resync callback on the fixture."""
+
+    def subscribe(resync_callback: Callable[[bool], None]) -> Mock:
+        ufp.public_resync_subscription = resync_callback
+        ufp.public_resync_unsub = Mock()
+        return ufp.public_resync_unsub
+
+    return subscribe
+
+
 @pytest.fixture(name="ufp")
 def mock_entry(
     hass: HomeAssistant, ufp_config_entry: MockConfigEntry, ufp_client: ProtectApiClient
@@ -304,6 +317,7 @@ def mock_entry(
         ufp_client.subscribe_events = subscribe_events
         ufp_client.subscribe_devices_websocket_state = subscribe_devices_websocket_state
         ufp_client.subscribe_events_websocket_state = subscribe_events_websocket_state
+        ufp_client.subscribe_public_resync = _subscribe_public_resync(ufp)
 
         async def update_public() -> Any:
             # Mirror the library prime: build each camera's public model from the
@@ -672,6 +686,7 @@ def mock_ufp_public_only(
     ufp_public_only_client.subscribe_events_websocket_state = (
         subscribe_events_websocket_state
     )
+    ufp_public_only_client.subscribe_public_resync = _subscribe_public_resync(ufp)
     return ufp
 
 

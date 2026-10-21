@@ -1,6 +1,6 @@
 """Test helpers for UniFi Protect."""
 
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import partial
@@ -31,6 +31,7 @@ from uiprotect.data import (
     SmartDetectAudioType,
     SmartDetectObjectType,
     VideoMode,
+    WSAction,
     WSSubscriptionMessage,
 )
 from uiprotect.data.bootstrap import ProtectDeviceRef
@@ -82,6 +83,8 @@ class MockUFPFixture:
     events_subscription: Callable[[ProtectEvent, EventChange], None] | None = None
     devices_ws_state_subscription: Callable[[WebsocketState], None] | None = None
     events_ws_state_subscription: Callable[[WebsocketState], None] | None = None
+    public_resync_subscription: Callable[[bool], None] | None = None
+    public_resync_unsub: Mock | None = None
 
     def ws_msg(self, msg: WSSubscriptionMessage) -> None:
         """Emit WS message for testing."""
@@ -94,6 +97,41 @@ class MockUFPFixture:
 
         if self.events_subscription is not None:
             self.events_subscription(event, change)
+
+    def public_resync(
+        self,
+        added: Iterable[Any] = (),
+        removed: Iterable[Any] = (),
+        success: bool = True,
+    ) -> None:
+        """Emit the library's public reconnect resync for testing.
+
+        Mirrors uiprotect: one synthetic add/remove devices websocket frame per
+        device whose membership changed, then the resync completion callback.
+        """
+        assert self.devices_ws_subscription is not None
+        assert self.public_resync_subscription is not None
+        for obj in added:
+            self.devices_ws_subscription(
+                WSSubscriptionMessage(
+                    action=WSAction.ADD,
+                    new_update_id=obj.id,
+                    changed_data={"modelKey": obj.model.value, "id": obj.id},
+                    new_obj=obj,
+                    old_obj=None,
+                )
+            )
+        for obj in removed:
+            self.devices_ws_subscription(
+                WSSubscriptionMessage(
+                    action=WSAction.REMOVE,
+                    new_update_id=obj.id,
+                    changed_data={"modelKey": obj.model.value, "id": obj.id},
+                    new_obj=None,
+                    old_obj=obj,
+                )
+            )
+        self.public_resync_subscription(success)
 
 
 def reset_objects(bootstrap: Bootstrap):
