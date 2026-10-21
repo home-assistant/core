@@ -13,6 +13,7 @@ from aioecosmart import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.ecosmart.const import SPOT_SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
@@ -21,8 +22,6 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from . import setup_integration
 from .conftest import TEST_POC, load_identity
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup_and_unload(

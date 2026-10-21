@@ -314,15 +314,17 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
             return
 
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=self.config_entry.entry_id,
-            identifiers={
-                (
-                    DOMAIN,
-                    self.envoy_serial_number,
-                )
-            },
-            connections={connection},
+            device_info=dr.DeviceInfo(
+                identifiers={
+                    (
+                        DOMAIN,
+                        self.envoy_serial_number,
+                    )
+                },
+                connections={connection},
+            ),
         )
         _LOGGER.debug("added connection: %s to %s", connection, self.name)
 

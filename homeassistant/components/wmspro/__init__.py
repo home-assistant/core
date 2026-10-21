@@ -63,15 +63,17 @@ async def async_setup_entry(
     entry.runtime_data = hub
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
-        if entry.unique_id
-        else UNDEFINED,
-        identifiers={(DOMAIN, entry.entry_id)},
-        manufacturer=MANUFACTURER,
-        model="WMS WebControl pro",
-        configuration_url=f"http://{hub.host}/system",
+        device_info=dr.DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
+            if entry.unique_id
+            else UNDEFINED,
+            identifiers={(DOMAIN, entry.entry_id)},
+            manufacturer=MANUFACTURER,
+            model="WMS WebControl pro",
+            configuration_url=f"http://{hub.host}/system",
+        ),
     )
 
     try:

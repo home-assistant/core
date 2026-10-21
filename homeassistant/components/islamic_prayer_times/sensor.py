@@ -13,9 +13,11 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import IslamicPrayerTimesConfigEntry
 from .const import DOMAIN, NAME
-from .coordinator import IslamicPrayerDataUpdateCoordinator
+from .coordinator import (
+    IslamicPrayerDataUpdateCoordinator,
+    IslamicPrayerTimesConfigEntry,
+)
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(

@@ -16,7 +16,7 @@ from homeassistant.helpers.entityfilter import (
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
-from homeassistant.helpers.recorder import DATA_INSTANCE
+from homeassistant.helpers.recorder import DATA_INSTANCE, get_instance
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.event_type import EventType
 
@@ -40,7 +40,6 @@ from .core import Recorder
 from .entity_options import is_entity_recorded
 from .services import async_setup_services
 from .tasks import AddRecorderPlatformTask
-from .util import get_instance
 
 _LOGGER = logging.getLogger(__name__)
 
