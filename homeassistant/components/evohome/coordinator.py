@@ -19,6 +19,8 @@ from evohomeasync2.const import (
     SZ_TIME_ZONE,
     SZ_USE_DAYLIGHT_SAVE_SWITCHING,
     SZ_ZONES,
+    SystemMode as EvoSystemMode,
+    ZoneMode as EvoZoneMode,
 )
 from evohomeasync2.typedefs import EvoLocStatusT, EvoTcsConfigResponseT
 
@@ -27,7 +29,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import SCHEDULE_MAX_AGE
+from .const import SCHEDULE_MAX_AGE, SWITCHPOINT_GRACE
 
 
 class EvoDataUpdateCoordinator(DataUpdateCoordinator):
@@ -68,6 +70,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
 
         self._first_refresh_done = False  # get schedules only after first refresh
         self._schedules_fetched: dict[str, datetime] = {}  # by DHW/zone id
+        self._mismatch_ignored_until: dict[str, datetime] = {}  # by DHW/zone id
 
     # our version of async_config_entry_first_refresh()...
     async def async_first_refresh(self) -> None:
@@ -221,6 +224,58 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         fetched = self._schedules_fetched.get(child.id)
         return fetched is None or dt_util.utcnow() - fetched >= SCHEDULE_MAX_AGE
 
+    def _schedule_seems_changed(self, child: ec2.HotWater | ec2.Zone) -> bool:
+        """Return True if the child's status suggests its schedule has changed.
+
+        That is, it follows its schedule, but its setpoint (or DHW state) is not the
+        one in the schedule we hold, and it is not close to a switchpoint.
+        """
+
+        if self.tcs.mode != EvoSystemMode.AUTO:  # e.g. AutoWithEco alters setpoints
+            return False
+        if child.mode != EvoZoneMode.FOLLOW_SCHEDULE:
+            return False
+        if child.id not in self._schedules_fetched:  # will be fetched anyway
+            return False
+
+        try:
+            this_sp, next_sp = child.this_switchpoint, child.next_switchpoint
+        except ec2.NotFetchedError, ec2.InvalidScheduleError:
+            return False
+        if this_sp is None or next_sp is None:  # there is no schedule
+            return False
+
+        now = dt_util.utcnow()
+        if now - this_sp[0] < SWITCHPOINT_GRACE or next_sp[0] - now < SWITCHPOINT_GRACE:
+            return False
+        if (until := self._mismatch_ignored_until.get(child.id)) and now < until:
+            return False
+
+        current = (
+            child.target_heat_temperature
+            if isinstance(child, ec2.Zone)
+            else child.state
+        )
+        return current != this_sp[1]
+
+    def _expire_changed_schedules(self) -> None:
+        """Mark as stale any schedule that the latest status suggests has changed."""
+
+        children: list[ec2.HotWater | ec2.Zone] = list(self.tcs.zones)
+        if self.tcs.hotwater:
+            children.append(self.tcs.hotwater)
+
+        for child in children:
+            if not self._schedule_seems_changed(child):
+                continue
+            self.logger.info(
+                "%s: Status differs from its schedule, so re-fetching it", child
+            )
+            del self._schedules_fetched[child.id]
+            # if the mismatch persists, don't re-fetch again before the next switchpoint
+            if (next_sp := child.next_switchpoint) is not None:
+                self._mismatch_ignored_until[child.id] = next_sp[0]
+
     async def _update_v2_schedules(self) -> None:
         for zone in self.tcs.zones:
             if not self._schedule_is_stale(zone):
@@ -256,6 +311,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         # to speed up HA startup, don't update entity schedules during initial
         # async_first_refresh(), only during subsequent async_refresh()...
         if self._first_refresh_done:
+            self._expire_changed_schedules()
             await self._update_v2_schedules()
         else:
             self._first_refresh_done = True
