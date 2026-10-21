@@ -14,7 +14,8 @@ from homeassistant.components.climate import (
 from homeassistant.const import UnitOfTemperature
 from homeassistant.util import dt as dt_util
 
-from ..entity import OverkizDataUpdateCoordinator, OverkizEntity
+from ..coordinator import OverkizDataUpdateCoordinator
+from ..entity import OverkizEntity
 
 PRESET_DAY_OFF = "day-off"
 PRESET_HOLIDAYS = "holidays"
