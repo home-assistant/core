@@ -49,6 +49,11 @@ def preferred_regions(
 
 def is_region(language: str, region: str | None) -> bool:
     """Return true if region is not known to be a script/code instead."""
+    language = language.casefold()
+    if region is not None:
+        # Script subtags are case-insensitive
+        region = region.title()
+
     if language == "es":
         return region != "419"
 
@@ -89,6 +94,10 @@ class Dialect:
         if self.region is not None:
             # Regions are upper-cased
             self.region = self.region.upper()
+
+        if self.code is not None:
+            # Scripts are title-cased
+            self.code = self.code.title()
 
     def score(
         self, dialect: Dialect, country: str | None = None
