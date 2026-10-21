@@ -33,11 +33,7 @@
     {
       "properties": {},
       "commands": {},
-      "components": [
-        "sensors",
-        "serial",
-        "temperature"
-      ],
+      "components": ["sensors", "serial", "temperature"],
       "apiVersion": 1,
       "uri": "https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.boiler",
       "gatewayId": "################",
@@ -131,9 +127,7 @@
     {
       "properties": {},
       "commands": {},
-      "components": [
-        "time"
-      ],
+      "components": ["time"],
       "apiVersion": 1,
       "uri": "https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.device",
       "gatewayId": "################",
