@@ -274,10 +274,14 @@ def _async_extract_excluded(
     """Resolve the exclude block of a target selection."""
     # Groups in the exclude block are not expanded, excluding a group entity
     # excludes the group entity itself and not its members. All entities are
-    # resolved, so excluding an area also excludes its config and diagnostic
-    # entities when those are part of the targeted entities.
+    # resolved, so excluding an area also excludes its hidden, config and
+    # diagnostic entities when those are part of the targeted entities.
     return _async_extract_referenced_entity_ids(
-        hass, exclude, expand_group=False, primary_entities_only=False
+        hass,
+        exclude,
+        expand_group=False,
+        primary_entities_only=False,
+        include_hidden=True,
     )
 
 
@@ -287,6 +291,7 @@ def _async_extract_referenced_entity_ids(
     expand_group: bool,
     *,
     primary_entities_only: bool,
+    include_hidden: bool = False,
 ) -> SelectedEntities:
     """Extract referenced entity IDs from a target selection, ignoring excludes."""
     selected = SelectedEntities()
@@ -331,7 +336,7 @@ def _async_extract_referenced_entity_ids(
                 selected.missing_labels.add(label_id)
 
             for entity_entry in entities.get_entries_for_label(label_id):
-                if entity_entry.hidden_by is None:
+                if include_hidden or entity_entry.hidden_by is None:
                     selected.indirectly_referenced.add(entity_entry.entity_id)
 
             # Labeled devices expand like directly targeted devices, children included.
@@ -356,7 +361,7 @@ def _async_extract_referenced_entity_ids(
 
     def _include_entry(entry: er.RegistryEntry) -> bool:
         """Return True if the entry should be included in indirect expansion."""
-        if entry.hidden_by is not None:
+        if not include_hidden and entry.hidden_by is not None:
             return False
         return not primary_entities_only or entry.entity_category is None
 

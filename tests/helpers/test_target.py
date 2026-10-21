@@ -610,6 +610,31 @@ async def test_extract_referenced_entity_ids(
                 missing_labels={"label1"},
             ),
         ),
+        # Hidden entities are excluded by an area, device or label
+        (
+            {
+                ATTR_ENTITY_ID: "light.hidden_in_area",
+                CONF_EXCLUDE: {ATTR_AREA_ID: "test-area"},
+            },
+            False,
+            target.SelectedEntities(),
+        ),
+        (
+            {
+                ATTR_ENTITY_ID: "light.hidden_in_area",
+                CONF_EXCLUDE: {ATTR_DEVICE_ID: "device-test-area"},
+            },
+            False,
+            target.SelectedEntities(),
+        ),
+        (
+            {
+                ATTR_ENTITY_ID: "light.hidden_with_my_label",
+                CONF_EXCLUDE: {ATTR_LABEL_ID: "my-label"},
+            },
+            False,
+            target.SelectedEntities(),
+        ),
         # Missing items in the exclude block are not reported
         (
             {
@@ -683,7 +708,12 @@ async def test_extract_referenced_entity_ids_exclude_non_primary(
         ({ATTR_ENTITY_ID: "all", CONF_EXCLUDE: {}}, set()),
         (
             {ATTR_ENTITY_ID: "all", CONF_EXCLUDE: {ATTR_AREA_ID: "test-area"}},
-            {"light.in_area", "light.config_in_area", "light.assigned_to_area"},
+            {
+                "light.in_area",
+                "light.config_in_area",
+                "light.hidden_in_area",
+                "light.assigned_to_area",
+            },
         ),
     ],
 )
