@@ -32,6 +32,18 @@ async def test_async_iterator_reader(hass: HomeAssistant) -> None:
     assert await hass.async_add_executor_job(_read_all, reader) == data * 10
 
 
+async def test_async_iterator_reader_empty_chunk(hass: HomeAssistant) -> None:
+    """Test an empty chunk is not treated as the end of the stream."""
+
+    async def async_gen() -> AsyncIterator[bytes]:
+        yield b"hello"
+        yield b""
+        yield b"world"
+
+    reader = AsyncIteratorReader(hass.loop, async_gen())
+    assert await hass.async_add_executor_job(_read_all, reader) == b"helloworld"
+
+
 async def test_async_iterator_reader_abort_early(hass: HomeAssistant) -> None:
     """Test abort the async iterator reader."""
     evt = asyncio.Event()

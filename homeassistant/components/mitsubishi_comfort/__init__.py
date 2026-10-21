@@ -99,17 +99,19 @@ async def async_setup_entry(
     device_registry = dr.async_get(hass)
     owned_macs = {dr.format_mac(info.mac) for info in devices.values() if info.mac}
     for serial, info in devices.items():
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, serial)},
-            # Connections are globally indexed: registering an empty MAC would
-            # merge every MAC-less device into one registry entry.
-            connections=(
-                {(dr.CONNECTION_NETWORK_MAC, info.mac)} if info.mac else set()
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, serial)},
+                # Connections are globally indexed: registering an empty MAC would
+                # merge every MAC-less device into one registry entry.
+                connections=(
+                    {(dr.CONNECTION_NETWORK_MAC, info.mac)} if info.mac else set()
+                ),
+                manufacturer="Mitsubishi",
+                name=info.label,
+                serial_number=serial,
             ),
-            manufacturer="Mitsubishi",
-            name=info.label,
-            serial_number=serial,
         )
 
     # Cache the freshly discovered credentials (password, cryptoSerial, MAC) so
