@@ -1144,3 +1144,113 @@ async def test_deferred_recovery_does_not_reload_an_unloaded_entry(
         await hass.async_block_till_done()
         reload.assert_not_awaited()
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.parametrize(
+    ("source", "discovery", "user_input"),
+    [
+        pytest.param(
+            SOURCE_BLUETOOTH, FAKE_SERVICE_INFO, {CONF_PIN: FIXTURE_PIN}, id="discovery"
+        ),
+        pytest.param(
+            SOURCE_USER,
+            None,
+            {CONF_ADDRESS: FIXTURE_ADDRESS, CONF_PIN: FIXTURE_PIN},
+            id="manual",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("udp_client")
+async def test_failed_bluetooth_setup_still_blocks_lan_duplicate(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_besen_client: Mock,
+    source: str,
+    discovery: BluetoothServiceInfoBleak | None,
+    user_input: dict[str, str],
+) -> None:
+    """Retain serial identity when entry setup fails before creating devices."""
+    mock_besen_client.state = mock_besen_client.state.updated(
+        info=mock_besen_client.state.info.updated(serial=SERIAL)
+    )
+    mock_besen_client.async_start.side_effect = [None, CannotConnect("setup failed")]
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": source}, data=discovery
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    entry = result["result"]
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hasattr(entry, "runtime_data")
+    assert dr.async_entries_for_config_entry(device_registry, entry.entry_id) == []
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST, CONF_PIN: FIXTURE_PIN}
+    )
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert hass.config_entries.async_entries(DOMAIN) == [entry]
+    assert entry.data[CONF_SERIAL] == SERIAL
+
+
+async def test_cancel_during_restoration_reloads_saved_connection(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_besen_client: Mock,
+    udp_client: Mock,
+    hub: Mock,
+) -> None:
+    """Recover the saved transport when flow removal interrupts its restart."""
+    restoring = asyncio.Event()
+
+    async def restore() -> None:
+        """Hold restoration until the user cancels the flow."""
+        restoring.set()
+        await asyncio.Event().wait()
+
+    mock_besen_client.is_connected = False
+    mock_besen_client.state = udp_client.state
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    mock_besen_client.async_start.side_effect = restore
+    with patch.object(
+        hass.config_entries, "async_reload", wraps=hass.config_entries.async_reload
+    ) as reload:
+        result = await mock_config_entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "lan"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: HOST, CONF_PIN: FIXTURE_PIN}
+        )
+        await restoring.wait()
+        flow = hass.config_entries.flow._progress[result["flow_id"]]
+        assert isinstance(flow, BesenConfigFlow)
+        assert flow._operation_task is not None
+        operation = flow._operation_task
+        mock_besen_client.async_start.side_effect = None
+        reload.assert_not_awaited()
+        hass.config_entries.flow.async_abort(result["flow_id"])
+        with pytest.raises(asyncio.CancelledError):
+            await operation
+        await hass.async_block_till_done()
+        reload.assert_awaited_once_with(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.data[CONF_PIN] == FIXTURE_PIN
+    assert CONF_TRANSPORT not in mock_config_entry.data
+    assert (
+        list(mock_config_entry.async_get_active_flows(hass, {SOURCE_RECONFIGURE})) == []
+    )
+    assert mock_besen_client.async_start.await_count == 3
+    udp_client.async_stop.assert_awaited_once()
+    hub.async_stop.assert_awaited_once()

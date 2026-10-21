@@ -11,7 +11,7 @@ from pytest_homeassistant.components.bluetooth import (
     generate_ble_device,
 )
 
-from homeassistant.components.besen.const import DOMAIN
+from homeassistant.components.besen.const import CONF_SERIAL, DOMAIN
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN
@@ -62,6 +62,7 @@ def _assert_create_entry(result: dict) -> None:
         CONF_ADDRESS: FIXTURE_ADDRESS,
         CONF_NAME: FIXTURE_NAME,
         CONF_PIN: FIXTURE_PIN,
+        CONF_SERIAL: "SERIAL",
     }
     assert result["options"] == {}
     assert result["result"].unique_id == FIXTURE_ADDRESS

@@ -119,8 +119,8 @@ async def _async_validate_input(
     address: str,
     pin: str,
     name: str | None,
-) -> str:
-    """Validate setup by logging into the charger."""
+) -> tuple[str, str | None]:
+    """Return the charger title and serial after verifying the connection."""
 
     if len(pin) != 6 or not (pin.isascii() and pin.isdecimal()):
         raise InvalidAuth("PIN must be exactly 6 digits")
@@ -152,7 +152,7 @@ async def _async_validate_input(
         await client.async_stop()
     if info.serial and _serial_is_configured(hass, info.serial, address=address):
         raise _AlreadyConfigured
-    return info.model or name or address
+    return info.model or name or address, info.serial
 
 
 class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -210,7 +210,7 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             pin = user_input[CONF_PIN]
             try:
-                title = await _async_validate_input(
+                title, serial = await _async_validate_input(
                     self.hass,
                     address=self._discovered_address,
                     pin=pin,
@@ -234,6 +234,7 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_ADDRESS: self._discovered_address,
                         CONF_NAME: self._discovered_name,
                         CONF_PIN: pin,
+                        CONF_SERIAL: serial,
                     },
                 )
 
@@ -266,7 +267,7 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             try:
-                title = await _async_validate_input(
+                title, serial = await _async_validate_input(
                     self.hass,
                     address=address,
                     pin=pin,
@@ -290,6 +291,7 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_ADDRESS: address,
                         CONF_NAME: discovery_info.name,
                         CONF_PIN: pin,
+                        CONF_SERIAL: serial,
                     },
                 )
 
@@ -547,15 +549,25 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         await async_release_udp_hub(self.hass)
                 finally:
                     if runtime and stopped:
-                        try:
-                            await runtime.async_resume_connection()
-                        except CannotConnect, InvalidAuth:
-                            assert entry is not None
-                            self._reload_after_flow = (entry, runtime)
-                            if self._removed:
-                                self._async_schedule_restore_reload()
-                        else:
-                            self._reload_after_flow = None
+                        assert entry is not None
+                        await self._async_restore_connection(entry, runtime)
+
+    async def _async_restore_connection(
+        self, entry: BesenConfigEntry, runtime: BesenCoordinator
+    ) -> None:
+        """Retry interrupted restoration after the active flow has been removed."""
+        try:
+            await runtime.async_resume_connection()
+        except asyncio.CancelledError:
+            self._reload_after_flow = (entry, runtime)
+            raise
+        except CannotConnect, InvalidAuth:
+            self._reload_after_flow = (entry, runtime)
+        else:
+            self._reload_after_flow = None
+        finally:
+            if self._removed:
+                self._async_schedule_restore_reload()
 
     async def async_step_connection_done(
         self, user_input: dict[str, Any] | None = None
