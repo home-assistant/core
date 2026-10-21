@@ -1,6 +1,7 @@
 """Netatmo web session authentication for siren control."""
 
 import logging
+from collections.abc import Mapping
 from urllib.parse import unquote
 
 import aiohttp
@@ -47,12 +48,15 @@ class NetatmoWebSessionAuth:
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         }
-        async with websession.get(
-            NETATMO_LOGIN_PAGE_URL,
-            headers=login_page_headers,
-            allow_redirects=True,
-        ) as resp:
-            _LOGGER.debug("Netatmo login page: %s", resp.status)
+        try:
+            async with websession.get(
+                NETATMO_LOGIN_PAGE_URL,
+                headers=login_page_headers,
+                allow_redirects=True,
+            ) as resp:
+                _LOGGER.debug("Netatmo login page: %s", resp.status)
+        except (aiohttp.ClientError, TimeoutError) as err:
+            raise aiohttp.ClientError("Netatmo login page request failed") from err
 
         # Step 2: POST login with credentials + CSRF token from cookie jar
         xsrf_token = None
@@ -76,40 +80,46 @@ class NetatmoWebSessionAuth:
             "X-XSRF-TOKEN": xsrf_token or "",
         }
 
-        async with websession.post(
-            NETATMO_LOGIN_URL,
-            data=data,
-            headers=post_headers,
-            allow_redirects=True,
-        ) as resp:
-            # Extract access token from cookie jar
-            token = None
-            for cookie in websession.cookie_jar:
-                if cookie.key == "netatmocomaccess_token":
-                    token = unquote(cookie.value)
-                    break
+        try:
+            async with websession.post(
+                NETATMO_LOGIN_URL,
+                data=data,
+                headers=post_headers,
+                allow_redirects=True,
+            ) as resp:
+                # Extract access token from cookie jar
+                token = None
+                for cookie in websession.cookie_jar:
+                    if cookie.key == "netatmocomaccess_token":
+                        token = unquote(cookie.value)
+                        break
 
-            # Also check Set-Cookie headers as fallback
-            if not token:
-                for header_name, header_value in resp.headers.items():
-                    if header_name.lower() != "set-cookie":
-                        continue
-                    if "netatmocomaccess_token=" not in header_value:
-                        continue
-                    for part in header_value.split(";"):
-                        part = part.strip()
-                        if part.startswith("netatmocomaccess_token="):
-                            token = unquote(part.split("=", 1)[1])
-                            break
+                # Also check Set-Cookie headers as fallback
+                if not token:
+                    for header_name, header_value in resp.headers.items():
+                        if header_name.lower() != "set-cookie":
+                            continue
+                        if "netatmocomaccess_token=" not in header_value:
+                            continue
+                        for part in header_value.split(";"):
+                            part = part.strip()
+                            if part.startswith("netatmocomaccess_token="):
+                                token = unquote(part.split("=", 1)[1])
+                                break
 
-            if not token:
-                _LOGGER.error(
-                    "Netatmo login failed - no access token. Status: %s", resp.status
-                )
-                raise aiohttp.ClientError("Login failed - no access token received")
+                if not token:
+                    _LOGGER.error(
+                        "Netatmo login failed - no access token. Status: %s",
+                        resp.status,
+                    )
+                    raise aiohttp.ClientError(
+                        "Login failed - no access token received"
+                    )
 
-            _LOGGER.debug("Netatmo web session token obtained successfully")
-            return cls(websession, token=token, email=email, password=password)
+                _LOGGER.debug("Netatmo web session token obtained successfully")
+                return cls(websession, token=token, email=email, password=password)
+        except (aiohttp.ClientError, TimeoutError) as err:
+            raise aiohttp.ClientError("Netatmo login request failed") from err
 
     async def _async_relogin(self) -> bool:
         """Re-login to get a fresh token. Returns True if successful."""

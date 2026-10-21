@@ -106,7 +106,22 @@ class NetatmoOptionsFlowHandler(OptionsFlow):
 
     async def async_step_init(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Manage the Netatmo options."""
-        return await self.async_step_public_weather_areas()
+        return await self.async_step_options_menu()
+
+    async def async_step_options_menu(
+        self, user_input: dict | None = None
+    ) -> ConfigFlowResult:
+        """Show the independent Netatmo options."""
+        return self.async_show_menu(
+            step_id="options_menu",
+            menu_options=["public_weather_areas", "siren_auth", "done"],
+        )
+
+    async def async_step_done(
+        self, user_input: dict | None = None
+    ) -> ConfigFlowResult:
+        """Save the options changes."""
+        return self._create_options_entry()
 
     async def async_step_siren_auth(
         self, user_input: dict | None = None
@@ -115,8 +130,8 @@ class NetatmoOptionsFlowHandler(OptionsFlow):
         errors: dict = {}
 
         if user_input is not None:
-            email = user_input.get(CONF_SIREN_EMAIL, "").strip()
-            password = user_input.get(CONF_SIREN_PASSWORD, "").strip()
+            email = user_input.get(CONF_SIREN_EMAIL, "")
+            password = user_input.get(CONF_SIREN_PASSWORD, "")
 
             if email and password:
                 # Attempt login to get session token
@@ -132,15 +147,16 @@ class NetatmoOptionsFlowHandler(OptionsFlow):
                     self.options[CONF_SIREN_EMAIL] = email
                     self.options[CONF_SIREN_PASSWORD] = password
                     _LOGGER.debug("Netatmo siren web session login successful")
-                except aiohttp.ClientError:
+                except (aiohttp.ClientError, TimeoutError):
                     errors["base"] = "siren_login_failed"
             elif not email and not password:
                 # Clear siren credentials
                 self.options.pop(CONF_SIREN_TOKEN, None)
                 self.options.pop(CONF_SIREN_EMAIL, None)
+                self.options.pop(CONF_SIREN_PASSWORD, None)
 
             if not errors:
-                return await self.async_step_public_weather_areas()
+                return await self.async_step_options_menu()
 
         current_email = self.options.get(CONF_SIREN_EMAIL, "")
         has_token = bool(self.options.get(CONF_SIREN_TOKEN))
@@ -153,7 +169,9 @@ class NetatmoOptionsFlowHandler(OptionsFlow):
         data_schema = probatio.Schema(
             {
                 probatio.Optional(CONF_SIREN_EMAIL, default=current_email): str,
-                probatio.Optional(CONF_SIREN_PASSWORD, default=""): str,
+                probatio.Optional(
+                    probatio.Secret(CONF_SIREN_PASSWORD), default=""
+                ): str,
             }
         )
 
@@ -182,7 +200,7 @@ class NetatmoOptionsFlowHandler(OptionsFlow):
                     user_input={CONF_NEW_AREA: new_client}
                 )
 
-            return self._create_options_entry()
+            return await self.async_step_options_menu()
 
         weather_areas = list(self.options[CONF_WEATHER_AREAS])
 

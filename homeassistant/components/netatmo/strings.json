@@ -171,6 +171,14 @@
       "siren_login_failed": "Failed to authenticate with Netatmo. Please check your email and password."
     },
     "step": {
+      "options_menu": {
+        "menu_options": {
+          "public_weather_areas": "Public weather sensors",
+          "siren_auth": "Siren credentials",
+          "done": "Done"
+        },
+        "title": "Netatmo options"
+      },
       "public_weather": {
         "data": {
           "area_name": "Name of the area",

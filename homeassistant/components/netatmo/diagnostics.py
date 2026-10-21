@@ -24,6 +24,9 @@ TO_REDACT = {
     "zones",
     "pseudo",
     "url",
+    "siren_email",
+    "siren_password",
+    "siren_token",
 }
 
 
