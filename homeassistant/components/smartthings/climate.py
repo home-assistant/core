@@ -430,6 +430,9 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             self._attr_swing_modes = self._determine_swing_modes()
         self._attr_supported_features = self._determine_supported_features()
         self._switched_on = asyncio.Event()
+        # Power, mode and setpoint requests run one at a time, so a request
+        # waiting for the device to turn on is not overtaken by a later one
+        self._command_lock = asyncio.Lock()
 
     @override
     def _update_attr(self) -> None:
@@ -464,8 +467,13 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
+        async with self._command_lock:
+            await self._async_set_hvac_mode(hvac_mode)
+
+    async def _async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set the operation mode, turning the device on or off as needed."""
         if hvac_mode == HVACMode.OFF:
-            await self.async_turn_off()
+            await self.execute_device_command(Capability.SWITCH, Command.OFF)
             return
         # Turn on the device if it's off before setting mode.
         if self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "off":
@@ -506,38 +514,41 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        # operation mode, which also turns the device on or off
-        if operation_mode := kwargs.get(ATTR_HVAC_MODE):
-            await self.async_set_hvac_mode(operation_mode)
-        # temperature
-        await self.execute_device_command(
-            Capability.THERMOSTAT_COOLING_SETPOINT,
-            Command.SET_COOLING_SETPOINT,
-            argument=kwargs[ATTR_TEMPERATURE],
-        )
+        async with self._command_lock:
+            # operation mode, which also turns the device on or off
+            if operation_mode := kwargs.get(ATTR_HVAC_MODE):
+                await self._async_set_hvac_mode(operation_mode)
+            # temperature
+            await self.execute_device_command(
+                Capability.THERMOSTAT_COOLING_SETPOINT,
+                Command.SET_COOLING_SETPOINT,
+                argument=kwargs[ATTR_TEMPERATURE],
+            )
 
     @override
     async def async_turn_on(self) -> None:
         """Turn device on."""
-        await self.execute_device_command(
-            Capability.SWITCH,
-            Command.ON,
-        )
+        async with self._command_lock:
+            await self.execute_device_command(
+                Capability.SWITCH,
+                Command.ON,
+            )
 
     @override
     async def async_turn_off(self) -> None:
         """Turn device off."""
-        await self.execute_device_command(
-            Capability.SWITCH,
-            Command.OFF,
-        )
+        async with self._command_lock:
+            await self.execute_device_command(
+                Capability.SWITCH,
+                Command.OFF,
+            )
 
     async def _async_turn_on_and_wait(self) -> None:
         """Turn the device on and wait until it reports that it is on.
 
         A device that is still off ignores a mode command and starts in its last mode.
         """
-        await self.async_turn_on()
+        await self.execute_device_command(Capability.SWITCH, Command.ON)
         with contextlib.suppress(TimeoutError):
             async with asyncio.timeout(SWITCH_ON_TIMEOUT):
                 await self._switched_on.wait()
