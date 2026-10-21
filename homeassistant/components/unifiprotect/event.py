@@ -8,8 +8,11 @@ from typing import Any, override
 
 from uiprotect import ProtectEvent
 from uiprotect.data import (
+    Bootstrap,
+    EventType,
     Fob,
     ModelType,
+    ProtectAdoptableDeviceModel,
     PublicCamera,
     PublicDeviceModel,
     SmartDetectObjectType,
@@ -28,7 +31,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_at
 
-from . import Bootstrap
 from .const import (
     ATTR_EVENT_ID,
     ATTR_EVENT_SOURCE,
@@ -44,13 +46,7 @@ from .const import (
     KEYRINGS_USER_STATUS,
     VEHICLE_EVENT_DELAY_SECONDS,
 )
-from .data import (
-    EventType,
-    ProtectAdoptableDeviceModel,
-    ProtectData,
-    ProtectDeviceType,
-    UFPConfigEntry,
-)
+from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
     EventEntityMixin,
     ProtectDeviceEntity,

@@ -2,12 +2,14 @@
 
 from typing import override
 
+from fluss_api import FlussApiClientError
+
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import FlussApiClientError, FlussConfigEntry
+from .coordinator import FlussConfigEntry
 from .entity import FlussEntity
 
 PARALLEL_UPDATES = 1

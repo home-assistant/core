@@ -8,6 +8,7 @@ from boschshcpy.services_impl import (
     DisplayedTemperatureConfiguration,
     OutdoorSirenService,
     PirSensorConfigurationService,
+    PowerSwitchConfigurationService,
     SmokeSensitivityService,
     VibrationSensorService,
 )
@@ -24,6 +25,8 @@ from .conftest import (
     setup_integration,
     shutter_contact2_device,
     shutter_contact2_plus_device,
+    smart_plug_compact_device,
+    smart_plug_device,
     smoke_detector_device,
     thermostat_gen2_device,
 )
@@ -32,6 +35,7 @@ SOUND_LEVEL_ENTITY_ID = "select.outdoor_siren_siren_volume"
 MOTION_SENSITIVITY_ENTITY_ID = "select.motion_detector_motion_sensitivity"
 DISPLAY_DIRECTION_ENTITY_ID = "select.thermostat_gen2_display_orientation"
 DISPLAYED_TEMPERATURE_ENTITY_ID = "select.thermostat_gen2_displayed_temperature"
+STATE_AFTER_OUTAGE_ENTITY_ID = "select.smart_plug_state_after_power_outage"
 SMOKE_SENSITIVITY_ENTITY_ID = "select.smoke_detector_smoke_sensitivity"
 VIBRATION_SENSITIVITY_ENTITY_ID = "select.shutter_contact_vibration_sensitivity"
 
@@ -470,3 +474,92 @@ async def test_room_thermostat_2_display_selects(
     )
     assert device.display_direction == DisplayDirection.Direction.REVERSED
     assert hass.states.get(DISPLAYED_TEMPERATURE_ENTITY_ID) is not None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "smart_plugs": [
+                smart_plug_device(
+                    state_after_power_outage=PowerSwitchConfigurationService.StateAfterPowerOutage.LAST_STATE
+                )
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_state_after_power_outage_current_option(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The Smart Plug's state after a power outage is reported."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(STATE_AFTER_OUTAGE_ENTITY_ID)
+    assert state is not None
+    assert state.state == "last_state"
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        {
+            "smart_plugs": [
+                smart_plug_device(
+                    state_after_power_outage=PowerSwitchConfigurationService.StateAfterPowerOutage.OFF
+                )
+            ],
+            "smart_plugs_compact": [
+                smart_plug_compact_device(
+                    name="Smart Plug Compact",
+                    state_after_power_outage=PowerSwitchConfigurationService.StateAfterPowerOutage.OFF,
+                )
+            ],
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_state_after_power_outage_select_option(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Selecting an option writes it to the plug and the compact plug."""
+    await setup_integration(hass, mock_config_entry)
+
+    for entity_id, device in (
+        (STATE_AFTER_OUTAGE_ENTITY_ID, mock_session.device_helper.smart_plugs[0]),
+        (
+            "select.smart_plug_compact_state_after_power_outage",
+            mock_session.device_helper.smart_plugs_compact[0],
+        ),
+    ):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: entity_id, "option": "on"},
+            blocking=True,
+        )
+        assert (
+            device.state_after_power_outage
+            == PowerSwitchConfigurationService.StateAfterPowerOutage.ON
+        )
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"smart_plugs": [smart_plug_device()]}],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_state_after_power_outage_unsupported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No select is created without power switch configuration support."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(STATE_AFTER_OUTAGE_ENTITY_ID) is None

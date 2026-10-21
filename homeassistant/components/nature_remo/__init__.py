@@ -43,7 +43,7 @@ def _async_register_devices(hass: HomeAssistant, entry: NatureRemoConfigEntry) -
         )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NatureRemoConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NatureRemoConfigEntry) -> None:
     """Set up Nature Remo from a config entry."""
     client = NatureRemoClient(entry.data[CONF_API_TOKEN], async_get_clientsession(hass))
     coordinator = NatureRemoCoordinator(hass, entry, client)
@@ -53,9 +53,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NatureRemoConfigEntry) -
     _async_register_devices(hass, entry)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: NatureRemoConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NatureRemoConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

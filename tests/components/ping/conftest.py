@@ -18,7 +18,7 @@ def patch_setup(*args, **kwargs):
     with (
         patch(
             "homeassistant.components.ping.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch("homeassistant.components.ping.async_setup", return_value=True),
     ):

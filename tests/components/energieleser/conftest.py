@@ -196,7 +196,7 @@ def mock_wasserleser_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.energieleser.async_setup_entry", return_value=True
+        "homeassistant.components.energieleser.async_setup_entry", return_value=None
     ):
         yield
 

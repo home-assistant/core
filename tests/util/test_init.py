@@ -1,6 +1,7 @@
 """Test Home Assistant util methods."""
 
 from datetime import datetime, timedelta
+import math
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -85,6 +86,19 @@ def test_convert() -> None:
     assert util.convert("NOT A NUMBER", int, 1) == 1
     assert util.convert(None, int, 1) == 1
     assert util.convert(object, int, 1) == 1
+
+
+@pytest.mark.parametrize(
+    ("value", "to_type"),
+    [
+        pytest.param(math.inf, int, id="inf_to_int"),
+        pytest.param(-math.inf, int, id="negative_inf_to_int"),
+        pytest.param(10**400, float, id="huge_int_to_float"),
+    ],
+)
+def test_convert_overflow_returns_default(value: float, to_type: type) -> None:
+    """Test convert returns the default when the conversion overflows."""
+    assert util.convert(value, to_type, 1) == 1
 
 
 def test_ensure_unique_string() -> None:
