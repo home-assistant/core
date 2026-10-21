@@ -30,6 +30,9 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
 from homeassistant.util import dt as dt_util
 
@@ -160,7 +163,13 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 return await self.async_step_auth()
         return self.async_show_form(
             step_id="pat",
-            data_schema=probatio.Schema({probatio.Required(CONF_PAT_TOKEN): str}),
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(probatio.Secret(CONF_PAT_TOKEN)): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                    )
+                }
+            ),
             errors=errors,
             description_placeholders={
                 "token_url": PAT_TOKEN_URL,

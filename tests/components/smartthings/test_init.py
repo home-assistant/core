@@ -11,6 +11,7 @@ from pysmartthings import (
     Lifecycle,
     SmartThingsAuthenticationFailedError,
     SmartThingsConnectionError,
+    SmartThingsForbiddenError,
     SmartThingsQuotaExceededError,
     SmartThingsSinkError,
     Subscription,
@@ -393,6 +394,42 @@ async def test_stale_subscription_id(
         == "f5768ce8-c9e5-4507-9020-912c0c60e0ab"
     )
     devices.delete_subscription.assert_called_once_with("test")
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("call", ["delete_subscription", "create_subscription"])
+@pytest.mark.parametrize(
+    ("error", "translation_key"),
+    [
+        (
+            SmartThingsAuthenticationFailedError("Authentication failed"),
+            "authentication_failed",
+        ),
+        (SmartThingsForbiddenError("Forbidden"), "entitlement_required"),
+    ],
+)
+async def test_subscription_authorization_error(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    call: str,
+    error: Exception,
+    translation_key: str,
+) -> None:
+    """Test starting reauth when a subscription call is not authorized."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_SUBSCRIPTION_ID: "old-id"},
+    )
+    getattr(devices, call).side_effect = error
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == translation_key
+    assert len(hass.config_entries.flow.async_progress()) == 1
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])

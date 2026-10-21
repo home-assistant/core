@@ -422,6 +422,8 @@ async def test_no_cloud_no_credential_prompts_for_pat(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pat"
+    pat_field = next(iter(result["data_schema"].schema))
+    assert result["data_schema"].schema[pat_field].config["type"] == "password"
 
 
 @pytest.mark.usefixtures("current_request_with_host", "use_cloud", "mock_setup_entry")

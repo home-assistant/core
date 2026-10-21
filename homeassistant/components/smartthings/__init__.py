@@ -24,6 +24,7 @@ from pysmartthings import (
     SmartThingsQuotaExceededError,
     SmartThingsSinkError,
     Status,
+    Subscription,
 )
 from pysmartthings.models import HealthStatus
 
@@ -180,6 +181,55 @@ async def _async_fetch_devices(
     return rooms, device_status, scenes
 
 
+async def _async_replace_subscription(
+    client: SmartThings, entry: SmartThingsConfigEntry
+) -> Subscription:
+    """Delete the stale subscription and create a new one, translating failures."""
+    if (old_identifier := entry.data.get(CONF_SUBSCRIPTION_ID)) is not None:
+        _LOGGER.debug("Trying to delete old subscription %s", old_identifier)
+        try:
+            await client.delete_subscription(old_identifier)
+        except SmartThingsConnectionError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="delete_subscription_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
+        except SmartThingsQuotaExceededError as err:
+            raise _quota_exceeded_not_ready() from err
+        except SmartThingsAuthenticationFailedError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="authentication_failed"
+            ) from err
+        except SmartThingsForbiddenError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="entitlement_required"
+            ) from err
+
+    _LOGGER.debug("Trying to create a new subscription")
+    try:
+        subscription = await client.create_subscription(
+            entry.data[CONF_LOCATION_ID],
+        )
+    except SmartThingsQuotaExceededError as err:
+        raise _quota_exceeded_not_ready() from err
+    except (SmartThingsConnectionError, SmartThingsSinkError) as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="create_subscription_error",
+            translation_placeholders={"error": str(err)},
+        ) from err
+    except SmartThingsAuthenticationFailedError as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="authentication_failed"
+        ) from err
+    except SmartThingsForbiddenError as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="entitlement_required"
+        ) from err
+    return subscription
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) -> None:
     """Initialize config entry which represents an installed SmartApp."""
     # The oauth smartthings entry will have a token, older ones are version 3
@@ -229,32 +279,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
 
     client.new_subscription_id_callback = _handle_new_subscription_identifier
 
-    if (old_identifier := entry.data.get(CONF_SUBSCRIPTION_ID)) is not None:
-        _LOGGER.debug("Trying to delete old subscription %s", old_identifier)
-        try:
-            await client.delete_subscription(old_identifier)
-        except SmartThingsConnectionError as err:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="delete_subscription_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
-        except SmartThingsQuotaExceededError as err:
-            raise _quota_exceeded_not_ready() from err
-
-    _LOGGER.debug("Trying to create a new subscription")
-    try:
-        subscription = await client.create_subscription(
-            entry.data[CONF_LOCATION_ID],
-        )
-    except SmartThingsQuotaExceededError as err:
-        raise _quota_exceeded_not_ready() from err
-    except (SmartThingsConnectionError, SmartThingsSinkError) as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="create_subscription_error",
-            translation_placeholders={"error": str(err)},
-        ) from err
+    subscription = await _async_replace_subscription(client, entry)
     subscription_id = subscription.subscription_id
     _handle_new_subscription_identifier(subscription_id)
 
