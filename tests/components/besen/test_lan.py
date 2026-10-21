@@ -1899,3 +1899,146 @@ async def test_failed_progress_task_never_creates_an_entry(
     assert result["errors"] == {"base": expected}
     assert hass.config_entries.async_entries(DOMAIN) == []
     hass.config_entries.flow.async_abort(result["flow_id"])
+
+
+@pytest.mark.parametrize(
+    ("source", "inputs"),
+    [
+        pytest.param(SOURCE_REAUTH, [{CONF_PIN: "654321"}], id="reauth"),
+        pytest.param(
+            SOURCE_RECONFIGURE,
+            [{"next_step_id": "use_bluetooth"}, {CONF_PIN: "654321"}],
+            id="reconfigure",
+        ),
+    ],
+)
+async def test_legacy_recovery_rechecks_serial_before_saving(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_besen_client: Mock,
+    source: str,
+    inputs: list[dict[str, str]],
+) -> None:
+    """Reject an identity another transport saved after recovery validation."""
+    mock_besen_client.state = mock_besen_client.state.updated(
+        info=mock_besen_client.state.info.updated(serial=SERIAL)
+    )
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": source, "entry_id": mock_config_entry.entry_id},
+        data=mock_config_entry.data,
+    )
+    for user_input in inputs:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input
+        )
+    flow = hass.config_entries.flow._progress[result["flow_id"]]
+    assert isinstance(flow, BesenConfigFlow)
+    await flow._operation_task
+    other = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=f"lan:{SERIAL}",
+        data={
+            CONF_ADDRESS: f"lan:{SERIAL}",
+            CONF_HOST: HOST,
+            CONF_PIN: FIXTURE_PIN,
+            CONF_SERIAL: SERIAL,
+            CONF_TRANSPORT: "lan",
+        },
+    )
+    other.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert CONF_SERIAL not in mock_config_entry.data
+    assert mock_config_entry.data[CONF_PIN] == FIXTURE_PIN
+
+
+async def test_changing_setup_host_cannot_bypass_retained_cleanup(
+    hass: HomeAssistant,
+    validation_clients: tuple[Mock, Mock],
+    hub: Mock,
+) -> None:
+    """Close the previous candidate before trying a different setup address."""
+    first, second = validation_clients
+    first.async_stop.side_effect = CannotConnect("stop failed")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST, CONF_PIN: FIXTURE_PIN}
+    )
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["errors"] == {"base": "cannot_connect"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.0.2.20", CONF_PIN: FIXTURE_PIN}
+    )
+    await hass.async_block_till_done()
+    second.async_start.assert_not_awaited()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert first.async_stop.await_count == 2
+    hub.async_stop.assert_not_awaited()
+    first.async_stop.side_effect = None
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    await hass.async_block_till_done()
+
+
+async def test_aborted_initial_setup_retries_retained_cleanup(
+    hass: HomeAssistant, udp_client: Mock, hub: Mock
+) -> None:
+    """Release the last hub reference when failed setup is closed after recovery."""
+    udp_client.async_stop.side_effect = CannotConnect("stop failed")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST, CONF_PIN: FIXTURE_PIN}
+    )
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["errors"] == {"base": "cannot_connect"}
+    udp_client.async_stop.side_effect = None
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    await hass.async_block_till_done()
+    assert udp_client.async_stop.await_count == 2
+    hub.async_stop.assert_awaited_once()
+    assert hass.config_entries.async_entries(DOMAIN) == []
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_cleanup_retry_after_abort_remains_recoverable(
+    hass: HomeAssistant, udp_client: Mock, hub: Mock
+) -> None:
+    """Recover retained cleanup when even the first post-abort retry fails."""
+    udp_client.async_stop.side_effect = CannotConnect("stop failed")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST, CONF_PIN: FIXTURE_PIN}
+    )
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["errors"] == {"base": "cannot_connect"}
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    await hass.async_block_till_done()
+    assert udp_client.async_stop.await_count == 2
+    hub.async_stop.assert_not_awaited()
+
+    udp_client.async_stop.side_effect = None
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST, CONF_PIN: FIXTURE_PIN}
+    )
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert udp_client.async_start.await_count == 2
+    assert udp_client.async_stop.await_count == 4
+    assert hub.async_stop.await_count == 2

@@ -52,12 +52,18 @@ class _AlreadyConfigured(Exception):
 
 
 def _serial_is_configured(
-    hass: HomeAssistant, serial: str, *, address: str | None = None
+    hass: HomeAssistant,
+    serial: str,
+    *,
+    address: str | None = None,
+    exclude_entry_id: str | None = None,
 ) -> bool:
     """Match serial identity even when a charger is currently unloaded."""
     registry = dr.async_get(hass)
     for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.data.get(CONF_ADDRESS) == address:
+        if entry.entry_id == exclude_entry_id or (
+            address is not None and entry.data.get(CONF_ADDRESS) == address
+        ):
             continue
         runtime = getattr(entry, "runtime_data", None)
         if (
@@ -120,20 +126,12 @@ async def _async_validate_input(
     address: str,
     pin: str,
     name: str | None,
-    connection: BesenConnectionState | None = None,
+    connection: BesenConnectionState,
 ) -> tuple[str, str | None]:
     """Return the charger title and serial after verifying the connection."""
 
     if len(pin) != 6 or not (pin.isascii() and pin.isdecimal()):
         raise InvalidAuth("PIN must be exactly 6 digits")
-
-    if connection is None:
-        connection = async_get_connection_state(hass, f"bluetooth:{address}")
-        async with connection.lock:
-            await connection.async_cleanup()
-            return await _async_validate_input(
-                hass, address=address, pin=pin, name=name, connection=connection
-            )
 
     def _ble_device_provider() -> BLEDevice | None:
         return bluetooth.async_ble_device_from_address(
@@ -190,6 +188,26 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._operation_step = "lan"
         self._removed = False
         self._reload_after_flow: tuple[BesenConfigEntry, BesenCoordinator] | None = None
+        self._connection: BesenConnectionState | None = None
+
+    async def _async_use_connection(self, connection: BesenConnectionState) -> None:
+        """Release retained cleanup before switching validation ownership."""
+        if self._connection is not None and self._connection is not connection:
+            async with self._connection.lock:
+                await self._connection.async_cleanup()
+        self._connection = connection
+
+    async def _async_validate_bluetooth(
+        self, *, address: str, pin: str, name: str | None
+    ) -> tuple[str, str | None]:
+        """Retain Bluetooth cleanup on this flow until it has succeeded."""
+        connection = async_get_connection_state(self.hass, f"bluetooth:{address}")
+        await self._async_use_connection(connection)
+        async with connection.lock:
+            await connection.async_cleanup()
+            return await _async_validate_input(
+                self.hass, address=address, pin=pin, name=name, connection=connection
+            )
 
     @override
     async def async_step_bluetooth(
@@ -227,8 +245,7 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             pin = user_input[CONF_PIN]
             try:
-                title, serial = await _async_validate_input(
-                    self.hass,
+                title, serial = await self._async_validate_bluetooth(
                     address=self._discovered_address,
                     pin=pin,
                     name=self._discovered_name,
@@ -284,8 +301,7 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             try:
-                title, serial = await _async_validate_input(
-                    self.hass,
+                title, serial = await self._async_validate_bluetooth(
                     address=address,
                     pin=pin,
                     name=discovery_info.name,
@@ -482,6 +498,7 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if entry
             else f"lan:{self._pending_data[CONF_HOST].casefold()}",
         )
+        await self._async_use_connection(connection)
         async with connection.lock:
             await connection.async_cleanup()
             await self._test_connection_locked(transport, entry, connection)
@@ -615,16 +632,20 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_configured")
         if self._operation_error:
             return self._connection_error_form({"base": self._operation_error})
-        if entry := self._current_entry():
+        entry = self._current_entry()
+        serial = self._pending_data.get(CONF_SERIAL)
+        if serial and _serial_is_configured(
+            self.hass, serial, exclude_entry_id=entry.entry_id if entry else None
+        ):
+            return self.async_abort(reason="already_configured")
+        if entry:
             self._reload_after_flow = None
             return self.async_update_reload_and_abort(
                 entry,
                 data=self._pending_data,
                 reload_even_if_entry_is_unchanged=True,
             )
-        serial = self._pending_data[CONF_SERIAL]
-        if _serial_is_configured(self.hass, serial):
-            return self.async_abort(reason="already_configured")
+        assert serial is not None
         await self.async_set_unique_id(self._pending_data[CONF_ADDRESS])
         self._abort_if_unique_id_configured()
         return self.async_create_entry(
@@ -659,6 +680,17 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.hass.loop.call_soon(reload_if_current)
 
+    async def _async_cleanup_removed_flow(self) -> None:
+        """Retry retained cleanup after cancelled validation has finished."""
+        if self._operation_task is not None:
+            await asyncio.gather(self._operation_task, return_exceptions=True)
+        assert self._connection is not None
+        async with self._connection.lock:
+            try:
+                await self._connection.async_cleanup()
+            except CannotConnect:
+                _LOGGER.warning("Besen setup cleanup still needs a retry")
+
     @callback
     @override
     def async_remove(self) -> None:
@@ -667,3 +699,9 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._operation_task and not self._operation_task.done():
             self._operation_task.cancel()
         self._async_schedule_restore_reload()
+        if self._connection is not None:
+            self.hass.async_create_task(
+                self._async_cleanup_removed_flow(),
+                "Besen removed setup cleanup",
+                eager_start=False,
+            )
