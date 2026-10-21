@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_DEVICE,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
+    CONF_PAYLOAD,
     CONF_PLATFORM,
     CONF_TYPE,
     CONF_VALUE_TEMPLATE,
@@ -25,14 +26,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import debug_info, trigger as mqtt_trigger
 from .config import MQTT_BASE_SCHEMA
-from .const import (
-    ATTR_DISCOVERY_HASH,
-    CONF_ENCODING,
-    CONF_PAYLOAD,
-    CONF_QOS,
-    CONF_TOPIC,
-    DOMAIN,
-)
+from .const import ATTR_DISCOVERY_HASH, CONF_ENCODING, CONF_QOS, CONF_TOPIC, DOMAIN
 from .discovery import MQTTDiscoveryPayload, clear_discovery_hash
 from .entity import MqttDiscoveryDeviceUpdateMixin, send_discovery_done, update_device
 from .models import DATA_MQTT

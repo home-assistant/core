@@ -28,9 +28,8 @@ from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import RingConfigEntry
 from .const import DOMAIN
-from .coordinator import RingDataCoordinator
+from .coordinator import RingConfigEntry, RingDataCoordinator
 from .entity import RingDeviceT, RingEntity, exception_wrap
 
 # Coordinator is used to centralize the data updates

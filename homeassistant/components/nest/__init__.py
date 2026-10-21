@@ -25,8 +25,7 @@ import probatio
 
 from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components.camera import Image, img_util
-from homeassistant.components.http import KEY_HASS_USER
-from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.components.http import KEY_HASS_USER, HomeAssistantView
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_CLIENT_ID,

@@ -42,6 +42,8 @@ async def mock_nanoleaf() -> AsyncGenerator[AsyncMock]:
         client.color_mode = "hs"
         client.effect = "Rainbow"
         client.effects_list = ["Rainbow", "Sunset", "Nemo"]
+        client.emersion_list = []
+        client.selected_emersion = None
         client.firmware_version = "4.0.0"
         client.name = "Nanoleaf"
         client.manufacturer = "Nanoleaf"
