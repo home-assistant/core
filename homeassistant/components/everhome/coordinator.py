@@ -13,13 +13,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    CONF_FAST_POLLING,
-    DEFAULT_UPDATE_INTERVAL,
-    DOMAIN,
-    FAST_UPDATE_INTERVAL,
-    REQUEST_REFRESH_COOLDOWN,
-)
+from .const import DEFAULT_UPDATE_INTERVAL, DOMAIN, REQUEST_REFRESH_COOLDOWN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,12 +38,7 @@ class EcoTrackerDataUpdateCoordinator(DataUpdateCoordinator[EcoTrackerData]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            # Entries created before the option existed have no options.
-            update_interval=timedelta(
-                seconds=FAST_UPDATE_INTERVAL
-                if config_entry.options.get(CONF_FAST_POLLING, False)
-                else DEFAULT_UPDATE_INTERVAL
-            ),
+            update_interval=timedelta(seconds=DEFAULT_UPDATE_INTERVAL),
             # The default 10 second cooldown would throttle polling via update_entity.
             request_refresh_debouncer=Debouncer(
                 hass, _LOGGER, cooldown=REQUEST_REFRESH_COOLDOWN, immediate=True
