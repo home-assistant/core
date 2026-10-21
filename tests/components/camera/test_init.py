@@ -1112,14 +1112,10 @@ async def _async_set_two_way_audio_preview_feature(
 
 
 @pytest.mark.parametrize(
-    (
-        "preview_feature_enabled",
-        "expected_two_way_audio",
-        "expected_two_way_audio_with_webrtc_provider",
-    ),
+    ("preview_feature_enabled", "expected_two_way_audio_with_webrtc_provider"),
     [
-        pytest.param(True, False, True, id="preview_feature_enabled"),
-        pytest.param(False, False, False, id="preview_feature_disabled"),
+        pytest.param(True, True, id="preview_feature_enabled"),
+        pytest.param(False, False, id="preview_feature_disabled"),
     ],
 )
 @pytest.mark.usefixtures("mock_camera", "mock_stream_source")
@@ -1127,7 +1123,6 @@ async def test_camera_capabilities_two_way_audio_hls(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     preview_feature_enabled: bool,
-    expected_two_way_audio: bool,
     expected_two_way_audio_with_webrtc_provider: bool,
 ) -> None:
     """Test two way audio for HLS cameras needs a WebRTC provider and labs."""
@@ -1143,7 +1138,6 @@ async def test_camera_capabilities_two_way_audio_hls(
         cam.entity_id,
         {StreamType.HLS},
         {StreamType.HLS, StreamType.WEB_RTC},
-        expected_two_way_audio=expected_two_way_audio,
         expected_two_way_audio_with_webrtc_provider=expected_two_way_audio_with_webrtc_provider,
     )
 
