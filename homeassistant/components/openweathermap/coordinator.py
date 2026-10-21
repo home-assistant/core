@@ -12,6 +12,7 @@ from pyopenweathermap import (
     MinutelyWeatherForecast,
     OWMClient,
     RequestError,
+    UnauthorizedError,
     WeatherReport,
 )
 
@@ -22,6 +23,7 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import sun
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -112,6 +114,8 @@ class WeatherUpdateCoordinator(OWMUpdateCoordinator):
             weather_report = await self._owm_client.get_weather(
                 self._latitude, self._longitude
             )
+        except UnauthorizedError as error:
+            raise ConfigEntryAuthFailed(error) from error
         except RequestError as error:
             raise UpdateFailed(error) from error
         return self._convert_weather_response(weather_report)
@@ -277,6 +281,8 @@ class AirPollutionUpdateCoordinator(OWMUpdateCoordinator):
             air_pollution_report = await self._owm_client.get_air_pollution(
                 self._latitude, self._longitude
             )
+        except UnauthorizedError as error:
+            raise ConfigEntryAuthFailed(error) from error
         except RequestError as error:
             raise UpdateFailed(error) from error
         current_air_pollution = (

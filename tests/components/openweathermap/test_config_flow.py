@@ -213,3 +213,64 @@ async def test_form_api_call_error(
         USER_INPUT,
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.parametrize("mode", [OWM_MODE_V30], indirect=True)
+async def test_reauth(
+    hass: HomeAssistant,
+    owm_client_mock: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the reauthentication flow."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "new_api_key"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "new_api_key"
+    owm_client_mock.validate_key.assert_awaited_once()
+
+
+@pytest.mark.parametrize("mode", [OWM_MODE_V30], indirect=True)
+@pytest.mark.parametrize(
+    ("validate_key", "side_effect", "error"),
+    [
+        pytest.param(False, None, "invalid_api_key", id="invalid_api_key"),
+        pytest.param(True, RequestError("oops"), "cannot_connect", id="cannot_connect"),
+    ],
+)
+async def test_reauth_errors(
+    hass: HomeAssistant,
+    owm_client_mock: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    validate_key: bool,
+    side_effect: Exception | None,
+    error: str,
+) -> None:
+    """Test the reauthentication flow recovers from errors."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    owm_client_mock.validate_key.return_value = validate_key
+    owm_client_mock.validate_key.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "new_api_key"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": error}
+
+    owm_client_mock.validate_key.return_value = True
+    owm_client_mock.validate_key.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "new_api_key"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == "new_api_key"

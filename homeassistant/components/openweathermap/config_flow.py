@@ -1,6 +1,7 @@
 """Config flow for OpenWeatherMap."""
 
-from typing import override
+from collections.abc import Mapping
+from typing import Any, override
 
 import probatio
 
@@ -49,6 +50,8 @@ USER_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_MODE, default=DEFAULT_OWM_MODE): probatio.In(OWM_MODES),
     }
 )
+
+REAUTH_SCHEMA = probatio.Schema({probatio.Required(probatio.Secret(CONF_API_KEY)): str})
 
 OPTIONS_SCHEMA = probatio.Schema(
     {
@@ -118,6 +121,39 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(USER_SCHEMA, schema_data),
+            errors=errors,
+            description_placeholders=description_placeholders,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication when the API key is rejected."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication with a new API key."""
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
+        if user_input is not None:
+            reauth_entry = self._get_reauth_entry()
+            errors, description_placeholders = await validate_api_key(
+                user_input[CONF_API_KEY], reauth_entry.options[CONF_MODE]
+            )
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data_updates={CONF_API_KEY: user_input[CONF_API_KEY]}
+                )
+
+        description_placeholders["doc_url"] = (
+            "https://www.home-assistant.io/integrations/openweathermap/"
+        )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=REAUTH_SCHEMA,
             errors=errors,
             description_placeholders=description_placeholders,
         )
