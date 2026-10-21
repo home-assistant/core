@@ -336,6 +336,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "registered_devices": True,
     },
     {
+        "domain": "electrasmart",
+        "hostname": "elrssid*",
+    },
+    {
         "domain": "elgato",
         "registered_devices": True,
     },
@@ -1541,6 +1545,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "tplink",
         "hostname": "kh1*",
         "macaddress": "F0A731*",
+    },
+    {
+        "domain": "trmnl",
+        "hostname": "trmnl-*",
     },
     {
         "domain": "tuya",

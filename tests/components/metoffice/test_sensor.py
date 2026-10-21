@@ -5,6 +5,11 @@ import json
 import re
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    get_sensor_display_state,
+)
 import requests_mock
 
 from homeassistant.components.metoffice.const import ATTRIBUTION, DOMAIN
@@ -22,12 +27,6 @@ from .const import (
     TEST_LATITUDE_WAVERTREE,
     TEST_LONGITUDE_WAVERTREE,
     WAVERTREE_SENSOR_RESULTS,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_object_fixture,
-    get_sensor_display_state,
 )
 
 

@@ -14,55 +14,20 @@ EXTRA_BASE_PLATFORMS = {"diagnostics"}
 # Core integrations that do not define __all__ yet.
 # These need to be fixed; do not add new entries to this list.
 MISSING_ALL = {
-    "alexa",
-    "auth",
-    "automation",
-    "blueprint",
-    "cloud",
-    "config",
-    "configurator",
-    "demo",
-    "device_automation",
-    "energy",
-    "ffmpeg",
-    "frontend",
-    "google_assistant",
-    "group",
-    "homeassistant",
-    "homeassistant_hardware",
-    "http",
-    "input_boolean",
-    "input_button",
-    "input_datetime",
-    "input_number",
-    "input_select",
-    "input_text",
-    "llm",
-    "logbook",
-    "logger",
-    "lovelace",
-    "network",
-    "onboarding",
-    "otp",
-    "persistent_notification",
-    "person",
-    "recorder",
-    "recovery_mode",
-    "script",
-    "shopping_list",
-    "ssdp",
-    "sun",
-    "system_health",
-    "tag",
-    "template",
-    "timer",
-    "webhook",
-    "websocket_api",
-    "zeroconf",
-    "zone",
+    "configurator",  # Deprecated, to be removed in 2027.10
 }
 
 _COMPONENT_RE = re.compile(r"homeassistant/components/([^/]+)/\*\*")
+
+
+def get_core_integrations(root: Path) -> set[str]:
+    """Return the integrations listed in .core_files.yaml."""
+    core_files = load_yaml_dict(str(root / ".core_files.yaml"))
+    return {
+        match.group(1)
+        for entry in (*core_files["base_platforms"], *core_files.get("components", []))
+        if (match := _COMPONENT_RE.match(entry))
+    }
 
 
 def _defines_all(init_file: Path) -> bool:

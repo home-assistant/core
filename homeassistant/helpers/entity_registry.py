@@ -146,6 +146,28 @@ class RegistryEntryDisabler(StrEnum):
     USER = "user"
 
 
+# Values of disabled_by which follow from the state of the config entry and device
+_DERIVED_DISABLED_BY: set[RegistryEntryDisabler | None] = {
+    RegistryEntryDisabler.CONFIG_ENTRY,
+    RegistryEntryDisabler.DEVICE,
+    None,
+}
+
+
+def _derived_disabled_by(
+    config_entry: ConfigEntry | None, device: dr.AnyDeviceEntry | None
+) -> RegistryEntryDisabler | None:
+    """Return the disabler implied by the state of the config entry and device.
+
+    A disabled config entry takes precedence over a disabled device.
+    """
+    if config_entry is not None and config_entry.disabled_by is not None:
+        return RegistryEntryDisabler.CONFIG_ENTRY
+    if device is not None and device.disabled:
+        return RegistryEntryDisabler.DEVICE
+    return None
+
+
 class RegistryEntryHider(StrEnum):
     """What hid a registry entry."""
 
@@ -1643,14 +1665,9 @@ class EntityRegistry(BaseRegistry):
             device_class = deleted_entity.device_class
             if deleted_entity.disabled_by is not UNDEFINED:
                 disabled_by = deleted_entity.disabled_by
-                # Adjust disabled_by based on config entry state
-                if config_entry and config_entry is not UNDEFINED:
-                    if config_entry.disabled_by:
-                        if disabled_by is None:
-                            disabled_by = RegistryEntryDisabler.CONFIG_ENTRY
-                    elif disabled_by == RegistryEntryDisabler.CONFIG_ENTRY:
-                        disabled_by = None
-                elif disabled_by == RegistryEntryDisabler.CONFIG_ENTRY:
+                # A stored derived disabled_by can be stale, so reset it to be
+                # derived again below
+                if disabled_by in _DERIVED_DISABLED_BY:
                     disabled_by = None
             # Restore entity_id if it's available
             if self._entity_id_available(deleted_entity.entity_id):
@@ -1703,14 +1720,22 @@ class EntityRegistry(BaseRegistry):
         original_name_unprefixed = _unprefix_original_name(
             self.hass, original_name, has_entity_name_bool, device_id
         )
+        config_entry = none_if_undefined(config_entry)
 
         if (
             disabled_by is None
-            and config_entry
-            and config_entry is not UNDEFINED
+            and config_entry is not None
             and config_entry.pref_disable_new_entities
         ):
             disabled_by = RegistryEntryDisabler.INTEGRATION
+        # Not explicitly disabled, so derive disabled_by
+        if disabled_by is None:
+            device = (
+                dr.async_get(self.hass).async_get(device_id)
+                if device_id is not None
+                else None
+            )
+            disabled_by = _derived_disabled_by(config_entry, device)
 
         entry = RegistryEntry(
             aliases=aliases,
@@ -1907,28 +1932,26 @@ class EntityRegistry(BaseRegistry):
                     original_name_unprefixed=original_name_unprefixed,
                 )
 
-        # Re-enable disabled entities if the device is no longer disabled
-        if not device.disabled:
-            entities = async_entries_for_device(
-                self, event.data["device_id"], include_disabled_entities=True
-            )
-            for entity in entities:
-                if entity.disabled_by is not RegistryEntryDisabler.DEVICE:
-                    continue
-                self.async_update_entity(entity.entity_id, disabled_by=None)
+        if "disabled_by" not in changes:
             return
 
-        # Ignore device disabled by config entry, this is handled by
-        # async_config_entry_disabled_by_changed
-        if device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY:
-            return
-
-        # Fetch entities which are not already disabled and disable them
-        entities = async_entries_for_device(self, event.data["device_id"])
+        # The disabled state of the device changed, so derive disabled_by of its
+        # entities again
+        entities = async_entries_for_device(
+            self, event.data["device_id"], include_disabled_entities=True
+        )
         for entity in entities:
-            self.async_update_entity(
-                entity.entity_id, disabled_by=RegistryEntryDisabler.DEVICE
-            )
+            if entity.disabled_by not in _DERIVED_DISABLED_BY:
+                continue
+            config_entry = None
+            if entity.config_entry_id is not None:
+                config_entry = self.hass.config_entries.async_get_entry(
+                    entity.config_entry_id
+                )
+            disabled_by = _derived_disabled_by(config_entry, device)
+            if disabled_by is entity.disabled_by:
+                continue
+            self.async_update_entity(entity.entity_id, disabled_by=disabled_by)
 
     @callback
     def _ignore_composite_device_id(
@@ -2007,16 +2030,26 @@ class EntityRegistry(BaseRegistry):
 
         device_id = self._ignore_composite_device_id(old.platform, device_id)
 
-        if disabled_by is UNDEFINED and config_entry_id is not UNDEFINED:
-            if config_entry_id is not None:
-                config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
-                if config_entry is not None and config_entry.disabled_by is not None:
-                    if old.disabled_by is None:
-                        disabled_by = RegistryEntryDisabler.CONFIG_ENTRY
-                elif old.disabled_by is RegistryEntryDisabler.CONFIG_ENTRY:
-                    disabled_by = None
-            elif old.disabled_by is RegistryEntryDisabler.CONFIG_ENTRY:
-                disabled_by = None
+        if disabled_by is None or (
+            disabled_by is UNDEFINED
+            and (config_entry_id is not UNDEFINED or device_id is not UNDEFINED)
+            and old.disabled_by in _DERIVED_DISABLED_BY
+        ):
+            new_config_entry_id = (
+                old.config_entry_id if config_entry_id is UNDEFINED else config_entry_id
+            )
+            new_device_id = old.device_id if device_id is UNDEFINED else device_id
+            new_config_entry = (
+                self.hass.config_entries.async_get_entry(new_config_entry_id)
+                if new_config_entry_id is not None
+                else None
+            )
+            new_device = (
+                dr.async_get(self.hass).async_get(new_device_id)
+                if new_device_id is not None
+                else None
+            )
+            disabled_by = _derived_disabled_by(new_config_entry, new_device)
 
         new_values: dict[str, Any] = {}  # Dict with new key/value pairs
         old_values: dict[str, Any] = {}  # Dict with old key/value pairs
@@ -2515,13 +2548,41 @@ class EntityRegistry(BaseRegistry):
                     entity_id_parts=tuple(EntityNamePart(part) for part in parts_data)
                 )
 
+        # A stored derived disabled_by can be stale, when an earlier version
+        # handled it incorrectly or when not all registries were saved before a
+        # shutdown, so derive it again from the loaded state.
+        # Config entries and device registry load concurrently with the entity
+        # registry; device registry load was already awaited above.
+        await self.hass.config_entries.async_wait_initialized()
+        disabled_by_changed = False
+        for entry in list(entities.values()):
+            if entry.disabled_by not in _DERIVED_DISABLED_BY:
+                continue
+            config_entry = (
+                self.hass.config_entries.async_get_entry(entry.config_entry_id)
+                if entry.config_entry_id is not None
+                else None
+            )
+            device = (
+                device_registry.async_get(entry.device_id)
+                if entry.device_id is not None
+                else None
+            )
+            disabled_by = _derived_disabled_by(config_entry, device)
+            if disabled_by is entry.disabled_by:
+                continue
+            entities[entry.entity_id] = attr.evolve(
+                entry, disabled_by=disabled_by, modified_at=utcnow()
+            )
+            disabled_by_changed = True
+
         self.entities = entities
         self.deleted_entities = deleted_entities
         self.settings = settings
         self._entities_data = entities.data
 
-        # Persist entities moved off a split pre-migration composite device
-        if migrated_composite_device:
+        # Persist entities repaired on load
+        if migrated_composite_device or disabled_by_changed:
             self.async_schedule_save()
 
         self._loaded_event.set()
@@ -2740,28 +2801,20 @@ def async_config_entry_disabled_by_changed(
 ) -> None:
     """Handle a config entry being disabled or enabled.
 
-    Disable entities in the registry that are associated with a config entry when
-    the config entry is disabled, enable entities in the registry that are associated
-    with a config entry when the config entry is enabled and the entities are marked
-    DISABLED_CONFIG_ENTRY.
+    The disabled state of the config entry changed, so derive disabled_by of its
+    entities again.
     """
-
-    entities = async_entries_for_config_entry(registry, config_entry.entry_id)
-
-    if not config_entry.disabled_by:
-        for entity in entities:
-            if entity.disabled_by is not RegistryEntryDisabler.CONFIG_ENTRY:
-                continue
-            registry.async_update_entity(entity.entity_id, disabled_by=None)
-        return
-
-    for entity in entities:
-        if entity.disabled:
-            # Entity already disabled, do not overwrite
+    device_registry = dr.async_get(registry.hass)
+    for entity in async_entries_for_config_entry(registry, config_entry.entry_id):
+        if entity.disabled_by not in _DERIVED_DISABLED_BY:
             continue
-        registry.async_update_entity(
-            entity.entity_id, disabled_by=RegistryEntryDisabler.CONFIG_ENTRY
-        )
+        device = None
+        if entity.device_id is not None:
+            device = device_registry.async_get(entity.device_id)
+        disabled_by = _derived_disabled_by(config_entry, device)
+        if disabled_by is entity.disabled_by:
+            continue
+        registry.async_update_entity(entity.entity_id, disabled_by=disabled_by)
 
 
 @callback

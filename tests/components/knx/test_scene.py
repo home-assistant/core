@@ -1,6 +1,7 @@
 """Test KNX scene."""
 
 import pytest
+from pytest_homeassistant.common import async_capture_events
 
 from homeassistant.components.knx.const import KNX_ADDRESS
 from homeassistant.components.knx.schema import SceneSchema
@@ -15,8 +16,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
-
-from tests.common import async_capture_events
 
 
 async def test_activate_knx_scene(

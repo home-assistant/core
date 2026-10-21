@@ -9,6 +9,9 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from aiohttp import ClientResponse
 from google_drive_api.exceptions import GoogleDriveApiError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import mock_stream
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup import (
@@ -22,10 +25,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .conftest import CONFIG_ENTRY_TITLE, TEST_AGENT_ID
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import mock_stream
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 FOLDER_ID = "google-folder-id"
 TEST_AGENT_BACKUP = AgentBackup(

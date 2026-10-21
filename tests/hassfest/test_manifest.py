@@ -56,9 +56,42 @@ def test_categories(config: Config, categories: list[str]) -> None:
 
 
 @pytest.mark.usefixtures("mock_core_integration")
-def test_no_categories(config: Config) -> None:
-    """Test categories are optional."""
-    assert _validate(config, {}) == []
+@pytest.mark.parametrize(
+    "integration_type", ["device", "hardware", "helper", "hub", "service"]
+)
+def test_categories_required(config: Config, integration_type: str) -> None:
+    """Test integrations people browse for need categories."""
+    assert _validate(config, {"integration_type": integration_type}) == [
+        f"Integrations of type {integration_type} need categories, see "
+        "https://contributors.home-assistant.io/core/integrations/categories/ "
+        "to pick them"
+    ]
+
+
+@pytest.mark.usefixtures("mock_core_integration")
+@pytest.mark.parametrize("integration_type", ["entity", "system"])
+def test_categories_not_needed(config: Config, integration_type: str) -> None:
+    """Test integration types people don't browse for need no categories."""
+    assert _validate(config, {"integration_type": integration_type}) == []
+
+
+@pytest.mark.usefixtures("mock_core_integration")
+def test_categories_not_needed_virtual(config: Config) -> None:
+    """Test virtual integrations need no categories."""
+    integration = Integration(
+        Path("test"),
+        _config=config,
+        _manifest={
+            "domain": "test",
+            "name": "Test",
+            "integration_type": "virtual",
+            "supported_by": "other",
+        },
+    )
+
+    manifest.validate_manifest(integration, Path("components"), KNOWN_CATEGORIES)
+
+    assert not [error for error in integration.errors if "categories" in error.error]
 
 
 @pytest.mark.usefixtures("mock_core_integration")

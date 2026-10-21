@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from httpx2 import RequestError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from wolf_comm.models import Device
 from wolf_comm.token_auth import InvalidAuth
 
@@ -14,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import CONFIG
-
-from tests.common import MockConfigEntry
 
 INPUT_CONFIG = {
     CONF_USERNAME: CONFIG[CONF_USERNAME],

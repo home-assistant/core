@@ -8,14 +8,13 @@ from aiohttp import ClientConnectorError
 from airly.exceptions import AirlyError
 from airly.measurements import Measurement
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.airly.const import CONF_USE_NEAREST, DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 CONFIG = {
     CONF_API_KEY: "foo",
@@ -33,7 +32,7 @@ UPDATE_API_KEY_FLOWS = [
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.airly.async_setup_entry", return_value=True
+        "homeassistant.components.airly.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
