@@ -37,7 +37,8 @@ async def async_setup_entry(
 
     LOGGER.debug(
         "Discovered %d IntelliClima VMC device(s)",
-        len(devices_coordinator.data.ecocomfort2_devices),
+        len(devices_coordinator.data.ecocomfort2_devices)
+        + len(devices_coordinator.data.ecocomfort3_devices),
     )
 
     device_serials = [

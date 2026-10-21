@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock
 
-from pyintelliclima import IntelliClimaECO3
 from pyintelliclima.api import (
     IntelliClimaAPIError,
     IntelliClimaAuthError,
@@ -17,8 +16,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import create_eco_device
-
 DATA_CONFIG = {
     CONF_USERNAME: "SuperUser",
     CONF_PASSWORD: "hunter2",
@@ -26,7 +23,7 @@ DATA_CONFIG = {
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_user_flow(hass: HomeAssistant, mock_cloud_interface) -> None:
+async def test_user_flow(hass: HomeAssistant, mock_cloud_interface: AsyncMock) -> None:
     """Test the full config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -95,19 +92,6 @@ async def test_form_auth_errors(
             IntelliClimaDevices(ecocomfort2_devices={}, c800_devices={}),
             id="no_devices",
         ),
-        pytest.param(
-            IntelliClimaDevices(
-                ecocomfort2_devices={},
-                c800_devices={},
-                ecocomfort3_devices={
-                    "56789": IntelliClimaECO3(
-                        **vars(create_eco_device("56789", "11223344", "Test VMC"))
-                    )
-                },
-            ),
-            # ECOCOMFORT 3 is discovered by the library but not yet supported here.
-            id="only_ecocomfort3",
-        ),
     ],
 )
 async def test_form_no_devices(
@@ -139,6 +123,22 @@ async def test_form_no_devices(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "IntelliClima (SuperUser)"
+    assert result["data"] == DATA_CONFIG
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_ecocomfort3(
+    hass: HomeAssistant,
+    mock_cloud_interface: AsyncMock,
+    single_eco3_device: IntelliClimaDevices,
+) -> None:
+    """An account containing only an ECOCOMFORT 3 can be configured."""
+    mock_cloud_interface.get_all_device_status.return_value = single_eco3_device
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=DATA_CONFIG
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == DATA_CONFIG
 
 
