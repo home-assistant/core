@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import MyPVConfigEntry
+from .coordinator import MyPVConfigEntry
 from .entity import MyPVDataEntity
 
 SENSOR_DESCRIPTIONS: Final[dict[str, dict[str, Any]]] = {

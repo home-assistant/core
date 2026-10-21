@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 from aiogithubapi import GitHubException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.marketplace.const import DOMAIN
 from homeassistant.config_entries import SOURCE_SYSTEM
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, UnknownFlow
 
 from .const import TOKEN
-
-from tests.common import MockConfigEntry
 
 
 async def _start_device_step(hass: HomeAssistant, entry: MockConfigEntry) -> str:

@@ -8,11 +8,12 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PLUG_AND_CHARGE, BlueCurrentConfigEntry, Connector
+from . import BlueCurrentConfigEntry, Connector
 from .const import (
     AVAILABLE,
     BLOCK,
     LINKED_CHARGE_CARDS,
+    PLUG_AND_CHARGE,
     PUBLIC_CHARGING,
     UNAVAILABLE,
     VALUE,

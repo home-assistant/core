@@ -6,11 +6,11 @@ from sqlalchemy.engine.url import make_url
 
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.recorder import session_scope
 
 from .. import get_instance
 from ..const import SupportedDialect
 from ..core import Recorder
-from ..util import session_scope
 from .mysql import db_size_bytes as mysql_db_size_bytes
 from .postgresql import db_size_bytes as postgresql_db_size_bytes
 from .sqlite import db_size_bytes as sqlite_db_size_bytes

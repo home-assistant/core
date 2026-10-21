@@ -10,14 +10,13 @@ from freezegun.api import FrozenDateTimeFactory
 from nibe.coil import Coil, CoilData
 from nibe.heatpump import Model
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import CoreState, HomeAssistant
 
 from . import MockConnection, async_add_model
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture(autouse=True)

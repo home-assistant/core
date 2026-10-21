@@ -6,6 +6,7 @@ from unittest.mock import Mock, call, patch
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from PyViCare.PyViCareUtils import (
     PyViCareDeviceCommunicationError,
     PyViCareInternalServerError,
@@ -39,8 +40,6 @@ from homeassistant.helpers import (
 
 from . import MODULE, setup_integration
 from .conftest import Fixture, MockPyViCare
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 # From a real rate limit response: 2026-09-09T00:00:04.144Z.
 QUOTA_RESET_MS = 1788912004144

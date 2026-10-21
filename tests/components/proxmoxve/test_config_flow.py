@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 from proxmoxer import AuthenticationError
 from proxmoxer.core import ResourceException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import requests
 from requests.exceptions import ConnectTimeout, SSLError
 
@@ -35,8 +36,6 @@ from .conftest import (
     MOCK_TEST_TOKEN_CONFIG,
     MOCK_TEST_TOKEN_OTHER_CONFIG,
 )
-
-from tests.common import MockConfigEntry
 
 # Regular PAM user authentication + password
 MOCK_USER_STEP = {

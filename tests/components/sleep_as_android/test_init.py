@@ -1,9 +1,9 @@
 """Test the Sleep as Android integration setup."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_entry_setup_unload(

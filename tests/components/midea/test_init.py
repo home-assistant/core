@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from midealocal.const import DeviceType, ProtocolVersion
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.midea.const import CONF_SN, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -33,8 +34,6 @@ from .const import (
     TEST_MAC_ADDRESS,
     TEST_SERIAL_NUMBER,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_setup(hass: HomeAssistant) -> None:

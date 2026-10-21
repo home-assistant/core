@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.waze_travel_time.config_flow import WazeConfigFlow
@@ -30,8 +31,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import get_default_options
 from .const import CONFIG_FLOW_USER_INPUT, MOCK_CONFIG
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("validate_config_entry")

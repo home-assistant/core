@@ -4,6 +4,8 @@ from unittest.mock import AsyncMock
 
 from aiohttp import ClientError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.namecheapdns.const import DOMAIN, UPDATE_URL
 from homeassistant.components.namecheapdns.helpers import AuthFailed
@@ -13,9 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_USER_INPUT
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.usefixtures("mock_namecheap")

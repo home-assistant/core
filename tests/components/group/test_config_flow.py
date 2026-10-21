@@ -4,6 +4,8 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant import config_entries
 from homeassistant.components.group import DOMAIN, async_setup_entry
@@ -11,9 +13,6 @@ from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
-from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.parametrize(
@@ -141,6 +140,7 @@ async def test_config_flow(
     [
         ("binary_sensor", {"all": False}),
         ("button", {}),
+        ("calendar", {}),
         ("cover", {}),
         ("event", {}),
         ("fan", {}),
@@ -393,6 +393,7 @@ async def test_all_options(
     [
         ("binary_sensor", {"all": False}),
         ("button", {}),
+        ("calendar", {}),
         ("cover", {}),
         ("event", {}),
         ("fan", {}),

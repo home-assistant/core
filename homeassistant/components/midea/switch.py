@@ -1,6 +1,7 @@
 """Switch for Midea."""
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
+from functools import partial
 from typing import Any, override
 
 from midealocal.const import DeviceType
@@ -13,6 +14,7 @@ from homeassistant.components.switch import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 
 from .entity import MideaConfigEntry, MideaEntity, midea_api_call
 
@@ -25,6 +27,21 @@ class MideaSwitchEntityDescription(SwitchEntityDescription):
 
     models: list[DeviceType]
     capability: str | None = None
+    # The device never reports this setting, and midea-local resets it to its
+    # own default on every setup, so the last value is restored instead.
+    restore: bool = False
+
+
+@dataclass(frozen=True)
+class MideaSwitchExtraStoredData(ExtraStoredData):
+    """Switch setting stored for a Midea restore switch."""
+
+    is_on: bool | None
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the stored data."""
+        return asdict(self)
 
 
 SWITCHES: list[MideaSwitchEntityDescription] = [
@@ -62,6 +79,7 @@ SWITCHES: list[MideaSwitchEntityDescription] = [
         translation_key="prompt_tone",
         models=[DeviceType.A1, DeviceType.AC],
         entity_category=EntityCategory.CONFIG,
+        restore=True,
     ),
     MideaSwitchEntityDescription(
         key="screen_display",
@@ -199,7 +217,9 @@ async def async_setup_entry(
     device = config_entry.runtime_data
 
     async_add_entities(
-        MideaSwitch(device, description)
+        (MideaRestoreSwitch if description.restore else MideaSwitch)(
+            device, description
+        )
         for description in SWITCHES
         if device.device_type in description.models
         and description.key in device.attributes
@@ -237,3 +257,29 @@ class MideaSwitch(MideaEntity, SwitchEntity):
         """Turn off switch."""
         with midea_api_call():
             self._device.set_attribute(attr=self.entity_description.key, value=False)
+
+
+class MideaRestoreSwitch(MideaSwitch, RestoreEntity):
+    """Represent a Midea switch for a setting the device does not report."""
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> MideaSwitchExtraStoredData:
+        """Return the setting, which stays known while the device is unavailable."""
+        return MideaSwitchExtraStoredData(is_on=self.is_on)
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Push the restored setting back into midea-local."""
+        await super().async_added_to_hass()
+        if (last_extra_data := await self.async_get_last_extra_data()) is None or (
+            not isinstance(is_on := last_extra_data.as_dict().get("is_on"), bool)
+        ):
+            return
+        await self.hass.async_add_executor_job(
+            partial(
+                self._device.set_attribute,
+                attr=self.entity_description.key,
+                value=is_on,
+            )
+        )

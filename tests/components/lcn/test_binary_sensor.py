@@ -5,6 +5,7 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 from pypck.inputs import ModStatusBinSensors
 from pypck.lcn_addr import LcnAddr
+from pytest_homeassistant.common import async_fire_time_changed, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lcn.binary_sensor import SCAN_INTERVAL
@@ -14,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockConfigEntry, MockDeviceConnection, init_integration
-
-from tests.common import async_fire_time_changed, snapshot_platform
 
 BINARY_SENSOR_SENSOR1 = "binary_sensor.testmodule_binary_sensor1"
 

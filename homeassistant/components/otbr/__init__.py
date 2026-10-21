@@ -58,6 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> None
             hass,
             DOMAIN,
             f"get_get_border_agent_id_unsupported_{otbrdata.entry_id}",
+            config_entry_id=otbrdata.entry_id,
             is_fixable=False,
             is_persistent=False,
             severity=ir.IssueSeverity.WARNING,

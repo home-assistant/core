@@ -469,13 +469,19 @@ class MatterListSensor(MatterSensor):
     @override
     def _update_from_device(self) -> None:
         """Update from device."""
-        self._attr_options = list_values = cast(
-            list[str],
-            self.get_matter_attribute_value(self.entity_description.list_attribute),
+        self._attr_options = list_values = (
+            cast(
+                list[str] | None,
+                self.get_matter_attribute_value(self.entity_description.list_attribute),
+            )
+            or []
         )
-        current_value: int = self.get_matter_attribute_value(
+        current_value: int | None = self.get_matter_attribute_value(
             self._entity_info.primary_attribute
         )
+        if current_value is None:
+            self._attr_native_value = None
+            return
         try:
             self._attr_native_value = list_values[current_value]
         except IndexError:
@@ -519,6 +525,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.FlowMeasurement.Attributes.MeasuredValue,),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,

@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.switcher_kis.const import DOMAIN
@@ -18,8 +19,6 @@ from .consts import (
     DUMMY_USERNAME,
     DUMMY_WATER_HEATER_DEVICE,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

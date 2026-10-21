@@ -248,9 +248,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> No
     # Register the parent device before forwarding platforms so child device
     # entities can resolve their via_device_id from it.
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, device.device_id)},
+        device_info=dr.DeviceInfo(identifiers={(DOMAIN, device.device_id)}),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
