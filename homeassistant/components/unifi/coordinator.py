@@ -34,7 +34,6 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
     ) -> None:
         """Initialize coordinator."""
         supports_websocket = bool(handler.process_messages or handler.remove_messages)
-        self._supports_websocket = supports_websocket
         super().__init__(
             hub.hass,
             LOGGER,
@@ -43,6 +42,7 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
             update_interval=None if supports_websocket else POLL_INTERVAL,
         )
         self._handler = handler
+        self._supports_websocket = supports_websocket
         self._connection = hub.connection
         self._disable_polling_on_endpoint_not_found = (
             disable_polling_on_endpoint_not_found
@@ -85,7 +85,9 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
             self._connection.verify_session(err)
             raise UpdateFailed(str(err)) from err
         except aiounifi.AiounifiException as err:
-            raise UpdateFailed(str(err)) from err
+            if not self._supports_websocket:
+                raise UpdateFailed(str(err)) from err
+            self.logger.warning("Error fetching %s data: %s", self.name, err)
 
         if self.update_interval is not None:
             self.update_interval = (

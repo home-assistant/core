@@ -543,6 +543,46 @@ async def test_recovery_refetches_websocket_backed_handlers(
     assert request_count() == requests_before + 1
 
 
+async def test_failure_during_recovery_retries_after_recovery(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_state: WebsocketStateManager,
+) -> None:
+    """Ensure a failed resync is retried without a timer racing the recovery."""
+    hub = config_entry_setup.runtime_data
+    connection = hub.connection
+
+    async def failing_recovery() -> None:
+        connection.report_failure()
+
+    connection.set_recovery_callback(failing_recovery)
+    await mock_websocket_state.disconnect()
+    await mock_websocket_state.reconnect()
+
+    assert not hub.available
+
+    connection.set_recovery_callback(hub._async_connection_recovered)
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hub.available
+
+
+async def test_websocket_handler_request_rejection_keeps_data_available(
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Ensure a rejected resync request does not leave websocket data unavailable."""
+    hub = config_entry_setup.runtime_data
+    coordinator = hub.entity_loader.get_data_update_coordinator(hub.api.clients)
+
+    with patch.object(
+        coordinator.handler, "update", side_effect=aiounifi.ResponseError
+    ):
+        await hub.entity_loader.async_resync()
+
+    assert coordinator.last_update_success is True
+
+
 @pytest.mark.parametrize(
     "exception",
     [
