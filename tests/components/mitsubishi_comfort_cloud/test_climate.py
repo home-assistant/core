@@ -19,7 +19,7 @@ from homeassistant.components.mitsubishi_comfort_cloud.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .conftest import MOCK_SERIAL
 
@@ -389,6 +389,47 @@ async def test_combined_mode_temperature(
         call(MOCK_SERIAL, command) for command in commands
     ]
     assert hass.states.get(ENTITY_ID).state == expected_mode
+
+
+@pytest.mark.parametrize(
+    "hvac_mode",
+    [
+        pytest.param("auto", id="unmapped-mode"),
+        pytest.param("heat", id="unsupported-device-mode"),
+    ],
+)
+@pytest.mark.parametrize(
+    "data",
+    [
+        pytest.param({"temperature": 25}, id="single"),
+        pytest.param({"target_temp_low": 20, "target_temp_high": 26}, id="range"),
+    ],
+)
+async def test_unsupported_combined_mode_temperature(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_account: AsyncMock,
+    hvac_mode: str,
+    data: dict[str, float],
+) -> None:
+    """Unsupported modes must fail before changing mode or setpoints."""
+    mock_cloud_account.get_device_profile.return_value["hasModeHeat"] = False
+    mock_cloud_account.get_device_profile.return_value["maximumSetPoints"].pop("heat")
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    before = hass.states.get(ENTITY_ID)
+    assert hvac_mode not in before.attributes["hvac_modes"]
+
+    with pytest.raises(ServiceValidationError, match="is not valid"):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            "set_temperature",
+            {ATTR_ENTITY_ID: ENTITY_ID, "hvac_mode": hvac_mode, **data},
+            blocking=True,
+        )
+    mock_cloud_account.send_command.assert_not_awaited()
+    assert hass.states.get(ENTITY_ID) == before
 
 
 @pytest.mark.parametrize(

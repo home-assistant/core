@@ -1,6 +1,7 @@
 """The Mitsubishi Comfort Cloud integration."""
 
 import asyncio
+import logging
 
 from mitsubishi_comfort import CloudIndoorUnit, MitsubishiCloudAccount
 from mitsubishi_comfort.exceptions import AuthenticationError, DeviceConnectionError
@@ -20,6 +21,8 @@ from .coordinator import (
     MitsubishiComfortCloudCoordinator,
 )
 from .helpers import async_discover_devices
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -69,6 +72,13 @@ async def async_setup_entry(
             raise result
     if failures and len(failures) == len(results):
         raise auth_failure or failures[0]
+    for coordinator, result in zip(coordinators.values(), results, strict=True):
+        if isinstance(result, (ConfigEntryNotReady, ConfigEntryAuthFailed)):
+            _LOGGER.error(
+                "Error fetching initial data for %s: %s",
+                coordinator.device.name,
+                result,
+            )
     if auth_failure:
         entry.async_start_reauth(hass)
 

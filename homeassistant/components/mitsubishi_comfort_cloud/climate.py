@@ -269,7 +269,7 @@ class MitsubishiComfortCloudClimate(MitsubishiComfortCloudEntity, ClimateEntity)
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature."""
         if ATTR_HVAC_MODE in kwargs:
-            await self.async_set_hvac_mode(kwargs[ATTR_HVAC_MODE])
+            await self.async_handle_set_hvac_mode_service(kwargs[ATTR_HVAC_MODE])
         mode = self._effective_mode
         wrote = False
         failed = False

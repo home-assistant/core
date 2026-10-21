@@ -132,6 +132,7 @@ async def test_partial_failure(
     mock_cloud_account: AsyncMock,
     error: Exception,
     reauth_steps: list[str],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """One failed unit does not hide working units on the account."""
     mock_cloud_account.get_zones.return_value.append(
@@ -150,6 +151,12 @@ async def test_partial_failure(
         flow["step_id"]
         for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     ] == reauth_steps
+    assert caplog.text.count("Error fetching initial data for Bedroom:") == 1
+    mock_cloud_account.get_device_details.side_effect = error
+    await mock_config_entry.runtime_data["SECOND"].async_refresh()
+    assert caplog.text.count("Error fetching initial data for Bedroom:") == 1
+    assert "Error fetching mitsubishi_comfort_cloud_SECOND data" not in caplog.text
+    assert "Authentication failed while fetching" not in caplog.text
     mock_cloud_account.get_device_details.side_effect = None
     await mock_config_entry.runtime_data["SECOND"].async_refresh()
     assert hass.states.get("climate.bedroom").state == "cool"
