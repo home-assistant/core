@@ -33,7 +33,7 @@ from .const import (
     TRANSPORT_BLUETOOTH,
     TRANSPORT_LAN,
 )
-from .coordinator import async_get_connection_lock
+from .coordinator import BesenConnectionState, async_get_connection_state
 from .lan import async_acquire_udp_hub, async_release_udp_hub
 
 if TYPE_CHECKING:
@@ -120,11 +120,20 @@ async def _async_validate_input(
     address: str,
     pin: str,
     name: str | None,
+    connection: BesenConnectionState | None = None,
 ) -> tuple[str, str | None]:
     """Return the charger title and serial after verifying the connection."""
 
     if len(pin) != 6 or not (pin.isascii() and pin.isdecimal()):
         raise InvalidAuth("PIN must be exactly 6 digits")
+
+    if connection is None:
+        connection = async_get_connection_state(hass, f"bluetooth:{address}")
+        async with connection.lock:
+            await connection.async_cleanup()
+            return await _async_validate_input(
+                hass, address=address, pin=pin, name=name, connection=connection
+            )
 
     def _ble_device_provider() -> BLEDevice | None:
         return bluetooth.async_ble_device_from_address(
@@ -146,11 +155,18 @@ async def _async_validate_input(
         logger=_LOGGER,
         advertised_name=name,
     )
+
+    async def stop_client() -> None:
+        await client.async_stop()
+        if client.is_connected:
+            raise CannotConnect("Test connection was not released")
+
+    connection.async_set_cleanup(stop_client)
     try:
         await client.async_start()
         info = client.state.info
     finally:
-        await client.async_stop()
+        await connection.async_cleanup()
     if info.serial and _serial_is_configured(hass, info.serial, address=address):
         raise _AlreadyConfigured
     return info.model or name or address, info.serial
@@ -446,21 +462,35 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 progress_action="connecting",
                 progress_task=self._operation_task,
             )
+        try:
+            self._operation_task.result()
+        except asyncio.CancelledError:
+            self._operation_error = "cannot_connect"
+        except CannotConnect, CommandFailed, TimeoutError:
+            self._operation_error = "cannot_connect"
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.error("Unexpected Besen setup task error: %s", type(err).__name__)
+            self._operation_error = "unknown"
         return self.async_show_progress_done(next_step_id="connection_done")
 
     async def _test_connection(self, transport: str) -> None:
         """Serialize validation, cleanup and restoration for an existing entry."""
         entry = self._current_entry()
-        lock = (
-            async_get_connection_lock(self.hass, entry.entry_id)
+        connection = async_get_connection_state(
+            self.hass,
+            entry.entry_id
             if entry
-            else asyncio.Lock()
+            else f"lan:{self._pending_data[CONF_HOST].casefold()}",
         )
-        async with lock:
-            await self._test_connection_locked(transport, entry)
+        async with connection.lock:
+            await connection.async_cleanup()
+            await self._test_connection_locked(transport, entry, connection)
 
     async def _test_connection_locked(
-        self, transport: str, entry: BesenConfigEntry | None
+        self,
+        transport: str,
+        entry: BesenConfigEntry | None,
+        connection: BesenConnectionState,
     ) -> None:
         """Release the old session, test the candidate and restore the old one.
 
@@ -471,6 +501,18 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         candidate: BesenUdpClient | None = None
         stopped = False
         acquired_hub = False
+
+        async def cleanup_candidate() -> None:
+            nonlocal candidate, acquired_hub
+            if candidate is not None:
+                await candidate.async_stop()
+                if candidate.is_connected:
+                    raise CannotConnect("Test connection was not released")
+                candidate = None
+            if acquired_hub:
+                acquired_hub = False
+                await async_release_udp_hub(self.hass)
+
         try:
             if runtime:
                 stopped = True
@@ -479,6 +521,7 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if transport == TRANSPORT_LAN:
                 hub = await async_acquire_udp_hub(self.hass)
                 acquired_hub = True
+                connection.async_set_cleanup(cleanup_candidate)
                 candidate = BesenUdpClient(
                     address=address,
                     pin=self._pending_data[CONF_PIN],
@@ -510,12 +553,15 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self._pending_title = candidate.state.info.model or "Besen"
                     self._pending_data[CONF_NAME] = self._pending_title
             else:
-                await _async_validate_input(
+                _, serial = await _async_validate_input(
                     self.hass,
                     address=address,
                     pin=self._pending_data[CONF_PIN],
                     name=self._pending_data.get(CONF_NAME),
+                    connection=connection,
                 )
+                if serial:
+                    self._pending_data[CONF_SERIAL] = serial
             self._pending_data[CONF_TRANSPORT] = transport
         except _AlreadyConfigured:
             self._operation_error = "already_configured"
@@ -533,15 +579,15 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._operation_error = "unknown"
         finally:
             try:
-                if candidate:
-                    await candidate.async_stop()
+                await connection.async_cleanup()
             finally:
-                try:
-                    if acquired_hub:
-                        await async_release_udp_hub(self.hass)
-                finally:
-                    if runtime and stopped:
-                        assert entry is not None
+                if runtime and stopped:
+                    assert entry is not None
+                    if connection.cleanup_pending:
+                        self._reload_after_flow = (entry, runtime)
+                        if self._removed:
+                            self._async_schedule_restore_reload()
+                    else:
                         await self._async_restore_connection(entry, runtime)
 
     async def _async_restore_connection(

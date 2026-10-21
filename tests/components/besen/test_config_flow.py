@@ -464,6 +464,7 @@ async def test_reauth_flow(
         CONF_NAME: FIXTURE_NAME,
         CONF_PIN: NEW_PIN,
         CONF_TRANSPORT: "bluetooth",
+        CONF_SERIAL: "SERIAL",
     }
     mock_besen_client.async_start.assert_awaited_once()
     mock_besen_client.async_stop.assert_awaited_once()

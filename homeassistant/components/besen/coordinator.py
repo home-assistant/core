@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Awaitable, Callable
 from contextlib import suppress
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, override
@@ -28,22 +29,84 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-@singleton(f"{DOMAIN}_validation_locks")
+@dataclass
+class BesenConnectionState:
+    """Keep ownership and unfinished candidate cleanup across coordinator changes."""
+
+    hass: HomeAssistant
+    key: str
+    lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    _cleanup: Callable[[], Awaitable[None]] | None = None
+
+    @property
+    def cleanup_pending(self) -> bool:
+        """Return whether a validation connection still needs to be released."""
+        return self._cleanup is not None
+
+    @callback
+    def async_set_cleanup(self, cleanup: Callable[[], Awaitable[None]]) -> None:
+        """Retain the candidate until its cleanup has succeeded."""
+        assert self._cleanup is None
+        self._cleanup = cleanup
+        _async_pending_connections(self.hass)[self.key] = self
+
+    async def _async_run_cleanup(self) -> CannotConnect | None:
+        """Release retained resources and keep failures safe to report."""
+        assert self._cleanup is not None
+        try:
+            await self._cleanup()
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.error("Besen connection cleanup failed: %s", type(err).__name__)
+            return CannotConnect("Unable to release the test connection")
+        self._cleanup = None
+        _async_pending_connections(self.hass).pop(self.key)
+        return None
+
+    async def async_cleanup(self) -> None:
+        """Wait for cleanup before propagating any caller cancellation."""
+        if self._cleanup is None:
+            return
+        task = self.hass.async_create_task(
+            self._async_run_cleanup(), "Besen connection cleanup", eager_start=False
+        )
+        cancelled: asyncio.CancelledError | None = None
+        while not task.done():
+            try:
+                await asyncio.shield(task)
+            except asyncio.CancelledError as err:
+                cancelled = err
+        try:
+            error = task.result()
+        finally:
+            if cancelled is not None:
+                raise cancelled
+        if error is not None:
+            raise error
+
+
+@singleton(f"{DOMAIN}_pending_connections")
 @callback
-def _async_validation_locks(
+def _async_pending_connections(hass: HomeAssistant) -> dict[str, BesenConnectionState]:
+    """Keep failed cleanup reachable until a retry succeeds."""
+    return {}
+
+
+@singleton(f"{DOMAIN}_validation_connections")
+@callback
+def _async_connections(
     hass: HomeAssistant,
-) -> WeakValueDictionary[str, asyncio.Lock]:
-    """Retain entry locks only while a coordinator or operation uses them."""
+) -> WeakValueDictionary[str, BesenConnectionState]:
+    """Retain idle ownership only while a coordinator or operation uses it."""
     return WeakValueDictionary()
 
 
 @callback
-def async_get_connection_lock(hass: HomeAssistant, entry_id: str) -> asyncio.Lock:
-    """Share validation ownership across flows and coordinator replacements."""
-    locks = _async_validation_locks(hass)
-    if (lock := locks.get(entry_id)) is None:
-        locks[entry_id] = lock = asyncio.Lock()
-    return lock
+def async_get_connection_state(hass: HomeAssistant, key: str) -> BesenConnectionState:
+    """Share ownership and cleanup across flows and coordinator replacements."""
+    connections = _async_connections(hass)
+    if (state := connections.get(key)) is None:
+        connections[key] = state = BesenConnectionState(hass, key)
+    return state
 
 
 class BesenCoordinator(DataUpdateCoordinator[BesenData]):
@@ -71,13 +134,14 @@ class BesenCoordinator(DataUpdateCoordinator[BesenData]):
         self._remove_listener: Callable[[], None] | None = None
         self._client_stopped = True
         self._connection_lock = asyncio.Lock()
-        self._validation_lock = async_get_connection_lock(hass, config_entry.entry_id)
+        self._connection_state = async_get_connection_state(hass, config_entry.entry_id)
         self._uses_lan = uses_lan
 
     async def async_start(self) -> None:
         """Start listening to charger updates."""
 
-        async with self._validation_lock:
+        async with self._connection_state.lock:
+            await self._connection_state.async_cleanup()
             self._remove_listener = self.client.add_listener(self._handle_client_update)
             self._client_stopped = False
             try:
@@ -100,9 +164,12 @@ class BesenCoordinator(DataUpdateCoordinator[BesenData]):
         if self._remove_listener is not None:
             self._remove_listener()
             self._remove_listener = None
-        async with self._validation_lock, self._connection_lock:
+        async with self._connection_state.lock, self._connection_lock:
             try:
-                await self._async_stop_client()
+                try:
+                    await self._connection_state.async_cleanup()
+                finally:
+                    await self._async_stop_client()
             finally:
                 await self._async_release_listener()
 
