@@ -4,11 +4,11 @@ from collections.abc import AsyncIterator
 from pathlib import Path
 from types import MappingProxyType
 
-from hass_client.channel import ChannelRemoteError
-from hass_client.entry_runner import _entry_from_proto
-from hass_client.entry_sync import EntrySync as ClientEntrySync
-from hass_client.flow_runner import FlowRunner
-from hass_client.testing._inproc import make_inproc_channel_pair
+from homeassistant_sandbox.channel import ChannelRemoteError
+from homeassistant_sandbox.entry_runner import _entry_from_proto
+from homeassistant_sandbox.entry_sync import EntrySync as ClientEntrySync
+from homeassistant_sandbox.flow_runner import FlowRunner
+from homeassistant_sandbox.testing._inproc import make_inproc_channel_pair
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 

@@ -100,7 +100,7 @@ async def test_multiple_groups_independent(hass: HomeAssistant) -> None:
         return [
             sys.executable,
             "-m",
-            "hass_client.sandbox",
+            "homeassistant_sandbox",
             "--name",
             group,
             "--url",

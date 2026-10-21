@@ -25,7 +25,7 @@ async def _manager_fixture(hass: HomeAssistant):
         return [
             sys.executable,
             "-m",
-            "hass_client.sandbox",
+            "homeassistant_sandbox",
             "--name",
             group,
             "--url",

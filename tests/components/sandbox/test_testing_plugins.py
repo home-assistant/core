@@ -1,11 +1,11 @@
-"""Tests for the ``hass_client.testing`` pytest plugins."""
+"""Tests for the ``homeassistant_sandbox.testing`` pytest plugins."""
 
 import asyncio
 from collections.abc import AsyncIterator
 from unittest.mock import MagicMock
 
-from hass_client.testing import conftest_sandbox as cs_plugin
-from hass_client.testing.pytest_plugin import (
+from homeassistant_sandbox.testing import conftest_sandbox as cs_plugin
+from homeassistant_sandbox.testing.pytest_plugin import (
     DEFAULT_GROUP,
     InProcessSandbox,
     async_setup_inprocess_sandbox,
@@ -120,7 +120,7 @@ def test_conftest_sandbox_leaves_non_hass_tests_alone() -> None:
 
 def test_inprocess_plugin_injects_sandbox_into_hass_tests() -> None:
     """The in-process plugin injects ``sandbox_inprocess`` the same way."""
-    from hass_client.testing import pytest_plugin as inproc_plugin  # noqa: PLC0415
+    from homeassistant_sandbox.testing import pytest_plugin as inproc_plugin  # noqa: PLC0415
 
     item = _make_item(fixturenames=("hass",))
     other = _make_item(fixturenames=("tmp_path",))
@@ -131,7 +131,7 @@ def test_inprocess_plugin_injects_sandbox_into_hass_tests() -> None:
 
 def test_autotag_sets_mock_config_entry_sandbox() -> None:
     """``install_mock_config_entry_autotag`` sets ``entry.sandbox`` on ``add_to_hass``."""
-    from hass_client.testing._autotag import install_mock_config_entry_autotag  # noqa: PLC0415
+    from homeassistant_sandbox.testing._autotag import install_mock_config_entry_autotag  # noqa: PLC0415
     from pytest_homeassistant.common import MockConfigEntry  # noqa: PLC0415
 
     fake_hass = MagicMock()

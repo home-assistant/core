@@ -30,7 +30,7 @@ def _runtime_factory(seen: dict[str, str]) -> object:
         return [
             sys.executable,
             "-m",
-            "hass_client.sandbox",
+            "homeassistant_sandbox",
             "--name",
             group,
             "--url",

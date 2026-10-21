@@ -156,7 +156,7 @@ async def test_started_worker_config_and_subentries(
         return [
             sys.executable,
             "-c",
-            "import asyncio,sys; from hass_client.sandbox import SandboxRuntime; asyncio.run(SandboxRuntime(group=sys.argv[1],url=sys.argv[2],config_dir=sys.argv[3]).run())",
+            "import asyncio,sys; from homeassistant_sandbox.runtime import SandboxRuntime; asyncio.run(SandboxRuntime(group=sys.argv[1],url=sys.argv[2],config_dir=sys.argv[3]).run())",
             group,
             url,
             str(child_dir),

@@ -31,7 +31,7 @@ async def _manager_fixture(hass: HomeAssistant) -> AsyncIterator[SandboxManager]
         return [
             sys.executable,
             "-m",
-            "hass_client.sandbox",
+            "homeassistant_sandbox",
             "--name",
             group,
             "--url",
@@ -77,7 +77,7 @@ async def test_graceful_shutdown_falls_through_to_sigterm_on_timeout(
             "-c",
             (
                 "import sys, time, struct;"
-                "from hass_client._proto import sandbox_pb2 as pb;"
+                "from homeassistant_sandbox._proto import sandbox_pb2 as pb;"
                 # Length-prefixed protobuf Ready push frame — the manager's
                 # ProtobufCodec decodes this and flips to "running".
                 "frame = pb.Frame(id=0, type='sandbox/ready');"
@@ -157,7 +157,7 @@ async def test_on_shutdown_reply_callback_is_invoked(
         return [
             sys.executable,
             "-m",
-            "hass_client.sandbox",
+            "homeassistant_sandbox",
             "--name",
             group,
             "--url",

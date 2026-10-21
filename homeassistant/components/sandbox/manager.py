@@ -633,11 +633,11 @@ class SandboxManager:
         )
 
     def _default_command(self, group: str, url: str) -> list[str]:
-        """Argv for ``python -m hass_client.sandbox``."""
+        """Argv for ``python -m homeassistant_sandbox``."""
         return [
             sys.executable,
             "-m",
-            "hass_client.sandbox",
+            "homeassistant_sandbox",
             "--name",
             group,
             "--url",
