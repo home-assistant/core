@@ -22,6 +22,7 @@ from boschshcpy.services_impl import (
     DisplayedTemperatureConfiguration,
     PirSensorConfigurationService,
     PowerSwitchConfigurationService,
+    SmartSensitivityControlService,
     SmokeSensitivityService,
     SwitchConfiguration,
     TerminalConfiguration,
@@ -256,6 +257,7 @@ SWITCH_TYPE_DESCRIPTION = SHCSelectEntityDescription[SHCMicromoduleRelay](
 )
 
 
+<<<<<<< HEAD
 def _terminal_type_select_option(device: SHCRoomThermostat2, option: str) -> None:
     """Write the thermostat's terminal (external sensor) type."""
     device.terminal_type = TerminalConfiguration.Type[option.upper()]
@@ -323,6 +325,50 @@ OUTPUT_MODE_DESCRIPTION = SHCSelectEntityDescription[SHCMicromoduleRelay](
         value.name.lower() if (value := device.output_mode) else None
     ),
     select_option_fn=_output_mode_select_option,
+=======
+def _smart_sensitivity_current_option(
+    device: SHCMotionDetector2,
+    context: SmartSensitivityControlService.SmartSensitivityContext,
+    options: Sequence[str] | None,
+) -> str | None:
+    """Read the manual sensitivity level of a smart sensitivity context."""
+    if (sensitivity := device.get_smart_sensitivity(context)) is None:
+        return None
+    level = str(sensitivity.get("manualLevel", "")).lower()
+    return level if options is not None and level in options else None
+
+
+SMART_SENSITIVITY_SECURITY_LEVEL_DESCRIPTION = SHCSelectEntityDescription[
+    SHCMotionDetector2
+](
+    key="smart_sensitivity_security_level",
+    translation_key="smart_sensitivity_security_level",
+    entity_category=EntityCategory.CONFIG,
+    options=["high", "middle", "low"],
+    current_option_fn=lambda device, options: _smart_sensitivity_current_option(
+        device, SmartSensitivityControlService.SmartSensitivityContext.SECURITY, options
+    ),
+    select_option_fn=lambda device, option: device.set_smart_sensitivity_manual_level(
+        SmartSensitivityControlService.SmartSensitivityContext.SECURITY,
+        SmartSensitivityControlService.MotionSensitivity[option.upper()],
+    ),
+)
+
+SMART_SENSITIVITY_COMFORT_LEVEL_DESCRIPTION = SHCSelectEntityDescription[
+    SHCMotionDetector2
+](
+    key="smart_sensitivity_comfort_level",
+    translation_key="smart_sensitivity_comfort_level",
+    entity_category=EntityCategory.CONFIG,
+    options=["high", "middle", "low"],
+    current_option_fn=lambda device, options: _smart_sensitivity_current_option(
+        device, SmartSensitivityControlService.SmartSensitivityContext.COMFORT, options
+    ),
+    select_option_fn=lambda device, option: device.set_smart_sensitivity_manual_level(
+        SmartSensitivityControlService.SmartSensitivityContext.COMFORT,
+        SmartSensitivityControlService.MotionSensitivity[option.upper()],
+    ),
+>>>>>>> 4714345c5b (Add smart sensitivity level selects to Bosch SHC)
 )
 
 
@@ -488,6 +534,7 @@ async def async_setup_entry(
     entities.extend(
         SHCSelect(
             hass=hass,
+<<<<<<< HEAD
             device=room_thermostat,
             parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
@@ -519,6 +566,19 @@ async def async_setup_entry(
         )
         for relay in session.device_helper.micromodule_relays
         if relay.supports_switch_configuration and relay.output_mode is not None
+=======
+            device=detector,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=description,
+        )
+        for detector in session.device_helper.motion_detectors2
+        if detector.supports_smart_sensitivity
+        for description in (
+            SMART_SENSITIVITY_SECURITY_LEVEL_DESCRIPTION,
+            SMART_SENSITIVITY_COMFORT_LEVEL_DESCRIPTION,
+        )
+>>>>>>> 4714345c5b (Add smart sensitivity level selects to Bosch SHC)
     )
 
     async_add_entities(entities)
