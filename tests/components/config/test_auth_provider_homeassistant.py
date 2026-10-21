@@ -8,7 +8,8 @@ import pytest
 from pytest_homeassistant.common import CLIENT_ID, MockUser
 from pytest_homeassistant.typing import WebSocketGenerator
 
-from homeassistant.auth.providers import homeassistant as prov_ha
+from homeassistant.auth import STEP_UP_MAX_ATTEMPTS
+from homeassistant.auth.providers import InvalidStepUpError, homeassistant as prov_ha
 from homeassistant.components.config import auth_provider_homeassistant as auth_ha
 from homeassistant.core import HomeAssistant
 
@@ -820,3 +821,61 @@ async def test_admin_change_username_no_cred(
     result = await client.receive_json()
     assert not result["success"], result
     assert result["error"]["code"] == "credentials_not_found"
+
+
+async def test_change_password_uses_up_the_verification_attempts(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_access_token: str,
+    auth_provider: prov_ha.HassAuthProvider,
+) -> None:
+    """Test guessing the current password counts against the step-up attempts."""
+    client = await hass_ws_client(hass)
+    for msg_id in range(1, STEP_UP_MAX_ATTEMPTS + 1):
+        await client.send_json(
+            {
+                "id": msg_id,
+                "type": "config/auth_provider/homeassistant/change_password",
+                "current_password": "wrong-pass",
+                "new_password": "new-pass",
+            }
+        )
+        result = await client.receive_json()
+        assert result["error"]["code"] == "invalid_current_password"
+
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
+    assert refresh_token is not None
+    with pytest.raises(InvalidStepUpError, match="Too many attempts"):
+        await hass.auth.async_step_up(
+            refresh_token.id, auth_provider, {"password": "test-pass"}, None
+        )
+
+
+async def test_used_up_verification_attempts_block_change_password(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_access_token: str,
+    auth_provider: prov_ha.HassAuthProvider,
+) -> None:
+    """Test the current password isn't checked once the attempts are used up."""
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
+    assert refresh_token is not None
+    for _ in range(STEP_UP_MAX_ATTEMPTS):
+        with pytest.raises(InvalidStepUpError):
+            await hass.auth.async_step_up(
+                refresh_token.id, auth_provider, {"password": "wrong-pass"}, None
+            )
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "config/auth_provider/homeassistant/change_password",
+            "current_password": "test-pass",
+            "new_password": "new-pass",
+        }
+    )
+
+    result = await client.receive_json()
+    assert result["error"]["code"] == "invalid_current_password"
+    await auth_provider.async_validate_login("test-user", "test-pass")

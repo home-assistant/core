@@ -204,6 +204,7 @@ class AuthManager:
         self._step_ups: dict[str, datetime] = {}
         # Refresh token ids that used their recent sign in as a step up.
         self._sign_in_step_ups_used: set[str] = set()
+        self._started_at = dt_util.utcnow()
         # User id to the monotonic times of their recent step up attempts.
         self._step_up_attempts: dict[str, deque[float]] = {}
         self._create_user_lock = asyncio.Lock()
@@ -359,8 +360,18 @@ class AuthManager:
         ) is None:
             raise InvalidStepUpError("Step up needs an interactive session.")
 
-        user = refresh_token.user
-        # Shared by all sessions of the user and counted before verifying, so a
+        await self.async_verify_user(refresh_token.user, provider, data, context)
+        self._step_ups[refresh_token.id] = dt_util.utcnow() + STEP_UP_VALIDITY
+
+    async def async_verify_user(
+        self,
+        user: models.User,
+        provider: AuthProvider,
+        data: Mapping[str, Any],
+        context: AuthFlowContext | None,
+    ) -> None:
+        """Verify a signed in user again, within a per-user attempt budget."""
+        # Shared by all sessions and callers, and counted before verifying, so a
         # stolen session can't guess the password quickly, not even in parallel.
         attempts = self._step_up_attempts.setdefault(user.id, deque())
         now = time.monotonic()
@@ -372,7 +383,6 @@ class AuthManager:
 
         await provider.async_verify_step_up(user, data, context)
         self._step_up_attempts.pop(user.id, None)
-        self._step_ups[refresh_token.id] = dt_util.utcnow() + STEP_UP_VALIDITY
 
     @callback
     def async_consume_step_up(self, refresh_token_id: str | None) -> bool:
@@ -387,9 +397,11 @@ class AuthManager:
             return now < expires
 
         # A user that no provider can verify again has to rely on having signed
-        # in moments ago, which counts once like a proof.
+        # in moments ago, which counts once like a proof. What was used up isn't
+        # stored, so a session from before a restart can't rely on it.
         if (
             refresh_token.id in self._sign_in_step_ups_used
+            or refresh_token.created_at < self._started_at
             or now >= refresh_token.created_at + STEP_UP_VALIDITY
             or self.async_get_step_up_providers(refresh_token.user)
         ):

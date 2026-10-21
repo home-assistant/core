@@ -1836,6 +1836,21 @@ async def test_step_up_falls_back_to_a_recent_sign_in(
     assert not hass.auth.async_consume_step_up(late.id)
 
 
+async def test_step_up_fallback_not_for_sessions_from_before_a_restart(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_admin_user: MockUser
+) -> None:
+    """Test a session restored after a restart can't rely on its sign in again."""
+    refresh_token = await hass.auth.async_create_refresh_token(
+        hass_admin_user, CLIENT_ID
+    )
+    assert hass.auth.async_consume_step_up(refresh_token.id)
+
+    freezer.tick(timedelta(seconds=1))
+    restarted = auth.AuthManager(hass, hass.auth._store, {}, {})
+
+    assert not restarted.async_consume_step_up(refresh_token.id)
+
+
 async def test_step_up_refuses_long_lived_access_token(
     hass: HomeAssistant, hass_admin_user: MockUser, local_auth: HassAuthProvider
 ) -> None:

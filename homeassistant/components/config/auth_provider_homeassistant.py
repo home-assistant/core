@@ -153,8 +153,8 @@ async def websocket_change_password(
         return
 
     try:
-        await provider.async_verify_step_up(
-            user, {"password": msg["current_password"]}, None
+        await hass.auth.async_verify_user(
+            user, provider, {"password": msg["current_password"]}, None
         )
     except InvalidStepUpError:
         connection.send_error(
