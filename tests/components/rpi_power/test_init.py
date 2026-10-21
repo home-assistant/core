@@ -1,5 +1,7 @@
 """Tests for rpi_power integration."""
 
+from unittest.mock import MagicMock
+
 from pytest_homeassistant.common import MockConfigEntry, patch
 
 from homeassistant.components.rpi_power.const import DOMAIN, ISSUE_UNDER_VOLTAGE
