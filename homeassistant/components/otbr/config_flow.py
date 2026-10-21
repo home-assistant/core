@@ -2,7 +2,7 @@
 
 from contextlib import suppress
 import logging
-from typing import TYPE_CHECKING, cast, override
+from typing import TYPE_CHECKING, Any, cast, override
 
 import aiohttp
 import probatio
@@ -38,6 +38,8 @@ if TYPE_CHECKING:
     from .types import OTBRConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+STEP_USER_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_URL): str})
 
 
 class AlreadyConfigured(HomeAssistantError):
@@ -182,9 +184,45 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={CONF_URL: url},
                 )
 
-        data_schema = probatio.Schema({CONF_URL: str})
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors
+            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the URL."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        # The app reports its URL through discovery
+        if reconfigure_entry.source == SOURCE_HASSIO:
+            return self.async_abort(reason="app_managed")
+
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            url = user_input[CONF_URL].rstrip("/")
+            api = python_otbr_api.OTBR(url, async_get_clientsession(self.hass), 10)
+            try:
+                border_agent_id = await api.get_border_agent_id()
+            except (
+                python_otbr_api.OTBRError,
+                aiohttp.ClientError,
+                TimeoutError,
+            ) as exc:
+                _LOGGER.debug("Failed to communicate with OTBR@%s: %s", url, exc)
+                errors["base"] = "cannot_connect"
+            else:
+                await self.async_set_unique_id(border_agent_id.hex())
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates={CONF_URL: url}
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input or reconfigure_entry.data
+            ),
+            errors=errors,
         )
 
     @callback

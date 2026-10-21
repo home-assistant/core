@@ -2,6 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "The Thread border router is already configured",
+      "app_managed": "This border router is managed by an app, its URL is updated automatically.",
+      "unique_id_mismatch": "The URL points to a different border router. Please ensure you reconfigure against the same border router.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
@@ -9,9 +11,21 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "url": "[%key:component::otbr::config::step::user::data_description::url%]"
+        },
+        "description": "Update the URL of the OpenThread Border Router's REST API"
+      },
       "user": {
         "data": {
           "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "url": "The URL of the OpenThread Border Router's REST API, for example `http://192.168.1.10:8081`."
         },
         "description": "Provide URL for the OpenThread Border Router's REST API"
       }

@@ -25,7 +25,12 @@ from homeassistant.components.homeassistant_hardware.util import (
     FirmwareInfo,
     OwningAddon,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import (
+    SOURCE_HASSIO,
+    SOURCE_USER,
+    ConfigEntryState,
+    ConfigFlowResult,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
@@ -1238,3 +1243,113 @@ async def test_hassio_discovery_reload(
 
         assert len(callback.mock_calls) == 2
         assert len(hass.config_entries.async_entries(otbr.DOMAIN)) == 1
+
+
+@pytest.fixture(name="mock_user_config_entry")
+def mock_user_config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
+    """Mock a config entry created by the user flow."""
+    config_entry = MockConfigEntry(
+        data={"url": "http://custom_url:1234"},
+        domain=otbr.DOMAIN,
+        source=SOURCE_USER,
+        title="Open Thread Border Router",
+        unique_id=TEST_BORDER_AGENT_ID.hex(),
+    )
+    config_entry.add_to_hass(hass)
+    return config_entry
+
+
+async def _finish_reconfigure_flow(
+    hass: HomeAssistant, flow_id: str, url: str
+) -> ConfigFlowResult:
+    """Submit the reconfigure form."""
+    with patch("homeassistant.components.otbr.async_setup_entry", return_value=None):
+        return await hass.config_entries.flow.async_configure(flow_id, {"url": url})
+
+
+@pytest.mark.usefixtures("get_border_agent_id")
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_user_config_entry: MockConfigEntry,
+    get_active_dataset_tlvs: AsyncMock,
+) -> None:
+    """Test the reconfigure flow."""
+    result = await mock_user_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+
+    result = await _finish_reconfigure_flow(
+        hass, result["flow_id"], "http://new_url:1234/"
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_user_config_entry.data == {"url": "http://new_url:1234"}
+    # The Thread network of the router must not be touched
+    get_active_dataset_tlvs.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(TimeoutError, id="timeout"),
+        pytest.param(python_otbr_api.OTBRError, id="otbr_error"),
+        pytest.param(aiohttp.ClientError, id="client_error"),
+    ],
+)
+async def test_reconfigure_flow_cannot_connect(
+    hass: HomeAssistant,
+    mock_user_config_entry: MockConfigEntry,
+    get_border_agent_id: AsyncMock,
+    error: type[Exception],
+) -> None:
+    """Test the reconfigure flow recovers from a connection error."""
+    result = await mock_user_config_entry.start_reconfigure_flow(hass)
+
+    get_border_agent_id.side_effect = error
+    result = await _finish_reconfigure_flow(
+        hass, result["flow_id"], "http://new_url:1234"
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    get_border_agent_id.side_effect = None
+    result = await _finish_reconfigure_flow(
+        hass, result["flow_id"], "http://new_url:1234"
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_user_config_entry.data == {"url": "http://new_url:1234"}
+
+
+async def test_reconfigure_flow_unique_id_mismatch(
+    hass: HomeAssistant,
+    mock_user_config_entry: MockConfigEntry,
+    get_border_agent_id: AsyncMock,
+) -> None:
+    """Test the reconfigure flow aborts for a different border router."""
+    get_border_agent_id.return_value = TEST_BORDER_AGENT_ID_2
+    result = await mock_user_config_entry.start_reconfigure_flow(hass)
+
+    result = await _finish_reconfigure_flow(
+        hass, result["flow_id"], "http://new_url:1234"
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_user_config_entry.data == {"url": "http://custom_url:1234"}
+
+
+async def test_reconfigure_flow_app_managed(hass: HomeAssistant) -> None:
+    """Test the reconfigure flow aborts for an entry managed by an app."""
+    config_entry = MockConfigEntry(
+        data={"url": "http://core-openthread-border-router:8081"},
+        domain=otbr.DOMAIN,
+        source=SOURCE_HASSIO,
+        title="Open Thread Border Router",
+        unique_id=HASSIO_DATA_OTBR.uuid,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "app_managed"
