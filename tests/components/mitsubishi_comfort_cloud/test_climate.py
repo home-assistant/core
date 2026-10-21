@@ -25,6 +25,8 @@ from .conftest import MOCK_SERIAL
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
+ENTITY_ID = "climate.living_room"
+
 
 @pytest.mark.parametrize(
     ("service", "data", "command"),
@@ -64,7 +66,7 @@ async def test_cloud_commands(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "climate.living_room", **data},
+        {ATTR_ENTITY_ID: ENTITY_ID, **data},
         blocking=True,
     )
     mock_cloud_account.send_command.assert_awaited_once_with(MOCK_SERIAL, command)
@@ -96,11 +98,11 @@ async def test_cloud_command_failure(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             "set_hvac_mode",
-            {ATTR_ENTITY_ID: "climate.living_room", "hvac_mode": "heat"},
+            {ATTR_ENTITY_ID: ENTITY_ID, "hvac_mode": "heat"},
             blocking=True,
         )
     await hass.async_block_till_done()
-    assert hass.states.get("climate.living_room").state == "cool"
+    assert hass.states.get(ENTITY_ID).state == "cool"
     assert [
         (flow["step_id"], flow["context"]["entry_id"])
         for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
@@ -121,7 +123,7 @@ async def test_cloud_poll_authentication_failure(
     await mock_config_entry.runtime_data[MOCK_SERIAL].async_refresh()
     await hass.async_block_till_done()
 
-    assert hass.states.get("climate.living_room").state == STATE_UNAVAILABLE
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
     assert mock_config_entry.state is ConfigEntryState.LOADED
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert len(flows) == 1
@@ -157,7 +159,7 @@ async def test_temperature_modes(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         "set_temperature",
-        {ATTR_ENTITY_ID: "climate.living_room", **data},
+        {ATTR_ENTITY_ID: ENTITY_ID, **data},
         blocking=True,
     )
     assert mock_cloud_account.send_command.await_args_list == [
@@ -187,16 +189,16 @@ async def test_action_error(
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    before = hass.states.get("climate.living_room")
+    before = hass.states.get(ENTITY_ID)
     mock_cloud_account.send_command.side_effect = DeviceConnectionError("offline")
     with pytest.raises(HomeAssistantError, match="did not accept"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             service,
-            {ATTR_ENTITY_ID: "climate.living_room", **data},
+            {ATTR_ENTITY_ID: ENTITY_ID, **data},
             blocking=True,
         )
-    assert hass.states.get("climate.living_room") == before
+    assert hass.states.get(ENTITY_ID) == before
 
 
 @pytest.mark.parametrize(
@@ -225,13 +227,13 @@ async def test_partial_temperature_failure(
             CLIMATE_DOMAIN,
             "set_temperature",
             {
-                ATTR_ENTITY_ID: "climate.living_room",
+                ATTR_ENTITY_ID: ENTITY_ID,
                 "target_temp_low": 20,
                 "target_temp_high": 26,
             },
             blocking=True,
         )
-    state = hass.states.get("climate.living_room")
+    state = hass.states.get(ENTITY_ID)
     assert state.attributes["target_temp_low"] == expected_low
     assert state.attributes["target_temp_high"] == expected_high
 
@@ -249,14 +251,14 @@ async def test_poll_replaces_optimistic_state(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         "set_hvac_mode",
-        {ATTR_ENTITY_ID: "climate.living_room", "hvac_mode": "heat"},
+        {ATTR_ENTITY_ID: ENTITY_ID, "hvac_mode": "heat"},
         blocking=True,
     )
-    assert hass.states.get("climate.living_room").state == "heat"
+    assert hass.states.get(ENTITY_ID).state == "heat"
     freezer.tick(DEFAULT_SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert hass.states.get("climate.living_room").state == "cool"
+    assert hass.states.get(ENTITY_ID).state == "cool"
     assert mock_cloud_account.get_device_details.await_count == 2
 
 
@@ -273,7 +275,7 @@ async def test_climate_state(
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert hass.states.get("climate.living_room") == snapshot
+    assert hass.states.get(ENTITY_ID) == snapshot
 
 
 @pytest.mark.parametrize("mode", ["auto", "autoCool", "autoHeat"])
@@ -307,7 +309,7 @@ async def test_automatic_temperature_bounds(
         CLIMATE_DOMAIN,
         "set_temperature",
         {
-            ATTR_ENTITY_ID: "climate.living_room",
+            ATTR_ENTITY_ID: ENTITY_ID,
             "target_temp_low": low,
             "target_temp_high": high,
         },
@@ -317,7 +319,7 @@ async def test_automatic_temperature_bounds(
         call(MOCK_SERIAL, {"spCool": high}),
         call(MOCK_SERIAL, {"spHeat": low}),
     ]
-    state = hass.states.get("climate.living_room")
+    state = hass.states.get(ENTITY_ID)
     assert state.attributes["target_temp_low"] == low
     assert state.attributes["target_temp_high"] == high
 
@@ -380,13 +382,13 @@ async def test_combined_mode_temperature(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         "set_temperature",
-        {ATTR_ENTITY_ID: "climate.living_room", **data},
+        {ATTR_ENTITY_ID: ENTITY_ID, **data},
         blocking=True,
     )
     assert mock_cloud_account.send_command.await_args_list == [
         call(MOCK_SERIAL, command) for command in commands
     ]
-    assert hass.states.get("climate.living_room").state == expected_mode
+    assert hass.states.get(ENTITY_ID).state == expected_mode
 
 
 @pytest.mark.parametrize(
@@ -418,7 +420,7 @@ async def test_failed_mode_change_stops_temperature_commands(
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    before = hass.states.get("climate.living_room")
+    before = hass.states.get(ENTITY_ID)
     mock_cloud_account.send_command.side_effect = error
 
     with pytest.raises(
@@ -427,12 +429,12 @@ async def test_failed_mode_change_stops_temperature_commands(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             "set_temperature",
-            {ATTR_ENTITY_ID: "climate.living_room", **data},
+            {ATTR_ENTITY_ID: ENTITY_ID, **data},
             blocking=True,
         )
     assert mock_cloud_account.send_command.await_count == 1
     assert "operationMode" in mock_cloud_account.send_command.await_args.args[1]
-    assert hass.states.get("climate.living_room") == before
+    assert hass.states.get(ENTITY_ID) == before
 
 
 @pytest.mark.parametrize(
@@ -463,7 +465,7 @@ async def test_partial_temperature_bounds(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("climate.living_room")
+    state = hass.states.get(ENTITY_ID)
     assert state.attributes["min_temp"] == expected_min
     assert state.attributes["max_temp"] == expected_max
 
@@ -487,14 +489,14 @@ async def test_reject_invalid_mode_setpoint(
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    before = hass.states.get("climate.living_room")
+    before = hass.states.get(ENTITY_ID)
 
     with pytest.raises(HomeAssistantError, match="did not accept"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             "set_temperature",
-            {ATTR_ENTITY_ID: "climate.living_room", "temperature": temperature},
+            {ATTR_ENTITY_ID: ENTITY_ID, "temperature": temperature},
             blocking=True,
         )
     mock_cloud_account.send_command.assert_not_awaited()
-    assert hass.states.get("climate.living_room") == before
+    assert hass.states.get(ENTITY_ID) == before
