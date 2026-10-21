@@ -25,6 +25,7 @@ from homeassistant.components.unifi.coordinator import (
 from homeassistant.components.unifi.hub import UnifiHub
 from homeassistant.components.unifi.hub.connection import (
     CONNECTION_STABLE_PERIOD,
+    LOGIN_REJECTIONS_BEFORE_REAUTH,
     MAX_RATE_LIMIT_PAUSE,
     RATE_LIMIT_PAUSE,
     REAUTH_RETRY_INTERVAL,
@@ -1774,6 +1775,44 @@ async def test_rate_limit_answered_after_outage_pauses_queued_retry(
         await _advance(hass, RATE_LIMIT_PAUSE + MAX_RETRY_DELAY)
     probe.assert_called_once()
     assert _available(hass)
+
+
+async def test_late_rate_limits_within_pause_count_once(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Requests sent before a pause that answer 429 neither extend nor count it."""
+    hub = config_entry_setup.runtime_data
+    with patch.object(hub.api.system_information, "update") as probe:
+        for _ in range(LOGIN_REJECTIONS_BEFORE_REAUTH):
+            hub.connection.verify_session(aiounifi.AuthenticationRateLimitError())
+        assert not _reauth_requested(hass, config_entry_setup)
+        await _advance(hass, RATE_LIMIT_PAUSE)
+    probe.assert_called_once()
+    assert _available(hass)
+
+
+async def test_unexpected_login_error_ends_rejections_in_a_row(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_state: WebsocketStateManager,
+) -> None:
+    """Rejections around an unexpected login error are not in a row."""
+    hub = config_entry_setup.runtime_data
+    login = AsyncMock(
+        side_effect=[
+            aiounifi.Forbidden,
+            aiounifi.Forbidden,
+            KeyError,
+            aiounifi.Forbidden,
+        ]
+    )
+    with _expired_session(hub, login):
+        await mock_websocket_state.disconnect()
+        for _ in range(4):
+            await _advance(hass, MAX_RETRY_DELAY)
+    assert login.call_count == 4
+    assert not _reauth_requested(hass, config_entry_setup)
 
 
 @PARAMETRIZE_STOP

@@ -95,6 +95,7 @@ class UnifiConnectionManager:
         self._attempt = 0
         self._retry_handle: asyncio.TimerHandle | None = None
         self._retry_for_reauth = False
+        self._retry_for_rate_limit = False
         self._reconnect_task: asyncio.Task[None] | None = None
         self._verify_task: asyncio.Task[None] | None = None
         self._stable_handle: asyncio.TimerHandle | None = None
@@ -197,6 +198,7 @@ class UnifiConnectionManager:
         if self._stopped:
             return
         remaining = 0.0
+        rate_limit = self._retry_handle is not None and self._retry_for_rate_limit
         if self._retry_handle is not None:
             if not self._rate_limited and (
                 not self._reauth_required or self._retry_for_reauth
@@ -206,6 +208,7 @@ class UnifiConnectionManager:
             self._retry_handle.cancel()
         if self._rate_limited:
             self._rate_limited = False
+            rate_limit = True
             delay = jitter(self._rate_limit_pause)
             if self._reauth_required:
                 delay = max(delay, REAUTH_RETRY_INTERVAL)
@@ -215,6 +218,7 @@ class UnifiConnectionManager:
             delay = retry_delay(self._attempt)
             self._attempt += 1
         self._retry_for_reauth = self._reauth_required
+        self._retry_for_rate_limit = rate_limit
         self._retry_handle = self.hass.loop.call_later(
             max(delay, remaining), self._async_reconnect
         )
@@ -297,8 +301,10 @@ class UnifiConnectionManager:
         try:
             async with asyncio.timeout(REQUEST_TIMEOUT):
                 await self.api.login()
-        except (TimeoutError, aiounifi.AiounifiException) as err:
+        except Exception as err:
             self._handle_login_error(err)
+            if not isinstance(err, (TimeoutError, aiounifi.AiounifiException)):
+                raise
             return False
         self._login_rejections = 0
         self._rate_limit_pause = 0
@@ -318,6 +324,9 @@ class UnifiConnectionManager:
                 self._login_rejections = 0
             return
 
+        if self._retry_handle is not None and self._retry_for_rate_limit:
+            # Requests sent before the pause started answer late
+            return
         if not self._rate_limit_pause:
             LOGGER.info(
                 "UniFi Network at %s limits logins, pausing reconnects for %s seconds",
