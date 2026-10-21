@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from lupupy import LupusecException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.lupusec.const import DOMAIN
@@ -17,8 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 MOCK_DATA_STEP = {
     CONF_HOST: "test-host.lan",

@@ -19,6 +19,7 @@ from lyngdorf import (
     ZoneB,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lyngdorf.const import (
     CONF_SERIAL_NUMBER,
@@ -27,8 +28,6 @@ from homeassistant.components.lyngdorf.const import (
 )
 from homeassistant.const import CONF_HOST, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

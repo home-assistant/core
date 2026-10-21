@@ -137,14 +137,16 @@ class InComfortDataCoordinator(DataUpdateCoordinator[InComfortData]):
         # Register discovered gateway device
         # Respect this as it is. Maybe later...
         device_registry = dr.async_get(self.hass)
-        gateway_device = device_registry.async_get_or_create(
+        gateway_device = device_registry.async_get_or_create_device(
             config_entry_id=self.config_entry.entry_id,
-            identifiers={(DOMAIN, self.config_entry.entry_id)},
-            connections={(dr.CONNECTION_NETWORK_MAC, self.config_entry.unique_id)}
-            if self.config_entry.unique_id is not None
-            else set(),
-            manufacturer="Intergas",
-            name="RFGateway",
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, self.config_entry.entry_id)},
+                connections={(dr.CONNECTION_NETWORK_MAC, self.config_entry.unique_id)}
+                if self.config_entry.unique_id is not None
+                else set(),
+                manufacturer="Intergas",
+                name="RFGateway",
+            ),
         )
         async_cleanup_stale_devices(
             self.hass,

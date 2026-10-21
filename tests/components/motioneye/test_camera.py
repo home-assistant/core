@@ -27,6 +27,7 @@ from motioneye_client.const import (
 )
 import probatio
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.camera import (
     async_get_image,
@@ -65,8 +66,6 @@ from . import (
     create_mock_motioneye_config_entry,
     setup_mock_motioneye_config_entry,
 )
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.fixture

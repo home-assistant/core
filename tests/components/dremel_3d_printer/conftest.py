@@ -4,13 +4,12 @@ from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 import requests_mock
 
 from homeassistant.components.dremel_3d_printer.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_fixture
 
 HOST = "1.2.3.4"
 CONF_DATA = {CONF_HOST: HOST}

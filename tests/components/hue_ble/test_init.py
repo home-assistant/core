@@ -5,6 +5,8 @@ from unittest.mock import patch
 from bleak.backends.device import BLEDevice
 from HueBLE import ConnectionError, HueBleError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import generate_ble_device
 
 from homeassistant.components.hue_ble.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -12,9 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import TEST_DEVICE_MAC, TEST_DEVICE_NAME
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import generate_ble_device
 
 
 @pytest.mark.parametrize(

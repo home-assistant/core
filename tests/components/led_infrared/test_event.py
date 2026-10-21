@@ -14,6 +14,12 @@ from infrared_protocols.codes.generic.led import (
 )
 from infrared_protocols.commands.nec import NECCommand
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.components.infrared import (
+    EMITTER_ENTITY_ID,
+    RECEIVER_ENTITY_ID,
+)
+from pytest_homeassistant.components.infrared.common import MockInfraredReceiverEntity
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.event import EventEntityStateAttribute
@@ -33,10 +39,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import EVENT_ENTITY_ID, LIGHT_ENTITY_ID
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.infrared import EMITTER_ENTITY_ID, RECEIVER_ENTITY_ID
-from tests.components.infrared.common import MockInfraredReceiverEntity
 
 
 @pytest.fixture

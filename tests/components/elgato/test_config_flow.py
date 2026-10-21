@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from elgato import ElgatoConnectionError, ElgatoError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.elgato.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, SOURCE_ZEROCONF
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 
 async def test_full_user_flow_implementation(

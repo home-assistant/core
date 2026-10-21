@@ -7,12 +7,11 @@ from aiorussound.rio import Source
 from aiorussound.rio.client import Controller, ZoneControlSurface
 from aiorussound.util import controller_device_str, zone_device_str
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.russound_rio.const import DOMAIN
 
 from .const import API_VERSION, HARDWARE_MAC, MOCK_SERIAL_CONFIG, MOCK_TCP_CONFIG, MODEL
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
