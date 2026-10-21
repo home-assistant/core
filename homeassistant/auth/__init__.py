@@ -1,7 +1,7 @@
 """Provide an authentication layer for Home Assistant."""
 
 import asyncio
-from collections import OrderedDict
+from collections import OrderedDict, deque
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 from functools import partial
@@ -45,6 +45,8 @@ EVENT_USER_UPDATED = "user_updated"
 EVENT_USER_REMOVED = "user_removed"
 
 STEP_UP_VALIDITY = timedelta(minutes=5)
+STEP_UP_MAX_ATTEMPTS = 5
+STEP_UP_ATTEMPT_WINDOW = timedelta(minutes=5)
 
 type _MfaModuleDict = dict[str, MultiFactorAuthModule]
 type _ProviderKey = tuple[str, str | None]
@@ -200,6 +202,8 @@ class AuthManager:
         self._revoke_callbacks: dict[str, set[CALLBACK_TYPE]] = {}
         # Refresh token id to when its step up proof stops counting.
         self._step_ups: dict[str, datetime] = {}
+        # User id to the monotonic times of their recent step up attempts.
+        self._step_up_attempts: dict[str, deque[float]] = {}
         self._create_user_lock = asyncio.Lock()
         self._expire_callback: CALLBACK_TYPE | None = None
         self._remove_expired_job = HassJob(
@@ -353,7 +357,19 @@ class AuthManager:
         ) is None:
             raise InvalidStepUpError("Step up needs an interactive session.")
 
-        await provider.async_verify_step_up(refresh_token.user, data, context)
+        user = refresh_token.user
+        # Shared by all sessions of the user and counted before verifying, so a
+        # stolen session can't guess the password quickly, not even in parallel.
+        attempts = self._step_up_attempts.setdefault(user.id, deque())
+        now = time.monotonic()
+        while attempts and attempts[0] <= now - STEP_UP_ATTEMPT_WINDOW.total_seconds():
+            attempts.popleft()
+        if len(attempts) >= STEP_UP_MAX_ATTEMPTS:
+            raise InvalidStepUpError("Too many attempts, try again later.")
+        attempts.append(now)
+
+        await provider.async_verify_step_up(user, data, context)
+        self._step_up_attempts.pop(user.id, None)
         self._step_ups[refresh_token.id] = dt_util.utcnow() + STEP_UP_VALIDITY
 
     @callback

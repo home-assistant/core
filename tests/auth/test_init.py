@@ -1,6 +1,7 @@
 """Tests for the Home Assistant auth module."""
 
 import asyncio
+from contextlib import suppress
 from datetime import timedelta
 from ipaddress import ip_address
 from pathlib import Path
@@ -1719,6 +1720,91 @@ async def test_step_up_proof_expires(
     freezer.tick(auth.STEP_UP_VALIDITY)
 
     assert not hass.auth.async_consume_step_up(refresh_token_id)
+
+
+async def test_step_up_attempts_are_limited(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    hass_access_token: str,
+    local_auth: HassAuthProvider,
+) -> None:
+    """Test a user only gets a few step up attempts at a time."""
+    await hass.async_add_executor_job(local_auth.data.add_auth, "admin", "test-pass")
+    refresh_token_id = hass.auth.async_validate_access_token(hass_access_token).id
+
+    for _ in range(auth.STEP_UP_MAX_ATTEMPTS):
+        with pytest.raises(InvalidStepUpError):
+            await hass.auth.async_step_up(
+                refresh_token_id, local_auth, {"password": "wrong-pass"}, None
+            )
+    with (
+        patch.object(local_auth, "async_verify_step_up") as verify,
+        pytest.raises(InvalidStepUpError, match="Too many attempts"),
+    ):
+        await hass.auth.async_step_up(
+            refresh_token_id, local_auth, {"password": "test-pass"}, None
+        )
+    verify.assert_not_called()
+
+    freezer.tick(auth.STEP_UP_ATTEMPT_WINDOW)
+    await hass.auth.async_step_up(
+        refresh_token_id, local_auth, {"password": "test-pass"}, None
+    )
+    assert hass.auth.async_consume_step_up(refresh_token_id)
+
+
+async def test_step_up_success_resets_the_attempts(
+    hass: HomeAssistant, hass_access_token: str, local_auth: HassAuthProvider
+) -> None:
+    """Test a successful step up gives the user their attempts back."""
+    refresh_token_id = hass.auth.async_validate_access_token(hass_access_token).id
+    outcomes = [
+        *[InvalidStepUpError("Wrong")] * (auth.STEP_UP_MAX_ATTEMPTS - 1),
+        None,
+        *[InvalidStepUpError("Wrong")] * (auth.STEP_UP_MAX_ATTEMPTS - 1),
+    ]
+
+    with patch.object(
+        local_auth, "async_verify_step_up", side_effect=outcomes
+    ) as verify:
+        for _ in outcomes:
+            with suppress(InvalidStepUpError):
+                await hass.auth.async_step_up(
+                    refresh_token_id, local_auth, {"password": "guess"}, None
+                )
+
+    assert verify.call_count == len(outcomes)
+
+
+async def test_step_up_attempts_count_in_parallel(
+    hass: HomeAssistant, hass_access_token: str, local_auth: HassAuthProvider
+) -> None:
+    """Test parallel step up attempts can't get past the budget."""
+    refresh_token_id = hass.auth.async_validate_access_token(hass_access_token).id
+    release = asyncio.Event()
+    verified = 0
+
+    async def slow_verify(*args: Any) -> None:
+        nonlocal verified
+        verified += 1
+        await release.wait()
+        raise InvalidStepUpError("Wrong")
+
+    with patch.object(local_auth, "async_verify_step_up", slow_verify):
+        attempts = [
+            hass.async_create_task(
+                hass.auth.async_step_up(
+                    refresh_token_id, local_auth, {"password": "guess"}, None
+                )
+            )
+            for _ in range(auth.STEP_UP_MAX_ATTEMPTS + 2)
+        ]
+        await asyncio.sleep(0)
+        release.set()
+        results = await asyncio.gather(*attempts, return_exceptions=True)
+
+    assert verified == auth.STEP_UP_MAX_ATTEMPTS
+    assert all(isinstance(result, InvalidStepUpError) for result in results)
 
 
 async def test_step_up_needed_when_the_user_can_step_up(
