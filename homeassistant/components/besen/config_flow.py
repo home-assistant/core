@@ -187,7 +187,6 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._operation_error: str | None = None
         self._operation_step = "lan"
         self._removed = False
-        self._reload_after_flow: tuple[BesenConfigEntry, BesenCoordinator] | None = None
         self._connection: BesenConnectionState | None = None
 
     async def _async_use_connection(self, connection: BesenConnectionState) -> None:
@@ -352,7 +351,9 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a rejected PIN for an existing charger."""
 
-        self.context["title_placeholders"] = {"name": self._get_reauth_entry().title}
+        entry = self._get_reauth_entry()
+        self._connection = async_get_connection_state(self.hass, entry.entry_id)
+        self.context["title_placeholders"] = {"name": entry.title}
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -393,6 +394,7 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Offer an explicit connection choice for the existing charger."""
         entry = self._get_reconfigure_entry()
+        self._connection = async_get_connection_state(self.hass, entry.entry_id)
         await self.async_set_unique_id(entry.unique_id or entry.data[CONF_ADDRESS])
         self._pending_data = dict(entry.data)
         self._pending_title = entry.title
@@ -601,7 +603,7 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if runtime and stopped:
                     assert entry is not None
                     if connection.cleanup_pending:
-                        self._reload_after_flow = (entry, runtime)
+                        connection.restore_reload = (entry, runtime)
                         if self._removed:
                             self._async_schedule_restore_reload()
                     else:
@@ -611,15 +613,17 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, entry: BesenConfigEntry, runtime: BesenCoordinator
     ) -> None:
         """Retry interrupted restoration after the active flow has been removed."""
+        connection = self._connection
+        assert connection is not None
         try:
             await runtime.async_resume_connection()
         except asyncio.CancelledError:
-            self._reload_after_flow = (entry, runtime)
+            connection.restore_reload = (entry, runtime)
             raise
         except CannotConnect, InvalidAuth:
-            self._reload_after_flow = (entry, runtime)
+            connection.restore_reload = (entry, runtime)
         else:
-            self._reload_after_flow = None
+            connection.restore_reload = None
         finally:
             if self._removed:
                 self._async_schedule_restore_reload()
@@ -639,7 +643,8 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         ):
             return self.async_abort(reason="already_configured")
         if entry:
-            self._reload_after_flow = None
+            assert self._connection is not None
+            self._connection.restore_reload = None
             return self.async_update_reload_and_abort(
                 entry,
                 data=self._pending_data,
@@ -664,19 +669,31 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @callback
     def _async_schedule_restore_reload(self) -> None:
-        """Reload a failed restoration after this flow has been removed."""
-        if self._reload_after_flow is None:
+        """Keep recovery pending until all successor connection flows have finished."""
+        connection = self._connection
+        if connection is None or (request := connection.restore_reload) is None:
             return
-        entry, runtime = self._reload_after_flow
-        self._reload_after_flow = None
+        entry, runtime = request
 
         @callback
         def reload_if_current() -> None:
+            if connection.restore_reload is not request:
+                return
             if (
-                entry.state is config_entries.ConfigEntryState.LOADED
-                and getattr(entry, "runtime_data", None) is runtime
+                entry.state is not config_entries.ConfigEntryState.LOADED
+                or getattr(entry, "runtime_data", None) is not runtime
             ):
-                self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                connection.restore_reload = None
+                return
+            if any(
+                entry.async_get_active_flows(
+                    self.hass,
+                    {config_entries.SOURCE_REAUTH, config_entries.SOURCE_RECONFIGURE},
+                )
+            ):
+                return
+            connection.restore_reload = None
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
 
         self.hass.loop.call_soon(reload_if_current)
 

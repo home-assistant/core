@@ -37,6 +37,7 @@ class BesenConnectionState:
     key: str
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     _cleanup: Callable[[], Awaitable[None]] | None = None
+    restore_reload: tuple[BesenConfigEntry, BesenCoordinator] | None = None
 
     @property
     def cleanup_pending(self) -> bool:

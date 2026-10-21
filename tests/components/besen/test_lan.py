@@ -26,6 +26,7 @@ from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     SOURCE_USER,
     ConfigEntryState,
+    ConfigFlowResult,
 )
 from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant
@@ -2042,3 +2043,158 @@ async def test_cleanup_retry_after_abort_remains_recoverable(
     assert udp_client.async_start.await_count == 2
     assert udp_client.async_stop.await_count == 4
     assert hub.async_stop.await_count == 2
+
+
+async def _cancelled_reconfigure_with_reauth_successor(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    current: Mock,
+    candidate: Mock,
+) -> ConfigFlowResult:
+    """Open a new PIN form before cancelled validation reports restoration failure."""
+    validating = asyncio.Event()
+    restoring = asyncio.Event()
+    finish_restore = asyncio.Event()
+
+    async def wait_for_status(*, timeout: int) -> None:
+        """Wait until the original Reconfigure flow is cancelled."""
+        validating.set()
+        await asyncio.Event().wait()
+
+    async def restore() -> None:
+        """Report the failure only after a successor flow has opened."""
+        restoring.set()
+        await finish_restore.wait()
+        raise InvalidAuth("old PIN rejected")
+
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        entry,
+        data={
+            **entry.data,
+            CONF_TRANSPORT: "lan",
+            CONF_HOST: HOST,
+            CONF_SERIAL: SERIAL,
+        },
+    )
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    candidate.async_wait_for_status.side_effect = wait_for_status
+    current.async_start.side_effect = restore
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "lan"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST, CONF_PIN: FIXTURE_PIN}
+    )
+    flow = hass.config_entries.flow._progress[result["flow_id"]]
+    assert isinstance(flow, BesenConfigFlow)
+    await validating.wait()
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    await restoring.wait()
+    successor = await entry.start_reauth_flow(hass)
+    current.async_start.side_effect = InvalidAuth("old PIN rejected")
+    finish_restore.set()
+    with pytest.raises(asyncio.CancelledError):
+        await flow._operation_task
+    await hass.async_block_till_done()
+    return successor
+
+
+async def test_replacement_reauth_survives_deferred_recovery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    udp_client: Mock,
+    validation_clients: tuple[Mock, Mock],
+) -> None:
+    """Save the successor's verified PIN before an earlier retry can abort it."""
+    first, second = validation_clients
+    with patch.object(
+        hass.config_entries, "async_reload", wraps=hass.config_entries.async_reload
+    ) as reload:
+        result = await _cancelled_reconfigure_with_reauth_successor(
+            hass, mock_config_entry, udp_client, first
+        )
+        reload.assert_not_awaited()
+        assert result["flow_id"] in {
+            item["flow_id"]
+            for item in mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH})
+        }
+        with patch(
+            "homeassistant.components.besen.BesenUdpClient", return_value=second
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {CONF_PIN: "654321"}
+            )
+            await hass.async_block_till_done()
+            reload.assert_not_awaited()
+            result = await hass.config_entries.flow.async_configure(result["flow_id"])
+            assert result["reason"] == "reauth_successful"
+            await hass.async_block_till_done()
+        reload.assert_awaited_once_with(mock_config_entry.entry_id)
+    assert mock_config_entry.data[CONF_PIN] == "654321"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.runtime_data.client is second
+
+
+async def test_cancelling_replacement_reauth_retries_deferred_recovery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    udp_client: Mock,
+    validation_clients: tuple[Mock, Mock],
+) -> None:
+    """Keep pending recovery when the successor PIN form is cancelled untouched."""
+    first, _ = validation_clients
+    with patch.object(
+        hass.config_entries, "async_reload", wraps=hass.config_entries.async_reload
+    ) as reload:
+        result = await _cancelled_reconfigure_with_reauth_successor(
+            hass, mock_config_entry, udp_client, first
+        )
+        reload.assert_not_awaited()
+        udp_client.async_start.side_effect = None
+        hass.config_entries.flow.async_abort(result["flow_id"])
+        await hass.async_block_till_done()
+        reload.assert_awaited_once_with(mock_config_entry.entry_id)
+    assert mock_config_entry.data[CONF_PIN] == FIXTURE_PIN
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_closing_overlapping_recovery_forms_queues_one_reload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    udp_client: Mock,
+    validation_clients: tuple[Mock, Mock],
+) -> None:
+    """Discard duplicate queued recovery after both overlapping forms are closed."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            **mock_config_entry.data,
+            CONF_TRANSPORT: "lan",
+            CONF_HOST: HOST,
+            CONF_SERIAL: SERIAL,
+        },
+    )
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    udp_client.async_start.side_effect = InvalidAuth("old PIN rejected")
+    with patch.object(
+        hass.config_entries, "async_reload", wraps=hass.config_entries.async_reload
+    ) as reload:
+        reauth = await mock_config_entry.start_reauth_flow(hass)
+        reconfigure = await mock_config_entry.start_reconfigure_flow(hass)
+        await hass.config_entries.flow.async_configure(
+            reauth["flow_id"], {CONF_PIN: "654321"}
+        )
+        await hass.async_block_till_done()
+        reload.assert_not_awaited()
+        udp_client.async_start.side_effect = None
+        hass.config_entries.flow.async_abort(reauth["flow_id"])
+        hass.config_entries.flow.async_abort(reconfigure["flow_id"])
+        await hass.async_block_till_done()
+        reload.assert_awaited_once_with(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.data[CONF_PIN] == FIXTURE_PIN
