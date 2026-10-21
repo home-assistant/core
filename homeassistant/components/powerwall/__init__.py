@@ -251,14 +251,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) ->
         else MODEL
     )
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, gateway_din)},
-        manufacturer=MANUFACTURER,
-        model=model,
-        name=base_info.site_name,
-        sw_version=base_info.status.version if base_info.status else None,
-        configuration_url=base_info.url,
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, gateway_din)},
+            manufacturer=MANUFACTURER,
+            model=model,
+            name=base_info.site_name,
+            sw_version=base_info.status.version if base_info.status else None,
+            configuration_url=base_info.url,
+        ),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

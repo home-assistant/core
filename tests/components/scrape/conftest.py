@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.rest.data import DEFAULT_TIMEOUT  # pylint: disable=home-assistant-component-root-import
 from homeassistant.components.rest.schema import DEFAULT_METHOD, DEFAULT_VERIFY_SSL  # pylint: disable=home-assistant-component-root-import
@@ -26,15 +27,13 @@ from homeassistant.core import HomeAssistant
 
 from . import MockRestData
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Automatically path uuid generator."""
     with patch(
         "homeassistant.components.scrape.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

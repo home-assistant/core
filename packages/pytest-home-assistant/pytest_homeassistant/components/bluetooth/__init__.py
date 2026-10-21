@@ -1,4 +1,4 @@
-"""Tests for the Bluetooth integration."""
+"""Bluetooth helpers."""
 
 from collections.abc import Generator, Iterable
 from contextlib import contextmanager

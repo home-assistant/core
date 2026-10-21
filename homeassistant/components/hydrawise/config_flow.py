@@ -3,13 +3,14 @@
 from collections.abc import Mapping
 from typing import Any, override
 
-from aiohttp import ClientError
+from aiohttp import ClientError, ClientSession
 import probatio
 from pydrawise import APIError, auth as pydrawise_auth, hybrid
 from pydrawise.exceptions import NotAuthorizedError
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import APP_ID, DOMAIN, LOGGER
 
@@ -44,7 +45,9 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
         api_key = user_input[CONF_API_KEY]
-        unique_id, errors = await _authenticate(username, password, api_key)
+        unique_id, errors = await _authenticate(
+            async_get_clientsession(self.hass), username, password, api_key
+        )
         if errors:
             return self._show_user_form(errors)
         await self.async_set_unique_id(unique_id)
@@ -86,7 +89,9 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         password = user_input[CONF_PASSWORD]
         api_key = user_input[CONF_API_KEY]
-        user_id, errors = await _authenticate(username, password, api_key)
+        user_id, errors = await _authenticate(
+            async_get_clientsession(self.hass), username, password, api_key
+        )
         if user_id is None:
             return self._show_reauth_form(errors)
 
@@ -121,7 +126,9 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
         api_key = user_input[CONF_API_KEY]
-        unique_id, errors = await _authenticate(username, password, api_key)
+        unique_id, errors = await _authenticate(
+            async_get_clientsession(self.hass), username, password, api_key
+        )
         if errors:
             return self._show_reconfigure_form(errors)
 
@@ -156,12 +163,12 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 async def _authenticate(
-    username: str, password: str, api_key: str
+    session: ClientSession, username: str, password: str, api_key: str
 ) -> tuple[str | None, dict[str, str]]:
     """Authenticate with the Hydrawise API."""
     unique_id = None
     errors: dict[str, str] = {}
-    auth = pydrawise_auth.HybridAuth(username, password, api_key)
+    auth = pydrawise_auth.HybridAuth(username, password, api_key, session=session)
     try:
         await auth.check()
         api = hybrid.HybridClient(auth, app_id=APP_ID)

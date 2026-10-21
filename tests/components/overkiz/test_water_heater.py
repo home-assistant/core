@@ -7,6 +7,7 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import OverkizState
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.water_heater import (
@@ -28,8 +29,6 @@ from .helpers import (
     async_deliver_events,
     device_state_changed_event,
 )
-
-from tests.common import snapshot_platform
 
 # Thermor Malicio 2 (io:AtlanticDomesticHotWaterProductionV2_CE_FLAT_C2_IOComponent)
 DHW_CE_FLAT_C2 = FixtureDevice(

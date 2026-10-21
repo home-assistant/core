@@ -11,6 +11,7 @@ from anthropic.types import ModelInfo
 from freezegun.api import FrozenDateTimeFactory
 from httpx2 import URL, Request, Response
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import conversation
 from homeassistant.components.anthropic.const import DOMAIN
@@ -27,8 +28,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import create_content_block, model_list
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(

@@ -6,6 +6,14 @@ from unittest.mock import patch
 from aiomodernforms import ModernFormsConnectionError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+)
 from yarl import URL
 
 from homeassistant.components.light import (
@@ -38,9 +46,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration, init_integration_gen4, modern_forms_gen4_call_mock
-
-from tests.common import async_fire_time_changed, async_load_json_object_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 
 async def test_light_state(

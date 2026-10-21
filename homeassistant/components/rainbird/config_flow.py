@@ -16,7 +16,6 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.device_registry import format_mac
 
-from . import RainbirdConfigEntry
 from .const import (
     ATTR_DURATION,
     CONF_SERIAL_NUMBER,
@@ -25,6 +24,7 @@ from .const import (
     TIMEOUT_SECONDS,
 )
 from .coordinator import async_create_clientsession
+from .types import RainbirdConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

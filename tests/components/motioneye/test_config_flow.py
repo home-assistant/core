@@ -10,6 +10,7 @@ from motioneye_client.client import (
     MotionEyeClientRequestError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.motioneye.const import (
@@ -30,8 +31,6 @@ from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from . import TEST_URL, create_mock_motioneye_client, create_mock_motioneye_config_entry
 
-from tests.common import MockConfigEntry
-
 USER_INPUT = {
     CONF_URL: TEST_URL,
     CONF_ADMIN_USERNAME: "admin-username",
@@ -51,7 +50,7 @@ def _patch_client_and_setup(mock_client: AsyncMock) -> Generator[None]:
         ),
         patch(
             "homeassistant.components.motioneye.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield
@@ -112,7 +111,7 @@ async def test_user_success(
         ),
         patch(
             "homeassistant.components.motioneye.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -158,7 +157,7 @@ async def test_hassio_success(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.motioneye.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -372,7 +371,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.motioneye.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -527,7 +526,7 @@ async def test_hassio_clean_up_on_user_flow(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.motioneye.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -562,7 +561,7 @@ async def test_options(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.motioneye.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         await hass.async_block_till_done()
@@ -599,7 +598,7 @@ async def test_more_options(hass: HomeAssistant) -> None:
         ) as mock_setup,
         patch(
             "homeassistant.components.motioneye.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         await hass.async_block_till_done()

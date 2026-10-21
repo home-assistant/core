@@ -74,6 +74,9 @@
       "lower_threshold": {
         "name": "Minimum charge level"
       },
+      "max_charge_power": {
+        "name": "Maximum charge power"
+      },
       "max_output": {
         "name": "Maximum output"
       },
