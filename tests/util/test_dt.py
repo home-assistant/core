@@ -1,7 +1,7 @@
 """Test Home Assistant date util methods."""
 # pylint: disable=home-assistant-enforce-utcnow
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, time, timedelta
 
 import pytest
 
@@ -185,6 +185,22 @@ def test_parse_duration(
     assert dt_util.parse_duration(duration_string) == expected_result
 
 
+@pytest.mark.parametrize(
+    ("time_string", "expected_result"),
+    [
+        pytest.param("12:34", time(12, 34), id="hours_minutes"),
+        pytest.param("12:34:56", time(12, 34, 56), id="hours_minutes_seconds"),
+        pytest.param("24:00", None, id="hour_out_of_range"),
+        pytest.param("0:2147483648", None, id="minute_overflows_c_int"),
+        pytest.param("2147483648:00", None, id="hour_overflows_c_int"),
+        pytest.param("0:0:99999999999999999999", None, id="second_overflows_c_long"),
+    ],
+)
+def test_parse_time(time_string: str, expected_result: time | None) -> None:
+    """Test that parse_time returns the expected result."""
+    assert dt_util.parse_time(time_string) == expected_result
+
+
 def test_get_age() -> None:
     """Test get_age."""
     diff = dt_util.now() - timedelta(seconds=0)
@@ -313,6 +329,20 @@ def test_time_remaining() -> None:
         (timedelta(hours=1, minutes=54, seconds=33), 0, "1 hour 54 minutes 33 seconds"),
         (timedelta(hours=-1), 1, "1 hour"),
         (timedelta(hours=-1, minutes=-30), 2, "1 hour 30 minutes"),
+        (timedelta(minutes=59, seconds=45), 1, "1 hour"),
+        (timedelta(hours=1, minutes=59, seconds=45), 2, "2 hours"),
+        (timedelta(hours=23, minutes=59, seconds=45), 2, "1 day"),
+        (timedelta(days=1, minutes=59, seconds=45), 2, "1 day 1 hour"),
+        (timedelta(days=29, hours=13), 1, "1 month"),
+        (timedelta(days=364, hours=13), 2, "1 year"),
+        (timedelta(days=350), 1, "1 year"),
+        (timedelta(days=360), 1, "1 year"),
+        (timedelta(days=364), 1, "1 year"),
+        (timedelta(days=365, hours=-1), 1, "1 year"),
+        (timedelta(days=729), 2, "2 years"),
+        (timedelta(days=724, hours=23, minutes=59, seconds=50), 2, "2 years"),
+        (timedelta(days=724, hours=13), 3, "2 years"),
+        (timedelta(days=380, hours=23, minutes=59, seconds=50), 2, "1 year 16 days"),
     ],
 )
 def test_timedelta_string(delta: timedelta, precision: int, expected: str) -> None:

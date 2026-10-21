@@ -19,9 +19,7 @@ from homeassistant.components.sensor import (
     SensorExtraStoredData,
     SensorStateClass,
 )
-from homeassistant.components.sensor.recorder import (  # pylint: disable=home-assistant-component-root-import
-    _suggest_report_issue,
-)
+from homeassistant.components.sensor.recorder import _suggest_report_issue  # pylint: disable=home-assistant-component-root-import
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
@@ -88,7 +86,7 @@ PERIOD2CRON = {
     QUARTER_HOURLY: "{minute}/15 * * * *",
     HOURLY: "{minute} * * * *",
     DAILY: "{minute} {hour} * * *",
-    WEEKLY: "{minute} {hour} * * {day}",
+    WEEKLY: "{minute} {hour} * * {weekday}",
     MONTHLY: "{minute} {hour} {day} * *",
     BIMONTHLY: "{minute} {hour} {day} */2 *",
     QUARTERLY: "{minute} {hour} {day} */3 *",
@@ -369,6 +367,7 @@ class UtilityMeterSensor(RestoreSensor):
                 minute=meter_offset.seconds % 3600 // 60,
                 hour=meter_offset.seconds // 3600,
                 day=meter_offset.days + 1,
+                weekday=meter_offset.days % 7 + 1,
             )
             _LOGGER.debug("CRON pattern: %s", self._cron_pattern)
         else:

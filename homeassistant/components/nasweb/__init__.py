@@ -108,12 +108,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: NASwebConfigEntry) -> No
         ) from error
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, webio_serial)},
-        manufacturer=MANUFACTURER,
-        name=webio_api.get_name(),
-        configuration_url=NASWEB_CONFIG_URL.format(host=entry.data[CONF_HOST]),
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, webio_serial)},
+            manufacturer=MANUFACTURER,
+            name=webio_api.get_name(),
+            configuration_url=NASWEB_CONFIG_URL.format(host=entry.data[CONF_HOST]),
+        ),
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

@@ -14,6 +14,7 @@ from airos.exceptions import (
 from airos.helpers import DetectDeviceData
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.airos.const import (
     CONF_LEGACY_SSL,
@@ -37,8 +38,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import AirOSData
-
-from tests.common import MockConfigEntry
 
 NEW_PASSWORD = "new_password"
 REAUTH_STEP = "reauth_confirm"

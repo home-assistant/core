@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from bthome_ble import BTHomeBluetoothDeviceData as DeviceData
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import BluetoothChange
@@ -16,8 +17,6 @@ from . import (
     TEMP_HUMI_ENCRYPTED_SERVICE_INFO,
     TEMP_HUMI_SERVICE_INFO,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:

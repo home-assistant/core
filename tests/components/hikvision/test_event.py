@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from pyhik.constants import SENSOR_MAP
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.event import (
     ATTR_EVENT_TYPE,
@@ -23,8 +24,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import TEST_DEVICE_ID
-
-from tests.common import MockConfigEntry
 
 MOTION_ENTITY_ID = "event.front_camera_motion"
 LINE_CROSSING_ENTITY_ID = "event.front_camera_line_crossing"

@@ -431,6 +431,22 @@ def test_wrap(hass: HomeAssistant) -> None:
             render(hass, case)
 
 
+@pytest.mark.parametrize(
+    ("value", "min_value", "max_value", "expected"),
+    [
+        pytest.param(-1e-20, 0, 10, 0.0, id="tiny_negative"),
+        pytest.param(-1e-15, 0, 360, 0.0, id="tiny_negative_angle"),
+        pytest.param(0.9999999999999999, 1, 360, 1.0, id="tiny_below_offset_min"),
+        pytest.param(-1e-10, 0, 10, 10 - 1e-10, id="small_negative_representable"),
+    ],
+)
+def test_wrap_never_returns_max(
+    value: float, min_value: float, max_value: float, expected: float
+) -> None:
+    """Test wrap stays in [min, max) when the modulo rounds up to max."""
+    assert MathExtension.wrap(value, min_value, max_value) == expected
+
+
 def test_remap(hass: HomeAssistant) -> None:
     """Test remap function."""
     # Test function and filter usage in templates, with kitchen sink parameters.
@@ -552,6 +568,23 @@ def test_remap_with_mirror(hass: HomeAssistant) -> None:
     assert MathExtension.remap(-0.1, 0, 1, 0, 1, edges="mirror") == pytest.approx(0.1)
 
 
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        pytest.param(-5, 3.0, id="second_period_below"),
+        pytest.param(-7, 1.0, id="second_period_below_near_end"),
+        pytest.param(-8, 0.0, id="two_widths_below"),
+        pytest.param(-9, 1.0, id="third_period_below"),
+        pytest.param(-13, 3.0, id="fourth_period_below"),
+    ],
+)
+def test_remap_with_mirror_far_below_range(value: float, expected: float) -> None:
+    """Test mirror reflects values more than one range width below in_min."""
+    assert MathExtension.remap(value, 0, 4, 0, 4, edges="mirror") == expected
+    # Mirroring is symmetric around in_min.
+    assert MathExtension.remap(-value, 0, 4, 0, 4, edges="mirror") == expected
+
+
 def test_rounding_value(hass: HomeAssistant) -> None:
     """Test rounding value."""
     hass.states.async_set("sensor.temperature", 12.78)
@@ -620,3 +653,33 @@ def test_add(hass: HomeAssistant) -> None:
     # Test handling of default return value
     assert render(hass, "{{ 'no_number' | add(10, 1) }}") == 1
     assert render(hass, "{{ 'no_number' | add(10, default=1) }}") == 1
+
+
+@pytest.mark.parametrize(
+    "template_str",
+    [
+        pytest.param("{{ log(value, default=1) }}", id="log"),
+        pytest.param("{{ log(10, value, default=1) }}", id="log_base"),
+        pytest.param("{{ log(10, 1, default=1) }}", id="log_base_one"),
+        pytest.param("{{ sin(value, default=1) }}", id="sin"),
+        pytest.param("{{ cos(value, default=1) }}", id="cos"),
+        pytest.param("{{ tan(value, default=1) }}", id="tan"),
+        pytest.param("{{ asin(value, default=1) }}", id="asin"),
+        pytest.param("{{ acos(value, default=1) }}", id="acos"),
+        pytest.param("{{ atan(value, default=1) }}", id="atan"),
+        pytest.param("{{ atan2(value, 1, default=1) }}", id="atan2"),
+        pytest.param("{{ sqrt(value, default=1) }}", id="sqrt"),
+        pytest.param("{{ value | add(1, default=1) }}", id="add"),
+        pytest.param("{{ value | multiply(1, default=1) }}", id="multiply"),
+        pytest.param("{{ value | round(default=1) }}", id="round"),
+        pytest.param("{{ inf | round(default=1) }}", id="round_inf"),
+        pytest.param("{{ inf | round(1, 'ceil', default=1) }}", id="round_inf_ceil"),
+        pytest.param("{{ inf | round(1, 'floor', default=1) }}", id="round_inf_floor"),
+        pytest.param("{{ inf | round(1, 'half', default=1) }}", id="round_inf_half"),
+    ],
+)
+def test_math_functions_out_of_range_return_default(
+    hass: HomeAssistant, template_str: str
+) -> None:
+    """Test math functions return the default for values out of float range."""
+    assert render(hass, template_str, {"value": 10**400, "inf": math.inf}) == 1

@@ -19,7 +19,7 @@ PRIVATE_NETWORKS = (
     ip_network("10.0.0.0/8"),
     ip_network("172.16.0.0/12"),
     ip_network("192.168.0.0/16"),
-    ip_network("fd00::/8"),
+    ip_network("fc00::/7"),
     ip_network("::ffff:10.0.0.0/104"),
     ip_network("::ffff:172.16.0.0/108"),
     ip_network("::ffff:192.168.0.0/112"),

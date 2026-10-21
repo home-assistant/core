@@ -23,6 +23,8 @@ def test_is_private() -> None:
     assert network_util.is_private(ip_address("172.16.12.0"))
     assert network_util.is_private(ip_address("10.5.43.3"))
     assert network_util.is_private(ip_address("fd12:3456:789a:1::1"))
+    assert network_util.is_private(ip_address("fc00::1"))
+    assert not network_util.is_private(ip_address("fe00::1"))
     assert not network_util.is_private(ip_address("127.0.0.1"))
     assert not network_util.is_private(ip_address("::1"))
 
@@ -46,6 +48,7 @@ def test_is_local() -> None:
     assert network_util.is_local(ip_address("192.168.0.1"))
     assert network_util.is_local(ip_address("127.0.0.1"))
     assert network_util.is_local(ip_address("fd12:3456:789a:1::1"))
+    assert network_util.is_local(ip_address("fc12:3456:789a:1::1"))
     assert network_util.is_local(ip_address("fe80::1234:5678:abcd"))
     assert network_util.is_local(ip_address("::ffff:192.168.0.1"))
     assert not network_util.is_local(ip_address("208.5.4.2"))

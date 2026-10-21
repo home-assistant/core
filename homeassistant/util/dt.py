@@ -306,8 +306,9 @@ def parse_time(time_str: str) -> dt.time | None:
         minute = int(parts[1])
         second = int(parts[2]) if len(parts) > 2 else 0
         return dt.time(hour, minute, second)
-    except ValueError:
-        # ValueError if value cannot be converted to an int or not in range
+    except ValueError, OverflowError:
+        # ValueError if value cannot be converted to an int or not in range,
+        # OverflowError if it does not even fit in a C int
         return None
 
 
@@ -326,6 +327,23 @@ def _get_timestring(timediff: float, precision: int = 1) -> str:
     units = ("year", "month", "day", "hour", "minute", "second")
 
     factors = (365 * 24 * 60 * 60, 30 * 24 * 60 * 60, 24 * 60 * 60, 60 * 60, 60, 1)
+
+    # Round at the last shown unit up front, so it carries into the larger units
+    remainder = timediff
+    current_precision = 0
+    for current_factor in factors:
+        if remainder < current_factor:
+            continue
+        current_precision += 1
+        if current_precision == precision:
+            months = (timediff % factors[0]) // factors[1]
+            timediff += round(remainder / current_factor) * current_factor - remainder
+            rounded_months = (timediff % factors[0]) // factors[1]
+            # 12 months are 5 days short of a year, so rounding to them ends the year
+            if rounded_months >= 12 and (months < 12 or current_factor == factors[1]):
+                timediff += factors[0] - timediff % factors[0]
+            break
+        remainder %= current_factor
 
     result_string: str = ""
     current_precision = 0
