@@ -3441,7 +3441,7 @@
       "iot_class": "cloud_push"
     },
     "flow_it": {
-      "name": "Flow-it",
+      "name": "AriaQ",
       "integration_type": "device",
       "categories": [
         "climate.fans_ventilation"
