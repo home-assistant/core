@@ -91,6 +91,7 @@ class UnifiConnectionManager:
         self._recovery_callback: Callable[[], Awaitable[None]] | None = None
         self._reauth_required = False
         self._stopped = False
+        self._unexpected_error_logged = False
 
     @callback
     def set_recovery_callback(
@@ -101,7 +102,10 @@ class UnifiConnectionManager:
 
     @property
     def _reconnect_in_flight(self) -> bool:
-        """Return if a login attempt is running."""
+        """Return if a login attempt is running.
+
+        The resync phase does not count, a failure there must mark the hub down.
+        """
         return (
             not self._recovering
             and self._reconnect_task is not None
@@ -190,7 +194,15 @@ class UnifiConnectionManager:
         try:
             await self._async_try_reconnect()
         except Exception as err:  # noqa: BLE001
-            LOGGER.exception("Unexpected error while reconnecting to UniFi Network")
+            # One traceback is enough while the same error repeats every retry
+            if self._unexpected_error_logged:
+                LOGGER.debug(
+                    "Unexpected error while reconnecting to UniFi Network",
+                    exc_info=True,
+                )
+            else:
+                self._unexpected_error_logged = True
+                LOGGER.exception("Unexpected error while reconnecting to UniFi Network")
             self.report_failure(err)
         finally:
             self._recovering = False
@@ -245,6 +257,7 @@ class UnifiConnectionManager:
         self.available = available
         async_dispatcher_send(self.hass, self.signal)
         if available:
+            self._unexpected_error_logged = False
             LOGGER.info("Connection to UniFi Network restored")
         else:
             LOGGER.info("Connection to UniFi Network lost")

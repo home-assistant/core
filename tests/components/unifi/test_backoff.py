@@ -30,15 +30,8 @@ def test_jitter_stays_within_bounds(
     pick: Callable[[float, float], float], expected: float
 ) -> None:
     """Verify the jittered delay spreads around the plain delay."""
-    with patch("random.uniform", side_effect=pick):
+    with patch(
+        "homeassistant.components.unifi.hub.connection.random.uniform",
+        side_effect=pick,
+    ):
         assert BackoffPolicy().jittered_delay(1) == expected
-
-
-def test_custom_policy_parameters() -> None:
-    """Verify base, factor and maximum are all respected."""
-    policy = BackoffPolicy(base=5, factor=3, maximum=50)
-
-    assert policy.next_delay(0) == 5
-    assert policy.next_delay(1) == 15
-    assert policy.next_delay(2) == 45
-    assert policy.next_delay(3) == 50

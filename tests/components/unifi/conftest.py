@@ -28,8 +28,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
+
+def retry_window(attempt: int) -> tuple[float, float]:
+    """Return the earliest and latest delay of a retry, jitter included."""
+    policy = BackoffPolicy()
+    delay = policy.next_delay(attempt)
+    return delay * (1 - policy.jitter), delay * (1 + policy.jitter)
+
+
 # Fires any pending retry, whatever the attempt number and jitter
 MAX_RETRY_DELAY = BackoffPolicy().maximum * (1 + BackoffPolicy().jitter)
+FIRST_RETRY_DELAY = retry_window(0)[1]
 
 DEFAULT_CONFIG_ENTRY_ID = "1"
 DEFAULT_HOST = "1.2.3.4"

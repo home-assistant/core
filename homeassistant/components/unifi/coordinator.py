@@ -1,5 +1,6 @@
 """UniFi Network data update coordinator."""
 
+import asyncio
 from datetime import timedelta
 from typing import TYPE_CHECKING, override
 
@@ -18,6 +19,11 @@ if TYPE_CHECKING:
 
 POLL_INTERVAL = timedelta(seconds=10)
 IDLE_POLL_INTERVAL = timedelta(minutes=10)
+# Large sites can take a while to list all clients
+UPDATE_TIMEOUT = 30
+
+# ValueError covers a half started application answering with invalid JSON
+TRANSPORT_ERRORS = (TimeoutError, ValueError, aiounifi.RequestError)
 
 
 class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
@@ -68,7 +74,8 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
             raise UpdateFailed("UniFi Network connection is unavailable")
 
         try:
-            await self._handler.update()
+            async with asyncio.timeout(UPDATE_TIMEOUT):
+                await self._handler.update()
         except EndpointNotFound as err:
             if (
                 self._disable_polling_on_endpoint_not_found
@@ -81,7 +88,7 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
                     type(self._handler).__name__,
                 )
             raise UpdateFailed(str(err)) from err
-        except (TimeoutError, aiounifi.RequestError) as err:
+        except TRANSPORT_ERRORS as err:
             self._connection.verify_session(err)
             raise UpdateFailed(str(err)) from err
         except aiounifi.AiounifiException as err:
@@ -116,14 +123,16 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
             return
 
         # Pushed data stays valid if the refetch fails, the websocket resumes after it
+        name = type(self._handler).__name__
         try:
-            await self._handler.update()
-        except (TimeoutError, aiounifi.RequestError) as err:
+            async with asyncio.timeout(UPDATE_TIMEOUT):
+                await self._handler.update()
+        except TRANSPORT_ERRORS as err:
             self._connection.verify_session(err)
         except aiounifi.AiounifiException as err:
-            LOGGER.debug(
-                "Could not refetch UniFi %s data: %s", type(self._handler).__name__, err
-            )
+            LOGGER.debug("Could not refetch UniFi %s data: %s", name, err)
+        except Exception:  # noqa: BLE001
+            LOGGER.exception("Unexpected error refetching UniFi %s data", name)
 
     @callback
     def _async_handle_update(self, event: ItemEvent, obj_id: str) -> None:
