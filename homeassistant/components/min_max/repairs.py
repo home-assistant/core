@@ -15,11 +15,7 @@ from homeassistant.components.repairs import (
     RepairsFlow,
     RepairsFlowResult,
 )
-from homeassistant.components.sensor import (
-    CONF_STATE_CLASS,
-    DOMAIN as SENSOR_DOMAIN,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
 from homeassistant.const import CONF_ENTITIES, CONF_TYPE
 from homeassistant.core import HomeAssistant
@@ -65,8 +61,6 @@ class MigrateToGroupSensorFlow(RepairsFlow):
             config[CONF_HIDE_MEMBERS] = False
             # Min/Max sum is unknown if any input is unavailable, other types skip it
             config[CONF_IGNORE_NON_NUMERIC] = config[CONF_TYPE] != "sum"
-            # Min/Max always uses measurement, Group would infer it from the inputs
-            config[CONF_STATE_CLASS] = SensorStateClass.MEASUREMENT.value
             config["old_config_entry_id"] = entry.entry_id
 
             import_result = await self.hass.config_entries.flow.async_init(

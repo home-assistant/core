@@ -15,7 +15,6 @@ from syrupy.filters import props
 
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.min_max.const import DOMAIN
-from homeassistant.components.sensor import SensorStateClass
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -96,8 +95,6 @@ async def test_setup_migrates_to_groups(
     assert len(hass.states.async_all()) == 3
     state = hass.states.get(min_max_entity_id)
     assert state.state == "20.0"
-    # The inputs have no state class, so it is kept from the Min/Max sensor
-    assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
 
     min_max_config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(min_max_config_entries) == 0
