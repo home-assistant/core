@@ -1,4 +1,4 @@
-"""Test the helper method for writing tests."""
+"""Home Assistant test helpers."""
 
 import asyncio
 from collections.abc import (
@@ -618,7 +618,7 @@ def load_json_array_fixture(
 async def async_load_json_array_fixture(
     hass: HomeAssistant, filename: str, integration: str | None = None
 ) -> JsonArrayType:
-    """Load a JSON object from a fixture."""
+    """Load a JSON array from a fixture."""
     return json_loads_array(await async_load_fixture(hass, filename, integration))
 
 
@@ -795,11 +795,11 @@ class MockGroup(auth_models.Group):
         super().__init__(**kwargs)
 
     def add_to_hass(self, hass: HomeAssistant) -> MockGroup:
-        """Test helper to add entry to hass."""
+        """Add the group to Home Assistant."""
         return self.add_to_auth_manager(hass.auth)
 
     def add_to_auth_manager(self, auth_mgr: auth.AuthManager) -> MockGroup:
-        """Test helper to add entry to hass."""
+        """Add the group to an authentication manager."""
         ensure_auth_manager_loaded(auth_mgr)
         auth_mgr._store._groups[self.id] = self
         return self
@@ -831,11 +831,11 @@ class MockUser(auth_models.User):
         super().__init__(**kwargs)
 
     def add_to_hass(self, hass: HomeAssistant) -> MockUser:
-        """Test helper to add entry to hass."""
+        """Add the user to Home Assistant."""
         return self.add_to_auth_manager(hass.auth)
 
     def add_to_auth_manager(self, auth_mgr: auth.AuthManager) -> MockUser:
-        """Test helper to add entry to hass."""
+        """Add the user to an authentication manager."""
         ensure_auth_manager_loaded(auth_mgr)
         auth_mgr._store._users[self.id] = self
         return self
@@ -1468,7 +1468,7 @@ class MockEntity(entity.Entity):
 
     @property
     def should_poll(self) -> bool:
-        """Return the ste of the polling."""
+        """Return whether the entity should be polled."""
         return self._handle("should_poll")
 
     @property

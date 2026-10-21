@@ -6,6 +6,7 @@ import httpx2
 from openai import APIConnectionError, AuthenticationError, BadRequestError
 from openai.types.responses import Response, ResponseOutputMessage, ResponseOutputText
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.openai_conversation.config_flow import (
@@ -53,8 +54,6 @@ from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_PROMPT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
-
 
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
@@ -78,7 +77,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.openai_conversation.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -716,7 +715,7 @@ async def test_form_invalid_auth(
         ),
         patch(
             "homeassistant.components.openai_conversation.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -1801,7 +1800,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.openai_conversation.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(

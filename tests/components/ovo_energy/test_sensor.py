@@ -14,12 +14,11 @@ from ovoenergy.models import (
     OVOInterval,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.ovo_energy.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 INTERVAL = OVOInterval(
     start=datetime(2026, 9, 1, tzinfo=UTC),

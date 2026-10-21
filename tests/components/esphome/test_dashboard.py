@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from aioesphomeapi import APIClient, DeviceInfo, InvalidEncryptionKeyAPIError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.esphome import CONF_NOISE_PSK, DOMAIN, dashboard
 from homeassistant.components.hassio import HassioNotReadyError
@@ -16,8 +17,6 @@ from homeassistant.setup import async_setup_component
 from . import VALID_NOISE_PSK
 from .common import MockDashboardRefresh
 from .conftest import MockESPHomeDeviceType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_dashboard")
@@ -186,7 +185,7 @@ async def test_setup_dashboard_fails_when_already_setup(
             side_effect=TimeoutError,
         ) as mock_get_devices,
         patch(
-            "homeassistant.components.esphome.async_setup_entry", return_value=True
+            "homeassistant.components.esphome.async_setup_entry", return_value=None
         ) as mock_setup,
     ):
         await dashboard.async_set_dashboard_info(hass, "test-slug", "test-host", 6052)
@@ -257,7 +256,7 @@ async def test_new_dashboard_fix_reauth(
             return_value=VALID_NOISE_PSK,
         ) as mock_get_encryption_key,
         patch(
-            "homeassistant.components.esphome.async_setup_entry", return_value=True
+            "homeassistant.components.esphome.async_setup_entry", return_value=None
         ) as mock_setup,
     ):
         await dashboard.async_set_dashboard_info(hass, "test-slug", "test-host", 6052)

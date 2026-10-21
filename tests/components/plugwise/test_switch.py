@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from plugwise.exceptions import PlugwiseException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
@@ -22,8 +23,6 @@ from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 DHW_CM_SWITCH_UNIQUE_ID = "36b937e44ad145bab165fa0fe99d742d-dhw_cm_switch"
 DHW_CM_SWITCH_ISSUE_ID = "deprecated_dhw_cm_switch_36b937e44ad145bab165fa0fe99d742d"
