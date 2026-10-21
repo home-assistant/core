@@ -492,16 +492,44 @@ async def test_on_deck_service(
 async def test_search_service_library_filters(
     hass: HomeAssistant, mock_plex_server
 ) -> None:
-    """Test library filters can include search options and keep their constraints."""
-    # A libtype in the filters must not clash with the media type
+    """Test a library search with a field filter and a media type."""
     result = await hass.services.async_call(
         DOMAIN,
         SERVICE_SEARCH,
-        {"library_name": "Movies", "filters": {"libtype": "movie"}},
+        {"library_name": "Movies", "year": 2000, "media_type": "movie"},
         blocking=True,
         return_response=True,
     )
     assert len(result["results"]) == 5
+
+
+async def test_search_service_advanced_filters(
+    hass: HomeAssistant, mock_plex_server
+) -> None:
+    """Test an advanced filter expression reaches Plex unchanged."""
+    expression = {"or": [{"genre": "Action"}, {"genre": "Comedy"}]}
+    with patch(
+        "plexapi.library.LibrarySection.search",
+        return_value=[],
+        __qualname__="search",
+    ) as search:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEARCH,
+            {
+                "library_name": "Movies",
+                "year": 2000,
+                "media_type": "movie",
+                "filters": expression,
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert search.call_args.kwargs["filters"] == expression
+    assert "or" not in search.call_args.kwargs
+    assert search.call_args.kwargs["year"] == 2000
+    assert search.call_args.kwargs["libtype"] == "movie"
 
 
 async def test_media_result_info_hierarchy(mock_plex_server) -> None:

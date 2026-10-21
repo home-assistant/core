@@ -188,7 +188,8 @@ def search_plex_media(hass: HomeAssistant, service_call: ServiceCall) -> dict[st
     plex_key = data.pop("plex_key", None)
     playlist_name = data.pop("playlist_name", None)
     include_on_deck = data.pop("include_on_deck", False)
-    filters = {**data.pop("filters", {}), **data}
+    advanced_filters = data.pop("filters", None)
+    filters = data
 
     results: list[Any]
     try:
@@ -199,8 +200,10 @@ def search_plex_media(hass: HomeAssistant, service_call: ServiceCall) -> dict[st
         elif library_name:
             if query:
                 filters.setdefault("title", query)
-            results = _search_library(plex_server, library_name, media_type, filters)
-        elif filters:
+            results = _search_library(
+                plex_server, library_name, media_type, filters, advanced_filters
+            )
+        elif filters or advanced_filters:
             raise ServiceValidationError(
                 translation_domain=DOMAIN, translation_key="library_required"
             )
@@ -264,6 +267,7 @@ def _search_library(
     library_name: str,
     media_type: str | None,
     filters: dict[str, Any],
+    advanced_filters: dict[str, Any] | None,
 ) -> list[Any]:
     """Search a single library using play_media compatible filters."""
     try:
@@ -279,6 +283,8 @@ def _search_library(
             },
         ) from err
     search_options: dict[str, Any] = {**filters, "allow_multiple": True}
+    if advanced_filters:
+        search_options["filters"] = advanced_filters
     if media_type:
         search_options["libtype"] = media_type
     results = search_media(
