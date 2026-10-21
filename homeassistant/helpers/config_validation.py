@@ -450,7 +450,7 @@ _WHITESPACE = re.compile(r"\s")
 
 def icon(value: Any) -> str:
     """Validate icon."""
-    str_value = str(value)
+    str_value = str(value).strip()
 
     if ":" in str_value and not _WHITESPACE.search(str_value):
         return str_value
