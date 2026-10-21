@@ -63,6 +63,9 @@
     },
     "library_required": {
       "message": "A library name is required to search with filters."
+    },
+    "user_not_found": {
+      "message": "The Plex user {user} was not found."
     }
   },
   "options": {
@@ -80,7 +83,7 @@
   },
   "services": {
     "on_deck": {
-      "description": "Returns unfinished movies and the next episodes to watch from the Continue Watching list, with the same info as the search service plus watch progress.",
+      "description": "Returns unfinished movies and the next episodes to watch from the Continue Watching list, with the same info as the search service plus watch progress. The poster links in the results are signed and stop working after one hour.",
       "fields": {
         "library_name": {
           "description": "Only return items from this Plex library.",
@@ -120,7 +123,7 @@
       "name": "Refresh library"
     },
     "search": {
-      "description": "Looks up Plex media and returns info (title, type, guid, rating key, server ID, year, summary, ratings, genres, watch status, and more) for each match. Accepts the same criteria as play media, or a free-text query.",
+      "description": "Looks up Plex media and returns info (title, type, guid, rating key, server ID, year, summary, ratings, genres, watch status, and more) for each match. Accepts the same criteria as play media, or a free-text query. The poster links in the results are signed and stop working after one hour.",
       "fields": {
         "album_name": {
           "description": "Name of an album (requires a library).",

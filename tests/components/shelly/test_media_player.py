@@ -7,6 +7,7 @@ from unittest.mock import Mock
 from aioshelly.const import MODEL_WALL_DISPLAY
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -45,8 +46,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import init_integration, patch_platforms
-
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 ENTITY_ID = f"{MEDIA_PLAYER_DOMAIN}.test_name"
 

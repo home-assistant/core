@@ -5,20 +5,19 @@ from unittest.mock import AsyncMock, patch
 
 from aiowaqi import WAQIAirQuality
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 
 from homeassistant.components.waqi.const import CONF_STATION_NUMBER, DOMAIN
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, async_load_json_object_fixture
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.waqi.async_setup_entry", return_value=True
+        "homeassistant.components.waqi.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

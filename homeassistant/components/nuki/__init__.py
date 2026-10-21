@@ -193,14 +193,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: NukiConfigEntry) -> None
     # Device registration for the bridge
     bridge_id = parse_id(info["ids"]["hardwareId"])
     dev_reg = dr.async_get(hass)
-    dev_reg.async_get_or_create(
+    dev_reg.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, bridge_id)},
-        manufacturer="Nuki Home Solutions GmbH",
-        name=f"Nuki Bridge {bridge_id}",
-        model="Hardware Bridge",
-        sw_version=info["versions"]["firmwareVersion"],
-        serial_number=parse_id(info["ids"]["hardwareId"]),
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, bridge_id)},
+            manufacturer="Nuki Home Solutions GmbH",
+            name=f"Nuki Bridge {bridge_id}",
+            model="Hardware Bridge",
+            sw_version=info["versions"]["firmwareVersion"],
+            serial_number=parse_id(info["ids"]["hardwareId"]),
+        ),
     )
 
     try:

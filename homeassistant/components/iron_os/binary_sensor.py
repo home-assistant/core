@@ -11,8 +11,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import IronOSConfigEntry
-from .coordinator import IronOSLiveDataCoordinator
+from .coordinator import IronOSConfigEntry, IronOSLiveDataCoordinator
 from .entity import IronOSBaseEntity
 
 # Coordinator is used to centralize the data updates

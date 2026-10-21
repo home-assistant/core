@@ -17,9 +17,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AirGradientConfigEntry
 from .const import DOMAIN, supports_config
-from .coordinator import AirGradientCoordinator
+from .coordinator import AirGradientConfigEntry, AirGradientCoordinator
 from .entity import AirGradientEntity, exception_handler
 
 PARALLEL_UPDATES = 1

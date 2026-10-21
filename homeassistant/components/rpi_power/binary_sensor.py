@@ -36,7 +36,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up rpi_power binary sensor."""
     under_voltage = config_entry.runtime_data
-    async_add_entities([RaspberryChargerBinarySensor(under_voltage)], True)
+    async_add_entities(
+        [RaspberryChargerBinarySensor(under_voltage, config_entry.entry_id)], True
+    )
 
 
 class RaspberryChargerBinarySensor(BinarySensorEntity):
@@ -49,9 +51,10 @@ class RaspberryChargerBinarySensor(BinarySensorEntity):
     # Legacy format, kept as migrating existing unique IDs is not worth the risk
     _attr_unique_id = "rpi_power"  # only one sensor possible  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
-    def __init__(self, under_voltage: UnderVoltage) -> None:
+    def __init__(self, under_voltage: UnderVoltage, config_entry_id: str) -> None:
         """Initialize the binary sensor."""
         self._under_voltage = under_voltage
+        self._config_entry_id = config_entry_id
 
         self._attr_device_info = DeviceInfo(
             manufacturer="Raspberry Pi",
@@ -69,6 +72,7 @@ class RaspberryChargerBinarySensor(BinarySensorEntity):
                     self.hass,
                     DOMAIN,
                     "under_voltage_detected",
+                    config_entry_id=self._config_entry_id,
                     is_fixable=True,
                     is_persistent=True,
                     severity=IssueSeverity.CRITICAL,

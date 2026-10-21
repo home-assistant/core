@@ -4,6 +4,11 @@ from unittest.mock import AsyncMock
 
 from aiohttp.test_utils import TestClient
 import pytest
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from uiprotect.api import RTSPSStreams
 from uiprotect.data import Camera, CloudAccount, Version
 from uiprotect.exceptions import NotAuthorized
@@ -17,9 +22,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .utils import MockUFPFixture, init_entry
-
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 _ACTIVE_STREAMS = RTSPSStreams(high="rtsps://example.test:7441/abc?enableSrtp")
 _NO_STREAMS = RTSPSStreams()

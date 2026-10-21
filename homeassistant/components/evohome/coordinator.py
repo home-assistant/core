@@ -1,7 +1,7 @@
 """Support for (EMEA/EU-based) Honeywell TCC systems."""
 
 from collections.abc import Awaitable
-from datetime import timedelta
+from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
 from typing import Any, override
@@ -25,6 +25,9 @@ from evohomeasync2.typedefs import EvoLocStatusT, EvoTcsConfigResponseT
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
+
+from .const import SCHEDULE_MAX_AGE
 
 
 class EvoDataUpdateCoordinator(DataUpdateCoordinator):
@@ -64,6 +67,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         self.temps: dict[str, float | None] = {}
 
         self._first_refresh_done = False  # get schedules only after first refresh
+        self._schedules_fetched: dict[str, datetime] = {}  # by DHW/zone id
 
     # our version of async_config_entry_first_refresh()...
     async def async_first_refresh(self) -> None:
@@ -104,7 +108,9 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
                 """
             ) from err
 
-        self.tcs = self.loc.gateways[0].systems[0]
+        if (tcs := self.loc.tcs) is None:
+            raise UpdateFailed(f"Config error: location {self.loc.id} has no TCS")
+        self.tcs = tcs
 
         if self.logger.isEnabledFor(logging.DEBUG):
             loc_info = {
@@ -181,9 +187,10 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             self.temps = {}  # high-precision temps now considered stale
 
         else:
-            self.temps = await self.client_v1.location_by_id[
-                self.loc.id
-            ].get_temperatures(dont_update_status=True)
+            tcs = self.client_v1.location_by_id[self.loc.id].tcs
+            self.temps = (
+                await tcs.get_temperatures(dont_update_status=True) if tcs else {}
+            )
 
         self.logger.debug("Status (high-res temps) = %s", self.temps)
 
@@ -209,20 +216,29 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
 
         self.logger.debug("Status = %s", status)
 
+    def _schedule_is_stale(self, child: ec2.HotWater | ec2.Zone) -> bool:
+        """Return True if the schedule has not been fetched within SCHEDULE_MAX_AGE."""
+        fetched = self._schedules_fetched.get(child.id)
+        return fetched is None or dt_util.utcnow() - fetched >= SCHEDULE_MAX_AGE
+
     async def _update_v2_schedules(self) -> None:
         for zone in self.tcs.zones:
+            if not self._schedule_is_stale(zone):
+                continue
             try:
                 await zone.get_schedule()
             except ec2.InvalidScheduleError as err:
                 self.logger.warning(
                     "Zone '%s' has an invalid/missing schedule: %r", zone.name, err
                 )
+            self._schedules_fetched[zone.id] = dt_util.utcnow()
 
-        if dhw := self.tcs.hotwater:
+        if (dhw := self.tcs.hotwater) and self._schedule_is_stale(dhw):
             try:
                 await dhw.get_schedule()
             except ec2.InvalidScheduleError as err:
                 self.logger.warning("DHW has an invalid/missing schedule: %r", err)
+            self._schedules_fetched[dhw.id] = dt_util.utcnow()
 
     @override
     async def _async_update_data(self) -> EvoLocStatusT:  # type: ignore[override]

@@ -10,6 +10,7 @@ import plexapi.playqueue
 import plexapi.video
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import requests_mock
 
 from homeassistant.components.media_player import MediaType
@@ -32,8 +33,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, SECONDARY_DATA
-
-from tests.common import MockConfigEntry
 
 
 async def test_refresh_library(
@@ -537,3 +536,81 @@ async def test_media_result_info_hierarchy(mock_plex_server) -> None:
     assert info["album_title"] == "Album"
     assert info["track_number"] == 3
     assert "show_title" not in info
+
+
+async def test_play_show_resumes_on_deck_episode(
+    hass: HomeAssistant, mock_plex_server
+) -> None:
+    """Test a show resolves to its on deck episode only when resume is set."""
+    content_id = f"{PLEX_URI_SCHEME}{DEFAULT_DATA[CONF_SERVER_IDENTIFIER]}/30"
+
+    result = process_plex_payload(
+        hass, MediaType.TVSHOW, content_id, supports_playqueues=False
+    )
+    assert isinstance(result.media, plexapi.video.Show)
+
+    on_deck_episode = SimpleNamespace(type="episode")
+    with patch.object(plexapi.video.Show, "onDeck", return_value=on_deck_episode):
+        result = process_plex_payload(
+            hass, MediaType.TVSHOW, f"{content_id}?resume=1", supports_playqueues=False
+        )
+    assert result.media is on_deck_episode
+
+    with patch.object(plexapi.video.Show, "onDeck", return_value=None):
+        result = process_plex_payload(
+            hass, MediaType.TVSHOW, f"{content_id}?resume=1", supports_playqueues=False
+        )
+    assert isinstance(result.media, plexapi.video.Show)
+    assert result.offset == 0
+
+
+async def test_search_service_season_zero(
+    hass: HomeAssistant, mock_plex_server
+) -> None:
+    """Test a season number of zero is kept in the search."""
+    with patch(
+        "plexapi.library.LibrarySection.search",
+        return_value=[],
+        __qualname__="search",
+    ) as search:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEARCH,
+            {
+                "library_name": "TV Shows",
+                "show_name": "TV Show",
+                "season_number": 0,
+                "media_type": "episode",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert search.call_args.kwargs["season.index"] == 0
+    assert search.call_args.kwargs["libtype"] == "episode"
+
+
+@pytest.mark.parametrize(
+    ("service", "data"),
+    [
+        (SERVICE_SEARCH, {"query": "Movie 1", "username": "unknown"}),
+        (SERVICE_ON_DECK, {"username": "unknown"}),
+    ],
+)
+async def test_unknown_username(
+    hass: HomeAssistant, mock_plex_server, service: str, data: dict[str, str]
+) -> None:
+    """Test an unknown Plex user gives a clear error."""
+    with (
+        patch(
+            "homeassistant.components.plex.server.PlexServer.switch_user",
+            side_effect=NotFound,
+        ),
+        pytest.raises(ServiceValidationError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN, service, data, blocking=True, return_response=True
+        )
+
+    assert exc_info.value.translation_key == "user_not_found"
+    assert exc_info.value.translation_placeholders == {"user": "unknown"}

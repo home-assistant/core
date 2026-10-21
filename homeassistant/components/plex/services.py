@@ -18,6 +18,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.template import result_as_boolean
 
 from .const import (
     DOMAIN,
@@ -178,7 +179,7 @@ def search_plex_media(hass: HomeAssistant, service_call: ServiceCall) -> dict[st
     plex_server = get_plex_server(hass, data.pop("server_name", None))
 
     if username := data.pop("username", None):
-        plex_server = plex_server.switch_user(username)
+        plex_server = _switch_user(plex_server, username)
 
     media_type = data.pop("media_type", None)
     library_name = data.pop("library_name", None)
@@ -230,7 +231,7 @@ def get_on_deck_media(hass: HomeAssistant, service_call: ServiceCall) -> dict[st
     plex_server = get_plex_server(hass, data.get("server_name"))
 
     if username := data.get("username"):
-        plex_server = plex_server.switch_user(username)
+        plex_server = _switch_user(plex_server, username)
 
     items = plex_server.continue_watching()
     if library_name := data.get("library_name"):
@@ -243,6 +244,18 @@ def get_on_deck_media(hass: HomeAssistant, service_call: ServiceCall) -> dict[st
             _media_result_info(item, plex_server) for item in items[: data["limit"]]
         ]
     }
+
+
+def _switch_user(plex_server: PlexServer, username: str) -> PlexServer:
+    """Return the Plex server as the given user."""
+    try:
+        return plex_server.switch_user(username)
+    except NotFound as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="user_not_found",
+            translation_placeholders={"user": username},
+        ) from err
 
 
 def _search_library(
@@ -500,6 +513,15 @@ def process_plex_payload(
         search_query.pop(internal_key, None)
 
     media = plex_server.lookup_media(content_type, **search_query)
+
+    resume = content.get("resume", False)
+    if isinstance(resume, str):
+        resume = result_as_boolean(resume)
+    if resume and getattr(media, "type", None) == "show":
+        if (on_deck := media.onDeck()) is not None:
+            media = on_deck
+        else:
+            content["resume"] = False
 
     if supports_playqueues and (isinstance(media, list) or shuffle or continuous):
         playqueue = plex_server.create_playqueue(

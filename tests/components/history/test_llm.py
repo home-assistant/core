@@ -5,6 +5,8 @@ from datetime import timedelta
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import MockUser
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import history
@@ -22,9 +24,6 @@ from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonObjectType
-
-from tests.common import MockUser
-from tests.components.recorder.common import async_wait_recording_done
 
 ENTITY_ID = "sensor.temperature"
 ENERGY_ENTITY_ID = "sensor.energy"

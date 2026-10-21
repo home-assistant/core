@@ -10,6 +10,11 @@ from aioautomower.model import MowerAttributes
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from aiohttp import ClientWebSocketResponse
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_fixture,
+    load_json_value_fixture,
+)
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
@@ -22,8 +27,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .const import CLIENT_ID, CLIENT_SECRET, USER_ID
-
-from tests.common import MockConfigEntry, load_fixture, load_json_value_fixture
 
 
 @pytest.fixture(name="jwt")

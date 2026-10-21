@@ -8,6 +8,11 @@ from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_CAMERA, MODEL_EM3
 from aioshelly.exceptions import NotInitialized
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    mock_restore_cache_with_extra_data,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homeassistant import (
@@ -57,12 +62,6 @@ from . import (
     register_entity,
 )
 from .conftest import MOCK_BLOCKS, MOCK_CONFIG, MOCK_SHELLY_RPC, MOCK_STATUS_RPC
-
-from tests.common import (
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-    mock_restore_cache_with_extra_data,
-)
 
 RELAY_BLOCK_ID = 0
 SENSOR_BLOCK_ID = 3
