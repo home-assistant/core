@@ -51,6 +51,7 @@ IGNORED_MODELS = ["HEOS 1", "HEOS 3", "HEOS 5", "HEOS 7"]
 DEFAULT_USE_TELNET_NEW_INSTALL = True
 
 CONFIG_SCHEMA = probatio.Schema({probatio.Optional(CONF_HOST): str})
+RECONFIGURE_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): str})
 
 
 class OptionsFlowHandler(OptionsFlowWithReload):
@@ -239,6 +240,37 @@ class DenonAvrFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_SERIAL_NUMBER: self.serial_number,
             },
             options={CONF_USE_TELNET: DEFAULT_USE_TELNET_NEW_INSTALL},
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the receiver host."""
+        errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            self.host = user_input[CONF_HOST]
+            if (receiver := await self._async_connect_receiver()) is None:
+                errors["base"] = "cannot_connect"
+            else:
+                if entry.unique_id is not None:
+                    await self.async_set_unique_id(
+                        self.construct_unique_id(
+                            receiver.model_name.replace("*", ""),
+                            receiver.serial_number,
+                        )
+                    )
+                    self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    entry, data_updates={CONF_HOST: self.host}
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                RECONFIGURE_SCHEMA, user_input or entry.data
+            ),
+            errors=errors,
         )
 
     @override
