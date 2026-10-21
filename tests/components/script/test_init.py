@@ -6,9 +6,20 @@ from typing import Any
 from unittest.mock import ANY, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockUser,
+    async_capture_events,
+    async_fire_time_changed,
+    async_mock_service,
+    mock_restore_cache,
+)
+from pytest_homeassistant.components.repairs import get_repairs
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import script
-from homeassistant.components.script import DOMAIN, EVENT_SCRIPT_STARTED, ScriptEntity
+from homeassistant.components.script import DOMAIN, EVENT_SCRIPT_STARTED
+from homeassistant.components.script.entity import ScriptEntity
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -50,17 +61,7 @@ from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 
-from tests.common import (
-    MockConfigEntry,
-    MockUser,
-    async_capture_events,
-    async_fire_time_changed,
-    async_mock_service,
-    mock_restore_cache,
-)
 from tests.components.logbook.common import MockRow, mock_humanify
-from tests.components.repairs import get_repairs
-from tests.typing import WebSocketGenerator
 
 ENTITY_ID = "script.test"
 
@@ -545,7 +546,7 @@ async def test_reload_unchanged_script(
 ) -> None:
     """Test an unmodified script is not reloaded."""
     with patch(
-        "homeassistant.components.script.ScriptEntity", wraps=ScriptEntity
+        "homeassistant.components.script.util.ScriptEntity", wraps=ScriptEntity
     ) as script_entity_init:
         config = {script.DOMAIN: [script_config]}
         assert await async_setup_component(hass, script.DOMAIN, config)

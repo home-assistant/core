@@ -5,6 +5,7 @@ from unittest.mock import PropertyMock, patch
 from pylitterbot import Account
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -13,8 +14,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .common import ACCOUNT_USER_ID, CONFIG, DOMAIN
-
-from tests.common import MockConfigEntry
 
 DHCP_DISCOVERY_LR4 = DhcpServiceInfo(
     ip="192.168.1.100",
@@ -48,7 +47,7 @@ async def test_full_flow(hass: HomeAssistant, mock_account) -> None:
         ),
         patch(
             "homeassistant.components.litterrobot.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -125,7 +124,7 @@ async def test_create_entry(
         ),
         patch(
             "homeassistant.components.litterrobot.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -176,7 +175,7 @@ async def test_reauth(hass: HomeAssistant, mock_account: Account) -> None:
         ),
         patch(
             "homeassistant.components.litterrobot.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -263,7 +262,7 @@ async def test_reconfigure(hass: HomeAssistant, mock_account: Account) -> None:
         ),
         patch(
             "homeassistant.components.litterrobot.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -318,7 +317,7 @@ async def test_dhcp_discovery_full_flow(
         ),
         patch(
             "homeassistant.components.litterrobot.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(

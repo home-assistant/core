@@ -196,18 +196,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
     registered_gateway_ids = {gateway.id for gateway in setup.gateways}
 
     for gateway in setup.gateways:
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, gateway.id)},
-            model=gateway.type.beautify_name if gateway.type else None,
-            model_id=str(gateway.type),
-            manufacturer=client.server_config.manufacturer,
-            name=gateway.type.beautify_name if gateway.type else gateway.id,
-            sw_version=gateway.connectivity.protocol_version,
-            hw_version=f"{gateway.type}:{gateway.sub_type}"
-            if gateway.type and gateway.sub_type
-            else None,
-            configuration_url=client.server_config.configuration_url,
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, gateway.id)},
+                model=gateway.type.beautify_name if gateway.type else None,
+                model_id=str(gateway.type),
+                manufacturer=client.server_config.manufacturer,
+                name=gateway.type.beautify_name if gateway.type else gateway.id,
+                sw_version=gateway.connectivity.protocol_version,
+                hw_version=f"{gateway.type}:{gateway.sub_type}"
+                if gateway.type and gateway.sub_type
+                else None,
+                configuration_url=client.server_config.configuration_url,
+            ),
         )
 
     # Some devices reference a gateway that is not part of setup.gateways
@@ -216,12 +218,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
     for gateway_id in {
         device.identifier.gateway_id for device in coordinator.data.values()
     } - registered_gateway_ids:
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, gateway_id)},
-            manufacturer=client.server_config.manufacturer,
-            name=gateway_id,
-            configuration_url=client.server_config.configuration_url,
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, gateway_id)},
+                manufacturer=client.server_config.manufacturer,
+                name=gateway_id,
+                configuration_url=client.server_config.configuration_url,
+            ),
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

@@ -8,6 +8,7 @@ from glances_api.exceptions import (
     GlancesApiNoDataAvailable,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.glances.const import DOMAIN
@@ -17,13 +18,11 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import HA_SENSOR_DATA, MOCK_USER_INPUT
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture(autouse=True)
 def glances_setup_fixture():
     """Mock Glances entry setup."""
-    with patch("homeassistant.components.glances.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.glances.async_setup_entry", return_value=None):
         yield
 
 

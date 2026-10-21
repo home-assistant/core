@@ -5,11 +5,10 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from xiaomi_weather import Location, parse_weather
 
 from homeassistant.components.xiaomi_weather.const import DOMAIN
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture

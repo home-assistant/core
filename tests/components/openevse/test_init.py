@@ -4,14 +4,13 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from openevsehttp.exceptions import AuthenticationError, MissingSerial
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.openevse.const import DOMAIN
 from homeassistant.components.openevse.coordinator import SCAN_INTERVAL
 from homeassistant.components.openevse.services import OpenEVSEService
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup_entry_timeout(

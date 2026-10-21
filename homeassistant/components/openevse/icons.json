@@ -9,6 +9,9 @@
       },
       "shaper_active": {
         "default": "mdi:tune-variant"
+      },
+      "station_status": {
+        "default": "mdi:ev-station"
       }
     },
     "select": {

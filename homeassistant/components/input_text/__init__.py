@@ -6,8 +6,7 @@ from typing import Any, override
 
 import probatio
 
-from homeassistant.const import (  # noqa: F401
-    ATTR_MODE,
+from homeassistant.const import (
     CONF_ICON,
     CONF_ID,
     CONF_MODE,
@@ -22,13 +21,12 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
-from .const import (  # noqa: F401
+from .const import (
     ATTR_VALUE,
     CONF_INITIAL,
     CONF_MAX,
     CONF_MIN,
     CONF_PATTERN,
-    CONF_VALUE,
     DATA_INPUT_TEXT,
     DOMAIN,
     SERVICE_SET_VALUE,
@@ -68,6 +66,14 @@ STORAGE_FIELDS: VolDictType = {
         [MODE_TEXT, MODE_PASSWORD]
     ),
 }
+
+__all__ = [
+    "ATTR_VALUE",
+    "DOMAIN",
+    "SERVICE_RELOAD",
+    "SERVICE_SET_VALUE",
+    "STORAGE_FIELDS",
+]
 
 
 def _cv_input_text(config: dict[str, Any]) -> dict[str, Any]:

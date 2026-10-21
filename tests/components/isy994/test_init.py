@@ -14,6 +14,7 @@ from pyisy.constants import (
 from pyisy.helpers import EventEmitter, NodeProperty
 from pyisy.variables import Variable
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_capture_events
 
 from homeassistant.components.isy994.const import DOMAIN, EVENT_ISY994_CONTROL
 from homeassistant.config_entries import ConfigEntryState
@@ -30,8 +31,6 @@ from homeassistant.helpers.entity_component import DATA_INSTANCES
 
 from . import entity_listeners
 from .conftest import MOCK_UUID as MOCK_ISY_UUID
-
-from tests.common import MockConfigEntry, async_capture_events
 
 MOCK_UUID = "ce:fb:72:31:b7:b9"
 

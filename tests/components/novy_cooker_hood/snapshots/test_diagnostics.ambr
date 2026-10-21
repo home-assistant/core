@@ -4,12 +4,13 @@
     'config_entry': dict({
       'data': dict({
         'code': 1,
+        'transmitter': 'radio_frequency.test_rf_transmitter',
       }),
       'disabled_by': None,
       'discovery_keys': dict({
       }),
       'domain': 'novy_cooker_hood',
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
@@ -34,6 +35,7 @@
         'config_subentry_id': None,
         'device_class': None,
         'disabled_by': None,
+        'domain': 'fan',
         'entity_category': None,
         'entity_id': 'fan.novy_cooker_hood',
         'has_entity_name': True,
@@ -42,14 +44,18 @@
         'labels': list([
         ]),
         'name': None,
-        'next_name_part': 'device',
+        'object_id_base': None,
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
         'original_name': None,
         'platform': 'novy_cooker_hood',
+        'previous_unique_id': None,
+        'suggested_object_id': None,
+        'supported_features': 49,
         'translation_key': None,
+        'unit_of_measurement': None,
       }),
       dict({
         'aliases': list([
@@ -66,6 +72,7 @@
         'config_subentry_id': None,
         'device_class': None,
         'disabled_by': None,
+        'domain': 'light',
         'entity_category': None,
         'entity_id': 'light.novy_cooker_hood_light',
         'has_entity_name': True,
@@ -74,14 +81,18 @@
         'labels': list([
         ]),
         'name': None,
-        'next_name_part': 'device',
+        'object_id_base': 'Light',
         'options': dict({
         }),
         'original_device_class': None,
         'original_icon': None,
         'original_name': 'Light',
         'platform': 'novy_cooker_hood',
+        'previous_unique_id': None,
+        'suggested_object_id': None,
+        'supported_features': 0,
         'translation_key': 'light',
+        'unit_of_measurement': None,
       }),
     ]),
     'transmitter': dict({

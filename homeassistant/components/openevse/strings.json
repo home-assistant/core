@@ -68,6 +68,9 @@
       "shaper_active": {
         "name": "Shaper active"
       },
+      "station_status": {
+        "name": "Station status"
+      },
       "using_ethernet": {
         "name": "Ethernet connected"
       },
