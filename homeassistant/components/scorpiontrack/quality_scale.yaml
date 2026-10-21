@@ -68,12 +68,12 @@ rules:
       Wi-Fi or the local network, so Home Assistant has no local discovery
       mechanism.
   docs-data-update: done
-  docs-examples: todo
+  docs-examples: done
   docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting: done
-  docs-use-cases: todo
+  docs-use-cases: done
   dynamic-devices: done
   entity-category: done
   entity-device-class: done
@@ -82,9 +82,14 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
-  repair-issues: todo
+  repair-issues:
+    status: exempt
+    comment: |
+      Unavailable shares are reflected by entity availability.
+      An updated link to the same share can be supplied through reconfiguration.
+      Vehicles removed from a successfully updated share are removed automatically.
+      There are no other known conditions that require a repair issue.
   stale-devices: done
-
   # Platinum
   async-dependency: done
   inject-websession: done
