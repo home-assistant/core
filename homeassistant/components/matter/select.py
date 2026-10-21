@@ -763,7 +763,7 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
-            key="WagoTravelTimeMode",
+            key="WagoManualMode",
             entity_category=EntityCategory.CONFIG,
             translation_key="travel_time_mode",
             options=["automatic", "manual"],

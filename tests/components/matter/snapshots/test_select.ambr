@@ -6553,7 +6553,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'travel_time_mode',
-    'unique_id': '00000000000004D2-0000000000000157-MatterNodeDevice-1-WagoTravelTimeMode-258-355729412',
+    'unique_id': '00000000000004D2-0000000000000157-MatterNodeDevice-1-WagoManualMode-258-355729412',
     'unit_of_measurement': None,
   })
 # ---
