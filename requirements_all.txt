@@ -406,7 +406,7 @@ aiopegelonline==0.1.1
 aiopnsense==1.0.10
 
 # homeassistant.components.proxmoxve
-aioproxmox==0.1.0
+aioproxmox==0.1.2
 
 # homeassistant.components.ptdevices
 aioptdevices==2026.11.1
