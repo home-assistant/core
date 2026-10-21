@@ -28,13 +28,12 @@ from homeassistant.util.json import JsonObjectType
 
 from . import LogErrorHandler
 from .const import DOMAIN
-from .stream import _read_log_tail
 
 _LOG_LEVELS = ["error", "warning", "critical"]
 _DEFAULT_LIMIT = 25
 _MAX_LIMIT = 50
 
-# Lines read from each source, the newest ones in the time window
+# Lines read from each source, the oldest ones in the time window
 LOG_QUERY_READ_LINES = 2000
 _LOG_QUERY_DEFAULT_SPAN = timedelta(minutes=15)
 _LOG_QUERY_DEFAULT_LIMIT = 100
@@ -208,6 +207,26 @@ def _parse_log_records(lines: list[str]) -> list[_LogRecord]:
     return records
 
 
+def _read_log_file(path: str, start_time: datetime, lines: int) -> list[str]:
+    """Return the lines of the log file from the first record at the start time."""
+    result: list[str] = []
+    try:
+        with open(path, encoding="utf-8", errors="replace") as log_file:
+            for line in log_file:
+                if not result and not (
+                    (match := _RECORD_START.match(line))
+                    and (time := datetime.fromisoformat(match[1])).tzinfo
+                    and time >= start_time
+                ):
+                    continue
+                result.append(line.rstrip("\n"))
+                if len(result) >= lines:
+                    break
+    except OSError:
+        return []
+    return result
+
+
 def _parse_time(value: str) -> datetime | None:
     """Parse a datetime string, assuming local time when no offset is given."""
     try:
@@ -215,18 +234,6 @@ def _parse_time(value: str) -> datetime | None:
     except ValueError:
         return None
     return dt_util.as_utc(parsed)
-
-
-def _fair_limits(counts: dict[str, int], limit: int) -> dict[str, int]:
-    """Split the limit over the sources, giving unused shares to the others."""
-    limits: dict[str, int] = {}
-    remaining = limit
-    for index, (source, count) in enumerate(
-        sorted(counts.items(), key=lambda item: item[1])
-    ):
-        limits[source] = min(count, remaining // (len(counts) - index))
-        remaining -= limits[source]
-    return limits
 
 
 class SystemLogGetLogsTool(Tool):
@@ -239,9 +246,9 @@ class SystemLogGetLogsTool(Tool):
         "includes INFO and DEBUG records. Use system_log__get_entries first for "
         "a summary of Home Assistant errors and warnings. Use this tool to see "
         "what happened around a specific time, or to find the cause of an error. "
-        "Records are sorted oldest first, with times in local time. If "
-        "'not_read_before' is set for a source, records older than that time "
-        "were not read."
+        "Records are sorted oldest first, with times in local time, starting at "
+        "start_time. If 'next_start_time' is set, the records stop before it: "
+        "call the tool again with it as start_time to read the records after."
     )
     annotations = ToolAnnotations(
         read_only=True, destructive=False, idempotent=True, open_world=False
@@ -297,9 +304,11 @@ class SystemLogGetLogsTool(Tool):
                 probatio.Optional(
                     "limit",
                     description=(
-                        "Maximum number of records to return, split fairly over "
-                        f"the sources (default: {_LOG_QUERY_DEFAULT_LIMIT}, "
-                        f"max: {_LOG_QUERY_MAX_LIMIT})."
+                        "Maximum number of records to return from the start of "
+                        "the time window. Records with the same time as the last "
+                        "one are also returned "
+                        f"(default: {_LOG_QUERY_DEFAULT_LIMIT}, max: "
+                        f"{_LOG_QUERY_MAX_LIMIT})."
                     ),
                     default=_LOG_QUERY_DEFAULT_LIMIT,
                 ): probatio.All(
@@ -317,14 +326,12 @@ class SystemLogGetLogsTool(Tool):
         end_time: datetime,
         lines: int,
     ) -> list[str]:
-        """Return the newest lines of the log of a source in the time window.
+        """Return the oldest lines of the log of a source in the time window.
 
-        Lines outside the time window are filtered out afterwards, so a source
-        that cannot select by time returns its newest lines.
         Raise HomeAssistantError when the log cannot be read.
         """
         return await hass.async_add_executor_job(
-            _read_log_tail, hass.data[KEY_DATA_LOGGING], lines
+            _read_log_file, hass.data[KEY_DATA_LOGGING], start_time, lines
         )
 
     @override
@@ -369,17 +376,29 @@ class SystemLogGetLogsTool(Tool):
             return_exceptions=True,
         )
 
-        summary: dict[str, JsonObjectType] = {}
-        matches: dict[str, list[_LogRecord]] = {}
+        errors: dict[str, str] = {}
+        # The merged log is complete until this time, as a source that reached
+        # the line limit has no records after its last one
+        complete_end: datetime | None = None
+        merged: list[tuple[str, _LogRecord]] = []
         for name, result in zip(names, results, strict=True):
             if isinstance(result, HomeAssistantError):
-                summary[name] = {"error": str(result)}
+                errors[name] = str(result)
                 continue
             if isinstance(result, BaseException):
                 raise result
             records = _parse_log_records(result)
-            matches[name] = [
-                record
+            if len(result) >= LOG_QUERY_READ_LINES and records:
+                # The last record can miss lines and moves to the next page.
+                # A single record that fills all lines is kept, so pages move on.
+                source_end = (
+                    records[-1].time
+                    if len(records) > 1
+                    else records[-1].time + timedelta(milliseconds=1)
+                )
+                complete_end = min(complete_end or source_end, source_end)
+            merged.extend(
+                (name, record)
                 for record in records
                 if start_time <= record.time <= end_time
                 and (
@@ -388,42 +407,36 @@ class SystemLogGetLogsTool(Tool):
                     or record.level >= min_level
                 )
                 and contains in record.message.lower()
+            )
+        if complete_end is not None:
+            merged = [item for item in merged if item[1].time < complete_end]
+        merged.sort(key=lambda item: item[1].time)
+
+        # Keep the records with the same time together, so pages never split them
+        end = args["limit"]
+        while end < len(merged) and merged[end][1].time == merged[end - 1][1].time:
+            end += 1
+        next_start_time = merged[end][1].time if end < len(merged) else complete_end
+
+        data: JsonObjectType = {
+            "records": [
+                {
+                    "time": dt_util.as_local(record.time).isoformat(
+                        timespec="milliseconds"
+                    ),
+                    "source": name,
+                    "message": record.message,
+                }
+                for name, record in merged[:end]
             ]
-            summary[name] = {"matched": len(matches[name])}
-            if (
-                len(result) >= LOG_QUERY_READ_LINES
-                and records
-                and records[0].time > start_time
-            ):
-                summary[name]["not_read_before"] = dt_util.as_local(
-                    records[0].time
-                ).isoformat(timespec="milliseconds")
-
-        returned: list[tuple[str, _LogRecord]] = []
-        for name, limit in _fair_limits(
-            {name: len(records) for name, records in matches.items()},
-            args["limit"],
-        ).items():
-            summary[name]["returned"] = limit
-            if limit:
-                returned.extend((name, record) for record in matches[name][-limit:])
-        returned.sort(key=lambda item: item[1].time)
-
-        return ToolResult(
-            data={
-                "records": [
-                    {
-                        "time": dt_util.as_local(record.time).isoformat(
-                            timespec="milliseconds"
-                        ),
-                        "source": name,
-                        "message": record.message,
-                    }
-                    for name, record in returned
-                ],
-                "sources": dict(summary.items()),
-            }
-        )
+        }
+        if next_start_time is not None and next_start_time <= end_time:
+            data["next_start_time"] = dt_util.as_local(next_start_time).isoformat(
+                timespec="milliseconds"
+            )
+        if errors:
+            data["errors"] = dict(errors.items())
+        return ToolResult(data=data)
 
 
 @callback

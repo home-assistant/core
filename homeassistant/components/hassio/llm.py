@@ -57,7 +57,7 @@ class SupervisorGetLogsTool(SystemLogGetLogsTool):
         end_time: datetime,
         lines: int,
     ) -> list[str]:
-        """Return the newest lines of the log of a source from the Supervisor."""
+        """Return the oldest lines of the log of a source in the time window."""
         if source.startswith(APP_SOURCE_PREFIX):
             command = f"/addons/{source.removeprefix(APP_SOURCE_PREFIX)}/logs"
         else:
@@ -72,10 +72,9 @@ class SupervisorGetLogsTool(SystemLogGetLogsTool):
                     "format": "plain" if source in _PLAIN_SOURCES else "verbose",
                     "no_colors": "",
                 },
-                # Without a start time, the journal returns the newest lines
-                # before the end time, not the oldest after the start time
                 range_header=(
-                    f"realtime=:{math.ceil(end_time.timestamp())}:-{lines - 1}:{lines}"
+                    f"realtime={math.floor(start_time.timestamp())}"
+                    f":{math.ceil(end_time.timestamp())}:{lines}"
                 ),
             )
         except HassioAPIError as err:

@@ -25,7 +25,7 @@
       }),
       'limit': dict({
         'default': 100,
-        'description': 'Maximum number of records to return, split fairly over the sources (default: 100, max: 500).',
+        'description': 'Maximum number of records to return from the start of the time window. Records with the same time as the last one are also returned (default: 100, max: 500).',
         'maximum': 500,
         'minimum': 1,
         'type': 'integer',
@@ -75,16 +75,6 @@
           'time': '2026-10-20T04:57:00.000-07:00',
         }),
       ]),
-      'sources': dict({
-        'core': dict({
-          'matched': 2,
-          'returned': 2,
-        }),
-        'supervisor': dict({
-          'matched': 1,
-          'returned': 1,
-        }),
-      }),
     }),
     'error': False,
   })

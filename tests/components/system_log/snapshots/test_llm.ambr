@@ -23,12 +23,6 @@
           'time': '2026-10-20T04:58:00.000-07:00',
         }),
       ]),
-      'sources': dict({
-        'core': dict({
-          'matched': 3,
-          'returned': 3,
-        }),
-      }),
     }),
     'error': False,
   })
@@ -36,41 +30,37 @@
 # name: test_get_logs_merge_sources
   dict({
     'data': dict({
+      'errors': dict({
+        'failing': 'Could not read',
+      }),
+      'next_start_time': '2026-10-20T04:53:00.000-07:00',
       'records': list([
+        dict({
+          'message': 'INFO (MainThread) [busy] Message 0',
+          'source': 'busy',
+          'time': '2026-10-20T04:50:00.000-07:00',
+        }),
+        dict({
+          'message': 'INFO (MainThread) [busy] Message 1',
+          'source': 'busy',
+          'time': '2026-10-20T04:51:00.000-07:00',
+        }),
         dict({
           'message': 'quiet[1]: Without a level',
           'source': 'quiet',
-          'time': '2026-10-20T04:52:30.000-07:00',
+          'time': '2026-10-20T04:51:30.000-07:00',
         }),
         dict({
-          'message': 'INFO (MainThread) [busy] Message 7',
+          'message': 'INFO (MainThread) [busy] Message 2',
           'source': 'busy',
-          'time': '2026-10-20T04:57:00.000-07:00',
+          'time': '2026-10-20T04:52:00.000-07:00',
         }),
         dict({
-          'message': 'INFO (MainThread) [busy] Message 8',
-          'source': 'busy',
-          'time': '2026-10-20T04:58:00.000-07:00',
-        }),
-        dict({
-          'message': 'INFO (MainThread) [busy] Message 9',
-          'source': 'busy',
-          'time': '2026-10-20T04:59:00.000-07:00',
+          'message': 'quiet[1]: Same time as busy',
+          'source': 'quiet',
+          'time': '2026-10-20T04:52:00.000-07:00',
         }),
       ]),
-      'sources': dict({
-        'busy': dict({
-          'matched': 10,
-          'returned': 3,
-        }),
-        'failing': dict({
-          'error': 'Could not read',
-        }),
-        'quiet': dict({
-          'matched': 1,
-          'returned': 1,
-        }),
-      }),
     }),
     'error': False,
   })
@@ -101,7 +91,7 @@
       }),
       'limit': dict({
         'default': 100,
-        'description': 'Maximum number of records to return, split fairly over the sources (default: 100, max: 500).',
+        'description': 'Maximum number of records to return from the start of the time window. Records with the same time as the last one are also returned (default: 100, max: 500).',
         'maximum': 500,
         'minimum': 1,
         'type': 'integer',

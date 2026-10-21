@@ -385,10 +385,10 @@ async def test_get_logs_default(
         pytest.param(
             {"start_time": "2026-10-20T13:30:00+02:00", "limit": 2},
             [
-                "ERROR (MainThread) [homeassistant.components.zwave_js] Connection lost",
-                "WARNING (MainThread) [homeassistant.components.hue] Slow update",
+                "INFO (MainThread) [homeassistant.core] Before the window",
+                "DEBUG (MainThread) [homeassistant.components.zwave_js] Polling",
             ],
-            id="limit_keeps_newest",
+            id="limit_keeps_oldest",
         ),
         pytest.param(
             {
@@ -449,43 +449,37 @@ async def test_get_logs_invalid_time(
 
 
 @pytest.mark.usefixtures("frozen_time")
-async def test_get_logs_not_read_before(
+async def test_get_logs_file_line_limit(
     hass: HomeAssistant, llm_context: llm.LLMContext, logs_tool: llm.Tool
 ) -> None:
-    """Test reporting a time window that starts before the lines read."""
+    """Test the next page starts at the last record of a full read."""
     with patch("homeassistant.components.system_log.llm.LOG_QUERY_READ_LINES", 3):
         result = await logs_tool.async_call(
             hass, llm.ToolInput(logs_tool.name, {}), llm_context
         )
 
-    # Continuation lines of a record that was not read are dropped
-    assert len(result.data["records"]) == 1
-    assert result.data["sources"] == {
-        "core": {
-            "matched": 1,
-            "returned": 1,
-            "not_read_before": "2026-10-20T04:58:00.000-07:00",
-        }
-    }
-
-
-@pytest.mark.usefixtures("frozen_time")
-async def test_get_logs_merge_sources(
-    hass: HomeAssistant, llm_context: llm.LLMContext, snapshot: SnapshotAssertion
-) -> None:
-    """Test the default sources are merged and the limit is split fairly."""
-    logs: dict[str, list[str] | HomeAssistantError] = {
-        "busy": [
-            *(
-                f"2026-10-20 13:5{minute}:00.000+02:00 INFO (MainThread) "
-                f"[busy] Message {minute}"
-                for minute in range(10)
-            ),
-            "2026-10-20 13:59:30.000+02:00 DEBUG (MainThread) [busy] Debug",
+    # The last record read misses its traceback, so it is on the next page
+    assert result.data == {
+        "records": [
+            {
+                "time": "2026-10-20T04:50:00.000-07:00",
+                "source": "core",
+                "message": (
+                    "DEBUG (MainThread) [homeassistant.components.zwave_js] Polling"
+                ),
+            }
         ],
-        "quiet": ["2026-10-20 13:52:30.000+02:00 quiet[1]: Without a level"],
-        "failing": HomeAssistantError("Could not read"),
+        "next_start_time": "2026-10-20T04:55:00.000-07:00",
     }
+
+
+async def _async_call_with_logs(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    logs: dict[str, list[str] | HomeAssistantError],
+    tool_args: JsonObjectType,
+) -> llm.ToolResult:
+    """Call the logs tool with the logs as default sources, plus an unread one."""
     tool = SystemLogGetLogsTool(
         dict.fromkeys((*logs, "other"), "a test log"), list(logs)
     )
@@ -502,11 +496,93 @@ async def test_get_logs_merge_sources(
         return log
 
     with patch.object(tool, "async_read_source", side_effect=_read_source):
-        result = await tool.async_call(
-            hass, llm.ToolInput(tool.name, {"limit": 4, "level": "info"}), llm_context
+        return await tool.async_call(
+            hass, llm.ToolInput(tool.name, tool_args), llm_context
         )
 
+
+@pytest.mark.usefixtures("frozen_time")
+async def test_get_logs_merge_sources(
+    hass: HomeAssistant, llm_context: llm.LLMContext, snapshot: SnapshotAssertion
+) -> None:
+    """Test the sources are merged into one log that is read from the start."""
+    result = await _async_call_with_logs(
+        hass,
+        llm_context,
+        {
+            "busy": [
+                *(
+                    f"2026-10-20 13:5{minute}:00.000+02:00 INFO (MainThread) "
+                    f"[busy] Message {minute}"
+                    for minute in range(10)
+                ),
+                "2026-10-20 13:59:30.000+02:00 DEBUG (MainThread) [busy] Debug",
+            ],
+            "quiet": [
+                "2026-10-20 13:51:30.000+02:00 quiet[1]: Without a level",
+                "2026-10-20 13:52:00.000+02:00 quiet[1]: Same time as busy",
+            ],
+            "failing": HomeAssistantError("Could not read"),
+        },
+        {"limit": 4, "level": "info"},
+    )
+
+    # The fifth record has the same time as the fourth, so it is included
     assert result == snapshot
+
+
+@pytest.mark.usefixtures("frozen_time")
+async def test_get_logs_source_line_limit(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test the merged log stops where a source stopped reading."""
+    with patch("homeassistant.components.system_log.llm.LOG_QUERY_READ_LINES", 3):
+        result = await _async_call_with_logs(
+            hass,
+            llm_context,
+            {
+                "busy": [
+                    f"2026-10-20 13:5{minute}:00.000+02:00 INFO (MainThread) "
+                    f"[busy] Message {minute}"
+                    for minute in range(3)
+                ],
+                "quiet": [
+                    "2026-10-20 13:51:30.000+02:00 quiet[1]: Before busy stopped",
+                    "2026-10-20 13:55:00.000+02:00 quiet[1]: After busy stopped",
+                ],
+            },
+            {},
+        )
+
+    assert [record["message"] for record in result.data["records"]] == [
+        "INFO (MainThread) [busy] Message 0",
+        "INFO (MainThread) [busy] Message 1",
+        "quiet[1]: Before busy stopped",
+    ]
+    assert result.data["next_start_time"] == "2026-10-20T04:52:00.000-07:00"
+
+
+@pytest.mark.usefixtures("frozen_time")
+async def test_get_logs_record_fills_line_limit(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test a record that fills all lines read is returned, so pages move on."""
+    with patch("homeassistant.components.system_log.llm.LOG_QUERY_READ_LINES", 3):
+        result = await _async_call_with_logs(
+            hass,
+            llm_context,
+            {
+                "core": [
+                    "2026-10-20 13:50:00.000+02:00 ERROR (MainThread) [core] Deep",
+                    "  File one",
+                    "  File two",
+                ]
+            },
+            {},
+        )
+
+    assert len(result.data["records"]) == 1
+    assert result.data["next_start_time"] == "2026-10-20T04:50:00.001-07:00"
 
 
 @pytest.mark.parametrize(

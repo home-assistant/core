@@ -99,40 +99,46 @@ async def test_get_logs_default(
             method="get",
             return_text=True,
             params={"format": "plain", "no_colors": ""},
-            range_header="realtime=:1792497600:-1999:2000",
+            range_header="realtime=1792496700:1792497600:2000",
         )
         for source in ("core", "supervisor")
     ]
 
 
 @pytest.mark.parametrize(
-    ("end_time", "expected_range"),
+    ("tool_args", "expected_range"),
     [
         pytest.param(
-            "2026-10-20T03:00:00+02:00",
-            "realtime=:1792458000:-1999:2000",
-            id="whole_second",
+            {
+                "start_time": "2026-10-20T02:45:00+02:00",
+                "end_time": "2026-10-20T03:00:00+02:00",
+            },
+            "realtime=1792457100:1792458000:2000",
+            id="whole_seconds",
         ),
         pytest.param(
-            "2026-10-20T03:00:00.500+02:00",
-            "realtime=:1792458001:-1999:2000",
-            id="rounded_up",
+            {
+                "start_time": "2026-10-20T02:45:00.500+02:00",
+                "end_time": "2026-10-20T03:00:00.500+02:00",
+            },
+            "realtime=1792457100:1792458001:2000",
+            id="rounded_outwards",
         ),
     ],
 )
-async def test_get_logs_end_time(
+async def test_get_logs_time_window(
     hass: HomeAssistant,
     llm_context: llm.LLMContext,
     send_command: AsyncMock,
-    end_time: str,
+    tool_args: dict[str, str],
     expected_range: str,
 ) -> None:
-    """Test the journal returns the newest lines before the end of the window."""
+    """Test the journal returns the oldest lines in the time window."""
     tool = SupervisorGetLogsTool({})
 
     await tool.async_call(
         hass,
-        llm.ToolInput(tool.name, {"source": ["host"], "end_time": end_time}),
+        llm.ToolInput(tool.name, {"source": ["host"], **tool_args}),
         llm_context,
     )
 
@@ -174,10 +180,8 @@ async def test_get_logs_source_error(
         hass, llm.ToolInput(tool.name, {"source": ["core", "dns"]}), llm_context
     )
 
-    assert result.data["sources"] == {
-        "core": {"matched": 2, "returned": 2},
-        "dns": {"error": "Could not read the dns log"},
-    }
+    assert len(result.data["records"]) == 2
+    assert result.data["errors"] == {"dns": "Could not read the dns log"}
 
 
 @pytest.mark.parametrize(
