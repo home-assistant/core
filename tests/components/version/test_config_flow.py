@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from pyhaversion.consts import HaVersionChannel, HaVersionSource
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant import config_entries
 from homeassistant.components.version.const import (
@@ -27,8 +28,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.util import dt as dt_util
 
 from .common import MOCK_VERSION, MOCK_VERSION_DATA, setup_version_integration
-
-from tests.common import async_fire_time_changed
 
 
 async def test_reload_config_entry(hass: HomeAssistant) -> None:

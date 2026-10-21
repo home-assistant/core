@@ -4,14 +4,13 @@ from collections.abc import Callable, Coroutine
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.escea.const import DOMAIN, ESCEA_FIREPLACE
 from homeassistant.components.escea.discovery import DiscoveryServiceListener
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="mock_discovery_service")

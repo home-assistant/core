@@ -12,6 +12,7 @@ from demetriek import (
     NotificationSound,
     Simple,
     Sound,
+    SoundURL,
 )
 import probatio
 
@@ -28,12 +29,18 @@ from .const import (
     CONF_MESSAGE,
     CONF_PRIORITY,
     CONF_SOUND,
+    CONF_SOUND_URL,
     DOMAIN,
     SERVICE_CHART,
     SERVICE_MESSAGE,
 )
 from .coordinator import LaMetricDataUpdateCoordinator
-from .helpers import async_get_coordinator_by_device_id
+from .helpers import (
+    async_get_coordinator_by_device_id,
+    async_resolve_sound_url,
+    has_audio,
+    media_content_id,
+)
 
 SERVICE_BASE_SCHEMA = probatio.Schema(
     {
@@ -48,6 +55,7 @@ SERVICE_BASE_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_SOUND): probatio.Any(
             probatio.Coerce(AlarmSound), probatio.Coerce(NotificationSound)
         ),
+        probatio.Optional(CONF_SOUND_URL): media_content_id,
     }
 )
 
@@ -90,7 +98,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             call,
             [
                 Simple(
-                    icon=call.data.get(CONF_ICON),
+                    icon=call.data.get(CONF_ICON, "a7956"),
                     text=call.data[CONF_MESSAGE],
                 )
             ],
@@ -118,7 +126,7 @@ async def async_send_notification(
     frames: list[Chart | Goal | Simple],
 ) -> None:
     """Send a notification to an LaMetric device."""
-    sound = None
+    builtin_sound: Sound | None = None
     if CONF_SOUND in call.data:
         snd: AlarmSound | NotificationSound | None
         if (snd := try_parse_enum(AlarmSound, call.data[CONF_SOUND])) is None and (
@@ -129,7 +137,22 @@ async def async_send_notification(
                 translation_key="unknown_sound",
                 translation_placeholders={"sound": str(call.data[CONF_SOUND])},
             )
-        sound = Sound(sound=snd, category=None)
+        builtin_sound = Sound(sound=snd, category=None)
+
+    # A built-in sound given as well plays when the URL cannot be fetched.
+    sound: Sound | SoundURL | None = builtin_sound
+    if CONF_SOUND_URL in call.data:
+        sound = SoundURL(
+            url=await async_resolve_sound_url(
+                coordinator.hass, call.data[CONF_SOUND_URL]
+            ),
+            fallback=builtin_sound,
+        )
+
+    # Leave the sound out for a device that cannot play it, rather than have
+    # it refuse the whole notification.
+    if not has_audio(coordinator.data):
+        sound = None
 
     notification = Notification(
         icon_type=NotificationIconType(call.data[CONF_ICON_TYPE]),

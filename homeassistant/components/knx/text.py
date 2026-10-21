@@ -39,6 +39,7 @@ from .entity import (
 )
 from .knx_module import KNXModule
 from .storage.entity_store_schema import KnxEntityData, TextKnxConfig
+from .storage.knx_selector import state_and_passive
 
 
 async def async_setup_entry(
@@ -155,11 +156,12 @@ class KnxUiText(_KnxText, KnxUiEntity):
             entity_config=config.entity,
         )
         knx_conf = config.knx
+        assert knx_conf.ga_text.dpt is not None  # required for text
         self._device = XknxNotification(
             knx_module.xknx,
-            name=config.entity.xknx_name,
+            name=config.entity.name,
             group_address=knx_conf.ga_text.write,
-            group_address_state=knx_conf.ga_text.state_and_passive(),
+            group_address_state=state_and_passive(knx_conf.ga_text),
             respond_to_read=knx_conf.respond_to_read,
             sync_state=knx_conf.sync_state,
             value_type=knx_conf.ga_text.dpt,

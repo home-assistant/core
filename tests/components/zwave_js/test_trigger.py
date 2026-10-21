@@ -8,6 +8,11 @@ from unittest.mock import MagicMock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+)
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
@@ -39,8 +44,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .common import COMMAND_CLASS_MARKERS, SCHLAGE_BE469_LOCK_ENTITY
-
-from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
 
 
 async def test_zwave_js_value_updated(

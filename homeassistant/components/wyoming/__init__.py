@@ -40,7 +40,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WyomingConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WyomingConfigEntry) -> None:
     """Load Wyoming."""
     service = await WyomingService.create(entry.data["host"], entry.data["port"])
 
@@ -72,11 +72,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: WyomingConfigEntry) -> b
 
         # Use config entry id since only one satellite per entry is supported
         satellite_id = entry.entry_id
-        device = dev_reg.async_get_or_create(
+        device = dev_reg.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, satellite_id)},
-            name=satellite_info.name,
-            suggested_area=satellite_info.area,
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, satellite_id)},
+                name=satellite_info.name,
+                suggested_area=satellite_info.area,
+            ),
         )
 
         item.device = SatelliteDevice(
@@ -87,15 +89,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: WyomingConfigEntry) -> b
         # Set up satellite entity, sensors, switches, etc.
         await hass.config_entries.async_forward_entry_setups(entry, SATELLITE_PLATFORMS)
 
-    return True
-
 
 async def update_listener(hass: HomeAssistant, entry: WyomingConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: WyomingConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WyomingConfigEntry) -> None:
     """Unload Wyoming."""
     item = entry.runtime_data
 
@@ -103,4 +103,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: WyomingConfigEntry) -> 
     if item.device is not None:
         platforms += SATELLITE_PLATFORMS
 
-    return await hass.config_entries.async_unload_platforms(entry, platforms)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, platforms)

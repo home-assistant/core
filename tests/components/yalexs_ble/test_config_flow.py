@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from bleak import BleakError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from yalexs_ble import AuthError, DoorStatus, LockInfo, LockState, LockStatus
 
 from homeassistant import config_entries
@@ -26,8 +27,6 @@ from . import (
     SAME_LOCAL_NAME_DISCOVERY_INFO,
     YALE_ACCESS_LOCK_DISCOVERY_INFO,
 )
-
-from tests.common import MockConfigEntry
 
 
 def _get_mock_push_lock():
@@ -613,6 +612,7 @@ async def test_integration_discovery_prefers_address(hass: HomeAssistant) -> Non
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"][CONF_ADDRESS] == YALE_ACCESS_LOCK_DISCOVERY_INFO.address
+    assert result2["result"].unique_id == YALE_ACCESS_LOCK_DISCOVERY_INFO.address
 
 
 async def test_integration_discovery_device_not_found(hass: HomeAssistant) -> None:
@@ -764,6 +764,7 @@ async def test_bluetooth_discovery_with_cached_config(
         CONF_KEY: "2fd51b8621c6a139eaffbedcb846b60f",
         CONF_SLOT: 66,
     }
+    assert result["result"].unique_id == YALE_ACCESS_LOCK_DISCOVERY_INFO.address
 
 
 async def test_integration_discovery_updates_key_unique_local_name(

@@ -138,7 +138,17 @@ SERVICE_PUBLISH_SCHEMA = probatio.All(
                     max=MAX_ACTIONS_ALLOWED,
                     msg="Too many actions defined. A maximum of 3 is supported",
                 ),
-                [probatio.Any(VIEW_SCHEMA, BROADCAST_SCHEMA, HTTP_SCHEMA, COPY_SCHEMA)],
+                [
+                    probatio.TaggedUnion(
+                        ATTR_ACTION,
+                        {
+                            "view": VIEW_SCHEMA,
+                            "broadcast": BROADCAST_SCHEMA,
+                            "http": HTTP_SCHEMA,
+                            "copy": COPY_SCHEMA,
+                        },
+                    )
+                ],
             ),
         }
     ),

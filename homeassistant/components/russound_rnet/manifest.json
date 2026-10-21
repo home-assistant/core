@@ -1,6 +1,7 @@
 {
   "domain": "russound_rnet",
   "name": "Russound RNET",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@noahhusby"],
   "documentation": "https://www.home-assistant.io/integrations/russound_rnet",
   "iot_class": "local_polling",

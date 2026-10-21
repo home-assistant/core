@@ -21,7 +21,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MelnorConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MelnorConfigEntry) -> None:
     """Set up melnor from a config entry."""
     ble_device = bluetooth.async_ble_device_from_address(hass, entry.data[CONF_ADDRESS])
 
@@ -60,22 +60,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: MelnorConfigEntry) -> bo
 
     # Register the parent device up front so zone entities can deterministically
     # resolve its via_device_id, regardless of platform setup order.
-    dr.async_get(hass).async_get_or_create(
+    dr.async_get(hass).async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, device.mac)},
-        connections={(CONNECTION_BLUETOOTH, device.mac)},
-        manufacturer="Melnor",
-        model=device.model,
-        name=device.name,
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, device.mac)},
+            connections={(CONNECTION_BLUETOOTH, device.mac)},
+            manufacturer="Melnor",
+            model=device.model,
+            name=device.name,
+        ),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: MelnorConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MelnorConfigEntry) -> None:
     """Unload a config entry."""
     await entry.runtime_data.data.disconnect()
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
