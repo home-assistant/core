@@ -73,9 +73,6 @@
     "abrp_update_failed": {
       "message": "Failed to fetch vehicle data from A Better Routeplanner."
     },
-    "oauth2_session_not_valid": {
-      "message": "The OAuth2 session is no longer valid; please re-authenticate."
-    },
     "oauth2_token_refresh_failed": {
       "message": "Failed to refresh the OAuth2 access token."
     }

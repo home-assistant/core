@@ -3,16 +3,10 @@
 import logging
 
 from aioabrp import AbrpClient, TelemetryStream
-from aiohttp import ClientError
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    OAuth2TokenRequestError,
-    OAuth2TokenRequestReauthError,
-)
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -41,14 +35,10 @@ async def async_setup_entry(
     )
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
+    # The helper maps token errors to setup errors, but not a bare timeout.
     try:
         await session.async_ensure_token_valid()
-    except OAuth2TokenRequestReauthError as err:
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_session_not_valid",
-        ) from err
-    except (OAuth2TokenRequestError, ClientError, TimeoutError) as err:
+    except TimeoutError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="oauth2_token_refresh_failed",
