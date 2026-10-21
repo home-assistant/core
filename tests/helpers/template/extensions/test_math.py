@@ -637,3 +637,33 @@ def test_add(hass: HomeAssistant) -> None:
     # Test handling of default return value
     assert render(hass, "{{ 'no_number' | add(10, 1) }}") == 1
     assert render(hass, "{{ 'no_number' | add(10, default=1) }}") == 1
+
+
+@pytest.mark.parametrize(
+    "template_str",
+    [
+        pytest.param("{{ log(value, default=1) }}", id="log"),
+        pytest.param("{{ log(10, value, default=1) }}", id="log_base"),
+        pytest.param("{{ log(10, 1, default=1) }}", id="log_base_one"),
+        pytest.param("{{ sin(value, default=1) }}", id="sin"),
+        pytest.param("{{ cos(value, default=1) }}", id="cos"),
+        pytest.param("{{ tan(value, default=1) }}", id="tan"),
+        pytest.param("{{ asin(value, default=1) }}", id="asin"),
+        pytest.param("{{ acos(value, default=1) }}", id="acos"),
+        pytest.param("{{ atan(value, default=1) }}", id="atan"),
+        pytest.param("{{ atan2(value, 1, default=1) }}", id="atan2"),
+        pytest.param("{{ sqrt(value, default=1) }}", id="sqrt"),
+        pytest.param("{{ value | add(1, default=1) }}", id="add"),
+        pytest.param("{{ value | multiply(1, default=1) }}", id="multiply"),
+        pytest.param("{{ value | round(default=1) }}", id="round"),
+        pytest.param("{{ inf | round(default=1) }}", id="round_inf"),
+        pytest.param("{{ inf | round(1, 'ceil', default=1) }}", id="round_inf_ceil"),
+        pytest.param("{{ inf | round(1, 'floor', default=1) }}", id="round_inf_floor"),
+        pytest.param("{{ inf | round(1, 'half', default=1) }}", id="round_inf_half"),
+    ],
+)
+def test_math_functions_out_of_range_return_default(
+    hass: HomeAssistant, template_str: str
+) -> None:
+    """Test math functions return the default for values out of float range."""
+    assert render(hass, template_str, {"value": 10**400, "inf": math.inf}) == 1
