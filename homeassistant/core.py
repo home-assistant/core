@@ -2121,7 +2121,11 @@ class State:
             last_reported = dt_util.parse_datetime(last_reported)
 
         if context := json_dict.get("context"):
-            context = Context(id=context.get("id"), user_id=context.get("user_id"))
+            context = Context(
+                id=context.get("id"),
+                user_id=context.get("user_id"),
+                parent_id=context.get("parent_id"),
+            )
 
         return cls(
             json_dict["entity_id"],

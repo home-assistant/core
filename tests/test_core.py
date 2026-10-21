@@ -1612,6 +1612,17 @@ def test_state_dict_conversion() -> None:
     assert state.as_dict() == ha.State.from_dict(state.as_dict()).as_dict()
 
 
+def test_state_dict_conversion_keeps_context() -> None:
+    """Test conversion of dict keeps the full context."""
+    context = ha.Context(user_id="user", parent_id="parent", id="id")
+    state = ha.State("domain.hello", "world", context=context)
+
+    restored = ha.State.from_dict(state.as_dict())
+
+    assert restored.context.parent_id == "parent"
+    assert restored.as_dict() == state.as_dict()
+
+
 def test_state_dict_conversion_with_wrong_data() -> None:
     """Test conversion with wrong data."""
     assert ha.State.from_dict(None) is None
