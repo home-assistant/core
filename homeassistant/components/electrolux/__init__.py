@@ -52,7 +52,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -> None:
     """Set up Electrolux integration entry."""
 
     token_manager = create_token_manager(hass, entry)
@@ -113,10 +113,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -> None:
     """Unload a config entry."""
     # Remove SSE listeners
     coordinators = entry.runtime_data.coordinators
@@ -131,7 +129,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) 
     except CancelledError:
         _LOGGER.info("SSE stream cancelled for entry %s", entry.entry_id)
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 def create_token_manager(
