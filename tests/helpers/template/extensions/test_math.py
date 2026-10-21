@@ -552,6 +552,23 @@ def test_remap_with_mirror(hass: HomeAssistant) -> None:
     assert MathExtension.remap(-0.1, 0, 1, 0, 1, edges="mirror") == pytest.approx(0.1)
 
 
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        pytest.param(-5, 3.0, id="second_period_below"),
+        pytest.param(-7, 1.0, id="second_period_below_near_end"),
+        pytest.param(-8, 0.0, id="two_widths_below"),
+        pytest.param(-9, 1.0, id="third_period_below"),
+        pytest.param(-13, 3.0, id="fourth_period_below"),
+    ],
+)
+def test_remap_with_mirror_far_below_range(value: float, expected: float) -> None:
+    """Test mirror reflects values more than one range width below in_min."""
+    assert MathExtension.remap(value, 0, 4, 0, 4, edges="mirror") == expected
+    # Mirroring is symmetric around in_min.
+    assert MathExtension.remap(-value, 0, 4, 0, 4, edges="mirror") == expected
+
+
 def test_rounding_value(hass: HomeAssistant) -> None:
     """Test rounding value."""
     hass.states.async_set("sensor.temperature", 12.78)
