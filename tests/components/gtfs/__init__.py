@@ -8,7 +8,7 @@ import zipfile
 
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.gtfs.const import DEFAULT_PATH
+from homeassistant.components.gtfs.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -38,8 +38,8 @@ def build_feed_zip(
 
 
 def gtfs_files(hass: HomeAssistant) -> list[str]:
-    """Return the names of the files in the config directory's gtfs folder."""
-    return sorted(path.name for path in Path(hass.config.path(DEFAULT_PATH)).glob("*"))
+    """Return the names of the files in the GTFS cache folder."""
+    return sorted(path.name for path in Path(hass.config.cache_path(DOMAIN)).glob("*"))
 
 
 async def setup_yaml_sensor(hass: HomeAssistant, **config: Any) -> None:

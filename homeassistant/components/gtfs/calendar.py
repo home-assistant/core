@@ -16,6 +16,8 @@ from .feed import GtfsConfigEntry, GtfsFeed, list_stops
 from .timetable import Departure, departures, feed_time_zone
 
 PARALLEL_UPDATES = 1
+# The schedule is static; the event property steps through cached departures.
+SCAN_INTERVAL = dt.timedelta(minutes=15)
 
 LOOKAHEAD = dt.timedelta(days=7)
 # Covers trips that departed before now and haven't arrived yet.

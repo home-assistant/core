@@ -2,6 +2,7 @@
 
 from contextlib import AbstractContextManager
 import json
+import logging
 from pathlib import Path
 import threading
 from typing import Any
@@ -20,6 +21,7 @@ from homeassistant.components.gtfs.const import (
     CONF_DATABASE,
     CONF_DESTINATION,
     CONF_ORIGIN,
+    DEFAULT_PATH,
     DOMAIN,
     SUBENTRY_TYPE_ROUTE,
 )
@@ -27,16 +29,41 @@ from homeassistant.components.gtfs.feed import (
     async_fetch_feed,
     feed_database_path,
     import_feed,
+    list_stops,
 )
-from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState, ConfigFlowResult
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import FEED_URL, build_feed_zip, gtfs_files, setup_integration
+from . import (
+    FEED_URL,
+    ROUTE_ENTITY_ID,
+    ROUTE_SUBENTRY_ID,
+    TEST_DATABASE,
+    build_feed_zip,
+    gtfs_files,
+    setup_integration,
+)
 
 AGENCY_HEADER = "agency_id,agency_name,agency_url,agency_timezone\n"
 STOP_TIMES_HEADER = "trip_id,arrival_time,departure_time,stop_id,stop_sequence\n"
+NEW_FEED_URL = "https://example.com/new/gtfs.zip"
+OTHER_FEED_URL = "https://example.org/gtfs.zip"
+# The fixture feed plus a Fourth Street stop, to tell the feeds apart.
+NEW_FEED_ZIP = build_feed_zip(
+    replace={
+        "stops.txt": (
+            "stop_id,stop_name,stop_lat,stop_lon\n"
+            "S1,First Street,40.0,-75.0\n"
+            "S2,Second Street,40.01,-75.01\n"
+            "S3,Third Street,40.02,-75.02\n"
+            "S4,Fourth Street,40.03,-75.03\n"
+            "N1,Night Depot,40.1,-75.1\n"
+            "N2,Night Terminal,40.11,-75.11\n"
+        )
+    }
+)
 
 
 async def _start_flow(hass: HomeAssistant) -> str:
@@ -121,7 +148,10 @@ async def test_user_flow(
     await hass.async_block_till_done()
     db_path = feed_database_path(hass, result["data"][CONF_DATABASE])
     assert db_path.is_file()
+    assert db_path.parent == Path(hass.config.cache_path(DOMAIN))
     assert sorted(path.name for path in db_path.parent.iterdir()) == [db_path.name]
+    # YAML users keep their feeds in config/gtfs; the flow never writes there.
+    assert not Path(hass.config.path(DEFAULT_PATH)).exists()
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -203,6 +233,41 @@ async def test_user_flow_download_errors(
     flow_id = await _start_flow(hass)
 
     _assert_load_error(hass, await _submit_url(hass, flow_id), error)
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(FEED_URL, content=feed_zip)
+    await _assert_recovers(hass, flow_id)
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    "response",
+    [
+        pytest.param({"exc": ClientError(FEED_URL)}, id="connection_error"),
+        pytest.param({"status": 401}, id="server_error"),
+    ],
+)
+async def test_user_flow_download_error_not_logging_url(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+    feed_zip: bytes,
+    response: dict[str, Any],
+) -> None:
+    """Test a failed download is logged without the URL, which may hold a token."""
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.gtfs")
+    aioclient_mock.get(FEED_URL, **response)
+    flow_id = await _start_flow(hass)
+
+    _assert_load_error(hass, await _submit_url(hass, flow_id), "cannot_connect")
+
+    messages = [
+        record.getMessage()
+        for record in caplog.records
+        if record.name.startswith("homeassistant.components.gtfs")
+    ]
+    assert any("Could not download GTFS feed" in message for message in messages)
+    assert not any("example.com" in message for message in messages)
 
     aioclient_mock.clear_requests()
     aioclient_mock.get(FEED_URL, content=feed_zip)
@@ -462,6 +527,51 @@ async def test_add_route(
 
 
 @pytest.mark.usefixtures("mock_feed_download")
+@pytest.mark.parametrize(
+    "feed_zip",
+    [
+        pytest.param(
+            build_feed_zip(
+                replace={
+                    "stops.txt": (
+                        "stop_id,stop_name,stop_lat,stop_lon,"
+                        "location_type,parent_station\n"
+                        "S1,First Street,40.0,-75.0,,\n"
+                        "S2,Second Street,40.01,-75.01,0,\n"
+                        "S3,Third Street Platform,40.02,-75.02,0,STA\n"
+                        "STA,Third Street Station,40.02,-75.02,1,\n"
+                        "ENT,Third Street Entrance,40.02,-75.02,2,STA\n"
+                        "N1,Night Depot,40.1,-75.1,,\n"
+                        "N2,Night Terminal,40.11,-75.11,,\n"
+                    )
+                }
+            ),
+            id="stations",
+        )
+    ],
+)
+async def test_add_route_lists_only_stops(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test stations and entrances, which trips never stop at, are not offered."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_ROUTE),
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    options = result["data_schema"].schema[CONF_ORIGIN].config["options"]
+    assert [option["value"] for option in options] == ["S1", "N1", "N2", "S2", "S3"]
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], _route_input("S2", "S3")
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Second Street to Third Street Platform"
+
+
+@pytest.mark.usefixtures("mock_feed_download")
 async def test_add_route_same_stop(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -511,3 +621,184 @@ async def test_add_route_entry_not_loaded(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "entry_not_loaded"
+
+
+async def _submit_reconfigure(
+    hass: HomeAssistant, flow_id: str, url: str
+) -> ConfigFlowResult:
+    """Submit url to a reconfigure flow and return the result once it has loaded."""
+    result = await hass.config_entries.flow.async_configure(flow_id, {CONF_URL: url})
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["progress_action"] == "load_feed"
+    await hass.async_block_till_done()
+    return await hass.config_entries.flow.async_configure(flow_id)
+
+
+async def _assert_reconfigured(
+    hass: HomeAssistant, entry: MockConfigEntry, result: ConfigFlowResult, url: str
+) -> None:
+    """Assert the entry now uses a new database of the new feed, keeping its routes."""
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+
+    database = entry.data[CONF_DATABASE]
+    assert entry.data == {CONF_URL: url, CONF_DATABASE: database}
+    assert database != TEST_DATABASE
+    assert gtfs_files(hass) == [database]
+    assert entry.state is ConfigEntryState.LOADED
+    assert "S4" in await hass.async_add_executor_job(list_stops, entry.runtime_data)
+    assert list(entry.subentries) == [ROUTE_SUBENTRY_ID]
+    assert hass.states.get(ROUTE_ENTITY_ID) is not None
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        pytest.param(FEED_URL, id="same_url"),
+        pytest.param(NEW_FEED_URL, id="new_url"),
+    ],
+)
+async def test_reconfigure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    feed_zip: bytes,
+    url: str,
+) -> None:
+    """Test reconfiguring downloads the feed into a new database and swaps it in."""
+    aioclient_mock.get(FEED_URL, content=feed_zip)
+    await setup_integration(hass, mock_config_entry)
+    assert gtfs_files(hass) == [TEST_DATABASE]
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_URL) == FEED_URL
+    )
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(url, content=NEW_FEED_ZIP)
+    result = await _submit_reconfigure(hass, result["flow_id"], url)
+
+    await _assert_reconfigured(hass, mock_config_entry, result, url)
+
+
+@pytest.mark.parametrize(
+    ("response", "error"),
+    [
+        pytest.param({"exc": ClientError()}, "cannot_connect", id="connection_error"),
+        pytest.param({"text": "<html>Not here</html>"}, "invalid_feed", id="html_page"),
+        pytest.param(
+            {"content": build_feed_zip(exclude=frozenset({"stops.txt"}))},
+            "invalid_feed",
+            id="missing_stops",
+        ),
+    ],
+)
+async def test_reconfigure_load_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    feed_zip: bytes,
+    response: dict[str, Any],
+    error: str,
+) -> None:
+    """Test a failed reload keeps the old database in use, then can recover."""
+    aioclient_mock.get(FEED_URL, content=feed_zip)
+    await setup_integration(hass, mock_config_entry)
+    feed = mock_config_entry.runtime_data
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    flow_id = result["flow_id"]
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(FEED_URL, **response)
+    result = await _submit_reconfigure(hass, flow_id, FEED_URL)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_URL) == FEED_URL
+    )
+    await hass.async_block_till_done()
+    assert gtfs_files(hass) == [TEST_DATABASE]
+    assert mock_config_entry.data[CONF_DATABASE] == TEST_DATABASE
+    assert mock_config_entry.runtime_data is feed
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(FEED_URL, content=NEW_FEED_ZIP)
+    result = await _submit_reconfigure(hass, flow_id, FEED_URL)
+
+    await _assert_reconfigured(hass, mock_config_entry, result, FEED_URL)
+
+
+async def test_reconfigure_invalid_url(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    feed_zip: bytes,
+) -> None:
+    """Test reconfiguring rejects a URL that is not http or https."""
+    aioclient_mock.get(FEED_URL, content=feed_zip)
+    await setup_integration(hass, mock_config_entry)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    flow_id = result["flow_id"]
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, {CONF_URL: "ftp://example.com/gtfs.zip"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {CONF_URL: "invalid_url"}
+
+    aioclient_mock.get(NEW_FEED_URL, content=NEW_FEED_ZIP)
+    result = await _submit_reconfigure(hass, flow_id, NEW_FEED_URL)
+
+    await _assert_reconfigured(hass, mock_config_entry, result, NEW_FEED_URL)
+
+
+@pytest.mark.usefixtures("mock_feed_download")
+async def test_reconfigure_url_of_other_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfiguring to a URL another entry uses aborts and keeps the feed."""
+    await setup_integration(hass, mock_config_entry)
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: OTHER_FEED_URL, CONF_DATABASE: "other.sqlite"},
+    ).add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_URL: f" {OTHER_FEED_URL} "}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_URL] == FEED_URL
+    assert gtfs_files(hass) == [TEST_DATABASE]
+
+
+@pytest.mark.usefixtures("mock_feed_download")
+async def test_reconfigure_removed_before_finish(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test abandoning a reconfigure after its import deletes only the new database."""
+    await setup_integration(hass, mock_config_entry)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    flow_id = result["flow_id"]
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, {CONF_URL: FEED_URL}
+    )
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    await hass.async_block_till_done()
+    assert len(gtfs_files(hass)) == 2
+
+    hass.config_entries.flow.async_abort(flow_id)
+    # Flow removal deletes the database in a background executor job.
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert gtfs_files(hass) == [TEST_DATABASE]
+    assert mock_config_entry.data[CONF_DATABASE] == TEST_DATABASE
+    assert mock_config_entry.state is ConfigEntryState.LOADED

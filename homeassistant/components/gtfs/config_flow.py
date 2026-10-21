@@ -12,6 +12,7 @@ import probatio
 from yarl import URL
 
 from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
@@ -72,13 +73,27 @@ class GtfsConfigFlow(ConfigFlow, domain=DOMAIN):
         self._load_task: asyncio.Task[str | None] | None = None
         self._cancelled = threading.Event()
         self._load_error: str | None = None
-        self._entry_created = False
+        self._database_kept = False
 
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Ask for a feed URL."""
+        return await self._async_step_url("user", user_input)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Download the feed again, optionally from a new URL."""
+        if self._url is None:
+            self._url = self._get_reconfigure_entry().data[CONF_URL]
+        return await self._async_step_url("reconfigure", user_input)
+
+    async def _async_step_url(
+        self, step_id: str, user_input: dict[str, Any] | None
+    ) -> ConfigFlowResult:
+        """Ask for a feed URL, then load it into a new database."""
         errors: dict[str, str] = {}
         if self._load_error:
             errors["base"] = self._load_error
@@ -93,7 +108,7 @@ class GtfsConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._set_database(f"{uuid4().hex}.sqlite")
                 return await self.async_step_load_feed()
         return self.async_show_form(
-            step_id="user",
+            step_id=step_id,
             data_schema=self.add_suggested_values_to_schema(
                 USER_SCHEMA, {CONF_URL: self._url}
             ),
@@ -141,7 +156,11 @@ class GtfsConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._load_error = "unknown"
             else:
                 return self.async_show_progress_done(next_step_id="finish")
-            return self.async_show_progress_done(next_step_id="user")
+            return self.async_show_progress_done(
+                next_step_id="reconfigure"
+                if self.source == SOURCE_RECONFIGURE
+                else "user"
+            )
         return self.async_show_progress(
             step_id="load_feed",
             progress_action="load_feed",
@@ -151,11 +170,22 @@ class GtfsConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_finish(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Create the entry after a successful import."""
+        """Create or update the entry after a successful import."""
         assert self._url is not None
         assert self._database is not None
         self._async_abort_entries_match({CONF_URL: self._url})
-        self._entry_created = True
+        self._database_kept = True
+        if self.source == SOURCE_RECONFIGURE:
+            entry = self._get_reconfigure_entry()
+            old_path = feed_database_path(self.hass, entry.data[CONF_DATABASE])
+            result = self.async_update_reload_and_abort(
+                entry, data_updates={CONF_URL: self._url, CONF_DATABASE: self._database}
+            )
+            # Until it reloads, the entry reads from its open handle on the old file.
+            await self.hass.async_add_executor_job(
+                partial(old_path.unlink, missing_ok=True)
+            )
+            return result
         return self.async_create_entry(
             title=self._title or URL(self._url).host or self._url,
             data={CONF_URL: self._url, CONF_DATABASE: self._database},
@@ -173,11 +203,11 @@ class GtfsConfigFlow(ConfigFlow, domain=DOMAIN):
     @override
     @callback
     def async_remove(self) -> None:
-        """Delete the imported feed if the flow ends without creating an entry."""
+        """Delete the imported feed if the flow ends without using it."""
         if self._database is None:
             return
         self.hass.data[FLOW_DATABASES].discard(self._database)
-        if not self._entry_created:
+        if not self._database_kept:
             self._cancelled.set()
             self.hass.async_add_executor_job(
                 partial(
