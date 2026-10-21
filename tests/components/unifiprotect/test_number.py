@@ -674,6 +674,24 @@ async def test_chime_ring_volume_setup(
     assert device_info["sw_version"] == chime.firmware_version
 
 
+async def test_chime_ring_volume_ignores_local_permissions(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    chime: Chime,
+    doorbell: Camera,
+) -> None:
+    """A read-only local user keeps the ring volume, which writes with the API key."""
+    ufp.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict({"rawPermission": "chime:read:*"})
+    ]
+    _setup_chime_with_doorbell(chime, doorbell, volume=75)
+    setup_public_chime(ufp)
+
+    await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
+
+    assert hass.states.get(RING_VOLUME_ENTITY).state == "75"
+
+
 async def test_chime_ring_volume_set_value(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
