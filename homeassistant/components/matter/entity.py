@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     from matter_server.client import MatterClient
     from matter_server.client.models.node import MatterEndpoint
 
-    from .models import MatterEntityInfo
+    from .discovery import MatterEntityInfo
 
 LOGGER = logging.getLogger(__name__)
 
