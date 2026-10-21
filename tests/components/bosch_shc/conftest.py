@@ -58,6 +58,7 @@ from boschshcpy.services_impl import (
     PresenceSimulationConfigurationService,
     SmokeSensitivityService,
     SwitchConfiguration,
+    TerminalConfiguration,
     ValveTappetService,
     VibrationSensorService,
     WallThermostatConfiguration,
@@ -502,6 +503,7 @@ def thermostat_gen2_device(
     supports_displayed_temperature: bool | None = None,
     valve_type: WallThermostatConfiguration.ValveType | None = None,
     heater_type: WallThermostatConfiguration.HeaterType | None = None,
+    terminal_type: TerminalConfiguration.Type | None = None,
     spec: type[SHCThermostatGen2 | SHCRoomThermostat2] = SHCThermostatGen2,
 ) -> SHCThermostatGen2 | SHCRoomThermostat2:
     """Build a minimal device double for the thermostats/roomthermostats buckets (Gen2)."""
@@ -536,6 +538,9 @@ def thermostat_gen2_device(
         )
         device.valve_type = valve_type
         device.heater_type = heater_type
+    if spec is SHCRoomThermostat2:
+        device.supports_terminal_configuration = terminal_type is not None
+        device.terminal_type = terminal_type
     return device
 
 
