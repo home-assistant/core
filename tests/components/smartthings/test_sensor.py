@@ -478,6 +478,10 @@ async def test_meat_probe_unavailable_when_disconnected(
         Attribute.STATUS,
         "connected",
     )
+
+    # The cached 0 °F reading stays hidden until the probe reports again.
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
     await trigger_update(
         hass,
         devices,
