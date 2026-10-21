@@ -22,7 +22,7 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
-    with patch("homeassistant.components.uptime.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.uptime.async_setup_entry", return_value=None):
         yield
 
 

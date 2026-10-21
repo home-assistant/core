@@ -1,10 +1,14 @@
 """Test the switchbot sensors."""
 
+from collections.abc import Callable
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
-from pytest_homeassistant.components.bluetooth import inject_bluetooth_service_info
+from pytest_homeassistant.components.bluetooth import (
+    inject_advertisement,
+    inject_bluetooth_service_info,
+)
 from switchbot import SwitchBotAdvertisement, SwitchbotModel
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
@@ -25,12 +29,17 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    EntityCategory,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import (
+    AIR_PURIFIER_JP_SERVICE_INFO,
+    AIR_PURIFIER_TABLE_JP_SERVICE_INFO,
     AIR_PURIFIER_TABLE_US_SERVICE_INFO,
+    AIR_PURIFIER_US_SERVICE_INFO,
     CIRCULATOR_FAN_SERVICE_INFO,
     CLIMATE_PANEL_SERVICE_INFO,
     EVAPORATIVE_HUMIDIFIER_SERVICE_INFO,
@@ -1210,6 +1219,7 @@ async def test_air_purifier_sensor(hass: HomeAssistant) -> None:
         "sensor.test_name_pm2_5",
         "sensor.test_name_air_quality_level",
         "sensor.test_name_bluetooth_signal",
+        "sensor.test_name_filter_usage",
     }
 
     pm25_sensor = hass.states.get("sensor.test_name_pm2_5")
@@ -1231,6 +1241,80 @@ async def test_air_purifier_sensor(hass: HomeAssistant) -> None:
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("service_info", "sensor_type"),
+    [
+        pytest.param(AIR_PURIFIER_US_SERVICE_INFO, "air_purifier_us", id="us"),
+        pytest.param(AIR_PURIFIER_JP_SERVICE_INFO, "air_purifier_jp", id="jp"),
+        pytest.param(
+            AIR_PURIFIER_TABLE_US_SERVICE_INFO, "air_purifier_table_us", id="table_us"
+        ),
+        pytest.param(
+            AIR_PURIFIER_TABLE_JP_SERVICE_INFO, "air_purifier_table_jp", id="table_jp"
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "updated_hours",
+    [
+        pytest.param(47, id="increment"),
+        pytest.param(0, id="filter_replacement"),
+        pytest.param(1896, id="used_filter"),
+        pytest.param(4321, id="expired_filter"),
+    ],
+)
+async def test_air_purifier_filter_usage_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    service_info: BluetoothServiceInfoBleak,
+    sensor_type: str,
+    updated_hours: int,
+) -> None:
+    """Test filter usage from advertisements, including replacement resets."""
+    manufacturer_data = bytearray(service_info.manufacturer_data[2409])
+    manufacturer_data[11:13] = (46).to_bytes(2, "big")
+    advertisement = service_info.advertisement._replace(
+        manufacturer_data={2409: bytes(manufacturer_data)}
+    )
+    inject_advertisement(hass, service_info.device, advertisement)
+
+    entry = mock_entry_encrypted_factory(sensor_type)
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.switchbot.fan.switchbot.SwitchbotAirPurifier.get_basic_info",
+        new=AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        entity_id = "sensor.test_name_filter_usage"
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == "46"
+        assert state.attributes[ATTR_FRIENDLY_NAME] == "test-name Filter usage"
+        assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "h"
+        assert state.attributes[ATTR_DEVICE_CLASS] == "duration"
+        assert state.attributes[ATTR_STATE_CLASS] == "measurement"
+        assert (
+            entity_registry.async_get(entity_id).entity_category
+            is EntityCategory.DIAGNOSTIC
+        )
+
+        manufacturer_data[6] = (manufacturer_data[6] + 1) % 256
+        manufacturer_data[11:13] = updated_hours.to_bytes(2, "big")
+        inject_advertisement(
+            hass,
+            service_info.device,
+            advertisement._replace(manufacturer_data={2409: bytes(manufacturer_data)}),
+        )
+        await hass.async_block_till_done()
+        assert hass.states.get(entity_id).state == str(updated_hours)
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

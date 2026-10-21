@@ -246,9 +246,9 @@ async def _async_register_zigbee_gateway_devices(
             continue
         gateway_serial = device.config.getConfig().serial
         identifier = f"{gateway_serial}_{device_serial.replace('-', '_')}"
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, identifier)},
+            device_info=dr.DeviceInfo(identifiers={(DOMAIN, identifier)}),
         )
 
 

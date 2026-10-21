@@ -14,8 +14,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import MyPVConfigEntry
 from .const import DOMAIN
+from .coordinator import MyPVConfigEntry
 from .entity import MyPVBaseEntity, MyPVSetupEntity
 
 ENTITY_DESCRIPTIONS: Final[dict[str, SwitchEntityDescription]] = {

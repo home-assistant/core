@@ -66,15 +66,17 @@ def get_matter_device_info(
     hass: HomeAssistant, device_id: str
 ) -> MatterDeviceInfo | None:
     """Return Matter device info or None if device does not exist."""
-    if not hass.config_entries.async_loaded_entries(DOMAIN) or not (
-        node := node_from_ha_device_id(hass, device_id)
+    if (
+        not hass.config_entries.async_loaded_entries(DOMAIN)
+        or not (node := node_from_ha_device_id(hass, device_id))
+        or (device_info := node.device_info) is None
     ):
         return None
 
     return MatterDeviceInfo(
-        unique_id=node.device_info.uniqueID or "",
-        vendor_id=hex(node.device_info.vendorID),
-        product_id=hex(node.device_info.productID),
+        unique_id=device_info.uniqueID or "",
+        vendor_id=hex(device_info.vendorID),
+        product_id=hex(device_info.productID),
     )
 
 
