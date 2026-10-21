@@ -6,6 +6,7 @@ from typing import Any, NoReturn, override
 from mitsubishi_comfort import FanSpeed, Mode, VaneDirection
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ClimateEntity,
@@ -197,23 +198,36 @@ class MitsubishiComfortCloudClimate(MitsubishiComfortCloudEntity, ClimateEntity)
     @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        if self._effective_mode in ("heat", "autoHeat"):
-            if self._device.status.min_heat_setpoint is not None:
-                return self._device.status.min_heat_setpoint
-        if self._device.status.min_cool_setpoint is not None:
-            return self._device.status.min_cool_setpoint
-        return super().min_temp
+        # Service validation runs before a requested HVAC mode change.
+        return min(
+            (
+                bound
+                for bound in (
+                    self._device.status.min_heat_setpoint,
+                    self._device.status.min_cool_setpoint,
+                    self._device.status.min_auto_setpoint,
+                )
+                if bound is not None
+            ),
+            default=super().min_temp,
+        )
 
     @property
     @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        if self._effective_mode in ("heat", "autoHeat"):
-            if self._device.status.max_heat_setpoint is not None:
-                return self._device.status.max_heat_setpoint
-        if self._device.status.max_cool_setpoint is not None:
-            return self._device.status.max_cool_setpoint
-        return super().max_temp
+        return max(
+            (
+                bound
+                for bound in (
+                    self._device.status.max_heat_setpoint,
+                    self._device.status.max_cool_setpoint,
+                    self._device.status.max_auto_setpoint,
+                )
+                if bound is not None
+            ),
+            default=super().max_temp,
+        )
 
     @property
     @override
@@ -254,6 +268,8 @@ class MitsubishiComfortCloudClimate(MitsubishiComfortCloudEntity, ClimateEntity)
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature."""
+        if ATTR_HVAC_MODE in kwargs:
+            await self.async_set_hvac_mode(kwargs[ATTR_HVAC_MODE])
         mode = self._effective_mode
         wrote = False
         failed = False

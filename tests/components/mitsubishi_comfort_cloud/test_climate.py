@@ -274,3 +274,227 @@ async def test_climate_state(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert hass.states.get("climate.living_room") == snapshot
+
+
+@pytest.mark.parametrize("mode", ["auto", "autoCool", "autoHeat"])
+@pytest.mark.parametrize(
+    ("auto_min", "auto_max", "low", "high"),
+    [
+        pytest.param(None, None, 16, 30, id="heat-cool-bounds"),
+        pytest.param(10, 35, 10, 35, id="wider-auto-bounds"),
+    ],
+)
+async def test_automatic_temperature_bounds(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_account: AsyncMock,
+    mode: str,
+    auto_min: float | None,
+    auto_max: float | None,
+    low: float,
+    high: float,
+) -> None:
+    """All automatic modes accept both setpoints at the supported boundaries."""
+    mock_cloud_account.get_device_details.return_value["operationMode"] = mode
+    profile = mock_cloud_account.get_device_profile.return_value
+    profile["minimumSetPoints"]["auto"] = auto_min
+    profile["maximumSetPoints"]["auto"] = auto_max
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        "set_temperature",
+        {
+            ATTR_ENTITY_ID: "climate.living_room",
+            "target_temp_low": low,
+            "target_temp_high": high,
+        },
+        blocking=True,
+    )
+    assert mock_cloud_account.send_command.await_args_list == [
+        call(MOCK_SERIAL, {"spCool": high}),
+        call(MOCK_SERIAL, {"spHeat": low}),
+    ]
+    state = hass.states.get("climate.living_room")
+    assert state.attributes["target_temp_low"] == low
+    assert state.attributes["target_temp_high"] == high
+
+
+@pytest.mark.parametrize(
+    ("mode", "data", "commands", "expected_mode"),
+    [
+        pytest.param(
+            "cool",
+            {"hvac_mode": "heat", "temperature": 22},
+            [{"operationMode": "heat"}, {"spHeat": 22}],
+            "heat",
+            id="cool-to-heat",
+        ),
+        pytest.param(
+            "off",
+            {"hvac_mode": "heat", "temperature": 22},
+            [{"operationMode": "heat"}, {"spHeat": 22}],
+            "heat",
+            id="off-to-heat",
+        ),
+        pytest.param(
+            "cool",
+            {"hvac_mode": "heat", "temperature": 16},
+            [{"operationMode": "heat"}, {"spHeat": 16}],
+            "heat",
+            id="cool-to-heat-minimum",
+        ),
+        pytest.param(
+            "heat",
+            {"hvac_mode": "cool", "temperature": 30},
+            [{"operationMode": "cool"}, {"spCool": 30}],
+            "cool",
+            id="heat-to-cool-maximum",
+        ),
+        pytest.param(
+            "off",
+            {"hvac_mode": "heat_cool", "target_temp_low": 16, "target_temp_high": 30},
+            [{"operationMode": "auto"}, {"spCool": 30}, {"spHeat": 16}],
+            "heat_cool",
+            id="off-to-auto-range",
+        ),
+    ],
+)
+async def test_combined_mode_temperature(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_account: AsyncMock,
+    mode: str,
+    data: dict[str, str | float],
+    commands: list[dict[str, str | float]],
+    expected_mode: str,
+) -> None:
+    """Apply the requested mode before choosing and sending its setpoints."""
+    mock_cloud_account.get_device_details.return_value["operationMode"] = mode
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        "set_temperature",
+        {ATTR_ENTITY_ID: "climate.living_room", **data},
+        blocking=True,
+    )
+    assert mock_cloud_account.send_command.await_args_list == [
+        call(MOCK_SERIAL, command) for command in commands
+    ]
+    assert hass.states.get("climate.living_room").state == expected_mode
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(CommandError("rejected"), id="rejected"),
+        pytest.param(DeviceConnectionError("offline"), id="connection"),
+        pytest.param(AuthenticationError("expired"), id="authentication"),
+    ],
+)
+@pytest.mark.parametrize(
+    "data",
+    [
+        pytest.param({"hvac_mode": "heat", "temperature": 22}, id="single"),
+        pytest.param(
+            {"hvac_mode": "heat_cool", "target_temp_low": 20, "target_temp_high": 26},
+            id="range",
+        ),
+    ],
+)
+async def test_failed_mode_change_stops_temperature_commands(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_account: AsyncMock,
+    error: Exception,
+    data: dict[str, str | float],
+) -> None:
+    """A failed mode command must not change any setpoints or optimistic state."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    before = hass.states.get("climate.living_room")
+    mock_cloud_account.send_command.side_effect = error
+
+    with pytest.raises(
+        HomeAssistantError, match="did not accept the requested HVAC mode"
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            "set_temperature",
+            {ATTR_ENTITY_ID: "climate.living_room", **data},
+            blocking=True,
+        )
+    assert mock_cloud_account.send_command.await_count == 1
+    assert "operationMode" in mock_cloud_account.send_command.await_args.args[1]
+    assert hass.states.get("climate.living_room") == before
+
+
+@pytest.mark.parametrize(
+    ("minimums", "maximums", "expected_min", "expected_max"),
+    [
+        pytest.param({}, {}, 7, 35, id="unknown"),
+        pytest.param({"heat": 16}, {"heat": 28}, 16, 28, id="heat-only"),
+        pytest.param({"cool": 18}, {"cool": 30}, 18, 30, id="cool-only"),
+        pytest.param({"auto": 10}, {"auto": 35}, 10, 35, id="auto-only"),
+        pytest.param({"heat": 16}, {}, 16, 35, id="missing-maximum"),
+        pytest.param({}, {"cool": 30}, 7, 30, id="missing-minimum"),
+    ],
+)
+async def test_partial_temperature_bounds(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_account: AsyncMock,
+    minimums: dict[str, float],
+    maximums: dict[str, float],
+    expected_min: float,
+    expected_max: float,
+) -> None:
+    """Use available profile bounds, defaulting only when none are reported."""
+    profile = mock_cloud_account.get_device_profile.return_value
+    profile["minimumSetPoints"] = minimums
+    profile["maximumSetPoints"] = maximums
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.living_room")
+    assert state.attributes["min_temp"] == expected_min
+    assert state.attributes["max_temp"] == expected_max
+
+
+@pytest.mark.parametrize(
+    ("mode", "temperature"),
+    [
+        pytest.param("heat", 30, id="above-heat-maximum"),
+        pytest.param("cool", 16, id="below-cool-minimum"),
+    ],
+)
+async def test_reject_invalid_mode_setpoint(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_cloud_account: AsyncMock,
+    mode: str,
+    temperature: float,
+) -> None:
+    """The library still rejects invalid setpoints within the overall range."""
+    mock_cloud_account.get_device_details.return_value["operationMode"] = mode
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    before = hass.states.get("climate.living_room")
+
+    with pytest.raises(HomeAssistantError, match="did not accept"):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            "set_temperature",
+            {ATTR_ENTITY_ID: "climate.living_room", "temperature": temperature},
+            blocking=True,
+        )
+    mock_cloud_account.send_command.assert_not_awaited()
+    assert hass.states.get("climate.living_room") == before
