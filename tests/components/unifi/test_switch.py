@@ -1179,8 +1179,10 @@ async def test_dpi_switches(
     mock_websocket_message(data=DPI_GROUP_REMOVE_APP)
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.unifi_network_block_media_streaming") is None
-    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
+    assert (
+        hass.states.get("switch.unifi_network_block_media_streaming").state
+        == STATE_UNAVAILABLE
+    )
 
 
 @pytest.mark.parametrize("dpi_app_payload", [DPI_APPS])

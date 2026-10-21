@@ -1446,6 +1446,23 @@ async def test_device_system_stats(
     assert hass.states.get("sensor.device_cpu_utilization").state == "7.7"
     assert hass.states.get("sensor.device_memory_utilization").state == "33.3"
 
+    # A restarting device reports no stats for a while
+    device["system-stats"] = {"cpu": "", "mem": "", "uptime": ""}
+    mock_websocket_message(message=MessageKey.DEVICE, data=device)
+    del device["system-stats"]
+    mock_websocket_message(message=MessageKey.DEVICE, data=device)
+
+    assert hass.states.get("sensor.device_cpu_utilization").state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get("sensor.device_memory_utilization").state == STATE_UNAVAILABLE
+    )
+
+    device["system-stats"] = {"cpu": 8.8, "mem": 34.4, "uptime": 10}
+    mock_websocket_message(message=MessageKey.DEVICE, data=device)
+
+    assert hass.states.get("sensor.device_cpu_utilization").state == "8.8"
+    assert hass.states.get("sensor.device_memory_utilization").state == "34.4"
+
 
 @pytest.mark.parametrize(
     "config_entry_options",
@@ -1706,6 +1723,25 @@ async def test_port_link_speed_sensors(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.mock_name_port_1_link_speed").state == "100"
+
+    # The sensor stays while the link is down
+    device_1["port_table"][0]["speed"] = 0
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("sensor.mock_name_port_1_link_speed").state == STATE_UNAVAILABLE
+    )
+    assert (
+        entity_registry.async_get("sensor.mock_name_port_1_link_speed").disabled_by
+        is None
+    )
+
+    device_1["port_table"][0]["speed"] = 1000
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.mock_name_port_1_link_speed").state == "1000"
 
 
 @pytest.mark.parametrize(
