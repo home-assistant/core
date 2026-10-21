@@ -18,7 +18,7 @@ from . import MockLocation
 @pytest.fixture(name="ipma_setup", autouse=True)
 def ipma_setup_fixture() -> Generator[None]:
     """Patch ipma setup entry."""
-    with patch("homeassistant.components.ipma.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.ipma.async_setup_entry", return_value=None):
         yield
 
 

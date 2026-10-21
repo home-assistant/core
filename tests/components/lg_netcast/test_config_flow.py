@@ -60,7 +60,7 @@ async def test_user_invalid_host(hass: HomeAssistant) -> None:
         assert result["step_id"] == "authorize"
 
         with patch(
-            "homeassistant.components.lg_netcast.async_setup_entry", return_value=True
+            "homeassistant.components.lg_netcast.async_setup_entry", return_value=None
         ):
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"], {CONF_ACCESS_TOKEN: FAKE_PIN}
@@ -217,7 +217,7 @@ async def test_invalid_session_id(hass: HomeAssistant) -> None:
     with (
         _patch_lg_netcast(),
         patch(
-            "homeassistant.components.lg_netcast.async_setup_entry", return_value=True
+            "homeassistant.components.lg_netcast.async_setup_entry", return_value=None
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(

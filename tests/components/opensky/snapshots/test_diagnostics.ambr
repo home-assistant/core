@@ -1,0 +1,13 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'flights_in_area': 1,
+    'options': dict({
+      'altitude': 12500.0,
+      'contributing_user': True,
+      'password': '**REDACTED**',
+      'radius': 10.0,
+      'username': '**REDACTED**',
+    }),
+  })
+# ---

@@ -192,7 +192,7 @@ async def test_user_setup(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.airthings_ble.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_ADDRESS: "cc:cc:cc:cc:cc:cc"}
@@ -245,7 +245,7 @@ async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.airthings_ble.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_ADDRESS: "cc:cc:cc:cc:cc:cc"}
@@ -410,7 +410,7 @@ async def test_step_user_firmware_required(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.airthings_ble.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_ADDRESS: "cc:cc:cc:cc:cc:cc"}
