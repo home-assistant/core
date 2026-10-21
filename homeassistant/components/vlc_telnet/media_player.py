@@ -326,8 +326,13 @@ class VlcDevice(MediaPlayerEntity):
             "on" if repeat == RepeatMode.ONE else "off"
         )
         loop_command: Literal["on", "off"] = "on" if repeat == RepeatMode.ALL else "off"
-        await self._vlc.repeat(repeat_command)
-        await self._vlc.loop(loop_command)
+        try:
+            await self._vlc.repeat(repeat_command)
+            await self._vlc.loop(loop_command)
+        except CommandError, ConnectError:
+            self._attr_repeat = None
+            self.async_write_ha_state()
+            raise
         self._attr_repeat = repeat
 
     @override

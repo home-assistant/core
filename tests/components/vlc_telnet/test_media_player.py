@@ -225,3 +225,39 @@ async def test_repeat_set(
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.attributes[ATTR_MEDIA_REPEAT] == repeat
+
+
+@pytest.mark.parametrize(
+    "error_class",
+    [
+        pytest.param(CommandError, id="command_error"),
+        pytest.param(ConnectError, id="connect_error"),
+    ],
+)
+@pytest.mark.usefixtures("setup_integration")
+async def test_repeat_set_partial_failure_clears_repeat(
+    hass: HomeAssistant,
+    vlc_mock: MagicMock,
+    error_class: type[Exception],
+) -> None:
+    """Test that a failed loop command after a successful repeat clears the mode."""
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_REPEAT_SET,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_REPEAT: RepeatMode.ONE},
+        blocking=True,
+    )
+    vlc_mock.loop.side_effect = error_class("test error")
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_REPEAT_SET,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_REPEAT: RepeatMode.ALL},
+            blocking=True,
+        )
+
+    vlc_mock.repeat.assert_awaited_with("off")
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert ATTR_MEDIA_REPEAT not in state.attributes
