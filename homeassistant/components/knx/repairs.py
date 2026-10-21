@@ -161,9 +161,11 @@ def _data_secure_group_key_issue_handler(
         existing_data: dict[str, str] = existing_issue.data  # type: ignore[assignment]
         if new_ga in existing_data:
             current_ias = existing_data[new_ga].split(", ")
-            if new_ia in current_ias:
+            if new_ia not in current_ias:
+                current_ias = sorted([*current_ias, new_ia], key=IndividualAddress)
+            # Re-create an issue raised before it was linked to the entry
+            elif existing_issue.config_entry_id is not None:
                 return
-            current_ias = sorted([*current_ias, new_ia], key=IndividualAddress)
             new_data[new_ga] = ", ".join(current_ias)
         new_data_unsorted = existing_data | new_data
         new_data = {
