@@ -72,7 +72,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Stop config-flow tests from setting the integration up for real."""
     with patch(
         "homeassistant.components.kaco_rs485.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as setup_entry:
         yield setup_entry
 
