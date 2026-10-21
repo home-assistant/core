@@ -1,7 +1,7 @@
 """Coordinator for the NSW Fuel Station integration."""
 
 from dataclasses import dataclass
-import datetime
+import datetime as dt
 import logging
 from typing import override
 
@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = datetime.timedelta(hours=1)
+SCAN_INTERVAL = dt.timedelta(hours=1)
 
 
 @dataclass

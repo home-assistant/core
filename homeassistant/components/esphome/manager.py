@@ -23,6 +23,7 @@ from aioesphomeapi import (
     LogLevel,
     ReconnectLogic,
     RequiresEncryptionAPIError,
+    SerialProxyIdentity,
     SupportsResponseType,
     UserService,
     UserServiceArgType,
@@ -101,7 +102,11 @@ from .domain_data import DomainData
 from .encryption_key_storage import async_get_encryption_key_storage
 
 # Import config flow so that it's added to the registry
-from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
+from .entry_data import (
+    ESPHomeConfigEntry,
+    RuntimeEntryData,
+    async_notify_serial_ports_changed,
+)
 from .enum_mapper import EsphomeEnumMapper
 from .outgoing_connection import async_register_outgoing_target
 
@@ -147,10 +152,13 @@ def async_create_api_client(
 
 
 if TYPE_CHECKING:
-    from aioesphomeapi.api_pb2 import SubscribeLogsResponse  # type: ignore[attr-defined]  # noqa: I001
+    from aioesphomeapi.api_pb2 import SubscribeLogsResponse  # type: ignore[attr-defined]
 
 
 _LOGGER = logging.getLogger(__name__)
+
+# Devices below this never answer the serial proxy identity subscription
+MIN_VERSION_SERIAL_PROXY_IDENTITY = APIVersion(1, 18)
 
 # Max time to wait at startup for a BLE proxy to register its scanner.
 STARTUP_SCANNER_WAIT: Final = 3.0
@@ -180,7 +188,10 @@ LOGGER_TO_LOG_LEVEL = {
 
 @callback
 def _async_check_firmware_version(
-    hass: HomeAssistant, device_info: EsphomeDeviceInfo, api_version: APIVersion
+    hass: HomeAssistant,
+    entry: ESPHomeConfigEntry,
+    device_info: EsphomeDeviceInfo,
+    api_version: APIVersion,
 ) -> None:
     """Create or delete an the ble_firmware_outdated issue."""
     # ESPHome device_info.mac_address is the unique_id
@@ -206,12 +217,16 @@ def _async_check_firmware_version(
             "name": device_info.name,
             "version": STABLE_BLE_VERSION_STR,
         },
+        config_entry_id=entry.entry_id,
     )
 
 
 @callback
 def _async_check_using_api_password(
-    hass: HomeAssistant, device_info: EsphomeDeviceInfo, has_password: bool
+    hass: HomeAssistant,
+    entry: ESPHomeConfigEntry,
+    device_info: EsphomeDeviceInfo,
+    has_password: bool,
 ) -> None:
     """Create or delete an the api_password_deprecated issue."""
     # ESPHome device_info.mac_address is the unique_id
@@ -230,6 +245,7 @@ def _async_check_using_api_password(
         translation_placeholders={
             "name": device_info.name,
         },
+        config_entry_id=entry.entry_id,
     )
 
 
@@ -279,7 +295,7 @@ class ESPHomeManager:
 
     async def on_stop(self, event: Event) -> None:
         """Cleanup the socket client on HA close."""
-        await cleanup_instance(self.entry)
+        await cleanup_instance(self.hass, self.entry)
 
     @property
     def services_issue(self) -> str:
@@ -376,6 +392,7 @@ class ESPHomeManager:
                 translation_placeholders={
                     "name": device_info.friendly_name or device_info.name,
                 },
+                config_entry_id=self.entry.entry_id,
             )
             _LOGGER.error(
                 "%s: Service call %s.%s: with data %s rejected; "
@@ -688,6 +705,7 @@ class ESPHomeManager:
                     hass,
                     DOMAIN,
                     issue,
+                    config_entry_id=entry.entry_id,
                     is_fixable=True,
                     severity=IssueSeverity.ERROR,
                     translation_key="device_conflict",
@@ -785,6 +803,15 @@ class ESPHomeManager:
                 cli.subscribe_zwave_proxy_request(self._async_zwave_proxy_request)
             )
 
+        if (
+            device_info.serial_proxies
+            and api_version >= MIN_VERSION_SERIAL_PROXY_IDENTITY
+        ):
+            # The device answers with one message per port, then one per change
+            entry_data.disconnect_callbacks.add(
+                cli.subscribe_serial_proxy_identity(self._async_serial_proxy_identity)
+            )
+
         cli.subscribe_home_assistant_states_and_services(
             on_state=entry_data.async_update_state,
             on_service_call=self.async_on_service_call,
@@ -793,8 +820,8 @@ class ESPHomeManager:
         )
 
         entry_data.async_save_to_store()
-        _async_check_firmware_version(hass, device_info, api_version)
-        _async_check_using_api_password(hass, device_info, bool(self.password))
+        _async_check_firmware_version(hass, entry, device_info, api_version)
+        _async_check_using_api_password(hass, entry, device_info, bool(self.password))
 
     def _async_zwave_proxy_request(self, request: ZWaveProxyRequest) -> None:
         """Handle a request to create a zwave_js config flow."""
@@ -821,6 +848,18 @@ class ESPHomeManager:
             self.hass, entry_data.device_info, zwave_home_id
         )
 
+    @callback
+    def _async_serial_proxy_identity(self, identity: SerialProxyIdentity) -> None:
+        """Record what is behind a serial proxy port, from the snapshot or a hotplug."""
+        identities = self.entry_data.serial_proxy_identities
+        if (
+            identity.instance in identities
+            and identities[identity.instance] == identity
+        ):
+            return
+        identities[identity.instance] = identity
+        async_notify_serial_ports_changed(self.hass)
+
     async def on_disconnect(self, expected_disconnect: bool) -> None:
         """Run disconnect callbacks on API disconnect."""
         entry_data = self.entry_data
@@ -833,7 +872,7 @@ class ESPHomeManager:
             host,
             expected_disconnect,
         )
-        entry_data.async_on_disconnect()
+        entry_data.async_on_disconnect(hass)
         entry_data.async_record_disconnect(expected_disconnect)
         if not hass.is_stopping:
             # Avoid marking every esphome entity as unavailable on shutdown
@@ -1329,15 +1368,17 @@ def _async_setup_device_registry(
         suggested_area = device_info.suggested_area
 
     # Create/update main device
-    device_entry = device_registry.async_get_or_create(
+    device_entry = device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        configuration_url=configuration_url,
-        connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
-        name=entry_data.friendly_name or entry_data.name,
-        manufacturer=manufacturer,
-        model=model,
-        sw_version=sw_version,
-        suggested_area=suggested_area,
+        device_info=dr.DeviceInfo(
+            configuration_url=configuration_url,
+            connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
+            name=entry_data.friendly_name or entry_data.name,
+            manufacturer=manufacturer,
+            model=model,
+            sw_version=sw_version,
+            suggested_area=suggested_area,
+        ),
     )
 
     # Handle sub devices
@@ -1353,14 +1394,18 @@ def _async_setup_device_registry(
         if sub_device.area_id is not None and sub_device.area_id in areas_by_id:
             sub_device_suggested_area = areas_by_id[sub_device.area_id].name
 
-        sub_device_entry = device_registry.async_get_or_create(
+        sub_device_entry = device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, f"{device_info.mac_address}_{sub_device.device_id}")},
-            name=sub_device.name or device_entry.name,
-            manufacturer=manufacturer,
-            model=model,
-            sw_version=sw_version,
-            suggested_area=sub_device_suggested_area,
+            device_info=dr.DeviceInfo(
+                identifiers={
+                    (DOMAIN, f"{device_info.mac_address}_{sub_device.device_id}")
+                },
+                name=sub_device.name or device_entry.name,
+                manufacturer=manufacturer,
+                model=model,
+                sw_version=sw_version,
+                suggested_area=sub_device_suggested_area,
+            ),
         )
 
         # Update the sub device to set via_device_id
@@ -1578,6 +1623,8 @@ def _async_register_service(
     esphome_supports_response = service.supports_response or SupportsResponseType.NONE
     ha_supports_response = _RESPONSE_TYPE_MAPPER.from_esphome(esphome_supports_response)
 
+    # Cannot be moved: action names come from the device
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.async_register(
         DOMAIN,
         service_name,
@@ -1637,11 +1684,13 @@ def _setup_services(
         _async_register_service(hass, entry_data, device_info, service)
 
 
-async def cleanup_instance(entry: ESPHomeConfigEntry) -> RuntimeEntryData:
+async def cleanup_instance(
+    hass: HomeAssistant, entry: ESPHomeConfigEntry
+) -> RuntimeEntryData:
     """Cleanup the esphome client if it exists."""
     data = entry.runtime_data
     was_connected = data.available
-    data.async_on_disconnect()
+    data.async_on_disconnect(hass)
     for cleanup_callback in data.cleanup_callbacks:
         cleanup_callback()
     try:

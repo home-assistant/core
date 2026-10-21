@@ -1,6 +1,7 @@
 {
   "domain": "datadog",
   "name": "Datadog",
+  "categories": ["computers_network.monitoring"],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/datadog",

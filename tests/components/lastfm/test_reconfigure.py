@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from pylast import NetworkError, WSError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lastfm.const import (
     CONF_API_SECRET,
@@ -41,8 +42,6 @@ from . import (
     get_session_key_polling_task,
     patch_setup_entry,
 )
-
-from tests.common import MockConfigEntry
 
 FLOW_MODULE = "homeassistant.components.lastfm.config_flow"
 SESSION_KEY_GENERATOR_PATH = f"{FLOW_MODULE}.SessionKeyGenerator"

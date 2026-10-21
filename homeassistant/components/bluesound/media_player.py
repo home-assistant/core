@@ -20,23 +20,22 @@ from homeassistant.components.media_player import (
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-    format_mac,
-)
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import ATTR_BLUESOUND_GROUP, ATTR_MASTER, DOMAIN
 from .coordinator import BluesoundCoordinator
-from .utils import dispatcher_unjoin_signal, format_unique_id, id_to_paired_player
+from .entity import BluesoundEntity
+from .utils import (
+    DISPATCHER_ENTITY_ID_CHANGED_SIGNAL,
+    dispatcher_unjoin_signal,
+    id_to_paired_player,
+)
 
 if TYPE_CHECKING:
     from . import BluesoundConfigEntry
@@ -46,7 +45,6 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=15)
 
 DATA_BLUESOUND = DOMAIN
-DEFAULT_PORT = 11000
 
 POLL_TIMEOUT = 120
 
@@ -67,7 +65,7 @@ async def async_setup_entry(
     async_add_entities([bluesound_player], update_before_add=True)
 
 
-class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity):
+class BluesoundPlayer(BluesoundEntity, MediaPlayerEntity):
     """Representation of a Bluesound Player."""
 
     _attr_media_content_type = MediaType.MUSIC
@@ -83,8 +81,13 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
         player: Player,
     ) -> None:
         """Initialize the media player."""
-        super().__init__(coordinator)
         sync_status = coordinator.data.sync_status
+        super().__init__(
+            coordinator,
+            player,
+            port=port,
+            sync_status=sync_status,
+        )
 
         self.host = host
         self.port = port
@@ -100,34 +103,7 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
         self._group_list: list[str] = []
         self._group_members: list[str] | None = None
         self._bluesound_device_name = sync_status.name
-        self._player = player
         self._last_status_update = dt_util.utcnow()
-
-        self._attr_unique_id = format_unique_id(sync_status.mac, port)
-        # there should always be one player with the default port per mac
-        if port == DEFAULT_PORT:
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, format_mac(sync_status.mac))},
-                connections={(CONNECTION_NETWORK_MAC, sync_status.mac)},
-                name=sync_status.name,
-                manufacturer=sync_status.brand,
-                model=sync_status.model_name,
-                model_id=sync_status.model,
-            )
-        else:
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, format_unique_id(sync_status.mac, port))},
-                name=sync_status.name,
-                manufacturer=sync_status.brand,
-                model=sync_status.model_name,
-                model_id=sync_status.model,
-            )
-            # The leader (default-port) device is a separate config entry that may
-            # not be loaded yet; link to it only if it already exists.
-            if leader_devices := dr.async_get(coordinator.hass).async_get_devices(
-                identifiers={(DOMAIN, format_mac(sync_status.mac))}
-            ):
-                self._attr_device_info["via_device_id"] = leader_devices[0].id
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -142,13 +118,26 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
                 self.async_remove_follower,
             )
         )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                DISPATCHER_ENTITY_ID_CHANGED_SIGNAL,
+                self._async_handle_entity_id_changed,
+            )
+        )
 
     @callback
     @override
     def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Rebuild the group members, which contain the entity_id."""
+        """Let every player rebuild its group members, which contain entity_ids."""
         super().async_entity_id_changed(old_entity_id)
+        async_dispatcher_send(self.hass, DISPATCHER_ENTITY_ID_CHANGED_SIGNAL)
+
+    @callback
+    def _async_handle_entity_id_changed(self) -> None:
+        """Rebuild the group members, which may list a renamed player."""
         self._group_members = self.rebuild_group_members()
+        self.async_write_ha_state()
 
     @override
     async def async_will_remove_from_hass(self) -> None:

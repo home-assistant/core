@@ -55,6 +55,11 @@
       }
     }
   },
+  "exceptions": {
+    "update_failed": {
+      "message": "Could not retrieve data from Last.fm for any of the configured users"
+    }
+  },
   "options": {
     "abort": {
       "configuration_changed": "[%key:component::lastfm::config::abort::configuration_changed%]"

@@ -36,7 +36,7 @@ PLATFORMS = [
 type HomeeConfigEntry = ConfigEntry[Homee]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> None:
     """Set up homee from a config entry."""
     # Create the Homee api object using host, user,
     # password & pyHomee instance from the config
@@ -81,14 +81,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> boo
 
     # create device register entry
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, homee.settings.mac_address)},
-        identifiers={(DOMAIN, homee.settings.uid)},
-        manufacturer="homee",
-        name=homee.settings.homee_name,
-        model="homee",
-        sw_version=homee.settings.version,
+        device_info=dr.DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, homee.settings.mac_address)},
+            identifiers={(DOMAIN, homee.settings.uid)},
+            manufacturer="homee",
+            name=homee.settings.homee_name,
+            model="homee",
+            sw_version=homee.settings.version,
+        ),
     )
 
     # Remove devices that are no longer present in homee.
@@ -123,10 +125,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> None:
     """Unload a homee config entry."""
     # Unload platforms
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from pylast import LastFMNetwork, WSError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lastfm.const import (
     CONF_API_SECRET,
@@ -18,8 +19,6 @@ from homeassistant.setup import async_setup_component
 
 from . import API_KEY, API_SECRET, SESSION_KEY, MockUser
 from .conftest import ComponentSetup
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_entry(
@@ -127,3 +126,20 @@ async def test_invalid_session_key_starts_reauth(
 
     assert authenticated_config_entry.state is ConfigEntryState.SETUP_ERROR
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
+async def test_setup_retry_when_no_user_data(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    not_found_user: MockUser,
+) -> None:
+    """Test setup is retried when no user data could be fetched."""
+    await setup_integration(config_entry, not_found_user)
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.error_reason_translation_key == "update_failed"
+    assert (
+        config_entry.reason
+        == "Could not retrieve data from Last.fm for any of the configured users"
+    )

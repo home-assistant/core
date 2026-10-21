@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, call, patch
 
 from pylast import MalformedResponseError, NetworkError, WSError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lastfm.const import (
     CONF_API_SECRET,
@@ -41,8 +42,6 @@ from . import (
     patch_setup_entry,
 )
 from .conftest import ComponentSetup
-
-from tests.common import MockConfigEntry
 
 FLOW_MODULE = "homeassistant.components.lastfm.config_flow"
 SESSION_KEY_GENERATOR_PATH = f"{FLOW_MODULE}.SessionKeyGenerator"
@@ -201,7 +200,10 @@ async def test_session_key_exchange_is_serialized(
         patch(POLLING_INTERVAL_PATH, 0),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA_WITH_SECRET
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=CONF_USER_DATA_WITH_SECRET
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
         polling_task = get_session_key_polling_task(hass, result["flow_id"])
@@ -236,7 +238,10 @@ async def test_flow_rejects_session_for_different_user(
         patch(POLLING_INTERVAL_PATH, 60),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA_WITH_SECRET
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=CONF_USER_DATA_WITH_SECRET
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
 
@@ -269,7 +274,10 @@ async def test_flow_restarts_polling_after_timeout(
         patch(MAX_POLLING_ATTEMPTS_PATH, 1),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA_WITH_SECRET
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=CONF_USER_DATA_WITH_SECRET
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
         await get_session_key_polling_task(hass, result["flow_id"])
@@ -307,7 +315,10 @@ async def test_flow_session_key_error(
         patch(POLLING_INTERVAL_PATH, 0),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA_WITH_SECRET
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=CONF_USER_DATA_WITH_SECRET
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
         await get_session_key_polling_task(hass, result["flow_id"])
@@ -499,7 +510,10 @@ async def test_flow_abort_cancels_session_key_polling(
         patch(POLLING_INTERVAL_PATH, 60),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA_WITH_SECRET
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=CONF_USER_DATA_WITH_SECRET
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
         polling_task = get_session_key_polling_task(hass, result["flow_id"])
@@ -528,7 +542,10 @@ async def test_flow_abort_after_terminal_polling_error(
         patch(POLLING_INTERVAL_PATH, 0),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA_WITH_SECRET
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=CONF_USER_DATA_WITH_SECRET
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
         polling_task = get_session_key_polling_task(hass, result["flow_id"])
@@ -570,7 +587,10 @@ async def test_flow_web_auth_fails(
         ),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA_WITH_SECRET
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=CONF_USER_DATA_WITH_SECRET
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
@@ -646,7 +666,10 @@ async def test_flow_waits_for_authorization(
         patch_setup_entry(),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA_WITH_SECRET
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=CONF_USER_DATA_WITH_SECRET
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
         assert result["step_id"] == "auth_url"
@@ -776,7 +799,10 @@ async def test_flow_hidden_user_with_secret(hass: HomeAssistant) -> None:
         patch_setup_entry(),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA_WITH_SECRET
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=CONF_USER_DATA_WITH_SECRET
         )
         assert result["type"] is FlowResultType.EXTERNAL_STEP
         assert result["step_id"] == "auth_url"

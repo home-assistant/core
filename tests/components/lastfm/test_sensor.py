@@ -6,6 +6,7 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 from pylast import LastFMNetwork, WSError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lastfm.const import (
@@ -22,8 +23,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import API_KEY, API_SECRET, SESSION_KEY, MockSessionKeyGenerator, MockUser
 from .conftest import ComponentSetup
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(

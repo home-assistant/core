@@ -26,6 +26,7 @@ from aiohomeconnect.model.error import (
 from aiohomeconnect.model.program import ProgramDefinitionOption
 from aiohomeconnect.model.setting import SettingConstraints
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.home_connect.const import (
     BSH_POWER_OFF,
@@ -49,8 +50,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

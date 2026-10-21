@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from pylast import Track, WSError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lastfm.const import CONF_MAIN_USER, CONF_USERS, DOMAIN
 from homeassistant.const import CONF_API_KEY
@@ -20,8 +21,6 @@ from . import (
     MockNetwork,
     MockUser,
 )
-
-from tests.common import MockConfigEntry
 
 type ComponentSetup = Callable[[MockConfigEntry, MockUser], Awaitable[None]]
 

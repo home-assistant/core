@@ -10,7 +10,7 @@ from .coordinator import EgaugeConfigEntry, EgaugeDataCoordinator
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: EgaugeConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EgaugeConfigEntry) -> None:
     """Set up eGauge from a config entry."""
 
     coordinator = EgaugeDataCoordinator(hass, entry)
@@ -21,20 +21,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: EgaugeConfigEntry) -> bo
 
     # Set up main device
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, coordinator.serial_number)},
-        name=coordinator.hostname,
-        manufacturer=MANUFACTURER,
-        model=MODEL,
-        serial_number=coordinator.serial_number,
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, coordinator.serial_number)},
+            name=coordinator.hostname,
+            manufacturer=MANUFACTURER,
+            model=MODEL,
+            serial_number=coordinator.serial_number,
+        ),
     )
 
     # Setup sensor platform
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: EgaugeConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EgaugeConfigEntry) -> None:
     """Unload eGauge config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

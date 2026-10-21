@@ -6,13 +6,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiomusiccast.capabilities import BinarySetter, EntityType
 from aiomusiccast.musiccast_data import MusicCastData, MusicCastZoneData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.yamaha_musiccast.const import DEFAULT_ZONE, DOMAIN
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry
 
 TEST_DEVICE_ID = "1234567890"
 TEST_ZONE = "zone2"

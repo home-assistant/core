@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from uiprotect.data import (
     Bootstrap,
     Camera,
@@ -32,8 +33,6 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import MockUFPFixture
 from .utils import init_entry
-
-from tests.common import MockConfigEntry
 
 
 async def test_get_media_source(hass: HomeAssistant) -> None:

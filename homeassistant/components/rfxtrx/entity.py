@@ -10,8 +10,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import DeviceTuple
-from .const import ATTR_EVENT, COMMAND_GROUP_LIST, DATA_RFXOBJECT, DOMAIN, SIGNAL_EVENT
+from . import DeviceTuple, RfxtrxConfigEntry
+from .const import ATTR_EVENT, COMMAND_GROUP_LIST, DOMAIN, SIGNAL_EVENT
 
 
 class RfxtrxEntity(RestoreEntity):
@@ -112,7 +112,6 @@ class RfxtrxCommandEntity(RfxtrxEntity):
     async def _async_send[*_Ts](
         self, fun: Callable[[rfxtrxmod.PySerialTransport, *_Ts], None], *args: *_Ts
     ) -> None:
-        # Uses legacy hass.data[DOMAIN] pattern
-        # pylint: disable-next=home-assistant-use-runtime-data
-        rfx_object: rfxtrxmod.Connect = self.hass.data[DOMAIN][DATA_RFXOBJECT]
+        config_entry = cast(RfxtrxConfigEntry, self.platform.config_entry)
+        rfx_object = config_entry.runtime_data
         await self.hass.async_add_executor_job(fun, rfx_object.transport, *args)

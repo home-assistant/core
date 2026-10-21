@@ -32,7 +32,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: AgentDVRConfigEntry
-) -> bool:
+) -> None:
     """Set up the Agent component."""
     server_origin = config_entry.data[SERVER_URL]
 
@@ -54,22 +54,22 @@ async def async_setup_entry(
 
     device_registry = dr.async_get(hass)
 
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, agent_client.unique)},
-        manufacturer="iSpyConnect",
-        name=f"Agent {agent_client.name}",
-        model="Agent DVR",
-        sw_version=agent_client.version,
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, agent_client.unique)},
+            manufacturer="iSpyConnect",
+            name=f"Agent {agent_client.name}",
+            model="Agent DVR",
+            sw_version=agent_client.version,
+        ),
     )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: AgentDVRConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)

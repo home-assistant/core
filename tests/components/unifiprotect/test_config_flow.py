@@ -6,6 +6,7 @@ import socket
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from uiprotect import NotAuthorized, NvrError, ProtectApiClient
 from uiprotect.data import NVR, Bootstrap, CloudAccount, Version
 from uiprotect.data.public_devices import PublicNVR
@@ -50,8 +51,6 @@ from .conftest import (
     DEFAULT_VERIFY_SSL,
     MAC_ADDR,
 )
-
-from tests.common import MockConfigEntry
 
 # Base user input without credentials (for tests that override them)
 BASE_USER_INPUT = {

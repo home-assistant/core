@@ -84,6 +84,7 @@ class UpdateCoordinatorDataType(TypedDict):
 
     call_deflections: dict[int, dict]
     entity_states: dict[str, StateType | bool]
+    wifi_networks: dict[int, dict[str, Any]]
     guest_wifi: int | None
     port_mappings: dict[int, dict[str, Any]]
 
@@ -181,6 +182,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self._entity_update_functions: dict[
             str, Callable[[FritzStatus, StateType], Any]
         ] = {}
+        self._wifi_network_indexes: set[int] = set()
         self._guest_wifi_registered = False
         self._port_mapping_indexes: set[int] = set()
 
@@ -194,15 +196,17 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self.hass.data[FRITZ_DATA_KEY].wol_buttons[self.unique_id] = set()
 
         device_registry = dr.async_get(self.hass)
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=self.config_entry.entry_id,
-            configuration_url=f"http://{self.host}",
-            connections={(dr.CONNECTION_NETWORK_MAC, self.mac)},
-            identifiers={(DOMAIN, self.unique_id)},
-            manufacturer="FRITZ!",
-            model=self.model,
-            name=self.config_entry.title,
-            sw_version=self.current_firmware,
+            device_info=dr.DeviceInfo(
+                configuration_url=f"http://{self.host}",
+                connections={(dr.CONNECTION_NETWORK_MAC, self.mac)},
+                identifiers={(DOMAIN, self.unique_id)},
+                manufacturer="FRITZ!",
+                model=self.model,
+                name=self.config_entry.title,
+                sw_version=self.current_firmware,
+            ),
         )
         self.connection.clear_cache()
 
@@ -303,6 +307,30 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 )
         return unregister_entity_updates
 
+    async def async_register_wifi_network(self, index: int) -> Callable[[], None]:
+        """Register a Wi-Fi network to be updated by coordinator."""
+
+        def unregister_wifi_network() -> None:
+            """Unregister a Wi-Fi network from coordinator updates."""
+            self._wifi_network_indexes.discard(index)
+            self.data["wifi_networks"].pop(index, None)
+
+        self._wifi_network_indexes.add(index)
+        self.data["wifi_networks"][index] = await self.hass.async_add_executor_job(
+            self._get_wifi_network, index
+        )
+        return unregister_wifi_network
+
+    def _get_wifi_network(self, index: int) -> dict[str, Any]:
+        """Get a Wi-Fi network configuration."""
+        return self.connection.call_action(f"WLANConfiguration{index}", "GetInfo")
+
+    def _wifi_networks_update(self) -> dict[int, dict[str, Any]]:
+        """Update registered Wi-Fi networks."""
+        return {
+            index: self._get_wifi_network(index) for index in self._wifi_network_indexes
+        }
+
     async def async_register_guest_wifi(self) -> Callable[[], None]:
         """Register the guest Wi-Fi to be updated by coordinator."""
 
@@ -359,11 +387,15 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             index: self._get_port_mapping(index) for index in self._port_mapping_indexes
         }
 
-    def _guest_wifi_and_port_mappings_update(
+    def _registered_entities_update(
         self,
-    ) -> tuple[int | None, dict[int, dict[str, Any]]]:
-        """Update the guest Wi-Fi and registered port mappings."""
-        return self._guest_wifi_update(), self._port_mappings_update()
+    ) -> tuple[dict[int, dict[str, Any]], int | None, dict[int, dict[str, Any]]]:
+        """Update registered Wi-Fi networks, guest Wi-Fi and port mappings."""
+        return (
+            self._wifi_networks_update(),
+            self._guest_wifi_update(),
+            self._port_mappings_update(),
+        )
 
     def _entity_states_update(self) -> dict:
         """Run registered entity update calls."""
@@ -382,6 +414,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         entity_data: UpdateCoordinatorDataType = {
             "call_deflections": {},
             "entity_states": {},
+            "wifi_networks": {},
             "guest_wifi": None,
             "port_mappings": {},
         }
@@ -402,11 +435,10 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 ] = await self.async_update_call_deflections()
 
             (
+                entity_data["wifi_networks"],
                 entity_data["guest_wifi"],
                 entity_data["port_mappings"],
-            ) = await self.hass.async_add_executor_job(
-                self._guest_wifi_and_port_mappings_update
-            )
+            ) = await self.hass.async_add_executor_job(self._registered_entities_update)
         except FRITZ_EXCEPTIONS as ex:
             LOGGER.debug(
                 "Reload %s due to error '%s' to ensure proper re-login",
@@ -621,16 +653,18 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
         # manually register device entry for new connected device
         device_registry = dr.async_get(self.hass)
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=self.config_entry.entry_id,
-            connections={(CONNECTION_NETWORK_MAC, dev_mac)},
-            manufacturer="FRITZ!",
-            model="FRITZ!Box Tracked device",
-            name=device.hostname,
-            via_device_id=dr.async_get_device_id_by_identifier(
-                self.hass,
-                (DOMAIN, self.unique_id),
-                config_entry_id=self.config_entry.entry_id,
+            device_info=dr.DeviceInfo(
+                connections={(CONNECTION_NETWORK_MAC, dev_mac)},
+                manufacturer="FRITZ!",
+                model="FRITZ!Box Tracked device",
+                name=device.hostname,
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    self.hass,
+                    (DOMAIN, self.unique_id),
+                    config_entry_id=self.config_entry.entry_id,
+                ),
             ),
         )
         return True
