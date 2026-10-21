@@ -1627,9 +1627,10 @@ def test_retryable_database_job_method(
 
 
 @pytest.mark.parametrize(
-    ("now", "offset", "expected_start", "expected_end"),
+    ("time_zone", "now", "offset", "expected_start", "expected_end"),
     [
         pytest.param(
+            "US/Pacific",
             # 01:30 PDT, before the fall-back
             datetime(2022, 11, 6, 8, 30, tzinfo=UTC),
             0,
@@ -1638,6 +1639,7 @@ def test_retryable_database_job_method(
             id="fall_back_first_occurrence",
         ),
         pytest.param(
+            "US/Pacific",
             # 01:30 PST, the repeated hour after the fall-back
             datetime(2022, 11, 6, 9, 30, tzinfo=UTC),
             0,
@@ -1646,6 +1648,7 @@ def test_retryable_database_job_method(
             id="fall_back_repeated_occurrence",
         ),
         pytest.param(
+            "US/Pacific",
             datetime(2022, 11, 6, 9, 30, tzinfo=UTC),
             -1,
             "2022-11-06T08:00:00+00:00",
@@ -1653,6 +1656,7 @@ def test_retryable_database_job_method(
             id="fall_back_repeated_occurrence_previous_hour",
         ),
         pytest.param(
+            "US/Pacific",
             # 03:30 PDT, right after the spring-forward
             datetime(2022, 3, 13, 10, 30, tzinfo=UTC),
             -1,
@@ -1660,18 +1664,98 @@ def test_retryable_database_job_method(
             "2022-03-13T10:00:00+00:00",
             id="spring_forward_previous_hour",
         ),
+        pytest.param(
+            "Australia/Lord_Howe",
+            # 02:45 +11:00, in the half-hour left after the spring-forward
+            datetime(2022, 10, 1, 15, 45, tzinfo=UTC),
+            0,
+            "2022-10-01T15:30:00+00:00",
+            "2022-10-01T16:00:00+00:00",
+            id="half_hour_spring_forward",
+        ),
+        pytest.param(
+            "Australia/Lord_Howe",
+            datetime(2022, 10, 1, 15, 45, tzinfo=UTC),
+            -1,
+            "2022-10-01T14:30:00+00:00",
+            "2022-10-01T15:30:00+00:00",
+            id="half_hour_spring_forward_previous_hour",
+        ),
+        pytest.param(
+            "Australia/Lord_Howe",
+            # 01:45 +10:30, before the spring-forward
+            datetime(2022, 10, 1, 15, 15, tzinfo=UTC),
+            1,
+            "2022-10-01T15:30:00+00:00",
+            "2022-10-01T16:00:00+00:00",
+            id="half_hour_spring_forward_next_hour",
+        ),
+        pytest.param(
+            "Australia/Lord_Howe",
+            # 03:15 +11:00
+            datetime(2022, 10, 1, 16, 15, tzinfo=UTC),
+            -1,
+            "2022-10-01T15:30:00+00:00",
+            "2022-10-01T16:00:00+00:00",
+            id="half_hour_spring_forward_from_next_hour",
+        ),
+        pytest.param(
+            "Australia/Lord_Howe",
+            # 01:45 +10:30, in the repeated half-hour after the fall-back
+            datetime(2022, 4, 2, 15, 15, tzinfo=UTC),
+            0,
+            "2022-04-02T15:00:00+00:00",
+            "2022-04-02T15:30:00+00:00",
+            id="half_hour_fall_back_repeated",
+        ),
+        pytest.param(
+            "Australia/Lord_Howe",
+            datetime(2022, 4, 2, 15, 15, tzinfo=UTC),
+            -1,
+            "2022-04-02T14:00:00+00:00",
+            "2022-04-02T15:00:00+00:00",
+            id="half_hour_fall_back_repeated_previous_hour",
+        ),
+        pytest.param(
+            "Australia/Lord_Howe",
+            # 01:45 +11:00, before the fall-back
+            datetime(2022, 4, 2, 14, 45, tzinfo=UTC),
+            1,
+            "2022-04-02T15:00:00+00:00",
+            "2022-04-02T15:30:00+00:00",
+            id="half_hour_fall_back_next_hour",
+        ),
+        pytest.param(
+            "Australia/Lord_Howe",
+            # 02:15 +10:30
+            datetime(2022, 4, 2, 15, 45, tzinfo=UTC),
+            -1,
+            "2022-04-02T15:00:00+00:00",
+            "2022-04-02T15:30:00+00:00",
+            id="half_hour_fall_back_from_next_hour",
+        ),
+        pytest.param(
+            "Antarctica/Casey",
+            # 03:26 +11:00, after the offset changed from +08:00 at 00:01
+            datetime(2022, 10, 1, 16, 26, 13, tzinfo=UTC),
+            -1,
+            "2022-10-01T16:00:00+00:00",
+            "2022-10-01T16:01:00+00:00",
+            id="offset_change_within_hour",
+        ),
     ],
 )
 async def test_resolve_period_hour_dst(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    time_zone: str,
     now: datetime,
     offset: int,
     expected_start: str,
     expected_end: str,
 ) -> None:
-    """Test a calendar hour is one hour long around DST changes."""
-    assert hass.config.time_zone == "US/Pacific"
+    """Test calendar hours follow local hours around DST changes."""
+    await hass.config.async_set_time_zone(time_zone)
     freezer.move_to(now)
 
     start_t, end_t = resolve_period({"calendar": {"period": "hour", "offset": offset}})
