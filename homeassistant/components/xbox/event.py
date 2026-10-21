@@ -54,7 +54,7 @@ class XboxAchievementEventEntity(
     _attr_has_entity_name = True
     _attr_translation_key = EVENT_ACHIEVEMENT_UNLOCKED
     _attr_event_types = [EVENT_ACHIEVEMENT_UNLOCKED]
-    _unrecorded_attributes = frozenset({"description", "image"})
+    _unrecorded_attributes = frozenset({"description", "image", "entity_picture"})
 
     def __init__(self, coordinator: XboxAchievementsCoordinator, xuid: str) -> None:
         """Initialize the entity."""
@@ -151,3 +151,10 @@ class XboxAchievementEventEntity(
     def _handle_coordinator_update(self) -> None:
         self._async_handle_event()
         return super()._handle_coordinator_update()
+
+    @property
+    @override
+    def entity_picture(self) -> str | None:
+        """Return the entity picture to use in the frontend, if any."""
+
+        return self.state_attributes.get("image") or super().entity_picture

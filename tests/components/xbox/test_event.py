@@ -129,6 +129,9 @@ async def test_xboxone_unlocks(
     await setup_integration(hass, config_entry)
 
     assert unlocked(events) == []
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert "entity_picture" not in state.attributes
 
     achievements.get_achievements_xboxone_recent_unlocks.return_value = xboxone(
         "Pork Chop", "Cow Tipper", "Complete Collection", "Racking Up The Miles"
@@ -136,7 +139,11 @@ async def test_xboxone_unlocks(
     await next_update(hass, freezer)
 
     assert unlocked(events) == ["Cow Tipper", "Pork Chop"]
-    assert hass.states.get(ENTITY_ID) == snapshot
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    # The picture follows the last unlock.
+    assert state.attributes["entity_picture"] == state.attributes["image"]
+    assert state == snapshot
 
 
 @pytest.mark.parametrize(
