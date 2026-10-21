@@ -178,7 +178,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 probatio.Required(ATTR_IMAGE): IMAGE_SCHEMA,
                 probatio.Required(ATTR_LABELS): LABELS_SCHEMA,
                 probatio.Optional(ATTR_REGION): REGION_SCHEMA,
-                probatio.Optional(ATTR_INSTRUCTIONS): cv.string,
+                probatio.Optional(ATTR_INSTRUCTIONS): probatio.All(
+                    cv.string, probatio.Length(min=1)
+                ),
             }
         ),
         supports_response=SupportsResponse.ONLY,

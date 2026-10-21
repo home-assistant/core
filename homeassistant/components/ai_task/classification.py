@@ -62,6 +62,8 @@ def _validate_region(value: dict[str, float]) -> dict[str, float]:
     return value
 
 
+# Providers round, so the probabilities of all labels may miss 1 slightly.
+PROBABILITY_SUM_TOLERANCE = 0.01
 _FRACTION = probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=1))
 _NONEMPTY_STRING = probatio.All(str, probatio.Length(min=1))
 IMAGE_SCHEMA = probatio.All(
@@ -106,11 +108,12 @@ LABELS_SCHEMA = probatio.Schema(
 
 
 def validate_result(answer: ChoiceAnswer, labels: dict[str, Any]) -> bool:
-    """Return whether an answer has a probability per label and a top choice."""
+    """Return whether an answer is a distribution over the labels with a top choice."""
     probabilities = answer.probabilities
     return (
         probabilities.keys() == labels.keys()
         and all(0 <= value <= 1 for value in probabilities.values())
+        and abs(sum(probabilities.values()) - 1) <= PROBABILITY_SUM_TOLERANCE
         and answer.choice in labels
         and probabilities[answer.choice] == max(probabilities.values())
     )

@@ -199,6 +199,7 @@ async def test_feature_required(
         pytest.param({"region": {"top": 0.9, "bottom": 0.1}}, id="no_height"),
         pytest.param({"region": {"right": 1.5}}, id="outside"),
         pytest.param({"image": [IMAGE, IMAGE]}, id="two_images"),
+        pytest.param({"instructions": ""}, id="empty_instructions"),
         pytest.param(
             {"image": {**IMAGE, "media_content_type": "video/mp4"}}, id="video"
         ),
@@ -308,6 +309,12 @@ async def test_example_permission(
                 choice="van", probabilities={"empty": 0.5, "car": 0.5}
             ),
             id="unknown_choice",
+        ),
+        pytest.param(
+            ai_task.ChoiceAnswer(
+                choice="car", probabilities={"empty": 0.4, "car": 0.9}
+            ),
+            id="not_a_distribution",
         ),
     ],
 )

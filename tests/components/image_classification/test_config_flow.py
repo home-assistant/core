@@ -21,7 +21,6 @@ from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_ENTITY_ID, CONF_REGION
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
-from homeassistant.helpers import entity_registry as er
 
 from . import (
     CAMERA,
@@ -91,52 +90,25 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
 
 
 @pytest.mark.parametrize(
-    ("preferred", "registered", "expected"),
+    ("preferred", "expected"),
     [
-        pytest.param(
-            CLASSIFIER,
-            [("local_vision", None)],
-            CLASSIFIER,
-            id="preferred",
-        ),
-        pytest.param(
-            None,
-            [("other", None), ("local_vision", None)],
-            "ai_task.local_vision",
-            id="local_vision",
-        ),
-        pytest.param(
-            None,
-            [("local_vision", er.RegistryEntryDisabler.USER)],
-            None,
-            id="local_vision_disabled",
-        ),
-        pytest.param(None, [("other", None)], None, id="none"),
+        pytest.param(CLASSIFIER, CLASSIFIER, id="preferred"),
+        pytest.param(None, None, id="none"),
     ],
 )
 @pytest.mark.usefixtures("camera")
 async def test_user_flow_ai_task_default(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    entity_registry: er.EntityRegistry,
     preferred: str | None,
-    registered: list[tuple[str, er.RegistryEntryDisabler | None]],
     expected: str | None,
 ) -> None:
-    """The preferred entity is suggested, else one of Local vision."""
+    """The preferred image classification entity is suggested."""
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
         {"type": "ai_task/preferences/set", "classify_image_entity_id": preferred}
     )
     assert (await client.receive_json())["success"]
-    for platform, disabled_by in registered:
-        entity_registry.async_get_or_create(
-            "ai_task",
-            platform,
-            platform,
-            suggested_object_id=platform,
-            disabled_by=disabled_by,
-        )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

@@ -21,7 +21,7 @@ from homeassistant.const import (
     CONF_STATE,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er, selector, translation
+from homeassistant.helpers import selector, translation
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -35,7 +35,6 @@ from .const import (
     DEFAULT_REGION,
     DEVICE_CLASSES,
     DOMAIN,
-    LOCAL_VISION_DOMAIN,
     STATES,
 )
 from .coordinator import ImageClassificationConfigEntry, ImageClassificationCoordinator
@@ -117,19 +116,8 @@ def _teach_schema(device_class: str) -> probatio.Schema:
 
 @callback
 def _default_ai_task_entity_id(hass: HomeAssistant) -> str | None:
-    """Return the preferred entity, else one that classifies on this device."""
-    if entity_id := ai_task.async_get_classify_image_entity_id(hass):
-        return entity_id
-    return next(
-        (
-            entry.entity_id
-            for entry in er.async_get(hass).entities.values()
-            if entry.platform == LOCAL_VISION_DOMAIN
-            and entry.domain == AI_TASK_DOMAIN
-            and not entry.disabled
-        ),
-        None,
-    )
+    """Return the preferred image classification entity, if one is set."""
+    return ai_task.async_get_classify_image_entity_id(hass)
 
 
 class ImageClassificationConfigFlow(ConfigFlow, domain=DOMAIN):

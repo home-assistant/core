@@ -35,6 +35,5 @@ THRESHOLD = 0.8
 
 # Integration that classifies on this device, the default when no AI Task
 # entity is preferred for image classification.
-LOCAL_VISION_DOMAIN = "local_vision"
 
 UPDATE_INTERVAL = timedelta(minutes=5)
