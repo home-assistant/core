@@ -39,7 +39,7 @@ _HVAC_MODE_OPTIONS = [
 
 
 @callback
-def _user_schema(hass: HomeAssistant) -> probatio.Schema:
+def _ac_schema(hass: HomeAssistant) -> probatio.Schema:
     """Return the emitter/receiver/mode selection schema."""
     return probatio.Schema(
         {
@@ -82,6 +82,16 @@ class GreeIrConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = ent_reg.async_get(entity_id)
         return entry.name or entry.original_name or entity_id if entry else entity_id
 
+    @callback
+    def _async_abort_infrared_entities_match(self, user_input: dict[str, Any]) -> None:
+        """Abort if another entry uses one of these IR entities."""
+        emitter_id = user_input[CONF_INFRARED_EMITTER_ENTITY_ID]
+        self._async_abort_entries_match({CONF_INFRARED_EMITTER_ENTITY_ID: emitter_id})
+        if receiver_id := user_input.get(CONF_INFRARED_RECEIVER_ENTITY_ID):
+            self._async_abort_entries_match(
+                {CONF_INFRARED_RECEIVER_ENTITY_ID: receiver_id}
+            )
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -91,18 +101,32 @@ class GreeIrConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_infrared_emitters")
 
         if user_input is not None:
+            self._async_abort_infrared_entities_match(user_input)
             emitter_id = user_input[CONF_INFRARED_EMITTER_ENTITY_ID]
-            self._async_abort_entries_match(
-                {CONF_INFRARED_EMITTER_ENTITY_ID: emitter_id}
-            )
-            if receiver_id := user_input.get(CONF_INFRARED_RECEIVER_ENTITY_ID):
-                self._async_abort_entries_match(
-                    {CONF_INFRARED_RECEIVER_ENTITY_ID: receiver_id}
-                )
-
             return self.async_create_entry(
                 title=f"Gree AC via {self._entity_name(emitter_id)}",
                 data=user_input,
             )
 
-        return self.async_show_form(step_id="user", data_schema=_user_schema(self.hass))
+        return self.async_show_form(step_id="user", data_schema=_ac_schema(self.hass))
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the infrared entities and supported modes."""
+        entry = self._get_reconfigure_entry()
+        if not async_get_emitters(self.hass):
+            return self.async_abort(reason="no_infrared_emitters")
+
+        if user_input is not None:
+            self._async_abort_infrared_entities_match(user_input)
+            # Replace rather than update the data, so a cleared receiver
+            # selector removes it from the entry.
+            return self.async_update_reload_and_abort(entry, data=user_input)
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                _ac_schema(self.hass), entry.data
+            ),
+        )
