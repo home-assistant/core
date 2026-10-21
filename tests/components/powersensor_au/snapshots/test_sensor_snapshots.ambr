@@ -231,7 +231,7 @@
       ]),
       'area_id': None,
       'capabilities': dict({
-        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       }),
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -431,6 +431,7 @@
       'attributes': ReadOnlyDict({
         <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
         <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mains sensor (112233445566) Energy',
+        <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2023-07-22T04:26:40+00:00',
         <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
         <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),

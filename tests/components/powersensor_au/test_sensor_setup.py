@@ -30,7 +30,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.util.dt import utcnow
+from homeassistant.util.dt import utc_from_timestamp, utcnow
 
 PLUG_MAC = "aabbccddeeff"
 SENSOR_MAC = "112233445566"
@@ -347,6 +347,8 @@ async def test_energy_converted_from_joules(
             "mac": SENSOR_MAC,
             "role": ROLE_HOUSENET,
             "summation_joules": 3_600_000,  # 1 kWh
+            "starttime_utc": 1700000000,
+            "summation_resettime_utc": 1690000000,
         }
     )
     await hass.async_block_till_done()
@@ -358,6 +360,77 @@ async def test_energy_converted_from_joules(
     state = hass.states.get(entity_id)
     assert state is not None
     assert float(state.state) == pytest.approx(1.0, rel=1e-4)
+
+
+@pytest.mark.parametrize(
+    ("discovery", "mac"),
+    [
+        pytest.param(
+            [
+                {"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"},
+                {"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_HOUSENET},
+            ],
+            SENSOR_MAC,
+            id="sensor",
+        ),
+        pytest.param(
+            [{"event": "device_found", "mac": PLUG_MAC, "device_type": "plug"}],
+            PLUG_MAC,
+            id="plug",
+        ),
+    ],
+)
+async def test_energy_last_reset_follows_device_reset(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+    entity_registry: er.EntityRegistry,
+    discovery: list[dict[str, Any]],
+    mac: str,
+) -> None:
+    """The energy total's last_reset follows the device's counter resets.
+
+    Without it, the drop to zero at a reset would be recorded in statistics as
+    negative energy, because the entity's state class is TOTAL.
+    """
+    for event in discovery:
+        await fire(event)
+    await hass.async_block_till_done()
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{mac}_total_energy"
+    )
+    assert entity_id is not None
+
+    await fire(
+        {
+            "event": "summation_energy",
+            "mac": mac,
+            "summation_joules": 18_000_000,  # 5 kWh
+            "starttime_utc": 1700000000,
+            "summation_resettime_utc": 1690000000,
+        }
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "5.0"
+    assert state.attributes["last_reset"] == utc_from_timestamp(1690000000).isoformat()
+
+    # The device resets its counter to zero.
+    await fire(
+        {
+            "event": "summation_energy",
+            "mac": mac,
+            "summation_joules": 0,
+            "starttime_utc": 1700000030,
+            "summation_resettime_utc": 1700000020,
+        }
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "0.0"
+    assert state.attributes["last_reset"] == utc_from_timestamp(1700000020).isoformat()
 
 
 async def test_water_sensor_creates_water_entities(

@@ -42,6 +42,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CFG_ROLES,
@@ -105,6 +106,10 @@ class PowersensorSensorEntityDescription(SensorEntityDescription):
         conversion_function: Optional transform applied to the raw message value.
         event:               Required dispatcher event name this entity subscribes to.
         message_key:         Required key inside the event payload that carries the value.
+        last_reset_key:      Optional key inside the event payload that carries when the
+                             value last reset to zero, in seconds since the Unix epoch.
+                             Set for TOTAL sensors, so that statistics start a new
+                             cycle at a reset instead of counting the drop.
         supported_roles:     When set, this entity is only created for sensors whose
                              role is in this set.  None means all roles.
     """
@@ -112,6 +117,7 @@ class PowersensorSensorEntityDescription(SensorEntityDescription):
     event: str
     message_key: str
     conversion_function: Callable[[float], float] | None = None
+    last_reset_key: str | None = None
     supported_roles: frozenset[str] | None = None
 
 
@@ -156,16 +162,14 @@ SENSOR_DESCRIPTIONS: tuple[PowersensorSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         # TOTAL (not TOTAL_INCREASING) is intentional: magnetic sensors do net
         # metering, so the cumulative joule value can decrease (e.g. a solar
-        # sensor exporting more than it imports).  TOTAL with last_reset=None
-        # is the HA-recommended state class for a lifetime counter that never
-        # resets but can go up or down; HA statistics tracks deltas from the
-        # first observed value.
+        # sensor exporting more than it imports).
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
         event="summation_energy",
         message_key="summation_joules",
         conversion_function=_joules_to_kwh,
+        last_reset_key="summation_resettime_utc",
         supported_roles=frozenset({ROLE_HOUSENET, ROLE_SOLAR, ROLE_APPLIANCE}),
     ),
     PowersensorSensorEntityDescription(
@@ -201,6 +205,9 @@ SENSOR_DESCRIPTIONS: tuple[PowersensorSensorEntityDescription, ...] = (
     PowersensorSensorEntityDescription(
         key="total_water_consumption",
         device_class=SensorDeviceClass.WATER,
+        # TOTAL_INCREASING: water sensors can't detect backflow, so the total
+        # only increases until the device resets it to zero, which this state
+        # class treats as the start of a new meter cycle.
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfVolume.LITERS,
         suggested_display_precision=2,
@@ -266,20 +273,21 @@ PLUG_DESCRIPTIONS: tuple[PowersensorSensorEntityDescription, ...] = (
     PowersensorSensorEntityDescription(
         key="total_energy",
         device_class=SensorDeviceClass.ENERGY,
-        # TOTAL_INCREASING (not TOTAL) is intentional: smart plugs measure
-        # load-side consumption only.  Unlike the magnetic sensors,
-        # plugs cannot measure reverse flow — their cumulative joule counter
-        # is guaranteed monotonically increasing.  TOTAL_INCREASING allows
-        # HA to detect meter resets and is the correct class for the Energy
-        # dashboard.  Contrast with the magnetic sensor's total_energy
-        # (SENSOR_DESCRIPTIONS above) which uses TOTAL because net metering
-        # means the cumulative value can decrease.
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        # TOTAL (not TOTAL_INCREASING) is intentional, even though plugs
+        # measure load-side consumption only and can't measure reverse flow.
+        # Readings aren't clipped at zero, so with no load, measurement noise
+        # makes the counter dip briefly, and can take it below zero just after
+        # a reset; the dips and rises cancel out over time.  HA requires that a
+        # TOTAL_INCREASING value cannot decrease because of measurement noise:
+        # it would log a warning for every dip, treat a dip of more than 10% as
+        # a meter reset, and reject negative values.
+        state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
         event="summation_energy",
         message_key="summation_joules",
         conversion_function=_joules_to_kwh,
+        last_reset_key="summation_resettime_utc",
     ),
     PowersensorSensorEntityDescription(
         # Plugs report ROLE_APPLIANCE.  A message without a role falls back to
@@ -326,6 +334,10 @@ CONSUMPTION_DESCRIPTIONS: tuple[
         translation_key="energy_home_use",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        # TOTAL_INCREASING: VirtualHousehold's totals only increase, and restart
+        # from zero when it is created (each HA start or integration reload) or
+        # a contributing sensor's counter resets.  This state class treats a
+        # drop as the start of a new meter cycle.
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=3,
         formatter=_joules_to_kwh,
@@ -336,6 +348,10 @@ CONSUMPTION_DESCRIPTIONS: tuple[
         key="energy_from_grid",
         translation_key="energy_from_grid",
         device_class=SensorDeviceClass.ENERGY,
+        # TOTAL_INCREASING: VirtualHousehold's totals only increase, and restart
+        # from zero when it is created (each HA start or integration reload) or
+        # a contributing sensor's counter resets.  This state class treats a
+        # drop as the start of a new meter cycle.
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=3,
@@ -375,6 +391,10 @@ PRODUCTION_DESCRIPTIONS: tuple[
         key="energy_to_grid",
         translation_key="energy_to_grid",
         device_class=SensorDeviceClass.ENERGY,
+        # TOTAL_INCREASING: VirtualHousehold's totals only increase, and restart
+        # from zero when it is created (each HA start or integration reload) or
+        # a contributing sensor's counter resets.  This state class treats a
+        # drop as the start of a new meter cycle.
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=3,
@@ -386,6 +406,10 @@ PRODUCTION_DESCRIPTIONS: tuple[
         key="energy_solar_generation",
         translation_key="energy_solar_generation",
         device_class=SensorDeviceClass.ENERGY,
+        # TOTAL_INCREASING: VirtualHousehold's totals only increase, and restart
+        # from zero when it is created (each HA start or integration reload) or
+        # a contributing sensor's counter resets.  This state class treats a
+        # drop as the start of a new meter cycle.
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=3,
@@ -632,6 +656,10 @@ class PowersensorMeasurementEntity(PowersensorEntity, SensorEntity):
         desc = self.entity_description
         if desc.message_key in message:
             raw = message[desc.message_key]
+            if desc.last_reset_key is not None:
+                self._attr_last_reset = dt_util.utc_from_timestamp(
+                    message[desc.last_reset_key]
+                )
             if desc.conversion_function:
                 self._attr_native_value = desc.conversion_function(raw)
             elif desc.key == "device_role":

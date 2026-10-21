@@ -108,6 +108,8 @@ async def test_sensor_housenet_state_snapshot(
             "mac": SENSOR_MAC,
             "role": ROLE_HOUSENET,
             "summation_joules": 18_000_000,  # 5 kWh
+            "starttime_utc": 1700000000,
+            "summation_resettime_utc": 1690000000,
         }
     )
     await fire(
