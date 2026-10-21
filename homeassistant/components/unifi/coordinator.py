@@ -23,8 +23,15 @@ IDLE_POLL_INTERVAL = timedelta(minutes=10)
 # Large sites can take a while to list all clients
 UPDATE_TIMEOUT = 30
 
-# A half started application can answer with invalid JSON
-TRANSPORT_ERRORS = (TimeoutError, json.JSONDecodeError, aiounifi.RequestError)
+# Errors after which the session is checked. A half started application can
+# answer with invalid JSON, and aiounifi raises LoginRequired once it does not
+# log in again on its own.
+SESSION_CHECK_ERRORS = (
+    TimeoutError,
+    json.JSONDecodeError,
+    aiounifi.LoginRequired,
+    aiounifi.RequestError,
+)
 
 
 class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
@@ -89,7 +96,7 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
                     type(self._handler).__name__,
                 )
             raise UpdateFailed(str(err)) from err
-        except TRANSPORT_ERRORS as err:
+        except SESSION_CHECK_ERRORS as err:
             self._connection.verify_session(err)
             raise UpdateFailed(str(err)) from err
         except aiounifi.AiounifiException as err:
@@ -128,7 +135,7 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
         try:
             async with asyncio.timeout(UPDATE_TIMEOUT):
                 await self._handler.update()
-        except TRANSPORT_ERRORS as err:
+        except SESSION_CHECK_ERRORS as err:
             self._connection.verify_session(err)
         except aiounifi.AiounifiException as err:
             LOGGER.debug("Could not refetch UniFi %s data: %s", name, err)

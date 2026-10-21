@@ -1102,6 +1102,7 @@ async def test_readiness_probe_after_login(
     "poll_error",
     [
         aiounifi.RequestError,
+        aiounifi.LoginRequired,
         aiounifi.BadGateway,
         aiounifi.ServiceUnavailable,
         TimeoutError,
@@ -1146,7 +1147,6 @@ async def test_polling_transport_failure_checks_session(
 @pytest.mark.parametrize(
     "exception",
     [
-        aiounifi.LoginRequired,
         aiounifi.Unauthorized,
         aiounifi.Forbidden,
         aiounifi.NoPermission,
