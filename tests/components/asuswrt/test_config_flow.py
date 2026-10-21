@@ -87,8 +87,9 @@ def mock_controller_patch_get_host():
 
 
 @pytest.fixture(name="patch_is_file", autouse=True)
-def mock_controller_patch_is_file():
+def mock_controller_patch_is_file(hass: HomeAssistant):
     """Mock call to os path.isfile function."""
+    # This patches os.path globally, so hass must set up the time zone first
     with patch(
         f"{ASUSWRT_BASE}.config_flow.os.path.isfile", return_value=True
     ) as is_file_mock:
