@@ -685,7 +685,7 @@ def mock_setup_fixture() -> Generator[AsyncMock]:
         ),
         patch(
             "homeassistant.components.unifiprotect.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock,
     ):
         yield mock
