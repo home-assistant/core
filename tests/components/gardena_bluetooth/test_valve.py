@@ -5,6 +5,7 @@ from unittest.mock import Mock, call
 
 from gardena_bluetooth.const import Valve
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
@@ -17,8 +18,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from . import setup_entry
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("constant_advertisements")
 

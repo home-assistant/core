@@ -1,0 +1,21 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'users': list([
+      dict({
+        'image': 'image',
+        'last_track': 'artist - title',
+        'now_playing': 'artist - title',
+        'play_count': 1,
+        'top_track': 'artist - title',
+      }),
+      dict({
+        'image': 'image',
+        'last_track': 'artist - title',
+        'now_playing': 'artist - title',
+        'play_count': 1,
+        'top_track': 'artist - title',
+      }),
+    ]),
+  })
+# ---

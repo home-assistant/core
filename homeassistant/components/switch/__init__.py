@@ -2,9 +2,6 @@
 
 from datetime import timedelta
 import logging
-from typing import override
-
-from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -14,13 +11,14 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_COMPONENT, DEVICE_CLASSES_SCHEMA, DOMAIN, SwitchDeviceClass
+from .entity import SwitchEntity, SwitchEntityDescription
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,39 +72,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a config entry."""
-    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
+    if not await hass.data[DATA_COMPONENT].async_setup_entry(entry):
+        raise ConfigEntryError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="platform_setup_failed",
+            translation_placeholders={"platform": entry.domain, "domain": DOMAIN},
+        )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
-
-
-class SwitchEntityDescription(ToggleEntityDescription, frozen_or_thawed=True):
-    """A class that describes switch entities."""
-
-    device_class: SwitchDeviceClass | None = None
-
-
-CACHED_PROPERTIES_WITH_ATTR_ = {
-    "device_class",
-}
-
-
-class SwitchEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
-    """Base class for switch entities."""
-
-    entity_description: SwitchEntityDescription
-    _attr_device_class: SwitchDeviceClass | None
-
-    @cached_property
-    @override
-    def device_class(self) -> SwitchDeviceClass | None:
-        """Return the class of this entity."""
-        if hasattr(self, "_attr_device_class"):
-            return self._attr_device_class
-        if hasattr(self, "entity_description"):
-            return self.entity_description.device_class
-        return None
+    await hass.data[DATA_COMPONENT].async_unload_entry(entry)

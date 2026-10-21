@@ -67,7 +67,7 @@ from .const import (
 from .coordinator import async_create_client, model_alias
 
 if TYPE_CHECKING:
-    from . import AnthropicConfigEntry
+    from .coordinator import AnthropicConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,6 +86,31 @@ DEFAULT_CONVERSATION_OPTIONS = {
 DEFAULT_AI_TASK_OPTIONS = {
     CONF_RECOMMENDED: True,
 }
+
+
+def get_unsupported_tool_options(
+    capabilities: anthropic.types.ModelCapabilities | None,
+) -> set[str]:
+    """Return configuration options for explicitly unsupported server tools."""
+    unsupported_options: set[str] = set()
+    if capabilities is None:
+        return unsupported_options
+
+    if not capabilities.server_tools.code_execution.supported:
+        unsupported_options.add(CONF_CODE_EXECUTION)
+    if not capabilities.server_tools.web_search.supported:
+        unsupported_options.update(
+            {
+                CONF_WEB_SEARCH,
+                CONF_WEB_SEARCH_MAX_USES,
+                CONF_WEB_SEARCH_USER_LOCATION,
+                CONF_WEB_SEARCH_CITY,
+                CONF_WEB_SEARCH_REGION,
+                CONF_WEB_SEARCH_COUNTRY,
+                CONF_WEB_SEARCH_TIMEZONE,
+            }
+        )
+    return unsupported_options
 
 
 def get_supported_thinking_efforts(
@@ -120,6 +145,9 @@ def reconcile_model_options(
 ) -> None:
     """Remove saved options incompatible with the selected model."""
     capabilities = model_info.capabilities
+    for option in get_unsupported_tool_options(capabilities):
+        options.pop(option, None)
+
     if (
         capabilities is None
         or not capabilities.thinking.supported
@@ -372,6 +400,10 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Manage additional options."""
+        coordinator = self._get_entry().runtime_data
+        if user_input is None:
+            await coordinator.async_refresh()
+
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
 
@@ -397,7 +429,6 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         if user_input is not None:
             self.options.update(user_input)
 
-            coordinator = self._get_entry().runtime_data
             self.model_info, status = coordinator.get_model_info(
                 self.options[CONF_CHAT_MODEL]
             )
@@ -415,6 +446,9 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     description_placeholders["message"] = (
                         err.message if isinstance(err, anthropic.APIError) else str(err)
                     )
+
+            if not errors and self.model_info.lifecycle == "retired":
+                errors[CONF_CHAT_MODEL] = "model_retired"
 
             if not errors:
                 return await self.async_step_model()
@@ -485,24 +519,37 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 )
             )
 
+        unsupported_tool_options = get_unsupported_tool_options(
+            self.model_info.capabilities
+        )
+
+        if CONF_CODE_EXECUTION not in unsupported_tool_options:
+            step_schema[
+                probatio.Optional(
+                    CONF_CODE_EXECUTION, default=DEFAULT[CONF_CODE_EXECUTION]
+                )
+            ] = bool
+
+        if CONF_WEB_SEARCH not in unsupported_tool_options:
+            step_schema.update(
+                {
+                    probatio.Optional(
+                        CONF_WEB_SEARCH,
+                        default=DEFAULT[CONF_WEB_SEARCH],
+                    ): bool,
+                    probatio.Optional(
+                        CONF_WEB_SEARCH_MAX_USES,
+                        default=DEFAULT[CONF_WEB_SEARCH_MAX_USES],
+                    ): cv.positive_int,
+                    probatio.Optional(
+                        CONF_WEB_SEARCH_USER_LOCATION,
+                        default=DEFAULT[CONF_WEB_SEARCH_USER_LOCATION],
+                    ): bool,
+                }
+            )
+
         step_schema.update(
             {
-                probatio.Optional(
-                    CONF_CODE_EXECUTION,
-                    default=DEFAULT[CONF_CODE_EXECUTION],
-                ): bool,
-                probatio.Optional(
-                    CONF_WEB_SEARCH,
-                    default=DEFAULT[CONF_WEB_SEARCH],
-                ): bool,
-                probatio.Optional(
-                    CONF_WEB_SEARCH_MAX_USES,
-                    default=DEFAULT[CONF_WEB_SEARCH_MAX_USES],
-                ): cv.positive_int,
-                probatio.Optional(
-                    CONF_WEB_SEARCH_USER_LOCATION,
-                    default=DEFAULT[CONF_WEB_SEARCH_USER_LOCATION],
-                ): bool,
                 probatio.Optional(
                     CONF_WEB_FETCH,
                     default=DEFAULT[CONF_WEB_FETCH],
@@ -581,6 +628,15 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 value=model_alias(model_info.id),
             )
             for model_info in coordinator.data or []
+            if coordinator.get_model_info(model_alias(model_info.id))[0].lifecycle
+            != "retired"
+            and (
+                self._subentry_type != "ai_task_data"
+                or (
+                    model_info.capabilities
+                    and model_info.capabilities.structured_outputs.supported
+                )
+            )
         ]
 
     async def _get_location_data(self) -> dict[str, str]:

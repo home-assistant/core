@@ -1,6 +1,7 @@
 {
   "domain": "uptime",
   "name": "Uptime",
+  "categories": ["computers_network.monitoring"],
   "codeowners": ["@frenck"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/uptime",

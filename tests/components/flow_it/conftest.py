@@ -5,18 +5,17 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from flow_it_api.models import MachineStatusResponse
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_value_fixture
 
 from homeassistant.components.flow_it.const import DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_json_value_fixture
 
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.flow_it.async_setup_entry", return_value=True
+        "homeassistant.components.flow_it.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

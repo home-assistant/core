@@ -12,30 +12,13 @@ from unittest.mock import MagicMock, patch
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-
-from homeassistant.components import sensor
-from homeassistant.components.mqtt.const import DOMAIN
-from homeassistant.components.mqtt.sensor import MQTT_SENSOR_ATTRIBUTES_BLOCKED
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
-    EVENT_STATE_CHANGED,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    UnitOfElectricPotential,
-    UnitOfReactiveEnergy,
-    UnitOfReactivePower,
-    UnitOfTemperature,
+from pytest_homeassistant.common import (
+    async_capture_events,
+    async_fire_mqtt_message,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_registry as er,
-    issue_registry as ir,
-)
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt as dt_util
-
-from .common import (
+from pytest_homeassistant.components.mqtt.common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -78,14 +61,29 @@ from .common import (
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
 )
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
-from tests.common import (
-    async_capture_events,
-    async_fire_mqtt_message,
-    async_fire_time_changed,
-    mock_restore_cache_with_extra_data,
+from homeassistant.components import sensor
+from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.components.mqtt.sensor import MQTT_SENSOR_ATTRIBUTES_BLOCKED
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    EVENT_STATE_CHANGED,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    UnitOfElectricPotential,
+    UnitOfReactiveEnergy,
+    UnitOfReactivePower,
+    UnitOfTemperature,
 )
-from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
+from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 
 DEFAULT_CONFIG = {
     DOMAIN: {sensor.DOMAIN: {"name": "test", "state_topic": "test-topic"}}

@@ -359,9 +359,10 @@ def _live_lists(service: RemindersService) -> list[tuple[str, str]]:
     list inside it can share a name, so leaving groups in shows that name
     twice, once as a permanently empty list.
 
-    A deleted list leaves a tombstone that keeps the name but no longer holds
-    the reminders, so it shows up as a permanently empty second list with the
-    same name (home-assistant/core#185251).
+    Deleted lists leave tombstones that still carry the list's name while
+    holding no reminders. Sharing a list replaces its record, so every shared
+    list leaves one behind: leaving them in showed a second, always empty,
+    entity next to the live list.
     """
     return [
         (reminder_list.id, reminder_list.title)

@@ -5,13 +5,12 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.sensor import SCAN_INTERVAL
 from homeassistant.const import PERCENTAGE, STATE_UNAVAILABLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, valid_entity_id
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_fire_time_changed
 
 UUID = "00000000-0000-0000-0000-000000000001"
 ENTITY_ID = "sensor.wirelesstag_bedroom_temperature"

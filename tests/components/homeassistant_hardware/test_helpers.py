@@ -5,6 +5,7 @@ import logging
 from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.homeassistant_hardware.const import DATA_COMPONENT, DOMAIN
 from homeassistant.components.homeassistant_hardware.helpers import (
@@ -24,8 +25,6 @@ from homeassistant.components.usb import DOMAIN as USB_DOMAIN, USBDevice
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 FIRMWARE_INFO_EZSP = FirmwareInfo(
     device="/dev/serial/by-id/device1",

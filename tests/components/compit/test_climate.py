@@ -9,6 +9,7 @@ from compit_inext_api.consts import (
     CompitPresetMode,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -41,8 +42,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration, snapshot_compit_entities
-
-from tests.common import MockConfigEntry
 
 CLIMATE_R900 = "climate.r_900"
 CLIMATE_NANO_COLOR_2 = "climate.nano_color_2"

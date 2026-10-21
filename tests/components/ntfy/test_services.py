@@ -10,6 +10,7 @@ from aiontfy.exceptions import (
 )
 import probatio
 import pytest
+from pytest_homeassistant.common import AsyncMock, MockConfigEntry, patch
 from yarl import URL
 
 from homeassistant.components import media_source
@@ -37,8 +38,6 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
-
-from tests.common import AsyncMock, MockConfigEntry, patch
 
 
 @pytest.mark.freeze_time("2026-01-01T23:59:59+00:00")

@@ -5,6 +5,7 @@ from ipaddress import ip_address
 
 from lektricowifi import DeviceConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lektrico.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -24,8 +25,6 @@ from .conftest import (
     MOCKED_DEVICE_TYPE,
     MOCKED_DEVICE_ZEROCONF_DATA,
 )
-
-from tests.common import MockConfigEntry
 
 
 async def test_user_setup(hass: HomeAssistant, mock_device, mock_setup_entry) -> None:

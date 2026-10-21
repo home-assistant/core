@@ -39,7 +39,7 @@ from .const import (
 )
 
 if TYPE_CHECKING:
-    from . import ClimateEntity
+    from .entity import ClimateEntity
 
 _LOGGER = logging.getLogger(__name__)
 

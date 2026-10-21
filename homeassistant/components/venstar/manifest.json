@@ -1,6 +1,7 @@
 {
   "domain": "venstar",
   "name": "Venstar",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@garbled1", "@jhollowe"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/venstar",

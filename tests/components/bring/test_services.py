@@ -10,6 +10,7 @@ from bring_api import (
     ReactionType,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bring.const import DOMAIN
 from homeassistant.components.bring.services import (
@@ -21,8 +22,6 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

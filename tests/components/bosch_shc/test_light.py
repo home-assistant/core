@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -21,8 +22,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .conftest import micromodule_dimmer_device, setup_integration
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

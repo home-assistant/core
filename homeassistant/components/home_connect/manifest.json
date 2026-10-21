@@ -1,6 +1,7 @@
 {
   "domain": "home_connect",
   "name": "Home Connect",
+  "categories": ["appliances_cleaning", "climate.heat_pumps_air_conditioning"],
   "codeowners": ["@DavidMStraub", "@Diegorro98", "@MartinHjelmare"],
   "config_flow": true,
   "dependencies": ["application_credentials", "repairs"],
