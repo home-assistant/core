@@ -5,9 +5,7 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "comfort": "mdi:weather-sunny",
-              "defrost": "mdi:snowflake",
-              "eco": "mdi:moon-waning-crescent"
+              "defrost": "mdi:snowflake"
             }
           }
         }

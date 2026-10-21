@@ -128,7 +128,7 @@ class GkpHubCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
                     translation_key="authentication_failed",
                 ) from err
             except GkpError as err:
-                _LOGGER.warning(
+                _LOGGER.debug(
                     "Failed to wake up devices of installation %s: %s",
                     installation_id,
                     err,
