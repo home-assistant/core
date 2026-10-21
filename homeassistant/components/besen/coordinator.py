@@ -6,6 +6,7 @@ from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, override
+from weakref import WeakValueDictionary
 
 from besen.client import BesenClient
 from besen.exceptions import CannotConnect, CommandFailed
@@ -14,6 +15,7 @@ from besen.models import BesenData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
@@ -24,6 +26,24 @@ if TYPE_CHECKING:
     from . import BesenConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@singleton(f"{DOMAIN}_validation_locks")
+@callback
+def _async_validation_locks(
+    hass: HomeAssistant,
+) -> WeakValueDictionary[str, asyncio.Lock]:
+    """Retain entry locks only while a coordinator or operation uses them."""
+    return WeakValueDictionary()
+
+
+@callback
+def async_get_connection_lock(hass: HomeAssistant, entry_id: str) -> asyncio.Lock:
+    """Share validation ownership across flows and coordinator replacements."""
+    locks = _async_validation_locks(hass)
+    if (lock := locks.get(entry_id)) is None:
+        locks[entry_id] = lock = asyncio.Lock()
+    return lock
 
 
 class BesenCoordinator(DataUpdateCoordinator[BesenData]):
@@ -51,24 +71,26 @@ class BesenCoordinator(DataUpdateCoordinator[BesenData]):
         self._remove_listener: Callable[[], None] | None = None
         self._client_stopped = True
         self._connection_lock = asyncio.Lock()
+        self._validation_lock = async_get_connection_lock(hass, config_entry.entry_id)
         self._uses_lan = uses_lan
 
     async def async_start(self) -> None:
         """Start listening to charger updates."""
 
-        self._remove_listener = self.client.add_listener(self._handle_client_update)
-        self._client_stopped = False
-        try:
-            await self.client.async_start()
-        except Exception:
-            if self._remove_listener is not None:
-                self._remove_listener()
-                self._remove_listener = None
-            with suppress(Exception):
-                await self._async_stop_client()
-            await self._async_release_listener()
-            raise
-        self.async_set_updated_data(self.client.state)
+        async with self._validation_lock:
+            self._remove_listener = self.client.add_listener(self._handle_client_update)
+            self._client_stopped = False
+            try:
+                await self.client.async_start()
+            except Exception:
+                if self._remove_listener is not None:
+                    self._remove_listener()
+                    self._remove_listener = None
+                with suppress(Exception):
+                    await self._async_stop_client()
+                await self._async_release_listener()
+                raise
+            self.async_set_updated_data(self.client.state)
 
     @override
     async def async_shutdown(self) -> None:
@@ -78,7 +100,7 @@ class BesenCoordinator(DataUpdateCoordinator[BesenData]):
         if self._remove_listener is not None:
             self._remove_listener()
             self._remove_listener = None
-        async with self._connection_lock:
+        async with self._validation_lock, self._connection_lock:
             try:
                 await self._async_stop_client()
             finally:

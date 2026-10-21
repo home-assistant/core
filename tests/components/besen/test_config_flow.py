@@ -11,7 +11,7 @@ from pytest_homeassistant.components.bluetooth import (
     generate_ble_device,
 )
 
-from homeassistant.components.besen.const import CONF_SERIAL, DOMAIN
+from homeassistant.components.besen.const import CONF_SERIAL, CONF_TRANSPORT, DOMAIN
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN
@@ -452,6 +452,9 @@ async def test_reauth_flow(
         result["flow_id"],
         {CONF_PIN: NEW_PIN},
     )
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
@@ -460,6 +463,7 @@ async def test_reauth_flow(
         CONF_ADDRESS: FIXTURE_ADDRESS,
         CONF_NAME: FIXTURE_NAME,
         CONF_PIN: NEW_PIN,
+        CONF_TRANSPORT: "bluetooth",
     }
     mock_besen_client.async_start.assert_awaited_once()
     mock_besen_client.async_stop.assert_awaited_once()
@@ -492,6 +496,9 @@ async def test_reauth_flow_errors_can_recover(
         result["flow_id"],
         {CONF_PIN: NEW_PIN},
     )
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -502,6 +509,9 @@ async def test_reauth_flow_errors_can_recover(
         result["flow_id"],
         {CONF_PIN: NEW_PIN},
     )
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -524,6 +534,9 @@ async def test_reauth_flow_no_connectable_path_can_recover(
         result["flow_id"],
         {CONF_PIN: NEW_PIN},
     )
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -534,6 +547,9 @@ async def test_reauth_flow_no_connectable_path_can_recover(
         result["flow_id"],
         {CONF_PIN: NEW_PIN},
     )
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"

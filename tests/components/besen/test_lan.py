@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
+from besen.client import BesenClient
 from besen.exceptions import CannotConnect, InvalidAuth
 from besen.udp import BesenUdpClient
 import pytest
@@ -461,14 +462,26 @@ async def test_runtime_failed_login_releases_listener(
     hub.async_stop.assert_awaited_once()
 
 
+@pytest.mark.parametrize(
+    "saved_serial",
+    [
+        pytest.param({}, id="missing"),
+        pytest.param({CONF_SERIAL: None}, id="null"),
+        pytest.param({CONF_SERIAL: ""}, id="empty"),
+    ],
+)
 async def test_reconfigure_recovers_identity_from_unloaded_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    saved_serial: dict[str, str | None],
 ) -> None:
     """Test that reconfigure recovers identity from unloaded device."""
 
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={**mock_config_entry.data, **saved_serial}
+    )
     device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         connections={(dr.CONNECTION_BLUETOOTH, FIXTURE_ADDRESS)},
@@ -869,6 +882,7 @@ async def test_validation_does_not_restart_an_unloaded_coordinator(
     """Do not resurrect a captured client after its entry has unloaded."""
     validating = asyncio.Event()
     finish_validation = asyncio.Event()
+    shutdown_started = asyncio.Event()
 
     async def wait_for_status(*, timeout: int) -> None:
         """Hold the candidate until the old coordinator has shut down."""
@@ -883,9 +897,14 @@ async def test_validation_does_not_restart_an_unloaded_coordinator(
     udp_client.async_wait_for_status.side_effect = wait_for_status
     await flow.async_step_lan({CONF_HOST: HOST, CONF_PIN: FIXTURE_PIN})
     await validating.wait()
-    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    mock_besen_client.add_listener.return_value.side_effect = shutdown_started.set
+    unloading = hass.async_create_task(
+        hass.config_entries.async_unload(mock_config_entry.entry_id)
+    )
+    await shutdown_started.wait()
     finish_validation.set()
     await flow._operation_task
+    assert await unloading
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_besen_client.async_start.assert_awaited_once()
     mock_besen_client.add_listener.return_value.assert_called_once_with()
@@ -1254,3 +1273,377 @@ async def test_cancel_during_restoration_reloads_saved_connection(
     assert mock_besen_client.async_start.await_count == 3
     udp_client.async_stop.assert_awaited_once()
     hub.async_stop.assert_awaited_once()
+
+
+@pytest.fixture
+def validation_clients(udp_client: Mock) -> Generator[tuple[Mock, Mock]]:
+    """Give overlapping flows separate candidates for the same charger."""
+    first = Mock(spec=BesenUdpClient)
+    second = Mock(spec=BesenUdpClient)
+    for client in (first, second):
+        _configure_client_mock(client)
+        client.state = udp_client.state
+        client.host = HOST
+        client.is_connected = False
+        client.async_wait_for_status = AsyncMock()
+        client.async_wait_for_heartbeat = AsyncMock()
+    with patch(
+        "homeassistant.components.besen.config_flow.BesenUdpClient",
+        side_effect=(first, second),
+    ):
+        yield first, second
+
+
+async def test_cancelled_validation_finishes_before_replacement_starts(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_besen_client: Mock,
+    udp_client: Mock,
+    validation_clients: tuple[Mock, Mock],
+) -> None:
+    """Keep ownership after cancellation until cleanup and restoration finish."""
+    first, second = validation_clients
+    validating = asyncio.Event()
+    cleaning = asyncio.Event()
+    finish_cleanup = asyncio.Event()
+    restoring = asyncio.Event()
+    finish_restore = asyncio.Event()
+
+    async def wait_for_status(*, timeout: int) -> None:
+        """Keep the first flow active until its dialog is cancelled."""
+        validating.set()
+        await asyncio.Event().wait()
+
+    async def stop_candidate() -> None:
+        """Hold candidate cleanup after the flow is removed from the manager."""
+        cleaning.set()
+        await finish_cleanup.wait()
+
+    async def restore() -> None:
+        """Hold restoration after candidate cleanup has finished."""
+        restoring.set()
+        await finish_restore.wait()
+
+    mock_besen_client.is_connected = False
+    mock_besen_client.state = udp_client.state
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    first.async_wait_for_status.side_effect = wait_for_status
+    first.async_stop.side_effect = stop_candidate
+    mock_besen_client.async_start.side_effect = restore
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "lan"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: HOST, CONF_PIN: FIXTURE_PIN}
+    )
+    first_flow = hass.config_entries.flow._progress[result["flow_id"]]
+    assert isinstance(first_flow, BesenConfigFlow)
+    await validating.wait()
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    await cleaning.wait()
+    replacement = await mock_config_entry.start_reconfigure_flow(hass)
+    replacement = await hass.config_entries.flow.async_configure(
+        replacement["flow_id"], {"next_step_id": "lan"}
+    )
+    replacement = await hass.config_entries.flow.async_configure(
+        replacement["flow_id"], {CONF_HOST: HOST, CONF_PIN: FIXTURE_PIN}
+    )
+    replacement_flow = hass.config_entries.flow._progress[replacement["flow_id"]]
+    assert isinstance(replacement_flow, BesenConfigFlow)
+    try:
+        await asyncio.sleep(0)
+        second.async_start.assert_not_awaited()
+        finish_cleanup.set()
+        await restoring.wait()
+        second.async_start.assert_not_awaited()
+    finally:
+        mock_besen_client.async_start.side_effect = None
+        finish_cleanup.set()
+        finish_restore.set()
+        assert first_flow._operation_task is not None
+        assert replacement_flow._operation_task is not None
+        await asyncio.gather(
+            first_flow._operation_task,
+            replacement_flow._operation_task,
+            return_exceptions=True,
+        )
+        hass.config_entries.flow.async_abort(replacement["flow_id"])
+    assert first_flow._operation_task.cancelled()
+    first.async_stop.assert_awaited_once()
+    second.async_start.assert_awaited_once()
+    second.async_stop.assert_awaited_once()
+    assert mock_besen_client.async_start.await_count == 3
+    assert CONF_TRANSPORT not in mock_config_entry.data
+
+
+@pytest.mark.parametrize(
+    ("first_source", "second_source"),
+    [
+        pytest.param(SOURCE_REAUTH, SOURCE_RECONFIGURE, id="reauth-first"),
+        pytest.param(SOURCE_RECONFIGURE, SOURCE_REAUTH, id="reconfigure-first"),
+    ],
+)
+async def test_reauth_and_reconfigure_serialize_entire_validation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    udp_client: Mock,
+    validation_clients: tuple[Mock, Mock],
+    first_source: str,
+    second_source: str,
+) -> None:
+    """Serialize candidates and restoration in either submission order."""
+    first, second = validation_clients
+    validating = asyncio.Event()
+    finish_validation = asyncio.Event()
+    restoring = asyncio.Event()
+    finish_restore = asyncio.Event()
+
+    async def wait_for_status(*, timeout: int) -> None:
+        """Hold validation while the other flow is submitted."""
+        validating.set()
+        await finish_validation.wait()
+
+    async def restore() -> None:
+        """Hold restoration after candidate validation succeeds."""
+        restoring.set()
+        await finish_restore.wait()
+
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            **mock_config_entry.data,
+            CONF_TRANSPORT: "lan",
+            CONF_HOST: HOST,
+            CONF_SERIAL: SERIAL,
+        },
+    )
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    reauth = await mock_config_entry.start_reauth_flow(hass)
+    reconfigure = await mock_config_entry.start_reconfigure_flow(hass)
+    reconfigure = await hass.config_entries.flow.async_configure(
+        reconfigure["flow_id"], {"next_step_id": "lan"}
+    )
+    forms = {SOURCE_REAUTH: reauth, SOURCE_RECONFIGURE: reconfigure}
+    inputs = {
+        SOURCE_REAUTH: {CONF_PIN: "654321"},
+        SOURCE_RECONFIGURE: {CONF_HOST: HOST, CONF_PIN: FIXTURE_PIN},
+    }
+    first.async_wait_for_status.side_effect = wait_for_status
+    udp_client.async_start.side_effect = restore
+    await hass.config_entries.flow.async_configure(
+        forms[first_source]["flow_id"], inputs[first_source]
+    )
+    await validating.wait()
+    await hass.config_entries.flow.async_configure(
+        forms[second_source]["flow_id"], inputs[second_source]
+    )
+    first_flow = hass.config_entries.flow._progress[forms[first_source]["flow_id"]]
+    second_flow = hass.config_entries.flow._progress[forms[second_source]["flow_id"]]
+    assert isinstance(first_flow, BesenConfigFlow)
+    assert isinstance(second_flow, BesenConfigFlow)
+    try:
+        await asyncio.sleep(0)
+        second.async_start.assert_not_awaited()
+        finish_validation.set()
+        await restoring.wait()
+        second.async_start.assert_not_awaited()
+    finally:
+        udp_client.async_start.side_effect = None
+        finish_validation.set()
+        finish_restore.set()
+        assert first_flow._operation_task is not None
+        assert second_flow._operation_task is not None
+        await asyncio.gather(first_flow._operation_task, second_flow._operation_task)
+        hass.config_entries.flow.async_abort(forms[first_source]["flow_id"])
+        hass.config_entries.flow.async_abort(forms[second_source]["flow_id"])
+    first.async_stop.assert_awaited_once()
+    second.async_start.assert_awaited_once()
+    second.async_stop.assert_awaited_once()
+    assert udp_client.async_start.await_count == 3
+    assert mock_config_entry.data[CONF_PIN] == FIXTURE_PIN
+
+
+async def test_validation_waits_for_entry_startup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_besen_client: Mock,
+    udp_client: Mock,
+) -> None:
+    """Pause the newly loaded coordinator before opening a validation client."""
+    starting = asyncio.Event()
+    finish_startup = asyncio.Event()
+
+    async def start() -> None:
+        """Hold startup before the runtime coordinator is assigned to its entry."""
+        starting.set()
+        await finish_startup.wait()
+
+    async def start_candidate() -> None:
+        """Require release of the runtime discovered after waiting for ownership."""
+        mock_besen_client.async_stop.assert_awaited_once()
+
+    mock_besen_client.is_connected = False
+    mock_besen_client.state = udp_client.state
+    mock_besen_client.async_start.side_effect = start
+    udp_client.async_start.side_effect = start_candidate
+    flow = flow_for(hass, mock_config_entry)
+    setup = hass.async_create_task(
+        hass.config_entries.async_setup(mock_config_entry.entry_id)
+    )
+    await starting.wait()
+    await flow.async_step_lan({CONF_HOST: HOST, CONF_PIN: FIXTURE_PIN})
+    try:
+        await asyncio.sleep(0)
+        udp_client.async_start.assert_not_awaited()
+    finally:
+        mock_besen_client.async_start.side_effect = None
+        finish_startup.set()
+    assert await setup
+    await flow._operation_task
+    udp_client.async_start.assert_awaited_once()
+    udp_client.async_stop.assert_awaited_once()
+    assert mock_besen_client.async_start.await_count == 2
+    flow.async_remove()
+
+
+async def test_entry_startup_waits_for_validation_cleanup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_besen_client: Mock,
+    udp_client: Mock,
+) -> None:
+    """Keep a new runtime from opening while an unloaded entry is validated."""
+    validating = asyncio.Event()
+    finish_validation = asyncio.Event()
+
+    async def wait_for_status(*, timeout: int) -> None:
+        """Hold the candidate while entry setup starts."""
+        validating.set()
+        await finish_validation.wait()
+
+    async def start() -> None:
+        """Require candidate cleanup before the saved client can start."""
+        udp_client.async_stop.assert_awaited_once()
+
+    mock_besen_client.state = udp_client.state
+    mock_besen_client.async_start.side_effect = start
+    udp_client.async_wait_for_status.side_effect = wait_for_status
+    flow = flow_for(hass, mock_config_entry)
+    await flow.async_step_lan({CONF_HOST: HOST, CONF_PIN: FIXTURE_PIN})
+    await validating.wait()
+    setup = hass.async_create_task(
+        hass.config_entries.async_setup(mock_config_entry.entry_id)
+    )
+    try:
+        await asyncio.sleep(0)
+        mock_besen_client.async_start.assert_not_awaited()
+    finally:
+        finish_validation.set()
+    await flow._operation_task
+    assert await setup
+    mock_besen_client.async_start.assert_awaited_once()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    flow.async_remove()
+
+
+async def test_loaded_bluetooth_reauth_uses_the_validation_transaction(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_besen_client: Mock,
+) -> None:
+    """Release the saved Bluetooth session before testing a replacement PIN."""
+    candidate = Mock(spec=BesenClient)
+    _configure_client_mock(candidate)
+
+    async def validate() -> None:
+        """Require the old session to be stopped before Bluetooth validation."""
+        mock_besen_client.async_stop.assert_awaited_once()
+
+    candidate.async_start.side_effect = validate
+    mock_besen_client.is_connected = False
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.besen.config_flow.BesenClient", return_value=candidate
+    ):
+        result = await mock_config_entry.start_reauth_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_PIN: "654321"}
+        )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        await hass.async_block_till_done()
+        assert mock_config_entry.data[CONF_PIN] == FIXTURE_PIN
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["reason"] == "reauth_successful"
+        await hass.async_block_till_done()
+    assert mock_config_entry.data[CONF_PIN] == "654321"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    candidate.async_start.assert_awaited_once()
+    candidate.async_stop.assert_awaited_once()
+
+
+async def test_cancelling_queued_validation_preserves_current_owner(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    udp_client: Mock,
+    validation_clients: tuple[Mock, Mock],
+) -> None:
+    """Cancelling a waiter cannot release another flow's connection ownership."""
+    first, second = validation_clients
+    validating = asyncio.Event()
+    finish_validation = asyncio.Event()
+
+    async def wait_for_status(*, timeout: int) -> None:
+        """Hold the owner while its waiting flow is cancelled."""
+        validating.set()
+        await finish_validation.wait()
+
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            **mock_config_entry.data,
+            CONF_TRANSPORT: "lan",
+            CONF_HOST: HOST,
+            CONF_SERIAL: SERIAL,
+        },
+    )
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    reauth = await mock_config_entry.start_reauth_flow(hass)
+    reconfigure = await mock_config_entry.start_reconfigure_flow(hass)
+    reconfigure = await hass.config_entries.flow.async_configure(
+        reconfigure["flow_id"], {"next_step_id": "lan"}
+    )
+    first.async_wait_for_status.side_effect = wait_for_status
+    await hass.config_entries.flow.async_configure(
+        reauth["flow_id"], {CONF_PIN: "654321"}
+    )
+    await validating.wait()
+    await hass.config_entries.flow.async_configure(
+        reconfigure["flow_id"], {CONF_HOST: HOST, CONF_PIN: FIXTURE_PIN}
+    )
+    owner = hass.config_entries.flow._progress[reauth["flow_id"]]
+    waiter = hass.config_entries.flow._progress[reconfigure["flow_id"]]
+    assert isinstance(owner, BesenConfigFlow)
+    assert isinstance(waiter, BesenConfigFlow)
+    try:
+        await asyncio.sleep(0)
+        hass.config_entries.flow.async_abort(reconfigure["flow_id"])
+        with pytest.raises(asyncio.CancelledError):
+            await waiter._operation_task
+        second.async_start.assert_not_awaited()
+        first.async_stop.assert_not_awaited()
+        udp_client.async_start.assert_awaited_once()
+    finally:
+        finish_validation.set()
+        await owner._operation_task
+        hass.config_entries.flow.async_abort(reauth["flow_id"])
+    first.async_stop.assert_awaited_once()
+    assert udp_client.async_start.await_count == 2

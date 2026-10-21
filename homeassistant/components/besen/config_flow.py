@@ -33,6 +33,7 @@ from .const import (
     TRANSPORT_BLUETOOTH,
     TRANSPORT_LAN,
 )
+from .coordinator import async_get_connection_lock
 from .lan import async_acquire_udp_hub, async_release_udp_hub
 
 if TYPE_CHECKING:
@@ -326,44 +327,21 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Validate a replacement PIN without replacing the config entry."""
-
         entry = self._get_reauth_entry()
         errors: dict[str, str] = {}
         if user_input is not None:
             pin = user_input[CONF_PIN]
-            if entry.data.get(CONF_TRANSPORT) == TRANSPORT_LAN:
-                if len(pin) != 6 or not (pin.isascii() and pin.isdecimal()):
-                    return self.async_show_form(
-                        step_id="reauth_confirm",
-                        data_schema=REAUTH_SCHEMA,
-                        errors={"base": "invalid_auth"},
-                    )
+            if len(pin) != 6 or not (pin.isascii() and pin.isdecimal()):
+                errors["base"] = "invalid_auth"
+            else:
                 self._pending_data = {**entry.data, CONF_PIN: pin}
                 self._operation_step = "reauth_confirm"
-                return await self._start_operation(TRANSPORT_LAN)
-            try:
-                await _async_validate_input(
-                    self.hass,
-                    address=entry.data[CONF_ADDRESS],
-                    pin=pin,
-                    name=entry.data.get(CONF_NAME),
+                transport = (
+                    TRANSPORT_LAN
+                    if entry.data.get(CONF_TRANSPORT) == TRANSPORT_LAN
+                    else TRANSPORT_BLUETOOTH
                 )
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except NoConnectablePath:
-                errors["base"] = "no_connectable_path"
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected Besen reauthentication error")
-                errors["base"] = "unknown"
-            else:
-                return self.async_update_reload_and_abort(
-                    entry,
-                    data_updates={CONF_PIN: pin},
-                    reload_even_if_entry_is_unchanged=True,
-                )
-
+                return await self._start_operation(transport)
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=REAUTH_SCHEMA,
@@ -390,7 +368,7 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             serial := runtime.client.state.info.serial
         ):
             self._pending_data[CONF_SERIAL] = serial
-        elif CONF_SERIAL not in self._pending_data:
+        elif not self._pending_data.get(CONF_SERIAL):
             for device in dr.async_entries_for_config_entry(
                 dr.async_get(self.hass), entry.entry_id
             ):
@@ -471,12 +449,24 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_progress_done(next_step_id="connection_done")
 
     async def _test_connection(self, transport: str) -> None:
+        """Serialize validation, cleanup and restoration for an existing entry."""
+        entry = self._current_entry()
+        lock = (
+            async_get_connection_lock(self.hass, entry.entry_id)
+            if entry
+            else asyncio.Lock()
+        )
+        async with lock:
+            await self._test_connection_locked(transport, entry)
+
+    async def _test_connection_locked(
+        self, transport: str, entry: BesenConfigEntry | None
+    ) -> None:
         """Release the old session, test the candidate and restore the old one.
 
         Saving and reloading happen only in the final flow step. Cancellation
         and failed validation leave the original entry and connection selected.
         """
-        entry = self._current_entry()
         runtime = getattr(entry, "runtime_data", None) if entry else None
         candidate: BesenUdpClient | None = None
         stopped = False
@@ -531,6 +521,8 @@ class BesenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._operation_error = "already_configured"
         except InvalidAuth:
             self._operation_error = "invalid_auth"
+        except NoConnectablePath:
+            self._operation_error = "no_connectable_path"
         except CannotConnect, CommandFailed, TimeoutError:
             self._operation_error = "cannot_connect"
         except Exception as err:  # noqa: BLE001
