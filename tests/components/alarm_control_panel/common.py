@@ -4,6 +4,8 @@ All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
 
+from pytest_homeassistant.common import MockEntity
+
 from homeassistant.components.alarm_control_panel import (
     DOMAIN,
     AlarmControlPanelEntity,
@@ -23,8 +25,6 @@ from homeassistant.const import (
     SERVICE_ALARM_TRIGGER,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockEntity
 
 
 async def async_alarm_disarm(

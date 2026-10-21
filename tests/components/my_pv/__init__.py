@@ -2,10 +2,10 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 ELWA2_SERIAL_NUMBER = "1601500000000000"
 

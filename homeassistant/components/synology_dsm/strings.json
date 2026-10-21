@@ -201,8 +201,14 @@
     "missing_serial": {
       "message": "More than one DSM configured, must specify one of serials: {serials}."
     },
+    "reboot_failed": {
+      "message": "Reboot failed with {error}"
+    },
     "serial_not_found": {
       "message": "DSM with specified serial {serial} not found."
+    },
+    "shutdown_failed": {
+      "message": "Shutdown failed with {error}"
     }
   },
   "issues": {

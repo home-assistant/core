@@ -356,9 +356,7 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Late imports in case BLE is not available
         from aiohomekit.controller.ble.discovery import BleDiscovery  # noqa: PLC0415
-        from aiohomekit.controller.ble.manufacturer_data import (  # noqa: PLC0415
-            HomeKitAdvertisement,
-        )
+        from aiohomekit.controller.ble.manufacturer_data import HomeKitAdvertisement  # noqa: PLC0415
 
         mfr_data = discovery_info.manufacturer_data
 

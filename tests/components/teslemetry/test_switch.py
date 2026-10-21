@@ -148,6 +148,46 @@ async def test_switch_command_errors(hass: HomeAssistant, response: dict) -> Non
         )
 
 
+@pytest.mark.parametrize(
+    ("service", "method", "reason", "expected"),
+    [
+        pytest.param(
+            SERVICE_TURN_ON,
+            "Vehicle.charge_start",
+            "is_charging",
+            STATE_ON,
+            id="charge_start_is_charging",
+        ),
+        pytest.param(
+            SERVICE_TURN_OFF,
+            "Vehicle.charge_stop",
+            "not_charging",
+            STATE_OFF,
+            id="charge_stop_not_charging",
+        ),
+    ],
+)
+async def test_switch_charge_accepted_reason(
+    hass: HomeAssistant, service: str, method: str, reason: str, expected: str
+) -> None:
+    """Tests that charge commands already in the requested state do not raise."""
+
+    await setup_platform(hass, [Platform.SWITCH])
+
+    with patch(
+        f"tesla_fleet_api.teslemetry.{method}",
+        return_value={"response": {"result": False, "reason": reason}},
+    ) as call:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: "switch.test_charge"},
+            blocking=True,
+        )
+    call.assert_called_once()
+    assert hass.states.get("switch.test_charge").state == expected
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("side_effect", "message"),

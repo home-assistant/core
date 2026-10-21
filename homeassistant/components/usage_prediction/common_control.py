@@ -11,10 +11,10 @@ from sqlalchemy import select
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.db_schema import EventData, Events, EventTypes
 from homeassistant.components.recorder.models import uuid_hex_to_bytes_or_none
-from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.recorder import session_scope
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads_object
 

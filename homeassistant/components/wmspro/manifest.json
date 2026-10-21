@@ -1,6 +1,7 @@
 {
   "domain": "wmspro",
   "name": "WMS WebControl pro",
+  "categories": ["blinds_curtains"],
   "codeowners": ["@mback2k"],
   "config_flow": true,
   "dhcp": [

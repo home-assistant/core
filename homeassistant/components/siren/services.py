@@ -20,7 +20,7 @@ from .const import (
 )
 
 if TYPE_CHECKING:
-    from . import SirenEntity
+    from .entity import SirenEntity
 
 TURN_ON_SCHEMA: VolDictType = {
     probatio.Optional(ATTR_TONE): probatio.Any(probatio.Coerce(int), cv.string),

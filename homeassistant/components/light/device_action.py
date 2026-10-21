@@ -3,6 +3,7 @@
 import probatio
 
 from homeassistant.components.device_automation import (
+    CONF_TURN_ON,
     async_get_entity_registry_entry_or_raise,
     async_validate_entity_schema,
     toggle_entity,
@@ -73,7 +74,7 @@ async def async_call_action_from_config(
     """Change state based on configuration."""
     if (
         config[CONF_TYPE] in toggle_entity.DEVICE_ACTION_TYPES
-        and config[CONF_TYPE] != toggle_entity.CONF_TURN_ON
+        and config[CONF_TYPE] != CONF_TURN_ON
     ):
         await toggle_entity.async_call_action_from_config(
             hass, config, variables, context, DOMAIN
@@ -136,7 +137,7 @@ async def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, probatio.Schema]:
     """List action capabilities."""
-    if config[CONF_TYPE] != toggle_entity.CONF_TURN_ON:
+    if config[CONF_TYPE] != CONF_TURN_ON:
         return {}
 
     try:

@@ -1,10 +1,12 @@
 """Tests for the OralB integration."""
 
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
 
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
-
-from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 NOT_ORALB_SERVICE_INFO = BluetoothServiceInfo(
     name="Not it",
