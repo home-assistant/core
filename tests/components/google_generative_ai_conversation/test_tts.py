@@ -298,6 +298,22 @@ async def test_tts_wire_parameters(
     )
 
 
+def _audio_response(mime_type: str) -> dict[str, Any]:
+    """Build a raw generateContent response with audio."""
+    return {
+        "candidates": [
+            {
+                "content": {
+                    "role": "model",
+                    "parts": [
+                        {"inlineData": {"data": "YXVkaW8=", "mimeType": mime_type}}
+                    ],
+                }
+            }
+        ]
+    }
+
+
 @pytest.fixture
 def wav_audio() -> bytes:
     """Create a complete WAV with known PCM samples."""
@@ -355,3 +371,18 @@ async def test_tts_unsupported_audio_format(hass: HomeAssistant) -> None:
         HomeAssistantError, match="Unsupported audio MIME type: audio/mpeg"
     ):
         await entity.async_get_tts_audio("Hello", "en-US", dict(entity.default_options))
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_tts_default_model(
+    hass: HomeAssistant,
+    mock_genai_transport: AsyncMock,
+) -> None:
+    """Test the recommended model is used when the subentry sets none."""
+    mock_genai_transport.return_value = [_audio_response("audio/wav")]
+    entity = hass.data[tts.DOMAIN].get_entity("tts.google_ai_tts")
+
+    await entity.async_get_tts_audio("Hello", "en-US", dict(entity.default_options))
+
+    request = mock_genai_transport.call_args.kwargs["http_request"]
+    assert request.url.endswith("/models/gemini-3.8-flash-tts:generateContent")
