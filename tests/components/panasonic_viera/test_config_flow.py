@@ -10,12 +10,13 @@ from pytest_homeassistant.common import MockConfigEntry
 from homeassistant import config_entries
 from homeassistant.components.panasonic_viera.const import (
     ATTR_DEVICE_INFO,
+    ATTR_FRIENDLY_NAME,
     ATTR_UDN,
     DEFAULT_NAME,
     DOMAIN,
     ERROR_INVALID_PIN_CODE,
 )
-from homeassistant.const import CONF_PIN
+from homeassistant.const import CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -63,6 +64,33 @@ async def test_flow_non_encrypted(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == {**MOCK_CONFIG_DATA, ATTR_DEVICE_INFO: MOCK_DEVICE_INFO}
+    assert result["result"].unique_id == MOCK_DEVICE_INFO[ATTR_UDN]
+
+
+async def test_flow_name_from_tv(hass: HomeAssistant) -> None:
+    """Test the entry is named after the friendly name reported by the TV."""
+    device_info = {**MOCK_DEVICE_INFO, ATTR_FRIENDLY_NAME: "Living_room_TV"}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
+        return_value=get_mock_remote(device_info=device_info),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {**MOCK_USER_INPUT},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Living room TV"
+    assert result["data"] == {
+        **MOCK_CONFIG_DATA,
+        CONF_NAME: "Living room TV",
+        ATTR_DEVICE_INFO: device_info,
+    }
     assert result["result"].unique_id == MOCK_DEVICE_INFO[ATTR_UDN]
 
 
