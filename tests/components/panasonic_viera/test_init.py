@@ -214,6 +214,25 @@ async def test_setup_config_flow_initiated(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
+async def test_setup_config_flow_not_connected(hass: HomeAssistant) -> None:
+    """Test no config flow is left behind when the TV cannot be reached."""
+    with patch(
+        "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
+        side_effect=OSError,
+    ):
+        assert (
+            await async_setup_component(
+                hass,
+                DOMAIN,
+                {DOMAIN: {CONF_HOST: "0.0.0.0"}},
+            )
+            is True
+        )
+        await hass.async_block_till_done()
+
+    assert hass.config_entries.flow.async_progress() == []
+
+
 async def test_setup_unload_entry(hass: HomeAssistant, mock_remote) -> None:
     """Test if config entry is unloaded."""
     mock_entry = MockConfigEntry(
