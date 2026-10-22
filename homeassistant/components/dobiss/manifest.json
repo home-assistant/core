@@ -1,6 +1,7 @@
 {
   "domain": "dobiss",
   "name": "Dobiss",
+  "categories": ["lighting.lighting_systems"],
   "codeowners": ["@koen-fermax"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/dobiss",
