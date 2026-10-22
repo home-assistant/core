@@ -639,13 +639,19 @@ async def test_zone_control_zone_set_program_setpoints(
         blocking=True,
     )
 
+    # Only the setpoints written and the applied one are refreshed.
     assert_commands_call(
         mock_client,
         device_url=ZONE_CONTROL_ZONE.device_url,
-        commands=[*commands, *ZONE_CONTROL_ZONE_REFRESH_COMMANDS],
+        commands=[
+            *commands,
+            *((name.replace("set", "refresh", 1), []) for name, _ in commands),
+            ("refreshTargetTemperature", []),
+        ],
     )
 
-    # A single setpoint is kept as the manual one, it doesn't start a derogation.
+    # A single setpoint is kept as the manual one, it doesn't start a derogation
+    # and there is nothing to refresh.
     mock_client.execute_action_group.reset_mock()
 
     await hass.services.async_call(
@@ -658,7 +664,7 @@ async def test_zone_control_zone_set_program_setpoints(
     assert_commands_call(
         mock_client,
         device_url=ZONE_CONTROL_ZONE.device_url,
-        commands=[(manual_command, [20.0]), *ZONE_CONTROL_ZONE_REFRESH_COMMANDS],
+        commands=[(manual_command, [20.0])],
     )
 
 
@@ -668,7 +674,11 @@ async def test_zone_control_zone_set_derogation_setpoint(
     mock_client: MockOverkizClient,
     setup_overkiz_integration: SetupOverkizIntegration,
 ) -> None:
-    """Test a derogation started outside Home Assistant can be adjusted."""
+    """Test a derogation started outside Home Assistant can be adjusted.
+
+    The derogation is already on: only the setpoint is sent, so that each step
+    of a slider stays quick.
+    """
     await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
     await _async_set_zone_control_operating_mode(hass, freezer, mock_client, "cooling")
     await _async_set_zone_program(
@@ -686,11 +696,7 @@ async def test_zone_control_zone_set_derogation_setpoint(
     assert_commands_call(
         mock_client,
         device_url=ZONE_CONTROL_ZONE.device_url,
-        commands=[
-            ("setCoolingTargetTemperature", [24.0]),
-            ("setDerogationOnOffState", ["on"]),
-            *ZONE_CONTROL_ZONE_REFRESH_COMMANDS,
-        ],
+        commands=[("setCoolingTargetTemperature", [24.0])],
     )
 
 
