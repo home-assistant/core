@@ -970,6 +970,44 @@ async def test_remove_last_child_device_entities_removes_empty_devices(
     mqtt_mock.async_publish.assert_not_called()
 
 
+async def test_remove_last_single_component_child_device_removes_parent(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test removing the child devices of single component discovery.
+
+    The discovery topic of the entity is cleared, and the parent device is removed
+    after its last child device.
+    """
+    mqtt_mock = await mqtt_mock_entry()
+    await _discover_switch(hass, "sw1", {**PARENT_DEVICE, "child_device": CHILD_DEVICE})
+    await _discover_switch(
+        hass,
+        "sw2",
+        {**PARENT_DEVICE, "child_device": {"identifiers": ["sub2"], "name": "Sub 2"}},
+    )
+    child_device = _get_child_device(hass, device_registry, "sub")
+    child_device_2 = _get_child_device(hass, device_registry, "sub2")
+    assert child_device is not None
+    assert child_device_2 is not None
+    mqtt_mock.async_publish.reset_mock()
+
+    device_registry.async_remove_device(child_device.id)
+    await hass.async_block_till_done()
+    mqtt_mock.async_publish.assert_any_call(
+        "homeassistant/switch/sw1/config", None, 0, True, message_expiry_interval=None
+    )
+    assert _get_device(hass, device_registry, "parent") is not None
+
+    device_registry.async_remove_device(child_device_2.id)
+    await hass.async_block_till_done()
+    mqtt_mock.async_publish.assert_any_call(
+        "homeassistant/switch/sw2/config", None, 0, True, message_expiry_interval=None
+    )
+    assert _get_device(hass, device_registry, "parent") is None
+
+
 async def test_remove_parent_device_with_child_device_components_clears_topic(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,

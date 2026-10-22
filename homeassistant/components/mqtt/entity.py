@@ -886,6 +886,15 @@ async def async_remove_entity_discovery_payload(
         )
         return
     await async_remove_discovery_payload(hass, discovery_data)
+    if (
+        registry_entry is not None
+        and main_device_id is not None
+        and main_device_id != registry_entry.device_id
+    ):
+        # The removed child device can no longer clean up its parent device
+        await async_cleanup_device_registry(
+            hass, main_device_id, registry_entry.config_entry_id
+        )
 
 
 async def async_clear_discovery_topic_if_entity_removed(
