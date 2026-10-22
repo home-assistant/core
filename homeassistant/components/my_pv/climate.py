@@ -5,6 +5,7 @@ from typing import Any, override
 from my_pv import MyPVDeviceMainMode
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     ClimateEntity,
     ClimateEntityDescription,
     ClimateEntityFeature,
@@ -99,7 +100,10 @@ class MyPVClimate(MyPVBaseEntity, ClimateEntity):
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Set new target temperature."""
+        """Set the target temperature."""
+        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
+            await self.async_handle_set_hvac_mode_service(hvac_mode)
+
         if not await self.coordinator.set_target_temperature(
             float(kwargs[ATTR_TEMPERATURE])
         ):
