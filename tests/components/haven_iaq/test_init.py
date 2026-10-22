@@ -11,6 +11,7 @@ from haveniaq import (
     HavenUnsupportedProductError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.haven_iaq.const import DOMAIN
 from homeassistant.config_entries import SOURCE_ZEROCONF, ConfigEntryState
@@ -20,8 +21,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 
 from . import TEST_HOST, TEST_INFO, TEST_SERIAL, ZEROCONF_DISCOVERY, setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_unload_ram_entry(

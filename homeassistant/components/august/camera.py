@@ -13,8 +13,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AugustConfigEntry, AugustData
+from . import AugustConfigEntry
 from .const import DEFAULT_NAME, DEFAULT_TIMEOUT
+from .data import AugustData
 from .entity import AugustEntity
 
 _LOGGER = logging.getLogger(__name__)

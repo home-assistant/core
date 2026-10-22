@@ -4,11 +4,10 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.teleinfo.const import CONF_SERIAL_PORT, DOMAIN
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
-
-from tests.common import MockConfigEntry
 
 USB_DISCOVERY_INFO = UsbServiceInfo(
     device="/dev/ttyUSB0",
@@ -92,7 +91,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.teleinfo.async_setup_entry", return_value=True
+        "homeassistant.components.teleinfo.async_setup_entry", return_value=None
     ):
         yield
 

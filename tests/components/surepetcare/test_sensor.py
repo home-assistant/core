@@ -1,14 +1,13 @@
 """Test the surepetcare sensor platform."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 
 from . import HOUSEHOLD_ID, MOCK_FELAQUA, MOCK_PET
-
-from tests.common import MockConfigEntry
 
 EXPECTED_ENTITIES = (
     ("sensor.pet_flap_battery_level", f"{HOUSEHOLD_ID}-13576-battery", "100"),

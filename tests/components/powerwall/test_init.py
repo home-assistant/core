@@ -5,6 +5,7 @@ from http.cookies import Morsel
 from unittest.mock import MagicMock, Mock, patch
 
 from aiohttp import CookieJar
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from tesla_powerwall import AccessDeniedError, ApiError, LoginResponse
 from tesla_powerwall.error import MissingAttributeError
 
@@ -23,8 +24,6 @@ from .mocks import (
     _mock_powerwall_restricted,
     _mock_powerwall_with_fixtures,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_update_data_reauthenticate_on_access_denied(hass: HomeAssistant) -> None:
