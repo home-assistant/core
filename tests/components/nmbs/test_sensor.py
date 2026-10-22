@@ -644,7 +644,6 @@ async def test_connection_sensor_unavailable_when_api_fails(
     assert state.state == STATE_UNAVAILABLE
 
 
-@freeze_time(FROZEN_TIME)
 async def test_connection_sensor_keeps_data_when_api_is_not_modified(
     hass: HomeAssistant,
     mock_nmbs_client: AsyncMock,
@@ -653,18 +652,21 @@ async def test_connection_sensor_keeps_data_when_api_is_not_modified(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the connection sensor keeps data when the API returns 304."""
+    freezer.move_to(FROZEN_TIME)
     await _setup_entry(hass, mock_config_entry)
     connection_id = _get_entity_id(entity_registry, CONNECTION_UNIQUE_ID)
+    assert mock_nmbs_client.get_connections.call_count == 1
 
     mock_nmbs_client.get_connections.return_value = None
     freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
+    assert mock_nmbs_client.get_connections.call_count == 2
     state = hass.states.get(connection_id)
     assert state is not None
     assert state.state == "20"
-    assert state.attributes["departure_minutes"] == 10
+    assert state.attributes["departure_minutes"] == 9
 
 
 async def test_departure_minutes_decrease_with_unchanged_data(
