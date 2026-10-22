@@ -6,7 +6,11 @@ import logging
 from typing import Any, override
 
 from lorawan_connection import ConnectionUnavailable
-from lorawan_connection.backend.tts import AuthenticationError, TTSConnection
+from lorawan_connection.backend.tts import (
+    TTN_REGIONS,
+    AuthenticationError,
+    TTSConnection,
+)
 import probatio
 from yarl import URL
 
@@ -86,7 +90,7 @@ class TheThingsNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     probatio.Required(CONF_REGION, default="eu1"): SelectSelector(
                         SelectSelectorConfig(
-                            options=["eu1", "nam1", "au1", "custom"],
+                            options=[*TTN_REGIONS, "custom"],
                             mode=SelectSelectorMode.DROPDOWN,
                             translation_key=CONF_REGION,
                         )
