@@ -8,6 +8,11 @@ from unittest.mock import AsyncMock, patch
 from aioonkyo import Code, Instruction, Kind, Zone, command, query, status
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homeassistant import (
@@ -26,8 +31,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import DISCONNECT, receive_messages, setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 BASS_ENTITY_ID = "number.tx_nr7100_bass"
 TREBLE_ENTITY_ID = "number.tx_nr7100_treble"
