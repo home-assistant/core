@@ -81,17 +81,15 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         }
         entity_registry = er.async_get(self.hass)
-        for entity_entry in er.async_entries_for_config_entry(
-            entity_registry, entry.entry_id
-        ):
-            new_unique_id = unique_ids.get(entity_entry.unique_id)
-            if new_unique_id is None:
+        for old_unique_id, new_unique_id in unique_ids.items():
+            entity_id = entity_registry.async_get_entity_id(
+                "sensor", DOMAIN, old_unique_id
+            )
+            if entity_id is None:
                 continue
-            if not entity_registry.async_get_entity_id(
-                entity_entry.domain, DOMAIN, new_unique_id
-            ):
+            if not entity_registry.async_get_entity_id("sensor", DOMAIN, new_unique_id):
                 entity_registry.async_update_entity(
-                    entity_entry.entity_id, new_unique_id=new_unique_id
+                    entity_id, new_unique_id=new_unique_id
                 )
 
     @override
