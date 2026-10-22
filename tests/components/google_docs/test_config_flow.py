@@ -11,12 +11,17 @@ from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.components.google_docs.application_credentials import (
     async_get_description_placeholders,
 )
 from homeassistant.components.google_docs.const import DEFAULT_ACCESS, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.setup import async_setup_component
 
 from .common import DOCUMENT_ID, TOKEN_URI, http_error
 
@@ -81,13 +86,30 @@ async def test_full_flow(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
-async def test_missing_credentials(hass: HomeAssistant) -> None:
-    """A new installation requests credentials through the standard HA mechanism."""
+async def test_missing_credentials(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Setup succeeds after the missing application credentials are supplied."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "missing_credentials"
+
+    assert await async_setup_component(hass, "application_credentials", {})
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential("client-id", "client-secret"), DOMAIN
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await finish_oauth(
+        hass, await hass_client_no_auth(), aioclient_mock, result
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DOCUMENT_ID
 
 
 @pytest.mark.usefixtures("setup_credentials")
@@ -99,7 +121,7 @@ async def test_create_failure(
     mock_api: dict[str, MagicMock],
     error: Exception,
 ) -> None:
-    """Creation failure does not leave an unusable configuration entry."""
+    """Creation failure leaves no entry and setup succeeds after recovery."""
     mock_api["create_document"].side_effect = error
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -111,6 +133,17 @@ async def test_create_failure(
     assert result["reason"] == "create_document_failure"
     assert hass.config_entries.async_entries(DOMAIN) == []
 
+    mock_api["create_document"].side_effect = None
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await finish_oauth(
+        hass, await hass_client_no_auth(), aioclient_mock, result
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DOCUMENT_ID
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
 
 @pytest.mark.usefixtures("setup_credentials")
 async def test_missing_scope(
@@ -119,7 +152,7 @@ async def test_missing_scope(
     aioclient_mock: AiohttpClientMocker,
     mock_api: dict[str, MagicMock],
 ) -> None:
-    """Insufficient authorization is rejected before creating a Google file."""
+    """Setup succeeds after the required authorization scope is granted."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -128,6 +161,17 @@ async def test_missing_scope(
     )
     assert result["reason"] == "missing_scope"
     mock_api["create_document"].assert_not_called()
+
+    aioclient_mock.clear_requests()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await finish_oauth(
+        hass, await hass_client_no_auth(), aioclient_mock, result
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DOCUMENT_ID
+    mock_api["create_document"].assert_called_once_with("new-access-token")
 
 
 @pytest.mark.usefixtures("setup_credentials")
@@ -161,16 +205,46 @@ async def test_reauth_preserves_document(
 
 
 @pytest.mark.usefixtures("setup_credentials")
-async def test_reauth_does_not_replace_inaccessible_document(
+@pytest.mark.parametrize(
+    ("error", "scope", "reason"),
+    [
+        pytest.param(
+            http_error(404),
+            DEFAULT_ACCESS,
+            "open_document_failure",
+            id="inaccessible-document",
+        ),
+        pytest.param(None, "", "missing_scope", id="missing-scope"),
+    ],
+)
+async def test_reauth_error_recovery(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_api: dict[str, MagicMock],
+    error: Exception | None,
+    scope: str,
+    reason: str,
 ) -> None:
-    """A different account or deleted document cannot silently replace the target."""
-    mock_api["get_document"].side_effect = http_error(404)
+    """Reauthentication preserves the original document through error recovery."""
+    mock_api["get_document"].side_effect = error
     config_entry.add_to_hass(hass)
+    config_entry.async_start_reauth(hass)
+    await hass.async_block_till_done()
+    flow = hass.config_entries.flow.async_progress()[0]
+    result = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
+    result = await finish_oauth(
+        hass, await hass_client_no_auth(), aioclient_mock, result, scope=scope
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    assert config_entry.unique_id == DOCUMENT_ID
+    assert config_entry.data["token"]["access_token"] == "mock-access-token"
+    mock_api["create_document"].assert_not_called()
+
+    mock_api["get_document"].side_effect = None
+    aioclient_mock.clear_requests()
     config_entry.async_start_reauth(hass)
     await hass.async_block_till_done()
     flow = hass.config_entries.flow.async_progress()[0]
@@ -178,10 +252,12 @@ async def test_reauth_does_not_replace_inaccessible_document(
     result = await finish_oauth(
         hass, await hass_client_no_auth(), aioclient_mock, result
     )
-    assert result["reason"] == "open_document_failure"
+    assert result["reason"] == "reauth_successful"
     assert config_entry.unique_id == DOCUMENT_ID
-    assert config_entry.data["token"]["access_token"] == "mock-access-token"
+    assert config_entry.data["token"]["access_token"] == "new-access-token"
+    mock_api["get_document"].assert_called_with("new-access-token", DOCUMENT_ID, False)
     mock_api["create_document"].assert_not_called()
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
 @pytest.mark.usefixtures("setup_credentials")

@@ -1,5 +1,6 @@
 """Actions to append and read Google Docs text."""
 
+from enum import StrEnum
 from typing import TYPE_CHECKING, NoReturn, cast
 
 from aiohttp import ClientError
@@ -29,19 +30,37 @@ from .const import DOMAIN
 if TYPE_CHECKING:
     from . import GoogleDocsConfigEntry
 
-CONFIG_ENTRY = "config_entry"
-TEXT = "text"
-SERVICE_APPEND_TEXT = "append_text"
-SERVICE_GET_TEXT = "get_text"
+
+class GoogleDocsService(StrEnum):
+    """Service names."""
+
+    APPEND_TEXT = "append_text"
+    GET_TEXT = "get_text"
+
+
+class GoogleDocsServiceArgument(StrEnum):
+    """Service argument names."""
+
+    CONFIG_ENTRY = "config_entry"
+    TEXT = "text"
+
 
 APPEND_TEXT_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-        probatio.Required(TEXT): probatio.All(cv.string, probatio.Length(min=1)),
+        probatio.Required(GoogleDocsServiceArgument.CONFIG_ENTRY): ConfigEntrySelector(
+            {"integration": DOMAIN}
+        ),
+        probatio.Required(GoogleDocsServiceArgument.TEXT): probatio.All(
+            cv.string, probatio.Length(min=1)
+        ),
     }
 )
 GET_TEXT_SCHEMA = probatio.Schema(
-    {probatio.Required(CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN})}
+    {
+        probatio.Required(GoogleDocsServiceArgument.CONFIG_ENTRY): ConfigEntrySelector(
+            {"integration": DOMAIN}
+        )
+    }
 )
 
 
@@ -54,7 +73,7 @@ async def _async_access_token(call: ServiceCall, entry: GoogleDocsConfigEntry) -
         raise HomeAssistantError(
             translation_domain=DOMAIN, translation_key="auth_failed"
         ) from err
-    except (ClientError, OAuth2TokenRequestError) as err:
+    except (ClientError, OAuth2TokenRequestError, TimeoutError) as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN, translation_key="cannot_connect"
         ) from err
@@ -80,13 +99,16 @@ def _raise_action_error(
 async def _async_append_text(call: ServiceCall) -> None:
     """Append text to the document belonging to the selected entry."""
     entry: GoogleDocsConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[CONFIG_ENTRY]
+        call.hass, DOMAIN, call.data[GoogleDocsServiceArgument.CONFIG_ENTRY]
     )
     access_token = await _async_access_token(call, entry)
     assert entry.unique_id is not None
     try:
         await call.hass.async_add_executor_job(
-            api.append_text, access_token, entry.unique_id, call.data[TEXT]
+            api.append_text,
+            access_token,
+            entry.unique_id,
+            call.data[GoogleDocsServiceArgument.TEXT],
         )
     except api.API_ERRORS as err:
         _raise_action_error(call, entry, err, "append")
@@ -95,7 +117,7 @@ async def _async_append_text(call: ServiceCall) -> None:
 async def _async_get_text(call: ServiceCall) -> ServiceResponse:
     """Return the document's plain text as an action response."""
     entry: GoogleDocsConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, call.data[CONFIG_ENTRY]
+        call.hass, DOMAIN, call.data[GoogleDocsServiceArgument.CONFIG_ENTRY]
     )
     access_token = await _async_access_token(call, entry)
     assert entry.unique_id is not None
@@ -117,11 +139,14 @@ async def _async_get_text(call: ServiceCall) -> ServiceResponse:
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register the Google Docs actions, following the Sheets integration."""
     hass.services.async_register(
-        DOMAIN, SERVICE_APPEND_TEXT, _async_append_text, schema=APPEND_TEXT_SCHEMA
+        DOMAIN,
+        GoogleDocsService.APPEND_TEXT,
+        _async_append_text,
+        schema=APPEND_TEXT_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_TEXT,
+        GoogleDocsService.GET_TEXT,
         _async_get_text,
         schema=GET_TEXT_SCHEMA,
         supports_response=SupportsResponse.ONLY,

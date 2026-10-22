@@ -44,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleDocsConfigEntry) -
         await session.async_ensure_token_valid()
     except OAuth2TokenRequestReauthError as err:
         raise ConfigEntryAuthFailed("Google account authorization expired") from err
-    except (ClientError, OAuth2TokenRequestError) as err:
+    except (ClientError, OAuth2TokenRequestError, TimeoutError) as err:
         raise ConfigEntryNotReady("Unable to refresh Google authorization") from err
 
     if DEFAULT_ACCESS not in entry.data.get(CONF_TOKEN, {}).get("scope", "").split():

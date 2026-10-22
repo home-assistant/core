@@ -93,22 +93,36 @@ async def test_expired_token_is_refreshed(
     assert config_entry.data["token"]["access_token"] == "new-token"
 
 
-@pytest.mark.usefixtures("setup_credentials", "mock_api")
+@pytest.mark.usefixtures("setup_credentials")
 @pytest.mark.parametrize(
-    ("status", "state"),
-    [(400, ConfigEntryState.SETUP_ERROR), (503, ConfigEntryState.SETUP_RETRY)],
+    ("status", "error", "state", "reauth_count"),
+    [
+        pytest.param(400, None, ConfigEntryState.SETUP_ERROR, 1, id="invalid-grant"),
+        pytest.param(503, None, ConfigEntryState.SETUP_RETRY, 0, id="server-error"),
+        pytest.param(
+            200, TimeoutError(), ConfigEntryState.SETUP_RETRY, 0, id="timeout"
+        ),
+    ],
 )
 async def test_refresh_failure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
+    mock_api: dict[str, MagicMock],
     status: int,
+    error: Exception | None,
     state: ConfigEntryState,
+    reauth_count: int,
 ) -> None:
     """Permanent token failure starts reauth while temporary failure retries setup."""
     config_entry.data["token"]["expires_at"] = 0
-    aioclient_mock.post(TOKEN_URI, status=status, json={"error": "invalid_grant"})
+    aioclient_mock.post(
+        TOKEN_URI, status=status, json={"error": "invalid_grant"}, exc=error
+    )
     config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is state
+    assert len(hass.config_entries.flow.async_progress()) == reauth_count
+    mock_api["get_document"].assert_not_called()
+    mock_api["create_document"].assert_not_called()

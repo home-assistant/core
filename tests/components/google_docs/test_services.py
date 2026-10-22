@@ -128,28 +128,54 @@ async def test_unloaded_entry(
         )
 
 
-@pytest.mark.parametrize(("status", "reauth_count"), [(400, 1), (503, 0)])
+@pytest.mark.parametrize(
+    ("action", "fields", "return_response"),
+    [
+        pytest.param("append_text", {"text": "Entry"}, False, id="append"),
+        pytest.param("get_text", {}, True, id="read"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("status", "error", "reauth_count", "translation_key"),
+    [
+        pytest.param(400, None, 1, "auth_failed", id="invalid-grant"),
+        pytest.param(503, None, 0, "cannot_connect", id="server-error"),
+        pytest.param(200, TimeoutError(), 0, "cannot_connect", id="timeout"),
+    ],
+)
 async def test_action_refresh_failure(
     hass: HomeAssistant,
     setup_integration: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
     mock_api: dict[str, MagicMock],
+    action: str,
+    fields: dict[str, str],
+    return_response: bool,
     status: int,
+    error: Exception | None,
     reauth_count: int,
+    translation_key: str,
 ) -> None:
-    """A failed token refresh prevents a write and only invalid grants reauth."""
+    """A failed token refresh prevents Docs calls and only invalid grants reauth."""
     token = {**setup_integration.data["token"], "expires_at": 0}
     hass.config_entries.async_update_entry(
         setup_integration, data={**setup_integration.data, "token": token}
     )
-    aioclient_mock.post(TOKEN_URI, status=status, json={"error": "invalid_grant"})
-    with pytest.raises(HomeAssistantError):
+    aioclient_mock.post(
+        TOKEN_URI, status=status, json={"error": "invalid_grant"}, exc=error
+    )
+    mock_api["get_document"].reset_mock()
+    with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             DOMAIN,
-            "append_text",
-            {"config_entry": setup_integration.entry_id, "text": "Entry"},
+            action,
+            {"config_entry": setup_integration.entry_id, **fields},
             blocking=True,
+            return_response=return_response,
         )
     await hass.async_block_till_done()
+    assert exc.value.translation_domain == DOMAIN
+    assert exc.value.translation_key == translation_key
     mock_api["append_text"].assert_not_called()
+    mock_api["get_document"].assert_not_called()
     assert len(hass.config_entries.flow.async_progress()) == reauth_count
