@@ -25,8 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> b
     try:
         gateway = await HausbusGateway.async_create(hass, entry)
     except HomeServerUnavailable as err:
-        # Terminal: pyhausbus already reset its singleton after a failed
-        # shutdown, so retrying setup cannot succeed before a restart.
+        # Terminal until Home Assistant restarts, retrying cannot succeed.
         raise ConfigEntryError(str(err)) from err
     except (OSError, TimeoutError) as err:
         raise ConfigEntryNotReady(
@@ -43,14 +42,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> b
         await async_release_home_server(hass, gateway.home_server)
         raise
 
-    # Flush channels discovered while the platform was still setting up.
     await gateway.async_flush_pending_channels()
 
-    # Start device discovery in the background: it is a best-effort UDP
-    # broadcast that may find devices at any time, not only at startup, so
-    # setup does not block on it. The task is stored on the gateway so
-    # async_unload_entry can await it to completion before tearing down
-    # the HomeServer singleton.
+    # Discovery is a best-effort broadcast, so setup does not block on it.
     gateway.discovery_task = entry.async_create_background_task(
         hass, gateway.start_discovery(), "Haus-Bus discovery"
     )
@@ -64,15 +58,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> 
         with contextlib.suppress(Exception):
             await gateway.discovery_task
 
-    # Gate dispatch before touching the pyhausbus listener:
-    # removeBusDeviceListener() cannot recall a newDeviceDetected() call
-    # already in flight or already queued onto the event loop, and the
-    # cover platform's NEW_CHANNEL_ADDED listener is not disconnected
-    # until this function returns successfully - so a late callback could
-    # still call async_add_entities() on a mid-teardown platform.
-    # gateway.pause_channel_dispatch() (see its docstring) closes that
-    # gap; both it and the listener removal are undone if the platform
-    # unload fails.
+    # removeBusDeviceListener() cannot recall callbacks already queued on the
+    # event loop, so also buffer new channels until the platform is unloaded.
     gateway.pause_channel_dispatch()
     gateway.home_server.removeBusDeviceListener(gateway)
     try:
@@ -88,8 +75,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> 
 
     gateway.home_server.removeBusEventListener(gateway)
 
-    # Release the process-wide HomeServer reference. A shutdown failure is terminal
-    # because pyhausbus already reset its singleton, so block future acquisitions.
+    # A failed shutdown is terminal, see async_release_home_server.
     try:
         await async_release_home_server(hass, gateway.home_server)
     except Exception:

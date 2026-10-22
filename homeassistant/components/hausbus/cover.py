@@ -29,9 +29,7 @@ from .entity import HausbusEntity
 if TYPE_CHECKING:
     from . import HausbusConfigEntry
 
-# Cover actions are fire-and-forget UDP sends to the Haus-Bus network; the
-# shared socket handles concurrent calls fine, so there is no need to limit
-# parallel entity actions.
+# Actions are fire-and-forget UDP sends that the shared socket handles in parallel.
 PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)

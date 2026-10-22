@@ -85,10 +85,7 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
             await self._search_task
 
         except HomeServerUnavailable:
-            # A flow already in the show-progress state can only transition
-            # to another show-progress step or to show-progress-done - not
-            # straight to async_abort() - so the actual abort happens in
-            # async_step_home_server_unavailable() below.
+            # A progress step can only continue via show-progress-done.
             return self.async_show_progress_done(next_step_id="home_server_unavailable")
 
         except TimeoutError, OSError:
@@ -140,12 +137,8 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             await asyncio.shield(search_job)
         except asyncio.CancelledError:
-            # Cancelling this coroutine does not cancel search_job - it
-            # keeps running on its executor thread regardless. Wait for it
-            # here so a caller that awaits this task (such as async_remove()
-            # cleaning up on flow removal) can rely on the search having
-            # actually finished, and not still be using self.home_server,
-            # before releasing it.
+            # The executor job keeps running after cancellation; wait for it
+            # so the HomeServer is not released while still in use.
             with contextlib.suppress(Exception):
                 await search_job
             raise

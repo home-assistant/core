@@ -35,8 +35,7 @@ class HausbusEntity(Entity):
         self._type = channel.__class__.__name__.lower()
 
         self._attr_device_info = device_info
-        # The channel name is configured on the Haus-Bus hardware itself, so
-        # it is used as-is rather than through a translation_key.
+        # The channel name is configured on the hardware, not translatable.
         self._attr_name = channel.getName()
         self._attr_unique_id = (
             f"{self._device_id}-{self._type}-{self._object_id.getInstanceId()}"
@@ -51,8 +50,7 @@ class HausbusEntity(Entity):
     def handle_event(self, data: Any) -> None:
         """Handle haus-bus events.
 
-        Must stay marked @callback: unmarked, the dispatcher would run this
-        (and subclass overrides) in the executor instead of the event loop.
+        Must stay a @callback so the dispatcher runs it on the event loop.
         """
         LOGGER.debug("handle_event %s for %s", data, self._debug_identifier)
 
@@ -67,8 +65,7 @@ class HausbusEntity(Entity):
             )
         )
 
-        # Request the current status only once this entity is listening for
-        # the response, and off the event loop since it sends blocking UDP traffic.
+        # Request the status only once listening; sending blocks on UDP.
         await self.hass.async_add_executor_job(self.get_hardware_status)
 
         LOGGER.debug(
