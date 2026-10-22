@@ -94,7 +94,7 @@ NUMBER_OPTIONS = {
             {},
             {},
             {"code_arm_required": True, "code_format": "number"},
-            {},
+            {"assumed_state": True},
         ),
         (
             "binary_sensor",
@@ -223,7 +223,7 @@ NUMBER_OPTIONS = {
                     }
                 ],
             },
-            {},
+            {"assumed_state": True},
         ),
         (
             "event",
@@ -253,7 +253,7 @@ NUMBER_OPTIONS = {
             {},
             {"turn_on": [], "turn_off": []},
             {"turn_on": [], "turn_off": []},
-            {},
+            {"assumed_state": True},
         ),
         (
             "image",
@@ -283,7 +283,7 @@ NUMBER_OPTIONS = {
             {},
             {"turn_on": [], "turn_off": []},
             {"turn_on": [], "turn_off": []},
-            {},
+            {"assumed_state": True},
         ),
         (
             "lock",
@@ -303,7 +303,7 @@ NUMBER_OPTIONS = {
             {},
             {"lock": [], "unlock": []},
             {"lock": [], "unlock": []},
-            {},
+            {"assumed_state": True},
         ),
         (
             "number",
@@ -363,7 +363,7 @@ NUMBER_OPTIONS = {
                     "data": {"value": "{{ value }}"},
                 },
             },
-            {},
+            {"assumed_state": True},
         ),
         (
             "select",
@@ -383,7 +383,7 @@ NUMBER_OPTIONS = {
             {},
             {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
             {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
-            {},
+            {"assumed_state": True},
         ),
         (
             "switch",
@@ -403,7 +403,7 @@ NUMBER_OPTIONS = {
             {},
             {},
             {},
-            {},
+            {"assumed_state": True},
         ),
         (
             "update",
@@ -433,7 +433,7 @@ NUMBER_OPTIONS = {
             {},
             {"start": []},
             {"start": []},
-            {},
+            {"assumed_state": True},
         ),
         (
             "weather",
