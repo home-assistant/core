@@ -212,7 +212,9 @@ class NMBSLiveBoard(NMBSEntity, SensorEntity):
     @override
     def icon(self) -> str:
         """Return the default icon or an alert icon if the next departure is delayed."""
-        if (departure := self.next_departure) and departure.delay > 0:
+        if (departure := self.next_departure) and get_delay_in_minutes(
+            departure.delay
+        ) > 0:
             return DEFAULT_ICON_ALERT
         return DEFAULT_ICON
 

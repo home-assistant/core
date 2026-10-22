@@ -38,13 +38,12 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _fetch_stations(self) -> list[StationDetails]:
         """Fetch the stations."""
         api_client = IRail(session=async_get_clientsession(self.hass))
-        message = "The API is currently unavailable."
         try:
             stations_response = await api_client.get_stations()
-        except PyRailError as err:
-            raise CannotConnect(message) from err
+        except (PyRailError, TimeoutError, ValueError, LookupError) as err:
+            raise CannotConnect from err
         if stations_response is None:
-            raise CannotConnect(message)
+            raise CannotConnect
         return stations_response.stations
 
     async def _fetch_stations_choices(self) -> list[SelectOptionDict]:
@@ -57,6 +56,16 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
             SelectOptionDict(value=station.id, label=station.standard_name)
             for station in self.stations
         ]
+
+    def _route(
+        self, user_input: dict[str, Any]
+    ) -> tuple[StationDetails, StationDetails, str]:
+        """Return the stations and the unique ID of the submitted route."""
+        stations = {station.id: station for station in self.stations}
+        station_from = stations[user_input[CONF_STATION_FROM]]
+        station_to = stations[user_input[CONF_STATION_TO]]
+        vias = "_excl_vias" if user_input.get(CONF_EXCLUDE_VIAS) else ""
+        return station_from, station_to, f"{station_from.id}_{station_to.id}{vias}"
 
     def _async_migrate_entities(
         self,
@@ -100,7 +109,7 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             choices = await self._fetch_stations_choices()
-        except CannotConnect, TimeoutError, ValueError, LookupError:
+        except CannotConnect:
             return self.async_abort(reason="api_unavailable")
 
         errors: dict[str, str] = {}
@@ -108,28 +117,11 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
             if user_input[CONF_STATION_FROM] == user_input[CONF_STATION_TO]:
                 errors["base"] = "same_station"
             else:
-                [station_from] = [
-                    station
-                    for station in self.stations
-                    if station.id == user_input[CONF_STATION_FROM]
-                ]
-                [station_to] = [
-                    station
-                    for station in self.stations
-                    if station.id == user_input[CONF_STATION_TO]
-                ]
-                vias = "_excl_vias" if user_input.get(CONF_EXCLUDE_VIAS) else ""
-                await self.async_set_unique_id(
-                    f"{user_input[CONF_STATION_FROM]}_{user_input[CONF_STATION_TO]}{vias}"
-                )
+                station_from, station_to, unique_id = self._route(user_input)
+                await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
-
-                config_entry_name = (
-                    f"Train from {station_from.standard_name}"
-                    f" to {station_to.standard_name}"
-                )
                 return self.async_create_entry(
-                    title=config_entry_name,
+                    title=_route_title(station_from, station_to),
                     data=user_input,
                 )
 
@@ -165,27 +157,14 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         try:
             choices = await self._fetch_stations_choices()
-        except CannotConnect, TimeoutError, ValueError, LookupError:
+        except CannotConnect:
             return self.async_abort(reason="api_unavailable")
 
         if user_input is not None:
-            station_from = next(
-                station
-                for station in self.stations
-                if station.id == user_input[CONF_STATION_FROM]
-            )
-            station_to = next(
-                station
-                for station in self.stations
-                if station.id == user_input[CONF_STATION_TO]
-            )
-            if station_from.id == station_to.id:
+            if user_input[CONF_STATION_FROM] == user_input[CONF_STATION_TO]:
                 errors["base"] = "same_station"
             else:
-                unique_id = (
-                    f"{station_from.id}_{station_to.id}"
-                    f"{'_excl_vias' if user_input.get(CONF_EXCLUDE_VIAS) else ''}"
-                )
+                station_from, station_to, unique_id = self._route(user_input)
                 if unique_id != entry.unique_id:
                     await self.async_set_unique_id(unique_id)
                     self._abort_if_unique_id_configured()
@@ -195,10 +174,7 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_update_reload_and_abort(
                     entry,
                     unique_id=unique_id,
-                    title=(
-                        f"Train from {station_from.standard_name}"
-                        f" to {station_to.standard_name}"
-                    ),
+                    title=_route_title(station_from, station_to),
                     data_updates=user_input,
                 )
 
@@ -234,6 +210,11 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+
+def _route_title(station_from: StationDetails, station_to: StationDetails) -> str:
+    """Return the config entry title of a route."""
+    return f"Train from {station_from.standard_name} to {station_to.standard_name}"
 
 
 class CannotConnect(Exception):

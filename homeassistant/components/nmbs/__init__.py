@@ -51,8 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NMBSConfigEntry) -> None
                     translation_domain=DOMAIN,
                     translation_key="station_list_unavailable",
                 )
-            if station_cache is not None:
-                hass.data[NMBS_STATION_DATA] = station_cache
+            hass.data[NMBS_STATION_DATA] = station_cache
 
     coordinator = NMBSCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()

@@ -402,11 +402,13 @@ async def test_liveboard_failure_only_affects_its_sensor(
             await async_load_json_object_fixture(hass, "liveboard.json", DOMAIN)
         ),
     }
-    mock_nmbs_client.get_liveboard.side_effect = lambda station_id: (
-        destination_liveboard_result()
-        if station_id == STATION_TO
-        else liveboards[station_id]
-    )
+    liveboard_results = {
+        STATION_FROM: lambda: liveboards[STATION_FROM],
+        STATION_TO: destination_liveboard_result,
+    }
+    mock_nmbs_client.get_liveboard.side_effect = lambda station_id: liveboard_results[
+        station_id
+    ]()
     await _enable_liveboards(hass, entity_registry, mock_config_entry)
 
     connection_state = hass.states.get(
@@ -543,10 +545,12 @@ async def test_connection_feed_logs_failure_and_recovery_once(
     mock_nmbs_client.get_connections.side_effect = PyRailError("API unavailable")
 
     with caplog.at_level(logging.WARNING):
-        for _ in range(2):
-            freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
-            async_fire_time_changed(hass)
-            await hass.async_block_till_done(wait_background_tasks=True)
+        freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
         sum(
