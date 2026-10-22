@@ -4,12 +4,13 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import gdocs_client
+
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from . import api
-from .const import DEFAULT_ACCESS, DEFAULT_NAME, DOMAIN
+from .const import DEFAULT_ACCESS, DEFAULT_DOCUMENT_NAME, DEFAULT_NAME, DOMAIN
 
 
 class OAuth2FlowHandler(
@@ -61,17 +62,17 @@ class OAuth2FlowHandler(
             assert entry.unique_id is not None
             try:
                 await self.hass.async_add_executor_job(
-                    api.get_document, access_token, entry.unique_id, False
+                    gdocs_client.get_document, access_token, entry.unique_id, False
                 )
-            except api.API_ERRORS:
+            except gdocs_client.API_ERRORS:
                 return self.async_abort(reason="open_document_failure")
             return self.async_update_reload_and_abort(entry, data=data)
 
         try:
             document = await self.hass.async_add_executor_job(
-                api.create_document, access_token
+                gdocs_client.create_document, access_token, DEFAULT_DOCUMENT_NAME
             )
-        except api.API_ERRORS:
+        except gdocs_client.API_ERRORS:
             return self.async_abort(reason="create_document_failure")
 
         await self.async_set_unique_id(document["documentId"])

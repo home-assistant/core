@@ -4,6 +4,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, NoReturn, cast
 
 from aiohttp import ClientError
+import gdocs_client
 from google.auth.exceptions import GoogleAuthError
 from googleapiclient.errors import HttpError
 import probatio
@@ -24,7 +25,6 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.selector import ConfigEntrySelector
 
-from . import api
 from .const import DOMAIN
 
 if TYPE_CHECKING:
@@ -105,12 +105,12 @@ async def _async_append_text(call: ServiceCall) -> None:
     assert entry.unique_id is not None
     try:
         await call.hass.async_add_executor_job(
-            api.append_text,
+            gdocs_client.append_text,
             access_token,
             entry.unique_id,
             call.data[GoogleDocsServiceArgument.TEXT],
         )
-    except api.API_ERRORS as err:
+    except gdocs_client.API_ERRORS as err:
         _raise_action_error(call, entry, err, "append")
 
 
@@ -123,15 +123,15 @@ async def _async_get_text(call: ServiceCall) -> ServiceResponse:
     assert entry.unique_id is not None
     try:
         document = await call.hass.async_add_executor_job(
-            api.get_document, access_token, entry.unique_id
+            gdocs_client.get_document, access_token, entry.unique_id
         )
-    except api.API_ERRORS as err:
+    except gdocs_client.API_ERRORS as err:
         _raise_action_error(call, entry, err, "get")
 
     return {
         "document_id": entry.unique_id,
         "title": document["title"],
-        "text": api.document_text(document),
+        "text": document["text"],
     }
 
 

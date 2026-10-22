@@ -24,9 +24,7 @@ def mock_api() -> Generator[dict[str, MagicMock]]:
     """Mock remote operations without bypassing the HA integration."""
     with ExitStack() as stack:
         mocks = {
-            name: stack.enter_context(
-                patch(f"homeassistant.components.google_docs.api.{name}")
-            )
+            name: stack.enter_context(patch(f"gdocs_client.{name}"))
             for name in ("create_document", "get_document", "append_text")
         }
         mocks["create_document"].return_value = {
@@ -36,11 +34,7 @@ def mock_api() -> Generator[dict[str, MagicMock]]:
         mocks["get_document"].return_value = {
             "documentId": DOCUMENT_ID,
             "title": "Home Assistant",
-            "body": {
-                "content": [
-                    {"paragraph": {"elements": [{"textRun": {"content": "Hello\n"}}]}}
-                ]
-            },
+            "text": "Hello",
         }
         yield mocks
 

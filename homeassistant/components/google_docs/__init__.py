@@ -1,6 +1,7 @@
 """Support for Google Docs."""
 
 from aiohttp import ClientError
+import gdocs_client
 from google.auth.exceptions import GoogleAuthError
 from googleapiclient.errors import HttpError
 
@@ -21,7 +22,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from . import api
 from .const import DEFAULT_ACCESS, DOMAIN
 from .services import async_setup_services
 
@@ -53,7 +53,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleDocsConfigEntry) -
     assert entry.unique_id is not None
     try:
         await hass.async_add_executor_job(
-            api.get_document, session.token[CONF_ACCESS_TOKEN], entry.unique_id, False
+            gdocs_client.get_document,
+            session.token[CONF_ACCESS_TOKEN],
+            entry.unique_id,
+            False,
         )
     except GoogleAuthError as err:
         raise ConfigEntryAuthFailed("Google account authorization expired") from err
@@ -65,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleDocsConfigEntry) -
         raise ConfigEntryError(
             translation_domain=DOMAIN, translation_key="document_not_accessible"
         ) from err
-    except api.API_ERRORS as err:
+    except gdocs_client.API_ERRORS as err:
         raise ConfigEntryNotReady("Unable to connect to Google Docs") from err
 
     entry.runtime_data = session

@@ -82,7 +82,9 @@ async def test_full_flow(
     assert result["description_placeholders"] == {
         "url": f"https://docs.google.com/document/d/{DOCUMENT_ID}/edit"
     }
-    mock_api["create_document"].assert_called_once_with("new-access-token")
+    mock_api["create_document"].assert_called_once_with(
+        "new-access-token", "Home Assistant"
+    )
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
@@ -171,7 +173,9 @@ async def test_missing_scope(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == DOCUMENT_ID
-    mock_api["create_document"].assert_called_once_with("new-access-token")
+    mock_api["create_document"].assert_called_once_with(
+        "new-access-token", "Home Assistant"
+    )
 
 
 @pytest.mark.usefixtures("setup_credentials")

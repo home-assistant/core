@@ -31,10 +31,15 @@ async def test_append_text(
     )
 
 
+@pytest.mark.parametrize("text", ["Hello", "שלום 🌍\nLine two\n", ""])
 async def test_get_text(
-    hass: HomeAssistant, setup_integration: MockConfigEntry
+    hass: HomeAssistant,
+    setup_integration: MockConfigEntry,
+    mock_api: dict[str, MagicMock],
+    text: str,
 ) -> None:
     """A read returns data directly to the calling script or automation."""
+    mock_api["get_document"].return_value["text"] = text
     result = await hass.services.async_call(
         DOMAIN,
         "get_text",
@@ -45,7 +50,7 @@ async def test_get_text(
     assert result == {
         "document_id": DOCUMENT_ID,
         "title": "Home Assistant",
-        "text": "Hello",
+        "text": text,
     }
 
 
