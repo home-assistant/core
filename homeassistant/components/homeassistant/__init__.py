@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine
+import logging
 import struct
 from typing import Any
 
@@ -10,6 +11,8 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.signal import KEY_HA_STOP
+from homeassistant.helpers.start import async_at_started
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.typing import ConfigType
 
@@ -42,6 +45,12 @@ DEPRECATION_URL = (
     "https://www.home-assistant.io/blog/2025/05/22/"
     "deprecating-core-and-supervised-installation-methods-and-32-bit-systems/"
 )
+
+_LOGGER = logging.getLogger(__name__)
+
+# Storage of the removed almond integration, which created an admin system user
+LEGACY_ALMOND_STORAGE_KEY = "almond"
+LEGACY_ALMOND_STORAGE_VERSION = 1
 
 __all__ = [
     "DOMAIN",
@@ -127,7 +136,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Delay deprecation check to make sure installation method is determined correctly
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_check_deprecation)
 
+    async_at_started(hass, _async_remove_legacy_almond_user_and_data)
+
     return True
+
+
+async def _async_remove_legacy_almond_user_and_data(hass: HomeAssistant) -> None:
+    """Remove the system user left behind by the removed almond integration."""
+    store = Store[dict[str, Any]](
+        hass, LEGACY_ALMOND_STORAGE_VERSION, LEGACY_ALMOND_STORAGE_KEY
+    )
+    if (data := await store.async_load()) is None:
+        return
+
+    if (user_id := data.get("almond_user")) and (
+        user := await hass.auth.async_get_user(user_id)
+    ):
+        _LOGGER.debug("Removing system user %s of legacy almond integration", user.id)
+        await hass.auth.async_remove_user(user)
+
+    await store.async_remove()
 
 
 async def _async_stop(hass: HomeAssistant, restart: bool) -> None:

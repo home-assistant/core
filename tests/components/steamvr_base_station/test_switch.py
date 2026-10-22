@@ -24,6 +24,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -32,6 +33,12 @@ from homeassistant.helpers import entity_registry as er
 from . import TEST_NAME, make_service_info, payload
 
 SWITCH = "switch.lhb_747a9bc5"
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Only set up the switch platform."""
+    return [Platform.SWITCH]
 
 
 async def test_switch_entity(

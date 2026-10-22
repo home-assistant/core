@@ -16,7 +16,9 @@ from homeassistant.components.edifier_infrared.const import (
     CONF_COMMAND_SET,
     CONF_INFRARED_ENTITY_ID,
     DOMAIN,
+    SUPPORTED_COMMAND_SETS,
 )
+from homeassistant.components.edifier_infrared.media_player import COMMAND_SET_COMMANDS
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_MEDIA_NEXT_TRACK,
@@ -142,3 +144,8 @@ async def test_media_player_availability_follows_ir_entity(
     await assert_availability_follows_source_entity(
         hass, MEDIA_PLAYER_ENTITY_ID, [EMITTER_ENTITY_ID]
     )
+
+
+def test_command_sets_match_supported_command_sets() -> None:
+    """Test that the media player implements every supported command set."""
+    assert set(COMMAND_SET_COMMANDS) == set(SUPPORTED_COMMAND_SETS)

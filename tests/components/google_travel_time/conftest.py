@@ -37,7 +37,7 @@ def mock_setup_entry() -> Generator[None]:
     """Bypass entry setup."""
     with patch(
         "homeassistant.components.google_travel_time.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         yield
 

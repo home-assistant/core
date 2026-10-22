@@ -1,5 +1,10 @@
 {
   "entity": {
+    "button": {
+      "reset_filter": {
+        "default": "mdi:air-filter"
+      }
+    },
     "fan": {
       "vesync": {
         "state_attributes": {

@@ -2,7 +2,12 @@
 
 from typing import TYPE_CHECKING, Any, override
 
-from boschshcpy import RoomClimateControlService, SHCClimateControl
+from boschshcpy import (
+    HeatingCircuitService,
+    RoomClimateControlService,
+    SHCClimateControl,
+    SHCHeatingCircuit,
+)
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -38,7 +43,7 @@ async def async_setup_entry(
     if TYPE_CHECKING:
         assert shc_info is not None and shc_info.unique_id is not None
 
-    async_add_entities(
+    entities: list[ClimateControl | HeatingCircuit] = [
         ClimateControl(
             hass=hass,
             device=device,
@@ -47,7 +52,17 @@ async def async_setup_entry(
             room_name=session.room(device.room_id).name,
         )
         for device in session.device_helper.climate_controls
+    ]
+    entities.extend(
+        HeatingCircuit(
+            hass=hass,
+            device=device,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+        )
+        for device in session.device_helper.heating_circuits
     )
+    async_add_entities(entities)
 
 
 class ClimateControl(SHCEntity, ClimateEntity):
@@ -211,3 +226,72 @@ class ClimateControl(SHCEntity, ClimateEntity):
     def turn_off(self) -> None:
         """Turn the climate device off."""
         self.set_hvac_mode(HVACMode.OFF)
+
+
+class HeatingCircuit(SHCEntity, ClimateEntity):
+    """Representation of a SHC heating circuit."""
+
+    _attr_name = None
+    _attr_target_temperature_step = 0.5
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_hvac_modes = [HVACMode.AUTO, HVACMode.HEAT]
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _device: SHCHeatingCircuit
+
+    @property
+    @override
+    def min_temp(self) -> float:
+        """Return the minimum settable temperature."""
+        if (temperature_range := self._device.setpoint_temperature_range) is None:
+            return 5.0
+        return temperature_range[0]
+
+    @property
+    @override
+    def max_temp(self) -> float:
+        """Return the maximum settable temperature."""
+        if (temperature_range := self._device.setpoint_temperature_range) is None:
+            return 30.0
+        return temperature_range[1]
+
+    @property
+    @override
+    def native_target_temperature(self) -> float | None:
+        """Return the target temperature."""
+        return self._device.setpoint_temperature
+
+    @property
+    @override
+    def hvac_mode(self) -> HVACMode:
+        """Return the current HVAC mode."""
+        if self._device.operation_mode is HeatingCircuitService.OperationMode.AUTOMATIC:
+            return HVACMode.AUTO
+        return HVACMode.HEAT
+
+    @property
+    @override
+    def hvac_action(self) -> HVACAction:
+        """Return the current HVAC action."""
+        return HVACAction.HEATING if self._device.on else HVACAction.IDLE
+
+    @override
+    def set_temperature(self, **kwargs: Any) -> None:
+        """Set the target temperature."""
+        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
+            if hvac_mode not in self.hvac_modes:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="unsupported_hvac_mode",
+                    translation_placeholders={"hvac_mode": hvac_mode},
+                )
+            self.set_hvac_mode(hvac_mode)
+        self._device.setpoint_temperature = kwargs[ATTR_TEMPERATURE]
+
+    @override
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set the HVAC mode."""
+        self._device.operation_mode = (
+            HeatingCircuitService.OperationMode.AUTOMATIC
+            if hvac_mode == HVACMode.AUTO
+            else HeatingCircuitService.OperationMode.MANUAL
+        )
