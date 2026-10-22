@@ -14,10 +14,15 @@ from roborock import MultiMapsList, RoborockException
 from roborock.data import CombinedMapInfo, RoborockStateCode
 from roborock.devices.traits.v1.map_content import MapContent
 
-from homeassistant.components.roborock.const import V1_LOCAL_NOT_CLEANING_INTERVAL
+from homeassistant.components.image import async_get_image
+from homeassistant.components.roborock.const import (
+    DOMAIN,
+    V1_LOCAL_NOT_CLEANING_INTERVAL,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 
 from .conftest import FakeDevice, make_home_trait
@@ -123,6 +128,34 @@ async def test_fail_updating_image(
     # last_updated timestamp.
     assert resp.ok
     assert previous_state == hass.states.get("image.roborock_s7_maxv_upstairs").state
+
+
+@pytest.mark.usefixtures("setup_entry")
+@pytest.mark.parametrize(
+    "home_map_content",
+    [
+        pytest.param(None, id="no_map_content"),
+        pytest.param({}, id="empty_map_content"),
+        pytest.param(
+            {1: MapContent(image_content=b"\x89PNG-002", map_data=None)},
+            id="missing_selected_map",
+        ),
+    ],
+)
+async def test_missing_map_image(
+    hass: HomeAssistant,
+    fake_vacuum: FakeDevice,
+    home_map_content: dict[int, MapContent] | None,
+) -> None:
+    """Test fetching a missing map raises a translated error."""
+    assert fake_vacuum.v1_properties
+    fake_vacuum.v1_properties.home.home_map_content = home_map_content
+
+    with pytest.raises(HomeAssistantError, match="^Map not found$") as exc_info:
+        await async_get_image(hass, "image.roborock_s7_maxv_upstairs")
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "map_not_found"
 
 
 async def test_map_status_change(
