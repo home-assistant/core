@@ -7,6 +7,7 @@ from typing import override
 
 from pypaperless import Paperless
 from pypaperless.exceptions import (
+    AsnRequestError,
     PaperlessConnectionError,
     PaperlessForbiddenError,
     PaperlessInactiveOrDeletedError,
@@ -23,6 +24,7 @@ from .const import DOMAIN, LOGGER
 
 type PaperlessConfigEntry = ConfigEntry[PaperlessData]
 
+UPDATE_INTERVAL_NEXT_ASN = timedelta(seconds=60)
 UPDATE_INTERVAL_STATISTICS = timedelta(seconds=120)
 UPDATE_INTERVAL_STATUS = timedelta(seconds=300)
 
@@ -33,6 +35,7 @@ class PaperlessData:
 
     statistics: PaperlessStatisticCoordinator
     status: PaperlessStatusCoordinator
+    next_asn: PaperlessAsnCoordinator
 
 
 class PaperlessCoordinator[DataT](DataUpdateCoordinator[DataT]):
@@ -136,3 +139,30 @@ class PaperlessStatusCoordinator(PaperlessCoordinator[Status]):
     async def _async_update_data_internal(self) -> Status:
         """Fetch status data from API endpoint."""
         return await self.api.status()
+
+
+class PaperlessAsnCoordinator(PaperlessCoordinator[int]):
+    """Coordinator to manage the next archive serial number update."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: PaperlessConfigEntry,
+        api: Paperless,
+    ) -> None:
+        """Initialize Paperless-ngx ASN coordinator."""
+        super().__init__(
+            hass,
+            entry,
+            api,
+            name="Next ASN Coordinator",
+            update_interval=UPDATE_INTERVAL_NEXT_ASN,
+        )
+
+    @override
+    async def _async_update_data_internal(self) -> int:
+        """Fetch the next archive serial number from the API."""
+        try:
+            return await self.api.documents.get_next_asn()
+        except AsnRequestError as err:
+            raise UpdateFailed from err
