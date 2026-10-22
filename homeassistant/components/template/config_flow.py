@@ -471,8 +471,12 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             probatio.Optional(
                 SET_WATER_HEATER_TEMPERATURE_ACTION
             ): selector.ActionSelector(),
-            probatio.Optional(CONF_TURN_ON): selector.ActionSelector(),
-            probatio.Optional(CONF_TURN_OFF): selector.ActionSelector(),
+            probatio.Inclusive(
+                CONF_TURN_ON, "on_off_actions"
+            ): selector.ActionSelector(),
+            probatio.Inclusive(
+                CONF_TURN_OFF, "on_off_actions"
+            ): selector.ActionSelector(),
             probatio.Optional(CONF_TEMPERATURE_UNIT): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=[cls.value for cls in UnitOfTemperature],
