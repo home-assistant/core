@@ -52,6 +52,7 @@ class PaperlessUpdate(PaperlessEntity[PaperlessStatusCoordinator], UpdateEntity)
     """Defines a Paperless-ngx update entity."""
 
     release_url = PAPERLESS_CHANGELOGS
+    _remote_version_available = True
 
     @property
     @override
@@ -63,15 +64,12 @@ class PaperlessUpdate(PaperlessEntity[PaperlessStatusCoordinator], UpdateEntity)
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._attr_available and self.coordinator.last_update_success
+        return super().available and self._remote_version_available
 
     @property
     @override
     def installed_version(self) -> str | None:
         """Return the installed version."""
-        if not self.coordinator.last_update_success or self.coordinator.data is None:
-            return None
-
         return self.coordinator.data.pngx_version
 
     @override
@@ -80,16 +78,16 @@ class PaperlessUpdate(PaperlessEntity[PaperlessStatusCoordinator], UpdateEntity)
         try:
             remote_version = await self.coordinator.api.remote_version()
         except PaperlessConnectionError as err:
-            if self._attr_available:
+            if self._remote_version_available:
                 LOGGER.warning("Could not fetch remote version: %s", err)
-                self._attr_available = False
+                self._remote_version_available = False
             return
 
         if remote_version.version is None or remote_version.version == "0.0.0":
-            if self._attr_available:
+            if self._remote_version_available:
                 LOGGER.warning("Remote version is not available or invalid")
-                self._attr_available = False
+                self._remote_version_available = False
             return
 
         self._attr_latest_version = remote_version.version.lstrip("v")
-        self._attr_available = True
+        self._remote_version_available = True
