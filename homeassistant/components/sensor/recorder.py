@@ -8,6 +8,7 @@ import datetime as dt
 import itertools
 import logging
 import math
+import re
 from typing import Any
 
 from sqlalchemy.orm.session import Session
@@ -101,6 +102,9 @@ LINK_DEV_STATISTICS = "https://my.home-assistant.io/redirect/developer_statistic
 STATE_CLASS_REMOVED_ISSUE = "state_class_removed"
 UNITS_CHANGED_ISSUE = "units_changed"
 MEAN_TYPE_CHANGED_ISSUE = "mean_type_changed"
+STATISTICS_ISSUE_ID_PATTERN = re.compile(
+    f"({STATE_CLASS_REMOVED_ISSUE}|{UNITS_CHANGED_ISSUE}|{MEAN_TYPE_CHANGED_ISSUE})_"
+)
 
 
 def _is_hashable(value: Any) -> bool:
@@ -1029,55 +1033,38 @@ def update_statistics_issues(
         instance, session, statistic_source=RECORDER_DOMAIN
     )
 
-    @callback
-    def get_sensor_statistics_issues(hass: HomeAssistant) -> set[str]:
-        """Return a list of statistics issues."""
-        issues = set()
-        issue_registry = ir.async_get(hass)
-        for issue in issue_registry.issues.values():
-            if (
-                issue.domain != DOMAIN
-                or not (issue_data := issue.data)
-                or issue_data.get("issue_type")
-                not in (
-                    STATE_CLASS_REMOVED_ISSUE,
-                    UNITS_CHANGED_ISSUE,
-                    MEAN_TYPE_CHANGED_ISSUE,
-                )
-            ):
-                continue
-            issues.add(issue.issue_id)
-        return issues
+    issues: dict[str, tuple[str, dict[str, Any]]] = {}
 
-    issues = run_callback_threadsafe(
-        hass.loop, get_sensor_statistics_issues, hass
-    ).result()
-
-    def create_issue_registry_issue(
-        issue_type: str, statistic_id: str, data: dict[str, Any]
-    ) -> None:
-        """Create an issue registry issue."""
-        issue_id = f"{issue_type}_{statistic_id}"
-        issues.discard(issue_id)
-        ir.create_issue(
-            hass,
-            DOMAIN,
-            issue_id,
-            data=data | {"issue_type": issue_type},
-            is_fixable=False,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key=issue_type,
-            translation_placeholders=data,
-        )
+    def collect_issue(issue_type: str, statistic_id: str, data: dict[str, Any]) -> None:
+        """Collect an issue registry issue."""
+        issues[f"{issue_type}_{statistic_id}"] = (issue_type, data)
 
     _update_issues(
-        create_issue_registry_issue,
+        collect_issue,
         sensor_states,
         metadatas,
         custom_units_for_entities,
     )
-    for issue_id in issues:
-        hass.loop.call_soon_threadsafe(ir.async_delete_issue, hass, DOMAIN, issue_id)
+
+    @callback
+    def refresh_issues() -> None:
+        """Create the collected issues and delete stale ones."""
+        with ir.async_begin_issues_refresh(
+            hass, DOMAIN, issue_id_pattern=STATISTICS_ISSUE_ID_PATTERN
+        ):
+            for issue_id, (issue_type, data) in issues.items():
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    issue_id,
+                    data=data | {"issue_type": issue_type},
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key=issue_type,
+                    translation_placeholders=data,
+                )
+
+    run_callback_threadsafe(hass.loop, refresh_issues).result()
 
 
 def validate_statistics(
