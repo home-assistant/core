@@ -1,5 +1,6 @@
 """Sensor platform for aerosmart."""
 
+from dataclasses import dataclass
 from typing import cast, override
 
 from homeassistant.components.sensor import (
@@ -34,6 +35,7 @@ HEAT_PUMP_STATUS_OPTIONS = {
 }
 
 
+@dataclass(frozen=True, kw_only=True)
 class AerosmartSensorEntityDescription(
     SensorEntityDescription, AerosmartEntityDescription
 ):
