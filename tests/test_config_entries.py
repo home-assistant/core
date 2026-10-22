@@ -606,7 +606,7 @@ async def test_migrate_raise_configentrynotready(
     mock_setup_entry = AsyncMock(return_value=None)
 
     mock_migrate_entry = AsyncMock(
-        side_effect=[ConfigEntryNotReady("Migration not ready yet"), True]
+        side_effect=[ConfigEntryNotReady("Migration not ready yet"), None]
     )
 
     mock_integration(
