@@ -5,13 +5,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from airgradient import ApiVersion
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.airgradient.const import DOMAIN
 from homeassistant.const import CONF_HOST
 
 from . import load_config_fixture, load_measures_fixture
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -19,7 +18,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.airgradient.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

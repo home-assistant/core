@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from yeelight import BulbException, BulbType
 from yeelight.aio import KEY_CONNECTED
 
@@ -47,8 +48,6 @@ from . import (
     _patch_discovery_interval,
     _patch_discovery_timeout,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_ip_changes_fallback_discovery(

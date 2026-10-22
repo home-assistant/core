@@ -26,7 +26,7 @@ from homeassistant.helpers import issue_registry as ir
 from .const import DOMAIN
 
 if TYPE_CHECKING:
-    from . import OTBRConfigEntry
+    from .types import OTBRConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -204,6 +204,7 @@ async def _warn_on_channel_collision(
         hass,
         DOMAIN,
         f"otbr_zha_channel_collision_{otbrdata.entry_id}",
+        config_entry_id=otbrdata.entry_id,
         is_fixable=False,
         is_persistent=False,
         severity=ir.IssueSeverity.WARNING,
@@ -245,6 +246,7 @@ def _warn_on_default_network_settings(
             hass,
             DOMAIN,
             f"insecure_thread_network_{otbrdata.entry_id}",
+            config_entry_id=otbrdata.entry_id,
             is_fixable=False,
             is_persistent=False,
             severity=ir.IssueSeverity.WARNING,

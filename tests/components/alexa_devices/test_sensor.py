@@ -18,6 +18,11 @@ from aioamazondevices.exceptions import (
 from aioamazondevices.structures import AmazonDevice, AmazonDeviceSensor, AmazonSchedule
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
@@ -34,8 +39,6 @@ from .const import (
     TEST_DEVICE_AQM,
     TEST_DEVICE_AQM_SN,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ALARM_ENTITY_ID = "sensor.echo_test_next_alarm"
 REMINDER_ENTITY_ID = "sensor.echo_test_next_reminder"
@@ -200,6 +203,9 @@ async def test_unit_of_measurement(
             error_msg=None,
             error_type=None,
             scale=scale,
+            feature_name="sensor",
+            property_name="sensor",
+            instance="1",
         )
     }
 
@@ -230,6 +236,9 @@ async def test_sensor_unavailable(
             error_msg=None,
             error_type=None,
             scale=None,
+            feature_name="lightSensor",
+            property_name="illuminance",
+            instance="1",
         )
     }
 

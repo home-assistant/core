@@ -9,6 +9,7 @@ from aioamazondevices.exceptions import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.alexa_devices.const import DOMAIN
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
@@ -25,8 +26,6 @@ from .const import (
     TEST_DEVICE_2_SN,
     TEST_NOTIFICATIONS,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 SYNC_METHODS = ["sync_dnd_state", "sync_media_state", "sync_notifications"]
 

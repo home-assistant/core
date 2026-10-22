@@ -47,6 +47,9 @@ TEST_DEVICE_1 = AmazonDevice(
             error_msg=None,
             error_type=None,
             scale=None,
+            feature_name="dnd",
+            property_name="dnd",
+            instance="",
         ),
         "temperature": AmazonDeviceSensor(
             name="temperature",
@@ -55,6 +58,9 @@ TEST_DEVICE_1 = AmazonDevice(
             error_msg=None,
             error_type=None,
             scale="CELSIUS",
+            feature_name="temperatureSensor",
+            property_name="temperature",
+            instance="1",
         ),
     },
     notifications_supported=True,
@@ -65,6 +71,7 @@ TEST_DEVICE_1 = AmazonDevice(
         "dropin": "All",
     },
     voice_control_supported=True,
+    features={},
 )
 
 TEST_NOTIFICATIONS: dict[str, dict[str, AmazonSchedule]] = {
@@ -116,12 +123,16 @@ TEST_DEVICE_2 = AmazonDevice(
             error_msg=None,
             error_type=None,
             scale="CELSIUS",
+            feature_name="temperatureSensor",
+            property_name="temperature",
+            instance="1",
         )
     },
     notifications_supported=False,
     media_player_supported=False,
     communication_settings={},
     voice_control_supported=True,
+    features={},
 )
 
 TEST_DEVICE_AQM_SN = "aqm_test_serial_number"
@@ -152,6 +163,9 @@ TEST_DEVICE_AQM = AmazonDevice(
             error_msg=None,
             error_type=None,
             scale="%",
+            feature_name="range",
+            property_name="rangeValue",
+            instance="4",
         ),
         "VOC": AmazonDeviceSensor(
             name="VOC",
@@ -160,6 +174,9 @@ TEST_DEVICE_AQM = AmazonDevice(
             error_msg=None,
             error_type=None,
             scale=None,
+            feature_name="range",
+            property_name="rangeValue",
+            instance="5",
         ),
         "PM25": AmazonDeviceSensor(
             name="PM25",
@@ -168,6 +185,9 @@ TEST_DEVICE_AQM = AmazonDevice(
             error_msg=None,
             error_type=None,
             scale="MicroGramsPerCubicMeter",
+            feature_name="range",
+            property_name="rangeValue",
+            instance="6",
         ),
         "PM10": AmazonDeviceSensor(
             name="PM10",
@@ -176,6 +196,9 @@ TEST_DEVICE_AQM = AmazonDevice(
             error_msg=None,
             error_type=None,
             scale="MicroGramsPerCubicMeter",
+            feature_name="range",
+            property_name="rangeValue",
+            instance="7",
         ),
         "CO": AmazonDeviceSensor(
             name="CO",
@@ -184,6 +207,9 @@ TEST_DEVICE_AQM = AmazonDevice(
             error_msg=None,
             error_type=None,
             scale="ppm",
+            feature_name="range",
+            property_name="rangeValue",
+            instance="8",
         ),
         "Air Quality": AmazonDeviceSensor(
             name="Air Quality",
@@ -192,12 +218,16 @@ TEST_DEVICE_AQM = AmazonDevice(
             error_msg=None,
             error_type=None,
             scale=None,
+            feature_name="range",
+            property_name="rangeValue",
+            instance="9",
         ),
     },
     notifications_supported=False,
     media_player_supported=False,
     communication_settings={},
     voice_control_supported=False,
+    features={},
 )
 
 TEST_VOCAL_RECORD_INITIAL = AmazonVocalRecord(

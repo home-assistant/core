@@ -76,14 +76,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ActronAirConfigEntry) ->
         # Register the AC system device so zone and peripheral entities can link to
         # it as their via device when they are set up.
         ac_system = coordinator.data.ac_system
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, system.serial)},
-            name=ac_system.system_name,
-            manufacturer="Actron Air",
-            model_id=ac_system.master_wc_model,
-            sw_version=ac_system.master_wc_firmware_version,
-            serial_number=system.serial,
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, system.serial)},
+                name=ac_system.system_name,
+                manufacturer="Actron Air",
+                model_id=ac_system.master_wc_model,
+                sw_version=ac_system.master_wc_firmware_version,
+                serial_number=system.serial,
+            ),
         )
 
     entry.runtime_data = ActronAirRuntimeData(

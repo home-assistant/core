@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock
 from besen.const import FALLBACK_MAX_CHARGE_AMPS
 from besen.exceptions import CommandFailed
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.besen.const import DOMAIN
@@ -27,8 +28,6 @@ from homeassistant.helpers.entity_component import async_update_entity
 
 from . import publish_besen_state
 from .conftest import charger_state, setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "number.garage_charging_current"
 
