@@ -873,14 +873,14 @@ async def async_remove_entity_discovery_payload(
             discovery_data[ATTR_DISCOVERY_TOPIC],
             application,
         )
+        # Other entities removed together check the parent device first, removing
+        # it or its last child device earlier would let them clear the topic
+        await asyncio.sleep(0)
         # Remove the device if no components are left, as an empty device
         # discovery payload can no longer clean it up
         await async_cleanup_device_registry(
             hass, registry_entry.device_id, registry_entry.config_entry_id
         )
-        # The entities of a removed child device check the parent device first,
-        # removing it earlier would let the next entity clear the topic
-        await asyncio.sleep(0)
         await async_cleanup_device_registry(
             hass, discovered_device_id, registry_entry.config_entry_id
         )
