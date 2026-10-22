@@ -40,7 +40,7 @@ from .const import (
 def no_sensor():
     """Remove sensors."""
     with patch(
-        "homeassistant.components.metoffice.sensor.async_setup_entry", return_value=True
+        "homeassistant.components.metoffice.sensor.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

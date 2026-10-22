@@ -10,6 +10,8 @@ from boschshcpy import (
     SHCOutdoorSiren,
     SHCRoomThermostat2,
     SHCShutterContact2Plus,
+    SHCSmartPlug,
+    SHCSmartPlugCompact,
     SHCSmokeDetector,
     SHCThermostatGen2,
 )
@@ -18,6 +20,7 @@ from boschshcpy.services_impl import (
     DisplayDirection,
     DisplayedTemperatureConfiguration,
     PirSensorConfigurationService,
+    PowerSwitchConfigurationService,
     SmokeSensitivityService,
     VibrationSensorService,
 )
@@ -163,6 +166,29 @@ DISPLAYED_TEMPERATURE_DESCRIPTION = SHCSelectEntityDescription[
 )
 
 
+def _state_after_power_outage_select_option(
+    device: SHCSmartPlug | SHCSmartPlugCompact, option: str
+) -> None:
+    """Write the Smart Plug's state after a power outage."""
+    device.state_after_power_outage = (
+        PowerSwitchConfigurationService.StateAfterPowerOutage[option.upper()]
+    )
+
+
+STATE_AFTER_POWER_OUTAGE_DESCRIPTION = SHCSelectEntityDescription[
+    SHCSmartPlug | SHCSmartPlugCompact
+](
+    key="state_after_power_outage",
+    translation_key="state_after_power_outage",
+    entity_category=EntityCategory.CONFIG,
+    options=["off", "on", "last_state"],
+    current_option_fn=lambda device, options: (
+        state.name.lower() if (state := device.state_after_power_outage) else None
+    ),
+    select_option_fn=_state_after_power_outage_select_option,
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BoschConfigEntry,
@@ -259,6 +285,30 @@ async def async_setup_entry(
         )
         for thermostat in thermostats
         if thermostat.supports_displayed_temperature
+    )
+
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=plug,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=STATE_AFTER_POWER_OUTAGE_DESCRIPTION,
+        )
+        for plug in session.device_helper.smart_plugs
+        if plug.state_after_power_outage is not None
+    )
+
+    entities.extend(
+        SHCSelect(
+            hass=hass,
+            device=compact_plug,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=STATE_AFTER_POWER_OUTAGE_DESCRIPTION,
+        )
+        for compact_plug in session.device_helper.smart_plugs_compact
+        if compact_plug.state_after_power_outage is not None
     )
 
     async_add_entities(entities)
