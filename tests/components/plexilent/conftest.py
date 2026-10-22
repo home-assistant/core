@@ -6,10 +6,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyplexilent import Device
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.plexilent.const import CONF_REFRESH_TOKEN, DOMAIN
-
-from tests.common import MockConfigEntry
 
 DEVICES = [
     Device(

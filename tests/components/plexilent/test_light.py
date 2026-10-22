@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from pyplexilent import PlexilentError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -20,8 +21,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 def _entity_id(hass: HomeAssistant, device_id: str) -> str:

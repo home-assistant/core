@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pyplexilent import Device, PlexilentAuthError, PlexilentError
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.plexilent.const import SCAN_INTERVAL
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 from .conftest import DEVICES
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup_retry_unload_remove(

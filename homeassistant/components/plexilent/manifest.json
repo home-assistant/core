@@ -1,6 +1,7 @@
 {
   "domain": "plexilent",
   "name": "Plexilent",
+  "categories": ["lighting.lighting_systems"],
   "codeowners": ["@plexilentpvtltd"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/plexilent",
