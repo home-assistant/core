@@ -348,6 +348,32 @@ async def test_update_streaming_restore_then_display_off(
     assert hass.states.get(entity_id).state == MediaPlayerState.OFF
 
 
+async def test_update_streaming_restore_off_then_playing(
+    hass: HomeAssistant, mock_add_listener: AsyncMock
+) -> None:
+    """Test a restored off state stays off until the display turns on."""
+
+    entity_id = "media_player.test_media_player"
+    mock_restore_cache(hass, (State(entity_id, MediaPlayerState.OFF),))
+
+    await setup_platform(hass, [Platform.MEDIA_PLAYER])
+    assert hass.states.get(entity_id).state == MediaPlayerState.OFF
+
+    for data, expected in (
+        ({Signal.MEDIA_PLAYBACK_STATUS: "Playing"}, MediaPlayerState.OFF),
+        ({Signal.CENTER_DISPLAY: "Driving"}, MediaPlayerState.PLAYING),
+    ):
+        mock_add_listener.send(
+            {
+                "vin": VEHICLE_DATA_ALT["response"]["vin"],
+                "data": data,
+                "createdAt": "2024-10-04T10:45:17.537Z",
+            }
+        )
+        await hass.async_block_till_done()
+        assert hass.states.get(entity_id).state == expected
+
+
 async def test_update_streaming_restore_channel(hass: HomeAssistant) -> None:
     """Test the streaming media player restores the station, not a playlist."""
 

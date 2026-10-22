@@ -205,6 +205,8 @@ class TeslemetryStreamingMediaEntity(
                 self._attr_state = MediaPlayerState(state.state)
             except ValueError:
                 self._attr_state = None
+            if self._attr_state is MediaPlayerState.OFF:
+                self._display_state = MediaPlayerState.OFF
             self._attr_volume_level = state.attributes.get(
                 MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL
             )
