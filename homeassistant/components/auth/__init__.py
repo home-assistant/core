@@ -99,8 +99,6 @@ The result payload likes
 Send websocket command `auth/long_lived_access_token` will create
 a long-lived access token for current user. Access token will not be saved in
 Home Assistant. User need to record the token in secure place.
-The session must have proved its user again just before, see `auth/step_up`,
-otherwise the command fails with `step_up_required`.
 
 {
     "id": 11,
@@ -647,7 +645,6 @@ async def websocket_current_user(
     }
 )
 @websocket_api.ws_require_user()
-@websocket_api.require_step_up
 @websocket_api.async_response
 async def websocket_create_long_lived_access_token(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]

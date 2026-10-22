@@ -37,6 +37,8 @@ def async_setup(hass: HomeAssistant) -> bool:
     }
 )
 @websocket_api.require_admin
+# Setting a password would let the session step up with it.
+@websocket_api.require_step_up
 @websocket_api.async_response
 async def websocket_create(
     hass: HomeAssistant,
@@ -177,6 +179,8 @@ async def websocket_change_password(
     }
 )
 @websocket_api.require_admin
+# Setting a password would let the session step up with it.
+@websocket_api.require_step_up
 @websocket_api.async_response
 async def websocket_admin_change_password(
     hass: HomeAssistant,

@@ -398,12 +398,18 @@ class AuthManager:
                 return expires
             del self._step_ups[refresh_token.id]
 
-        # A user that no provider can verify again has to rely on having signed
-        # in moments ago.
-        if self.async_get_step_up_providers(refresh_token.user):
-            return None
+        # Signing in moments ago proved the user as well as a step up does,
+        # unless a provider could verify them while the sign in didn't, like a
+        # trusted network sign in of a user with a password.
         expires = refresh_token.created_at + STEP_UP_VALIDITY
-        return expires if now < expires else None
+        if now >= expires:
+            return None
+        if (providers := self.async_get_step_up_providers(refresh_token.user)) and (
+            refresh_token.credential is None
+            or self._async_get_auth_provider(refresh_token.credential) not in providers
+        ):
+            return None
+        return expires
 
     @callback
     def async_has_step_up(self, refresh_token_id: str | None) -> bool:

@@ -4,11 +4,12 @@ from typing import Any
 from unittest.mock import patch
 
 from aiohttp import WSMsgType
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import CLIENT_ID, MockUser
 from pytest_homeassistant.typing import WebSocketGenerator
 
-from homeassistant.auth import STEP_UP_MAX_ATTEMPTS
+from homeassistant.auth import STEP_UP_MAX_ATTEMPTS, STEP_UP_VALIDITY
 from homeassistant.auth.providers import InvalidStepUpError, homeassistant as prov_ha
 from homeassistant.components.config import auth_provider_homeassistant as auth_ha
 from homeassistant.core import HomeAssistant
@@ -879,3 +880,72 @@ async def test_used_up_verification_attempts_block_change_password(
     result = await client.receive_json()
     assert result["error"]["code"] == "invalid_current_password"
     await auth_provider.async_validate_login("test-user", "test-pass")
+
+
+async def test_admin_change_password_needs_a_step_up(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    hass_ws_client: WebSocketGenerator,
+    hass_owner_user: MockUser,
+    auth_provider: prov_ha.HassAuthProvider,
+) -> None:
+    """Test an owner session can't reset its own password to step up with it."""
+    await auth_provider.async_add_auth("owner", "owner-pass")
+    credentials = await auth_provider.async_get_or_create_credentials(
+        {"username": "owner"}
+    )
+    await hass.auth.async_link_user(hass_owner_user, credentials)
+    refresh_token = await hass.auth.async_create_refresh_token(
+        hass_owner_user, CLIENT_ID, credential=credentials
+    )
+    client = await hass_ws_client(
+        hass, hass.auth.async_create_access_token(refresh_token)
+    )
+    # Long enough after signing in that only a step up counts.
+    freezer.tick(STEP_UP_VALIDITY)
+    reset = {
+        "type": "config/auth_provider/homeassistant/admin_change_password",
+        "user_id": hass_owner_user.id,
+        "password": "chosen-pass",
+    }
+
+    await client.send_json({"id": 5, **reset})
+    result = await client.receive_json()
+    assert result["error"]["code"] == "step_up_required"
+    await auth_provider.async_validate_login("owner", "owner-pass")
+
+    await hass.auth.async_step_up(
+        refresh_token.id, auth_provider, {"password": "owner-pass"}, None
+    )
+    await client.send_json({"id": 7, **reset})
+    assert (await client.receive_json())["success"]
+    await auth_provider.async_validate_login("owner", "chosen-pass")
+
+
+async def test_create_needs_a_step_up(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    hass_ws_client: WebSocketGenerator,
+    hass_owner_user: MockUser,
+    owner_access_token: str,
+    auth_provider: prov_ha.HassAuthProvider,
+) -> None:
+    """Test an owner session can't add a password to step up with after a while."""
+    client = await hass_ws_client(hass, owner_access_token)
+    freezer.tick(STEP_UP_VALIDITY)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "config/auth_provider/homeassistant/create",
+            "user_id": hass_owner_user.id,
+            "username": "owner",
+            "password": "chosen-pass",
+        }
+    )
+
+    result = await client.receive_json()
+    assert result["error"]["code"] == "step_up_required"
+    assert hass_owner_user.credentials == []
+    with pytest.raises(prov_ha.InvalidAuth):
+        await auth_provider.async_validate_login("owner", "chosen-pass")

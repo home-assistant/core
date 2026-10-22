@@ -1817,13 +1817,48 @@ async def test_step_up_attempts_count_in_parallel(
     assert all(isinstance(result, InvalidStepUpError) for result in results)
 
 
-async def test_step_up_needed_when_the_user_can_step_up(
-    hass: HomeAssistant, hass_access_token: str
+@pytest.mark.parametrize(
+    ("logins", "signed_in_with", "in_window"),
+    [
+        pytest.param(["homeassistant"], "homeassistant", True, id="password"),
+        pytest.param(
+            ["homeassistant", "trusted_networks"],
+            "trusted_networks",
+            False,
+            id="trusted-network-with-password",
+        ),
+        pytest.param(
+            ["trusted_networks"], "trusted_networks", True, id="trusted-network-only"
+        ),
+    ],
+)
+async def test_recent_sign_in_counts_when_it_verified_the_user(
+    mock_hass: HomeAssistant,
+    logins: list[str],
+    signed_in_with: str,
+    in_window: bool,
 ) -> None:
-    """Test a fresh session alone does not count when the user can step up."""
-    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
+    """Test a recent sign in only counts when no provider could do better."""
+    manager = await auth.auth_manager_from_config(
+        mock_hass,
+        [
+            {"type": "homeassistant"},
+            {"type": "trusted_networks", "trusted_networks": ["192.168.0.0/24"]},
+        ],
+        [],
+    )
+    providers = {provider.type: provider for provider in manager.auth_providers}
+    user = MockUser().add_to_auth_manager(manager)
+    credentials = {
+        login: providers[login].async_create_credentials({"username": "test-user"})
+        for login in logins
+    }
+    user.credentials.extend(credentials.values())
+    refresh_token = await manager.async_create_refresh_token(
+        user, CLIENT_ID, credential=credentials[signed_in_with]
+    )
 
-    assert not hass.auth.async_has_step_up(refresh_token.id)
+    assert manager.async_has_step_up(refresh_token.id) is in_window
 
 
 async def test_step_up_falls_back_to_a_recent_sign_in(

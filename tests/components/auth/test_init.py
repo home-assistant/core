@@ -22,7 +22,7 @@ from homeassistant.auth.models import (
     RefreshToken,
 )
 from homeassistant.auth.providers import homeassistant as prov_ha
-from homeassistant.components import auth, websocket_api
+from homeassistant.components import auth
 from homeassistant.components.auth import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -528,53 +528,33 @@ async def test_revoking_refresh_token(
 
 
 async def test_ws_long_lived_access_token(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    hass_ws_client: WebSocketGenerator,
-    hass_access_token: str,
-    local_auth: prov_ha.HassAuthProvider,
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_access_token: str
 ) -> None:
-    """Test a long-lived access token needs a fresh proof of identity."""
+    """Test generate long-lived access token."""
     assert await async_setup_component(hass, DOMAIN, {"http": {}})
-    await hass.async_add_executor_job(local_auth.data.add_auth, "admin", "test-pass")
+
     ws_client = await hass_ws_client(hass, hass_access_token)
-    create = {
-        "type": "auth/long_lived_access_token",
-        "client_name": "GPS Logger",
-        "lifespan": 365,
-    }
 
-    await ws_client.send_json({"id": 5, **create})
-    result = await ws_client.receive_json()
-    assert result["error"]["code"] == websocket_api.ERR_STEP_UP_REQUIRED
-
+    # verify create long-lived access token
     await ws_client.send_json(
         {
-            "id": 6,
-            "type": "auth/step_up",
-            "handler": ["homeassistant", None],
-            "data": {"password": "test-pass"},
+            "id": 5,
+            "type": "auth/long_lived_access_token",
+            "client_name": "GPS Logger",
+            "lifespan": 365,
         }
     )
-    assert (await ws_client.receive_json())["success"]
-    await ws_client.send_json({"id": 7, **create})
+
     result = await ws_client.receive_json()
     assert result["success"], result
 
     long_lived_access_token = result["result"]
     assert long_lived_access_token is not None
+
     refresh_token = hass.auth.async_validate_access_token(long_lived_access_token)
     assert refresh_token.client_id is None
     assert refresh_token.client_name == "GPS Logger"
     assert refresh_token.client_icon is None
-
-    # The step up window covers more tokens, until it closes.
-    await ws_client.send_json({"id": 8, **create, "client_name": "Second"})
-    assert (await ws_client.receive_json())["success"]
-    freezer.tick(STEP_UP_VALIDITY)
-    await ws_client.send_json({"id": 9, **create, "client_name": "Third"})
-    result = await ws_client.receive_json()
-    assert result["error"]["code"] == websocket_api.ERR_STEP_UP_REQUIRED
 
 
 async def test_ws_refresh_tokens(
@@ -1242,6 +1222,7 @@ async def test_auth_code_unexpected_verifier_rejected(
 
 async def test_ws_step_up(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     hass_ws_client: WebSocketGenerator,
     hass_access_token: str,
     local_auth: prov_ha.HassAuthProvider,
@@ -1251,6 +1232,8 @@ async def test_ws_step_up(
     await hass.async_add_executor_job(local_auth.data.add_auth, "admin", "test-pass")
     refresh_token_id = hass.auth.async_validate_access_token(hass_access_token).id
     ws_client = await hass_ws_client(hass, hass_access_token)
+    # Long enough after signing in that only a step up counts.
+    freezer.tick(STEP_UP_VALIDITY)
 
     await ws_client.send_json(
         {"id": 5, "type": "auth/step_up/start", "handler": ["homeassistant", None]}
@@ -1323,8 +1306,18 @@ async def test_ws_step_up_status(
     """Test the status tells if the step up window is open and how to open it."""
     assert await async_setup_component(hass, DOMAIN, {"http": {}})
     await hass.async_add_executor_job(local_auth.data.add_auth, "admin", "test-pass")
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
     ws_client = await hass_ws_client(hass, hass_access_token)
 
+    # Signing in with the password opened the window.
+    await ws_client.send_json({"id": 4, "type": "auth/step_up/status"})
+    result = await ws_client.receive_json()
+    assert result["result"] == {
+        "expires_at": (refresh_token.created_at + STEP_UP_VALIDITY).isoformat(),
+        "handlers": [["homeassistant", None]],
+    }
+
+    freezer.tick(STEP_UP_VALIDITY)
     await ws_client.send_json({"id": 5, "type": "auth/step_up/status"})
     result = await ws_client.receive_json()
     assert result["result"] == {
