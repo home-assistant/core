@@ -232,14 +232,12 @@ class HomeConnectRuntimeData:
             ) from error
 
         for appliance in appliances.homeappliances:
-            self.device_registry.async_get_or_create_device(
+            self.device_registry.async_get_or_create(
                 config_entry_id=self.config_entry.entry_id,
-                device_info=dr.DeviceInfo(
-                    identifiers={(DOMAIN, appliance.ha_id)},
-                    manufacturer=appliance.brand,
-                    name=appliance.name,
-                    model=appliance.vib,
-                ),
+                identifiers={(DOMAIN, appliance.ha_id)},
+                manufacturer=appliance.brand,
+                name=appliance.name,
+                model=appliance.vib,
             )
             new_coordinator = HomeConnectApplianceCoordinator(
                 self.hass,
@@ -456,14 +454,12 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
     async def get_appliance_data(self) -> None:
         """Get appliance data."""
         appliance = self.data.info
-        self.device_registry.async_get_or_create_device(
+        self.device_registry.async_get_or_create(
             config_entry_id=self._config_entry.entry_id,
-            device_info=dr.DeviceInfo(
-                identifiers={(DOMAIN, appliance.ha_id)},
-                manufacturer=appliance.brand,
-                name=appliance.name,
-                model=appliance.vib,
-            ),
+            identifiers={(DOMAIN, appliance.ha_id)},
+            manufacturer=appliance.brand,
+            name=appliance.name,
+            model=appliance.vib,
         )
         if not appliance.connected:
             self.data.update(HomeConnectApplianceData.empty(appliance))

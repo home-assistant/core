@@ -1127,7 +1127,9 @@ def async_register_addons_in_dev_reg(
         )
         if manufacturer := addon_data.repository or addon.url:
             params.manufacturer = manufacturer
-        dev_reg.async_get_or_create_device(config_entry_id=entry_id, device_info=params)
+        dev_reg.async_get_or_create_from_info(
+            config_entry_id=entry_id, device_info=params
+        )
 
 
 @callback
@@ -1146,7 +1148,9 @@ def async_register_mounts_in_dev_reg(
             name=mount.name,
             entry_type=dr.DeviceEntryType.SERVICE,
         )
-        dev_reg.async_get_or_create_device(config_entry_id=entry_id, device_info=params)
+        dev_reg.async_get_or_create_from_info(
+            config_entry_id=entry_id, device_info=params
+        )
 
 
 @callback
@@ -1162,7 +1166,7 @@ def async_register_os_in_dev_reg(
         name="Home Assistant Operating System",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
-    dev_reg.async_get_or_create_device(config_entry_id=entry_id, device_info=params)
+    dev_reg.async_get_or_create_from_info(config_entry_id=entry_id, device_info=params)
 
 
 @callback
@@ -1178,7 +1182,7 @@ def async_register_host_in_dev_reg(
         name="Home Assistant Host",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
-    dev_reg.async_get_or_create_device(config_entry_id=entry_id, device_info=params)
+    dev_reg.async_get_or_create_from_info(config_entry_id=entry_id, device_info=params)
 
 
 @callback
@@ -1196,7 +1200,7 @@ def async_register_core_in_dev_reg(
         name="Home Assistant Core",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
-    dev_reg.async_get_or_create_device(config_entry_id=entry_id, device_info=params)
+    dev_reg.async_get_or_create_from_info(config_entry_id=entry_id, device_info=params)
 
 
 @callback
@@ -1214,7 +1218,7 @@ def async_register_supervisor_in_dev_reg(
         name="Home Assistant Supervisor",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
-    dev_reg.async_get_or_create_device(config_entry_id=entry_id, device_info=params)
+    dev_reg.async_get_or_create_from_info(config_entry_id=entry_id, device_info=params)
 
 
 @callback

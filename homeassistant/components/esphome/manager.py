@@ -84,6 +84,7 @@ from homeassistant.util.json import json_loads_object
 
 from .bluetooth import async_connect_scanner
 from .const import (
+    ASSIST_SATELLITE_KEY,
     CLIENT_INFO,
     CONF_ALLOW_SERVICE_CALLS,
     CONF_BLUETOOTH_MAC_ADDRESS,
@@ -96,6 +97,7 @@ from .const import (
     PROJECT_URLS,
     STABLE_BLE_VERSION,
     STABLE_BLE_VERSION_STR,
+    VOICE_ASSISTANT_SELECT_KEYS,
 )
 from .dashboard import async_get_dashboard
 from .domain_data import DomainData
@@ -247,6 +249,22 @@ def _async_check_using_api_password(
         },
         config_entry_id=entry.entry_id,
     )
+
+
+@callback
+def _async_remove_voice_assistant_entities(
+    hass: HomeAssistant, mac_address: str
+) -> None:
+    """Remove the entities a device that no longer offers a voice assistant left."""
+    ent_reg = er.async_get(hass)
+    for platform, key in (
+        (Platform.ASSIST_SATELLITE, ASSIST_SATELLITE_KEY),
+        *((Platform.SELECT, key) for key in VOICE_ASSISTANT_SELECT_KEYS),
+    ):
+        if entity_id := ent_reg.async_get_entity_id(
+            platform, DOMAIN, f"{mac_address}-{key}"
+        ):
+            ent_reg.async_remove(entity_id)
 
 
 class ESPHomeManager:
@@ -786,14 +804,16 @@ class ESPHomeManager:
                 hass, device_info.bluetooth_mac_address or device_info.mac_address
             )
 
-        if device_info.voice_assistant_feature_flags_compat(api_version) and (
-            Platform.ASSIST_SATELLITE not in entry_data.loaded_platforms
-        ):
-            # Create assist satellite entity
-            await self.hass.config_entries.async_forward_entry_setups(
-                self.entry, [Platform.ASSIST_SATELLITE]
-            )
-            entry_data.loaded_platforms.add(Platform.ASSIST_SATELLITE)
+        if device_info.voice_assistant_feature_flags_compat(api_version):
+            if Platform.ASSIST_SATELLITE not in entry_data.loaded_platforms:
+                # Create assist satellite entity
+                await self.hass.config_entries.async_forward_entry_setups(
+                    self.entry, [Platform.ASSIST_SATELLITE]
+                )
+                entry_data.loaded_platforms.add(Platform.ASSIST_SATELLITE)
+        else:
+            # Neither platform is reliably loaded here, so removal cannot live in them.
+            _async_remove_voice_assistant_entities(hass, device_info.mac_address)
 
         # Setup can wait for this, so only after the platforms are forwarded
         entry_data.first_connect_done.set()
@@ -1368,17 +1388,15 @@ def _async_setup_device_registry(
         suggested_area = device_info.suggested_area
 
     # Create/update main device
-    device_entry = device_registry.async_get_or_create_device(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            configuration_url=configuration_url,
-            connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
-            name=entry_data.friendly_name or entry_data.name,
-            manufacturer=manufacturer,
-            model=model,
-            sw_version=sw_version,
-            suggested_area=suggested_area,
-        ),
+        configuration_url=configuration_url,
+        connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
+        name=entry_data.friendly_name or entry_data.name,
+        manufacturer=manufacturer,
+        model=model,
+        sw_version=sw_version,
+        suggested_area=suggested_area,
     )
 
     # Handle sub devices
@@ -1394,18 +1412,14 @@ def _async_setup_device_registry(
         if sub_device.area_id is not None and sub_device.area_id in areas_by_id:
             sub_device_suggested_area = areas_by_id[sub_device.area_id].name
 
-        sub_device_entry = device_registry.async_get_or_create_device(
+        sub_device_entry = device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            device_info=dr.DeviceInfo(
-                identifiers={
-                    (DOMAIN, f"{device_info.mac_address}_{sub_device.device_id}")
-                },
-                name=sub_device.name or device_entry.name,
-                manufacturer=manufacturer,
-                model=model,
-                sw_version=sw_version,
-                suggested_area=sub_device_suggested_area,
-            ),
+            identifiers={(DOMAIN, f"{device_info.mac_address}_{sub_device.device_id}")},
+            name=sub_device.name or device_entry.name,
+            manufacturer=manufacturer,
+            model=model,
+            sw_version=sw_version,
+            suggested_area=sub_device_suggested_area,
         )
 
         # Update the sub device to set via_device_id
