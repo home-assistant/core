@@ -149,6 +149,20 @@ from .update import (
     async_create_preview_update,
 )
 from .vacuum import CONF_FAN_SPEED, CONF_FAN_SPEED_LIST, async_create_preview_vacuum
+from .water_heater import (
+    CONF_AWAY_MODE,
+    CONF_CURRENT_TEMPERATURE as CONF_WATER_HEATER_CURRENT_TEMPERATURE,
+    CONF_MAX_TEMPERATURE as CONF_WATER_HEATER_MAX_TEMPERATURE,
+    CONF_MIN_TEMPERATURE as CONF_WATER_HEATER_MIN_TEMPERATURE,
+    CONF_OPERATION_LIST,
+    CONF_OPERATION_MODE,
+    CONF_TARGET_TEMPERATURE as CONF_WATER_HEATER_TARGET_TEMPERATURE,
+    SET_OPERATION_MODE_ACTION,
+    SET_TEMPERATURE_ACTION as SET_WATER_HEATER_TEMPERATURE_ACTION,
+    TURN_AWAY_MODE_OFF_ACTION,
+    TURN_AWAY_MODE_ON_ACTION,
+    async_create_preview_water_heater,
+)
 from .weather import (
     CONF_FORECAST_DAILY,
     CONF_FORECAST_HOURLY,
@@ -443,6 +457,58 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             probatio.Optional(SERVICE_LOCATE): selector.ActionSelector(),
         }
 
+    if domain == Platform.WATER_HEATER:
+        schema |= {
+            probatio.Required(CONF_OPERATION_LIST): selector.TemplateSelector(),
+            probatio.Optional(CONF_OPERATION_MODE): selector.TemplateSelector(),
+            probatio.Required(SET_OPERATION_MODE_ACTION): selector.ActionSelector(),
+            probatio.Optional(
+                CONF_WATER_HEATER_CURRENT_TEMPERATURE
+            ): selector.TemplateSelector(),
+            probatio.Optional(
+                CONF_WATER_HEATER_TARGET_TEMPERATURE
+            ): selector.TemplateSelector(),
+            probatio.Optional(
+                SET_WATER_HEATER_TEMPERATURE_ACTION
+            ): selector.ActionSelector(),
+            probatio.Inclusive(
+                CONF_TURN_ON, "on_off_actions"
+            ): selector.ActionSelector(),
+            probatio.Inclusive(
+                CONF_TURN_OFF, "on_off_actions"
+            ): selector.ActionSelector(),
+            probatio.Optional(CONF_TEMPERATURE_UNIT): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[cls.value for cls in UnitOfTemperature],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    sort=True,
+                ),
+            ),
+        }
+        additional_options |= {
+            probatio.Optional(CONF_AWAY_MODE): selector.TemplateSelector(),
+            probatio.Optional(TURN_AWAY_MODE_ON_ACTION): selector.ActionSelector(),
+            probatio.Optional(TURN_AWAY_MODE_OFF_ACTION): selector.ActionSelector(),
+            probatio.Optional(
+                CONF_WATER_HEATER_MIN_TEMPERATURE
+            ): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    mode=selector.NumberSelectorMode.BOX,
+                    unit_of_measurement=DEGREE,
+                    step=0.1,
+                )
+            ),
+            probatio.Optional(
+                CONF_WATER_HEATER_MAX_TEMPERATURE
+            ): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    mode=selector.NumberSelectorMode.BOX,
+                    unit_of_measurement=DEGREE,
+                    step=0.1,
+                )
+            ),
+        }
+
     if domain == Platform.WEATHER:
         schema |= {
             probatio.Required(CONF_CONDITION): selector.TemplateSelector(),
@@ -569,6 +635,21 @@ def validate_user_input(
             tcv.requires_option(CONF_TARGET_TEMPERATURE, SET_TEMPERATURE_ACTION)(
                 user_input
             )
+        if template_type == Platform.WATER_HEATER:
+            tcv.requires_option(
+                CONF_WATER_HEATER_TARGET_TEMPERATURE,
+                SET_WATER_HEATER_TEMPERATURE_ACTION,
+            )(user_input)
+            additional_options = user_input.get(CONF_ADDITIONAL_OPTIONS, {})
+            tcv.requires_option(CONF_AWAY_MODE, TURN_AWAY_MODE_ON_ACTION)(
+                additional_options
+            )
+            tcv.requires_option(TURN_AWAY_MODE_ON_ACTION, TURN_AWAY_MODE_OFF_ACTION)(
+                additional_options
+            )
+            tcv.requires_option(TURN_AWAY_MODE_OFF_ACTION, TURN_AWAY_MODE_ON_ACTION)(
+                additional_options
+            )
         return {"template_type": template_type} | user_input
 
     return _validate_user_input
@@ -592,6 +673,7 @@ TEMPLATE_TYPES = [
     Platform.SWITCH,
     Platform.UPDATE,
     Platform.VACUUM,
+    Platform.WATER_HEATER,
     Platform.WEATHER,
 ]
 
@@ -679,6 +761,11 @@ CONFIG_FLOW = {
         config_schema(Platform.VACUUM),
         preview="template",
         validate_user_input=validate_user_input(Platform.VACUUM),
+    ),
+    Platform.WATER_HEATER: SchemaFlowFormStep(
+        config_schema(Platform.WATER_HEATER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.WATER_HEATER),
     ),
     Platform.WEATHER: SchemaFlowFormStep(
         config_schema(Platform.WEATHER),
@@ -774,6 +861,11 @@ OPTIONS_FLOW = {
         preview="template",
         validate_user_input=validate_user_input(Platform.VACUUM),
     ),
+    Platform.WATER_HEATER: SchemaFlowFormStep(
+        options_schema(Platform.WATER_HEATER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.WATER_HEATER),
+    ),
     Platform.WEATHER: SchemaFlowFormStep(
         options_schema(Platform.WEATHER),
         preview="template",
@@ -801,6 +893,7 @@ CREATE_PREVIEW_ENTITY: dict[
     Platform.SWITCH: async_create_preview_switch,
     Platform.UPDATE: async_create_preview_update,
     Platform.VACUUM: async_create_preview_vacuum,
+    Platform.WATER_HEATER: async_create_preview_water_heater,
     Platform.WEATHER: async_create_preview_weather,
 }
 

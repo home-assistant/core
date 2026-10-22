@@ -31,6 +31,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
+from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config import async_log_schema_error, config_without_domain
 from homeassistant.const import (
@@ -75,6 +76,7 @@ from . import (
     switch as switch_platform,
     update as update_platform,
     vacuum as vacuum_platform,
+    water_heater as water_heater_platform,
     weather as weather_platform,
 )
 from .const import (
@@ -110,6 +112,7 @@ _DEFAULT_NAMES = {
     Platform.SWITCH: switch_platform.DEFAULT_NAME,
     Platform.UPDATE: update_platform.DEFAULT_NAME,
     Platform.VACUUM: vacuum_platform.DEFAULT_NAME,
+    Platform.WATER_HEATER: water_heater_platform.DEFAULT_NAME,
     Platform.WEATHER: weather_platform.DEFAULT_NAME,
 }
 
@@ -314,6 +317,10 @@ CONFIG_SECTION_SCHEMA = probatio.All(
             ),
             probatio.Optional(VACUUM_DOMAIN): probatio.All(
                 probatio.EnsureList(), [vacuum_platform.VACUUM_YAML_SCHEMA]
+            ),
+            probatio.Optional(WATER_HEATER_DOMAIN): probatio.All(
+                probatio.EnsureList(),
+                [water_heater_platform.WATER_HEATER_YAML_SCHEMA],
             ),
             probatio.Optional(WEATHER_DOMAIN): probatio.All(
                 probatio.EnsureList(),
