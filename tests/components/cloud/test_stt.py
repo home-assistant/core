@@ -242,7 +242,7 @@ async def test_stt_v2_enabled(
     entity = async_get_speech_to_text_entity(hass, ENTITY_ID)
     assert entity
     assert entity.audio_processing == SpeechAudioProcessing(
-        requires_external_vad=True,
+        requires_external_vad=False,
         prefers_auto_gain_enabled=False,
         prefers_noise_reduction_enabled=False,
     )

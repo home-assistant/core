@@ -2545,6 +2545,96 @@ async def test_stt_vad_enabled_based_on_audio_processing(
         mock_vad.assert_not_called()
 
 
+@pytest.mark.parametrize(
+    ("is_vad_enabled", "expected_events"),
+    [
+        pytest.param(
+            True,
+            [
+                PipelineEventType.STT_VAD_START,
+                PipelineEventType.STT_VAD_END,
+                PipelineEventType.STT_END,
+            ],
+            id="vad_enabled",
+        ),
+        pytest.param(False, [PipelineEventType.STT_END], id="vad_disabled"),
+    ],
+)
+async def test_stt_vad_events_for_self_endpointing_provider(
+    hass: HomeAssistant,
+    mock_stt_provider: MockSTTProvider,
+    init_components,
+    pipeline_data: assist_pipeline.pipeline.PipelineData,
+    mock_chat_session: chat_session.ChatSession,
+    is_vad_enabled: bool,
+    expected_events: list[PipelineEventType],
+) -> None:
+    """Test VAD events bracket the command when the provider does its own endpointing.
+
+    Satellites rely on STT_VAD_END to stop recording, so it is sent even though no
+    segmenter runs when requires_external_vad is False.
+    """
+
+    async def audio_data():
+        yield make_10ms_chunk(b"speech!!")
+        yield make_10ms_chunk(b"speech!!")
+        yield b""
+
+    pipeline_store = pipeline_data.pipeline_store
+    pipeline_id = pipeline_store.async_get_preferred_item()
+    pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
+
+    events: list[assist_pipeline.PipelineEvent] = []
+
+    with patch(
+        "homeassistant.components.stt.async_get_speech_to_text_engine",
+        return_value=mock_stt_provider,
+    ):
+        mock_stt_provider._audio_processing = stt.SpeechAudioProcessing(
+            requires_external_vad=False,
+            prefers_auto_gain_enabled=False,
+            prefers_noise_reduction_enabled=False,
+        )
+
+        pipeline_input = assist_pipeline.pipeline.PipelineInput(
+            session=mock_chat_session,
+            device_id=None,
+            stt_metadata=stt.SpeechMetadata(
+                language="en-US",
+                format=stt.AudioFormats.WAV,
+                codec=stt.AudioCodecs.PCM,
+                bit_rate=stt.AudioBitRates.BITRATE_16,
+                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                channel=stt.AudioChannels.CHANNEL_MONO,
+            ),
+            stt_stream=audio_data(),
+            run=assist_pipeline.pipeline.PipelineRun(
+                hass,
+                context=Context(),
+                pipeline=pipeline,
+                start_stage=assist_pipeline.PipelineStage.STT,
+                end_stage=assist_pipeline.PipelineStage.STT,
+                event_callback=events.append,
+                audio_settings=assist_pipeline.AudioSettings(
+                    is_vad_enabled=is_vad_enabled
+                ),
+            ),
+        )
+        await pipeline_input.validate()
+        await pipeline_input.execute()
+
+    assert [
+        event.type
+        for event in events
+        if event.type
+        in (
+            PipelineEventType.STT_VAD_START,
+            PipelineEventType.STT_VAD_END,
+            PipelineEventType.STT_END,
+        )
+    ] == expected_events
+
+
 async def test_invalid_pipeline_does_not_create_tts_stream(
     hass: HomeAssistant,
     mock_wake_word_provider_entity: MockWakeWordEntity,

@@ -158,6 +158,7 @@ class _DefaultPipelineProcessor:
     _intent_agent_only: bool = field(init=False, default=False)
     _streamed_response_text: bool = field(init=False, default=False)
     _invalidated: bool = field(init=False, default=False)
+    _stt_last_timestamp_ms: int | None = field(init=False, default=None)
     intent_agent: conversation.AgentInfo | None = field(init=False, default=None)
 
     def __post_init__(self) -> None:
@@ -477,6 +478,19 @@ class _DefaultPipelineProcessor:
                 code="stt-no-text-recognized", message="No text recognized"
             )
 
+        # For provider-specific VAD, send the event when the stream closes
+        if (
+            stt_vad is None
+            and self.host.audio_settings.is_vad_enabled
+            and self._stt_last_timestamp_ms is not None
+        ):
+            self.host.process_event(
+                PipelineEvent(
+                    PipelineEventType.STT_VAD_END,
+                    {"timestamp": self._stt_last_timestamp_ms},
+                )
+            )
+
         self.host.process_event(
             PipelineEvent(
                 PipelineEventType.STT_END,
@@ -523,6 +537,19 @@ class _DefaultPipelineProcessor:
                         )
                     )
                     sent_vad_start = True
+            else:
+                if (
+                    self.host.audio_settings.is_vad_enabled
+                    and self._stt_last_timestamp_ms is None
+                ):
+                    # Provider own VAD, we track the last processed chunk for STT_VAD_END
+                    self.host.process_event(
+                        PipelineEvent(
+                            PipelineEventType.STT_VAD_START,
+                            {"timestamp": chunk.timestamp_ms},
+                        )
+                    )
+                self._stt_last_timestamp_ms = chunk.timestamp_ms
 
             yield chunk.audio
 

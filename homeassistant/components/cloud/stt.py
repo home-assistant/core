@@ -41,7 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # STT v2 detects the end of speech itself and works best on untouched audio.
 STT_V2_AUDIO_PROCESSING = SpeechAudioProcessing(
-    requires_external_vad=True,
+    requires_external_vad=False,
     prefers_auto_gain_enabled=False,
     prefers_noise_reduction_enabled=False,
 )
