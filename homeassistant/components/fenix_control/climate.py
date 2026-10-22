@@ -88,7 +88,7 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
         self._remember_on_mode()
 
     def _remember_on_mode(self) -> None:
-        if (mode := self.hvac_mode) != HVACMode.OFF:
+        if (mode := self.hvac_mode) not in (None, HVACMode.OFF):
             self._last_on_mode = mode
 
     @property
@@ -105,21 +105,28 @@ class FenixControlClimate(FenixControlEntity, ClimateEntity):
 
     @property
     @override
-    def hvac_mode(self) -> HVACMode:
+    def hvac_mode(self) -> HVACMode | None:
         """Return the HVAC mode; holiday, defrost and boost follow the program."""
         match self.device.preset_mode:
             case PresetMode.OFF:
                 return HVACMode.OFF
             case PresetMode.MANUAL:
                 return HVACMode.HEAT
-        return HVACMode.AUTO
+            case (
+                PresetMode.PROGRAM
+                | PresetMode.HOLIDAYS
+                | PresetMode.DEFROST
+                | PresetMode.BOOST
+            ):
+                return HVACMode.AUTO
+        return None
 
     @property
     @override
     def hvac_modes(self) -> list[HVACMode]:
         """Return the selectable HVAC modes; none can be chosen during a holiday."""
         if self.device.holiday_active:
-            return [self.hvac_mode]
+            return [mode] if (mode := self.hvac_mode) is not None else []
         return self._attr_hvac_modes
 
     @property

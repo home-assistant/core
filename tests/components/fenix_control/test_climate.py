@@ -5,7 +5,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from pyfenixcontrol import FenixControlConnectionError, PresetMode
+from pyfenixcontrol import Device, FenixControlConnectionError, PresetMode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -32,6 +32,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -440,22 +441,62 @@ async def test_hvac_action(
 
 
 @pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("device", "hvac_modes"),
+    [
+        pytest.param(
+            dataclasses.replace(DEVICE, preset_mode=None),
+            [HVACMode.OFF, HVACMode.AUTO, HVACMode.HEAT],
+            id="unreported",
+        ),
+        pytest.param(
+            dataclasses.replace(DEVICE, preset_mode=3),
+            [HVACMode.OFF, HVACMode.AUTO, HVACMode.HEAT],
+            id="unrecognized",
+        ),
+        pytest.param(
+            dataclasses.replace(HOLIDAY_DEVICE, preset_mode=None),
+            [],
+            id="holiday",
+        ),
+    ],
+)
 async def test_unknown_preset(
     hass: HomeAssistant,
     mock_fenix_client: MagicMock,
     freezer: FrozenDateTimeFactory,
+    device: Device,
+    hvac_modes: list[HVACMode],
 ) -> None:
-    """Test an unreported operating mode has no preset."""
-    await _set_devices(
-        hass,
-        mock_fenix_client,
-        freezer,
-        dataclasses.replace(DEVICE, preset_mode=None),
-    )
+    """Test an unreported or unrecognized operating mode is unknown."""
+    await _set_devices(hass, mock_fenix_client, freezer, device)
 
     state = hass.states.get(ENTITY_ID)
-    assert state.state == HVACMode.AUTO
-    assert state.attributes[ATTR_PRESET_MODE] is None
+    assert state.state == STATE_UNKNOWN
+    # A holiday removes the preset feature, so the attribute is omitted
+    assert state.attributes.get(ATTR_PRESET_MODE) is None
+    assert state.attributes[ATTR_HVAC_MODES] == hvac_modes
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_turn_on_skips_unknown_mode(
+    hass: HomeAssistant,
+    mock_fenix_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an unknown operating mode doesn't replace the last mode it was on in."""
+    await _set_devices(
+        hass, mock_fenix_client, freezer, dataclasses.replace(DEVICE, preset_mode=None)
+    )
+    await _set_devices(hass, mock_fenix_client, freezer, OFF_DEVICE)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+    )
+
+    mock_fenix_client.set_preset_mode.assert_awaited_once_with(
+        DEVICE_ID, PresetMode.MANUAL
+    )
 
 
 @pytest.mark.usefixtures("init_integration")
