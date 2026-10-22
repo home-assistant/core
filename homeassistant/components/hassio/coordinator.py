@@ -329,63 +329,53 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             previous_issue == issue and previous_issue.suggestions == issue.suggestions
         )
 
-    def _process_reason_deltas(
-        self,
-        previous_data: SupervisorIssuesData,
-        current_data: SupervisorIssuesData,
-    ) -> None:
-        """Create/delete unhealthy and unsupported repairs based on reason deltas."""
-        for unhealthy in (
-            current_data.unhealthy_reasons - previous_data.unhealthy_reasons
+    def _update_unhealthy_issues(self, unhealthy_reasons: set[str]) -> None:
+        """Create unhealthy repairs and delete those whose reason is gone."""
+        with ir.async_begin_issues_refresh(
+            self.hass, DOMAIN, issue_id_pattern=f"{ISSUE_ID_UNHEALTHY}_"
         ):
-            if unhealthy in UnhealthyReason:
-                translation_key = f"{ISSUE_KEY_UNHEALTHY}_{unhealthy}"
-                translation_placeholders = None
-            else:
-                translation_key = ISSUE_KEY_UNHEALTHY
-                translation_placeholders = {PLACEHOLDER_KEY_REASON: unhealthy}
+            for unhealthy in unhealthy_reasons:
+                if unhealthy in UnhealthyReason:
+                    translation_key = f"{ISSUE_KEY_UNHEALTHY}_{unhealthy}"
+                    translation_placeholders = None
+                else:
+                    translation_key = ISSUE_KEY_UNHEALTHY
+                    translation_placeholders = {PLACEHOLDER_KEY_REASON: unhealthy}
 
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                f"{ISSUE_ID_UNHEALTHY}_{unhealthy}",
-                is_fixable=False,
-                learn_more_url=f"{INFO_URL_UNHEALTHY}/{unhealthy}",
-                severity=IssueSeverity.CRITICAL,
-                translation_key=translation_key,
-                translation_placeholders=translation_placeholders,
-            )
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"{ISSUE_ID_UNHEALTHY}_{unhealthy}",
+                    is_fixable=False,
+                    learn_more_url=f"{INFO_URL_UNHEALTHY}/{unhealthy}",
+                    severity=IssueSeverity.CRITICAL,
+                    translation_key=translation_key,
+                    translation_placeholders=translation_placeholders,
+                )
 
-        for fixed in previous_data.unhealthy_reasons - current_data.unhealthy_reasons:
-            async_delete_issue(self.hass, DOMAIN, f"{ISSUE_ID_UNHEALTHY}_{fixed}")
-
-        for unsupported in (
-            current_data.unsupported_reasons
-            - UNSUPPORTED_SKIP_REPAIR
-            - previous_data.unsupported_reasons
+    def _update_unsupported_issues(self, unsupported_reasons: set[str]) -> None:
+        """Create unsupported repairs and delete those whose reason is gone."""
+        with ir.async_begin_issues_refresh(
+            self.hass, DOMAIN, issue_id_pattern=f"{ISSUE_ID_UNSUPPORTED}_"
         ):
-            if unsupported in UnsupportedReason:
-                translation_key = f"{ISSUE_KEY_UNSUPPORTED}_{unsupported}"
-                translation_placeholders = None
-            else:
-                translation_key = ISSUE_KEY_UNSUPPORTED
-                translation_placeholders = {PLACEHOLDER_KEY_REASON: unsupported}
+            for unsupported in unsupported_reasons - UNSUPPORTED_SKIP_REPAIR:
+                if unsupported in UnsupportedReason:
+                    translation_key = f"{ISSUE_KEY_UNSUPPORTED}_{unsupported}"
+                    translation_placeholders = None
+                else:
+                    translation_key = ISSUE_KEY_UNSUPPORTED
+                    translation_placeholders = {PLACEHOLDER_KEY_REASON: unsupported}
 
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                f"{ISSUE_ID_UNSUPPORTED}_{unsupported}",
-                is_fixable=False,
-                learn_more_url=f"{INFO_URL_UNSUPPORTED}/{unsupported}",
-                severity=IssueSeverity.WARNING,
-                translation_key=translation_key,
-                translation_placeholders=translation_placeholders,
-            )
-
-        for fixed in previous_data.unsupported_reasons - (
-            current_data.unsupported_reasons - UNSUPPORTED_SKIP_REPAIR
-        ):
-            async_delete_issue(self.hass, DOMAIN, f"{ISSUE_ID_UNSUPPORTED}_{fixed}")
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"{ISSUE_ID_UNSUPPORTED}_{unsupported}",
+                    is_fixable=False,
+                    learn_more_url=f"{INFO_URL_UNSUPPORTED}/{unsupported}",
+                    severity=IssueSeverity.WARNING,
+                    translation_key=translation_key,
+                    translation_placeholders=translation_placeholders,
+                )
 
     def _create_or_update_issue_repair(self, issue: Issue) -> None:
         """Create/update a repair for an issue if needed."""
@@ -560,7 +550,8 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             log_failures, raise_on_auth_failed, scheduled, raise_on_entry_error
         )
         if self.last_update_success and self.data is not None:
-            self._process_reason_deltas(previous_data, self.data)
+            self._update_unhealthy_issues(self.data.unhealthy_reasons)
+            self._update_unsupported_issues(self.data.unsupported_reasons)
             self._process_issue_deltas(previous_data, self.data)
 
     @override
@@ -631,7 +622,10 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             return
 
         self.async_set_updated_data(updated_data)
-        self._process_reason_deltas(previous_data, updated_data)
+        if event[ATTR_WS_EVENT] == EVENT_HEALTH_CHANGED:
+            self._update_unhealthy_issues(updated_data.unhealthy_reasons)
+        elif event[ATTR_WS_EVENT] == EVENT_SUPPORTED_CHANGED:
+            self._update_unsupported_issues(updated_data.unsupported_reasons)
         self._process_issue_deltas(previous_data, updated_data)
 
 
