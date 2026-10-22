@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, mock_restore_cache
 from victron_mqtt import (
     AuthenticationError,
     CannotConnectError,
@@ -18,18 +18,19 @@ from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
-    DOMAIN as UPDATE_DOMAIN,
+    ATTR_SKIPPED_VERSION,
 )
 from homeassistant.components.victron_gx import async_remove_config_entry_device
 from homeassistant.components.victron_gx.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
+    STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -323,24 +324,47 @@ async def test_hub_starts_firmware_update_checks(
     mock_victron_hub_library.return_value.check_firmware_update.assert_called_once_with()
 
 
+@pytest.mark.parametrize(
+    ("skipped_version", "expected_state"),
+    [
+        pytest.param(None, STATE_ON, id="not-skipped"),
+        pytest.param("v3.70", STATE_OFF, id="skipped"),
+    ],
+)
 async def test_firmware_update_waits_for_first_refresh(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_victron_hub_library: MagicMock,
     entity_registry: er.EntityRegistry,
+    skipped_version: str | None,
+    expected_state: str,
 ) -> None:
-    """Test the update entity waits for the first firmware snapshot."""
+    """Test the first firmware snapshot preserves restored skipped updates."""
     mock_config_entry.add_to_hass(hass)
+    update_entry = entity_registry.async_get_or_create(
+        Platform.UPDATE,
+        DOMAIN,
+        f"{MOCK_INSTALLATION_ID}_firmware",
+        suggested_object_id="venus_os_firmware",
+        config_entry=mock_config_entry,
+    )
+    mock_restore_cache(
+        hass,
+        [
+            State(
+                update_entry.entity_id,
+                STATE_OFF,
+                {
+                    ATTR_INSTALLED_VERSION: "v3.60",
+                    ATTR_LATEST_VERSION: "v3.70",
+                    ATTR_SKIPPED_VERSION: skipped_version,
+                },
+            )
+        ],
+    )
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    update_entry = next(
-        entry
-        for entry in er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
-        )
-        if entry.domain == UPDATE_DOMAIN
-    )
     state = hass.states.get(update_entry.entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
@@ -355,9 +379,10 @@ async def test_firmware_update_waits_for_first_refresh(
 
     state = hass.states.get(update_entry.entity_id)
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == expected_state
     assert state.attributes[ATTR_INSTALLED_VERSION] == "v3.60"
     assert state.attributes[ATTR_LATEST_VERSION] == "v3.70"
+    assert state.attributes[ATTR_SKIPPED_VERSION] == skipped_version
 
 
 async def test_device_via_device_links(

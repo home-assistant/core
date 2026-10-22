@@ -10,6 +10,7 @@ from victron_mqtt import (
     CannotConnectError,
     Device as VictronVenusDevice,
     FirmwareUpdateInfo,
+    FirmwareUpdateState,
     Hub as VictronVenusHub,
     Metric as VictronVenusMetric,
     MetricKind,
@@ -139,6 +140,12 @@ class Hub:
         self, hub: VictronVenusHub, info: FirmwareUpdateInfo
     ) -> None:
         """Handle updated firmware information."""
+        # Transient checks must not clear Home Assistant's skipped version.
+        if info.state in {
+            FirmwareUpdateState.CHECKING,
+            FirmwareUpdateState.ERROR_DURING_CHECK,
+        }:
+            return
         if self._firmware_update_callback is not None:
             self._firmware_update_callback(info)
 

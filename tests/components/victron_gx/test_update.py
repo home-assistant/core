@@ -8,6 +8,7 @@ from pytest_homeassistant.common import MockConfigEntry
 from victron_mqtt import (
     FirmwareUpdateError,
     FirmwareUpdateErrorReason,
+    FirmwareUpdateState,
     Hub as VictronVenusHub,
 )
 from victron_mqtt.testing import finalize_injection, inject_message
@@ -16,10 +17,12 @@ from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
+    ATTR_SKIPPED_VERSION,
     ATTR_TITLE,
     ATTR_UPDATE_PERCENTAGE,
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
+    SERVICE_SKIP,
     UpdateDeviceClass,
     UpdateEntityFeature,
 )
@@ -151,6 +154,81 @@ async def test_firmware_without_available_version(
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_INSTALLED_VERSION] == "v3.60"
     assert state.attributes[ATTR_LATEST_VERSION] == "v3.60"
+
+
+@pytest.mark.parametrize(
+    "firmware_state",
+    [
+        pytest.param(FirmwareUpdateState.CHECKING, id="checking"),
+        pytest.param(FirmwareUpdateState.ERROR_DURING_CHECK, id="check-failed"),
+    ],
+)
+async def test_firmware_check_preserves_skipped_update(
+    hass: HomeAssistant,
+    init_integration_with_update: tuple[VictronVenusHub, MockConfigEntry],
+    entity_registry: er.EntityRegistry,
+    firmware_state: FirmwareUpdateState,
+) -> None:
+    """Test unresolved checks preserve the last offer and skipped version."""
+    victron_hub, config_entry = init_integration_with_update
+    await _async_inject_firmware_versions(hass, victron_hub, "v3.60", "v3.70")
+    update_entry = next(
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        if entry.domain == UPDATE_DOMAIN
+    )
+    await hass.services.async_call(
+        UPDATE_DOMAIN,
+        SERVICE_SKIP,
+        {ATTR_ENTITY_ID: update_entry.entity_id},
+        blocking=True,
+    )
+
+    state = hass.states.get(update_entry.entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_SKIPPED_VERSION] == "v3.70"
+
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/platform/0/Firmware/Online/AvailableVersion",
+        '{"value": null}',
+    )
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/platform/0/Firmware/State",
+        f'{{"value": {firmware_state.code}}}',
+    )
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(update_entry.entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_LATEST_VERSION] == "v3.70"
+    assert state.attributes[ATTR_SKIPPED_VERSION] == "v3.70"
+
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/platform/0/Firmware/State",
+        f'{{"value": {FirmwareUpdateState.IDLE.code}}}',
+    )
+    await _async_inject_firmware_versions(hass, victron_hub, "v3.60", "v3.70")
+
+    state = hass.states.get(update_entry.entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_SKIPPED_VERSION] == "v3.70"
+
+    await _async_inject_firmware_versions(hass, victron_hub, "v3.60", "v3.80")
+
+    state = hass.states.get(update_entry.entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_LATEST_VERSION] == "v3.80"
+    assert state.attributes[ATTR_SKIPPED_VERSION] is None
 
 
 @pytest.mark.parametrize(
