@@ -101,7 +101,7 @@ def async_get_chat_log(
         hass.data[DATA_CHAT_LOGS] = all_chat_logs
 
     is_new_log = session.conversation_id not in all_chat_logs
-    user_id = user_input.context.user_id if user_input and user_input.context else None
+    user_id = user_input.context.user_id if user_input else None
 
     if chat_log := all_chat_logs.get(session.conversation_id):
         if user_input is not None and chat_log.user_id != user_id:
