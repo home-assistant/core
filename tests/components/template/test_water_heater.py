@@ -505,6 +505,51 @@ async def test_set_temperature_action_with_operation_mode(
 
 
 @pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+async def test_set_temperature_action_with_invalid_operation_mode(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    calls: list[ServiceCall],
+) -> None:
+    """Test set_temperature action rejects an operation_mode not in operation_list."""
+    await setup_entity(
+        hass,
+        TEST_WATER_HEATER,
+        style,
+        1,
+        {
+            "operation_mode": "{{ 'eco' }}",
+            "target_temperature": "{{ 21 }}",
+            "min_temperature": -2,
+            "max_temperature": 101,
+            **MINIMUM_REQUIREMENTS,
+            **SET_TEMPERATURE_ACTION,
+        },
+    )
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "anything")
+
+    state = hass.states.get(TEST_WATER_HEATER.entity_id)
+    assert state is not None
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            water_heater.DOMAIN,
+            "set_temperature",
+            {
+                "operation_mode": "not_valid",
+                "temperature": 18,
+                ATTR_ENTITY_ID: TEST_WATER_HEATER.entity_id,
+            },
+            blocking=True,
+        )
+
+    assert len(calls) == 0
+
+
+@pytest.mark.parametrize(
     ("config", "extra_config"), [(MINIMUM_REQUIREMENTS, SET_TEMPERATURE_ACTION)]
 )
 @pytest.mark.parametrize(

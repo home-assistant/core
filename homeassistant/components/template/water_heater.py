@@ -354,10 +354,7 @@ class AbstractTemplateWaterHeater(
         write_state = False
 
         if (operation_mode := kwargs.get("operation_mode")) is not None:
-            await self._async_set_operation_mode(operation_mode)
-            if self._attr_assumed_state:
-                self._attr_current_operation = operation_mode
-                write_state = True
+            await self.async_handle_set_operation_mode(operation_mode)
 
         if (value := kwargs.get("temperature")) is not None and (
             validated := tcv.number(
