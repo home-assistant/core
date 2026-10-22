@@ -8727,6 +8727,9 @@
     "plexilent": {
       "name": "Plexilent",
       "integration_type": "hub",
+      "categories": [
+        "lighting.lighting_systems"
+      ],
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
