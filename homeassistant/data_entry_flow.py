@@ -660,6 +660,15 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         ]
 
 
+def _report_missing_step_id(method: str) -> None:
+    """Report a flow result built without a step id."""
+    report_usage(
+        f"calls {method} without passing a step_id",
+        core_integration_behavior=ReportBehavior.ERROR,
+        breaks_in_ha_version="2027.5.0",
+    )
+
+
 class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
     """Handle a data entry flow."""
 
@@ -769,6 +778,8 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         )
         if step_id is not None:
             flow_result["step_id"] = step_id
+        else:
+            _report_missing_step_id("async_show_form")
         return flow_result
 
     @callback
@@ -836,6 +847,8 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         )
         if step_id is not None:
             flow_result["step_id"] = step_id
+        else:
+            _report_missing_step_id("async_external_step")
         return flow_result
 
     @callback
@@ -886,6 +899,8 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         )
         if step_id is not None:
             flow_result["step_id"] = step_id
+        else:
+            _report_missing_step_id("async_show_progress")
         return flow_result
 
     @callback
@@ -942,6 +957,8 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             flow_result["sort"] = sort
         if step_id is not None:
             flow_result["step_id"] = step_id
+        else:
+            _report_missing_step_id("async_show_menu")
         return flow_result
 
     @callback
