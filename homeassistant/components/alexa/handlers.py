@@ -72,7 +72,10 @@ from homeassistant.components.vacuum import (
     VacuumEntityCapabilityAttribute,
     VacuumEntityStateAttribute,
 )
-from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
+from homeassistant.components.valve import (
+    DOMAIN as VALVE_DOMAIN,
+    ValveEntityStateAttribute,
+)
 from homeassistant.components.water_heater import (
     DOMAIN as WATER_HEATER_DOMAIN,
     WaterHeaterCapabilityAttribute,
@@ -1755,7 +1758,7 @@ async def async_api_adjust_range(
     elif instance == f"{COVER_DOMAIN}.tilt":
         range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
         service = SERVICE_SET_COVER_TILT_POSITION
-        current = entity.attributes.get(cover.ATTR_TILT_POSITION)
+        current = entity.attributes.get(CoverEntityStateAttribute.CURRENT_TILT_POSITION)
         if current is None:
             msg = f"Unable to determine {entity.entity_id} current tilt position"
             raise AlexaInvalidValueError(msg)
@@ -1856,7 +1859,9 @@ async def async_api_adjust_range(
     elif instance == f"{VALVE_DOMAIN}.{valve.ATTR_POSITION}":
         range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
         service = valve.SERVICE_SET_VALVE_POSITION
-        if (current := entity.attributes.get(valve.ATTR_POSITION)) is None:
+        if (
+            current := entity.attributes.get(ValveEntityStateAttribute.CURRENT_POSITION)
+        ) is None:
             msg = f"Unable to determine {entity.entity_id} current position"
             raise AlexaInvalidValueError(msg)
         position = response_value = min(100, max(0, range_delta + current))

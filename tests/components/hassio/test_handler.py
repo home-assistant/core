@@ -90,6 +90,31 @@ async def test_api_range_header(
     assert received_request.headers[hdrs.RANGE] == "entries=:-1:2"
 
 
+@pytest.mark.usefixtures("socket_enabled")
+async def test_send_command_text_error(
+    aiohttp_raw_server,  # 'aiohttp_raw_server' must be before 'hass'!
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a plain text error response raises with the response text."""
+
+    async def mock_handler(request: web.BaseRequest) -> web.Response:
+        """Return a plain text error like aiohttp's HTTP exceptions."""
+        return web.Response(status=401, text="401: Unauthorized")
+
+    server = await aiohttp_raw_server(mock_handler)
+    hassio_handler = HassIO(
+        hass.loop,
+        async_get_clientsession(hass),
+        f"{server.host}:{server.port}",
+    )
+
+    with pytest.raises(HassioAPIError, match="^401: Unauthorized$"):
+        await hassio_handler.send_command("/ingress/validate_session")
+
+    assert "Client error" not in caplog.text
+
+
 @pytest.mark.usefixtures("hassio_stubs")
 async def test_send_command_invalid_command(hass: HomeAssistant) -> None:
     """Test send command fails when command is invalid."""

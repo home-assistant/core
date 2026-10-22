@@ -2190,7 +2190,7 @@ async def test_valve_position(
             "friendly_name": "Test valve range",
             "device_class": "water",
             "supported_features": supported_features,
-            "position": position,
+            "current_position": position,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -2414,7 +2414,7 @@ async def test_valve_position_range(
             "friendly_name": "Test valve range",
             "device_class": "water",
             "supported_features": 15,
-            "position": 30,
+            "current_position": 30,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -4630,7 +4630,7 @@ async def test_cover_tilt_position(
             "friendly_name": "Test cover tilt range",
             "device_class": "blind",
             "supported_features": supported_features,
-            "tilt_position": tilt_position,
+            "current_tilt_position": tilt_position,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -4700,7 +4700,7 @@ async def test_cover_tilt_position_range(hass: HomeAssistant) -> None:
             "friendly_name": "Test cover tilt range",
             "device_class": "blind",
             "supported_features": 240,
-            "tilt_position": 30,
+            "current_tilt_position": 30,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -4781,14 +4781,14 @@ async def test_cover_tilt_position_range(hass: HomeAssistant) -> None:
         (
             "cover.test_closed",
             CoverEntityFeature.SET_TILT_POSITION,
-            "tilt_position",
+            "current_tilt_position",
             "cover.tilt",
             "cover.set_cover_tilt_position",
         ),
         (
             "valve.test_closed",
             ValveEntityFeature.SET_POSITION,
-            "position",
+            "current_position",
             "valve.position",
             "valve.set_valve_position",
         ),
@@ -4874,7 +4874,7 @@ async def test_cover_stop(
             "device_class": "blind",
             "supported_features": int(base_features | supported_stop_features),
             "current_position": 30,
-            "tilt_position": 30,
+            "current_tilt_position": 30,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -4909,7 +4909,7 @@ async def test_cover_semantics_position_and_tilt(hass: HomeAssistant) -> None:
             "device_class": "blind",
             "supported_features": 255,
             "current_position": 30,
-            "tilt_position": 30,
+            "current_tilt_position": 30,
         },
     )
     appliance = await discovery_test(device, hass)
