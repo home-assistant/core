@@ -21,10 +21,7 @@ from homeassistant.components.recorder.models import (
     extract_metadata_ids,
     process_timestamp_to_utc_isoformat,
 )
-from homeassistant.components.recorder.util import (
-    execute_stmt_lambda_element,
-    session_scope,
-)
+from homeassistant.components.recorder.util import execute_stmt_lambda_element
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_DOMAIN,
@@ -37,6 +34,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.recorder import session_scope
 from homeassistant.util import dt as dt_util
 from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.event_type import EventType

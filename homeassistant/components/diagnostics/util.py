@@ -6,14 +6,20 @@ from typing import Any, cast, overload
 import attr
 
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import AnyDeviceEntry
-from homeassistant.helpers.entity_registry import RegistryEntry
+from homeassistant.helpers.device_registry import (
+    AnyDeviceEntry,
+    ChildDeviceInfo,
+    DeviceInfo,
+)
+from homeassistant.helpers.entity_registry import RegistryEntry, _serialize_aliases
 
 from .const import REDACTED
 
 
 @overload
-def async_redact_data(data: Mapping, to_redact: Iterable[Any]) -> dict: ...
+def async_redact_data(
+    data: Mapping | DeviceInfo | ChildDeviceInfo, to_redact: Iterable[Any]
+) -> dict: ...
 
 
 @overload
@@ -23,6 +29,10 @@ def async_redact_data[_T](data: _T, to_redact: Iterable[Any]) -> _T: ...
 @callback
 def async_redact_data[_T](data: _T, to_redact: Iterable[Any]) -> _T:
     """Redact sensitive data in a dict."""
+    if isinstance(data, DeviceInfo | ChildDeviceInfo):
+        # Not a mapping, but it holds serial numbers and addresses
+        return cast(_T, async_redact_data(data.as_dict(), to_redact))
+
     if not isinstance(data, (Mapping, list)):
         return data
 
@@ -38,7 +48,7 @@ def async_redact_data[_T](data: _T, to_redact: Iterable[Any]) -> _T:
             continue
         if key in to_redact:
             redacted[key] = REDACTED
-        elif isinstance(value, Mapping):
+        elif isinstance(value, Mapping | DeviceInfo | ChildDeviceInfo):
             redacted[key] = async_redact_data(value, to_redact)
         elif isinstance(value, list):
             redacted[key] = [async_redact_data(item, to_redact) for item in value]
@@ -88,4 +98,6 @@ def entity_entry_as_dict(entry: RegistryEntry) -> dict[str, Any]:
 
     This excludes internal fields that should not be exposed in diagnostics.
     """
-    return attr.asdict(entry, filter=_entity_entry_filter)
+    data = attr.asdict(entry, filter=_entity_entry_filter)
+    data["aliases"] = _serialize_aliases(entry.aliases)
+    return data

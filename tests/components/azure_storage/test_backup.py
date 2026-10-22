@@ -2,13 +2,21 @@
 
 from collections.abc import AsyncGenerator
 from io import StringIO
-from unittest.mock import ANY, Mock, patch
+from typing import Any
+from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
 from azure.core.exceptions import AzureError, HttpResponseError, ServiceRequestError
 from azure.storage.blob import BlobProperties
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MagicMock,
+    WebSocketGenerator,
+)
 
 from homeassistant.components.azure_storage.backup import (
+    async_get_backup_agents,
     async_register_backup_agents_listener,
 )
 from homeassistant.components.azure_storage.const import (
@@ -21,9 +29,6 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 from .const import BACKUP_METADATA, TEST_BACKUP
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -230,7 +235,34 @@ async def test_agents_upload(
         metadata=BACKUP_METADATA,
         data=ANY,
         length=ANY,
+        progress_hook=ANY,
     )
+
+
+async def test_agents_upload_progress(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+) -> None:
+    """Test that upload progress is reported from the SDK progress hook."""
+
+    async def upload_blob(**kwargs: Any) -> None:
+        await kwargs["progress_hook"](4, 8)
+        await kwargs["progress_hook"](8, 8)
+
+    mock_client.upload_blob.side_effect = upload_blob
+    on_progress = Mock()
+    (agent,) = await async_get_backup_agents(hass)
+
+    await agent.async_upload_backup(
+        open_stream=AsyncMock(),
+        backup=TEST_BACKUP,
+        on_progress=on_progress,
+    )
+
+    assert on_progress.call_args_list == [
+        call(bytes_uploaded=4),
+        call(bytes_uploaded=8),
+    ]
 
 
 async def test_agents_download(

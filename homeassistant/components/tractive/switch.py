@@ -16,6 +16,8 @@ from .const import ATTR_BUZZER, ATTR_LED, ATTR_LIVE_TRACKING, DOMAIN
 from .coordinator import TractiveConfigEntry, TractiveCoordinator
 from .entity import TractiveEntity
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class TractiveSwitchEntityDescription(SwitchEntityDescription):

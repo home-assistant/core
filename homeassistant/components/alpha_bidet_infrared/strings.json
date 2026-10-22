@@ -1,0 +1,79 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This infrared transmitter is already configured to control a bidet.",
+      "no_emitters": "No infrared transmitter entities found. Please set up an infrared device first."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "infrared_emitter_entity_id": "Infrared transmitter",
+          "model": "Bidet model"
+        },
+        "data_description": {
+          "infrared_emitter_entity_id": "The infrared transmitter entity to use for sending commands.",
+          "model": "Choose your Alpha Bidet model from the list."
+        },
+        "description": "Configure your Alpha Bidet for IR control.",
+        "title": "Set up Alpha Bidet IR"
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "dry": {
+        "name": "Dry"
+      },
+      "easy_wash": {
+        "name": "Easy wash"
+      },
+      "front": {
+        "name": "Front"
+      },
+      "nozzle_down": {
+        "name": "Nozzle down"
+      },
+      "nozzle_up": {
+        "name": "Nozzle up"
+      },
+      "rear": {
+        "name": "Rear"
+      },
+      "stop": {
+        "name": "Stop"
+      },
+      "stop_hold": {
+        "name": "Stop (hold)"
+      },
+      "wash_and_dry": {
+        "name": "Wash and dry"
+      },
+      "water_dry_down": {
+        "name": "Water/dry down"
+      },
+      "water_dry_up": {
+        "name": "Water/dry up"
+      }
+    },
+    "select": {
+      "seat_temperature": {
+        "name": "Seat temperature",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "water_temperature": {
+        "name": "Water temperature",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
+        }
+      }
+    }
+  }
+}

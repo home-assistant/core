@@ -32,7 +32,7 @@ type R2ConfigEntry = ConfigEntry[S3Client]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: R2ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: R2ConfigEntry) -> None:
     """Set up Cloudflare R2 from a config entry."""
 
     data = cast(dict, entry.data)
@@ -77,11 +77,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: R2ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.async_on_state_change(notify_backup_listeners))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: R2ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: R2ConfigEntry) -> None:
     """Unload a config entry."""
     client = entry.runtime_data
     await client.__aexit__(None, None, None)
-    return True

@@ -9,9 +9,12 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import WaterHeaterEntity
+    from .entity import WaterHeaterEntity
 
 DOMAIN: Final = "water_heater"
+
+DEFAULT_MIN_TEMP = 110
+DEFAULT_MAX_TEMP = 140
 
 ATTR_AWAY_MODE: Final = "away_mode"
 ATTR_OPERATION_MODE: Final = "operation_mode"
@@ -66,3 +69,21 @@ class WaterHeaterEntityFeature(IntFlag):
     OPERATION_MODE = 2
     AWAY_MODE = 4
     ON_OFF = 8
+
+
+class WaterHeaterService(StrEnum):
+    """Store keys for water heater services."""
+
+    SET_AWAY_MODE = "set_away_mode"
+    SET_OPERATION_MODE = "set_operation_mode"
+    SET_TEMPERATURE = "set_temperature"
+    TURN_OFF = "turn_off"
+    TURN_ON = "turn_on"
+
+
+class WaterHeaterServiceArgument(StrEnum):
+    """Store keys for water heater service arguments."""
+
+    AWAY_MODE = "away_mode"
+    OPERATION_MODE = "operation_mode"
+    TEMPERATURE = "temperature"

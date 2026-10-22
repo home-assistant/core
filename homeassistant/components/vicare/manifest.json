@@ -1,6 +1,10 @@
 {
   "domain": "vicare",
   "name": "Viessmann ViCare",
+  "categories": [
+    "climate.thermostats_heating",
+    "climate.heat_pumps_air_conditioning"
+  ],
   "codeowners": ["@CFenner", "@lackas"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

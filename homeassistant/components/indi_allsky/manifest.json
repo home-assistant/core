@@ -1,6 +1,7 @@
 {
   "domain": "indi_allsky",
   "name": "INDI Allsky",
+  "categories": ["diy_makers", "weather_alerts"],
   "codeowners": ["@TN-1"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/indi_allsky",

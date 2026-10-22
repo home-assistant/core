@@ -18,11 +18,11 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     PRESET_NONE,
-    ClimateEntity,
     ClimateEntityFeature,
     ClimateEntityStateAttribute,
     HVACAction,
     HVACMode,
+    RestoreClimate,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -66,10 +66,8 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
 )
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolDictType
 from homeassistant.util import dt as dt_util
-from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
     CONF_AC_MODE,
@@ -228,7 +226,7 @@ async def _async_setup_config(
     )
 
 
-class GenericThermostat(ClimateEntity, RestoreEntity):
+class GenericThermostat(RestoreClimate):
     """Representation of a Generic Thermostat device."""
 
     _attr_should_poll = False
@@ -360,11 +358,14 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             if self._target_temp is None:
                 # If we have a previously saved temperature
                 if (
-                    old_state.attributes.get(
-                        ClimateEntityStateAttribute.TARGET_TEMPERATURE
+                    climate_data := await self.async_get_last_climate_data(
+                        validate_range=True
                     )
-                    is None
-                ):
+                ) is not None and (
+                    temperature := climate_data.native_target_temperature
+                ) is not None:
+                    self._target_temp = temperature
+                else:
                     if self.ac_mode:
                         self._target_temp = self.max_temp
                     else:
@@ -372,19 +373,6 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                     _LOGGER.warning(
                         "Undefined target temperature, falling back to %s",
                         self._target_temp,
-                    )
-                else:
-                    self._target_temp = TemperatureConverter.convert(
-                        float(
-                            old_state.attributes[
-                                ClimateEntityStateAttribute.TARGET_TEMPERATURE
-                            ]
-                        ),
-                        old_state.attributes.get(
-                            ClimateEntityStateAttribute.TEMPERATURE_UNIT,
-                            self.hass.config.units.temperature_unit,
-                        ),
-                        self.native_temperature_unit,
                     )
             if (
                 self.preset_modes

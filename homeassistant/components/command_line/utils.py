@@ -121,25 +121,34 @@ def build_shell_template_issue_id(platform: str, name: str) -> str:
 
 
 @callback
-def async_prune_shell_template_issues(
-    hass: HomeAssistant, valid_issue_ids: set[str]
-) -> None:
-    """Delete deprecation issues for entities that no longer exist.
+def async_begin_shell_template_issues_refresh(hass: HomeAssistant) -> ir.IssuesRefresh:
+    """Begin a refresh of the deprecation issues, which deletes orphaned ones."""
+    return ir.async_begin_issues_refresh(
+        hass, DOMAIN, issue_id_pattern=_ISSUE_ID_PREFIX
+    )
 
-    Called on reload to remove issues left behind by removed or renamed
-    entities. Issues for still-configured entities are kept so a user's decision
-    to ignore an issue survives the reload; each entity refreshes or clears its
-    own issue on its next update. Deleting and later recreating an issue would
-    reset the ignore state, so we never delete an issue we cannot prove is stale.
+
+def notify_name(notify_config: dict[str, Any]) -> str:
+    """Return the name of a notify service, the integration domain if not set."""
+    return notify_config.get(CONF_NAME) or DOMAIN
+
+
+@callback
+def async_keep_shell_template_issue(
+    hass: HomeAssistant, platform: str, platform_config: dict[str, Any]
+) -> None:
+    """Keep the deprecation issue of an entity which is being set up.
+
+    Whether the issue is still valid is only known when the entity next runs its
+    command, which then creates or deletes it.
     """
-    registry = ir.async_get(hass)
-    for domain, issue_id in list(registry.issues):
-        if (
-            domain == DOMAIN
-            and issue_id.startswith(_ISSUE_ID_PREFIX)
-            and issue_id not in valid_issue_ids
-        ):
-            ir.async_delete_issue(hass, DOMAIN, issue_id)
+    if platform == NOTIFY_DOMAIN:
+        name = notify_name(platform_config)
+    elif platform in (SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN):
+        name = platform_config[CONF_NAME]
+    else:
+        return
+    ir.async_keep_issue(hass, DOMAIN, build_shell_template_issue_id(platform, name))
 
 
 @overload
@@ -347,26 +356,3 @@ def create_platform_yaml_not_supported_issue(
         learn_more_url="https://www.home-assistant.io/integrations/command_line/",
         logger=LOGGER,
     )
-
-
-def shell_template_issue_ids(
-    command_line_config: list[dict[str, dict[str, Any]]],
-) -> set[str]:
-    """Return the shell template deprecation issue ids for the given config.
-
-    Only sensor, binary_sensor and notify run templated commands and can raise
-    the issue. The name mirrors each platform's setup: sensor and binary_sensor
-    always have a name (schema default), while notify falls back to the
-    integration domain when no name is configured.
-    """
-    issue_ids: set[str] = set()
-    for platform_config in command_line_config:
-        for platform, platform_conf in platform_config.items():
-            if platform == NOTIFY_DOMAIN:
-                name = platform_conf.get(CONF_NAME) or DOMAIN
-            elif platform in (SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN):
-                name = platform_conf[CONF_NAME]
-            else:
-                continue
-            issue_ids.add(build_shell_template_issue_id(platform, name))
-    return issue_ids

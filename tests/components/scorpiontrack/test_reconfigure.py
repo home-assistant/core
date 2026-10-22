@@ -10,6 +10,7 @@ from pyscorpiontrack import (
     ScorpionTrackShareUnavailableError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant.components.scorpiontrack.const import CONF_SHARE_TOKEN, DOMAIN
 from homeassistant.config_entries import SOURCE_RECONFIGURE, ConfigEntryState
@@ -19,8 +20,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 @pytest.mark.parametrize(
@@ -54,6 +53,7 @@ async def test_reconfigure_same_share(
         mock_share, token=token, title="New share title"
     )
 
+    # pylint: disable-next=home-assistant-test-flow-start-helper
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
@@ -98,6 +98,7 @@ async def test_reconfigure_rejects_different_share(
     """Keep the original configuration when the link identifies another share."""
     mock_config_entry.add_to_hass(hass)
     mock_scorpiontrack_client.async_get_share.return_value = replace(mock_share, id=202)
+    # pylint: disable-next=home-assistant-test-flow-start-helper
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
@@ -133,6 +134,7 @@ async def test_reconfigure_validation_error(
     mock_config_entry.add_to_hass(hass)
     mock_scorpiontrack_client.async_get_share.side_effect = error
     share_input = "https://app.scorpiontrack.com/shared/location?token=updated-token"
+    # pylint: disable-next=home-assistant-test-flow-start-helper
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
@@ -169,6 +171,7 @@ async def test_reconfigure_malformed_link(
 ) -> None:
     """Recover from an empty token by submitting a valid token."""
     mock_config_entry.add_to_hass(hass)
+    # pylint: disable-next=home-assistant-test-flow-start-helper
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},

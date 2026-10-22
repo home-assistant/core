@@ -1,6 +1,7 @@
 {
   "domain": "flipr",
   "name": "Flipr",
+  "categories": ["water.pools_spas"],
   "codeowners": ["@cnico"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/flipr",

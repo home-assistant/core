@@ -52,7 +52,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> None:
     """Set up from a config entry."""
     try:
         discovery = await async_ensure_discovery(hass)
@@ -132,10 +132,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> boo
     # resolve zone entity_ids for control_zone_source after that gather.
     coordinator.async_set_updated_data(controller)
 
-    return True
 
-
-async def async_migrate_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> None:
     """Migrate old config entry schema to the current version.
 
     Discovery for legacy ``unique_id=DOMAIN`` / missing ``CONF_HOST`` runs here so
@@ -216,16 +214,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> b
             data=data,
         )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> None:
     """Unload the config entry and release the controller."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        coordinator = entry.runtime_data
-        await coordinator.async_shutdown()
-        await coordinator.controller.close()
-        if not hass.config_entries.async_loaded_entries(DOMAIN):
-            await async_stop_discovery(hass)
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    coordinator = entry.runtime_data
+    await coordinator.async_shutdown()
+    await coordinator.controller.close()
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
+        await async_stop_discovery(hass)

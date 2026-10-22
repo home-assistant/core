@@ -9,6 +9,7 @@ import pypjlink
 from pypjlink import MUTE_AUDIO
 from pypjlink.projector import ProjectorError
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components import media_player
 from homeassistant.components.pjlink.const import (
@@ -32,8 +33,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import setup_pjlink_entry
-
-from tests.common import async_fire_time_changed
 
 _EXAMPLE_YAML_CONFIG = {
     Platform.MEDIA_PLAYER: [

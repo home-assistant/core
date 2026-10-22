@@ -67,6 +67,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     track_time_interval(hass, update_records_interval, INTERVAL)
 
+    # Should be adjusted to register actions in setup_services in services.py
+    # pylint: disable-next=home-assistant-action-registered-outside-services-module
     hass.services.register(DOMAIN, "update_records", update_records_service)
     return True
 

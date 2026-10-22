@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.purpleair.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -13,8 +14,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import TEST_API_KEY, TEST_SENSOR_INDEX1, TEST_SENSOR_INDEX2
-
-from tests.common import MockConfigEntry
 
 TEST_LATITUDE = 51.5285582
 TEST_LONGITUDE = -0.2416796

@@ -1,6 +1,7 @@
 """Test KNX climate."""
 
 import pytest
+from pytest_homeassistant.common import async_capture_events
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.knx.const import CONF_SYNC_STATE, ClimateConf
@@ -12,8 +13,6 @@ from homeassistant.setup import async_setup_component
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
-
-from tests.common import async_capture_events
 
 RAW_FLOAT_MINUS_1_0 = (0x87, 0x9C)
 RAW_FLOAT_20_0 = (0x07, 0xD0)
@@ -368,8 +367,8 @@ async def test_climate_preset_mode(
     knx.assert_state("climate.test", HVACMode.HEAT, preset_mode="economy")
 
     assert len(knx.xknx.devices) == 2
-    assert len(knx.xknx.devices[0].device_updated_cbs) == 2
-    assert len(knx.xknx.devices[1].device_updated_cbs) == 2
+    for device in knx.xknx.devices:
+        assert len(device.device_updated_cbs) == 2
     # test removing also removes hooks
     entity_registry.async_remove("climate.test")
     # If we remove the entity the underlying devices should disappear too

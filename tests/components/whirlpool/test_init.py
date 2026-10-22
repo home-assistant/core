@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from whirlpool.auth import AccountLockedError
 from whirlpool.backendselector import Brand, Region
 
@@ -20,8 +21,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration, init_integration_with_entry, trigger_attr_callback
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup(

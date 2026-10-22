@@ -5,6 +5,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockUser,
+    mock_integration,
+)
 
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
@@ -24,8 +30,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonObjectType
-
-from tests.common import MockConfigEntry, MockModule, MockUser, mock_integration
 
 
 @pytest.fixture(autouse=True)
@@ -1053,9 +1057,9 @@ Static Context: An overview of the areas and the devices in this smart home:
         " tool will provide the needed real-time"
         " information (like temperature from the local"
         " weather, lock status, etc.).\n"
-        "    3.  Use the tool's response** to answer"
-        ' the user accurately (e.g., "The temperature'
-        ' outside is [value from tool].").\n'
+        "    3.  Use the tool's response to answer"
+        " the user accurately, stating the actual value"
+        " or state it returned.\n"
         "For general knowledge questions not about the"
         " home: Answer truthfully from internal"
         " knowledge.\n"

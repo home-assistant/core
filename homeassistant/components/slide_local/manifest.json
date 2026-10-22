@@ -1,6 +1,7 @@
 {
   "domain": "slide_local",
   "name": "Slide Local",
+  "categories": ["blinds_curtains"],
   "codeowners": ["@dontinelli"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/slide_local",

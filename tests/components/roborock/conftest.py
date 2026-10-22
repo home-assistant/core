@@ -11,6 +11,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from roborock import (
     CleaningMode,
     CleanRoutes,
@@ -99,8 +100,6 @@ from .mock_data import (
     USER_EMAIL,
     VALLEY_ELECTRICITY_TIMER,
 )
-
-from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

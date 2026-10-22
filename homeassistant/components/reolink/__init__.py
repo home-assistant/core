@@ -86,7 +86,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: ReolinkConfigEntry
-) -> bool:
+) -> None:
     """Set up Reolink from a config entry."""
     host = ReolinkHost(hass, config_entry.data, config_entry.options, config_entry)
 
@@ -306,8 +306,6 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
-
 
 async def register_callbacks(
     host: ReolinkHost,
@@ -359,7 +357,7 @@ async def register_callbacks(
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: ReolinkConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
     host: ReolinkHost = config_entry.runtime_data.host
 
@@ -375,7 +373,7 @@ async def async_unload_entry(
     if host.cancel_first_firmware_check is not None:
         host.cancel_first_firmware_check()
 
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
 
 async def async_remove_entry(

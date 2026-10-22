@@ -5,6 +5,7 @@ from copy import deepcopy
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from satel_integra import SatelFirmwareVersion, SatelPanelInfo, SatelPanelModel
 
 from homeassistant.components.satel_integra.config_flow import SatelConfigFlow
@@ -22,15 +23,13 @@ from . import (
     get_monitor_callbacks,
 )
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override integration setup."""
     with patch(
         "homeassistant.components.satel_integra.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -59,6 +58,9 @@ def mock_satel() -> Generator[AsyncMock]:
         ),
     ):
         client = mock_client.return_value
+        client.add_connection_status_callback.return_value = MagicMock(
+            return_value=None
+        )
 
         client.partition_states = {}
         client.violated_outputs = []
