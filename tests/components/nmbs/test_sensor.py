@@ -755,6 +755,9 @@ async def test_liveboard_sensor_alerts_on_short_delay(
     state = hass.states.get(_get_entity_id(entity_registry, LIVEBOARD_FROM_UNIQUE_ID))
     assert state is not None
     assert state.attributes["icon"] == "mdi:alert-octagon"
+    assert state.attributes["delay_seconds"] == 20
+    assert "delay" not in state.attributes
+    assert "delay_minutes" not in state.attributes
 
 
 @freeze_time(FROZEN_TIME)

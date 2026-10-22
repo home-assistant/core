@@ -248,8 +248,9 @@ class NMBSLiveBoard(NMBSEntity, SensorEntity):
             "monitored_station": self._station.standard_name,
         }
 
-        if delay > 0:
+        if departure.delay > 0:
             attrs["delay_seconds"] = departure.delay
+        if delay > 0:
             attrs["delay"] = f"{delay} minutes"
             attrs["delay_minutes"] = delay
 
