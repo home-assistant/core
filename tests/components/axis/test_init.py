@@ -54,7 +54,7 @@ async def test_migrate_entry(
     mock_device.api.vapix.light_control = None
     mock_device.api.vapix.params.image_format = None
 
-    with patch("homeassistant.components.axis.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.axis.async_setup_entry", return_value=None):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert config_entry.state is ConfigEntryState.LOADED

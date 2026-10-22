@@ -34,7 +34,7 @@ async def test_form(hass: HomeAssistant, get_camera: CameraInfoModel) -> None:
         ),
         patch(
             "homeassistant.components.trafikverket_camera.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -120,7 +120,7 @@ async def test_form_multiple_cameras(
         ),
         patch(
             "homeassistant.components.trafikverket_camera.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -159,7 +159,7 @@ async def test_form_no_location_data(
         ),
         patch(
             "homeassistant.components.trafikverket_camera.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -237,7 +237,7 @@ async def test_flow_fails(
         ),
         patch(
             "homeassistant.components.trafikverket_camera.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result4 = await hass.config_entries.flow.async_configure(
@@ -276,7 +276,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.trafikverket_camera.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -351,7 +351,7 @@ async def test_reauth_flow_error(
         ),
         patch(
             "homeassistant.components.trafikverket_camera.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -410,7 +410,7 @@ async def test_reconfigure_flow(
         ),
         patch(
             "homeassistant.components.trafikverket_camera.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -450,7 +450,7 @@ async def test_reconfigure_flow_same_camera(
         ),
         patch(
             "homeassistant.components.trafikverket_camera.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -610,7 +610,7 @@ async def test_reconfigure_flow_error(
         ),
         patch(
             "homeassistant.components.trafikverket_camera.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
