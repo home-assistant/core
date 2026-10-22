@@ -1,0 +1,16 @@
+{
+  "domain": "wws",
+  "name": "WestfalenWIND Ökostrom smart",
+  "categories": ["energy.energy_prices", "sensors"],
+  "codeowners": ["@ed-julian", "@dennis-schoen"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/wws",
+  "homekit": {},
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["pyEnergieDock==0.1.0"],
+  "ssdp": [],
+  "zeroconf": []
+}
