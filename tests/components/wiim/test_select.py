@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, MagicMock
 import aiohttp
 from async_upnp_client.exceptions import UpnpError
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
 from wiim.exceptions import WiimRequestException
 
 from homeassistant.components.select import (
@@ -28,7 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from . import fire_general_update, setup_integration
+from . import MockConfigEntry, fire_general_update, setup_integration
 
 ENTITY_ID = "select.test_wiim_device_audio_output"
 OPTIONS = ["Line Out", "Optical Out", "Other Out"]
