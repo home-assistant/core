@@ -375,6 +375,20 @@
           "reception": "Reception",
           "workplace": "Workplace"
         }
+      },
+      "effect_palette": {
+        "name": "Effect palette",
+        "state": {
+          "complementary": "Complementary",
+          "contrast": "Contrast",
+          "fire": "Fire",
+          "forest": "Forest",
+          "harmony": "Harmony",
+          "monochrome": "Monochrome",
+          "ocean": "Ocean",
+          "pastel": "Pastel",
+          "rainbow": "Rainbow"
+        }
       }
     },
     "sensor": {
