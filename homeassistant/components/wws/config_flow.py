@@ -23,7 +23,6 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
     }
 )
 
-
 class ConfigFlow(HAConfigFlow, domain=DOMAIN):
     """Handle a config flow for WWS."""
 
