@@ -46,7 +46,7 @@ from .entity import VoIPEntity
 _LOGGER = logging.getLogger(__name__)
 
 _PIPELINE_TIMEOUT_SEC: Final = 30
-_HANGUP_SEC: Final = 0.5
+_HANGUP_SEC: Final = 2.0
 _ANNOUNCEMENT_BEFORE_DELAY: Final = 0.5
 _ANNOUNCEMENT_AFTER_DELAY: Final = 1.0
 _ANNOUNCEMENT_RING_TIMEOUT: Final = 30
