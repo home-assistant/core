@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from unittest.mock import ANY, AsyncMock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.kodi.config_flow import (
@@ -35,8 +36,6 @@ from .util import (
     get_kodi_connection,
 )
 
-from tests.common import MockConfigEntry
-
 
 @contextmanager
 def _patch_kodi_success() -> Generator[None]:
@@ -52,7 +51,7 @@ def _patch_kodi_success() -> Generator[None]:
         ),
         patch(
             "homeassistant.components.kodi.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield
@@ -83,7 +82,7 @@ async def test_user_flow(hass: HomeAssistant, user_flow: str) -> None:
         ),
         patch(
             "homeassistant.components.kodi.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(user_flow, TEST_HOST)
@@ -133,7 +132,7 @@ async def test_form_valid_auth(hass: HomeAssistant, user_flow: str) -> None:
         ),
         patch(
             "homeassistant.components.kodi.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -188,7 +187,7 @@ async def test_form_valid_ws_port(hass: HomeAssistant, user_flow: str) -> None:
         ),
         patch(
             "homeassistant.components.kodi.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -235,7 +234,7 @@ async def test_form_empty_ws_port(hass: HomeAssistant, user_flow: str) -> None:
 
     with patch(
         "homeassistant.components.kodi.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"ws_port": 0}
@@ -559,7 +558,7 @@ async def test_discovery(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.kodi.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"], user_input={}

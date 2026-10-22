@@ -17,6 +17,8 @@ from mcp.shared.exceptions import MCPError
 import probatio
 import pydantic
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, setup_test_component_platform
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.conversation import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
@@ -48,9 +50,7 @@ from homeassistant.util.json import JsonObjectType
 
 from .conftest import TEST_LLM_API_ID, MockLLMAPI
 
-from tests.common import MockConfigEntry, setup_test_component_platform
 from tests.components.light.common import MockLight
-from tests.typing import ClientSessionGenerator
 
 _LOGGER = logging.getLogger(__name__)
 

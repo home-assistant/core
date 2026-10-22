@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, Mock
 from aioshelly.const import MODEL_BLU_GATEWAY_G3
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
+from pytest_homeassistant.common import mock_restore_cache_with_extra_data
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
@@ -45,8 +46,6 @@ from .conftest import (
     MOCK_LEDSTRIP_STATUS_RAINBOW,
     MOCK_LEDSTRIP_STATUS_SOLID,
 )
-
-from tests.common import mock_restore_cache_with_extra_data
 
 DEVICE_BLOCK_ID = 4
 LEDSTRIP_ENTITY_ID = f"{NUMBER_DOMAIN}.test_name_ledstrip_0_effect_speed"

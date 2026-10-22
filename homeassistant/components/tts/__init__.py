@@ -32,13 +32,18 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, PLATFORM_FORMAT
 from homeassistant.core import (
     CALLBACK_TYPE,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     Event,
     HassJob,
     HassJobType,
     HomeAssistant,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    ConfigEntryError,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
@@ -62,6 +67,8 @@ from .const import (
     DOMAIN,
     MEDIA_SOURCE_STREAM_PATH,
     SERVICE_CLEAR_CACHE,
+    TextToSpeechService,
+    TextToSpeechServiceArgument,
     TtsAudioType,
 )
 from .entity import TextToSpeechEntity, TTSAudioRequest, TTSAudioResponse
@@ -91,6 +98,8 @@ __all__ = [
     "TTSAudioRequest",
     "TTSAudioResponse",
     "TextToSpeechEntity",
+    "TextToSpeechService",
+    "TextToSpeechServiceArgument",
     "TtsAudioType",
     "Voice",
     "async_default_engine",
@@ -639,14 +648,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a config entry."""
-    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
+    if not await hass.data[DATA_COMPONENT].async_setup_entry(entry):
+        raise ConfigEntryError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="platform_setup_failed",
+            translation_placeholders={"platform": entry.domain, "domain": DOMAIN},
+        )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
+    await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 @dataclass

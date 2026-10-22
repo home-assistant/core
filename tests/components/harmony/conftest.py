@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from aioharmony.const import ClientCallbackType
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.harmony.const import ACTIVITY_POWER_OFF, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
@@ -15,8 +16,6 @@ from .const import (
     PLAY_MUSIC_ACTIVITY_ID,
     WATCH_TV_ACTIVITY_ID,
 )
-
-from tests.common import MockConfigEntry
 
 ACTIVITIES_TO_IDS = {
     ACTIVITY_POWER_OFF: -1,

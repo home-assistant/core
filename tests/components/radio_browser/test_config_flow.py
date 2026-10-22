@@ -3,14 +3,13 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from radios import RadioBrowserConnectionError
 
 from homeassistant.components.radio_browser.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_radio_browser")

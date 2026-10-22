@@ -7,6 +7,7 @@ from ndms2_client import ConnectionException
 from ndms2_client.client import InterfaceInfo, RouterInfo
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.keenetic_ndms2 import CONF_INTERFACES, const
@@ -27,8 +28,6 @@ from . import (
     MOCK_RECONFIGURE,
     MOCK_SSDP_DISCOVERY_INFO,
 )
-
-from tests.common import MockConfigEntry
 
 MOCK_ROUTER_INFO = RouterInfo(
     name=MOCK_NAME,
@@ -70,7 +69,7 @@ async def test_flow_works(hass: HomeAssistant, connect) -> None:
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.keenetic_ndms2.async_setup_entry", return_value=True
+        "homeassistant.components.keenetic_ndms2.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -96,7 +95,7 @@ async def test_reconfigure(hass: HomeAssistant, connect) -> None:
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.keenetic_ndms2.async_setup_entry", return_value=True
+        "homeassistant.components.keenetic_ndms2.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -118,7 +117,7 @@ async def test_options(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_DATA)
     entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.keenetic_ndms2.async_setup_entry", return_value=True
+        "homeassistant.components.keenetic_ndms2.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -189,7 +188,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.keenetic_ndms2.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -278,7 +277,7 @@ async def test_ssdp_works(hass: HomeAssistant, connect) -> None:
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.keenetic_ndms2.async_setup_entry", return_value=True
+        "homeassistant.components.keenetic_ndms2.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         user_input = MOCK_DATA.copy()
         user_input.pop(CONF_HOST)
