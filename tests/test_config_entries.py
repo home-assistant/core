@@ -10830,6 +10830,39 @@ async def test_unique_id_collision_issues(
     assert not issue_registry.issues
 
 
+async def test_unique_id_collision_issue_keeps_ignore(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test an ignored unique id collision issue is kept while the collision persists."""
+    issue_id = "config_entry_unique_id_collision_test1_not_unique"
+    mock_integration(
+        hass, MockModule("test1", async_setup_entry=AsyncMock(return_value=True))
+    )
+    mock_platform(hass, "test1.config_flow", None)
+    entries = [
+        MockConfigEntry(domain="test1", unique_id="not_unique") for _ in range(3)
+    ]
+    for entry in entries:
+        await manager.async_add(entry)
+    ir.async_ignore_issue(hass, HOMEASSISTANT_DOMAIN, issue_id, True)
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+
+    await manager.async_remove(entries[0].entry_id)
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.dismissed_version is not None
+    # The issue is updated with the new entry count, not removed and created again
+    assert [event.data["action"] for event in events] == ["update"]
+
+    await manager.async_remove(entries[1].entry_id)
+
+    assert not issue_registry.issues
+
+
 async def test_context_no_leak(hass: HomeAssistant) -> None:
     """Test ensure that config entry context does not leak.
 
