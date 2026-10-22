@@ -48,8 +48,6 @@ MOCK_DEVICE_INFO = {
     ATTR_UDN: "mock-unique-id",
 }
 
-MOCK_MAC = "aa:bb:cc:dd:ee:ff"
-
 
 def get_mock_remote(
     request_error=None,
@@ -98,16 +96,6 @@ def get_mock_remote(
     mock_remote.set_input = Mock(side_effect=set_input)
 
     return mock_remote
-
-
-@pytest.fixture(autouse=True)
-def mock_get_mac_address():
-    """Patch the MAC address lookup so tests never touch the network."""
-    with patch(
-        "homeassistant.components.panasonic_viera.getmac.get_mac_address",
-        return_value=MOCK_MAC,
-    ) as mock_get_mac:
-        yield mock_get_mac
 
 
 @pytest.fixture(name="mock_remote")
