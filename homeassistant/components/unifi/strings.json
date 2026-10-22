@@ -201,6 +201,9 @@
     "remove_clients_request_failed": {
       "message": "Failed to remove clients from UniFi Network"
     },
+    "site_not_found": {
+      "message": "The configured UniFi Network site no longer exists"
+    },
     "unload_failed": {
       "message": "Failed to unload UniFi Network"
     }

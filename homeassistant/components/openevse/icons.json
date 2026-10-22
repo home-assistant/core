@@ -50,5 +50,10 @@
         "default": "mdi:counter"
       }
     }
+  },
+  "services": {
+    "set_override": {
+      "service": "mdi:tune-variant"
+    }
   }
 }

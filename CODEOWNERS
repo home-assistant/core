@@ -1962,6 +1962,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/thermopro/ @bdraco @h3ss
 /homeassistant/components/thethingsnetwork/ @angelnu
 /tests/components/thethingsnetwork/ @angelnu
+/homeassistant/components/thethingsnetwork_lorawan/ @balloob
+/tests/components/thethingsnetwork_lorawan/ @balloob
 /homeassistant/components/thread/ @home-assistant/core
 /tests/components/thread/ @home-assistant/core
 /homeassistant/components/threema/ @LukasQ
