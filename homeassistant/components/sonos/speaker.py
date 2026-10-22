@@ -550,6 +550,10 @@ class SonosSpeaker:
     @callback
     def async_dispatch_media_update(self, event: SonosEvent) -> None:
         """Update information about currently playing media from an event."""
+        # Only included when it changes, which can be in an event skipped below
+        if "av_transport_uri" in event.variables:
+            self._av_transport_uri = event.variables["av_transport_uri"]
+
         # The new coordinator can be provided in a media update event but
         # before the ZoneGroupState updates. If this happens the playback
         # state will be incorrect and should be ignored. Switching to the
@@ -585,10 +589,6 @@ class SonosSpeaker:
         # Missing transport_state indicates a transient error
         if (new_status := event.variables.get("transport_state")) is None:
             return
-
-        # Only included when it changes, which can be in a transition
-        if "av_transport_uri" in event.variables:
-            self._av_transport_uri = event.variables["av_transport_uri"]
 
         # Ignore transitions, we should get the target state soon
         if new_status == SONOS_STATE_TRANSITIONING:

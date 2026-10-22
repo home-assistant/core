@@ -1521,6 +1521,76 @@ async def test_release_uses_uri_from_its_own_event(
 
 
 @pytest.mark.usefixtures("async_autosetup_sonos")
+async def test_release_skipped_for_stale_update(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    no_media_event: SonosMockEvent,
+) -> None:
+    """Test an update running after a newer one does not release newer media."""
+    hass.config.internal_url = "http://10.0.0.1:8123"
+    new_media_uri = "http://10.0.0.1:8123/media/local/doorbell.mp3?authSig=def"
+    variables = no_media_event.variables | {"current_track_uri": HASS_MEDIA_URI}
+    event = SonosMockEvent(
+        soco,
+        soco.avTransport,
+        variables | {"transport_state": "PLAYING", "av_transport_uri": HASS_MEDIA_URI},
+    )
+    soco.avTransport.subscribe.return_value.callback(event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    events = [
+        variables | {"transport_state": "STOPPED"},
+        no_media_event.variables
+        | {
+            "transport_state": "PLAYING",
+            "av_transport_uri": new_media_uri,
+            "current_track_uri": new_media_uri,
+        },
+    ]
+    jobs: list[tuple[Any, ...]] = []
+    with patch.object(
+        hass, "async_add_executor_job", side_effect=lambda *job: jobs.append(job)
+    ):
+        for event_vars in events:
+            event = SonosMockEvent(soco, soco.avTransport, event_vars)
+            soco.avTransport.subscribe.return_value.callback(event)
+    # The update for the earlier stopped event runs last
+    for target, *args in reversed(jobs):
+        await hass.async_add_executor_job(target, *args)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    soco.avTransport.SetAVTransportURI.assert_not_called()
+
+
+@pytest.mark.usefixtures("async_autosetup_sonos")
+async def test_release_skipped_after_joining_group(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    no_media_event: SonosMockEvent,
+) -> None:
+    """Test a speaker that joined a group is not switched to its own queue."""
+    hass.config.internal_url = "http://10.0.0.1:8123"
+    coordinator_uri = "x-rincon:RINCON_other"
+    variables = no_media_event.variables | {"current_track_uri": HASS_MEDIA_URI}
+    events = [
+        variables | {"transport_state": "PLAYING", "av_transport_uri": HASS_MEDIA_URI},
+        no_media_event.variables
+        | {
+            "transport_state": "PLAYING",
+            "av_transport_uri": coordinator_uri,
+            "current_track_uri": coordinator_uri,
+        },
+        no_media_event.variables | {"transport_state": "STOPPED"},
+    ]
+    for event_vars in events:
+        event = SonosMockEvent(soco, soco.avTransport, event_vars)
+        soco.avTransport.subscribe.return_value.callback(event)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    soco.avTransport.SetAVTransportURI.assert_not_called()
+
+
+@pytest.mark.usefixtures("async_autosetup_sonos")
 async def test_release_hass_media_retried_after_failure(
     hass: HomeAssistant,
     soco: MockSoCo,

@@ -64,7 +64,6 @@ class SonosMedia:
         self.hass = hass
         self.soco = soco
         self.played_hass_media_uri: str | None = None
-        self.transport_uri: str | None = None
         self.play_mode: str | None = None
         self.playback_status: str | None = None
 
@@ -153,8 +152,9 @@ class SonosMedia:
         """Update information about currently playing media using an event payload."""
         new_status = evars["transport_state"]
         state_changed = new_status != self.playback_status
-        self.transport_uri = evars["av_transport_uri"]
-        self.release_finished_hass_media(new_status, self.playback_status is None)
+        self.release_finished_hass_media(
+            evars["av_transport_uri"], new_status, self.playback_status is None
+        )
 
         self.play_mode = evars["current_play_mode"]
         self.playback_status = new_status
@@ -209,10 +209,10 @@ class SonosMedia:
         self.set_basic_track_info(update_position=update_position)
 
         if self.uri and self.is_signed_hass_url(self.uri):
-            self.transport_uri = self.soco.avTransport.GetMediaInfo(
-                [("InstanceID", 0)]
-            )["CurrentURI"]
-            self.release_finished_hass_media(new_status, first_update)
+            transport_uri = self.soco.avTransport.GetMediaInfo([("InstanceID", 0)])[
+                "CurrentURI"
+            ]
+            self.release_finished_hass_media(transport_uri, new_status, first_update)
 
         self.write_media_player_states()
 
@@ -220,13 +220,14 @@ class SonosMedia:
         """Return if the URI is Home Assistant media with an expiring signature."""
         return "authSig" in yarl.URL(uri).query and is_hass_url(self.hass, uri)
 
-    def release_finished_hass_media(self, new_status: str, first_update: bool) -> None:
+    def release_finished_hass_media(
+        self, transport_uri: str | None, new_status: str, first_update: bool
+    ) -> None:
         """Switch to the queue once signed Home Assistant media has finished.
 
         Otherwise Sonos fetches the URL again on the next play, when the signature
         may have expired.
         """
-        transport_uri = self.transport_uri
         if not transport_uri or not self.is_signed_hass_url(transport_uri):
             self.played_hass_media_uri = None
             return
