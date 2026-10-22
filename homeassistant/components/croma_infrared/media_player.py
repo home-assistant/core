@@ -20,12 +20,12 @@ from .entity import CromaIrEntity
 
 PARALLEL_UPDATES = 1
 
-ON_STATES = (
+RESTORED_STATES = (
     MediaPlayerState.ON,
+    MediaPlayerState.OFF,
     MediaPlayerState.PLAYING,
     MediaPlayerState.PAUSED,
 )
-RESTORED_STATES = (*ON_STATES, MediaPlayerState.OFF)
 
 SOURCE_TO_CODE: dict[str, CromaTVCode] = {
     "youtube": CromaTVCode.YOUTUBE,
@@ -76,18 +76,14 @@ class CromaIrMediaPlayer(CromaIrEntity, MediaPlayerEntity, RestoreEntity):
 
     @override
     async def async_turn_on(self) -> None:
-        """Send the power command unless the TV is assumed to be on."""
-        if self.state in ON_STATES:
-            return
+        """Send the power command."""
         await self._send_command(CromaTVCode.POWER.to_command())
         self._attr_state = MediaPlayerState.ON
         self.async_write_ha_state()
 
     @override
     async def async_turn_off(self) -> None:
-        """Send the power command unless the TV is assumed to be off."""
-        if self.state == MediaPlayerState.OFF:
-            return
+        """Send the power command."""
         await self._send_command(CromaTVCode.POWER.to_command())
         self._attr_state = MediaPlayerState.OFF
         self.async_write_ha_state()
@@ -104,9 +100,7 @@ class CromaIrMediaPlayer(CromaIrEntity, MediaPlayerEntity, RestoreEntity):
 
     @override
     async def async_mute_volume(self, mute: bool) -> None:
-        """Send the mute command unless already in the requested mute state."""
-        if self.is_volume_muted == mute:
-            return
+        """Send the mute command."""
         await self._send_command(CromaTVCode.MUTE.to_command())
         self._attr_is_volume_muted = mute
         self.async_write_ha_state()

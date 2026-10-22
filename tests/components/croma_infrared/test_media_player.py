@@ -149,12 +149,12 @@ async def test_mute(
 
 @pytest.mark.parametrize("mute", [True, False])
 @pytest.mark.usefixtures("init_integration")
-async def test_repeated_mute_sends_once(
+async def test_repeated_mute_sends_each_time(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     mute: bool,
 ) -> None:
-    """Test repeating a mute request does not toggle the TV back."""
+    """Test every mute request sends the toggle, even if the state matches."""
     for _ in range(2):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
@@ -163,59 +163,39 @@ async def test_repeated_mute_sends_once(
             blocking=True,
         )
 
-    assert mock_infrared_emitter_entity.send_command_calls == [CromaTVCode.MUTE]
+    assert mock_infrared_emitter_entity.send_command_calls == [
+        CromaTVCode.MUTE,
+        CromaTVCode.MUTE,
+    ]
     state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state
     assert state.attributes[ATTR_MEDIA_VOLUME_MUTED] is mute
 
 
 @pytest.mark.parametrize(
-    ("service", "expected_state"),
+    ("service", "restored_state", "expected_state"),
     [
-        (SERVICE_TURN_ON, MediaPlayerState.ON),
-        (SERVICE_TURN_OFF, MediaPlayerState.OFF),
+        (SERVICE_TURN_ON, MediaPlayerState.ON, MediaPlayerState.ON),
+        (SERVICE_TURN_ON, MediaPlayerState.PLAYING, MediaPlayerState.ON),
+        (SERVICE_TURN_ON, MediaPlayerState.PAUSED, MediaPlayerState.ON),
+        (SERVICE_TURN_OFF, MediaPlayerState.OFF, MediaPlayerState.OFF),
     ],
 )
-@pytest.mark.usefixtures("init_integration")
-async def test_repeated_power_sends_once(
-    hass: HomeAssistant,
-    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
-    service: str,
-    expected_state: MediaPlayerState,
-) -> None:
-    """Test repeating a power request does not toggle the TV back."""
-    for _ in range(2):
-        await hass.services.async_call(
-            MEDIA_PLAYER_DOMAIN,
-            service,
-            {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
-            blocking=True,
-        )
-
-    assert mock_infrared_emitter_entity.send_command_calls == [CromaTVCode.POWER]
-    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
-    assert state
-    assert state.state == expected_state
-
-
-@pytest.mark.parametrize(
-    ("service", "restored_state"),
-    [
-        (SERVICE_TURN_ON, MediaPlayerState.ON),
-        (SERVICE_TURN_ON, MediaPlayerState.PLAYING),
-        (SERVICE_TURN_ON, MediaPlayerState.PAUSED),
-        (SERVICE_TURN_OFF, MediaPlayerState.OFF),
-    ],
-)
-async def test_power_skipped_when_already_in_state(
+@pytest.mark.usefixtures("mock_croma_to_command")
+async def test_power_sent_when_already_in_state(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     platforms: list[Platform],
     service: str,
     restored_state: MediaPlayerState,
+    expected_state: MediaPlayerState,
 ) -> None:
-    """Test power requests matching the assumed state send nothing."""
+    """Test power is sent even when the assumed state already matches.
+
+    The state is only assumed, so this is how a TV that is out of step with
+    Home Assistant gets brought back in line.
+    """
     mock_restore_cache(hass, [State(MEDIA_PLAYER_ENTITY_ID, restored_state)])
 
     mock_config_entry.add_to_hass(hass)
@@ -230,10 +210,10 @@ async def test_power_skipped_when_already_in_state(
         blocking=True,
     )
 
-    assert mock_infrared_emitter_entity.send_command_calls == []
+    assert mock_infrared_emitter_entity.send_command_calls == [CromaTVCode.POWER]
     state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state
-    assert state.state == restored_state
+    assert state.state == expected_state
 
 
 @pytest.mark.parametrize(
