@@ -114,7 +114,7 @@ class FlicTwistNumberEntity(FlicButtonEntity, RestoreNumber):
         # so the write waits for the session to come up.
         if (
             last_data := await self.async_get_last_number_data()
-        ) is not None and last_data.native_value:
+        ) is not None and last_data.native_value is not None:
             self._attr_native_value = last_data.native_value
             self._pending_restore = last_data.native_value
             if self._client.state.connected:

@@ -183,20 +183,24 @@ def _restore(entity_id: str, value: float) -> tuple[State, dict[str, Any]]:
     "mock_no_ble_device_from_address", "mock_bluetooth_register_callback"
 )
 @pytest.mark.parametrize("device_type", [DeviceType.TWIST])
+@pytest.mark.parametrize("position", [40.0, 0.0])
 async def test_position_restored_and_sent_to_device(
     hass: HomeAssistant,
     mock_flic_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    position: float,
 ) -> None:
     """Test the last position is restored and handed back to the device."""
     mock_restore_cache_with_extra_data(
-        hass, (_restore(TWIST_POSITION_ENTITY_ID, 40.0),)
+        hass, (_restore(TWIST_POSITION_ENTITY_ID, position),)
     )
 
     await setup_twist(hass, mock_config_entry, PushTwistMode.DEFAULT)
 
-    assert hass.states.get(TWIST_POSITION_ENTITY_ID).state == "40.0"
-    mock_flic_client.async_send_update_twist_position.assert_awaited_once_with(0, 40.0)
+    assert hass.states.get(TWIST_POSITION_ENTITY_ID).state == str(position)
+    mock_flic_client.async_send_update_twist_position.assert_awaited_once_with(
+        0, position
+    )
 
 
 @pytest.mark.usefixtures(

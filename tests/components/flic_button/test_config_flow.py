@@ -105,6 +105,25 @@ async def test_user_flow_shows_discovery_progress(hass: HomeAssistant) -> None:
     assert not hass.config_entries.flow.async_progress(include_uninitialized=True)
 
 
+async def test_user_flow_discovery_timeout(hass: HomeAssistant) -> None:
+    """Test user-initiated flow aborts when no device is found."""
+    with patch(
+        "homeassistant.components.flic_button.config_flow.async_process_advertisements",
+        side_effect=TimeoutError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
+
+
 @pytest.mark.usefixtures("mock_discovered_service_info")
 @pytest.mark.parametrize(
     ("device_type", "serial"),

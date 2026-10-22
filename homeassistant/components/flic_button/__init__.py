@@ -3,7 +3,13 @@
 from dataclasses import dataclass
 
 from bleak import BleakError
-from pyflic_ble import DeviceType, FlicClient, FlicProtocolError, PushTwistMode
+from pyflic_ble import (
+    DeviceType,
+    FlicAuthenticationError,
+    FlicClient,
+    FlicProtocolError,
+    PushTwistMode,
+)
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
@@ -39,7 +45,7 @@ class FlicButtonData:
 type FlicButtonConfigEntry = ConfigEntry[FlicButtonData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -> None:
     """Set up Flic Button from a config entry."""
 
     address: str = entry.data[CONF_ADDRESS]
@@ -69,11 +75,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
         client=client,
         serial_number=serial_number,
     )
+    entry.async_on_unload(client.stop)
 
     if ble_device:
         try:
             await client.start()
-        except (TimeoutError, BleakError, FlicProtocolError) as err:
+        # The library raises FlicAuthenticationError only for a verify timeout
+        except (
+            TimeoutError,
+            BleakError,
+            FlicAuthenticationError,
+            FlicProtocolError,
+        ) as err:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
@@ -102,8 +115,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
     # Reload entry when options change (e.g. push_twist_mode)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
-    return True
-
 
 async def _async_update_listener(
     hass: HomeAssistant, entry: FlicButtonConfigEntry
@@ -112,10 +123,6 @@ async def _async_update_listener(
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        await entry.runtime_data.client.stop()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

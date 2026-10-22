@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock
 
 from bleak import BleakError
-from pyflic_ble import DeviceType
+from pyflic_ble import DeviceType, FlicAuthenticationError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -43,19 +43,30 @@ async def test_setup_entry_device_not_available(
     mock_flic_client.start.assert_not_called()
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(BleakError("Connection failed"), id="bleak_error"),
+        pytest.param(
+            FlicAuthenticationError("Quick verify timeout"), id="verify_timeout"
+        ),
+    ],
+)
 async def test_setup_entry_initial_connection_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_flic_client: MagicMock,
     mock_ble_device_from_address: MagicMock,
     mock_bluetooth_register_callback: MagicMock,
+    side_effect: Exception,
 ) -> None:
-    """Test setup entry raises ConfigEntryNotReady when connection fails."""
-    mock_flic_client.start.side_effect = BleakError("Connection failed")
+    """Test setup entry retries and stops the client when connection fails."""
+    mock_flic_client.start.side_effect = side_effect
 
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_flic_client.stop.assert_called_once()
 
 
 async def test_unload_entry(

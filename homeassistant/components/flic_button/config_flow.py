@@ -1,6 +1,7 @@
 """Config flow for Flic Button integration."""
 
 import asyncio
+from contextlib import suppress
 import logging
 from typing import TYPE_CHECKING, Any, override
 
@@ -127,13 +128,10 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
                     progress_task=self._discovery_task,
                 )
 
-            try:
+            # On timeout, discovery_done aborts because no device was found
+            with suppress(TimeoutError):
                 self._discovery_info = self._discovery_task.result()
-            except TimeoutError:
-                self._discovery_task = None
-                return self.async_abort(reason="no_devices_found")
-            finally:
-                self._discovery_task = None
+            self._discovery_task = None
 
             return self.async_show_progress_done(next_step_id="discovery_done")
 
