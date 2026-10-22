@@ -7,13 +7,12 @@ from egauge_async.exceptions import EgaugeAuthenticationError, EgaugePermissionE
 from egauge_async.json.client import EgaugeJsonClient
 from httpx2 import ConnectError
 import probatio
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -48,7 +47,7 @@ class EgaugeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowWithReload:
         """Return the options flow."""
         return EgaugeOptionsFlowHandler()
 
@@ -137,7 +136,7 @@ class EgaugeFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
 
-class EgaugeOptionsFlowHandler(OptionsFlow):
+class EgaugeOptionsFlowHandler(OptionsFlowWithReload):
     """Handle an eGauge options flow."""
 
     async def async_step_init(
@@ -148,14 +147,16 @@ class EgaugeOptionsFlowHandler(OptionsFlow):
             return self.async_create_entry(data=user_input)
 
         coordinator = self.config_entry.runtime_data
+        if coordinator is None:
+            return self.async_abort(reason="not_loaded")
         registers = sorted(coordinator.data.register_info)
         current = self.config_entry.options.get(CONF_INVERT_REGISTERS, [])
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(CONF_INVERT_REGISTERS, default=current): (
+                    probatio.Optional(CONF_INVERT_REGISTERS, default=current): (
                         selector.SelectSelector(
                             selector.SelectSelectorConfig(
                                 options=registers,

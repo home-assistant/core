@@ -106,10 +106,11 @@ class EgaugeSensor(EgaugeEntity, SensorEntity):
         super().__init__(coordinator, register_name)
         self._register_name = register_name
         self.entity_description = description
-        self._invertible = description.device_class in (
-            SensorDeviceClass.POWER,
-            SensorDeviceClass.ENERGY,
-        )
+        # Only a power register can be inverted. An energy register carries
+        # `TOTAL_INCREASING`, and the recorder rejects a negative sample from
+        # such a sensor, so a negated total is not a reading Home Assistant
+        # keeps -- it stops summing that entity and logs an error.
+        self._invertible = description.device_class == SensorDeviceClass.POWER
         self._attr_unique_id = (
             f"{coordinator.serial_number}_{register_name}_{description.key}"
         )
@@ -126,18 +127,10 @@ class EgaugeSensor(EgaugeEntity, SensorEntity):
         return value
 
     def _inverted_registers(self) -> list[str]:
-        """Return the registers the user asked to invert.
-
-        Read from the live entry rather than the coordinator's copy: an options
-        change replaces the entry object, and the coordinator keeps the one it
-        was built with.
-        """
-        entry = self.hass.config_entries.async_get_entry(
-            self.coordinator.config_entry.entry_id
+        """Return the registers the user asked to invert."""
+        return list(
+            self.coordinator.config_entry.options.get(CONF_INVERT_REGISTERS, [])
         )
-        if entry is None:
-            return []
-        return list(entry.options.get(CONF_INVERT_REGISTERS, []))
 
     @property
     @override
