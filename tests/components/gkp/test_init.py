@@ -315,6 +315,33 @@ async def test_stale_device_removal(
     )
 
 
+@pytest.mark.usefixtures("mock_gkp_client")
+async def test_stale_device_removal_on_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test devices removed while Home Assistant was stopped are removed."""
+    mock_config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "AABBCCDDEE03")},
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "AABBCCDDEE03"), mock_config_entry.entry_id
+        )
+        is None
+    )
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, LIVING_ROOM_ID), mock_config_entry.entry_id
+    )
+
+
 async def test_periodic_discovery_error(
     hass: HomeAssistant,
     mock_gkp_client: AsyncMock,

@@ -108,14 +108,11 @@ class GkpHubCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
                 translation_key="authentication_failed",
             ) from err
 
-        previous_devices = set(self.device_installations)
         self.installations = {
             installation.installation_id: installation for installation in installations
         }
         self.last_discovery = time.time()
-
-        if stale_devices := previous_devices - set(self.device_installations):
-            self._remove_stale_devices(stale_devices)
+        self._remove_stale_devices()
 
     async def _async_wake_up_devices(self, now: float) -> None:
         """Ask the devices to report their current state."""
@@ -171,18 +168,16 @@ class GkpHubCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
         _LOGGER.debug("Updated %d devices", len(thermostats))
         return thermostats
 
-    def _remove_stale_devices(self, stale_device_ids: set[str]) -> None:
+    def _remove_stale_devices(self) -> None:
         """Remove devices that are no longer in the user installations."""
         assert self.config_entry is not None
         device_registry = dr.async_get(self.hass)
-
-        for device_id in stale_device_ids:
-            _LOGGER.info("Removing stale device: %s", device_id)
-
-            device = device_registry.async_get_device_by_identifier(
-                (DOMAIN, device_id), self.config_entry.entry_id
-            )
-            if device:
+        identifiers = {(DOMAIN, device_id) for device_id in self.device_installations}
+        for device in dr.async_entries_for_config_entry(
+            device_registry, self.config_entry.entry_id
+        ):
+            if not device.identifiers & identifiers:
+                _LOGGER.info("Removing stale device: %s", device.name)
                 device_registry.async_remove_device(device.id)
 
     @property
