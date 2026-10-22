@@ -1,5 +1,6 @@
 """Config flow for the SolarEdge platform."""
 
+from collections.abc import Mapping
 import logging
 import socket
 from typing import TYPE_CHECKING, Any, override
@@ -55,17 +56,20 @@ class SolarEdgeConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     VERSION = 1
     DOMAIN = DOMAIN
 
-    @property
-    @override
-    def logger(self) -> logging.Logger:
-        """Return the integration logger."""
-        return LOGGER
-
     def __init__(self) -> None:
         """Initialize the config flow."""
         super().__init__()
         self._errors: dict[str, str] = {}
         self._oauth_site_id = ""
+        # Validated web-account change, applied only once consent succeeds.
+        # None keeps the existing settings; an empty dict clears them.
+        self._pending_web: dict[str, str] | None = None
+
+    @property
+    @override
+    def logger(self) -> logging.Logger:
+        """Return the integration logger."""
+        return LOGGER
 
     @override
     async def async_step_auth(
@@ -142,6 +146,27 @@ class SolarEdgeConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return False
         return True
 
+    async def _async_stage_web_update(
+        self, site_id: str, user_input: dict[str, Any]
+    ) -> bool:
+        """Validate submitted web credentials before consent; save nothing yet."""
+        self._pending_web = None
+        if CONF_SECTION_WEB_AUTH not in user_input:
+            return True
+        web_auth = user_input[CONF_SECTION_WEB_AUTH]
+        if not (username := web_auth.get(CONF_USERNAME)):
+            self._pending_web = {}
+            return True
+        if not await self._async_check_web_login(
+            site_id, username, web_auth[CONF_PASSWORD]
+        ):
+            return False
+        self._pending_web = {
+            CONF_USERNAME: username,
+            CONF_PASSWORD: web_auth[CONF_PASSWORD],
+        }
+        return True
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -163,10 +188,10 @@ class SolarEdgeConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             site_id = entry.data[CONF_SITE_ID] if entry else user_input[CONF_SITE_ID]
             if not site_id.isascii() or not site_id.isdecimal():
                 return self.async_abort(reason="invalid_site")
-            self._oauth_site_id = site_id
-            return await self.async_step_oauth_application()
-
-        if user_input is not None:
+            if await self._async_stage_web_update(site_id, user_input):
+                self._oauth_site_id = site_id
+                return await self.async_step_oauth_application()
+        elif user_input is not None:
             name = slugify(user_input.get(CONF_NAME, DEFAULT_NAME))
             if self.source == SOURCE_RECONFIGURE:
                 if TYPE_CHECKING:
@@ -364,7 +389,9 @@ class SolarEdgeConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Handle a reconfiguration flow initiated by the user."""
         return await self.async_step_user(user_input)
 
-    async def async_step_reauth(self, entry_data: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Renew the grant without creating a new config entry."""
         self._oauth_site_id = entry_data[CONF_SITE_ID]
         return await self.async_step_reauth_confirm()
@@ -414,10 +441,16 @@ class SolarEdgeConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             )
             updated = {**entry.data, **data}
             updated.pop(CONF_API_KEY, None)
+            if self._pending_web is not None:
+                updated.pop(CONF_USERNAME, None)
+                updated.pop(CONF_PASSWORD, None)
+                updated.update(self._pending_web)
             await async_repair_authorization(
                 self.hass, entry.entry_id, safe_metadata(metadata)
             )
             return self.async_update_reload_and_abort(entry, data=updated)
         if self._site_in_configuration_exists(self._oauth_site_id):
             return self.async_abort(reason="already_configured")
-        return self.async_create_entry(title=DEFAULT_NAME, data=data)
+        return self.async_create_entry(
+            title=DEFAULT_NAME, data={**data, **(self._pending_web or {})}
+        )

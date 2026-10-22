@@ -287,6 +287,13 @@ class SolarEdgeV2Coordinator(DataUpdateCoordinator[dict[str, Reading]]):
         for key, hours in jobs:
             due[key] = (now + HOUR * hours).timestamp()
         await self.store.async_save(self.state)
+        # Finished jobs keep their normal cadence above; only a failed or
+        # unattempted job is retried, so partial batches cannot starve later jobs.
+        completed: set[str] = set()
+
+        def unfinished() -> list[str]:
+            return [key for key, _ in jobs if key not in completed]
+
         try:
             for key, _ in jobs:
                 try:
@@ -313,12 +320,14 @@ class SolarEdgeV2Coordinator(DataUpdateCoordinator[dict[str, Reading]]):
                             )
                         ):
                             self.state["readings"][name]["value"] = None
+                    completed.add(key)
                     continue
                 self._save_readings(readings, now)
+                completed.add(key)
                 await self.store.async_save(self.state)
         except AuthenticationError, OAuth2TokenRequestReauthError:
-            self.state["auth_failed_jobs"] = [key for key, _ in jobs]
-            for key, _ in jobs:
+            self.state["auth_failed_jobs"] = unfinished()
+            for key in unfinished():
                 due[key] = self.state["next_poll"]
             await self.store.async_save(self.state)
             raise ConfigEntryAuthFailed(
@@ -339,7 +348,7 @@ class SolarEdgeV2Coordinator(DataUpdateCoordinator[dict[str, Reading]]):
                 now if provider else dt_util.utcnow(),
                 provider=provider,
             ).timestamp()
-            for key, _ in jobs:
+            for key in unfinished():
                 due[key] = self.state["next_poll"]
             await self.store.async_save(self.state)
             raise UpdateFailed("SolarEdge quota exceeded; polling paused") from None
@@ -352,10 +361,19 @@ class SolarEdgeV2Coordinator(DataUpdateCoordinator[dict[str, Reading]]):
             self.state["next_poll"] = (
                 now + HOUR * min(24, 2 ** min(5, self.state["failures"] - 1))
             ).timestamp()
-            for key, _ in jobs:
+            for key in unfinished():
                 due[key] = self.state["next_poll"]
             await self.store.async_save(self.state)
             raise UpdateFailed("SolarEdge read failed; polling backed off") from None
+        except BaseException:
+            # Cancellation or an unexpected error: keep the pre-I/O pause and
+            # reservations, and retry unfinished jobs then instead of a full cadence.
+            for key in unfinished():
+                due[key] = self.state["next_poll"]
+            self.hass.async_create_task(
+                self.store.async_save(self.state), "SolarEdge V2 schedule save"
+            )
+            raise
         self.state.update(failures=0, failed=False)
         await self.store.async_save(self.state)
         return self._cached()

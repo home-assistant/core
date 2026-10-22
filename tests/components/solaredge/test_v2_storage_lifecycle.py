@@ -7,7 +7,11 @@ from aiosolaredge.v2 import PermissionDeniedError, Reading
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.solaredge import sensor
+from homeassistant.components.solaredge.v2_runtime import SolarEdgeV2Coordinator
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .test_v2_runtime import coordinator, entry_data
@@ -15,7 +19,25 @@ from .test_v2_runtime import coordinator, entry_data
 NOW = datetime(2026, 10, 22, 12, tzinfo=UTC)
 
 
-def battery(serial, values=(100, 130)):
+async def _load_sensor_platform(
+    hass: HomeAssistant, entry: MockConfigEntry, coord: SolarEdgeV2Coordinator
+) -> None:
+    """Forward the native sensor platform for an already prepared coordinator."""
+    entry.runtime_data = {"v2_coordinator": coord}
+    entry.mock_state(hass, ConfigEntryState.LOADED)
+    await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR])
+    await hass.async_block_till_done()
+
+
+def _battery_ids(registry: er.EntityRegistry, entry: MockConfigEntry) -> list[str]:
+    return [
+        item.unique_id
+        for item in er.async_entries_for_config_entry(registry, entry.entry_id)
+        if "_battery_" in item.unique_id
+    ]
+
+
+def battery(serial: str, values: tuple[int, ...] = (100, 130)) -> dict:
     """Battery."""
     samples = [
         {
@@ -34,7 +56,9 @@ def battery(serial, values=(100, 130)):
     }
 
 
-async def test_inactive_inventory_member_does_not_poison_active_total(hass):
+async def test_inactive_inventory_member_does_not_poison_active_total(
+    hass: HomeAssistant,
+) -> None:
     """Test inactive inventory member does not poison active total."""
     entry = MockConfigEntry(domain="solaredge", data=entry_data())
     entry.add_to_hass(hass)
@@ -52,7 +76,9 @@ async def test_inactive_inventory_member_does_not_poison_active_total(hass):
     assert result["storage_charge_energy"].value == 30
 
 
-async def test_new_active_battery_does_not_disable_site_polling(hass):
+async def test_new_active_battery_does_not_disable_site_polling(
+    hass: HomeAssistant,
+) -> None:
     """Test new active battery does not disable site polling."""
     entry = MockConfigEntry(domain="solaredge", data=entry_data())
     entry.add_to_hass(hass)
@@ -105,22 +131,23 @@ async def test_new_active_battery_does_not_disable_site_polling(hass):
     assert recovered["storage_charge_energy"].value == 60
 
 
-async def test_inventory_recovery_adds_battery_entities_without_reload(hass):
+@pytest.mark.usefixtures("recorder_mock")
+async def test_inventory_recovery_adds_battery_entities_without_reload(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test inventory recovery adds battery entities without reload."""
     entry = MockConfigEntry(domain="solaredge", data=entry_data())
     entry.add_to_hass(hass)
     coord = coordinator(hass, entry)
-    entry.runtime_data = {"v2_coordinator": coord}
-    added = []
-    await sensor.async_setup_entry(hass, entry, lambda entities: added.extend(entities))
-    assert not any(item.unique_id == "123_B1_battery_charge_energy" for item in added)
+    await _load_sensor_platform(hass, entry, coord)
+    assert "123_B1_battery_charge_energy" not in _battery_ids(entity_registry, entry)
     coord.state["inventory"] = {"batteries": [{"serialNumber": "B1"}]}
     coord.async_set_updated_data({"B1_battery_charge_energy": Reading(30, NOW)})
     await hass.async_block_till_done()
-    assert any(item.unique_id == "123_B1_battery_charge_energy" for item in added)
+    assert "123_B1_battery_charge_energy" in _battery_ids(entity_registry, entry)
 
 
-async def test_inventory_denial_invalidates_cached_storage(hass):
+async def test_inventory_denial_invalidates_cached_storage(hass: HomeAssistant) -> None:
     """Test inventory denial invalidates cached storage."""
     entry = MockConfigEntry(domain="solaredge", data=entry_data())
     entry.add_to_hass(hass)
@@ -152,7 +179,9 @@ async def test_inventory_denial_invalidates_cached_storage(hass):
 
 
 @pytest.mark.parametrize("devices", [[], [{"serialNumber": "B1", "active": False}]])
-async def test_no_active_inventory_clears_all_dependent_cache(hass, devices):
+async def test_no_active_inventory_clears_all_dependent_cache(
+    hass: HomeAssistant, devices: list[dict]
+) -> None:
     """Test no active inventory clears all dependent cache."""
     entry = MockConfigEntry(domain="solaredge", data=entry_data())
     entry.add_to_hass(hass)
@@ -183,30 +212,36 @@ async def test_no_active_inventory_clears_all_dependent_cache(hass, devices):
     coord.api.storage_daily.assert_not_called()
 
 
-async def test_battery_discovery_deduplicates_and_unloads(hass):
+@pytest.mark.usefixtures("recorder_mock")
+async def test_battery_discovery_deduplicates_and_unloads(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test battery discovery deduplicates and unloads."""
     entry = MockConfigEntry(domain="solaredge", data=entry_data())
     entry.add_to_hass(hass)
     coord = coordinator(hass, entry)
-    entry.runtime_data = {"v2_coordinator": coord}
-    added = []
-    await sensor.async_setup_entry(hass, entry, lambda entities: added.extend(entities))
+    await _load_sensor_platform(hass, entry, coord)
     for serials in (["B1"], ["B1", "B2"], ["B1", "B2"], ["B1", "B2"]):
         coord.state["inventory"] = {
             "batteries": [{"serialNumber": serial} for serial in serials]
         }
         coord.async_set_updated_data({})
-    ids = [entity.unique_id for entity in added]
+        await hass.async_block_till_done()
+    ids = _battery_ids(entity_registry, entry)
     assert len(ids) == len(set(ids))
     assert sum("_B1_" in identity for identity in ids) == 4
     assert sum("_B2_" in identity for identity in ids) == 4
     await entry._async_process_on_unload(hass)
     coord.state["inventory"] = {"batteries": [{"serialNumber": "B3"}]}
     coord.async_set_updated_data({})
-    assert len(added) == len(ids)
+    await hass.async_block_till_done()
+    assert _battery_ids(entity_registry, entry) == ids
 
 
-async def test_inactive_history_and_missing_active_stay_distinct(hass):
+@pytest.mark.usefixtures("recorder_mock")
+async def test_inactive_history_and_missing_active_stay_distinct(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Keep inactive serial entities unavailable, missing active totals unknown."""
     entry = MockConfigEntry(domain="solaredge", data=entry_data())
     entry.add_to_hass(hass)
@@ -224,18 +259,21 @@ async def test_inactive_history_and_missing_active_stay_distinct(hass):
     assert result["B1_battery_charge_energy"].value == 30
     assert result["B2_battery_charge_energy"].value is None
     assert result["storage_charge_energy"].value is None
-    entry.runtime_data = {"v2_coordinator": coord}
-    added = []
-    await sensor.async_setup_entry(hass, entry, lambda entities: added.extend(entities))
-    historical = next(
-        item for item in added if item.unique_id == "123_OLD_battery_charge_energy"
-    )
-    assert not historical.available
+    # Battery energy is disabled by default; these were enabled by the user.
+    ids = {}
+    for serial in ("OLD", "B2"):
+        ids[serial] = entity_registry.async_get_or_create(
+            "sensor",
+            "solaredge",
+            f"123_{serial}_battery_charge_energy",
+            config_entry=entry,
+        ).entity_id
     coord.data = result
-    missing = next(
-        item for item in added if item.unique_id == "123_B2_battery_charge_energy"
-    )
-    assert missing.extra_state_attributes["sample_timestamp"] is None
+    await _load_sensor_platform(hass, entry, coord)
+    assert hass.states.get(ids["OLD"]).state == "unavailable"
+    missing = hass.states.get(ids["B2"])
+    assert missing.state == "unknown"
+    assert missing.attributes["sample_timestamp"] is None
 
 
 @pytest.mark.parametrize(
@@ -243,8 +281,8 @@ async def test_inactive_history_and_missing_active_stay_distinct(hass):
     [None, {"batteries": []}, {"batteries": [{"serialNumber": "B1", "active": False}]}],
 )
 async def test_restored_missing_capability_never_republishes_old_storage(
-    hass, inventory
-):
+    hass: HomeAssistant, inventory: dict | None
+) -> None:
     """Invalidate historical cache dependencies without bypassing its schedule."""
     entry = MockConfigEntry(domain="solaredge", data=entry_data())
     entry.add_to_hass(hass)

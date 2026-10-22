@@ -30,11 +30,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolarEdgeConfigEntry) ->
 
     if entry.data.get("api_version") == 2:
         implementation = await async_get_config_entry_implementation(hass, entry)
-        coordinator = SolarEdgeV2Coordinator(
+        v2_coordinator = SolarEdgeV2Coordinator(
             hass, entry, OAuth2Session(hass, entry, implementation)
         )
-        await coordinator.async_config_entry_first_refresh()
-        entry.runtime_data["v2_coordinator"] = coordinator
+        await v2_coordinator.async_config_entry_first_refresh()
+        entry.runtime_data["v2_coordinator"] = v2_coordinator
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Setup for API key (sensors)

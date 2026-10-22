@@ -1,43 +1,47 @@
 {
   "config": {
     "abort": {
-      "invalid_site": "The authorized site does not match the requested site ID.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "Could not validate the authorized site. Check access and quota before trying again.",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "invalid_site": "The authorized site does not match the requested site ID."
     },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "oauth_credentials_conflict": "This Client ID already has different saved credentials. Review it in Application credentials before continuing; the saved secret has not been replaced.",
-      "oauth_credentials_required": "Enter both Client ID and Client secret. Neither may be blank. V2 will not fall back to V1.",
       "api_key_with_oauth": "Turn V2 OAuth off to switch this entry to a V1 API key. The V2 authorization was kept.",
       "auth_missing": "You must provide either an API key or a username and password.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "oauth_credentials_conflict": "This Client ID already has different saved credentials. Review it in Application credentials before continuing; the saved secret has not been replaced.",
+      "oauth_credentials_required": "Enter both Client ID and Client secret. Neither may be blank. V2 will not fall back to V1.",
       "site_not_active": "The site is not active for the provided API key",
-      "v1_api_key_required": "Switching from V2 OAuth to V1 requires a valid V1 API key. The V2 authorization was kept.",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "v1_api_key_required": "Switching from V2 OAuth to V1 requires a valid V1 API key. The V2 authorization was kept."
     },
     "step": {
       "oauth_application": {
-        "title": "SolarEdge V2 OAuth application",
+        "data": { "client_id": "Client ID", "client_secret": "Client secret" },
         "description": "Enter your SolarEdge developer application credentials here. Home Assistant stores them in its native Application Credentials registry, then opens secured SolarEdge sign-in and consent. Register your Home Assistant external HTTPS URL followed by /auth/external/callback/solaredge as the callback. No refresh token is needed. Existing entry, site and history are preserved.",
-        "data": {"client_id": "Client ID", "client_secret": "Client secret"}
+        "title": "SolarEdge V2 OAuth application"
       },
       "pick_implementation": {
-        "data": {"implementation": "[%key:common::config_flow::data::implementation%]"},
-        "data_description": {"implementation": "[%key:common::config_flow::description::implementation%]"},
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        },
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
       "reauth_confirm": {
-        "title": "Authorize SolarEdge Basic V2",
-        "description": "Renew access to the same site with SITE_DATA and DEVICE_DATA scopes. Basic V2 supports lifetime and calendar energy, directional daily energy, inventory and observed daily battery counter deltas. Average power is a separate 15-minute sample polled every two hours, not instantaneous. Unsupported current readings and their history remain unchanged."
+        "description": "Renew access to the same site with SITE_DATA and DEVICE_DATA scopes. Basic V2 supports lifetime and calendar energy, directional daily energy, inventory and observed daily battery counter deltas. Average power is a separate 15-minute sample polled every two hours, not instantaneous. Unsupported current readings and their history remain unchanged.",
+        "title": "Authorize SolarEdge Basic V2"
       },
       "reconfigure": {
         "data": {
-          "use_oauth": "API version: V2 OAuth ON / deprecated V1 OFF",
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "password": "[%key:common::config_flow::data::password%]",
+          "use_oauth": "API version: V2 OAuth ON / deprecated V1 OFF",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
@@ -67,11 +71,11 @@
       },
       "user": {
         "data": {
-          "use_oauth": "API version: V2 OAuth ON / deprecated V1 OFF",
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "name": "The name of this installation",
           "password": "[%key:common::config_flow::data::password%]",
           "site_id": "The SolarEdge site ID",
+          "use_oauth": "API version: V2 OAuth ON / deprecated V1 OFF",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
@@ -103,7 +107,7 @@
   },
   "entity": {
     "sensor": {
-      "average_power": {"name": "Average power (15-minute sample)"},
+      "average_power": { "name": "Average power (15-minute sample)" },
       "batteries": {
         "name": "Batteries"
       },

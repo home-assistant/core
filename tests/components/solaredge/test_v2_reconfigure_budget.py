@@ -11,7 +11,7 @@ from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.solaredge.config_flow import SolarEdgeConfigFlow
 from homeassistant.components.solaredge.v2_budget import MAX_CALLS, WINDOW, get_budget
-from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
@@ -200,9 +200,7 @@ async def test_reconfigure_defaults_to_current_protocol(
     data = entry_data() if api_version else {"site_id": "123", "api_key": "synthetic"}
     entry = MockConfigEntry(domain="solaredge", data=data)
     entry.add_to_hass(hass)
-    initial = await hass.config_entries.flow.async_init(
-        "solaredge", context={"source": SOURCE_RECONFIGURE, "entry_id": entry.entry_id}
-    )
+    initial = await entry.start_reconfigure_flow(hass)
     marker = next(
         key for key in initial["data_schema"].schema if key.schema == "use_oauth"
     )
@@ -213,7 +211,10 @@ async def test_reconfigure_defaults_to_current_protocol(
 @pytest.mark.usefixtures("recorder_mock", "mock_setup_entry")
 @pytest.mark.parametrize("selection", ["omitted", "kept", "unchanged", "cleared"])
 async def test_v2_web_reconfigure_keeps_oauth(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, selection: str
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
+    selection: str,
 ) -> None:
     """Native update/reload preserves entry, registry and OAuth without fresh consent."""
     original = {
@@ -226,13 +227,11 @@ async def test_v2_web_reconfigure_keeps_oauth(
         domain="solaredge", unique_id="synthetic-identity", data=deepcopy(original)
     )
     entry.add_to_hass(hass)
-    registry = er.async_get(hass)
+    registry = entity_registry
     entity = registry.async_get_or_create(
         "sensor", "solaredge", "123_lifetime_energy", config_entry=entry
     )
-    initial = await hass.config_entries.flow.async_init(
-        "solaredge", context={"source": SOURCE_RECONFIGURE, "entry_id": entry.entry_id}
-    )
+    initial = await entry.start_reconfigure_flow(hass)
     assert initial["step_id"] == "reconfigure"
     web = {"username": "synthetic-web", "password": "synthetic-new-password"}
     expected = {**original, "password": "synthetic-new-password"}
@@ -304,9 +303,7 @@ async def test_v2_protocol_switch_requires_explicit_valid_v1(
     original = entry_data()
     entry = MockConfigEntry(domain="solaredge", data=deepcopy(original))
     entry.add_to_hass(hass)
-    initial = await hass.config_entries.flow.async_init(
-        "solaredge", context={"source": SOURCE_RECONFIGURE, "entry_id": entry.entry_id}
-    )
+    initial = await entry.start_reconfigure_flow(hass)
     submitted: dict = {"use_oauth": use_oauth}
     if case == "missing_key":
         submitted["web_auth"] = {"username": "synthetic-web", "password": "synthetic"}

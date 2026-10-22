@@ -7,6 +7,8 @@ from unittest.mock import AsyncMock, patch
 from aiosolaredge.v2 import RateLimitError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 from yarl import URL
 
 from homeassistant.components import http
@@ -23,7 +25,8 @@ from homeassistant.components.solaredge.v2_runtime import (
     SolarEdgeV2Coordinator,
     async_repair_authorization,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_entry_oauth2_flow as oauth
@@ -37,7 +40,7 @@ from .test_v2_runtime import coordinator, entry_data
 
 
 @pytest.mark.usefixtures("recorder_mock")
-async def test_saved_credential_appearing_while_form_open(hass):
+async def test_saved_credential_appearing_while_form_open(hass: HomeAssistant) -> None:
     """Test saved credential appearing while form open."""
     assert await async_setup_component(hass, "application_credentials", {})
     hass.config.external_url = "https://ha.example.com"
@@ -69,8 +72,10 @@ async def test_saved_credential_appearing_while_form_open(hass):
 
 @pytest.mark.usefixtures("recorder_mock")
 async def test_successful_native_reauth_repairs_auth_failure_pause(
-    hass, aioclient_mock, hass_client
-):
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client: ClientSessionGenerator,
+) -> None:
     """Test successful native reauth repairs auth failure pause."""
     hass.config.external_url = "https://ha.example.com"
     impl = await async_get_auth_implementation(
@@ -88,11 +93,7 @@ async def test_successful_native_reauth_repairs_auth_failure_pause(
         await old._async_update_data()
     assert old.state["failed"] is True
     assert old.state["next_poll"] > now.timestamp() + 7000
-    result = await hass.config_entries.flow.async_init(
-        "solaredge",
-        context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"implementation": "solaredge"}
@@ -143,7 +144,9 @@ async def test_successful_native_reauth_repairs_auth_failure_pause(
     assert restored.state["failed"] is False
 
 
-async def test_actual_json_refresh_is_serialized_and_rotated(hass, aioclient_mock):
+async def test_actual_json_refresh_is_serialized_and_rotated(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test actual json refresh is serialized and rotated."""
     impl = await async_get_auth_implementation(
         hass, "solaredge", ClientCredential("synthetic", "synthetic")
@@ -170,8 +173,8 @@ async def test_actual_json_refresh_is_serialized_and_rotated(hass, aioclient_moc
 
 
 async def test_actual_refresh_429_does_not_reauth_and_persists_pause(
-    hass, aioclient_mock
-):
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test actual refresh 429 does not reauth and persists pause."""
     impl = await async_get_auth_implementation(
         hass, "solaredge", ClientCredential("synthetic", "synthetic")
@@ -201,8 +204,10 @@ async def test_actual_refresh_429_does_not_reauth_and_persists_pause(
 
 @pytest.mark.usefixtures("recorder_mock")
 async def test_provider_error_callback_is_redacted_and_single_use(
-    hass, hass_client, aioclient_mock
-):
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
     """Test provider error callback is redacted and single use."""
     flow_id, encoded = await start_flow(hass)
     client = await hass_client()
@@ -231,7 +236,9 @@ async def test_provider_error_callback_is_redacted_and_single_use(
         ({"client_id": "new-app"}, "oauth_credentials_required"),
     ],
 )
-async def test_two_open_forms_reconcile_intent(hass, submitted, expected_error):
+async def test_two_open_forms_reconcile_intent(
+    hass: HomeAssistant, submitted: dict[str, str], expected_error: str | None
+) -> None:
     """Test two open forms reconcile intent."""
     assert await async_setup_component(hass, "application_credentials", {})
     hass.config.external_url = "https://ha.example.com"
@@ -261,8 +268,8 @@ async def test_two_open_forms_reconcile_intent(hass, submitted, expected_error):
 
 @pytest.mark.parametrize("cause", ["quota", "timeout", "monthly"])
 async def test_authorization_repair_preserves_non_auth_pause(
-    hass, aioclient_mock, cause
-):
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, cause: str
+) -> None:
     """Test authorization repair preserves non auth pause."""
     entry = MockConfigEntry(domain="solaredge", data=entry_data())
     entry.add_to_hass(hass)

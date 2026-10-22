@@ -280,12 +280,14 @@ async def test_native_oauth_flow(
 
 @pytest.mark.usefixtures("recorder_mock")
 async def test_runtime_setup_keeps_registry(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Actual platform setup/unload keeps entity IDs and old instantaneous placeholder."""
     entry = MockConfigEntry(domain="solaredge", title="SolarEdge", data=entry_data())
     entry.add_to_hass(hass)
-    registry = er.async_get(hass)
+    registry = entity_registry
     old = registry.async_get_or_create(
         "sensor",
         "solaredge",

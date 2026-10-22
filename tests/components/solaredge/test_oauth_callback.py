@@ -1,7 +1,9 @@
 """Native SolarEdge callback security regressions; all values are synthetic."""
 
 import asyncio
+from collections.abc import Awaitable, Callable
 import time
+from typing import Any
 
 import pytest
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
@@ -44,84 +46,140 @@ async def start_flow(hass: HomeAssistant) -> tuple[str, str]:
     return result["flow_id"], query["state"]
 
 
+CODE = "synthetic-evil-code"
+SITE = "untrusted-999"
+
+
 @pytest.mark.usefixtures("recorder_mock")
 @pytest.mark.parametrize(
-    "case",
+    "build_params",
     [
-        "missing",
-        "bare-site",
-        "static-id",
-        "tampered",
-        "mismatch",
-        "duplicate",
-        "missing-code",
-        "code-and-error",
-        "expired",
-        "wrong-flow",
-        "wrong-domain",
-        "wrong-implementation",
-        "wrong-redirect",
-        "wrong-site-binding",
-        "inactive",
-        "not-auth",
+        pytest.param(lambda state: {"code": CODE, "site_id": SITE}, id="missing"),
+        pytest.param(lambda state: {"code": CODE, "site_id": "123"}, id="bare-site"),
+        pytest.param(
+            lambda state: {
+                "external_id": "synthetic-static-customer",
+                "code": CODE,
+                "site_id": SITE,
+            },
+            id="static-id",
+        ),
+        pytest.param(
+            lambda state: {"external_id": state + "tampered", "code": CODE},
+            id="tampered",
+        ),
+        pytest.param(
+            lambda state: {
+                "external_id": state,
+                "state": "synthetic-other-state",
+                "code": CODE,
+            },
+            id="mismatch",
+        ),
+        pytest.param(
+            lambda state: [
+                ("external_id", state),
+                ("code", CODE),
+                ("external_id", state),
+            ],
+            id="duplicate",
+        ),
+        pytest.param(
+            lambda state: {"external_id": state, "site_id": SITE}, id="missing-code"
+        ),
+        pytest.param(
+            lambda state: {
+                "external_id": state,
+                "code": CODE,
+                "error": "synthetic-error",
+            },
+            id="code-and-error",
+        ),
     ],
 )
-async def test_invalid_callback(
+async def test_invalid_callback_query(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    case: str,
+    build_params: Callable[[str], dict[str, str] | list[tuple[str, str]]],
 ) -> None:
-    """No unbound callback may resume consent or initiate token exchange."""
+    """No malformed or unbound carrier may resume consent or exchange a code."""
+    _, encoded = await start_flow(hass)
+    client = await hass_client()
+    response = await client.get(CALLBACK_PATH, params=build_params(encoded))
+    assert response.status == 400
+    assert await response.text() == "Invalid SolarEdge OAuth callback"
+    assert aioclient_mock.call_count == 0
+
+
+async def _expire(hass: HomeAssistant, flow_id: str, attempt: Any) -> None:
+    attempt.expires = time.time() - 1
+
+
+async def _other_flow(hass: HomeAssistant, flow_id: str, attempt: Any) -> None:
+    attempt.flow.flow_id = "synthetic-other-flow"
+
+
+async def _other_domain(hass: HomeAssistant, flow_id: str, attempt: Any) -> None:
+    attempt.flow.DOMAIN = "synthetic-other-provider"
+
+
+async def _other_implementation(
+    hass: HomeAssistant, flow_id: str, attempt: Any
+) -> None:
+    attempt.flow.flow_impl = await async_get_auth_implementation(
+        hass,
+        "synthetic-other-app",
+        ClientCredential("synthetic-other", "synthetic-secret"),
+    )
+
+
+async def _other_redirect(hass: HomeAssistant, flow_id: str, attempt: Any) -> None:
+    attempt.redirect_uri = "https://evil.invalid/callback"
+
+
+async def _other_site(hass: HomeAssistant, flow_id: str, attempt: Any) -> None:
+    attempt.flow._oauth_site_id = "999"
+
+
+async def _inactive(hass: HomeAssistant, flow_id: str, attempt: Any) -> None:
+    hass.config_entries.flow.async_abort(flow_id)
+
+
+async def _not_auth(hass: HomeAssistant, flow_id: str, attempt: Any) -> None:
+    attempt.flow.cur_step = {
+        "type": FlowResultType.EXTERNAL_STEP_DONE,
+        "step_id": "creation",
+    }
+
+
+@pytest.mark.usefixtures("recorder_mock")
+@pytest.mark.parametrize(
+    "tamper",
+    [
+        pytest.param(_expire, id="expired"),
+        pytest.param(_other_flow, id="wrong-flow"),
+        pytest.param(_other_domain, id="wrong-domain"),
+        pytest.param(_other_implementation, id="wrong-implementation"),
+        pytest.param(_other_redirect, id="wrong-redirect"),
+        pytest.param(_other_site, id="wrong-site-binding"),
+        pytest.param(_inactive, id="inactive"),
+        pytest.param(_not_auth, id="not-auth"),
+    ],
+)
+async def test_invalid_callback_binding(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    tamper: Callable[[HomeAssistant, str, Any], Awaitable[None]],
+) -> None:
+    """A valid carrier is rejected once its pending flow binding changed."""
     flow_id, encoded = await start_flow(hass)
     client = await hass_client()
-    attempt = hass.data[DATA_PENDING][encoded]
-    params = {
-        "external_id": encoded,
-        "code": "synthetic-evil-code",
-        "site_id": "untrusted-999",
-    }
-    match case:
-        case "missing":
-            del params["external_id"]
-        case "bare-site":
-            params = {"code": "synthetic-evil-code", "site_id": "123"}
-        case "static-id":
-            params["external_id"] = "synthetic-static-customer"
-        case "tampered":
-            params["external_id"] += "tampered"
-        case "mismatch":
-            params["state"] = "synthetic-other-state"
-        case "duplicate":
-            params = [*params.items(), ("external_id", encoded)]
-        case "missing-code":
-            del params["code"]
-        case "code-and-error":
-            params["error"] = "synthetic-error"
-        case "expired":
-            attempt.expires = time.time() - 1
-        case "wrong-flow":
-            attempt.flow.flow_id = "synthetic-other-flow"
-        case "wrong-domain":
-            attempt.flow.DOMAIN = "synthetic-other-provider"
-        case "wrong-implementation":
-            attempt.flow.flow_impl = await async_get_auth_implementation(
-                hass,
-                "synthetic-other-app",
-                ClientCredential("synthetic-other", "synthetic-secret"),
-            )
-        case "wrong-redirect":
-            attempt.redirect_uri = "https://evil.invalid/callback"
-        case "wrong-site-binding":
-            attempt.flow._oauth_site_id = "999"
-        case "inactive":
-            hass.config_entries.flow.async_abort(flow_id)
-        case "not-auth":
-            attempt.flow.cur_step = {
-                "type": FlowResultType.EXTERNAL_STEP_DONE,
-                "step_id": "creation",
-            }
-    response = await client.get(CALLBACK_PATH, params=params)
+    await tamper(hass, flow_id, hass.data[DATA_PENDING][encoded])
+    response = await client.get(
+        CALLBACK_PATH, params={"external_id": encoded, "code": CODE, "site_id": SITE}
+    )
     assert response.status == 400
     assert await response.text() == "Invalid SolarEdge OAuth callback"
     assert aioclient_mock.call_count == 0
