@@ -27,7 +27,9 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
+    STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
@@ -65,10 +67,15 @@ async def test_firmware_update_entity(
 ) -> None:
     """Test firmware versions create an available update."""
     victron_hub, config_entry = init_integration_with_update
-    await _async_inject_firmware_versions(hass, victron_hub, "v3.80~45", "v3.80~36")
 
     entity = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
     update_entry = next(entry for entry in entity if entry.domain == UPDATE_DOMAIN)
+
+    state = hass.states.get(update_entry.entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    await _async_inject_firmware_versions(hass, victron_hub, "v3.80~45", "v3.80~36")
 
     state = hass.states.get(update_entry.entity_id)
     assert state is not None
@@ -115,6 +122,35 @@ async def test_firmware_update_entity(
     assert state is not None
     assert state.attributes[ATTR_IN_PROGRESS] is False
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
+
+
+async def test_firmware_without_available_version(
+    hass: HomeAssistant,
+    init_integration_with_update: tuple[VictronVenusHub, MockConfigEntry],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test installed firmware remains available without an online version."""
+    victron_hub, config_entry = init_integration_with_update
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/platform/0/Firmware/Installed/Version",
+        '{"value": "v3.60"}',
+    )
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
+
+    update_entry = next(
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        if entry.domain == UPDATE_DOMAIN
+    )
+    state = hass.states.get(update_entry.entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "v3.60"
+    assert state.attributes[ATTR_LATEST_VERSION] == "v3.60"
 
 
 @pytest.mark.parametrize(

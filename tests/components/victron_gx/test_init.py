@@ -15,10 +15,20 @@ from victron_mqtt.testing import finalize_injection, inject_message
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
+from homeassistant.components.update import (
+    ATTR_INSTALLED_VERSION,
+    ATTR_LATEST_VERSION,
+    DOMAIN as UPDATE_DOMAIN,
+)
 from homeassistant.components.victron_gx import async_remove_config_entry_device
 from homeassistant.components.victron_gx.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
@@ -57,11 +67,13 @@ def _register_legacy_sensor(
 @pytest.fixture
 def mock_victron_hub_library():
     """Mock the victron_mqtt library."""
-    with patch("homeassistant.components.victron_gx.hub.VictronVenusHub") as mock_lib:
+    with patch(
+        "homeassistant.components.victron_gx.hub.VictronVenusHub", autospec=True
+    ) as mock_lib:
         hub_instance = MagicMock()
         hub_instance.connect = AsyncMock()
         hub_instance.disconnect = AsyncMock()
-        hub_instance.firmware_update_info = FirmwareUpdateInfo(None, None, None, None)
+        hub_instance.firmware_update_info = None
         hub_instance.installation_id = MOCK_INSTALLATION_ID
         mock_lib.return_value = hub_instance
         yield mock_lib
@@ -309,6 +321,43 @@ async def test_hub_starts_firmware_update_checks(
     await hass.async_block_till_done()
 
     mock_victron_hub_library.return_value.check_firmware_update.assert_called_once_with()
+
+
+async def test_firmware_update_waits_for_first_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_victron_hub_library: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the update entity waits for the first firmware snapshot."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    update_entry = next(
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+        if entry.domain == UPDATE_DOMAIN
+    )
+    state = hass.states.get(update_entry.entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert ATTR_INSTALLED_VERSION not in state.attributes
+    assert ATTR_LATEST_VERSION not in state.attributes
+
+    library_hub = mock_victron_hub_library.return_value
+    library_hub.on_firmware_update(
+        library_hub, FirmwareUpdateInfo("v3.60", "v3.70", None, None)
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(update_entry.entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "v3.60"
+    assert state.attributes[ATTR_LATEST_VERSION] == "v3.70"
 
 
 async def test_device_via_device_links(

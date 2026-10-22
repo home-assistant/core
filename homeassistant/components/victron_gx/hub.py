@@ -21,7 +21,6 @@ from victron_mqtt import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
-    CONF_MODEL,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
@@ -32,7 +31,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.redact import async_redact_data
 
-from .const import CONF_INSTALLATION_ID, CONF_SERIAL, DOMAIN
+from .const import CONF_INSTALLATION_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,8 +75,6 @@ class Hub:
             password=config.get(CONF_PASSWORD) or None,
             use_ssl=config.get(CONF_SSL, False),
             installation_id=config.get(CONF_INSTALLATION_ID) or None,
-            model_name=config.get(CONF_MODEL) or None,
-            serial=config.get(CONF_SERIAL) or None,
             operation_mode=OperationMode.FULL,
             update_frequency_seconds=UPDATE_FREQUENCY_AUTO,
         )
@@ -118,7 +115,7 @@ class Hub:
             )
 
     @property
-    def firmware_update_info(self) -> FirmwareUpdateInfo:
+    def firmware_update_info(self) -> FirmwareUpdateInfo | None:
         """Return the library's current firmware update snapshot."""
         return self._hub.firmware_update_info
 
