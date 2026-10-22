@@ -358,7 +358,7 @@ aiolookin==1.0.0
 aiolyric==2.2.1
 
 # homeassistant.components.mealie
-aiomealie==2.1.2
+aiomealie==2.1.3
 
 # homeassistant.components.melcloud_home
 aiomelcloudhome==0.3.1
@@ -481,7 +481,7 @@ aiotedee==0.3.0
 aiothreema==0.2.0
 
 # homeassistant.components.tractive
-aiotractive==1.3.0
+aiotractive==1.3.1
 
 # homeassistant.components.unifi
 aiounifi==97
@@ -1597,7 +1597,8 @@ loqedAPI==2.1.16
 
 # homeassistant.components.chirpstack
 # homeassistant.components.lorawan
-lorawan-connection[chirpstack]==1.2.0
+# homeassistant.components.thethingsnetwork_lorawan
+lorawan-connection[chirpstack,tts]==1.3.0
 
 # homeassistant.components.luftdaten
 luftdaten==0.7.4
@@ -2339,7 +2340,7 @@ pyhaversion==22.8.0
 pyhelty==0.2.0
 
 # homeassistant.components.helty_cloud
-pyheltycloud==0.2.0
+pyheltycloud==0.2.1
 
 # homeassistant.components.heos
 pyheos==1.0.6
@@ -2498,7 +2499,7 @@ pynetgear==0.10.10
 pynetio==0.1.9.1
 
 # homeassistant.components.nina
-pynina==1.0.3
+pynina==1.0.4
 
 # homeassistant.components.nintendo_parental_controls
 pynintendoauth==1.0.3
@@ -2692,7 +2693,7 @@ pysmarty2==0.10.3
 pysmartyplants==0.2.1
 
 # homeassistant.components.smhi
-pysmhi==2.0.0
+pysmhi==2.1.0
 
 # homeassistant.components.edl21
 pysml==0.1.8
@@ -2752,7 +2753,7 @@ python-awair==0.2.5
 python-blockchain-api==0.0.2
 
 # homeassistant.components.bsblan
-python-bsblan==6.1.10
+python-bsblan==6.1.11
 
 # homeassistant.components.citybikes
 python-citybikes==0.3.3
