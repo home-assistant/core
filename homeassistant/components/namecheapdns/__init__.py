@@ -9,7 +9,7 @@ from .coordinator import NamecheapConfigEntry, NamecheapDnsUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NamecheapConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NamecheapConfigEntry) -> None:
     """Set up Namecheap DynamicDNS from a config entry."""
 
     coordinator = NamecheapDnsUpdateCoordinator(hass, entry)
@@ -19,9 +19,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NamecheapConfigEntry) ->
     # Add a dummy listener as we do not have regular entities
     entry.async_on_unload(coordinator.async_add_listener(async_noop))
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: NamecheapConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NamecheapConfigEntry) -> None:
     """Unload a config entry."""
-    return True

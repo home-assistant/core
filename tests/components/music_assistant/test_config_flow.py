@@ -19,6 +19,7 @@ from music_assistant_client.exceptions import (
 from music_assistant_models.api import ServerInfoMessage
 from music_assistant_models.errors import AuthenticationFailed, InvalidToken
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
 
 from homeassistant.components.music_assistant.config_flow import (
     CONF_URL,
@@ -48,8 +49,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry, async_load_fixture
 
 SERVER_INFO = {
     "server_id": "1234",
@@ -831,6 +830,7 @@ async def test_finish_auth_token_exchange(
     assert call_args[1]["aiohttp_session"] is not None
 
     # Verify entry was created with long-lived token
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_URL: "http://localhost:8095",
@@ -846,11 +846,7 @@ async def test_reauth_flow(
     """Test reauth flow shows confirmation before auth."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["description_placeholders"]["url"] == "http://localhost:8095"
@@ -874,11 +870,7 @@ async def test_reauth_with_manual_token(
     with patch(
         "homeassistant.components.music_assistant.config_flow._test_connection"
     ) as mock_test_connection:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
-            data=mock_config_entry.data,
-        )
+        result = await mock_config_entry.start_reauth_flow(hass)
         assert result["step_id"] == "reauth_confirm"
 
         result = await hass.config_entries.flow.async_configure(
@@ -908,9 +900,9 @@ async def test_reauth_with_manual_token(
         (InvalidToken("invalid_token"), "auth_failed"),
     ],
 )
+@pytest.mark.usefixtures("mock_get_server_info")
 async def test_auth_manual_invalid_token(
     hass: HomeAssistant,
-    mock_get_server_info: AsyncMock,
     exception: Exception,
     error_key: str,
 ) -> None:
@@ -937,6 +929,20 @@ async def test_auth_manual_invalid_token(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth_manual"
     assert result["errors"] == {"base": error_key}
+
+    with (
+        patch("homeassistant.components.music_assistant.config_flow._test_connection"),
+        patch(
+            "homeassistant.components.music_assistant.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_TOKEN: "test_auth_token"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -1271,6 +1277,7 @@ async def test_app_installed_not_running(
     assert start_addon.call_args == call(APP_SLUG)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_URL: APP_URL, CONF_TOKEN: "test_token"}
+    assert result["result"].unique_id == "1234"
 
 
 async def test_app_running(
@@ -1696,6 +1703,7 @@ async def test_app_onboarding_poll_timeout(
     assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "1234"
 
 
 async def test_app_onboarding_url_without_request(

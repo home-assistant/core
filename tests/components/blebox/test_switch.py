@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, PropertyMock
 
 import blebox_uniapi
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.config_entries import ConfigEntryState
@@ -27,8 +28,6 @@ from .conftest import (
     mock_only_feature,
     setup_product_mock,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="switchbox")

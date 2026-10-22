@@ -17,6 +17,8 @@ async def test_home_assistant_restart_not_required(hass: HomeAssistant) -> None:
         "home_assistant_restart_dismissed": False,
         "home_assistant_restart_required": False,
         "home_assistant_restart_sources": [],
+        "host_reboot_dismissed": False,
+        "host_reboot_required": False,
     }
 
 
@@ -40,11 +42,15 @@ async def test_set_home_assistant_restart_required(hass: HomeAssistant) -> None:
             "home_assistant_restart_dismissed": False,
             "home_assistant_restart_required": True,
             "home_assistant_restart_sources": ["hacs"],
+            "host_reboot_dismissed": False,
+            "host_reboot_required": False,
         },
         {
             "home_assistant_restart_dismissed": False,
             "home_assistant_restart_required": True,
             "home_assistant_restart_sources": ["demo", "hacs"],
+            "host_reboot_dismissed": False,
+            "host_reboot_required": False,
         },
     ]
 
@@ -75,8 +81,26 @@ async def test_system_state_is_read_only(hass: HomeAssistant) -> None:
         state.home_assistant_restart_sources = frozenset()  # type: ignore[misc]
     with pytest.raises(AttributeError):
         state.home_assistant_restart_sources.clear()  # type: ignore[attr-defined]
+    with pytest.raises(FrozenInstanceError):
+        state.host_reboot_required = True  # type: ignore[misc]
 
     assert system_state.async_get(hass).home_assistant_restart_sources == {"hacs"}
+
+
+async def test_set_host_reboot_required(hass: HomeAssistant) -> None:
+    """Test the host reboot flag follows Supervisor, and only updates on change."""
+    updates: list[bool] = []
+    system_state.async_subscribe(
+        hass, callback(lambda state: updates.append(state.host_reboot_required))
+    )
+
+    system_state.async_set_host_reboot_required(hass, True)
+    system_state.async_set_host_reboot_required(hass, True)
+    system_state.async_set_host_reboot_required(hass, False)
+    await hass.async_block_till_done()
+
+    assert updates == [True, False]
+    assert not system_state.async_get(hass).host_reboot_required
 
 
 async def test_dismiss(hass: HomeAssistant) -> None:
@@ -107,3 +131,19 @@ async def test_dismiss(hass: HomeAssistant) -> None:
 
     assert not system_state.async_get(hass).home_assistant_restart_dismissed
     assert updates == [False, True, False]
+
+
+async def test_dismiss_host_reboot(hass: HomeAssistant) -> None:
+    """Test a dismissed reboot comes back once Supervisor raises it again."""
+    system_state.async_set_host_reboot_required(hass, True)
+    system_state.async_dismiss(hass)
+
+    state = system_state.async_get(hass)
+    assert state.host_reboot_required
+    assert state.host_reboot_dismissed
+
+    # After the reboot a new one is new again, not put off.
+    system_state.async_set_host_reboot_required(hass, False)
+    system_state.async_set_host_reboot_required(hass, True)
+
+    assert not system_state.async_get(hass).host_reboot_dismissed

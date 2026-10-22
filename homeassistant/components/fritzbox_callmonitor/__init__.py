@@ -1,7 +1,5 @@
 """The fritzbox_callmonitor integration."""
 
-import logging
-
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
@@ -17,14 +15,12 @@ from homeassistant.exceptions import (
 from .base import FritzBoxPhonebook
 from .const import CONF_PHONEBOOK, CONF_PREFIXES, DOMAIN, PLATFORMS
 
-_LOGGER = logging.getLogger(__name__)
-
 type FritzBoxCallMonitorConfigEntry = ConfigEntry[FritzBoxPhonebook]
 
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: FritzBoxCallMonitorConfigEntry
-) -> bool:
+) -> None:
     """Set up the fritzbox_callmonitor platforms."""
     fritzbox_phonebook = FritzBoxPhonebook(
         host=config_entry.data[CONF_HOST],
@@ -44,17 +40,18 @@ async def async_setup_entry(
     except FritzConnectionException as ex:
         raise ConfigEntryAuthFailed from ex
     except RequestsConnectionError as ex:
-        _LOGGER.error("Unable to connect to FRITZ!Box call monitor: %s", ex)
-        raise ConfigEntryNotReady from ex
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"host": config_entry.data[CONF_HOST]},
+        ) from ex
 
     config_entry.runtime_data = fritzbox_phonebook
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: FritzBoxCallMonitorConfigEntry
-) -> bool:
+) -> None:
     """Unloading the fritzbox_callmonitor platforms."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)

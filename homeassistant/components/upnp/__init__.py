@@ -34,7 +34,7 @@ NOTIFICATION_TITLE = "UPnP/IGD Setup"
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> None:
     """Set up UPnP/IGD device from a config entry."""
     LOGGER.debug("Setting up config entry: %s", entry.entry_id)
 
@@ -148,13 +148,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> bool
         )
     if not device_entry:
         # No device found, create new device entry.
-        device_entry = dev_registry.async_get_or_create(
+        device_entry = dev_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            connections=set(connections),
-            identifiers=set(identifiers),
-            name=device.name,
-            manufacturer=device.manufacturer,
-            model=device.model_name,
+            device_info=dr.DeviceInfo(
+                connections=set(connections),
+                identifiers=set(identifiers),
+                name=device.name,
+                manufacturer=device.manufacturer,
+                model=device.model_name,
+            ),
         )
         LOGGER.debug(
             "Created device using UDN '%s', device_entry: %s", device.udn, device_entry
@@ -184,10 +186,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> bool
     # Setup platforms, creating sensors/binary_sensors.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> None:
     """Unload a UPnP/IGD device from a config entry."""
     LOGGER.debug("Unloading config entry: %s", entry.entry_id)
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

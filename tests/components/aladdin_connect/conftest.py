@@ -5,6 +5,7 @@ from time import time
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.aladdin_connect import DOMAIN
 from homeassistant.components.application_credentials import (
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .const import CLIENT_ID, CLIENT_SECRET, USER_ID
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -62,7 +61,7 @@ def mock_aladdin_connect_api() -> Generator[AsyncMock]:
 def mock_setup_entry() -> AsyncMock:
     """Fixture to mock setup entry."""
     with patch(
-        "homeassistant.components.aladdin_connect.async_setup_entry", return_value=True
+        "homeassistant.components.aladdin_connect.async_setup_entry", return_value=None
     ):
         yield
 

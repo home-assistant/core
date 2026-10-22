@@ -1,6 +1,10 @@
 {
   "domain": "yale_smart_alarm",
   "name": "Yale Smart Living",
+  "categories": [
+    "security_safety.alarm_systems",
+    "security_safety.locks_access"
+  ],
   "codeowners": ["@gjohansson-ST"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/yale_smart_alarm",

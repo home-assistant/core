@@ -55,19 +55,24 @@ class CameraPreferences:
     def _async_entity_registry_filter(
         self, event_data: er.EventEntityRegistryUpdatedData
     ) -> bool:
-        """Filter entity registry events for renamed cameras."""
+        """Filter entity registry events for removed or renamed cameras."""
         return (
-            event_data["action"] == "update"
-            and "old_entity_id" in event_data
-            and split_entity_id(event_data["entity_id"])[0] == DOMAIN
-        )
+            event_data["action"] == "remove"
+            or (event_data["action"] == "update" and "old_entity_id" in event_data)
+        ) and split_entity_id(event_data["entity_id"])[0] == DOMAIN
 
     @callback
     def _async_entity_registry_updated(
         self, event: Event[er.EventEntityRegistryUpdatedData]
     ) -> None:
-        """Move the preferences of a renamed camera to its new entity_id."""
+        """Drop or move the preferences of a removed or renamed camera."""
         data = event.data
+        if data["action"] == "remove":
+            self._dynamic_stream_settings_by_entity_id.pop(data["entity_id"], None)
+            if self._preload_prefs.pop(data["entity_id"], None) is not None:
+                self._store.async_delay_save(lambda: self._preload_prefs, 0)
+            return
+
         assert data["action"] == "update"
         old_entity_id = data["old_entity_id"]
         new_entity_id = data["entity_id"]
