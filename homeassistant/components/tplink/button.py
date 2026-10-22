@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Final, override
 
-from kasa import Device, Feature, Module
+from kasa import Device, Feature, KasaException, Module
 
 from homeassistant.components.button import (
     DOMAIN as BUTTON_DOMAIN,
@@ -120,10 +120,15 @@ async def async_setup_entry(
     ) -> list[TPLinkPtzPresetButtonEntity]:
         if (pan_tilt := dev.modules.get(Module.PanTilt)) is None:
             return []
+        try:
+            presets = pan_tilt.presets
+        except KasaException:
+            # Try again on the next update, don't lose the other cameras
+            return []
         known = known_preset_ids.setdefault(dev.device_id, set())
         new_presets = {
             preset_id: name
-            for name, preset_id in pan_tilt.presets.items()
+            for name, preset_id in presets.items()
             if preset_id not in known
         }
         if not new_presets:
