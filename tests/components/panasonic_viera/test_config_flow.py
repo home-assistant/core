@@ -24,6 +24,7 @@ from .conftest import (
     MOCK_CONFIG_DATA,
     MOCK_DEVICE_INFO,
     MOCK_ENCRYPTION_DATA,
+    MOCK_USER_INPUT,
     get_mock_remote,
 )
 
@@ -56,7 +57,7 @@ async def test_flow_non_encrypted(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {**MOCK_BASIC_DATA},
+            {**MOCK_USER_INPUT},
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -81,7 +82,7 @@ async def test_flow_not_connected_error(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {**MOCK_BASIC_DATA},
+            {**MOCK_USER_INPUT},
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -94,7 +95,7 @@ async def test_flow_not_connected_error(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {**MOCK_BASIC_DATA},
+            {**MOCK_USER_INPUT},
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -116,7 +117,7 @@ async def test_flow_unknown_abort(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {**MOCK_BASIC_DATA},
+            {**MOCK_USER_INPUT},
         )
 
     assert result["type"] is FlowResultType.ABORT
@@ -143,7 +144,7 @@ async def test_flow_encrypted_not_connected_pin_code_request(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {**MOCK_BASIC_DATA},
+            {**MOCK_USER_INPUT},
         )
 
     assert result["type"] is FlowResultType.ABORT
@@ -168,7 +169,7 @@ async def test_flow_encrypted_unknown_pin_code_request(hass: HomeAssistant) -> N
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {**MOCK_BASIC_DATA},
+            {**MOCK_USER_INPUT},
         )
 
     assert result["type"] is FlowResultType.ABORT
@@ -197,7 +198,7 @@ async def test_flow_encrypted_valid_pin_code(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {**MOCK_BASIC_DATA},
+            {**MOCK_USER_INPUT},
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -236,7 +237,7 @@ async def test_flow_encrypted_invalid_pin_code_error(hass: HomeAssistant) -> Non
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {**MOCK_BASIC_DATA},
+            {**MOCK_USER_INPUT},
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -281,7 +282,7 @@ async def test_flow_encrypted_not_connected_abort(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {**MOCK_BASIC_DATA},
+            {**MOCK_USER_INPUT},
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -314,7 +315,7 @@ async def test_flow_encrypted_unknown_abort(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {**MOCK_BASIC_DATA},
+            {**MOCK_USER_INPUT},
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -347,7 +348,7 @@ async def test_flow_non_encrypted_already_configured_abort(hass: HomeAssistant) 
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={**MOCK_BASIC_DATA},
+        user_input={**MOCK_USER_INPUT},
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -372,7 +373,7 @@ async def test_flow_encrypted_already_configured_abort(hass: HomeAssistant) -> N
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={**MOCK_BASIC_DATA},
+        user_input={**MOCK_USER_INPUT},
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -555,7 +556,7 @@ async def test_imported_flow_not_connected_error(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {**MOCK_BASIC_DATA},
+            {**MOCK_USER_INPUT},
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
