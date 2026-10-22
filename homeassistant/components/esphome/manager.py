@@ -1388,17 +1388,15 @@ def _async_setup_device_registry(
         suggested_area = device_info.suggested_area
 
     # Create/update main device
-    device_entry = device_registry.async_get_or_create_device(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            configuration_url=configuration_url,
-            connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
-            name=entry_data.friendly_name or entry_data.name,
-            manufacturer=manufacturer,
-            model=model,
-            sw_version=sw_version,
-            suggested_area=suggested_area,
-        ),
+        configuration_url=configuration_url,
+        connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
+        name=entry_data.friendly_name or entry_data.name,
+        manufacturer=manufacturer,
+        model=model,
+        sw_version=sw_version,
+        suggested_area=suggested_area,
     )
 
     # Handle sub devices
@@ -1414,18 +1412,14 @@ def _async_setup_device_registry(
         if sub_device.area_id is not None and sub_device.area_id in areas_by_id:
             sub_device_suggested_area = areas_by_id[sub_device.area_id].name
 
-        sub_device_entry = device_registry.async_get_or_create_device(
+        sub_device_entry = device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            device_info=dr.DeviceInfo(
-                identifiers={
-                    (DOMAIN, f"{device_info.mac_address}_{sub_device.device_id}")
-                },
-                name=sub_device.name or device_entry.name,
-                manufacturer=manufacturer,
-                model=model,
-                sw_version=sw_version,
-                suggested_area=sub_device_suggested_area,
-            ),
+            identifiers={(DOMAIN, f"{device_info.mac_address}_{sub_device.device_id}")},
+            name=sub_device.name or device_entry.name,
+            manufacturer=manufacturer,
+            model=model,
+            sw_version=sw_version,
+            suggested_area=sub_device_suggested_area,
         )
 
         # Update the sub device to set via_device_id
