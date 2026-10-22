@@ -16,6 +16,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigSubentryData
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, PERCENTAGE, EntityCategory
 from homeassistant.core import (
     CoreState,
+    Event,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -1402,6 +1403,114 @@ async def test_entity_registry_updates_invalid_entity_id(hass: HomeAssistant) ->
     await hass.async_block_till_done()
 
     assert hass.states.get("test_domain.world") is not None
+
+
+def _run_in_event_dispatch(hass: HomeAssistant, func: Callable[[], None]) -> None:
+    """Run func from an event listener, registry events it fires are queued."""
+
+    @callback
+    def _listener(event: Event) -> None:
+        func()
+
+    unsub = hass.bus.async_listen("test_event", _listener)
+    hass.bus.async_fire("test_event")
+    unsub()
+
+
+def _rename_twice(registry: er.EntityRegistry) -> None:
+    registry.async_update_entity(
+        "test_domain.world", new_entity_id="test_domain.planet"
+    )
+    registry.async_update_entity(
+        "test_domain.planet", new_entity_id="test_domain.globe", name="Globe"
+    )
+
+
+def _rename_then_remove(registry: er.EntityRegistry) -> None:
+    registry.async_update_entity(
+        "test_domain.world", new_entity_id="test_domain.planet"
+    )
+    registry.async_remove("test_domain.planet")
+
+
+def _update_then_remove(registry: er.EntityRegistry) -> None:
+    registry.async_update_entity("test_domain.world", name="Planet")
+    registry.async_remove("test_domain.world")
+
+
+@pytest.mark.parametrize(
+    ("registry_changes", "expected_entity_ids"),
+    [
+        pytest.param(_rename_twice, ["test_domain.globe"], id="rename_twice"),
+        pytest.param(_rename_then_remove, [], id="rename_then_remove"),
+        pytest.param(_update_then_remove, [], id="update_then_remove"),
+    ],
+)
+async def test_entity_registry_updates_queued_events(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    registry_changes: Callable[[er.EntityRegistry], None],
+    expected_entity_ids: list[str],
+) -> None:
+    """Test registry events delivered after the entry was changed again."""
+    entity_registry.async_get_or_create(
+        DOMAIN, "test_platform", "1234", suggested_object_id="world"
+    )
+    platform = MockEntityPlatform(hass)
+    await platform.async_add_entities([MockEntity(unique_id="1234")])
+    assert hass.states.get("test_domain.world") is not None
+
+    _run_in_event_dispatch(hass, lambda: registry_changes(entity_registry))
+    await hass.async_block_till_done()
+
+    assert hass.states.async_entity_ids(DOMAIN) == expected_entity_ids
+
+
+async def test_entity_registry_updates_queued_rename_chain(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test an entity follows a rename chain applied while events are queued."""
+    entity_registry.async_get_or_create(
+        DOMAIN, "test_platform", "1234", suggested_object_id="world"
+    )
+    platform = MockEntityPlatform(hass)
+    await platform.async_add_entities([MockEntity(unique_id="1234")])
+
+    _run_in_event_dispatch(hass, lambda: _rename_twice(entity_registry))
+    await hass.async_block_till_done()
+
+    # The name was changed by an event the entity did not receive
+    assert hass.states.get("test_domain.globe").name == "Globe"
+
+    # The entity listens to registry updates for its new entity_id
+    entity_registry.async_update_entity("test_domain.globe", name="Earth")
+    await hass.async_block_till_done()
+    assert hass.states.get("test_domain.globe").name == "Earth"
+
+
+async def test_entity_registry_queued_update_and_remove_removes_once(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a queued update and remove only remove the entity once."""
+    removed_from_registry = 0
+
+    class RemoveTrackingEntity(MockEntity):
+        async def async_removed_from_registry(self) -> None:
+            nonlocal removed_from_registry
+            removed_from_registry += 1
+            await asyncio.sleep(0)
+
+    entity_registry.async_get_or_create(
+        DOMAIN, "test_platform", "1234", suggested_object_id="world"
+    )
+    platform = MockEntityPlatform(hass)
+    await platform.async_add_entities([RemoveTrackingEntity(unique_id="1234")])
+
+    _run_in_event_dispatch(hass, lambda: _update_then_remove(entity_registry))
+    await hass.async_block_till_done()
+
+    assert hass.states.get("test_domain.world") is None
+    assert removed_from_registry == 1
     assert hass.states.get("invalid_entity_id") is None
     assert hass.states.get("diff_domain.world") is None
 
