@@ -41,6 +41,9 @@ LOG_QUERY_MAX_CHARACTERS = 10000
 # traceback with the innermost frames and the exception
 _LOG_QUERY_RECORD_START_CHARACTERS = 300
 _LOG_QUERY_RECORD_END_CHARACTERS = 700
+# Logging threads can write records in another order than they were created,
+# so lines after the last one read can hold records this much older
+_LOG_QUERY_ORDER_MARGIN = timedelta(milliseconds=100)
 _LOG_QUERY_DEFAULT_SPAN = timedelta(minutes=15)
 _LOG_QUERY_DEFAULT_LIMIT = 100
 _LOG_QUERY_MAX_LIMIT = 500
@@ -412,14 +415,19 @@ class SystemLogGetLogsTool(Tool):
                 raise result
             records = _parse_log_records(result)
             if len(result) >= LOG_QUERY_READ_LINES and records:
-                # The last record can miss lines and moves to the next page.
-                # When all records read after the start have the same time,
-                # they are kept, so the next page starts later.
-                source_end = (
-                    records[-1].time
-                    if records[-1].time > max(records[0].time, start_time)
-                    else max(records[-1].time, start_time) + timedelta(milliseconds=1)
+                # The last record read can miss lines and moves to the next page
+                source_end = min(
+                    records[-1].time,
+                    max(record.time for record in records) - _LOG_QUERY_ORDER_MARGIN,
                 )
+                first_time = min(
+                    (record.time for record in records if record.time >= start_time),
+                    default=start_time,
+                )
+                if source_end <= first_time:
+                    # Keep the records of the first time, so the next page
+                    # starts later
+                    source_end = first_time + timedelta(milliseconds=1)
                 complete_end = min(complete_end or source_end, source_end)
             merged.extend(
                 (name, record)

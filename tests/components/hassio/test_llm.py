@@ -215,31 +215,70 @@ async def test_get_logs_invalid_source(
     send_command.assert_not_called()
 
 
-async def test_get_logs_pages_through_busy_second(
-    hass: HomeAssistant, llm_context: llm.LLMContext, freezer: FrozenDateTimeFactory
+@pytest.mark.parametrize(
+    ("journal", "pages"),
+    [
+        pytest.param(
+            [
+                ("13:50:00.100", "13:50:00.100 First"),
+                ("13:50:00.200", "13:50:00.200 Second"),
+                ("13:50:00.300", "13:50:00.300 Third"),
+            ],
+            [
+                (["First"], "2026-10-20T04:50:00.101-07:00"),
+                (["Second"], "2026-10-20T04:50:00.201-07:00"),
+                (["Third"], None),
+            ],
+            id="busy_second",
+        ),
+        pytest.param(
+            [
+                ("13:50:00.000", "13:50:00.000 First"),
+                ("13:50:01.000", "13:50:01.000 Third"),
+                # Created before the record above, but received after it
+                ("13:50:01.010", "13:50:00.950 Second"),
+                ("13:50:02.000", "13:50:02.000 Fourth"),
+            ],
+            [
+                (["First"], "2026-10-20T04:50:00.900-07:00"),
+                (["Second"], "2026-10-20T04:50:00.951-07:00"),
+                (["Third"], "2026-10-20T04:50:01.001-07:00"),
+                (["Fourth"], "2026-10-20T04:50:02.001-07:00"),
+                ([], None),
+            ],
+            id="received_out_of_order",
+        ),
+    ],
+)
+async def test_get_logs_pages(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    freezer: FrozenDateTimeFactory,
+    journal: list[tuple[str, str]],
+    pages: list[tuple[list[str], str | None]],
 ) -> None:
-    """Test pages within a second with more lines than one read continue."""
+    """Test following next_start_time returns every record once."""
     freezer.move_to("2026-10-20 12:00:00+00:00")
-    journal = [
-        f"2026-10-20 13:50:00.{millisecond}+02:00 INFO (MainThread) [core] {millisecond}"
-        for millisecond in ("100", "200", "300")
-    ]
+
+    def _microseconds(time: str) -> int:
+        return (
+            datetime.fromisoformat(f"2026-10-20 {time}+02:00")
+            - datetime(1970, 1, 1, tzinfo=UTC)
+        ) // timedelta(microseconds=1)
 
     async def _send_command(
         command: str, *, range_header: str, **kwargs: object
     ) -> str:
-        """Return the lines from the start time like the journal."""
+        """Return the lines received from the start time like the journal."""
         start, _, lines = range_header.removeprefix("realtime=").split(":")
         start_microseconds = int(start.replace(".", ""))
         return "\n".join(
             [
-                line
-                for line in journal
-                if (
-                    datetime.fromisoformat(line[:29]) - datetime(1970, 1, 1, tzinfo=UTC)
+                "2026-10-20 {}+02:00 INFO (MainThread) [core] {}".format(
+                    *line.split(" ", 1)
                 )
-                // timedelta(microseconds=1)
-                >= start_microseconds
+                for received, line in journal
+                if _microseconds(received) >= start_microseconds
             ][: int(lines)]
         )
 
@@ -248,11 +287,7 @@ async def test_get_logs_pages_through_busy_second(
     start_time = "2026-10-20T13:45:00+02:00"
 
     with patch("homeassistant.components.system_log.llm.LOG_QUERY_READ_LINES", 2):
-        for expected_message, expected_next_start_time in (
-            ("100", "2026-10-20T04:50:00.200-07:00"),
-            ("200", "2026-10-20T04:50:00.300-07:00"),
-            ("300", None),
-        ):
+        for expected_messages, expected_next_start_time in pages:
             result = await tool.async_call(
                 hass,
                 llm.ToolInput(
@@ -261,7 +296,7 @@ async def test_get_logs_pages_through_busy_second(
                 llm_context,
             )
             assert [record["message"] for record in result.data["records"]] == [
-                f"INFO (MainThread) [core] {expected_message}"
+                f"INFO (MainThread) [core] {message}" for message in expected_messages
             ]
             assert result.data.get("next_start_time") == expected_next_start_time
             start_time = expected_next_start_time

@@ -469,7 +469,7 @@ async def test_get_logs_file_line_limit(
                 ),
             }
         ],
-        "next_start_time": "2026-10-20T04:55:00.000-07:00",
+        "next_start_time": "2026-10-20T04:54:59.900-07:00",
     }
 
 
@@ -578,7 +578,7 @@ async def test_get_logs_source_line_limit(
         "INFO (MainThread) [busy] Message 1",
         "quiet[1]: Before busy stopped",
     ]
-    assert result.data["next_start_time"] == "2026-10-20T04:52:00.000-07:00"
+    assert result.data["next_start_time"] == "2026-10-20T04:51:59.900-07:00"
 
 
 @pytest.mark.parametrize(
@@ -614,28 +614,61 @@ async def test_get_logs_records_fill_line_limit(
     assert result.data["next_start_time"] == "2026-10-20T04:50:00.001-07:00"
 
 
+@pytest.mark.parametrize(
+    ("log", "pages"),
+    [
+        pytest.param(
+            [
+                "13:50:00.000 First",
+                "13:50:00.000 Same time",
+                "13:50:00.500 Second",
+                "13:51:00.000 Third",
+            ],
+            [
+                (["First", "Same time"], "2026-10-20T04:50:00.001-07:00"),
+                (["Second"], "2026-10-20T04:50:59.900-07:00"),
+                (["Third"], None),
+            ],
+            id="same_time",
+        ),
+        pytest.param(
+            [
+                "13:50:00.000 First",
+                "13:50:01.000 Third",
+                # Created before the record above, but written after it
+                "13:50:00.950 Second",
+                "13:50:02.000 Fourth",
+            ],
+            [
+                (["First"], "2026-10-20T04:50:00.900-07:00"),
+                (["Second"], "2026-10-20T04:50:00.951-07:00"),
+                (["Third"], "2026-10-20T04:50:01.001-07:00"),
+                (["Fourth"], None),
+            ],
+            id="written_out_of_order",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("frozen_time")
 async def test_get_logs_pages(
     hass: HomeAssistant,
     llm_context: llm.LLMContext,
     logs_tool: llm.Tool,
     tmp_path: Path,
+    log: list[str],
+    pages: list[tuple[list[str], str | None]],
 ) -> None:
     """Test following next_start_time returns every record once."""
     (tmp_path / "home-assistant.log").write_text(
-        "2026-10-20 13:50:00.000+02:00 INFO (MainThread) [core] First\n"
-        "2026-10-20 13:50:00.000+02:00 INFO (MainThread) [core] Same time\n"
-        "2026-10-20 13:50:00.500+02:00 INFO (MainThread) [core] Second\n"
-        "2026-10-20 13:51:00.000+02:00 INFO (MainThread) [core] Third\n"
+        "".join(
+            f"2026-10-20 {time}+02:00 INFO (MainThread) [core] {message}\n"
+            for time, message in (line.split(" ", 1) for line in log)
+        )
     )
     start_time = "2026-10-20T13:45:00+02:00"
 
     with patch("homeassistant.components.system_log.llm.LOG_QUERY_READ_LINES", 2):
-        for expected_messages, expected_next_start_time in (
-            (["First", "Same time"], "2026-10-20T04:50:00.001-07:00"),
-            (["Second"], "2026-10-20T04:51:00.000-07:00"),
-            (["Third"], None),
-        ):
+        for expected_messages, expected_next_start_time in pages:
             result = await logs_tool.async_call(
                 hass,
                 llm.ToolInput(logs_tool.name, {"start_time": start_time}),
