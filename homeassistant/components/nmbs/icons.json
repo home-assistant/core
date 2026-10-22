@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "connection": {
+        "default": "mdi:train"
+      },
+      "liveboard": {
+        "default": "mdi:train"
+      }
+    }
+  }
+}

@@ -39,6 +39,16 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "connection": {
+        "name": "Train from {station_from} to {station_to}"
+      },
+      "liveboard": {
+        "name": "Trains in {station}"
+      }
+    }
+  },
   "exceptions": {
     "station_list_unavailable": {
       "message": "Unable to fetch the NMBS station list because the iRail API is unavailable"

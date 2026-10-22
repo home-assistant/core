@@ -64,9 +64,9 @@ rules:
   entity-category: todo
   entity-device-class: todo
   entity-disabled-by-default: done
-  entity-translations: todo
+  entity-translations: done
   exception-translations: done
-  icon-translations: todo
+  icon-translations: done
   reconfiguration-flow: done
   repair-issues: todo
   stale-devices: todo

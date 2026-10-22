@@ -74,11 +74,13 @@ class NMBSSensor(NMBSEntity, SensorEntity):
         """Initialize the NMBS connection sensor."""
         super().__init__(coordinator)
         self._show_on_map = coordinator.config_entry.data.get(CONF_SHOW_ON_MAP, False)
-        self._attr_name = (
-            coordinator.config_entry.data.get(CONF_NAME)
-            or f"Train from {coordinator.station_from.standard_name}"
-            f" to {coordinator.station_to.standard_name}"
-        )
+        self._attr_translation_key = "connection"
+        self._attr_translation_placeholders = {
+            "station_from": coordinator.station_from.standard_name,
+            "station_to": coordinator.station_to.standard_name,
+        }
+        if custom_name := coordinator.config_entry.data.get(CONF_NAME):
+            self._attr_name = custom_name
         unique_id = f"{coordinator.station_from.id}_{coordinator.station_to.id}"
         vias = "_excl_vias" if coordinator.exclude_vias else ""
         self._attr_unique_id = f"{CONNECTION_UNIQUE_ID_PREFIX}{unique_id}{vias}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
@@ -135,14 +137,13 @@ class NMBSSensor(NMBSEntity, SensorEntity):
             "platform_arriving": connection.arrival.platform,
             "platform_departing": connection.departure.platform,
             "vehicle_id": connection.departure.vehicle,
+            "departure_time": connection.departure.time,
         }
 
         attrs["canceled"] = connection.departure.canceled
         if attrs["canceled"]:
-            attrs["departure"] = None
             attrs["departure_minutes"] = None
         else:
-            attrs["departure"] = f"In {departure} minutes"
             attrs["departure_minutes"] = departure
 
         if self._show_on_map:
@@ -163,7 +164,7 @@ class NMBSSensor(NMBSEntity, SensorEntity):
                 via.timebetween
             ) + get_delay_in_minutes(via.departure.delay)
 
-        attrs["delay"] = f"{delay} minutes"
+        attrs["delay_seconds"] = connection.departure.delay
         attrs["delay_minutes"] = delay
 
         return attrs
@@ -178,7 +179,8 @@ class NMBSLiveBoard(NMBSEntity, SensorEntity):
         """Initialize the sensor for getting liveboard data."""
         super().__init__(coordinator)
         self._station = station
-        self._attr_name = f"Trains in {station.standard_name}"
+        self._attr_translation_key = "liveboard"
+        self._attr_translation_placeholders = {"station": station.standard_name}
         unique_id = (
             f"{station.id}_{coordinator.station_from.id}_{coordinator.station_to.id}"
         )
@@ -226,7 +228,7 @@ class NMBSLiveBoard(NMBSEntity, SensorEntity):
         departure_minutes = get_time_until(departure.time)
 
         attrs: dict[str, Any] = {
-            "departure": f"In {departure_minutes} minutes",
+            "departure_time": departure.time,
             "departure_minutes": departure_minutes,
             "extra_train": departure.is_extra,
             "vehicle_id": departure.vehicle,
@@ -234,7 +236,7 @@ class NMBSLiveBoard(NMBSEntity, SensorEntity):
         }
 
         if delay > 0:
-            attrs["delay"] = f"{delay} minutes"
+            attrs["delay_seconds"] = departure.delay
             attrs["delay_minutes"] = delay
 
         return attrs
