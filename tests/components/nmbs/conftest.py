@@ -34,20 +34,9 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_nmbs_client() -> Generator[AsyncMock]:
     """Mock a NMBS client."""
-    with (
-        patch(
-            "homeassistant.components.nmbs.IRail",
-            autospec=True,
-        ) as mock_client,
-        patch(
-            "homeassistant.components.nmbs.config_flow.IRail",
-            new=mock_client,
-        ),
-        patch(
-            "homeassistant.components.nmbs.coordinator.IRail",
-            new=mock_client,
-        ),
-    ):
+    with patch(
+        "homeassistant.components.nmbs.coordinator.IRail", autospec=True
+    ) as mock_client:
         client = mock_client.return_value
         client.get_stations.return_value = StationsApiResponse.from_dict(
             load_json_object_fixture("stations.json", DOMAIN)

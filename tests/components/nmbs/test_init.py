@@ -51,51 +51,23 @@ async def test_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_setup_entry_api_unavailable(
-    hass: HomeAssistant,
-    mock_nmbs_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the entry is retried when the station list cannot be fetched."""
-    mock_nmbs_client.get_stations.return_value = None
-    mock_config_entry.add_to_hass(hass)
-
-    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_setup_entry_api_timeout(
-    hass: HomeAssistant,
-    mock_nmbs_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the entry is retried when fetching the station list times out."""
-    mock_nmbs_client.get_stations.side_effect = TimeoutError
-    mock_config_entry.add_to_hass(hass)
-
-    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
 @pytest.mark.parametrize(
     "stations_side_effect",
     [
+        pytest.param([None], id="no_response"),
+        pytest.param(TimeoutError, id="timeout"),
         pytest.param(ApiUnavailableError("API unavailable"), id="api_unavailable"),
         pytest.param(ValueError("Unexpected response schema"), id="decoding_error"),
         pytest.param(MissingField("name", "str", "StationDetails"), id="missing_field"),
     ],
 )
-async def test_setup_entry_station_list_unparsable(
+async def test_setup_entry_station_list_unavailable(
     hass: HomeAssistant,
     mock_nmbs_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    stations_side_effect: Exception,
+    stations_side_effect: list[None] | Exception | type[Exception],
 ) -> None:
-    """Test the entry is retried when the station list cannot be parsed."""
+    """Test the entry is retried when the station list cannot be fetched."""
     mock_nmbs_client.get_stations.side_effect = stations_side_effect
     mock_config_entry.add_to_hass(hass)
 

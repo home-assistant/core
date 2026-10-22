@@ -131,7 +131,7 @@ class NMBSSensor(NMBSEntity, SensorEntity):
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return sensor attributes if data is available.
+        """Return sensor attributes, or only the map location when there is no connection.
 
         The departure and delay attributes are text forms of
         departure_minutes and delay_minutes, kept for existing templates.

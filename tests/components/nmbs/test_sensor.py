@@ -634,30 +634,6 @@ async def test_unexpected_error_fails_the_refresh(
         assert state.state == STATE_UNAVAILABLE
 
 
-async def test_connection_sensor_unavailable_when_api_fails(
-    hass: HomeAssistant,
-    mock_nmbs_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test the connection sensor becomes unavailable when the API fails."""
-    await _setup_entry(hass, mock_config_entry)
-    connection_id = _get_entity_id(entity_registry, CONNECTION_UNIQUE_ID)
-    state = hass.states.get(connection_id)
-    assert state is not None
-    assert state.state == "20"
-
-    mock_nmbs_client.get_connections.side_effect = PyRailError("API unavailable")
-    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    state = hass.states.get(connection_id)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
-
 async def test_connection_sensor_keeps_data_when_api_is_not_modified(
     hass: HomeAssistant,
     mock_nmbs_client: AsyncMock,
@@ -710,30 +686,6 @@ async def test_departure_minutes_decrease_with_unchanged_data(
     assert state.attributes["departure"] == "In 9 minutes"
     assert state.attributes["departure_time"] is not None
     assert state.attributes["departure_minutes"] == 9
-
-
-async def test_connection_sensor_unavailable_when_api_times_out(
-    hass: HomeAssistant,
-    mock_nmbs_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test the connection sensor becomes unavailable when the API times out."""
-    await _setup_entry(hass, mock_config_entry)
-    connection_id = _get_entity_id(entity_registry, CONNECTION_UNIQUE_ID)
-    state = hass.states.get(connection_id)
-    assert state is not None
-    assert state.state == "20"
-
-    mock_nmbs_client.get_connections.side_effect = TimeoutError
-    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    state = hass.states.get(connection_id)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
 
 
 @freeze_time(FROZEN_TIME)

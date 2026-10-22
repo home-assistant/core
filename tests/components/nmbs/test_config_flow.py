@@ -143,23 +143,10 @@ async def test_dont_abort_if_exists_when_vias_differs(
     assert result["result"].unique_id == f"{mock_config_entry.unique_id}_excl_vias"
 
 
-async def test_unavailable_api(
-    hass: HomeAssistant, mock_nmbs_client: AsyncMock
-) -> None:
-    """Test the flow aborts when the API is unavailable."""
-    mock_nmbs_client.get_stations.return_value = None
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "api_unavailable"
-
-
 @pytest.mark.parametrize(
     "stations_side_effect",
     [
+        pytest.param([None], id="no_response"),
         pytest.param(ApiUnavailableError("API unavailable"), id="api_unavailable"),
         pytest.param(TimeoutError, id="timeout"),
         pytest.param(ValueError("Unexpected response schema"), id="decoding_error"),
@@ -170,7 +157,7 @@ async def test_unavailable_api(
 async def test_unavailable_api_errors(
     hass: HomeAssistant,
     mock_nmbs_client: AsyncMock,
-    stations_side_effect: Exception | type[Exception],
+    stations_side_effect: list[None] | Exception | type[Exception],
 ) -> None:
     """Test the flow aborts when the station list cannot be fetched and recovers."""
     mock_nmbs_client.get_stations.side_effect = stations_side_effect

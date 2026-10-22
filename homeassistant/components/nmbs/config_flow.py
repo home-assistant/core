@@ -4,13 +4,11 @@ from collections.abc import Mapping
 from typing import Any, override
 
 import probatio
-from pyrail import IRail, PyRailError
 from pyrail.models import StationDetails
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     BooleanSelector,
     SelectOptionDict,
@@ -27,6 +25,7 @@ from .const import (
     DOMAIN,
     LIVEBOARD_UNIQUE_ID_PREFIX,
 )
+from .coordinator import StationListUnavailableError, async_fetch_stations
 
 
 class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -36,22 +35,11 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self.stations: list[StationDetails] = []
 
-    async def _fetch_stations(self) -> list[StationDetails]:
-        """Fetch the stations."""
-        api_client = IRail(session=async_get_clientsession(self.hass))
-        try:
-            stations_response = await api_client.get_stations()
-        except (PyRailError, TimeoutError, ValueError, LookupError) as err:
-            raise CannotConnect from err
-        if stations_response is None:
-            raise CannotConnect
-        return stations_response.stations
-
     async def _fetch_stations_choices(self) -> list[SelectOptionDict]:
         """Fetch the stations options."""
 
         if len(self.stations) == 0:
-            self.stations = await self._fetch_stations()
+            self.stations = await async_fetch_stations(self.hass)
 
         return [
             SelectOptionDict(value=station.id, label=station.standard_name)
@@ -60,12 +48,13 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def _route(
         self, user_input: dict[str, Any]
-    ) -> tuple[StationDetails, StationDetails, str]:
-        """Return the stations and the unique ID of the submitted route."""
+    ) -> tuple[StationDetails, StationDetails]:
+        """Return the stations of the submitted route."""
         stations = {station.id: station for station in self.stations}
-        station_from = stations[user_input[CONF_STATION_FROM]]
-        station_to = stations[user_input[CONF_STATION_TO]]
-        return station_from, station_to, _route_unique_id(user_input)
+        return (
+            stations[user_input[CONF_STATION_FROM]],
+            stations[user_input[CONF_STATION_TO]],
+        )
 
     def _async_migrate_entities(self, entry: ConfigEntry, unique_id: str) -> None:
         """Migrate the entities of the entry to its new unique ID.
@@ -100,7 +89,7 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             choices = await self._fetch_stations_choices()
-        except CannotConnect:
+        except StationListUnavailableError:
             return self.async_abort(reason="api_unavailable")
 
         errors: dict[str, str] = {}
@@ -108,8 +97,8 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
             if user_input[CONF_STATION_FROM] == user_input[CONF_STATION_TO]:
                 errors["base"] = "same_station"
             else:
-                station_from, station_to, unique_id = self._route(user_input)
-                await self.async_set_unique_id(unique_id)
+                station_from, station_to = self._route(user_input)
+                await self.async_set_unique_id(_route_unique_id(user_input))
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=_route_title(station_from, station_to),
@@ -183,7 +172,3 @@ def _route_unique_id(data: Mapping[str, Any]) -> str:
 def _route_title(station_from: StationDetails, station_to: StationDetails) -> str:
     """Return the config entry title of a route."""
     return f"Train from {station_from.standard_name} to {station_to.standard_name}"
-
-
-class CannotConnect(Exception):
-    """Error to indicate we cannot connect to NMBS."""

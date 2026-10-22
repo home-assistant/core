@@ -65,6 +65,22 @@ def _find_station(
     return next((station for station in stations if station.id == station_id), None)
 
 
+class StationListUnavailableError(Exception):
+    """Error to indicate the NMBS station list cannot be fetched."""
+
+
+async def async_fetch_stations(hass: HomeAssistant) -> list[StationDetails]:
+    """Fetch the list of NMBS stations from the iRail API."""
+    api_client = IRail(session=async_get_clientsession(hass))
+    try:
+        response = await api_client.get_stations()
+    except (PyRailError, TimeoutError, ValueError, LookupError) as err:
+        raise StationListUnavailableError from err
+    if response is None:
+        raise StationListUnavailableError
+    return response.stations
+
+
 class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
     """Coordinator to fetch NMBS connection and liveboard data."""
 
