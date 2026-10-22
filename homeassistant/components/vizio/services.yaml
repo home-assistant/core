@@ -1,3 +1,15 @@
+send_text:
+  target:
+    entity:
+      integration: vizio
+      domain: media_player
+  fields:
+    text:
+      required: true
+      example: "stranger things"
+      selector:
+        text:
+
 update_setting:
   target:
     entity:

@@ -287,12 +287,16 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a NextDNS entities from a config_entry."""
-    async_add_entities(
-        NextDnsSensor(
-            getattr(entry.runtime_data, description.coordinator_type), description
+    for subentry_id, profile_data in entry.runtime_data.profiles.items():
+        async_add_entities(
+            (
+                NextDnsSensor(
+                    getattr(profile_data, description.coordinator_type), description
+                )
+                for description in SENSORS
+            ),
+            config_subentry_id=subentry_id,
         )
-        for description in SENSORS
-    )
 
 
 class NextDnsSensor[CoordinatorDataT: NextDnsData](

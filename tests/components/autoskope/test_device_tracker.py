@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock
 from autoskope_client.models import CannotConnect, InvalidAuth, Vehicle, VehiclePosition
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.autoskope.const import DOMAIN, UPDATE_INTERVAL
@@ -13,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_all_entities(
@@ -190,6 +193,7 @@ async def test_reauth_failure(
 
 async def test_vehicle_name_update(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
     mock_autoskope_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
@@ -197,8 +201,9 @@ async def test_vehicle_name_update(
     """Test device name updates in device registry when vehicle is renamed."""
     await setup_integration(hass, mock_config_entry)
 
-    device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "12345")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "12345"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
     assert device_entry.name == "Test Vehicle"
 
@@ -227,6 +232,8 @@ async def test_vehicle_name_update(
     await hass.async_block_till_done()
 
     # Device registry should reflect the new name
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "12345")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "12345"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
     assert device_entry.name == "Renamed Vehicle"

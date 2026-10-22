@@ -5,6 +5,7 @@ import json
 import logging
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
@@ -12,7 +13,6 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import entity, entity_registry as er
 from homeassistant.helpers.entity_platform import EntityPlatform
 
-from tests.common import MockConfigEntry
 from tests.helpers.template.helpers import assert_result_info, render, render_to_info
 
 

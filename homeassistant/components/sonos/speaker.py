@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Callable, Collection, Coroutine
 import contextlib
-import datetime
+import datetime as dt
 from functools import partial
 import logging
 import time
@@ -17,10 +17,11 @@ from soco.plugins.plex import PlexPlugin
 from soco.plugins.sharelink import ShareLinkPlugin
 from soco.snapshot import Snapshot
 from sonos_websocket import SonosWebsocket
+from sonos_websocket.exception import SonosWebsocketError
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
@@ -44,6 +45,7 @@ from .const import (
     SONOS_CREATE_ALARM,
     SONOS_CREATE_AUDIO_FORMAT_SENSOR,
     SONOS_CREATE_BATTERY,
+    SONOS_CREATE_BUTTON,
     SONOS_CREATE_LEVELS,
     SONOS_CREATE_MEDIA_PLAYER,
     SONOS_CREATE_MIC_SENSOR,
@@ -145,7 +147,7 @@ class SonosSpeaker:
 
         # Battery
         self.battery_info: dict[str, Any] = {}
-        self._last_battery_event: datetime.datetime | None = None
+        self._last_battery_event: dt.datetime | None = None
         self._battery_poll_timer: Callable | None = None
 
         # Volume / Sound
@@ -185,6 +187,9 @@ class SonosSpeaker:
         self.soco_snapshot: Snapshot | None = None
         self.snapshot_group: list[SonosSpeaker] = []
         self._group_members_missing: set[str] = set()
+
+        # Announcement tracking
+        self.last_announce_id: str | None = None
 
     async def async_setup(
         self,
@@ -261,6 +266,7 @@ class SonosSpeaker:
 
         dispatches.append((SONOS_CREATE_SELECTS, self))
         dispatches.append((SONOS_CREATE_SWITCHES, self))
+        dispatches.append((SONOS_CREATE_BUTTON, self))
         dispatches.append((SONOS_CREATE_MEDIA_PLAYER, self))
         dispatches.append((SONOS_SPEAKER_ADDED, self.soco.uid))
 
@@ -678,7 +684,7 @@ class SonosSpeaker:
             self.hass.async_create_task(self.async_subscribe(), eager_start=True)
 
     @callback
-    def async_check_activity(self, now: datetime.datetime) -> None:
+    def async_check_activity(self, now: dt.datetime) -> None:
         """Validate availability of the speaker based on recent activity."""
         if not self.available:
             return
@@ -829,7 +835,7 @@ class SonosSpeaker:
             return self.power_source != "BATTERY"
         return None
 
-    async def async_poll_battery(self, now: datetime.datetime | None = None) -> None:
+    async def async_poll_battery(self, now: dt.datetime | None = None) -> None:
         """Poll the device for the current battery state."""
         if not self.available:
             return
@@ -1293,6 +1299,37 @@ class SonosSpeaker:
             ) from TimeoutError
         any_speaker = next(iter(config_entry.runtime_data.discovered.values()))
         any_speaker.soco.zone_group_state.clear_cache()
+
+    async def async_cancel_announcement(self) -> None:
+        """Cancel the current announcement audio clip."""
+        if self.last_announce_id is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="cancel_announcement_no_id",
+            )
+        if not self.websocket:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="announcement_connection_error",
+                translation_placeholders={"error": "websocket not available"},
+            )
+        announcement_id = self.last_announce_id
+        try:
+            response, _ = await self.websocket.cancel_clip(announcement_id)
+        except SonosWebsocketError as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="announcement_connection_error",
+                translation_placeholders={"error": str(exc)},
+            ) from exc
+        if not response.get("success"):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cancel_announcement_error",
+                translation_placeholders={"response": str(response)},
+            )
+        if announcement_id == self.last_announce_id:
+            self.last_announce_id = None
 
     #
     # Media and playback state handlers

@@ -8,9 +8,11 @@ from huawei_lte_api.exceptions import ResponseErrorException
 from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, CONF_RECIPIENT
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import HuaweiLteConfigEntry, Router
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,6 +63,12 @@ class HuaweiLteSmsNotificationService(BaseNotificationService):
                 phone_numbers=targets, message=message
             )
             _LOGGER.debug("Sent to %s: %s", targets, resp)
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except ResponseErrorException as ex:
-            _LOGGER.error("Could not send to %s: %s", targets, ex)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="send_message_failed",
+                translation_placeholders={
+                    "targets": ", ".join(targets),
+                    "error": str(ex),
+                },
+            ) from ex

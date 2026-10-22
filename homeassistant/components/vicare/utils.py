@@ -1,6 +1,7 @@
 """ViCare helpers functions."""
 
 from collections.abc import Callable, Mapping
+from datetime import UTC, timedelta
 import logging
 from typing import Any
 
@@ -21,8 +22,11 @@ import requests
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import STORAGE_DIR
+from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_CACHE_DURATION, VICARE_TOKEN_FILENAME
+
+MAX_RATE_LIMIT_BACKOFF = 86400  # the quota window is a day
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -157,3 +161,13 @@ def filter_state(state: str) -> str | None:
 def normalize_state(state: str) -> str:
     """Return the state with underscores instead of hyphens."""
     return state.replace("-", "_")
+
+
+def retry_after_from(error: PyViCareRateLimitError, floor: timedelta) -> float:
+    """Return seconds to wait after a rate limit, clamped to [floor, one day].
+
+    limitResetDate is naive UTC and can be in the past.
+    """
+    reset = error.limitResetDate.replace(tzinfo=UTC)
+    delay = (reset - dt_util.utcnow()).total_seconds()
+    return min(max(delay, floor.total_seconds()), MAX_RATE_LIMIT_BACKOFF)

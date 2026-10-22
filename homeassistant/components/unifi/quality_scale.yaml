@@ -58,12 +58,7 @@ rules:
   entity-translations: done
   exception-translations: todo
   icon-translations: done
-  reconfiguration-flow:
-    status: todo
-    comment: |
-      The user flow currently allows updating existing config entry data
-      (host/credentials), which should be handled by a dedicated
-      async_step_reconfigure instead.
+  reconfiguration-flow: done
   repair-issues: todo
   stale-devices:
     status: todo

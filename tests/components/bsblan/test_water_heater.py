@@ -1,11 +1,17 @@
 """Tests for the BSB-LAN water heater platform."""
 
+import asyncio
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 from bsblan import BSBLANError, SetHotWaterParam
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bsblan.const import DOMAIN
@@ -26,8 +32,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_with_selected_platforms
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "water_heater.water_heater"
 
@@ -390,6 +394,41 @@ async def test_water_heater_custom_temperature_limits_from_config(
     assert (
         state.attributes.get("max_temp") == 75.0
     )  # Custom maximum from nominal_setpoint_max
+
+
+async def test_water_heater_temperature_limits_update_after_slow_fetch(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test temperature limits update when the background fetch completes."""
+    release = asyncio.Event()
+    config = mock_bsblan.hot_water_config.return_value
+    config.reduced_setpoint.value = 15.0
+    config.nominal_setpoint_max.value = 75.0
+
+    async def _blocking_config(*args: object, **kwargs: object) -> object:
+        await release.wait()
+        return config
+
+    mock_bsblan.hot_water_config.side_effect = _blocking_config
+
+    await setup_with_selected_platforms(
+        hass, mock_config_entry, [Platform.WATER_HEATER]
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes["min_temp"] == 10.0
+    assert state.attributes["max_temp"] == 65.0
+
+    release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes["min_temp"] == 15.0
+    assert state.attributes["max_temp"] == 75.0
 
 
 async def test_turn_on(

@@ -13,7 +13,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import _LOGGER, UOM_8_BIT_RANGE
+from .const import LOGGER, UOM_8_BIT_RANGE
 from .entity import ISYNodeEntity, ISYProgramEntity
 from .models import IsyConfigEntry
 
@@ -70,13 +70,13 @@ class ISYCoverEntity(ISYNodeEntity, CoverEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Send the open cover command to the ISY cover device."""
         if not await self._node.turn_on():
-            _LOGGER.error("Unable to open the cover")
+            LOGGER.error("Unable to open the cover")
 
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Send the close cover command to the ISY cover device."""
         if not await self._node.turn_off():
-            _LOGGER.error("Unable to close the cover")
+            LOGGER.error("Unable to close the cover")
 
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
@@ -85,7 +85,7 @@ class ISYCoverEntity(ISYNodeEntity, CoverEntity):
         if self._node.uom == UOM_8_BIT_RANGE:
             position = round(position * 255.0 / 100.0)
         if not await self._node.turn_on(val=position):
-            _LOGGER.error("Unable to set cover position")
+            LOGGER.error("Unable to set cover position")
 
 
 class ISYCoverProgramEntity(ISYProgramEntity, CoverEntity):
@@ -101,10 +101,10 @@ class ISYCoverProgramEntity(ISYProgramEntity, CoverEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Send the open cover command to the ISY cover program."""
         if not await self._actions.run_then():
-            _LOGGER.error("Unable to open the cover")
+            LOGGER.error("Unable to open the cover")
 
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Send the close cover command to the ISY cover program."""
         if not await self._actions.run_else():
-            _LOGGER.error("Unable to close the cover")
+            LOGGER.error("Unable to close the cover")

@@ -1,10 +1,8 @@
 {
   "config": {
     "abort": {
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "not_ipv4_address": "No IPv4 address in SSDP discovery information",
-      "not_sonos_device": "Discovered device is not a Sonos device",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "not_sonos_device": "Discovered device is not a Sonos device"
     },
     "step": {
       "confirm": {
@@ -16,6 +14,11 @@
     "binary_sensor": {
       "microphone": {
         "name": "Microphone"
+      }
+    },
+    "button": {
+      "cancel_announcement": {
+        "name": "Cancel announcement"
       }
     },
     "number": {
@@ -109,6 +112,18 @@
     "announce_media_error": {
       "message": "Announcing clip {media_id} failed {response}"
     },
+    "announcement_connection_error": {
+      "message": "Failed to reach Sonos speaker for announcement: {error}"
+    },
+    "call_failed": {
+      "message": "Error on {target}: {error}"
+    },
+    "cancel_announcement_error": {
+      "message": "Cancelling announcement failed: {response}"
+    },
+    "cancel_announcement_no_id": {
+      "message": "No active announcement to cancel"
+    },
     "entity_not_found": {
       "message": "Entity {entity_id} not found."
     },
@@ -141,6 +156,12 @@
     },
     "toggle_failed": {
       "message": "Could not toggle {entity_id}."
+    },
+    "upnp_call_failed": {
+      "message": "Error on {target} (UPnP error code {error_code}): {error}"
+    },
+    "upnp_call_failed_music_service_unavailable": {
+      "message": "Error on {target} (UPnP error code {error_code}): {error}. This may indicate the selected music service is not available on the speaker."
     }
   },
   "issues": {

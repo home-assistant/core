@@ -19,7 +19,7 @@ from homeassistant.util.percentage import (
 
 from .entity import ViCareEntity
 from .types import ViCareConfigEntry, ViCareDevice
-from .utils import filter_state, get_device_serial, is_supported
+from .utils import filter_state, is_supported
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,7 +95,7 @@ def _build_entities(
 ) -> list[ViCareFan]:
     """Create ViCare climate entities for a device."""
     return [
-        ViCareFan(get_device_serial(device.api), device.config, device.api)
+        ViCareFan(device.serial, device.config, device.api)
         for device in device_list
         if device.api.isVentilationDevice()
     ]
@@ -120,7 +120,7 @@ class ViCareFan(ViCareEntity, FanEntity):
 
     _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
     _attr_translation_key = "ventilation"
-    _attributes: dict[str, Any] = {}
+    _standby: bool = False
 
     def __init__(
         self,
@@ -149,6 +149,7 @@ class ViCareFan(ViCareEntity, FanEntity):
             self._attr_supported_features |= FanEntityFeature.SET_SPEED
 
         # evaluate quickmodes
+        self._attributes: dict[str, Any] = {}
         self._attributes["vicare_quickmodes"] = quickmodes = list[str](
             device.getVentilationQuickmodes()
             if is_supported(
@@ -160,6 +161,11 @@ class ViCareFan(ViCareEntity, FanEntity):
         )
         if VentilationQuickmode.STANDBY in quickmodes:
             self._attr_supported_features |= FanEntityFeature.TURN_OFF
+            # The first state is published before the first poll.
+            with suppress(PyViCareNotSupportedFeatureError):
+                self._standby = device.getVentilationQuickmode(
+                    VentilationQuickmode.STANDBY
+                )
 
     def update(self) -> None:
         """Update state of fan."""
@@ -169,6 +175,15 @@ class ViCareFan(ViCareEntity, FanEntity):
                 self._attr_preset_mode = VentilationMode.from_vicare_mode(
                     self._api.getActiveVentilationMode()
                 )
+
+            if FanEntityFeature.TURN_OFF in self._attr_supported_features:
+                # Clear before the guarded read, a suppressed error would
+                # otherwise keep reporting the fan as off.
+                self._standby = False
+                with suppress(PyViCareNotSupportedFeatureError):
+                    self._standby = self._api.getVentilationQuickmode(
+                        VentilationQuickmode.STANDBY
+                    )
 
             with suppress(PyViCareNotSupportedFeatureError):
                 level = filter_state(self._api.getVentilationLevel())
@@ -183,9 +198,7 @@ class ViCareFan(ViCareEntity, FanEntity):
     @override
     def is_on(self) -> bool | None:
         """Return true if the entity is on."""
-        if VentilationQuickmode.STANDBY in self._attributes[
-            "vicare_quickmodes"
-        ] and self._api.getVentilationQuickmode(VentilationQuickmode.STANDBY):
+        if self._standby:
             return False
 
         return self.percentage is not None and self.percentage > 0
@@ -199,9 +212,7 @@ class ViCareFan(ViCareEntity, FanEntity):
     @override
     def icon(self) -> str | None:
         """Return the icon to use in the frontend."""
-        if VentilationQuickmode.STANDBY in self._attributes[
-            "vicare_quickmodes"
-        ] and self._api.getVentilationQuickmode(VentilationQuickmode.STANDBY):
+        if self._standby:
             return "mdi:fan-off"
         if hasattr(self, "_attr_preset_mode"):
             if self._attr_preset_mode == VentilationMode.VENTILATION:

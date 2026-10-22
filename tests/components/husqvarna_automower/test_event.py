@@ -9,6 +9,11 @@ from aioautomower.model import MowerAttributes, SingleMessageData
 from aioautomower.model.model_message import Message, Severity, SingleMessageAttributes
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.event import ATTR_EVENT_TYPE
@@ -21,8 +26,6 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import setup_integration
 from .const import TEST_MOWER_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.freeze_time(datetime(2023, 6, 5, 12))
@@ -162,6 +165,56 @@ async def test_event(
     assert state is None
     entry = entity_registry.async_get("event.garden_test_mower_2_message")
     assert entry is None
+
+
+@pytest.mark.freeze_time(datetime(2023, 6, 5, 12))
+async def test_event_destination_blocked(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    automower_ws_ready: list[Callable[[], None]],
+) -> None:
+    """Newer error codes such as destination_blocked must trigger the message event."""
+    callbacks: list[Callable[[SingleMessageData], None]] = []
+
+    @callback
+    def fake_register_websocket_response(
+        cb: Callable[[SingleMessageData], None],
+    ) -> None:
+        callbacks.append(cb)
+
+    mock_automower_client.register_single_message_callback.side_effect = (
+        fake_register_websocket_response
+    )
+
+    await setup_integration(hass, mock_config_entry)
+    await hass.async_block_till_done()
+
+    for cb in automower_ws_ready:
+        cb()
+    await hass.async_block_till_done()
+
+    message = SingleMessageData(
+        type="messages",
+        id=TEST_MOWER_ID,
+        attributes=SingleMessageAttributes(
+            message=Message(
+                time=datetime(2025, 7, 13, 15, 30, tzinfo=UTC),
+                code="destination_blocked",
+                severity=Severity.ERROR,
+                latitude=49.0,
+                longitude=10.0,
+            )
+        ),
+    )
+
+    for cb in callbacks:
+        cb(message)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("event.garden_test_mower_1_message")
+    assert state is not None
+    assert state.attributes[ATTR_EVENT_TYPE] == "destination_blocked"
 
 
 @pytest.mark.freeze_time(datetime(2023, 6, 5, 12))

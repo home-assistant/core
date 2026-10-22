@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 from aiohttp import RequestInfo
 from electrickiwi_api.exceptions import ApiException, AuthException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.electric_kiwi.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -18,8 +19,6 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_async_setup_entry(
@@ -129,7 +128,8 @@ async def test_unique_id_migration_failure(
 
     assert config_entry.minor_version == 1
     assert config_entry.unique_id == DOMAIN
-    assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.reason == "Failed to connect to Electric Kiwi"
 
 
 async def test_unique_id_migration_auth_failure(
@@ -142,3 +142,7 @@ async def test_unique_id_migration_auth_failure(
     assert config_entry.minor_version == 1
     assert config_entry.unique_id == DOMAIN
     assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert (
+        config_entry.reason
+        == "Authentication with Electric Kiwi failed. Please re-authenticate"
+    )

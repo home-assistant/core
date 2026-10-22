@@ -26,7 +26,8 @@
 .volume_threshold_number: &volume_threshold_number
   min: 0
   max: 100
-  mode: box
+  step: any
+  mode: slider
   unit_of_measurement: "%"
 
 is_muted: *condition_common
@@ -36,6 +37,20 @@ is_not_playing: *condition_common
 is_paused: *condition_common
 is_playing: *condition_common
 is_unmuted: *condition_common
+
+is_current_source:
+  target: *condition_media_player_target
+  fields:
+    behavior: *condition_behavior
+    for: *condition_for
+    source:
+      context:
+        filter_target: target
+      required: true
+      selector:
+        state:
+          attribute: source
+          multiple: true
 
 is_volume:
   target: *condition_media_player_target

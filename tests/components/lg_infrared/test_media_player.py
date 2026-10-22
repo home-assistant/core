@@ -2,6 +2,12 @@
 
 from infrared_protocols.codes.lg.tv import LGTVCode
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.components.common import (
+    assert_availability_follows_source_entity,
+)
+from pytest_homeassistant.components.infrared import EMITTER_ENTITY_ID
+from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
@@ -20,11 +26,6 @@ from homeassistant.components.media_player import (
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.common import assert_availability_follows_source_entity
-from tests.components.infrared import EMITTER_ENTITY_ID
-from tests.components.infrared.common import MockInfraredEmitterEntity
 
 MEDIA_PLAYER_ENTITY_ID = "media_player.lg_tv"
 
@@ -47,8 +48,8 @@ async def test_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
     # Verify entity belongs to the correct device
-    device_entry = device_registry.async_get_device(
-        identifiers={("lg_infrared", mock_config_entry.entry_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("lg_infrared", mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device_entry
     entity_entries = er.async_entries_for_config_entry(
@@ -99,5 +100,5 @@ async def test_media_player_availability_follows_ir_entity(
 ) -> None:
     """Test media player becomes unavailable when IR entity is unavailable."""
     await assert_availability_follows_source_entity(
-        hass, MEDIA_PLAYER_ENTITY_ID, EMITTER_ENTITY_ID
+        hass, MEDIA_PLAYER_ENTITY_ID, [EMITTER_ENTITY_ID]
     )

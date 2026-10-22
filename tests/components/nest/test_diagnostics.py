@@ -4,6 +4,12 @@ from unittest.mock import patch
 
 from google_nest_sdm.exceptions import SubscriberException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import (
+    get_diagnostics_for_config_entry,
+    get_diagnostics_for_device,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nest.const import DOMAIN
@@ -12,13 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import CreateDevice, PlatformSetup
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import (
-    get_diagnostics_for_config_entry,
-    get_diagnostics_for_device,
-)
-from tests.typing import ClientSessionGenerator
 
 NEST_DEVICE_ID = "enterprises/project-id/devices/device-id"
 
@@ -97,7 +96,9 @@ async def test_device_diagnostics(
     await setup_platform()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, NEST_DEVICE_ID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, NEST_DEVICE_ID), config_entry.entry_id
+    )
     assert device is not None
 
     assert (

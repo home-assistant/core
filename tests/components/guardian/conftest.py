@@ -5,21 +5,20 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.guardian import CONF_UID, DOMAIN
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonObjectType
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.guardian.async_setup_entry", return_value=True
+        "homeassistant.components.guardian.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -97,10 +96,17 @@ def data_wifi_status_fixture() -> JsonObjectType:
     return load_json_object_fixture("wifi_status_data.json", "guardian")
 
 
+@pytest.fixture(name="platforms")
+def platforms_fixture() -> list[Platform]:
+    """Define a platforms fixture."""
+    return []
+
+
 @pytest.fixture(name="setup_guardian")
 async def setup_guardian_fixture(
     hass: HomeAssistant,
     config: dict[str, Any],
+    platforms: list[Platform],
     data_sensor_pair_dump: JsonObjectType,
     data_sensor_pair_sensor: JsonObjectType,
     data_sensor_paired_sensor_status: JsonObjectType,
@@ -150,7 +156,7 @@ async def setup_guardian_fixture(
         ),
         patch(
             "homeassistant.components.guardian.PLATFORMS",
-            [],
+            platforms,
         ),
     ):
         assert await async_setup_component(hass, DOMAIN, config)

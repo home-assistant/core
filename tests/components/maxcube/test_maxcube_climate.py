@@ -12,6 +12,7 @@ from maxcube.device import (
 from maxcube.thermostat import MaxThermostat
 from maxcube.wallthermostat import MaxWallThermostat
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
@@ -54,8 +55,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import utcnow
-
-from tests.common import async_fire_time_changed
 
 ENTITY_ID = "climate.testroom_testthermostat"
 WALL_ENTITY_ID = "climate.testroom_testwallthermostat"

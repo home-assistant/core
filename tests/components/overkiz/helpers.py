@@ -7,6 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import DataType, EventName, ExecutionState
 from pyoverkiz.models import (
     DeviceAvailableEvent,
+    DeviceCreatedEvent,
     DeviceRemovedEvent,
     DeviceStateChangedEvent,
     DeviceUnavailableEvent,
@@ -14,13 +15,12 @@ from pyoverkiz.models import (
     EventState,
     ExecutionStateChangedEvent,
 )
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.overkiz.const import UPDATE_INTERVAL
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockOverkizClient
-
-from tests.common import async_fire_time_changed
 
 
 def assert_command_call(
@@ -95,6 +95,11 @@ def device_unavailable_event(device_url: str) -> DeviceUnavailableEvent:
 def device_removed_event(device_url: str) -> DeviceRemovedEvent:
     """Build a DEVICE_REMOVED event for the given device."""
     return DeviceRemovedEvent(name=EventName.DEVICE_REMOVED, device_url=device_url)
+
+
+def device_created_event(device_url: str) -> DeviceCreatedEvent:
+    """Build a DEVICE_CREATED event for the given device."""
+    return DeviceCreatedEvent(name=EventName.DEVICE_CREATED, device_url=device_url)
 
 
 def execution_state_changed_event(

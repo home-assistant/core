@@ -9,6 +9,7 @@ from electrolux_group_developer_sdk.client.appliance_data_factory import (
 from electrolux_group_developer_sdk.client.dto.appliance_state import ApplianceState
 from electrolux_group_developer_sdk.client.dto.email import Email
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.electrolux.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY
@@ -24,8 +25,6 @@ from . import (
     load_memory_maps,
     setup_integration,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

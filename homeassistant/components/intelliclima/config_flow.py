@@ -2,8 +2,8 @@
 
 from typing import Any, override
 
+import probatio
 from pyintelliclima import IntelliClimaAPI, IntelliClimaAPIError, IntelliClimaAuthError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -11,10 +11,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -57,7 +57,7 @@ class IntelliClimaConfigFlow(ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if devices.num_devices == 0:
+                if not devices.ecocomfort2_devices:
                     errors["base"] = "no_devices"
                 else:
                     return self.async_create_entry(

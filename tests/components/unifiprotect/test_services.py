@@ -1,9 +1,13 @@
 """Test the UniFi Protect global services."""
 
+from collections.abc import Callable, Coroutine
+from typing import Any
 from unittest.mock import AsyncMock, Mock
 
+import probatio
 import pytest
-from uiprotect.data import Camera, Chime, Color, Light, ModelType, PTZPreset
+from pytest_homeassistant.common import MockConfigEntry, MockUser
+from uiprotect.data import Camera, Chime, Light, ModelType, PTZPreset
 from uiprotect.data.devices import CameraZone
 from uiprotect.exceptions import BadRequest, ClientError
 
@@ -19,20 +23,32 @@ from homeassistant.components.unifiprotect.const import (
 )
 from homeassistant.components.unifiprotect.services import (
     ATTR_PRESET,
+    ATTR_TRIGGER_ID,
     SERVICE_ADD_DOORBELL_TEXT,
     SERVICE_GET_USER_KEYRING_INFO,
     SERVICE_PTZ_GOTO_PRESET,
     SERVICE_REMOVE_DOORBELL_TEXT,
     SERVICE_REMOVE_PRIVACY_ZONE,
     SERVICE_SET_CHIME_PAIRED,
+    SERVICE_TRIGGER_ALARM_WEBHOOK,
 )
 from homeassistant.config_entries import ConfigEntryDisabler
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_NAME
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.const import (
+    ATTR_CONFIG_ENTRY_ID,
+    ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
+    ATTR_NAME,
+)
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, Context, HomeAssistant
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceValidationError,
+    Unauthorized,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import patch_ufp_method
+from .conftest import UNIFI_MAC
 from .utils import MockUFPFixture, init_entry
 
 
@@ -44,7 +60,7 @@ async def device_fixture(
 
     await init_entry(hass, ufp, [])
 
-    return list(device_registry.devices.values())[0]
+    return list(device_registry.devices)[0]
 
 
 @pytest.fixture(name="subdevice")
@@ -58,7 +74,7 @@ async def subdevice_fixture(
 
     await init_entry(hass, ufp, [light])
 
-    return [d for d in device_registry.devices.values() if d.name != "UnifiProtect"][0]
+    return [d for d in device_registry.devices if d.name != "UnifiProtect"][0]
 
 
 async def test_global_service_bad_device(
@@ -66,12 +82,13 @@ async def test_global_service_bad_device(
 ) -> None:
     """Test global service, invalid device ID."""
 
+    await init_entry(hass, ufp, [])
     nvr = ufp.api.bootstrap.nvr
 
     with patch_ufp_method(
         nvr, "add_custom_doorbell_message", new_callable=AsyncMock
     ) as mock_method:
-        with pytest.raises(HomeAssistantError):
+        with pytest.raises(ServiceValidationError) as error:
             await hass.services.async_call(
                 DOMAIN,
                 SERVICE_ADD_DOORBELL_TEXT,
@@ -79,6 +96,37 @@ async def test_global_service_bad_device(
                 blocking=True,
             )
         assert not mock_method.called
+
+    assert error.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert error.value.translation_key == "service_device_not_found"
+
+
+async def test_global_service_device_from_other_integration(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    ufp: MockUFPFixture,
+) -> None:
+    """Test a device not owned by a UniFi Protect config entry is rejected."""
+
+    await init_entry(hass, ufp, [])
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    other_device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers={("other", "other-device")},
+        name="Other device",
+    )
+
+    with pytest.raises(ServiceValidationError) as error:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_DOORBELL_TEXT,
+            {ATTR_DEVICE_ID: other_device.id, ATTR_MESSAGE: "Test Message"},
+            blocking=True,
+        )
+
+    assert error.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert error.value.translation_key == "service_device_wrong_domain"
 
 
 async def test_global_service_exception(
@@ -156,7 +204,7 @@ async def test_add_doorbell_text_disabled_config_entry(
     with patch_ufp_method(
         nvr, "add_custom_doorbell_message", new_callable=AsyncMock
     ) as mock_method:
-        with pytest.raises(HomeAssistantError):
+        with pytest.raises(ServiceValidationError) as error:
             await hass.services.async_call(
                 DOMAIN,
                 SERVICE_ADD_DOORBELL_TEXT,
@@ -164,6 +212,9 @@ async def test_add_doorbell_text_disabled_config_entry(
                 blocking=True,
             )
         assert not mock_method.called
+
+    assert error.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert error.value.translation_key == "service_config_entry_not_loaded"
 
 
 async def test_set_chime_paired_doorbells(
@@ -243,7 +294,7 @@ async def test_remove_privacy_zone(
 
     ufp.api.update_device = AsyncMock()
     doorbell.privacy_zones = [
-        CameraZone(id=0, name="Testing", color=Color("red"), points=[(0, 0), (1, 1)])
+        CameraZone(id=0, name="Testing", color="#FF0000", points=[(0, 0), (1, 1)])
     ]
 
     await init_entry(hass, ufp, [doorbell])
@@ -378,16 +429,14 @@ async def test_ptz_goto_preset(
         "camera.ptz_camera_high_resolution_channel"
     )
 
-    with patch_ufp_method(
-        ptz_camera, "ptz_goto_preset_public", new_callable=AsyncMock
-    ) as mock_method:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_PTZ_GOTO_PRESET,
-            {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Preset 1"},
-            blocking=True,
-        )
-        mock_method.assert_called_once_with(slot=0)
+    public = ufp.api.public_bootstrap.cameras[ptz_camera.id]
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PTZ_GOTO_PRESET,
+        {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Preset 1"},
+        blocking=True,
+    )
+    public.ptz_goto_preset.assert_awaited_once_with(slot=0)
 
 
 async def test_ptz_goto_preset_home(
@@ -404,16 +453,14 @@ async def test_ptz_goto_preset_home(
         "camera.ptz_camera_high_resolution_channel"
     )
 
-    with patch_ufp_method(
-        ptz_camera, "ptz_goto_preset_public", new_callable=AsyncMock
-    ) as mock_method:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_PTZ_GOTO_PRESET,
-            {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Home"},
-            blocking=True,
-        )
-        mock_method.assert_called_once_with(slot=-1)
+    public = ufp.api.public_bootstrap.cameras[ptz_camera.id]
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PTZ_GOTO_PRESET,
+        {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Home"},
+        blocking=True,
+    )
+    public.ptz_goto_preset.assert_awaited_once_with(slot=-1)
 
 
 async def test_ptz_goto_preset_not_found(
@@ -493,7 +540,7 @@ async def test_ptz_goto_preset_public_client_error(
     ufp: MockUFPFixture,
     ptz_camera: Camera,
 ) -> None:
-    """Test ptz_goto_preset service when ptz_goto_preset_public raises ClientError."""
+    """Test ptz_goto_preset service when ptz_goto_preset raises ClientError."""
     ptz_camera.get_ptz_presets.return_value = _make_presets()
     ptz_camera.get_ptz_patrols.return_value = []
     await init_entry(hass, ufp, [ptz_camera])
@@ -502,15 +549,9 @@ async def test_ptz_goto_preset_public_client_error(
         "camera.ptz_camera_high_resolution_channel"
     )
 
-    with (
-        patch_ufp_method(
-            ptz_camera,
-            "ptz_goto_preset_public",
-            new_callable=AsyncMock,
-            side_effect=ClientError("Connection failed"),
-        ),
-        pytest.raises(HomeAssistantError),
-    ):
+    public = ufp.api.public_bootstrap.cameras[ptz_camera.id]
+    public.ptz_goto_preset.side_effect = ClientError("Connection failed")
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_PTZ_GOTO_PRESET,
@@ -533,18 +574,136 @@ async def test_ptz_goto_home_preset_client_error(
         "camera.ptz_camera_high_resolution_channel"
     )
 
-    with (
-        patch_ufp_method(
-            ptz_camera,
-            "ptz_goto_preset_public",
-            new_callable=AsyncMock,
-            side_effect=ClientError("Connection failed"),
-        ),
-        pytest.raises(HomeAssistantError),
-    ):
+    public = ufp.api.public_bootstrap.cameras[ptz_camera.id]
+    public.ptz_goto_preset.side_effect = ClientError("Connection failed")
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_PTZ_GOTO_PRESET,
             {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Home"},
             blocking=True,
         )
+
+
+async def test_ptz_goto_preset_no_public_camera(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    ptz_camera: Camera,
+) -> None:
+    """Test ptz_goto_preset raises when the camera is missing from the public API."""
+    await init_entry(hass, ufp, [ptz_camera])
+
+    camera_entry = entity_registry.async_get(
+        "camera.ptz_camera_high_resolution_channel"
+    )
+
+    ufp.api.public_bootstrap.cameras = {}
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PTZ_GOTO_PRESET,
+            {ATTR_DEVICE_ID: camera_entry.device_id, ATTR_PRESET: "Home"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "device_not_available"
+
+
+async def test_public_only_action_rejected(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """Actions require full access; a public-only device raises cleanly."""
+    await setup_public_only()
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, UNIFI_MAC), ufp_public_only.entry.entry_id
+    )
+    assert device is not None
+
+    with pytest.raises(HomeAssistantError, match="requires full access"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_DOORBELL_TEXT,
+            {ATTR_DEVICE_ID: device.id, ATTR_MESSAGE: "Test Message"},
+            blocking=True,
+        )
+
+
+async def test_trigger_alarm_webhook(
+    hass: HomeAssistant,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """Test trigger_alarm_webhook, which also works on an API-key-only entry."""
+    await setup_public_only()
+    ufp_public_only.api.send_alarm_webhook_public = AsyncMock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_TRIGGER_ALARM_WEBHOOK,
+        {
+            ATTR_CONFIG_ENTRY_ID: ufp_public_only.entry.entry_id,
+            ATTR_TRIGGER_ID: "test-trigger",
+        },
+        blocking=True,
+    )
+    ufp_public_only.api.send_alarm_webhook_public.assert_awaited_once_with(
+        "test-trigger"
+    )
+
+
+@pytest.mark.usefixtures("device")
+async def test_trigger_alarm_webhook_error(
+    hass: HomeAssistant, ufp: MockUFPFixture
+) -> None:
+    """Test trigger_alarm_webhook reports Protect errors."""
+    ufp.api.send_alarm_webhook_public = AsyncMock(side_effect=BadRequest("400"))
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TRIGGER_ALARM_WEBHOOK,
+            {ATTR_CONFIG_ENTRY_ID: ufp.entry.entry_id, ATTR_TRIGGER_ID: "test-trigger"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "command_error"
+    assert exc_info.value.translation_placeholders == {"error": "400"}
+
+
+@pytest.mark.usefixtures("device")
+async def test_trigger_alarm_webhook_empty_trigger_id(
+    hass: HomeAssistant, ufp: MockUFPFixture
+) -> None:
+    """Test trigger_alarm_webhook rejects an empty trigger ID."""
+    ufp.api.send_alarm_webhook_public = AsyncMock()
+
+    with pytest.raises(probatio.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TRIGGER_ALARM_WEBHOOK,
+            {ATTR_CONFIG_ENTRY_ID: ufp.entry.entry_id, ATTR_TRIGGER_ID: ""},
+            blocking=True,
+        )
+    ufp.api.send_alarm_webhook_public.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("device")
+async def test_trigger_alarm_webhook_non_admin(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    hass_read_only_user: MockUser,
+) -> None:
+    """Test trigger_alarm_webhook rejects non-admin callers."""
+    ufp.api.send_alarm_webhook_public = AsyncMock()
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TRIGGER_ALARM_WEBHOOK,
+            {ATTR_CONFIG_ENTRY_ID: ufp.entry.entry_id, ATTR_TRIGGER_ID: "test-trigger"},
+            blocking=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
+    ufp.api.send_alarm_webhook_public.assert_not_awaited()

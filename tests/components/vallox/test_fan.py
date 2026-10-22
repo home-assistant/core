@@ -3,6 +3,7 @@
 from unittest.mock import call
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from vallox_websocket_api import MetricData, MetricValue, Profile, ValloxApiException
 
 from homeassistant.components.fan import (
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import patch_set_fan_speed, patch_set_profile, patch_set_values
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -56,6 +55,7 @@ async def test_fan_state(
         (Profile.AWAY, "Away"),
         (Profile.BOOST, "Boost"),
         (Profile.FIREPLACE, "Fireplace"),
+        (Profile.AUTO, "Auto"),
     ],
 )
 async def test_fan_profile(
@@ -168,6 +168,7 @@ async def test_turn_on_with_parameters(
         ("Away", Profile.HOME, [call(Profile.AWAY)]),
         ("Boost", Profile.HOME, [call(Profile.BOOST)]),
         ("Fireplace", Profile.HOME, [call(Profile.FIREPLACE)]),
+        ("Auto", Profile.HOME, [call(Profile.AUTO)]),
         ("Home", Profile.HOME, []),  # No change
     ],
 )

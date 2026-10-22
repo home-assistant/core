@@ -8,10 +8,14 @@ import aiosomecomfort
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import _LOGGER, CONF_COOL_AWAY_TEMPERATURE, CONF_HEAT_AWAY_TEMPERATURE
+from .const import CONF_COOL_AWAY_TEMPERATURE, CONF_HEAT_AWAY_TEMPERATURE, DOMAIN
 
 UPDATE_LOOP_SLEEP_TIME = 5
 PLATFORMS = [Platform.CLIMATE, Platform.HUMIDIFIER, Platform.SENSOR, Platform.SWITCH]
@@ -41,7 +45,7 @@ def _async_migrate_data_to_options(
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: HoneywellConfigEntry
-) -> bool:
+) -> None:
     """Set up the Honeywell thermostat."""
     _async_migrate_data_to_options(hass, config_entry)
 
@@ -78,19 +82,19 @@ async def async_setup_entry(
             devices[device.deviceid] = device
 
     if len(devices) == 0:
-        _LOGGER.debug("No devices found")
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="no_devices_found",
+        )
     config_entry.runtime_data = HoneywellData(config_entry.entry_id, client, devices)
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: HoneywellConfigEntry
-) -> bool:
+) -> None:
     """Unload the config and platforms."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
 
 @dataclass

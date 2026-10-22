@@ -3,22 +3,24 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.cover import ATTR_IS_CLOSED, CoverState
-from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     ConditionStateDescription,
+    TargetSupport,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
     assert_condition_options_supported,
+    assert_conditions_target_support,
     create_target_condition,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
     parametrize_target_entities,
     target_entities,
 )
+
+from homeassistant.components.cover import ATTR_IS_CLOSED, CoverState
+from homeassistant.components.window.condition import CONDITIONS
+from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
@@ -31,6 +33,12 @@ async def target_binary_sensors(hass: HomeAssistant) -> dict[str, list[str]]:
 async def target_covers(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple cover entities associated with different targets."""
     return await target_entities(hass, "cover")
+
+
+_CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "is_closed": TargetSupport.STANDARD,
+    "is_open": TargetSupport.STANDARD,
+}
 
 
 @pytest.mark.parametrize(
@@ -55,6 +63,11 @@ async def test_window_condition_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_condition_target_support() -> None:
+    """Certify the condition registry matches its declared target support."""
+    assert_conditions_target_support(CONDITIONS, _CONDITION_TARGET_SUPPORT)
 
 
 # --- binary_sensor tests ---

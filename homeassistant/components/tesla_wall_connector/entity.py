@@ -7,7 +7,12 @@ from typing import Any, override
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, WALLCONNECTOR_DEVICE_NAME
+from .const import (
+    DOMAIN,
+    WALLCONNECTOR_DEVICE_MANUFACTURER,
+    WALLCONNECTOR_DEVICE_MODEL,
+    WALLCONNECTOR_DEVICE_NAME,
+)
 from .coordinator import WallConnectorCoordinator, WallConnectorData
 
 
@@ -43,7 +48,9 @@ class WallConnectorEntity(CoordinatorEntity[WallConnectorCoordinator]):
         return DeviceInfo(
             identifiers={(DOMAIN, self.wall_connector_data.serial_number)},
             name=WALLCONNECTOR_DEVICE_NAME,
-            model=self.wall_connector_data.part_number,
+            manufacturer=WALLCONNECTOR_DEVICE_MANUFACTURER,
+            model=WALLCONNECTOR_DEVICE_MODEL,
+            model_id=self.wall_connector_data.part_number,
+            serial_number=self.wall_connector_data.serial_number,
             sw_version=self.wall_connector_data.firmware_version,
-            manufacturer="Tesla",
         )

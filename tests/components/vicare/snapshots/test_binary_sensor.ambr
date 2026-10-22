@@ -740,7 +740,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'identification_mode',
-    'unique_id': 'gateway3_zigbee_################-identification_mode',
+    'unique_id': 'fht_gateway_zigbee_################-identification_mode',
     'unit_of_measurement': None,
   })
 # ---
@@ -790,7 +790,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'valve',
-    'unique_id': 'gateway4_zigbee_################_2-valve',
+    'unique_id': 'fht_gateway_zigbee_################_2-valve',
     'unit_of_measurement': None,
   })
 # ---

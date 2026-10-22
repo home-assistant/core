@@ -9,6 +9,7 @@ from essent_dynamic_pricing import (
     EssentResponseError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.essent.const import DOMAIN
@@ -17,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_entry(
@@ -47,8 +46,8 @@ async def test_device_registry(
     """Test device is registered correctly."""
     await setup_integration(hass, mock_config_entry)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device_entry is not None
     assert device_entry == snapshot

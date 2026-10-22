@@ -4,13 +4,12 @@ import logging
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import button
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 async def test_buttons(
@@ -50,8 +49,8 @@ async def test_device_info_sw_version_is_string(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff"), mock_config_entry.entry_id
     )
     assert device_entry
     assert device_entry.sw_version == "120"

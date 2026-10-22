@@ -1,0 +1,9 @@
+{
+  "deviceId": "MW2-1E7C3325-9C2B-4E1F-8D64-0A5B7C11F203",
+  "deviceInfo": {
+    "deviceType": "DEVICE_WASHTOWER_DRYER",
+    "modelName": "W3S1CVK2EVS",
+    "alias": "Test washtower dryer",
+    "reportable": true
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "did": "8516fbb1-17f1-4194-0000002",
+  "name": "E1234567890000000004",
+  "class": "9eamof",
+  "resource": "NHl6",
+  "company": "eco-ng",
+  "bindTs": 1734792100200,
+  "service": {
+    "jmq": "jmq-ngiot-eu.dc.ww.ecouser.net",
+    "mqs": "api-ngiot.dc-eu.ww.ecouser.net"
+  },
+  "deviceName": "DEEBOT T80 OMNI",
+  "icon": "https: //portal-ww.ecouser.net/api/pim/file/get/0000002",
+  "ota": true,
+  "UILogicId": "t8_ww_h_t80",
+  "materialNo": "110-2304-0001",
+  "pid": "0000002",
+  "product_category": "DEEBOT",
+  "model": "T80_OMNI_INT",
+  "updateInfo": {
+    "needUpdate": false,
+    "changeLog": ""
+  },
+  "nick": "T80 OMNI",
+  "homeId": "1234567890abcdef12345678",
+  "homeSort": 2,
+  "status": 1,
+  "otaUpgrade": {}
+}

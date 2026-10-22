@@ -31,6 +31,8 @@ _REPO_URL_KEYS = (
     "repository",
     "code",
     "github",
+    "gitlab",
+    "codeberg",
     "homepage",
 )
 
@@ -49,6 +51,7 @@ _KNOWN_CI_PUBLISHERS = (
 _REPO_HOST_SUFFIXES = (
     "github.com",
     "gitlab.com",
+    "codeberg.org",
 )
 
 

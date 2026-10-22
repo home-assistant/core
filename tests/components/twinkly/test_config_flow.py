@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.twinkly.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
@@ -12,8 +13,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import TEST_MAC, TEST_MODEL, TEST_NAME
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_twinkly_client", "mock_setup_entry")
@@ -117,6 +116,26 @@ async def test_dhcp_full_flow(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == TEST_MAC
 
 
+async def test_dhcp_cannot_connect(
+    hass: HomeAssistant, mock_twinkly_client: AsyncMock
+) -> None:
+    """Test DHCP discovery aborts when the device does not answer."""
+    mock_twinkly_client.get_details.side_effect = TimeoutError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            hostname="Twinkly_XYZ",
+            ip="1.2.3.4",
+            macaddress="002d133baabb",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
 @pytest.mark.usefixtures("mock_twinkly_client")
 async def test_dhcp_already_configured(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
@@ -165,6 +184,7 @@ async def test_user_flow_works_discovery(hass: HomeAssistant) -> None:
         {CONF_HOST: "10.0.0.131"},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_MAC
 
     # Verify the discovery flow was aborted
     assert not hass.config_entries.flow.async_progress(DOMAIN)
