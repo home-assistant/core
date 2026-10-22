@@ -2,14 +2,14 @@
 
 from unittest.mock import Mock, patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.cover import CoverEntityFeature, CoverState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_positionable_cover_setup(
@@ -160,7 +160,7 @@ async def test_cover_open_action(
         )
 
         # Assert
-        mock_cover.execute_action.assert_called_once_with("open", ())
+        mock_cover.execute_action.assert_called_once_with("open", None)
 
 
 async def test_cover_close_action(
@@ -187,7 +187,7 @@ async def test_cover_close_action(
         )
 
         # Assert
-        mock_cover.execute_action.assert_called_once_with("close", ())
+        mock_cover.execute_action.assert_called_once_with("close", None)
 
 
 async def test_cover_stop_action(
@@ -214,7 +214,7 @@ async def test_cover_stop_action(
         )
 
         # Assert
-        mock_cover.execute_action.assert_called_once_with("stop", ())
+        mock_cover.execute_action.assert_called_once_with("stop", None)
 
 
 async def test_cover_open_slats_action(
@@ -241,7 +241,7 @@ async def test_cover_open_slats_action(
         )
 
         # Assert
-        mock_cover.execute_action.assert_called_once_with("rotateSlatsUp", ())
+        mock_cover.execute_action.assert_called_once_with("rotateSlatsUp", None)
 
 
 async def test_cover_close_tilt_action(
@@ -268,7 +268,7 @@ async def test_cover_close_tilt_action(
         )
 
         # Assert
-        mock_cover.execute_action.assert_called_once_with("rotateSlatsDown", ())
+        mock_cover.execute_action.assert_called_once_with("rotateSlatsDown", None)
 
 
 async def test_cover_stop_slats_action(
@@ -295,4 +295,4 @@ async def test_cover_stop_slats_action(
         )
 
         # Assert
-        mock_cover.execute_action.assert_called_once_with("stopSlats", ())
+        mock_cover.execute_action.assert_called_once_with("stopSlats", None)

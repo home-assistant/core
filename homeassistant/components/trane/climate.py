@@ -73,7 +73,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+    _attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
     _attr_target_temperature_step = 1.0
 
     def __init__(
@@ -98,7 +98,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         # indoor_temperature is a string from the protocol (e.g. "72.00")
         # or empty string if not yet received
@@ -144,7 +144,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return target temperature for single-setpoint modes."""
         # Setpoints are strings from the protocol or empty string if not yet received
         zone = self._zone
@@ -156,7 +156,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the upper bound target temperature."""
         zone = self._zone
         if zone.mode in SINGLE_SETPOINT_MODES:
@@ -165,7 +165,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the lower bound target temperature."""
         zone = self._zone
         if zone.mode in SINGLE_SETPOINT_MODES:

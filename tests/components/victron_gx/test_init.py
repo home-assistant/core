@@ -3,9 +3,11 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from victron_mqtt import (
     AuthenticationError,
     CannotConnectError,
+    FirmwareUpdateInfo,
     Hub as VictronVenusHub,
     MetricKind,
 )
@@ -26,8 +28,6 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 
 from .const import MOCK_INSTALLATION_ID
-
-from tests.common import MockConfigEntry
 
 LEGACY_SENSOR_UNIQUE_ID = (
     f"{MOCK_INSTALLATION_ID}_evcharger_0_evcharger_max_set_current"
@@ -61,6 +61,7 @@ def mock_victron_hub_library():
         hub_instance = MagicMock()
         hub_instance.connect = AsyncMock()
         hub_instance.disconnect = AsyncMock()
+        hub_instance.firmware_update_info = FirmwareUpdateInfo(None, None, None, None)
         hub_instance.installation_id = MOCK_INSTALLATION_ID
         mock_lib.return_value = hub_instance
         yield mock_lib
@@ -86,6 +87,11 @@ async def test_legacy_evcharger_sensor_creates_repair(
     assert issue is not None
     assert issue.translation_key == "deprecated_sensor"
     assert issue.translation_placeholders == {"entity_id": LEGACY_SENSOR_ENTITY_ID}
+    assert issue.config_entry_id == mock_config_entry.entry_id
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, DEPRECATED_SENSOR_ISSUE_ID) is None
 
 
 @pytest.mark.usefixtures("mock_victron_hub_library")
@@ -257,6 +263,7 @@ async def test_setup_entry_start_failure_unloads_platforms_and_callbacks(
 
     assert mock_config_entry.state is expected_state
     assert mock_config_entry.runtime_data.new_metric_callbacks == {}
+    mock_victron_hub_library.return_value.check_firmware_update.assert_not_called()
 
 
 async def test_hub_start_connection_error(
@@ -287,6 +294,21 @@ async def test_hub_start_success(
     # Verify the hub was started (integration was set up successfully)
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert victron_hub.installation_id == MOCK_INSTALLATION_ID
+
+
+@pytest.mark.usefixtures("mock_victron_hub_library")
+async def test_hub_starts_firmware_update_checks(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_victron_hub_library: MagicMock,
+) -> None:
+    """Test firmware update checks start after connecting."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_victron_hub_library.return_value.check_firmware_update.assert_called_once_with()
 
 
 async def test_device_via_device_links(

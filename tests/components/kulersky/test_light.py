@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from bleak.backends.device import BLEDevice
 import pykulersky
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.kulersky.const import DOMAIN
 from homeassistant.components.light import (
@@ -31,8 +32,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture

@@ -121,6 +121,21 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return None
 
+    async def async_has_tr064_support(self) -> bool:
+        """Check if the device supports TR-064."""
+        return await self.hass.async_add_executor_job(self.has_tr064_support)
+
+    def has_tr064_support(self) -> bool:
+        """Check if the device supports TR-064."""
+        try:
+            # During initialization, FritzConnection tries to fetch the TR-064
+            # description file from the device. If it does not exist, the
+            # library raises a FritzConnectionException.
+            FritzConnection(address=self._host)
+        except FritzConnectionException:
+            return False
+        return True
+
     async def async_check_configured_entry(self) -> FritzConfigEntry | None:
         """Check if entry is configured."""
         current_host = await self.hass.async_add_executor_job(
@@ -189,6 +204,9 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             if uuid and not entry.unique_id:
                 self.hass.config_entries.async_update_entry(entry, unique_id=uuid)
             return self.async_abort(reason="already_configured")
+
+        if not await self.async_has_tr064_support():
+            return self.async_abort(reason="not_supported")
 
         self.context.update(
             {

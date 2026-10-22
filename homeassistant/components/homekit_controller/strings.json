@@ -107,9 +107,6 @@
       }
     },
     "number": {
-      "duration": {
-        "name": "Duration"
-      },
       "elevation": {
         "name": "Elevation"
       },

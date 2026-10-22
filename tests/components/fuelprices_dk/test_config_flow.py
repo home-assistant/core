@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock
 from aiohttp import ClientResponseError
 from pybraendstofpriser import Flist
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.fuelprices_dk.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -15,8 +16,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_integration
 from .conftest import TEST_API_KEY, TEST_COMPANY, TEST_STATION
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 

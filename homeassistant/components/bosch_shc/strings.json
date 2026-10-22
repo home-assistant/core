@@ -42,6 +42,11 @@
       }
     }
   },
+  "device": {
+    "intrusion_system": {
+      "name": "Alarm system"
+    }
+  },
   "entity": {
     "button": {
       "reset_tamper": {
@@ -71,20 +76,40 @@
       "bypass_timeout": {
         "name": "Break function timeout"
       },
+      "energy_saving_enter_duration": {
+        "name": "Energy-saving enter duration"
+      },
       "energy_saving_power_threshold": {
         "name": "Energy-saving power threshold"
       },
       "impulse_length": {
         "name": "Pulse length"
+      },
+      "offset": {
+        "name": "Temperature offset"
       }
     },
     "select": {
+      "display_direction": {
+        "name": "Display orientation",
+        "state": {
+          "normal": "[%key:common::state::normal%]",
+          "reversed": "Rotated by 180°"
+        }
+      },
+      "displayed_temperature": {
+        "name": "Displayed temperature",
+        "state": {
+          "measured": "Measured",
+          "setpoint": "Set temperature"
+        }
+      },
       "motion_sensitivity": {
         "name": "Motion sensitivity",
         "state": {
-          "high": "High",
-          "low": "Low",
-          "middle": "Medium"
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "middle": "[%key:common::state::medium%]"
         }
       },
       "siren_sound_level": {
@@ -92,17 +117,33 @@
         "state": {
           "high": "Loud",
           "low": "Reduced",
-          "medium": "Medium"
+          "medium": "[%key:common::state::medium%]"
+        }
+      },
+      "smoke_sensitivity": {
+        "name": "Smoke sensitivity",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "middle": "[%key:common::state::medium%]"
+        }
+      },
+      "state_after_power_outage": {
+        "name": "State after power outage",
+        "state": {
+          "last_state": "Last state",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
         }
       },
       "vibration_sensitivity": {
         "name": "Vibration sensitivity",
         "state": {
-          "high": "High",
-          "low": "Low",
-          "medium": "Medium",
-          "very_high": "Very high",
-          "very_low": "Very low"
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "very_high": "[%key:common::state::very_high%]",
+          "very_low": "[%key:common::state::very_low%]"
         }
       }
     },
@@ -217,6 +258,11 @@
       "valve": {
         "name": "Valve"
       }
+    }
+  },
+  "exceptions": {
+    "unsupported_hvac_mode": {
+      "message": "This entity does not support the HVAC mode {hvac_mode}."
     }
   }
 }

@@ -83,6 +83,8 @@ class TwinklyLight(TwinklyEntity, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
+        current_mode = self.coordinator.data.current_mode
+
         if ATTR_BRIGHTNESS in kwargs:
             brightness = int(int(kwargs[ATTR_BRIGHTNESS]) / 2.55)
 
@@ -110,6 +112,7 @@ class TwinklyLight(TwinklyEntity, LightEntity):
                 )
                 await self.client.set_mode("color")
                 self.client.default_mode = "color"
+                current_mode = "color"
             else:
                 await self.client.set_cycle_colours(
                     (
@@ -129,6 +132,7 @@ class TwinklyLight(TwinklyEntity, LightEntity):
                 await self.client.set_static_colour(kwargs[ATTR_RGB_COLOR])
                 await self.client.set_mode("color")
                 self.client.default_mode = "color"
+                current_mode = "color"
             else:
                 await self.client.set_cycle_colours(kwargs[ATTR_RGB_COLOR])
                 await self.client.set_mode("movie")
@@ -142,7 +146,8 @@ class TwinklyLight(TwinklyEntity, LightEntity):
         ):
             movie_id = kwargs[ATTR_EFFECT].split(" ")[0]
             if (
-                self.coordinator.data.current_movie is None
+                current_mode != "movie"
+                or self.coordinator.data.current_movie is None
                 or int(movie_id) != self.coordinator.data.current_movie
             ):
                 await self.client.interview()

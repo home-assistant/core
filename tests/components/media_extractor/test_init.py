@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 from syrupy.assertion import SnapshotAssertion
 from yt_dlp import DownloadError
 
@@ -21,8 +22,6 @@ from homeassistant.setup import async_setup_component
 
 from . import YOUTUBE_EMPTY_PLAYLIST, YOUTUBE_PLAYLIST, YOUTUBE_VIDEO, MockYoutubeDL
 from .const import NO_FORMATS_RESPONSE, SOUNDCLOUD_TRACK
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 async def test_play_media_service_is_registered(hass: HomeAssistant) -> None:
@@ -79,7 +78,9 @@ async def test_extracting_playlist_no_entries(
 
     await async_setup_component(hass, DOMAIN, empty_media_extractor_config)
     await hass.async_block_till_done()
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError, match="The playlist does not contain any media"
+    ) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_EXTRACT_MEDIA_URL,
@@ -87,6 +88,7 @@ async def test_extracting_playlist_no_entries(
             blocking=True,
             return_response=True,
         )
+    assert exc_info.value.translation_key == "playlist_empty"
 
 
 @pytest.mark.parametrize(

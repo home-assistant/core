@@ -24,6 +24,9 @@
       },
       "temperature_alert": {
         "default": "mdi:alert"
+      },
+      "ventilation_filter_dirty": {
+        "default": "mdi:air-filter"
       }
     },
     "fan": {

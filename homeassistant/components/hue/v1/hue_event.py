@@ -93,8 +93,9 @@ class HueEvent(GenericHueDevice):
         """Update device registry."""
         device_registry = dr.async_get(self.bridge.hass)
 
-        entry = device_registry.async_get_or_create(
-            config_entry_id=self.bridge.config_entry.entry_id, **self.device_info
+        entry = device_registry.async_get_or_create_from_info(
+            config_entry_id=self.bridge.config_entry.entry_id,
+            device_info=self.device_info,
         )
         self.device_registry_id = entry.id
         LOGGER.debug(

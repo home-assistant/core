@@ -4,7 +4,7 @@ from typing import Any
 
 import probatio
 
-from homeassistant.const import ATTR_ENTITY_ID, CONF_DESCRIPTION, CONF_SELECTOR
+from homeassistant.const import CONF_DESCRIPTION, CONF_SELECTOR
 from homeassistant.core import (
     HassJobType,
     HomeAssistant,
@@ -14,18 +14,12 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers.service import async_register_admin_service
 
-from .const import (
-    ATTR_ATTACHMENTS,
-    ATTR_INSTRUCTIONS,
-    ATTR_REQUIRED,
-    ATTR_STRUCTURE,
-    ATTR_TASK_NAME,
-    DOMAIN,
-    SERVICE_GENERATE_DATA,
-    SERVICE_GENERATE_IMAGE,
-)
-from .task import async_generate_data, async_generate_image
+from .const import ATTR_REQUIRED, DOMAIN, AITaskService, AITaskServiceArgument
+from .evaluation import QUESTIONS_SCHEMA
+from .media_source import async_clear_images
+from .task import async_evaluate, async_generate_data, async_generate_image
 
 STRUCTURE_FIELD_SCHEMA = probatio.Schema(
     {
@@ -64,25 +58,36 @@ async def async_service_generate_image(call: ServiceCall) -> ServiceResponse:
     return await async_generate_image(hass=call.hass, context=call.context, **call.data)
 
 
+async def async_service_evaluate(call: ServiceCall) -> ServiceResponse:
+    """Run an evaluation task."""
+    result = await async_evaluate(hass=call.hass, context=call.context, **call.data)
+    return result.as_dict()
+
+
+async def async_service_clear_images(call: ServiceCall) -> None:
+    """Delete generated images."""
+    await async_clear_images(call.hass, call.data.get(AITaskServiceArgument.DAYS))
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register the AI Task services."""
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GENERATE_DATA,
+        AITaskService.GENERATE_DATA,
         async_service_generate_data,
         schema=probatio.Schema(
             {
-                probatio.Required(ATTR_TASK_NAME): cv.string,
-                probatio.Optional(ATTR_ENTITY_ID): cv.entity_id,
-                probatio.Required(ATTR_INSTRUCTIONS): cv.string,
-                probatio.Optional(ATTR_STRUCTURE): probatio.All(
+                probatio.Required(AITaskServiceArgument.TASK_NAME): cv.string,
+                probatio.Optional(AITaskServiceArgument.ENTITY_ID): cv.entity_id,
+                probatio.Required(AITaskServiceArgument.INSTRUCTIONS): cv.string,
+                probatio.Optional(AITaskServiceArgument.STRUCTURE): probatio.All(
                     probatio.Schema({str: STRUCTURE_FIELD_SCHEMA}),
                     _validate_structure_fields,
                 ),
-                probatio.Optional(ATTR_ATTACHMENTS): selector.MediaSelector(
-                    {"accept": ["*/*"], "multiple": True}
-                ),
+                probatio.Optional(
+                    AITaskServiceArgument.ATTACHMENTS
+                ): selector.MediaSelector({"accept": ["*/*"], "multiple": True}),
             }
         ),
         supports_response=SupportsResponse.ONLY,
@@ -90,18 +95,51 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GENERATE_IMAGE,
+        AITaskService.GENERATE_IMAGE,
         async_service_generate_image,
         schema=probatio.Schema(
             {
-                probatio.Required(ATTR_TASK_NAME): cv.string,
-                probatio.Optional(ATTR_ENTITY_ID): cv.entity_id,
-                probatio.Required(ATTR_INSTRUCTIONS): cv.string,
-                probatio.Optional(ATTR_ATTACHMENTS): selector.MediaSelector(
-                    {"accept": ["*/*"], "multiple": True}
-                ),
+                probatio.Required(AITaskServiceArgument.TASK_NAME): cv.string,
+                probatio.Optional(AITaskServiceArgument.ENTITY_ID): cv.entity_id,
+                probatio.Required(AITaskServiceArgument.INSTRUCTIONS): cv.string,
+                probatio.Optional(
+                    AITaskServiceArgument.ATTACHMENTS
+                ): selector.MediaSelector({"accept": ["*/*"], "multiple": True}),
             }
         ),
         supports_response=SupportsResponse.ONLY,
         job_type=HassJobType.Coroutinefunction,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        AITaskService.EVALUATE,
+        async_service_evaluate,
+        schema=probatio.Schema(
+            {
+                probatio.Required(AITaskServiceArgument.TASK_NAME): cv.string,
+                probatio.Optional(AITaskServiceArgument.ENTITY_ID): cv.entity_id,
+                probatio.Optional(AITaskServiceArgument.STATE): cv.match_all,
+                probatio.Required(AITaskServiceArgument.QUESTIONS): QUESTIONS_SCHEMA,
+                probatio.Optional(
+                    AITaskServiceArgument.ATTACHMENTS
+                ): selector.MediaSelector({"accept": ["*/*"], "multiple": True}),
+            }
+        ),
+        supports_response=SupportsResponse.ONLY,
+        job_type=HassJobType.Coroutinefunction,
+    )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        AITaskService.CLEAR_IMAGES,
+        async_service_clear_images,
+        schema=probatio.Schema(
+            {
+                probatio.Optional(AITaskServiceArgument.DAYS): probatio.All(
+                    probatio.Coerce(int), probatio.Range(min=1, max=3650)
+                )
+            }
+        ),
     )
