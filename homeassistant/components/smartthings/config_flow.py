@@ -257,6 +257,8 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 reason="quota_exceeded",
                 description_placeholders={"manage_plans_url": MANAGE_PLANS_URL},
             )
+        except SmartThingsForbiddenError:
+            return self.async_abort(reason="entitlement_required")
         location = locations[0]
         # We pick to use the location id as unique id rather than the installed app id
         # as the installed app id could change with the right settings in the SmartApp

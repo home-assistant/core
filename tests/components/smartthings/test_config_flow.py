@@ -104,6 +104,71 @@ async def test_pat_implementation_auto_selects_stored_credential(
     )
 
 
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@pytest.mark.parametrize(
+    ("error", "reason", "placeholders"),
+    [
+        pytest.param(
+            SmartThingsQuotaExceededError("Quota exceeded"),
+            "quota_exceeded",
+            {"manage_plans_url": MANAGE_PLANS_URL},
+            id="quota_exceeded",
+        ),
+        pytest.param(
+            SmartThingsForbiddenError("Forbidden"),
+            "entitlement_required",
+            None,
+            id="forbidden",
+        ),
+    ],
+)
+async def test_stored_credential_location_fetch_error(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_smartthings: AsyncMock,
+    error: Exception,
+    reason: str,
+    placeholders: dict[str, str] | None,
+) -> None:
+    """Check a failed location fetch after OAuth aborts with guidance."""
+    mock_smartthings.get_locations.side_effect = error
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert "client_id=CLIENT_ID" in result["url"]
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass, {"flow_id": result["flow_id"], "redirect_uri": REDIRECT_URI}
+    )
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == HTTPStatus.OK
+
+    aioclient_mock.post(
+        "https://auth-global.api.smartthings.com/oauth/token",
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "token_type": "Bearer",
+            "expires_in": 82806,
+            "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
+            "r:locations:* w:locations:* x:locations:* "
+            "r:scenes:* x:scenes:* r:rules:* w:rules:* sse",
+            "access_tier": 0,
+            "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    assert result["description_placeholders"] == placeholders
+
+
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_pat_flow_records_app_before_storing_credential(
     hass: HomeAssistant,
