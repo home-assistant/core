@@ -50,10 +50,12 @@ async def async_setup_scanner(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=data
     )
+    ir.async_delete_issue(hass, HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}")
     if (
         result["type"] is FlowResultType.ABORT
         and result["reason"] != "already_configured"
     ):
+        ir.async_delete_issue(hass, DOMAIN, f"yaml_imported_{config[CONF_HOST]}")
         ir.async_create_issue(
             hass,
             DOMAIN,
@@ -67,13 +69,12 @@ async def async_setup_scanner(
     ir.async_delete_issue(hass, DOMAIN, f"yaml_import_{config[CONF_HOST]}")
     ir.async_create_issue(
         hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
+        DOMAIN,
+        f"yaml_imported_{config[CONF_HOST]}",
         is_fixable=False,
-        issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={"domain": DOMAIN, "integration_title": "FortiOS"},
+        translation_key="yaml_imported",
+        translation_placeholders={"host": config[CONF_HOST]},
     )
     return True
 

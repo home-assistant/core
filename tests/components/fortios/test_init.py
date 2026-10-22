@@ -140,7 +140,7 @@ async def test_yaml_unsupported_firmware_and_recovery(
     assert hass.states.get("device_tracker.phone").state == STATE_HOME
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
     assert (
-        issue_registry.async_get_issue("homeassistant", f"deprecated_yaml_{DOMAIN}")
+        issue_registry.async_get_issue(DOMAIN, f"yaml_imported_{USER_INPUT[CONF_HOST]}")
         is not None
     )
 
@@ -198,7 +198,7 @@ async def test_yaml_import_success(
     await hass.async_block_till_done(wait_background_tasks=True)
     assert mock_client.update.call_count == 2
     assert (
-        issue_registry.async_get_issue("homeassistant", f"deprecated_yaml_{DOMAIN}")
+        issue_registry.async_get_issue(DOMAIN, f"yaml_imported_{USER_INPUT[CONF_HOST]}")
         is not None
     )
 
@@ -327,6 +327,47 @@ async def test_yaml_import_multiple_failures(
     assert second is not None
     assert first.translation_placeholders == {"host": USER_INPUT[CONF_HOST]}
     assert second.translation_placeholders == {"host": other_host}
+    assert (
+        issue_registry.async_get_issue("homeassistant", f"deprecated_yaml_{DOMAIN}")
+        is None
+    )
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize("failed_first", [True, False])
+async def test_yaml_import_mixed_outcomes(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+    failed_first: bool,
+) -> None:
+    """Only instruct removal of the successfully imported host's YAML block."""
+    failed_host = "192.168.1.2"
+    hosts = {
+        True: [failed_host, USER_INPUT[CONF_HOST]],
+        False: [USER_INPUT[CONF_HOST], failed_host],
+    }
+    for host in hosts[failed_first]:
+        mock_client.connect.side_effect = (
+            FortiOSConnectionError() if host == failed_host else None
+        )
+        config = PLATFORM_SCHEMA(
+            {CONF_PLATFORM: DOMAIN} | USER_INPUT | {CONF_HOST: host}
+        )
+        assert await async_setup_scanner(hass, config, AsyncMock())
+        await hass.async_block_till_done()
+    success = issue_registry.async_get_issue(
+        DOMAIN, f"yaml_imported_{USER_INPUT[CONF_HOST]}"
+    )
+    assert success is not None
+    assert success.translation_key == "yaml_imported"
+    assert success.translation_placeholders == {"host": USER_INPUT[CONF_HOST]}
+    assert (
+        issue_registry.async_get_issue(DOMAIN, f"yaml_imported_{failed_host}") is None
+    )
+    assert (
+        issue_registry.async_get_issue(DOMAIN, f"yaml_import_{failed_host}") is not None
+    )
     assert (
         issue_registry.async_get_issue("homeassistant", f"deprecated_yaml_{DOMAIN}")
         is None

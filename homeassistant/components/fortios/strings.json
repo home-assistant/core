@@ -51,6 +51,10 @@
     "yaml_import_failed": {
       "description": "The FortiOS YAML configuration at `{host}` could not be imported. FortiOS 6.4.3 or newer is required. Update incompatible firmware and check the host, API token and SSL verification setting in `configuration.yaml`, then restart Home Assistant to retry the import. Keep the FortiOS YAML configuration until you confirm that the import succeeded and a FortiOS config entry is available in Devices & services. Only then remove the FortiOS YAML block.",
       "title": "FortiOS YAML import failed"
+    },
+    "yaml_imported": {
+      "description": "The FortiOS YAML configuration for `{host}` was imported successfully. Remove only the FortiOS device tracker YAML block with host `{host}` from `configuration.yaml`, then restart Home Assistant. Keep YAML blocks for any other FortiOS hosts until their imports succeed.",
+      "title": "Remove imported FortiOS YAML configuration"
     }
   }
 }
