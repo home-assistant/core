@@ -640,12 +640,15 @@ def validate_user_input(
                 CONF_WATER_HEATER_TARGET_TEMPERATURE,
                 SET_WATER_HEATER_TEMPERATURE_ACTION,
             )(user_input)
-            tcv.requires_option(CONF_AWAY_MODE, TURN_AWAY_MODE_ON_ACTION)(user_input)
+            additional_options = user_input.get(CONF_ADDITIONAL_OPTIONS, {})
+            tcv.requires_option(CONF_AWAY_MODE, TURN_AWAY_MODE_ON_ACTION)(
+                additional_options
+            )
             tcv.requires_option(TURN_AWAY_MODE_ON_ACTION, TURN_AWAY_MODE_OFF_ACTION)(
-                user_input
+                additional_options
             )
             tcv.requires_option(TURN_AWAY_MODE_OFF_ACTION, TURN_AWAY_MODE_ON_ACTION)(
-                user_input
+                additional_options
             )
         return {"template_type": template_type} | user_input
 
