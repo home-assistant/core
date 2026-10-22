@@ -334,7 +334,7 @@ async def test_flow_non_encrypted_already_configured_abort(hass: HomeAssistant) 
 
     MockConfigEntry(
         domain=DOMAIN,
-        unique_id="0.0.0.0",
+        unique_id=MOCK_DEVICE_INFO[ATTR_UDN],
         data=MOCK_CONFIG_DATA,
     ).add_to_hass(hass)
 
@@ -359,7 +359,7 @@ async def test_flow_encrypted_already_configured_abort(hass: HomeAssistant) -> N
 
     MockConfigEntry(
         domain=DOMAIN,
-        unique_id="0.0.0.0",
+        unique_id=MOCK_DEVICE_INFO[ATTR_UDN],
         data={**MOCK_CONFIG_DATA, **MOCK_ENCRYPTION_DATA},
     ).add_to_hass(hass)
 
@@ -532,7 +532,7 @@ async def test_imported_flow_encrypted_unknown_abort(hass: HomeAssistant) -> Non
     assert result["reason"] == "unknown"
 
 
-async def test_imported_flow_not_connected_error(hass: HomeAssistant) -> None:
+async def test_imported_flow_not_connected_abort(hass: HomeAssistant) -> None:
     """Test imported flow with connection error abortion."""
 
     with patch(
@@ -545,20 +545,8 @@ async def test_imported_flow_not_connected_error(hass: HomeAssistant) -> None:
             data={**MOCK_CONFIG_DATA},
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cannot_connect"}
-
-    with patch(
-        "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
-        return_value=get_mock_remote(encrypted=False),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {**MOCK_BASIC_DATA},
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_imported_flow_unknown_abort(hass: HomeAssistant) -> None:
@@ -585,7 +573,7 @@ async def test_imported_flow_non_encrypted_already_configured_abort(
 
     MockConfigEntry(
         domain=DOMAIN,
-        unique_id="0.0.0.0",
+        unique_id=MOCK_DEVICE_INFO[ATTR_UDN],
         data=MOCK_CONFIG_DATA,
     ).add_to_hass(hass)
 
@@ -606,7 +594,7 @@ async def test_imported_flow_encrypted_already_configured_abort(
 
     MockConfigEntry(
         domain=DOMAIN,
-        unique_id="0.0.0.0",
+        unique_id=MOCK_DEVICE_INFO[ATTR_UDN],
         data={**MOCK_CONFIG_DATA, **MOCK_ENCRYPTION_DATA},
     ).add_to_hass(hass)
 
