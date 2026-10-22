@@ -404,7 +404,7 @@ class EntityConditionBase(Condition):
                 )
         except (SQLAlchemyError, TimeoutError) as err:
             # Best effort: keep the conservative anchors rather than failing.
-            _LOGGER.debug("Error priming condition durations from history: %s", err)
+            _LOGGER.debug("Error priming condition durations from history: %r", err)
             return
 
         queued_states = queued or {}
