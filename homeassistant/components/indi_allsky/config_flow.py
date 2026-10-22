@@ -140,6 +140,7 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     _discovered_data: dict[str, Any] | None = None
+    _requires_auth: bool = False
 
     @override
     async def async_step_user(
@@ -207,6 +208,7 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery of an INDI Allsky server."""
         host = normalize_host(discovery_info.host)
+        hostname = normalize_host(discovery_info.hostname)
         ssl = str(discovery_info.properties.get("ssl", "true")).lower() == "true"
         port = discovery_info.port or (443 if ssl else 80)
         mac = discovery_info.properties.get("mac")
@@ -218,7 +220,7 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                 for entry in self._async_current_entries(include_ignore=False):
                     if (
                         entry.unique_id is None
-                        and normalize_host(entry.data[CONF_HOST]) == host
+                        and normalize_host(entry.data[CONF_HOST]) in (host, hostname)
                         and entry.data[CONF_PORT] == port
                     ):
                         self.hass.config_entries.async_update_entry(
@@ -237,12 +239,12 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                 updates[CONF_HOST] = host
             self._abort_if_unique_id_configured(updates=updates)
         else:
-            self._async_abort_entries_match(
-                {
-                    CONF_HOST: host,
-                    CONF_PORT: port,
-                }
-            )
+            for entry in self._async_current_entries(include_ignore=False):
+                if (
+                    normalize_host(entry.data[CONF_HOST]) in (host, hostname)
+                    and entry.data[CONF_PORT] == port
+                ):
+                    return self.async_abort(reason="already_configured")
             await self._async_handle_discovery_without_unique_id()
 
         self._discovered_data = {
@@ -255,24 +257,31 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
         server_name = discovery_info.name.split("._")[0]
         self.context["title_placeholders"] = {"name": server_name}
 
+        unverified_ssl_needed = False
         try:
             await validate_input(self.hass, self._discovered_data)
         except InvalidAuth:
-            return await self.async_step_credentials()
+            self._requires_auth = True
         except CannotConnect, Unknown:
             if ssl:
                 try:
                     unverified_data = {**self._discovered_data, CONF_VERIFY_SSL: False}
                     await validate_input(self.hass, unverified_data)
                 except InvalidAuth:
-                    self._discovered_data[CONF_VERIFY_SSL] = False
-                    return await self.async_step_credentials()
+                    self._requires_auth = True
+                    unverified_ssl_needed = True
                 except CannotConnect, Unknown:
                     return self.async_abort(reason="cannot_connect")
                 else:
-                    self._discovered_data[CONF_VERIFY_SSL] = False
-                    return await self.async_step_discovery_confirm()
-            return self.async_abort(reason="cannot_connect")
+                    unverified_ssl_needed = True
+            else:
+                return self.async_abort(reason="cannot_connect")
+
+        if unverified_ssl_needed:
+            return await self.async_step_unverified_ssl()
+
+        if self._requires_auth:
+            return await self.async_step_credentials()
 
         return await self.async_step_discovery_confirm()
 
@@ -295,6 +304,23 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=f"INDI Allsky ({host_str})",
             data=self._discovered_data,
+        )
+
+    async def async_step_unverified_ssl(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle user consent for unverified SSL."""
+        if user_input is not None:
+            assert self._discovered_data is not None
+            self._discovered_data[CONF_VERIFY_SSL] = False
+            if self._requires_auth:
+                return await self.async_step_credentials()
+            return self._create_discovered_entry()
+
+        self._set_confirm_only()
+        return self.async_show_form(
+            step_id="unverified_ssl",
+            description_placeholders=self.context.get("title_placeholders", {}),
         )
 
     async def async_step_discovery_confirm(
@@ -326,6 +352,8 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 await validate_input(self.hass, data)
+            except MissingCredentials:
+                errors["base"] = "missing_credentials"
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:

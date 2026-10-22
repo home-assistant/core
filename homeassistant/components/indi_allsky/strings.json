@@ -37,6 +37,9 @@
         },
         "description": "Please enter updated credentials for INDI Allsky."
       },
+      "unverified_ssl": {
+        "description": "INDI Allsky servers use a self-signed SSL certificate by default. Connecting without certificate verification allows communication with {name}, but encrypted traffic cannot be verified against a trusted authority. Do you want to continue without certificate verification?"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
