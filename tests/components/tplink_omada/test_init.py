@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import timedelta
+from functools import partial
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -29,7 +30,7 @@ from homeassistant.components.tplink_omada.coordinator import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -295,6 +296,67 @@ async def test_cleanup_runs_hourly(
             (DOMAIN, removed_mac), mock_config_entry.entry_id
         )
         is None
+    )
+
+
+async def test_cleanup_recreates_device_when_reappears(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a device removed by cleanup is registered again when it returns."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    removed_mac = "54-AF-97-00-00-01"
+    update_unique_id = f"{removed_mac}_firmware"
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, removed_mac), mock_config_entry.entry_id
+    )
+    assert (
+        entity_registry.async_get_entity_id("update", DOMAIN, update_unique_id)
+        is not None
+    )
+
+    site_client = mock_omada_client.get_site_client.return_value
+
+    # Remove the switch from the controller's device list and clean up
+    site_client.get_devices = AsyncMock(
+        side_effect=partial(_get_devices_without, hass, removed_mac)
+    )
+    freezer.tick(timedelta(hours=1, seconds=1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, removed_mac), mock_config_entry.entry_id
+        )
+        is None
+    )
+    assert (
+        entity_registry.async_get_entity_id("update", DOMAIN, update_unique_id) is None
+    )
+
+    # Switch returns to the controller, and the next run registers it again
+    devices_data = await async_load_json_array_fixture(hass, "devices.json", DOMAIN)
+    site_client.get_devices = AsyncMock(
+        return_value=[OmadaListDevice(d) for d in devices_data]
+    )
+    freezer.tick(timedelta(hours=1, seconds=1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, removed_mac), mock_config_entry.entry_id
+    )
+    assert (
+        entity_registry.async_get_entity_id("update", DOMAIN, update_unique_id)
+        is not None
     )
 
 

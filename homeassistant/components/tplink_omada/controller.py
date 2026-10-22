@@ -53,6 +53,7 @@ class OmadaSiteController:
         self._clients_coordinator = OmadaClientsCoordinator(
             hass, config_entry, omada_client
         )
+        self._device_entity_registrations: list[set[str]] = []
 
     async def initialize_first_refresh(self) -> None:
         """Initialize the all coordinators, and perform first refresh."""
@@ -84,22 +85,26 @@ class OmadaSiteController:
             device_filter: Function that returns True if a device should be processed.
             entity_callback: Given a discovered Omada device, creates entities for that device.
         """
-        # Track which devices have been processed already
+        # Track which devices have been processed already. A device removed by
+        # cleanup is dropped from these sets so it is registered again when it
+        # reappears.
         processed_devices: set[str] = set()
+        self._device_entity_registrations.append(processed_devices)
 
         async def _async_register_entities() -> None:
             """Register entities for devices that match the filter."""
             devices_to_process = [
                 device
                 for device in self._devices_coordinator.data.values()
-                if device_filter(device) and device.mac not in processed_devices
+                if device_filter(device)
+                and dr.format_mac(device.mac) not in processed_devices
             ]
 
             if not devices_to_process:
                 return
 
             for device in devices_to_process:
-                processed_devices.add(device.mac)
+                processed_devices.add(dr.format_mac(device.mac))
                 await entity_callback(device)
 
         @callback
@@ -113,8 +118,15 @@ class OmadaSiteController:
         # Call once on initial setup
         await _async_register_entities()
 
+    def _forget_device_registration(self, mac: str) -> None:
+        """Drop a device from the registration state so it can be added again."""
+        mac = dr.format_mac(mac)
+        for processed in self._device_entity_registrations:
+            processed.discard(mac)
+
     async def async_remove_device(self, mac: str, device_entry: dr.DeviceEntry) -> None:
         """Remove a device entry and drop its cached port coordinator."""
+        self._forget_device_registration(mac)
         coordinator = self._switch_port_coordinators.pop(dr.format_mac(mac), None)
         if coordinator is not None:
             await coordinator.async_shutdown()
