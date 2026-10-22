@@ -14,6 +14,7 @@ from gkphomepython import (
 )
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -159,8 +160,15 @@ class GkpClimate(GkpEntity, ClimateEntity):
         boost at the requested temperature, like the GKP application.
         """
         temperature: float = kwargs[ATTR_TEMPERATURE]
-        mode = self.thermostat.mode
-        if mode is None or not mode.setpoint_adjustable:
+        hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
+        mode = (
+            self.thermostat.mode if hvac_mode is None else HVAC_TO_GKP_MODE[hvac_mode]
+        )
+        if (
+            mode is None
+            or not mode.setpoint_adjustable
+            or (hvac_mode is not None and mode is GkpMode.AUTO)
+        ):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="setpoint_not_adjustable",

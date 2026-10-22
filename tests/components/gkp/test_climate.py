@@ -199,6 +199,65 @@ async def test_set_temperature(
     )
 
 
+async def test_set_temperature_with_heat_hvac_mode(
+    hass: HomeAssistant,
+    mock_gkp_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_contents: dict[str, dict[str, Any]],
+) -> None:
+    """Test setting the temperature of an off device with the heat HVAC mode."""
+    device_contents[LIVING_ROOM_ID]["Cm"]["value"] = GkpMode.OFF.value
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: LIVING_ROOM_ENTITY_ID,
+            ATTR_TEMPERATURE: 21.0,
+            ATTR_HVAC_MODE: HVACMode.HEAT,
+        },
+        blocking=True,
+    )
+
+    mock_gkp_client.set_temperature.assert_called_once_with(
+        LIVING_ROOM_ID, GkpMode.COMFORT, 21.0
+    )
+
+
+@pytest.mark.parametrize(
+    "hvac_mode",
+    [
+        pytest.param(HVACMode.OFF, id="off"),
+        pytest.param(HVACMode.AUTO, id="auto"),
+    ],
+)
+async def test_set_temperature_with_hvac_mode_not_adjustable(
+    hass: HomeAssistant,
+    mock_gkp_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    hvac_mode: HVACMode,
+) -> None:
+    """Test the temperature cannot be set with an HVAC mode without setpoint."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: LIVING_ROOM_ENTITY_ID,
+                ATTR_TEMPERATURE: 21.0,
+                ATTR_HVAC_MODE: hvac_mode,
+            },
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "setpoint_not_adjustable"
+    mock_gkp_client.set_mode.assert_not_called()
+    mock_gkp_client.set_temperature.assert_not_called()
+
+
 @pytest.mark.parametrize(
     ("mode", "temperature"),
     [
