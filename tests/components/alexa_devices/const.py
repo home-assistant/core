@@ -64,7 +64,18 @@ TEST_DEVICE_1 = AmazonDevice(
         ),
     },
     notifications_supported=True,
-    notifications={
+    media_player_supported=True,
+    communication_settings={
+        "announcements": "ON",
+        "communications": "ON",
+        "dropin": "All",
+    },
+    voice_control_supported=True,
+    features={},
+)
+
+TEST_NOTIFICATIONS: dict[str, dict[str, AmazonSchedule]] = {
+    TEST_DEVICE_1_SN: {
         NOTIFICATION_ALARM: AmazonSchedule(
             type=NOTIFICATION_ALARM,
             status="ON",
@@ -84,15 +95,7 @@ TEST_DEVICE_1 = AmazonDevice(
             next_occurrence=None,
         ),
     },
-    media_player_supported=True,
-    communication_settings={
-        "announcements": "ON",
-        "communications": "ON",
-        "dropin": "All",
-    },
-    voice_control_supported=True,
-    features={},
-)
+}
 
 TEST_DEVICE_2_SN = "echo_test_2_serial_number"
 TEST_DEVICE_2 = AmazonDevice(
@@ -126,7 +129,6 @@ TEST_DEVICE_2 = AmazonDevice(
         )
     },
     notifications_supported=False,
-    notifications={},
     media_player_supported=False,
     communication_settings={},
     voice_control_supported=True,
@@ -222,7 +224,6 @@ TEST_DEVICE_AQM = AmazonDevice(
         ),
     },
     notifications_supported=False,
-    notifications={},
     media_player_supported=False,
     communication_settings={},
     voice_control_supported=False,
