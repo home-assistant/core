@@ -266,14 +266,15 @@ class ToneCoordinator(DataUpdateCoordinator[ToneData]):
 
     async def _update_callback(self, message: Status) -> None:
         """New message from the receiver."""
+        data: ToneData
         match message:
             case status.Tone(zone=Zone.MAIN):
-                self.data = {
+                data = {
                     ToneControl.BASS: message.bass,
                     ToneControl.TREBLE: message.treble,
                 }
             case status.NotAvailable(kind=Kind.TONE, zone=Zone.MAIN):
-                self.data = {}
+                data = {}
             case status.Power(zone=Zone.MAIN, param=param):
                 self.power_on = param is status.Power.Param.ON
                 if self.power_on:
@@ -283,7 +284,9 @@ class ToneCoordinator(DataUpdateCoordinator[ToneData]):
             case _:
                 return
 
-        if not self._entities_added and self.data:
+        self.async_set_updated_data(data)
+
+        if not self._entities_added and data:
             _LOGGER.debug(
                 "Discovered %s on %s (%s)",
                 self.name,
@@ -296,5 +299,3 @@ class ToneCoordinator(DataUpdateCoordinator[ToneData]):
                 f"{DOMAIN}_{self.config_entry.entry_id}_tone",
                 self,
             )
-
-        self.async_set_updated_data(self.data)

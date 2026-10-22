@@ -83,13 +83,13 @@ class OnkyoToneNumber(CoordinatorEntity[ToneCoordinator], NumberEntity):
             and self._control in self.coordinator.data
         )
 
+    @property
+    @override
+    def native_value(self) -> int | None:
+        """Return the tone control value."""
+        return self.coordinator.data.get(self._control)
+
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the tone control."""
         await self.coordinator.async_send_command(self._control, int(value))
-
-    @override
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._attr_native_value = self.coordinator.data.get(self._control)
-        super()._handle_coordinator_update()
