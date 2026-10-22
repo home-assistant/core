@@ -4,14 +4,13 @@ import logging
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import MockUser
 
 from homeassistant.components import person
 from homeassistant.components.person import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import collection
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockUser
 
 DEVICE_TRACKER = "device_tracker.test_tracker"
 DEVICE_TRACKER_2 = "device_tracker.test_tracker_2"

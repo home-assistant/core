@@ -1,6 +1,7 @@
 {
   "domain": "discogs",
   "name": "Discogs",
+  "categories": ["media_entertainment.music_radio_services"],
   "codeowners": ["@thibmaek"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/discogs",

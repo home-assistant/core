@@ -1,12 +1,17 @@
 """Test the Teslemetry cover platform."""
 
+from collections.abc import AsyncIterator
 from copy import deepcopy
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    mock_restore_cache_with_extra_data,
+)
 from syrupy.assertion import SnapshotAssertion
-from tesla_fleet_api.const import ClosureState
 from tesla_fleet_api.exceptions import InvalidCommand
+from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
 from teslemetry_stream import Signal
 
 from homeassistant.components.cover import (
@@ -17,16 +22,21 @@ from homeassistant.components.cover import (
     SERVICE_STOP_COVER,
     CoverState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.components.teslemetry.const import CONF_VIN, SUBENTRY_TYPE_VEHICLE
+from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.const import ATTR_ENTITY_ID, CONF_ADDRESS, STATE_UNKNOWN, Platform
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.restore_state import async_get as async_get_restore_state
 
-from . import assert_entities, setup_platform
+from . import assert_entities, mock_config_entry, setup_platform
 from .const import (
     COMMAND_ERRORS,
     COMMAND_OK,
+    CYBERTRUCK_VIN,
     METADATA,
+    METADATA_CYBERTRUCK,
     METADATA_NOSCOPE,
     PRODUCTS,
     PRODUCTS_CYBERTRUCK,
@@ -34,7 +44,60 @@ from .const import (
     VEHICLE_DATA_NONE,
 )
 
-VIN = PRODUCTS_CYBERTRUCK["response"][0]["vin"]
+WINDOWS_ENTITY_ID = "cover.test_windows"
+TONNEAU_ENTITY_ID = "cover.test_tonneau"
+BLE_ADDRESS = "AA:BB:CC:DD:EE:FF"
+TONNEAU_SERVICES = [
+    pytest.param(SERVICE_OPEN_COVER, "open_tonneau", id="open"),
+    pytest.param(SERVICE_CLOSE_COVER, "close_tonneau", id="close"),
+    pytest.param(SERVICE_STOP_COVER, "stop_tonneau", id="stop"),
+]
+
+
+@pytest.fixture
+async def ble_cybertruck(
+    hass: HomeAssistant, mock_products: AsyncMock, mock_metadata: AsyncMock
+) -> AsyncIterator[tuple[AsyncMock, MagicMock]]:
+    """Set up a Bluetooth-paired Cybertruck, yielding its Bluetooth vehicle and lookup."""
+    mock_products.return_value = PRODUCTS_CYBERTRUCK
+    mock_metadata.return_value = METADATA_CYBERTRUCK
+    base = mock_config_entry()
+    entry = MockConfigEntry(
+        domain=base.domain,
+        version=base.version,
+        unique_id=base.unique_id,
+        data=dict(base.data),
+        subentries_data=[
+            ConfigSubentryData(
+                subentry_type=SUBENTRY_TYPE_VEHICLE,
+                unique_id=CYBERTRUCK_VIN,
+                title="Test",
+                data={CONF_VIN: CYBERTRUCK_VIN, CONF_ADDRESS: BLE_ADDRESS},
+            )
+        ],
+    )
+    entry.add_to_hass(hass)
+    bluetooth_vehicle = AsyncMock(spec=VehicleBluetooth)
+    bluetooth_vehicle.model = "Cybertruck"
+    ble_lookup = MagicMock(return_value=MagicMock())
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            ble_lookup,
+        ),
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
+        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.COVER]),
+    ):
+        mock_parent.return_value.get_private_key = AsyncMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = (
+            bluetooth_vehicle
+        )
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        yield bluetooth_vehicle, ble_lookup
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -95,21 +158,24 @@ async def test_cover_noscope(
 
 
 @pytest.mark.parametrize(
-    ("products", "expected"),
+    ("products", "metadata", "expected"),
     [
-        pytest.param(PRODUCTS, False, id="model3"),
-        pytest.param(PRODUCTS_CYBERTRUCK, True, id="cybertruck"),
+        pytest.param(PRODUCTS, METADATA, False, id="model3"),
+        pytest.param(PRODUCTS_CYBERTRUCK, METADATA_CYBERTRUCK, True, id="cybertruck"),
     ],
 )
 async def test_cover_tonneau_model_gate(
     hass: HomeAssistant,
     mock_products: AsyncMock,
+    mock_metadata: AsyncMock,
     products: dict,
+    metadata: dict,
     expected: bool,
 ) -> None:
-    """Tests that the tonneau cover is only created for a Cybertruck."""
+    """Tests that the tonneau cover is only created for a Cybertruck VIN."""
 
     mock_products.return_value = products
+    mock_metadata.return_value = metadata
     await setup_platform(hass, [Platform.COVER])
     assert (hass.states.get("cover.test_tonneau") is not None) == expected
 
@@ -131,8 +197,8 @@ async def test_cover_tonneau_firmware_gate(
     """Tests that the tonneau cover is only created on firmware >= 2024.44.25."""
 
     mock_products.return_value = PRODUCTS_CYBERTRUCK
-    metadata = deepcopy(METADATA)
-    metadata["vehicles"][VIN]["firmware"] = firmware
+    metadata = deepcopy(METADATA_CYBERTRUCK)
+    metadata["vehicles"][CYBERTRUCK_VIN]["firmware"] = firmware
     mock_metadata.return_value = metadata
 
     await setup_platform(hass, [Platform.COVER])
@@ -145,10 +211,12 @@ async def test_cover_cybertruck(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_products: AsyncMock,
+    mock_metadata: AsyncMock,
 ) -> None:
     """Tests that the cover entities are correct for a Cybertruck."""
 
     mock_products.return_value = PRODUCTS_CYBERTRUCK
+    mock_metadata.return_value = METADATA_CYBERTRUCK
     entry = await setup_platform(hass, [Platform.COVER])
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
@@ -157,15 +225,17 @@ async def test_cover_cybertruck(
 async def test_cover_tonneau_services(
     hass: HomeAssistant,
     mock_products: AsyncMock,
+    mock_metadata: AsyncMock,
 ) -> None:
     """Tests that the tonneau cover commands work for a Cybertruck."""
 
     mock_products.return_value = PRODUCTS_CYBERTRUCK
+    mock_metadata.return_value = METADATA_CYBERTRUCK
     await setup_platform(hass, [Platform.COVER])
 
     entity_id = "cover.test_tonneau"
     with patch(
-        "tesla_fleet_api.teslemetry.Vehicle.closure",
+        "tesla_fleet_api.teslemetry.Vehicle.open_tonneau",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -174,52 +244,124 @@ async def test_cover_tonneau_services(
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-        call.assert_called_once_with(tonneau=ClosureState.OPEN)
+        call.assert_called_once_with()
         state = hass.states.get(entity_id)
         assert state
         assert state.state == CoverState.OPEN
 
-        call.reset_mock()
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.stop_tonneau",
+        return_value=COMMAND_OK,
+    ) as call:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_STOP_COVER,
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-        call.assert_called_once_with(tonneau=ClosureState.STOP)
+        call.assert_called_once_with()
         state = hass.states.get(entity_id)
         assert state
         assert state.state == CoverState.OPEN
 
-        call.reset_mock()
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.close_tonneau",
+        return_value=COMMAND_OK,
+    ) as call:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-        call.assert_called_once_with(tonneau=ClosureState.CLOSE)
+        call.assert_called_once_with()
         state = hass.states.get(entity_id)
         assert state
         assert state.state == CoverState.CLOSED
 
 
+@pytest.mark.parametrize(("service", "command"), TONNEAU_SERVICES)
+async def test_cover_tonneau_bluetooth(
+    hass: HomeAssistant,
+    ble_cybertruck: tuple[AsyncMock, MagicMock],
+    service: str,
+    command: str,
+) -> None:
+    """Tests that a Bluetooth-paired Cybertruck in range moves the tonneau locally."""
+    bluetooth_vehicle, _ = ble_cybertruck
+    getattr(bluetooth_vehicle, command).return_value = COMMAND_OK
+
+    with patch(
+        f"tesla_fleet_api.teslemetry.Vehicle.{command}", return_value=COMMAND_OK
+    ) as cloud_command:
+        await hass.services.async_call(
+            COVER_DOMAIN, service, {ATTR_ENTITY_ID: [TONNEAU_ENTITY_ID]}, blocking=True
+        )
+
+    getattr(bluetooth_vehicle, command).assert_awaited_once_with()
+    cloud_command.assert_not_called()
+
+
+@pytest.mark.parametrize(("service", "command"), TONNEAU_SERVICES)
+async def test_cover_tonneau_bluetooth_out_of_range(
+    hass: HomeAssistant,
+    ble_cybertruck: tuple[AsyncMock, MagicMock],
+    service: str,
+    command: str,
+) -> None:
+    """Tests that a Bluetooth-paired Cybertruck out of range uses the cloud."""
+    bluetooth_vehicle, ble_lookup = ble_cybertruck
+    ble_lookup.return_value = None
+
+    with patch(
+        f"tesla_fleet_api.teslemetry.Vehicle.{command}", return_value=COMMAND_OK
+    ) as cloud_command:
+        await hass.services.async_call(
+            COVER_DOMAIN, service, {ATTR_ENTITY_ID: [TONNEAU_ENTITY_ID]}, blocking=True
+        )
+
+    cloud_command.assert_called_once_with()
+    getattr(bluetooth_vehicle, command).assert_not_called()
+
+
+@pytest.mark.parametrize(("service", "command"), TONNEAU_SERVICES)
+async def test_cover_tonneau_bluetooth_failover(
+    hass: HomeAssistant,
+    ble_cybertruck: tuple[AsyncMock, MagicMock],
+    service: str,
+    command: str,
+) -> None:
+    """Tests that a failed Bluetooth tonneau command falls back to the cloud."""
+    bluetooth_vehicle, _ = ble_cybertruck
+    getattr(bluetooth_vehicle, command).side_effect = TimeoutError
+
+    with patch(
+        f"tesla_fleet_api.teslemetry.Vehicle.{command}", return_value=COMMAND_OK
+    ) as cloud_command:
+        await hass.services.async_call(
+            COVER_DOMAIN, service, {ATTR_ENTITY_ID: [TONNEAU_ENTITY_ID]}, blocking=True
+        )
+
+    getattr(bluetooth_vehicle, command).assert_awaited_once_with()
+    cloud_command.assert_called_once_with()
+
+
 async def test_cover_tonneau_streaming(
     hass: HomeAssistant,
     mock_products: AsyncMock,
+    mock_metadata: AsyncMock,
     mock_add_listener: AsyncMock,
 ) -> None:
     """Tests that the tonneau cover reflects streamed position and percent."""
 
     mock_products.return_value = PRODUCTS_CYBERTRUCK
+    mock_metadata.return_value = METADATA_CYBERTRUCK
     await setup_platform(hass, [Platform.COVER])
 
     entity_id = "cover.test_tonneau"
-    vin = PRODUCTS_CYBERTRUCK["response"][0]["vin"]
-
     mock_add_listener.send(
         {
-            "vin": vin,
+            "vin": CYBERTRUCK_VIN,
             "data": {
                 Signal.TONNEAU_POSITION: "TonneauPositionStateClosed",
                 Signal.TONNEAU_OPEN_PERCENT: 0,
@@ -236,7 +378,7 @@ async def test_cover_tonneau_streaming(
 
     mock_add_listener.send(
         {
-            "vin": vin,
+            "vin": CYBERTRUCK_VIN,
             "data": {
                 Signal.TONNEAU_POSITION: "TonneauPositionStateFullyOpen",
                 Signal.TONNEAU_OPEN_PERCENT: 100,
@@ -565,3 +707,77 @@ async def test_cover_streaming(
     assert hass.states.get("cover.test_charge_port_door").state == "unknown"
     assert hass.states.get("cover.test_frunk").state == "unknown"
     assert hass.states.get("cover.test_trunk").state == "unknown"
+
+
+@pytest.mark.parametrize(
+    ("restored_state", "extra_data", "expected_state", "expected_extra_data"),
+    [
+        pytest.param(
+            CoverState.CLOSED,
+            {"fd": True, "fp": True, "rd": True, "rp": True},
+            CoverState.CLOSED,
+            {"fd": True, "fp": True, "rd": True, "rp": True},
+            id="closed",
+        ),
+        pytest.param(
+            CoverState.OPEN,
+            {"fd": False, "fp": True, "rd": True, "rp": True},
+            CoverState.CLOSED,
+            {"fd": True, "fp": True, "rd": True, "rp": True},
+            id="open_window_closes",
+        ),
+        pytest.param(
+            CoverState.OPEN,
+            {"fd": False, "fp": False, "rd": True, "rp": True},
+            CoverState.OPEN,
+            {"fd": True, "fp": False, "rd": True, "rp": True},
+            id="other_window_still_open",
+        ),
+        pytest.param(
+            CoverState.CLOSED,
+            None,
+            CoverState.CLOSED,
+            {"fd": True, "fp": True, "rd": True, "rp": True},
+            id="no_extra_data_closed",
+        ),
+        pytest.param(
+            CoverState.OPEN,
+            None,
+            STATE_UNKNOWN,
+            {"fd": True, "fp": None, "rd": None, "rp": None},
+            id="no_extra_data_open",
+        ),
+    ],
+)
+async def test_cover_streaming_windows_restore(
+    hass: HomeAssistant,
+    mock_add_listener: AsyncMock,
+    restored_state: CoverState,
+    extra_data: dict[str, bool] | None,
+    expected_state: str,
+    expected_extra_data: dict[str, bool | None],
+) -> None:
+    """Tests the windows cover restores its per-window state."""
+
+    mock_restore_cache_with_extra_data(
+        hass, ((State(WINDOWS_ENTITY_ID, restored_state), extra_data),)
+    )
+
+    await setup_platform(hass, [Platform.COVER])
+    assert hass.states.get(WINDOWS_ENTITY_ID).state == restored_state
+
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {Signal.FD_WINDOW: "WindowStateClosed"},
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(WINDOWS_ENTITY_ID).state == expected_state
+    stored_states = {
+        stored.state.entity_id: stored
+        for stored in async_get_restore_state(hass).async_get_stored_states()
+    }
+    assert stored_states[WINDOWS_ENTITY_ID].extra_data.as_dict() == expected_extra_data

@@ -89,6 +89,15 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
 
     @property
     @override
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        """Flag media player features that are supported."""
+        features = self._attr_supported_features
+        if self._remote.source_list:
+            features |= MediaPlayerEntityFeature.SELECT_SOURCE
+        return features
+
+    @property
+    @override
     def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
         return self._remote.state
@@ -110,6 +119,18 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
     def is_volume_muted(self) -> bool | None:
         """Boolean if volume is currently muted."""
         return self._remote.muted
+
+    @property
+    @override
+    def source(self) -> str | None:
+        """Name of the current input source."""
+        return self._remote.source
+
+    @property
+    @override
+    def source_list(self) -> list[str] | None:
+        """List of available input sources."""
+        return self._remote.source_list or None
 
     async def async_update(self) -> None:
         """Retrieve the latest data."""
@@ -166,6 +187,11 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
         """Send pause command."""
         await self._remote.async_send_key(Keys.PAUSE)
         self._remote.playing = False
+
+    @override
+    async def async_select_source(self, source: str) -> None:
+        """Select input source."""
+        await self._remote.async_select_source(source)
 
     @override
     async def async_media_stop(self) -> None:

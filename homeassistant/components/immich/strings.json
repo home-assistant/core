@@ -85,6 +85,9 @@
     }
   },
   "exceptions": {
+    "account_not_loaded": {
+      "message": "The Immich account `{unique_id}` is not loaded."
+    },
     "album_not_found": {
       "message": "Album with ID `{album_id}` not found ({error})."
     },
@@ -108,6 +111,9 @@
     },
     "only_local_media_supported": {
       "message": "Only local media files are currently supported."
+    },
+    "search_requires_account": {
+      "message": "Select an Immich account to search."
     },
     "update_error": {
       "message": "An error occurred while retrieving data from your Immich instance: {error}"

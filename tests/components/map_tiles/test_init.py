@@ -9,6 +9,9 @@ from unittest.mock import patch
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components.map_tiles.const import (
     ASSET_MAX_AGE,
@@ -19,15 +22,12 @@ from homeassistant.components.map_tiles.const import (
     TILE_MAX_AGE,
     TILEJSON_URL,
     TOKEN_CHANGE_INTERVAL,
+    TOKEN_HEADER,
     VECTOR_URL,
 )
 from homeassistant.components.map_tiles.views import MapTilesVectorView
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 VECTOR_TILE = b"\x1a\x0fnot-really-a-mvt"
 RASTER_TILE = b"\x89PNG\r\n\x1a\nnot-really-a-png"
@@ -604,6 +604,52 @@ async def test_unauthenticated_request_is_forbidden(
 
     assert resp.status == HTTPStatus.FORBIDDEN
     assert aioclient_mock.call_count == 0
+
+
+async def test_token_header_authenticates(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test that a token in the header authenticates, keeping it out of the URL."""
+    aioclient_mock.get(VECTOR_UPSTREAM, content=VECTOR_TILE)
+
+    token = hass.data[DATA_ACCESS_TOKENS][-1]
+    client = await hass_client_no_auth()
+    resp = await client.get(VECTOR_PATH, headers={TOKEN_HEADER: token})
+
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == VECTOR_TILE
+
+
+async def test_rotated_out_token_header_is_rejected(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a header token stops authenticating after two rotations."""
+    token = hass.data[DATA_ACCESS_TOKENS][-1]
+    client = await hass_client_no_auth()
+
+    for _ in range(2):
+        freezer.tick(TOKEN_CHANGE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    resp = await client.get(VECTOR_PATH, headers={TOKEN_HEADER: token})
+
+    assert resp.status == HTTPStatus.FORBIDDEN
+
+
+async def test_invalid_token_header_is_forbidden(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test that a wrong header token does not count as a failed login."""
+    client = await hass_client_no_auth()
+    resp = await client.get(VECTOR_PATH, headers={TOKEN_HEADER: "not-a-token"})
+
+    assert resp.status == HTTPStatus.FORBIDDEN
 
 
 async def test_invalid_token_is_forbidden(

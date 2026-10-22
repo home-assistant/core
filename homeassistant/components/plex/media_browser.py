@@ -4,9 +4,9 @@ from yarl import URL
 
 from homeassistant.components.media_player import BrowseError, BrowseMedia, MediaClass
 
-from .const import DOMAIN, SERVERS
+from .const import DOMAIN
 from .errors import MediaNotFound
-from .helpers import get_plex_data, get_plex_server, pretty_title
+from .helpers import get_plex_server, get_plex_servers, pretty_title
 
 
 class UnknownMediaType(BrowseError):
@@ -303,7 +303,7 @@ def root_payload(hass, is_internal, platform=None):
             generate_plex_uri(server_id, ""),
             platform=platform,
         )
-        for server_id in get_plex_data(hass)[SERVERS]
+        for server_id in get_plex_servers(hass)
     ]
 
     if len(children) == 1:

@@ -124,13 +124,9 @@ components: &components
   - homeassistant/components/sun/**
   - homeassistant/components/system_health/**
   - homeassistant/components/tag/**
-  # telegram_bot is used by telegram
-  - homeassistant/components/telegram_bot/**
   - homeassistant/components/template/**
   - homeassistant/components/timer/**
   - homeassistant/components/trace/**
-  # twilio is used by twilio_call and twilio_sms
-  - homeassistant/components/twilio/**
   - homeassistant/components/usb/**
   - homeassistant/components/webhook/**
   - homeassistant/components/websocket_api/**
@@ -140,7 +136,8 @@ components: &components
 # Testing related files that affect the whole test/linting suite
 tests: &tests
   - codecov.yaml
-  - pylint/**
+  - packages/pylint-home-assistant/**
+  - packages/pytest-home-assistant/**
   - requirements_test_pre_commit.txt
   - requirements_test.txt
   - tests/*.py

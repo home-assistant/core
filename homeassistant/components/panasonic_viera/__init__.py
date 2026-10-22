@@ -39,13 +39,15 @@ NULL_MAC = "00:00:00:00:00:00"
 CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 probatio.Schema(
                     {
                         probatio.Required(CONF_HOST): cv.string,
                         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                        probatio.Optional(
+                            CONF_PORT, default=DEFAULT_PORT
+                        ): probatio.Port(),
                         probatio.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
                     }
                 )
@@ -75,7 +77,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: PanasonicVieraConfigEntry
-) -> bool:
+) -> None:
     """Set up Panasonic Viera from a config entry."""
     config = config_entry.data
 
@@ -128,14 +130,12 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: PanasonicVieraConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
 
 class Remote:
@@ -171,6 +171,10 @@ class Remote:
         self.volume: float = 0
         self.muted: bool = False
         self.playing: bool = True
+        # Input selection relies on the optional PAC service of the TV.
+        # None until probed, an empty list when the TV does not support it.
+        self.source_list: list[str] | None = None
+        self.source: str | None = None
 
     async def async_create_remote_control(self, during_setup: bool = False) -> None:
         """Create remote control."""
@@ -210,6 +214,26 @@ class Remote:
         assert self._control is not None
         self.muted = self._control.get_mute()
         self.volume = self._control.get_volume() / 100
+        self._update_source()
+
+    def _update_source(self) -> None:
+        """Retrieve the available inputs and the current one, if supported."""
+        assert self._control is not None
+        if self.source_list is None:
+            try:
+                self.source_list = self._control.list_inputs()
+            except SOAPError:
+                # The TV does not implement the optional PAC service
+                _LOGGER.debug("Input selection is not supported by the TV")
+                self.source_list = []
+        if self.source_list:
+            self.source = self._control.get_input()
+
+    async def async_select_source(self, source: str) -> None:
+        """Select the input of the TV."""
+        assert self._control is not None
+        await self._handle_errors(self._control.set_input, source)
+        self.source = source
 
     async def async_send_key(self, key: Keys | str) -> None:
         """Send a key to the TV and handle exceptions."""

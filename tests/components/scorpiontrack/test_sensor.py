@@ -6,6 +6,11 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from pyscorpiontrack import ScorpionTrackConnectionError, ScorpionTrackShare
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.scorpiontrack.const import DEFAULT_SCAN_INTERVAL
@@ -22,8 +27,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "sensor.ab12_cde_speed"
 LAST_REPORTED_ENTITY_ID = "sensor.ab12_cde_last_reported"
@@ -155,7 +158,7 @@ async def test_speed_sensor_metric_display(
     ("speed_kmh", "expected_state"),
     [
         pytest.param(0.0, "0.0", id="zero"),
-        pytest.param(None, STATE_UNAVAILABLE, id="missing"),
+        pytest.param(None, STATE_UNKNOWN, id="missing"),
     ],
 )
 async def test_speed_sensor_availability(
@@ -166,7 +169,7 @@ async def test_speed_sensor_availability(
     speed_kmh: float | None,
     expected_state: str,
 ) -> None:
-    """Test zero is valid and missing speed is unavailable."""
+    """Test zero is valid and missing speed is unknown."""
     vehicle = mock_share.vehicles[0]
     mock_scorpiontrack_client.async_get_share.return_value = replace(
         mock_share,

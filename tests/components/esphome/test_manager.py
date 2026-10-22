@@ -19,6 +19,7 @@ from aioesphomeapi import (
     BinarySensorState,
     BluetoothProxyFeature,
     CameraState,
+    DeviceCapabilities,
     DeviceInfo,
     EncryptionPlaintextAPIError,
     EntityInfo,
@@ -31,13 +32,16 @@ from aioesphomeapi import (
     LogLevel,
     ReconnectLogic,
     RequiresEncryptionAPIError,
+    SendspinFeature,
     SensorInfo,
     SensorState,
+    SerialProxyPortType,
     SubDeviceInfo,
     SupportsResponseType,
     UserService,
     UserServiceArg,
     UserServiceArgType,
+    VoiceAssistantFeature,
     ZWaveProxyRequest,
     ZWaveProxyRequestType,
     build_device_unique_id,
@@ -46,6 +50,13 @@ import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_call_logger_set_level,
+    async_capture_events,
+    async_fire_time_changed,
+    async_mock_service,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.esphome.config_flow import PROBE_NOISE_PSK
@@ -77,6 +88,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.data_entry_flow import FlowResultType
@@ -90,14 +102,10 @@ from homeassistant.helpers import (
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.setup import async_setup_component
 
-from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
-
-from tests.common import (
-    MockConfigEntry,
-    async_call_logger_set_level,
-    async_capture_events,
-    async_fire_time_changed,
-    async_mock_service,
+from .conftest import (
+    MockESPHomeDeviceType,
+    MockGenericDeviceEntryType,
+    reconnect_with_updated_entity_info,
 )
 
 
@@ -194,15 +202,19 @@ async def test_esphome_device_service_calls_not_allowed(
     )
     await hass.async_block_till_done()
     assert len(mock_esphome_test) == 0
-    issue = issue_registry.async_get_issue(
-        "esphome", "service_calls_not_enabled-11:22:33:44:55:aa"
-    )
+    issue_id = "service_calls_not_enabled-11:22:33:44:55:aa"
+    issue = issue_registry.async_get_issue("esphome", issue_id)
     assert issue is not None
+    assert issue.config_entry_id == device.entry.entry_id
     assert (
         "If you trust this device and want to allow access "
         "for it to make Home Assistant service calls, you can "
         "enable this functionality in the options flow"
     ) in caplog.text
+
+    await hass.config_entries.async_remove(device.entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue("esphome", issue_id) is None
 
 
 @pytest.mark.parametrize("has_deep_sleep", [True, False])
@@ -989,7 +1001,8 @@ async def test_esphome_device_service_call_with_response_template_error(
     )
     assert call_id == 789
     assert success is False
-    assert "Error rendering response template" in error_message
+    assert error_message.startswith("Error rendering response template: ")
+    assert "invalid_field" in error_message
     assert response_data == b""
 
 
@@ -1180,18 +1193,22 @@ async def test_esphome_device_with_old_bluetooth(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a device with old bluetooth creates an issue."""
-    await mock_esphome_device(
+    device = await mock_esphome_device(
         mock_client=mock_client,
         device_info={"bluetooth_proxy_feature_flags": 1, "esphome_version": "2023.3.0"},
     )
     await hass.async_block_till_done()
-    issue = issue_registry.async_get_issue(
-        "esphome", "ble_firmware_outdated-11:22:33:44:55:AA"
-    )
+    issue_id = "ble_firmware_outdated-11:22:33:44:55:AA"
+    issue = issue_registry.async_get_issue("esphome", issue_id)
     assert (
         issue.learn_more_url
         == f"https://esphome.io/changelog/{STABLE_BLE_URL_VERSION}.html"
     )
+    assert issue.config_entry_id == device.entry.entry_id
+
+    await hass.config_entries.async_remove(device.entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue("esphome", issue_id) is None
 
 
 async def test_esphome_device_with_password(
@@ -1216,15 +1233,19 @@ async def test_esphome_device_with_password(
         entry=entry,
     )
     await hass.async_block_till_done()
-    assert (
-        issue_registry.async_get_issue(
-            # This issue uses the ESPHome mac address which
-            # is always UPPER case
-            "esphome",
-            "api_password_deprecated-11:22:33:44:55:AA",
-        )
-        is not None
+    issue_id = "api_password_deprecated-11:22:33:44:55:AA"
+    issue = issue_registry.async_get_issue(
+        # This issue uses the ESPHome mac address which
+        # is always UPPER case
+        "esphome",
+        issue_id,
     )
+    assert issue is not None
+    assert issue.config_entry_id == entry.entry_id
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue("esphome", issue_id) is None
 
 
 async def test_esphome_device_with_current_bluetooth(
@@ -1773,6 +1794,29 @@ async def test_state_subscription(
     hass.states.async_remove("binary_sensor.test")
     await hass.async_block_till_done()
     assert mock_client.send_home_assistant_state.mock_calls == []
+
+
+async def test_state_subscription_entity_added_later(
+    mock_client: APIClient,
+    hass: HomeAssistant,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test the state is sent once a subscribed entity is created."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+    )
+    await hass.async_block_till_done()
+    device.mock_home_assistant_state_subscription("cover.garage_door", None)
+    device.mock_home_assistant_state_subscription("cover.garage_door", "position")
+    await hass.async_block_till_done()
+    assert mock_client.send_home_assistant_state.mock_calls == []
+
+    hass.states.async_set("cover.garage_door", "closed", {"position": 0})
+    await hass.async_block_till_done()
+    assert mock_client.send_home_assistant_state.mock_calls == [
+        call("cover.garage_door", None, "closed"),
+        call("cover.garage_door", "position", "0"),
+    ]
 
 
 async def test_state_request(
@@ -2472,6 +2516,87 @@ async def test_assist_in_progress_issue_deleted(
         )
         is None
     )
+
+
+async def test_assist_satellite_removed_when_a_voice_assistant_goes_away(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test the satellite goes when a device stops offering a voice assistant."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    unique_id = f"{device.device_info.mac_address}-assist_satellite"
+    assert entity_registry.async_get_entity_id(
+        Platform.ASSIST_SATELLITE, DOMAIN, unique_id
+    )
+
+    await reconnect_with_updated_entity_info(
+        hass, device, [], device_info={"voice_assistant_feature_flags": 0}
+    )
+
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.ASSIST_SATELLITE, DOMAIN, unique_id
+        )
+        is None
+    )
+
+
+async def test_assist_satellite_restored_when_a_voice_assistant_returns(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test the satellite comes back when a device offers a voice assistant again.
+
+    It needs no device info subscription of its own, unlike the selects: the
+    platform is unloaded on every disconnect and forwarded again on the connect
+    that finds the flags, so removing the registry entry does not strand it.
+    """
+    flags = VoiceAssistantFeature.VOICE_ASSISTANT
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={"voice_assistant_feature_flags": flags},
+    )
+    await hass.async_block_till_done()
+
+    unique_id = f"{device.device_info.mac_address}-assist_satellite"
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.ASSIST_SATELLITE, DOMAIN, unique_id
+    )
+    assert entity_id is not None
+
+    await reconnect_with_updated_entity_info(
+        hass, device, [], device_info={"voice_assistant_feature_flags": 0}
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.ASSIST_SATELLITE, DOMAIN, unique_id
+        )
+        is None
+    )
+    assert Platform.ASSIST_SATELLITE not in device.entry.runtime_data.loaded_platforms
+
+    await reconnect_with_updated_entity_info(
+        hass, device, [], device_info={"voice_assistant_feature_flags": flags}
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.ASSIST_SATELLITE, DOMAIN, unique_id
+        )
+        == entity_id
+    )
+    # A registry row is not an entity: the re-added satellite has to be live
+    assert hass.states.get(entity_id) is not None
 
 
 async def test_sub_device_creation(
@@ -3991,6 +4116,7 @@ def test_zero_noise_psk_is_not_the_probe_key() -> None:
 async def test_zwave_proxy_request_home_id_change(
     hass: HomeAssistant,
     mock_client: APIClient,
+    hass_storage: dict[str, Any],
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test Z-Wave proxy request handler with HOME_ID_CHANGE request."""
@@ -4013,11 +4139,18 @@ async def test_zwave_proxy_request_home_id_change(
         "mac_address": "11:22:33:44:55:AA",
         "zwave_proxy_feature_flags": 1,
     }
+    device_capabilities = {
+        "bluetooth_proxy": {"feature_flags": 1},
+        "zwave_proxy": {"feature_flags": 1},
+        "serial_proxies": [{"name": "uart0", "port_type": SerialProxyPortType.TTL}],
+        "sendspin": {"feature_flags": SendspinFeature.PAIRING_TOKEN},
+    }
 
     await mock_esphome_device(
         mock_client=mock_client,
         entry=entry,
         device_info=device_info,
+        device_capabilities=device_capabilities,
     )
     await hass.async_block_till_done()
 
@@ -4076,6 +4209,58 @@ async def test_zwave_proxy_request_home_id_change(
         assert call_args[0][1] == "zwave_js"
         # The noise PSK is taken from the config entry, not the live client
         assert call_args[0][3].noise_psk == noise_psk
+
+    # Only the home ID changes
+    device_capabilities["zwave_proxy"]["home_id"] = zwave_home_id
+    assert entry.runtime_data.device_capabilities == DeviceCapabilities.from_dict(
+        device_capabilities
+    )
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    data = hass_storage[f"{DOMAIN}.{entry.entry_id}"]["data"]
+    assert data["device_capabilities"]["zwave_proxy"]["home_id"] == zwave_home_id
+
+
+async def test_zwave_home_id_change_saved_after_reconnect(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+    mock_esphome_device: MockESPHomeDeviceType,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a home ID change replaces the pending connect-time save."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={"zwave_proxy_feature_flags": 1},
+    )
+    storage_key = f"{DOMAIN}.{device.entry.entry_id}"
+    zwave_home_id = 3551671779
+
+    async def report_home_id() -> None:
+        callback = mock_client.subscribe_zwave_proxy_request.call_args[0][0]
+        callback(
+            ZWaveProxyRequest(
+                type=ZWaveProxyRequestType.HOME_ID_CHANGE,
+                data=zwave_home_id.to_bytes(4, byteorder="big"),
+            )
+        )
+        freezer.tick(SAVE_DELAY + 1)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    with patch("homeassistant.helpers.discovery_flow.async_create_flow"):
+        await report_home_id()
+        stored = hass_storage[storage_key]["data"]
+        assert stored["device_capabilities"]["zwave_proxy"]["home_id"] == zwave_home_id
+
+        # The device reconnects with home ID 0, so the connect-time save holds 0
+        await device.mock_disconnect(expected_disconnect=False)
+        await device.mock_connect()
+        await report_home_id()
+
+    # Equal to the store, so only replacing the pending save can write it
+    assert hass_storage[storage_key]["data"] == stored
 
 
 async def test_no_zwave_proxy_subscribe_without_feature_flags(
@@ -4629,6 +4814,58 @@ async def test_bluetooth_proxy_waits_for_scanner_at_startup(
     async with asyncio.timeout(2):
         assert await setup_task is True
     assert entry.runtime_data.first_connect_done.is_set()
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_bluetooth_proxy_with_voice_assistant_awaits_forward(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test setup waits for the assist satellite platform of a bluetooth proxy."""
+    entry, device_info = _create_cached_bluetooth_proxy_entry(
+        hass, hass_storage, BluetoothProxyFeature.PASSIVE_SCAN
+    )
+    device_info = DeviceInfo(
+        **{
+            **device_info.to_dict(),
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT,
+        }
+    )
+    connect_event = asyncio.Event()
+    reached_connect = asyncio.Event()
+
+    async def _block_until_released() -> tuple[DeviceInfo, list[Any], list[Any]]:
+        reached_connect.set()
+        await connect_event.wait()
+        return (device_info, [], [])
+
+    mock_client.device_info_and_list_entities = _block_until_released
+
+    async def _slow_satellite_setup(*args: Any) -> None:
+        """Take a moment to set up, like a real assist satellite."""
+        await asyncio.sleep(0.01)
+
+    # Connect only once setup is waiting for the scanner, like at startup
+    with patch(
+        "homeassistant.components.esphome.assist_satellite.async_setup_entry",
+        _slow_satellite_setup,
+    ):
+        setup_task = hass.async_create_task(
+            hass.config_entries.async_setup(entry.entry_id)
+        )
+        async with asyncio.timeout(2):
+            await reached_connect.wait()
+        connect_event.set()
+        async with asyncio.timeout(2):
+            assert await setup_task is True
+            # The connection runs outside of the tasks Home Assistant tracks
+            await entry.runtime_data.first_connect_done.wait()
+
+    assert Platform.ASSIST_SATELLITE in entry.runtime_data.loaded_platforms
+
+    assert "without awaiting async_forward_entry_setups" not in caplog.text
 
 
 @pytest.mark.usefixtures("mock_zeroconf")

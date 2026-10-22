@@ -14,6 +14,8 @@ from knx_telegram_store import (
     BufferedSqliteStore,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
+from pytest_homeassistant.typing import WebSocketGenerator
 from xknx import XKNX
 from xknx.core import XknxConnectionState, XknxConnectionType
 from xknx.dpt import DPTArray, DPTBinary
@@ -59,9 +61,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
 from . import KnxEntityGenerator
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
-from tests.typing import WebSocketGenerator
 
 
 class _TestTelegramStore(BufferedMemoryStore):

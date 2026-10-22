@@ -1,6 +1,6 @@
 """API for Google Nest Device Access bound to Home Assistant OAuth."""
 
-import datetime
+import datetime as dt
 import logging
 from typing import cast, override
 
@@ -67,7 +67,7 @@ class AsyncConfigEntryAuth(AbstractAuth):
             client_secret=self._client_secret,
             scopes=SDM_SCOPES,
         )
-        creds.expiry = datetime.datetime.fromtimestamp(token["expires_at"])
+        creds.expiry = dt.datetime.fromtimestamp(token["expires_at"])
         return creds
 
 

@@ -21,6 +21,11 @@ from aioshelly.exceptions import (
 )
 from aioshelly.rpc_device.utils import bluetooth_mac_from_primary_mac
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_load_json_object_fixture,
+)
 
 from homeassistant.components.shelly.const import (
     BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID,
@@ -55,12 +60,6 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.setup import async_setup_component
 
 from . import MOCK_MAC, init_integration, mutate_rpc_device_status, register_sub_device
-
-from tests.common import (
-    MockConfigEntry,
-    async_capture_events,
-    async_load_json_object_fixture,
-)
 
 
 async def test_custom_coap_port(
@@ -161,12 +160,14 @@ async def test_shared_device_mac(
     assert other_device is not None
 
 
-async def test_setup_entry_not_shelly(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_setup_entry_not_shelly(hass: HomeAssistant) -> None:
     """Test not Shelly entry."""
-    await init_integration(hass, 1, data={})
-    assert "probably comes from a custom integration" in caplog.text
+    entry = await init_integration(hass, 1, data={})
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.reason == (
+        "The config entry Test name probably comes from a custom integration, please"
+        " remove it if you want to use core Shelly integration"
+    )
 
 
 @pytest.mark.parametrize("gen", [1, 2, 3])
@@ -204,10 +205,13 @@ async def test_device_unsupported_firmware(
 
     entry = await init_integration(hass, gen)
     assert entry.state is ConfigEntryState.SETUP_RETRY
-    assert (
-        DOMAIN,
-        "firmware_unsupported_123456789ABC",
-    ) in issue_registry.issues
+    issue_id = "firmware_unsupported_123456789ABC"
+    assert (issue := issue_registry.async_get_issue(DOMAIN, issue_id))
+    assert issue.config_entry_id == entry.entry_id
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
 @pytest.mark.parametrize("gen", [1, 2, 3])
@@ -650,6 +654,22 @@ async def test_device_script_getcode_error(
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_device_ledstrip_effects_error(
+    hass: HomeAssistant,
+    mock_ledstrip_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test device LED strip effects list error."""
+    monkeypatch.setattr(
+        mock_ledstrip_rpc_device,
+        "ledstrip_list_effects",
+        AsyncMock(side_effect=RpcCallError(0)),
+    )
+
+    entry = await init_integration(hass, 2)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
 async def test_ble_scanner_unsupported_firmware_fixed(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
@@ -950,6 +970,39 @@ async def test_rpc_ble_scanner_startup_wait_times_out(
     assert entry.state is ConfigEntryState.LOADED
     connect_event.set()
     await hass.async_block_till_done()
+
+
+async def test_rpc_setup_device_reconnecting_before_platforms(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test setup uses last known data if the device reconnects before platforms."""
+    entity_id = "sensor.test_name_voltmeter"
+
+    async def _device_reconnecting(*args: Any, **kwargs: Any) -> Mock:
+        # The device disconnected and is re-initializing, keeping last known data
+        monkeypatch.setattr(mock_rpc_device, "initialized", False)
+        return Mock()
+
+    with patch(
+        "homeassistant.components.shelly.coordinator.async_connect_scanner",
+        _device_reconnecting,
+    ):
+        entry = await init_integration(
+            hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
+        )
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+
+    monkeypatch.setattr(mock_rpc_device, "initialized", True)
+    mock_rpc_device.mock_initialized()
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "4.321"
 
 
 async def test_rpc_disabled_ble_scanner_does_not_wait_at_startup(

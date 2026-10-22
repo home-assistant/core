@@ -221,6 +221,8 @@ class DeviceCategory(StrEnum):
 
     https://developer.tuya.com/en/docs/iot/categoryhps?id=Kaiuz42yhn1hs
     """
+    HWSB = "hwsb"
+    """Outdoor equipment"""
     JS = "js"
     """Water purifier"""
     JSQ = "jsq"
@@ -816,6 +818,26 @@ class DPCode(StrEnum):
     PHASE_A = "phase_a"
     PHASE_B = "phase_b"
     PHASE_C = "phase_c"
+    PHASE_S1 = "phase_s1"
+    PHASE_S2 = "phase_s2"
+    PHASE_S3 = "phase_s3"
+    PHASE_S4 = "phase_s4"
+    PHASE_S5 = "phase_s5"
+    PHASE_S6 = "phase_s6"
+    PHASE_S7 = "phase_s7"
+    PHASE_S8 = "phase_s8"
+    PHASE_S9 = "phase_s9"
+    PHASE_S10 = "phase_s10"
+    PHASE_S11 = "phase_s11"
+    PHASE_S12 = "phase_s12"
+    PHASE_S13 = "phase_s13"
+    PHASE_S14 = "phase_s14"
+    PHASE_S15 = "phase_s15"
+    PHASE_S16 = "phase_s16"
+    PHASE_S17 = "phase_s17"
+    PHASE_S18 = "phase_s18"
+    PHASE_S19 = "phase_s19"
+    PHASE_S20 = "phase_s20"
     PH_CURRENT = "ph_current"
     PIR = "pir"  # Motion sensor
     PM1 = "pm1"
@@ -871,6 +893,7 @@ class DPCode(StrEnum):
     SOS = "sos"  # Emergency State
     SOS_STATE = "sos_state"  # Emergency mode
     SPEED = "speed"  # Speed level
+    SPEED_SET = "speed_set"
     SPRAY_MODE = "spray_mode"  # Spraying mode
     START = "start"  # Start
     STATUS = "status"

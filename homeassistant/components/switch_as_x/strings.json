@@ -14,6 +14,11 @@
       }
     }
   },
+  "exceptions": {
+    "unknown_entity": {
+      "message": "Failed to set up switch_as_x for unknown entity {entity_id}"
+    }
+  },
   "options": {
     "step": {
       "init": {

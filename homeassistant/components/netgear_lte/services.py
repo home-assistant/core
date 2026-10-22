@@ -26,13 +26,15 @@ SERVICE_DISCONNECT_LTE = "disconnect_lte"
 DELETE_SMS_SCHEMA = probatio.Schema(
     {
         probatio.Optional(ATTR_HOST): cv.string,
-        probatio.Required(ATTR_SMS_ID): probatio.All(cv.ensure_list, [cv.positive_int]),
+        probatio.Required(ATTR_SMS_ID): probatio.All(
+            probatio.EnsureList(), [cv.positive_int]
+        ),
     }
 )
 
 SET_OPTION_SCHEMA = probatio.Schema(
     probatio.All(
-        cv.has_at_least_one_key(ATTR_FAILOVER, ATTR_AUTOCONNECT),
+        probatio.AtLeastOne(ATTR_FAILOVER, ATTR_AUTOCONNECT),
         {
             probatio.Optional(ATTR_HOST): cv.string,
             probatio.Optional(ATTR_FAILOVER): probatio.In(FAILOVER_MODES),

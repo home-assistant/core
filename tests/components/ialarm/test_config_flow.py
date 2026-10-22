@@ -2,13 +2,13 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant import config_entries
 from homeassistant.components.ialarm.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 TEST_DATA = {CONF_HOST: "1.1.1.1", CONF_PORT: 18034}
 
@@ -35,7 +35,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.ialarm.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -46,6 +46,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == TEST_DATA["host"]
     assert result2["data"] == TEST_DATA
+    assert result2["result"].unique_id == TEST_MAC
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -66,6 +67,27 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    with (
+        patch(
+            "homeassistant.components.ialarm.config_flow.IAlarm.get_status",
+            return_value=1,
+        ),
+        patch(
+            "homeassistant.components.ialarm.config_flow.IAlarm.get_mac",
+            return_value=TEST_MAC,
+        ),
+        patch(
+            "homeassistant.components.ialarm.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_DATA
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_exception(hass: HomeAssistant) -> None:
     """Test we handle unknown exception."""
@@ -83,6 +105,27 @@ async def test_form_exception(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+    with (
+        patch(
+            "homeassistant.components.ialarm.config_flow.IAlarm.get_status",
+            return_value=1,
+        ),
+        patch(
+            "homeassistant.components.ialarm.config_flow.IAlarm.get_mac",
+            return_value=TEST_MAC,
+        ),
+        patch(
+            "homeassistant.components.ialarm.async_setup_entry",
+            return_value=None,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_DATA
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_already_exists(hass: HomeAssistant) -> None:

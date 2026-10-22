@@ -22,7 +22,7 @@ from homeassistant.helpers.entity import get_capability, get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType, VolDictType
 
 from . import const
-from .const import DOMAIN
+from .const import DOMAIN, HumidifierService, HumidifierServiceArgument
 
 # mypy: disallow-any-generics
 
@@ -46,7 +46,16 @@ ONOFF_SCHEMA = toggle_entity.ACTION_SCHEMA.extend(
     {probatio.Required(CONF_DOMAIN): DOMAIN}
 )
 
-_ACTION_SCHEMA = probatio.Any(SET_HUMIDITY_SCHEMA, SET_MODE_SCHEMA, ONOFF_SCHEMA)
+_ACTION_SCHEMA = probatio.TaggedUnion(
+    CONF_TYPE,
+    {
+        "set_humidity": SET_HUMIDITY_SCHEMA,
+        "set_mode": SET_MODE_SCHEMA,
+        "toggle": ONOFF_SCHEMA,
+        "turn_off": ONOFF_SCHEMA,
+        "turn_on": ONOFF_SCHEMA,
+    },
+)
 
 
 async def async_validate_action_config(
@@ -93,11 +102,11 @@ async def async_call_action_from_config(
     service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
 
     if config[CONF_TYPE] == "set_humidity":
-        service = const.SERVICE_SET_HUMIDITY
-        service_data[const.ATTR_HUMIDITY] = config[const.ATTR_HUMIDITY]
+        service = HumidifierService.SET_HUMIDITY
+        service_data[HumidifierServiceArgument.HUMIDITY] = config[const.ATTR_HUMIDITY]
     elif config[CONF_TYPE] == "set_mode":
-        service = const.SERVICE_SET_MODE
-        service_data[ATTR_MODE] = config[ATTR_MODE]
+        service = HumidifierService.SET_MODE
+        service_data[HumidifierServiceArgument.MODE] = config[ATTR_MODE]
     else:
         await toggle_entity.async_call_action_from_config(
             hass, config, variables, context, DOMAIN

@@ -1,6 +1,7 @@
 {
   "domain": "mpd",
   "name": "Music Player Daemon (MPD)",
+  "categories": ["media_entertainment.music_radio_services"],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/mpd",
