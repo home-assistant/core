@@ -49,7 +49,7 @@ def mock_discover_devices() -> Generator[AsyncMock]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Bypass full entry setup, e.g. for config flow tests."""
     with patch(
-        "homeassistant.components.powershades.async_setup_entry", return_value=True
+        "homeassistant.components.powershades.async_setup_entry", return_value=None
     ) as mock:
         yield mock
 

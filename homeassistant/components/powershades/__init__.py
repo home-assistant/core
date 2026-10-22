@@ -27,7 +27,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PowerShadesConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PowerShadesConfigEntry) -> None:
     """Set up PowerShades from a config entry."""
     connection = PowerShadesConnection(entry.data[CONF_HOST])
     await connection.async_connect()
@@ -43,11 +43,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerShadesConfigEntry) 
     entry.async_on_unload(connection.close)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: PowerShadesConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
