@@ -130,8 +130,9 @@ class OmadaSiteController:
                     )
                     continue
                 except Exception:
-                    # Release the reservation so registration retries on the
-                    # next device update.
+                    # One misbehaving device must not block registration for
+                    # the rest. Release the reservation so this device is
+                    # retried on the next update, and log the traceback.
                     processed_devices.discard(mac)
                     _LOGGER.exception(
                         "Failed to register entities for device %s", device.mac

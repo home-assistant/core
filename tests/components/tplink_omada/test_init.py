@@ -426,6 +426,34 @@ async def test_cleanup_recreates_gateway_when_it_reappears(
     assert hass.states.get("binary_sensor.test_router_port_1_lan_status") is not None
 
 
+async def test_registration_failure_does_not_block_other_devices(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test one failing device does not stop registration for the others."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    controller = hass.config_entries.async_get_entry(
+        mock_config_entry.entry_id
+    ).runtime_data
+
+    failing_mac = "54-AF-97-00-00-01"
+    registered: list[str] = []
+
+    async def _callback(device: OmadaListDevice) -> None:
+        if device.mac == failing_mac:
+            raise ValueError("unexpected failure")
+        registered.append(device.mac)
+
+    await controller.async_register_device_entities(lambda device: True, _callback)
+
+    assert failing_mac not in registered
+    assert registered
+
+
 async def test_gateway_registration_retries_after_failed_refresh(
     hass: HomeAssistant,
     mock_omada_client: MagicMock,
