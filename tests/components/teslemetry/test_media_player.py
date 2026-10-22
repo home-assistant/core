@@ -529,3 +529,47 @@ async def test_streaming_center_display_keeps_commanded_playback(
     )
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == expected
+
+
+@pytest.mark.parametrize(
+    ("service", "calls"),
+    [
+        pytest.param(SERVICE_MEDIA_PLAY, 0, id="play"),
+        pytest.param(SERVICE_MEDIA_PAUSE, 1, id="pause"),
+    ],
+)
+async def test_streaming_commands_while_display_off_and_playing(
+    hass: HomeAssistant,
+    mock_add_listener: AsyncMock,
+    service: str,
+    calls: int,
+) -> None:
+    """Test commands follow the playback state while the display is off."""
+
+    entity_id = "media_player.test_media_player"
+    await setup_platform(hass, [Platform.MEDIA_PLAYER])
+
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {
+                Signal.CENTER_DISPLAY: "Off",
+                Signal.MEDIA_PLAYBACK_STATUS: "Playing",
+            },
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.media_toggle_playback",
+        return_value=COMMAND_OK,
+    ) as call:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        assert call.call_count == calls
+    assert hass.states.get(entity_id).state == MediaPlayerState.OFF

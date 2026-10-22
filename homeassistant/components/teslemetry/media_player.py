@@ -78,6 +78,11 @@ class TeslemetryMediaEntity(TeslemetryRootEntity, MediaPlayerEntity):
         self._attr_volume_level = volume
         self.async_write_ha_state()
 
+    @property
+    def _is_playing(self) -> bool:
+        """Return if the car is playing media."""
+        return self.state == MediaPlayerState.PLAYING
+
     def _async_set_playback_state(self, state: MediaPlayerState) -> None:
         """Apply the playback state after a play or pause command."""
         self._attr_state = state
@@ -86,7 +91,7 @@ class TeslemetryMediaEntity(TeslemetryRootEntity, MediaPlayerEntity):
     @override
     async def async_media_play(self) -> None:
         """Send play command."""
-        if self.state != MediaPlayerState.PLAYING:
+        if not self._is_playing:
             self.raise_for_scope(Scope.VEHICLE_CMDS)
 
             await handle_vehicle_command(self.api.media_toggle_playback())
@@ -96,7 +101,7 @@ class TeslemetryMediaEntity(TeslemetryRootEntity, MediaPlayerEntity):
     async def async_media_pause(self) -> None:
         """Send pause command."""
 
-        if self.state == MediaPlayerState.PLAYING:
+        if self._is_playing:
             self.raise_for_scope(Scope.VEHICLE_CMDS)
 
             await handle_vehicle_command(self.api.media_toggle_playback())
@@ -289,6 +294,12 @@ class TeslemetryStreamingMediaEntity(
                 self._async_handle_media_now_playing_station
             )
         )
+
+    @property
+    @override
+    def _is_playing(self) -> bool:
+        """Return if the car is playing media, even while the display is off."""
+        return self._playback_state == MediaPlayerState.PLAYING
 
     @override
     def _async_set_playback_state(self, state: MediaPlayerState) -> None:
