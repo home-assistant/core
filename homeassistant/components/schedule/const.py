@@ -60,3 +60,10 @@ WEEKDAY_TO_CONF: Final = {
 }
 
 SERVICE_GET: Final = "get_schedule"
+
+
+class ScheduleService(StrEnum):
+    """Store keys for schedule services."""
+
+    GET_SCHEDULE = "get_schedule"
+    RELOAD = "reload"
