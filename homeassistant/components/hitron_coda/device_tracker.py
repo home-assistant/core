@@ -5,6 +5,7 @@ from typing import override
 import probatio
 
 from homeassistant.components.device_tracker import (
+    CONF_CONSIDER_HOME,
     CONF_SCAN_INTERVAL as CONF_INTERVAL_SECONDS,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     AsyncSeeCallback,
@@ -18,7 +19,7 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_USERNAME,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.device_registry import format_mac
@@ -51,6 +52,7 @@ async def async_setup_scanner(
     }
     if CONF_INTERVAL_SECONDS in config:
         data[CONF_SCAN_INTERVAL] = config[CONF_INTERVAL_SECONDS].total_seconds()
+    data[CONF_CONSIDER_HOME] = config[CONF_CONSIDER_HOME].total_seconds()
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=data
     )
@@ -72,16 +74,11 @@ async def async_setup_scanner(
     ir.async_delete_issue(hass, DOMAIN, "yaml_import_failed")
     ir.async_create_issue(
         hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
+        DOMAIN,
+        "deprecated_yaml",
         is_fixable=False,
-        issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "Rogers Hitron CODA",
-        },
     )
     return True
 

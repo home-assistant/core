@@ -30,6 +30,10 @@
     }
   },
   "issues": {
+    "deprecated_yaml": {
+      "description": "The Hitron CODA router configuration has been imported automatically. Remove only the entries with `platform: hitron_coda` from the `device_tracker` section in `configuration.yaml`, then restart Home Assistant. Keep any entries for other device tracker platforms.",
+      "title": "Remove the Hitron CODA YAML configuration"
+    },
     "yaml_import_failed": {
       "description": "The YAML configuration for the Hitron CODA router at `{host}` could not be imported. Check the router connection and credentials in `configuration.yaml`, then restart Home Assistant.",
       "title": "Unable to import Hitron CODA YAML configuration"

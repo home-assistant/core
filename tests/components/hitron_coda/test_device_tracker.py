@@ -7,11 +7,12 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
+from homeassistant.components.device_tracker import CONF_CONSIDER_HOME
 from homeassistant.components.hitron_coda.api import CannotConnect, InvalidAuth
 from homeassistant.components.hitron_coda.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import (
     EntityRegistry,
     async_entries_for_config_entry,
@@ -27,13 +28,24 @@ pytestmark = pytest.mark.usefixtures("mock_client")
 
 
 @pytest.fixture
+def consider_home() -> int:
+    """Use the legacy default grace period."""
+    return 180
+
+
+@pytest.fixture
 async def setup_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     entity_registry: EntityRegistry,
+    consider_home: int,
 ) -> MockConfigEntry:
     """Set up a router with a client the user has enabled."""
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, CONF_CONSIDER_HOME: consider_home},
+    )
     entity_registry.async_get_or_create(
         "device_tracker",
         DOMAIN,
@@ -47,6 +59,7 @@ async def setup_integration(
     return mock_config_entry
 
 
+@pytest.mark.parametrize("consider_home", [0])
 async def test_presence_and_names(
     hass: HomeAssistant,
     setup_integration: MockConfigEntry,
@@ -79,6 +92,56 @@ async def test_presence_and_names(
     )
 
 
+@pytest.mark.parametrize(
+    "consider_home",
+    [pytest.param(30, id="custom"), pytest.param(180, id="legacy-default")],
+)
+async def test_consider_home(
+    hass: HomeAssistant,
+    setup_integration: MockConfigEntry,
+    mock_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    consider_home: int,
+) -> None:
+    """Keep clients home until the grace period since their last sighting expires."""
+    coordinator = setup_integration.runtime_data
+    mock_client.get_devices.return_value = {}
+    await coordinator.async_refresh()
+    assert hass.states.get(ENTITY_ID).state == STATE_HOME
+
+    freezer.tick(timedelta(seconds=consider_home - 1))
+    await coordinator.async_refresh()
+    assert hass.states.get(ENTITY_ID).state == STATE_HOME
+
+    freezer.tick(timedelta(seconds=1))
+    await coordinator.async_refresh()
+    assert hass.states.get(ENTITY_ID).state == STATE_NOT_HOME
+
+
+async def test_reconnection_resets_consider_home(
+    hass: HomeAssistant,
+    setup_integration: MockConfigEntry,
+    mock_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Measure the grace period from the most recent successful sighting."""
+    coordinator = setup_integration.runtime_data
+    mock_client.get_devices.return_value = {}
+    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=100))
+    mock_client.get_devices.return_value = DEVICES.copy()
+    await coordinator.async_refresh()
+
+    mock_client.get_devices.return_value = {}
+    freezer.tick(timedelta(seconds=100))
+    await coordinator.async_refresh()
+    assert hass.states.get(ENTITY_ID).state == STATE_HOME
+
+    freezer.tick(timedelta(seconds=80))
+    await coordinator.async_refresh()
+    assert hass.states.get(ENTITY_ID).state == STATE_NOT_HOME
+
+
 async def test_new_devices(
     hass: HomeAssistant,
     setup_integration: MockConfigEntry,
@@ -107,14 +170,17 @@ async def test_connection_failure_and_recovery(
     hass: HomeAssistant,
     setup_integration: MockConfigEntry,
     mock_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """A failed scan makes clients unavailable and preserves their last good data."""
     coordinator = setup_integration.runtime_data
+    freezer.tick(timedelta(seconds=179))
     mock_client.get_devices.side_effect = CannotConnect("Router unreachable")
     await coordinator.async_refresh()
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
     assert coordinator.data == DEVICES
 
+    freezer.tick(timedelta(seconds=1))
     mock_client.get_devices.side_effect = None
     mock_client.get_devices.return_value = {}
     await coordinator.async_refresh()
@@ -178,27 +244,51 @@ async def test_unload(
     mock_client.get_devices.assert_not_called()
 
 
+@pytest.mark.parametrize(
+    ("yaml_options", "consider_home"),
+    [
+        pytest.param({CONF_CONSIDER_HOME: 30}, 30, id="custom"),
+        pytest.param({}, 180, id="legacy-default"),
+    ],
+)
 async def test_yaml_import(
     hass: HomeAssistant,
     issue_registry: IssueRegistry,
+    yaml_options: dict[str, int],
+    consider_home: int,
 ) -> None:
     """Migrate YAML credentials and the configured polling interval."""
     assert await async_setup_component(
         hass,
         "device_tracker",
-        {"device_tracker": [{"platform": DOMAIN, **CONFIG, "interval_seconds": 30}]},
+        {
+            "device_tracker": [
+                {
+                    "platform": DOMAIN,
+                    **CONFIG,
+                    "interval_seconds": 30,
+                    **yaml_options,
+                }
+            ]
+        },
     )
     await hass.async_block_till_done()
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].source == SOURCE_IMPORT
-    assert entries[0].data == {**CONFIG, "scan_interval": 30}
+    assert entries[0].data == {
+        **CONFIG,
+        "scan_interval": 30,
+        CONF_CONSIDER_HOME: consider_home,
+    }
     assert entries[0].runtime_data.update_interval == timedelta(seconds=30)
+    assert entries[0].runtime_data.consider_home == timedelta(seconds=consider_home)
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml")
+    assert issue is not None
+    assert issue.translation_key == "deprecated_yaml"
     assert (
-        issue_registry.async_get_issue(
-            HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
-        )
-        is not None
+        issue_registry.async_get_issue("homeassistant", f"deprecated_yaml_{DOMAIN}")
+        is None
     )
 
 
