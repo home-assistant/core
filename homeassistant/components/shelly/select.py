@@ -135,10 +135,10 @@ class RpcLedStripPaletteSelect(RpcSelect):
     @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        if isinstance(value := self.attribute_value, str):
-            return value
+        if TYPE_CHECKING:
+            assert isinstance(self.attribute_value, str)
 
-        return None
+        return self.attribute_value
 
     @rpc_call
     @override
