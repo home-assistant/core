@@ -328,6 +328,7 @@ class CoiotConfigureFlow(ShellyBlockRepairsFlow):
             description_placeholders = issue.translation_placeholders
 
         return self.async_show_menu(
+            step_id="init",
             menu_options=["confirm", "ignore"],
             description_placeholders=description_placeholders,
         )
@@ -456,6 +457,7 @@ class ShellyRpcMenuRepairsFlow(RepairsFlow):
             description_placeholders = issue.translation_placeholders
 
         return self.async_show_menu(
+            step_id="init",
             menu_options=["confirm", "ignore"],
             description_placeholders=description_placeholders,
         )

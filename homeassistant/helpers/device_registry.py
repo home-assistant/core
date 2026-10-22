@@ -35,6 +35,7 @@ from homeassistant.core import (
     ReleaseChannel,
     callback,
     get_release_channel,
+    verify_event_loop_thread,
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_suggest_report_issue
@@ -2838,7 +2839,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         device = self._async_update_device(
             device.id,
-            disabled_by=disabled_by,
+            disabled_by=disabled_by if is_new else UNDEFINED,
             entry_type=entry_type,
             is_new=is_new,
             name=name,
@@ -2899,6 +2900,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         *,
         config_entry_id: str,
         config_subentry_id: str | UndefinedType | None = UNDEFINED,
+        # To disable a device if it gets created, does not affect existing devices
         disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
         identifiers: set[tuple[str, str]],
         name: str | UndefinedType | None = UNDEFINED,
@@ -2932,6 +2934,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         *,
         config_entry_id: str,
         config_subentry_id: str | UndefinedType | None = UNDEFINED,
+        # To disable a device if it gets created, does not affect existing devices
         disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
         device_info: ChildDeviceInfo,
     ) -> ChildDeviceEntry:
@@ -3113,7 +3116,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         updated_child_device = self._async_update_child_device(
             child_device.id,
-            disabled_by=disabled_by,
+            disabled_by=disabled_by if is_new else UNDEFINED,
             is_new=is_new,
             merge_identifiers=identifiers,
             name=name,
@@ -3170,6 +3173,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             )
 
     @callback
+    @verify_event_loop_thread("device_registry.async_get_or_create_child")
     def _async_convert_device_to_child(
         self,
         device: DeviceEntry,
@@ -3184,8 +3188,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         The caller must have validated the conversion with
         _async_validate_device_to_child_conversion.
         """
-        self.hass.verify_event_loop_thread("device_registry.async_get_or_create_child")
-
         # The update event reports the old values of every conceptually changed
         # field: the fields a child device does not have change to None / empty.
         changes: dict[str, Any] = {"parent_device_id": None}
@@ -3256,6 +3258,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         return child_device
 
     @callback
+    @verify_event_loop_thread("device_registry._async_update_device")
     def _async_update_device(  # noqa: C901
         self,
         device_id: str,
@@ -3712,7 +3715,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             # Change modified_at if we are changing something that we store
             new_values["modified_at"] = utcnow()
 
-        self.hass.verify_event_loop_thread("device_registry._async_update_device")
         new = attr.evolve(old, **new_values)
         self._devices[device_id] = new
 
@@ -3777,6 +3779,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         return new
 
     @callback
+    @verify_event_loop_thread("device_registry._async_update_child_device")
     def _async_update_child_device(
         self,
         child_device_id: str,
@@ -3914,7 +3917,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         new_values["modified_at"] = utcnow()
 
-        self.hass.verify_event_loop_thread("device_registry._async_update_child_device")
         new = attr.evolve(old, **new_values)
         self._child_devices[child_device_id] = new
 
@@ -4389,6 +4391,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         return self._restore_composite_device(composite_id, remaining)
 
     @callback
+    @verify_event_loop_thread("device_registry.async_remove_device")
     def async_remove_device(self, device_id: str) -> None:
         """Remove a device or child device from the device registry."""
         if (child_device := self._child_device_data.get(device_id)) is not None:
@@ -4400,7 +4403,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             for underlying_id in underlying_ids:
                 self.async_remove_device(underlying_id)
             return
-        self.hass.verify_event_loop_thread("device_registry.async_remove_device")
         # Removing the parent removes its child devices
         for child in self._child_devices.get_children_for_device_id(device_id):
             self._async_remove_child_device(child)
@@ -4433,9 +4435,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self.async_schedule_save()
 
     @callback
+    @verify_event_loop_thread("device_registry.async_remove_device")
     def _async_remove_child_device(self, child_device: ChildDeviceEntry) -> None:
         """Remove a child device from the device registry."""
-        self.hass.verify_event_loop_thread("device_registry.async_remove_device")
         del self._child_devices[child_device.id]
         config_entry = self.hass.config_entries.async_get_entry(
             child_device.config_entry_id

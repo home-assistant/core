@@ -1001,6 +1001,11 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
             )
             try:
                 await self.async_update(discovery_payload)
+            except probatio.Invalid as err:
+                # Keep the current payload, so the update is validated again
+                # when it is received again
+                async_handle_schema_error(discovery_payload, err)
+                return
             finally:
                 send_discovery_done(self.hass, self._discovery_data)
             self._discovery_data[ATTR_DISCOVERY_PAYLOAD] = discovery_payload
@@ -1441,9 +1446,9 @@ def ensure_via_device_exists(
         "Device Registry, creating new entry",
         identifier,
     )
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        device_info=dr.DeviceInfo(identifiers={identifier}),
+        identifiers={identifier},
     )
 
 

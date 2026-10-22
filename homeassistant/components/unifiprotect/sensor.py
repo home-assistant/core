@@ -60,7 +60,6 @@ from .entity import (
     async_remove_unsupported_sense_entities,
 )
 from .migrate import async_is_new_private_only_entity
-from .utils import async_get_light_motion_current_public
 
 _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
@@ -531,7 +530,7 @@ LIGHT_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key="light_motion",
         translation_key="light_mode",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_public_value_fn=async_get_light_motion_current_public,
+        ufp_public_value="light_mode_preset",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectSensorEntityDescription(

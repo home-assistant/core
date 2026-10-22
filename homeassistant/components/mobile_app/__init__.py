@@ -203,15 +203,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     device_registry = dr.async_get(hass)
 
-    device = device_registry.async_get_or_create_device(
+    device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, registration[ATTR_DEVICE_ID])},
-            manufacturer=registration[ATTR_MANUFACTURER],
-            model=registration[ATTR_MODEL],
-            name=registration[ATTR_DEVICE_NAME],
-            sw_version=registration[ATTR_OS_VERSION],
-        ),
+        identifiers={(DOMAIN, registration[ATTR_DEVICE_ID])},
+        manufacturer=registration[ATTR_MANUFACTURER],
+        model=registration[ATTR_MODEL],
+        name=registration[ATTR_DEVICE_NAME],
+        sw_version=registration[ATTR_OS_VERSION],
     )
 
     hass.data[DOMAIN][DATA_DEVICES][webhook_id] = device
