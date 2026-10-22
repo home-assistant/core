@@ -6,6 +6,18 @@ from typing import Any
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    async_mock_restore_state_shutdown_restart,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+    setup_test_component_platform,
+)
 
 from homeassistant.components.event import (
     ATTR_EVENT_TYPE,
@@ -25,19 +37,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .const import TEST_DOMAIN
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    async_mock_restore_state_shutdown_restart,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-    mock_restore_cache,
-    mock_restore_cache_with_extra_data,
-    setup_test_component_platform,
-)
 
 
 async def test_event() -> None:

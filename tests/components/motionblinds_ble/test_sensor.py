@@ -11,6 +11,7 @@ from motionblindsble.const import (
 )
 from motionblindsble.device import MotionDevice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.motionblinds_ble.const import (
     ATTR_BATTERY,
@@ -20,8 +21,6 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

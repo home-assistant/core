@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 
 from homeassistant.components.watttime.config_flow import (
     CONF_LOCATION_TYPE,
@@ -24,8 +25,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonObjectType
-
-from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture(name="client")

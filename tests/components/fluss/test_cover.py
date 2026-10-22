@@ -7,6 +7,11 @@ from unittest.mock import AsyncMock, patch
 from fluss_api import FlussApiClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import (
@@ -28,8 +33,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID_1 = "cover.device_1"
 DEVICE_ID_1 = "2a303030sdj1"

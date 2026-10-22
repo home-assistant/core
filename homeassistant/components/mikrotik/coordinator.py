@@ -363,10 +363,10 @@ class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self,
         hass: HomeAssistant,
         config_entry: MikrotikConfigEntry,
-        api: librouteros.Api,
+        mk_data: MikrotikData,
     ) -> None:
         """Initialize the Mikrotik Client."""
-        self._mk_data = MikrotikData(hass, config_entry, api)
+        self._mk_data = mk_data
         super().__init__(
             hass,
             LOGGER,

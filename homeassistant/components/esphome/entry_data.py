@@ -47,11 +47,12 @@ from aioesphomeapi import (
     WaterHeaterInfo,
     build_device_unique_id,
 )
-from aioesphomeapi.model import ButtonInfo
+from aioesphomeapi.model import ButtonInfo, SerialProxyIdentity
 from aioesphomeapi.model_conversions import STATE_TYPE_TO_INFO_TYPE
 from bleak_esphome.backend.device import ESPHomeBluetoothDevice
 
 from homeassistant import config_entries
+from homeassistant.components import usb
 from homeassistant.components.assist_satellite import AssistSatelliteConfiguration
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -118,6 +119,13 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
 
 
 @callback
+def async_notify_serial_ports_changed(hass: HomeAssistant) -> None:
+    """Have the usb integration rescan, as a udev event would for a local port."""
+    if "usb" in hass.config.components:
+        usb.async_notify_serial_ports_changed(hass)
+
+
+@callback
 def async_migrate_unique_id(
     ent_reg: er.EntityRegistry,
     platform_domain: str,
@@ -175,6 +183,12 @@ class RuntimeEntryData:
     available: bool = False
     expected_disconnect: bool = False  # Last disconnect was expected (e.g. deep sleep)
     device_info: DeviceInfo | None = None
+    # Identity of the device behind each serial proxy port, keyed by instance index.
+    # Filled from the device on connect and kept current by its hotplug messages, so
+    # the USB port scanner can answer without asking the device.
+    serial_proxy_identities: dict[int, SerialProxyIdentity] = field(
+        default_factory=dict
+    )
     bluetooth_device: ESPHomeBluetoothDevice | None = None
     api_version: APIVersion = field(default_factory=APIVersion)
     cleanup_callbacks: list[CALLBACK_TYPE] = field(default_factory=list)
@@ -593,12 +607,17 @@ class RuntimeEntryData:
             await self.store.async_save(self._pending_storage())
 
     @callback
-    def async_on_disconnect(self) -> None:
+    def async_on_disconnect(self, hass: HomeAssistant) -> None:
         """Call when the entry has been disconnected.
 
         Safe to call multiple times.
         """
         self.available = False
+        # The device's ports go with it, as a hub being unplugged takes its ports
+        if self.serial_proxy_identities:
+            self.serial_proxy_identities.clear()
+            if not hass.is_stopping:
+                async_notify_serial_ports_changed(hass)
         if self.bluetooth_device:
             # Fails pending BLE slot waiters and clears the dead
             # session's allocations in addition to closing the gate.

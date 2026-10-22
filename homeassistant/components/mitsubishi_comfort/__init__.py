@@ -73,10 +73,10 @@ async def async_setup_entry(
     # is throttled to empty, leaving devices unconfigurable.
     cached_credentials: dict[str, dict[str, str]] = entry.data.get(CONF_CREDENTIALS, {})
 
-    # The issue is not persistent and unload deletes it: if the cloud is
-    # unreachable below, addressless devices would retry with no fix flow
-    # offered. Reconcile from the stored data now; the fresh device list
-    # refines it further down.
+    # The issue is not persistent: if the cloud is unreachable below after a
+    # restart, addressless devices would retry with no fix flow offered.
+    # Reconcile from the stored data now; the fresh device list refines it
+    # further down.
     async_reconcile_missing_address_issue(hass, entry)
 
     try:
@@ -99,17 +99,19 @@ async def async_setup_entry(
     device_registry = dr.async_get(hass)
     owned_macs = {dr.format_mac(info.mac) for info in devices.values() if info.mac}
     for serial, info in devices.items():
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, serial)},
-            # Connections are globally indexed: registering an empty MAC would
-            # merge every MAC-less device into one registry entry.
-            connections=(
-                {(dr.CONNECTION_NETWORK_MAC, info.mac)} if info.mac else set()
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, serial)},
+                # Connections are globally indexed: registering an empty MAC would
+                # merge every MAC-less device into one registry entry.
+                connections=(
+                    {(dr.CONNECTION_NETWORK_MAC, info.mac)} if info.mac else set()
+                ),
+                manufacturer="Mitsubishi",
+                name=info.label,
+                serial_number=serial,
             ),
-            manufacturer="Mitsubishi",
-            name=info.label,
-            serial_number=serial,
         )
 
     # Cache the freshly discovered credentials (password, cryptoSerial, MAC) so
@@ -200,21 +202,7 @@ async def async_unload_entry(
 ) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
-    # Only after a successful unload: a failed unload leaves the entry
-    # active, so its addressless devices still need the repair.
-    ir.async_delete_issue(hass, DOMAIN, f"missing_address_{entry.entry_id}")
     await asyncio.gather(
         *(c.device.close() for c in entry.runtime_data.values()),
         return_exceptions=True,
     )
-
-
-async def async_remove_entry(
-    hass: HomeAssistant, entry: MitsubishiComfortConfigEntry
-) -> None:
-    """Remove a config entry's leftovers.
-
-    Removal never calls async_unload_entry for an entry that failed setup, so
-    the repair issue such a setup left behind is deleted here.
-    """
-    ir.async_delete_issue(hass, DOMAIN, f"missing_address_{entry.entry_id}")

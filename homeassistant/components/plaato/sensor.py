@@ -3,7 +3,7 @@
 from typing import override
 
 from pyplaato.models.device import PlaatoDevice
-from pyplaato.plaato import PlaatoKeg
+from pyplaato.plaato import ATTR_TEMP, PlaatoKeg
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant, callback
@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import ATTR_TEMP, SENSOR_UPDATE
+from . import SENSOR_UPDATE
 from .const import CONF_USE_WEBHOOK, SENSOR_SIGNAL
 from .coordinator import PlaatoConfigEntry, PlaatoCoordinator, PlaatoData
 from .entity import PlaatoEntity

@@ -1866,3 +1866,460 @@
     'state': 'on',
   })
 # ---
+# name: test_bluetooth_binary_sensors[binary_sensor.test_bluetooth][binary_sensor.test_bluetooth-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_bluetooth',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Bluetooth',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Bluetooth',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'bluetooth',
+    'unique_id': 'LRW3F7EK4NC700000-bluetooth',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_bluetooth_binary_sensors[binary_sensor.test_bluetooth][binary_sensor.test_bluetooth-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Bluetooth',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_bluetooth',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_bluetooth_binary_sensors[binary_sensor.test_bluetooth_session][binary_sensor.test_bluetooth_session-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_bluetooth_session',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Bluetooth session',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Bluetooth session',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'bluetooth_session',
+    'unique_id': 'LRW3F7EK4NC700000-bluetooth_session',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_bluetooth_binary_sensors[binary_sensor.test_bluetooth_session][binary_sensor.test_bluetooth_session-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Bluetooth session',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_bluetooth_session',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_local_binary_sensors[binary_sensor.energy_site_contactor_closed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.energy_site_contactor_closed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Contactor closed',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Contactor closed',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'contactor_closed',
+    'unique_id': '123456-contactor_closed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_local_binary_sensors[binary_sensor.energy_site_contactor_closed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Contactor closed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.energy_site_contactor_closed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_local_binary_sensors[binary_sensor.energy_site_escan_firmware_updating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.energy_site_escan_firmware_updating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'ESCAN firmware updating',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'ESCAN firmware updating',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'escan_firmware_updating',
+    'unique_id': '123456-escan_firmware_updating',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_local_binary_sensors[binary_sensor.energy_site_escan_firmware_updating-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site ESCAN firmware updating',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.energy_site_escan_firmware_updating',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_local_binary_sensors[binary_sensor.energy_site_grid_ok-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.energy_site_grid_ok',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Grid OK',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Grid OK',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'grid_ok',
+    'unique_id': '123456-grid_ok',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_local_binary_sensors[binary_sensor.energy_site_grid_ok-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Grid OK',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.energy_site_grid_ok',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_local_binary_sensors[binary_sensor.energy_site_microgrid_ok-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.energy_site_microgrid_ok',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Microgrid OK',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Microgrid OK',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'microgrid_ok',
+    'unique_id': '123456-microgrid_ok',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_local_binary_sensors[binary_sensor.energy_site_microgrid_ok-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Microgrid OK',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.energy_site_microgrid_ok',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_local_binary_sensors[binary_sensor.energy_site_pw3can_firmware_updating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.energy_site_pw3can_firmware_updating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'PW3CAN firmware updating',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'PW3CAN firmware updating',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pw3can_firmware_updating',
+    'unique_id': '123456-pw3can_firmware_updating',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_local_binary_sensors[binary_sensor.energy_site_pw3can_firmware_updating-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site PW3CAN firmware updating',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.energy_site_pw3can_firmware_updating',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_local_binary_sensors[binary_sensor.energy_site_site_manager_running-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.energy_site_site_manager_running',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Site manager running',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Site manager running',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'site_manager_running',
+    'unique_id': '123456-site_manager_running',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_local_binary_sensors[binary_sensor.energy_site_site_manager_running-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Site manager running',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.energy_site_site_manager_running',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_local_binary_sensors[binary_sensor.energy_site_site_running-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.energy_site_site_running',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Site running',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Site running',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'site_running',
+    'unique_id': '123456-site_running',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_local_binary_sensors[binary_sensor.energy_site_site_running-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Site running',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.energy_site_site_running',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
