@@ -20,7 +20,7 @@ type SenseCapConfigEntry = ConfigEntry[
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SenseCapConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SenseCapConfigEntry) -> None:
     """Set up SenseCAP devices across the available LoRaWAN connections."""
     manager = entry.runtime_data = DeviceManager(
         hass,
@@ -34,9 +34,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseCapConfigEntry) -> 
     except ConnectionUnavailable as err:
         raise ConfigEntryNotReady(str(err)) from err
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: SenseCapConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SenseCapConfigEntry) -> None:
     """Unload entities; the manager releases the collection and coordinators."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

@@ -1625,6 +1625,15 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "chirpstack": {
+      "name": "ChirpStack",
+      "integration_type": "hub",
+      "categories": [
+        "hubs_protocols.wireless_protocols"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "cielo_home": {
       "name": "Cielo Home",
       "integration_type": "hub",
@@ -3432,7 +3441,7 @@
       "iot_class": "cloud_push"
     },
     "flow_it": {
-      "name": "Flow-it",
+      "name": "AriaQ",
       "integration_type": "device",
       "categories": [
         "climate.fans_ventilation"
@@ -11466,13 +11475,27 @@
     },
     "thethingsnetwork": {
       "name": "The Things Network",
-      "integration_type": "hub",
-      "categories": [
-        "hubs_protocols.wireless_protocols",
-        "diy_makers.web_data_connectors"
-      ],
-      "config_flow": true,
-      "iot_class": "cloud_polling"
+      "integrations": {
+        "thethingsnetwork_lorawan": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "categories": [
+            "hubs_protocols.wireless_protocols"
+          ],
+          "name": "The Things Network"
+        },
+        "thethingsnetwork": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "categories": [
+            "hubs_protocols.wireless_protocols",
+            "diy_makers.web_data_connectors"
+          ],
+          "name": "The Things Network (Cloud Storage)"
+        }
+      }
     },
     "thingspeak": {
       "name": "ThingSpeak",

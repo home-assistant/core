@@ -44,7 +44,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FarmadConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FarmadConfigEntry) -> None:
     """Set up Mijn Farmad Apotheek from a config entry."""
 
     async def persist_tokens(access_token: str, refresh_token: str | None) -> None:
@@ -89,10 +89,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: FarmadConfigEntry) -> bo
         ) from err
 
     entry.runtime_data = FarmadData(client=client, products=products)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: FarmadConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FarmadConfigEntry) -> None:
     """Unload a Mijn Farmad Apotheek config entry."""
     await entry.runtime_data.client.async_close()
-    return True

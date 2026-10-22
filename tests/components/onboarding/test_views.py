@@ -98,14 +98,14 @@ def mock_default_integrations():
     with (
         patch("homeassistant.components.rpi_power.config_flow.new_under_voltage"),
         patch("homeassistant.components.rpi_power.new_under_voltage"),
-        patch("homeassistant.components.met.async_setup_entry", return_value=True),
+        patch("homeassistant.components.met.async_setup_entry", return_value=None),
         patch(
             "homeassistant.components.radio_browser.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.shopping_list.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield
