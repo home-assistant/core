@@ -49,6 +49,7 @@ from .const import (
     CREATE_PLUG_SIGNAL,
     CREATE_SENSOR_SIGNAL,
     DATA_UPDATE_SIGNAL_PREFIX,
+    DEVICE_REMOVED_SIGNAL,
     DOMAIN,
     ROLE_APPLIANCE,
     ROLE_HOUSENET,
@@ -56,6 +57,7 @@ from .const import (
     ROLE_UPDATE_SIGNAL,
     ROLE_WATER,
     UPDATE_VHH_SIGNAL,
+    VHH_DEVICE_ID,
 )
 from .entity import PLUG_UPDATE_TIMEOUT, SENSOR_UPDATE_TIMEOUT, PowersensorEntity
 from .models import PowersensorConfigEntry, PowersensorRuntimeData
@@ -458,7 +460,8 @@ async def async_setup_entry(
     # (mac, description.key).  Used only to prevent handle_role_update from
     # re-adding entities that handle_discovered_sensor already created.
     # Entries are never removed on a role change, matching the fact that the
-    # entities themselves are kept (see handle_role_update).
+    # entities themselves are kept (see handle_role_update).  They are removed
+    # only when the user deletes the device, which takes its entities with it.
     role_entities_added: set[tuple[str, str]] = set()
 
     entry_id = entry.entry_id
@@ -529,6 +532,17 @@ async def async_setup_entry(
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, ROLE_UPDATE_SIGNAL, handle_role_update)
+    )
+
+    @callback
+    def handle_device_removed(mac_address: str) -> None:
+        """Forget a deleted device's entities, so they are added again if it returns."""
+        role_entities_added.difference_update(
+            {added for added in role_entities_added if added[0] == mac_address}
+        )
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, DEVICE_REMOVED_SIGNAL, handle_device_removed)
     )
 
     @callback
@@ -761,7 +775,7 @@ class PowersensorHouseholdEntity(SensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return device info for the virtual household device."""
         return DeviceInfo(
-            identifiers={(DOMAIN, "vhh")},
+            identifiers={(DOMAIN, VHH_DEVICE_ID)},
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="Powersensor",
             model="Virtual",

@@ -10,7 +10,8 @@ Event routing:
   device_found  (device_type=plug)    → CREATE_PLUG_SIGNAL
   device_found  (device_type=sensor)  → CREATE_SENSOR_SIGNAL
   now_relaying_for                    → ROLE_UPDATE_SIGNAL (role hint, best-effort)
-  device_lost                         → logged (library handles reconnection)
+  device_lost                         → the user may now delete the device
+                                        (library handles reconnection)
   average_power, summation_energy,    → DATA_UPDATE_SIGNAL_PREFIX + mac + event
     and all other measurement events    (also fed into VirtualHousehold)
 
@@ -74,6 +75,7 @@ from .const import (
     CREATE_PLUG_SIGNAL,
     CREATE_SENSOR_SIGNAL,
     DATA_UPDATE_SIGNAL_PREFIX,
+    DEVICE_REMOVED_SIGNAL,
     ROLE_UNKNOWN,
     ROLE_UPDATE_SIGNAL,
 )
@@ -112,9 +114,24 @@ class PowersensorMessageDispatcher:
         # Tracks known devices.  The library announces a device only once while
         # it holds it, but announces it again after removing it, so this is what
         # stops a returning device from getting duplicate entities (see
-        # _handle_device_found).
+        # _handle_device_found).  A device leaves these only when the user
+        # deletes it (see forget), because its entities go with it.
         self.plugs: set[str] = set()
         self.sensors: dict[str, str | None] = {}
+        # Devices the library currently holds: from device_found until
+        # device_lost, which it sends once a device has been silent for a few
+        # minutes or a plug has left the network.
+        self._present: set[str] = set()
+
+    def is_present(self, mac: str) -> bool:
+        """Return whether the device is currently on the network."""
+        return mac in self._present
+
+    def forget(self, mac: str) -> None:
+        """Forget a device the user has deleted, so it is set up anew if it returns."""
+        self.plugs.discard(mac)
+        self.sensors.pop(mac, None)
+        async_dispatcher_send(self._hass, DEVICE_REMOVED_SIGNAL, mac)
 
     async def on_device_event(self, event: dict[str, Any]) -> None:
         """Handle all events from the PowersensorZeroconfDevices unified stream.
@@ -165,6 +182,7 @@ class PowersensorMessageDispatcher:
         device_type = event.get("device_type")
         if mac is None:
             return
+        self._present.add(mac)
 
         if device_type == "plug":
             if mac not in self.plugs:
@@ -252,11 +270,12 @@ class PowersensorMessageDispatcher:
 
         The library manages reconnection internally, so we don't remove
         entities.  Entities naturally become unavailable when their data
-        update timeout fires.
+        update timeout fires.  From here on the user may delete the device.
         """
         mac = event.get("mac")
         if mac is None:
             return
+        self._present.discard(mac)
         _LOGGER.debug("Device lost: %s", mac)
 
     async def _handle_measurement(

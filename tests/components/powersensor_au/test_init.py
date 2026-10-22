@@ -1,19 +1,32 @@
 """Tests for setup, unload, and migration of the Powersensor integration."""
 
+from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from powersensor_local import VirtualHousehold
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.powersensor_au.config_flow import PowersensorConfigFlow
-from homeassistant.components.powersensor_au.const import DOMAIN, ROLE_SOLAR
+from homeassistant.components.powersensor_au.const import (
+    CFG_ROLES,
+    DOMAIN,
+    ROLE_APPLIANCE,
+    ROLE_HOUSENET,
+    ROLE_SOLAR,
+    ROLE_WATER,
+    VHH_DEVICE_ID,
+)
 from homeassistant.components.powersensor_au.models import PowersensorRuntimeData
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 PLUG_MAC = "aabbccddeeff"
@@ -186,3 +199,155 @@ async def test_setup_constructs_vhh_with_solar_when_role_persisted(
     assert constructed_args == [
         (True, logging.getLogger("homeassistant.components.powersensor_au"))
     ]
+
+
+async def _delete_device(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, device_id: str
+) -> bool:
+    """Ask HA to delete a device, as its device page does; return whether it did."""
+    assert await async_setup_component(hass, "config", {})
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device_id)
+    return response["success"]
+
+
+@pytest.mark.parametrize(
+    ("mac", "device_type"),
+    [
+        pytest.param(PLUG_MAC, "plug", id="plug"),
+        pytest.param(SENSOR_MAC, "sensor", id="sensor"),
+    ],
+)
+async def test_device_on_the_network_cannot_be_deleted(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+    mac: str,
+    device_type: str,
+) -> None:
+    """A device the library still reports would come back, so it can't be deleted."""
+    await fire({"event": "device_found", "mac": mac, "device_type": device_type})
+    await hass.async_block_till_done()
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mac), config_entry.entry_id
+    )
+    assert device is not None
+
+    assert not await _delete_device(hass, hass_ws_client, device.id)
+    assert device_registry.async_get(device.id) is not None
+
+
+@pytest.mark.parametrize(
+    ("discovery", "mac"),
+    [
+        pytest.param(
+            [{"event": "device_found", "mac": PLUG_MAC, "device_type": "plug"}],
+            PLUG_MAC,
+            id="plug",
+        ),
+        pytest.param(
+            [
+                {"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"},
+                {"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_HOUSENET},
+            ],
+            SENSOR_MAC,
+            id="sensor",
+        ),
+    ],
+)
+async def test_lost_device_can_be_deleted_and_is_rebuilt_if_it_returns(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    discovery: list[dict[str, Any]],
+    mac: str,
+) -> None:
+    """Once lost, a device can be deleted, and it is set up anew if it returns."""
+    for event in discovery:
+        await fire(event)
+    await hass.async_block_till_done()
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mac), config_entry.entry_id
+    )
+    assert device is not None
+    entities = {
+        e.unique_id for e in er.async_entries_for_device(entity_registry, device.id)
+    }
+    assert entities
+
+    await fire({"event": "device_lost", "mac": mac})
+    assert await _delete_device(hass, hass_ws_client, device.id)
+    await hass.async_block_till_done()
+    assert device_registry.async_get(device.id) is None
+
+    for event in discovery:
+        await fire(event)
+    await hass.async_block_till_done()
+    returned = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mac), config_entry.entry_id
+    )
+    assert returned is not None
+    assert {
+        e.unique_id for e in er.async_entries_for_device(entity_registry, returned.id)
+    } == entities
+
+
+async def test_returning_sensor_gets_entities_of_a_role_it_had_before(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Deleting a sensor forgets which of its entities exist, but keeps its role."""
+    await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
+    await fire({"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_APPLIANCE})
+    await fire({"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_WATER})
+    await hass.async_block_till_done()
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SENSOR_MAC), config_entry.entry_id
+    )
+    assert device is not None
+
+    await fire({"event": "device_lost", "mac": SENSOR_MAC})
+    assert await _delete_device(hass, hass_ws_client, device.id)
+    await hass.async_block_till_done()
+    assert config_entry.data[CFG_ROLES][SENSOR_MAC] == ROLE_WATER
+
+    # It returns with its saved role, water, then reports appliance again.
+    await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
+    await fire({"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_APPLIANCE})
+    await hass.async_block_till_done()
+    assert entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{SENSOR_MAC}_power"
+    )
+    assert entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{SENSOR_MAC}_total_water_consumption"
+    )
+
+
+async def test_household_view_cannot_be_deleted(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """The household view belongs to the installation, not to one device."""
+    await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
+    await fire({"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_HOUSENET})
+    await fire({"event": "device_lost", "mac": SENSOR_MAC})
+    await hass.async_block_till_done()
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, VHH_DEVICE_ID), config_entry.entry_id
+    )
+    assert device is not None
+
+    assert not await _delete_device(hass, hass_ws_client, device.id)
+    assert device_registry.async_get(device.id) is not None

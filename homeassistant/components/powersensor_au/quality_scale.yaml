@@ -81,14 +81,19 @@ rules:
   reconfiguration-flow: todo
   repair-issues: todo
   stale-devices:
-    status: exempt
+    status: done
     comment: |
-      Devices and their role-gated entities are deliberately never removed.
-      Sensors drop off the network and re-appear, and a sensor that has
-      forgotten its role reports the real one again once it recovers, so a
-      removal would usually be undone moments later and would discard the
-      energy history recorded against those entities.  Hardware that has
-      genuinely been removed or re-purposed is deleted by the user.
+      Devices are never removed automatically: sensors drop off the network
+      and reappear, so a removal would usually be undone moments later and
+      would discard the energy history recorded against their entities.
+      Instead, async_remove_config_entry_device lets the user delete a plug or
+      sensor once it has left the network (the library reports it lost after
+      a few minutes of silence).  A device still on the network is refused,
+      as it would come back with its next reading.  The household view is
+      never deleted, as it belongs to the installation rather than to one
+      device.  A deleted sensor's saved role is kept on purpose: the household
+      view's with_solar flag is rebuilt from saved roles at setup, so dropping
+      a solar sensor's role would make it report home use without solar.
 
   # Platinum
   async-dependency: todo

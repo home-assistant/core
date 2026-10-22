@@ -9,8 +9,9 @@ from homeassistant.components import zeroconf
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
-from .const import CFG_ROLES, ROLE_SOLAR
+from .const import CFG_ROLES, DOMAIN, ROLE_SOLAR, VHH_DEVICE_ID
 from .models import PowersensorConfigEntry, PowersensorRuntimeData
 from .powersensor_message_dispatcher import PowersensorMessageDispatcher
 
@@ -63,3 +64,35 @@ async def async_unload_entry(
     await entry.runtime_data.dispatcher.disconnect()
     await entry.runtime_data.devices.stop()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: PowersensorConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
+) -> bool:
+    """Allow the user to delete a plug or sensor that has left the network.
+
+    A device still on the network is refused: it would only come back with its
+    next reading.  A plug or sensor counts as gone once it has been unplugged or
+    switched off for a few minutes.
+
+    The household view is never deleted.  It belongs to the installation as a
+    whole rather than to one device, and a household that has genuinely changed
+    is set up again by removing the integration and adding it again.
+
+    A deleted sensor's saved role is deliberately kept in the config entry.
+    The household view's with_solar flag is rebuilt from the saved roles at
+    setup, and a solar sensor whose battery has run flat is one a user may well
+    delete.  Dropping its role would make the household report home use without
+    solar after the next restart, which is the incorrect data the one-way solar
+    flag exists to prevent.  The role also serves as the fallback if the sensor
+    returns.
+    """
+    dispatcher = config_entry.runtime_data.dispatcher
+    ids = {id_ for domain, id_ in device_entry.identifiers if domain == DOMAIN}
+    if VHH_DEVICE_ID in ids or any(dispatcher.is_present(mac) for mac in ids):
+        return False
+    for mac in ids:
+        dispatcher.forget(mac)
+    return True
