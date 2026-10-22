@@ -13525,7 +13525,7 @@ async def test_clear_config_subentry_removes_orphaned_child_device(
     assert device_registry.async_get(child_2.id, include_main_devices=False) is not None
 
 
-async def test_get_or_create_child_device(
+async def test_get_or_create_child_from_info(
     device_registry: dr.DeviceRegistry,
     mock_config_entry_with_subentries: MockConfigEntry,
 ) -> None:
@@ -13538,10 +13538,9 @@ async def test_get_or_create_child_device(
         name="Power strip",
     )
 
-    child_device = device_registry.async_get_or_create_child_device(
+    child_device = device_registry.async_get_or_create_child_from_info(
         config_entry_id=config_entry_id,
         config_subentry_id="mock-subentry-id-1-1",
-        disabled_by=dr.DeviceEntryDisabler.INTEGRATION,
         device_info=dr.ChildDeviceInfo(
             identifiers={("test", "strip_outlet_1")},
             parent_device_id=parent.id,
@@ -13550,13 +13549,13 @@ async def test_get_or_create_child_device(
     )
     assert isinstance(child_device, dr.ChildDeviceEntry)
     assert child_device.config_subentry_id == "mock-subentry-id-1-1"
-    assert child_device.disabled_by is dr.DeviceEntryDisabler.INTEGRATION
+    assert child_device.disabled_by is None
     assert child_device.identifiers == {("test", "strip_outlet_1")}
     assert child_device.name == "Outlet 1"
     assert child_device.parent_device_id == parent.id
 
     # Fields left unset in the child device info keep their value
-    same_child_device = device_registry.async_get_or_create_child_device(
+    same_child_device = device_registry.async_get_or_create_child_from_info(
         config_entry_id=config_entry_id,
         config_subentry_id="mock-subentry-id-1-1",
         device_info=dr.ChildDeviceInfo(
@@ -13567,29 +13566,28 @@ async def test_get_or_create_child_device(
     assert same_child_device.name == "Outlet 1"
 
 
-async def test_get_or_create_device(
+async def test_get_or_create_from_info(
     device_registry: dr.DeviceRegistry,
     mock_config_entry_with_subentries: MockConfigEntry,
 ) -> None:
     """Test getting or creating a device from a device info."""
     config_entry_id = mock_config_entry_with_subentries.entry_id
-    device = device_registry.async_get_or_create_device(
+    device = device_registry.async_get_or_create_from_info(
         config_entry_id=config_entry_id,
         config_subentry_id="mock-subentry-id-1-1",
-        disabled_by=dr.DeviceEntryDisabler.INTEGRATION,
         device_info=dr.DeviceInfo(
             identifiers={("test", "strip")}, manufacturer="Acme", name="Power strip"
         ),
     )
     assert isinstance(device, dr.DeviceEntry)
     assert device.config_subentry_id == "mock-subentry-id-1-1"
-    assert device.disabled_by is dr.DeviceEntryDisabler.INTEGRATION
+    assert device.disabled_by is None
     assert device.identifiers == {("test", "strip")}
     assert device.manufacturer == "Acme"
     assert device.name == "Power strip"
 
     # Fields left unset in the device info keep their value
-    same_device = device_registry.async_get_or_create_device(
+    same_device = device_registry.async_get_or_create_from_info(
         config_entry_id=config_entry_id,
         config_subentry_id="mock-subentry-id-1-1",
         device_info=dr.DeviceInfo(identifiers={("test", "strip")}),

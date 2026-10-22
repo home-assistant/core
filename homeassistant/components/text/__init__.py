@@ -21,6 +21,8 @@ from .const import (
     SERVICE_SET_VALUE,
     TextEntityCapabilityAttribute,
     TextMode,
+    TextService,
+    TextServiceArgument,
 )
 from .entity import RestoreText, TextEntity, TextEntityDescription, TextExtraStoredData
 from .services import async_setup_services
@@ -49,6 +51,8 @@ __all__ = [
     "TextEntityDescription",
     "TextExtraStoredData",
     "TextMode",
+    "TextService",
+    "TextServiceArgument",
 ]
 
 
