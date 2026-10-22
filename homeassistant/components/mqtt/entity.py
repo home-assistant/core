@@ -1537,9 +1537,9 @@ def ensure_via_device_exists(
         identifier,
     )
     try:
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=config_entry.entry_id,
-            identifiers={identifier},
+            device_info=dr.DeviceInfo(identifiers={identifier}),
         )
     except dr.DeviceInfoError as err:
         _log_device_info_error(err)
@@ -1631,8 +1631,8 @@ class MqttEntityDeviceInfo(Entity):
         device_registry = dr.async_get(self.hass)
         config_entry_id = self._config_entry.entry_id
         try:
-            device = device_registry.async_get_or_create(
-                config_entry_id=config_entry_id, **device_info
+            device = device_registry.async_get_or_create_device(
+                config_entry_id=config_entry_id, device_info=device_info
             )
         except dr.DeviceInfoError as err:
             self._device_registration_failed = True
@@ -1642,8 +1642,9 @@ class MqttEntityDeviceInfo(Entity):
             self._registered_device_id = self._main_device_id = device.id
             return device
         try:
-            child_device = device_registry.async_get_or_create_child(
-                config_entry_id=config_entry_id, **self._child_device_info(device.id)
+            child_device = device_registry.async_get_or_create_child_device(
+                config_entry_id=config_entry_id,
+                device_info=self._child_device_info(device.id),
             )
         except dr.DeviceInfoError as err:
             self._device_registration_failed = True
@@ -2184,8 +2185,8 @@ def update_device(
     if config_entry_id is not None and device_info is not None:
         if via_device_id := _resolve_via_device_id(hass, specifications, config_entry):
             device_info.via_device_id = via_device_id
-        device = device_registry.async_get_or_create(
-            config_entry_id=config_entry_id, **device_info
+        device = device_registry.async_get_or_create_device(
+            config_entry_id=config_entry_id, device_info=device_info
         )
 
     return device.id if device else None
