@@ -232,18 +232,15 @@ async def test_reconfigure_route(
 async def test_reconfigure_migrates_entities(
     hass: HomeAssistant,
     mock_nmbs_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test reconfiguration keeps entity IDs and the stored custom name."""
     entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Train from Brussel-Noord/Bruxelles-Nord to Brussel-Zuid/Bruxelles-Midi",
-        data={
-            CONF_STATION_FROM: STATION_FROM,
-            CONF_STATION_TO: STATION_TO,
-            CONF_NAME: "My train to work",
-        },
-        unique_id=f"{STATION_FROM}_{STATION_TO}",
+        domain=mock_config_entry.domain,
+        title=mock_config_entry.title,
+        data={**mock_config_entry.data, CONF_NAME: "My train to work"},
+        unique_id=mock_config_entry.unique_id,
     )
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -327,18 +324,11 @@ async def test_reconfigure_migrates_entities(
 async def test_reconfigure_abort_when_route_configured(
     hass: HomeAssistant,
     mock_nmbs_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test reconfiguration aborts when another entry already monitors the route."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Train from Brussel-Noord/Bruxelles-Nord to Brussel-Zuid/Bruxelles-Midi",
-        data={
-            CONF_STATION_FROM: STATION_FROM,
-            CONF_STATION_TO: STATION_TO,
-        },
-        unique_id=f"{STATION_FROM}_{STATION_TO}",
-    )
+    entry = mock_config_entry
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -377,18 +367,11 @@ async def test_reconfigure_abort_when_route_configured(
 async def test_reconfigure_skips_taken_unique_id(
     hass: HomeAssistant,
     mock_nmbs_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migration leaves an entity alone when its new unique ID is taken."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Train from Brussel-Noord/Bruxelles-Nord to Brussel-Zuid/Bruxelles-Midi",
-        data={
-            CONF_STATION_FROM: STATION_FROM,
-            CONF_STATION_TO: STATION_TO,
-        },
-        unique_id=f"{STATION_FROM}_{STATION_TO}",
-    )
+    entry = mock_config_entry
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()

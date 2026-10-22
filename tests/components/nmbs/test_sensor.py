@@ -1,7 +1,7 @@
 """Test the NMBS sensor platform."""
 
 from collections.abc import Callable
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 import logging
 from unittest.mock import AsyncMock
 
@@ -142,7 +142,7 @@ async def test_connection_sensor(
     assert attrs["canceled"] is False
     assert attrs["departure"] == "In 10 minutes"
     assert attrs["departure_minutes"] == 10
-    assert attrs["departure_time"] is not None
+    assert attrs["departure_time"] == datetime(2025, 10, 9, 12, 10, tzinfo=UTC)
     assert attrs["delay_seconds"] == 600
     assert attrs["delay"] == "10 minutes"
     assert attrs["delay_minutes"] == 10

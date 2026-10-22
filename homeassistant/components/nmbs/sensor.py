@@ -124,7 +124,11 @@ class NMBSSensor(NMBSEntity, SensorEntity):
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return sensor attributes if data is available."""
+        """Return sensor attributes if data is available.
+
+        The departure and delay attributes are text forms of
+        departure_minutes and delay_minutes, kept for existing templates.
+        """
         if (connection := self.connection) is None:
             return None
 
@@ -223,7 +227,11 @@ class NMBSLiveBoard(NMBSEntity, SensorEntity):
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the sensor attributes if data is available."""
+        """Return the sensor attributes if data is available.
+
+        The departure and delay attributes are text forms of
+        departure_minutes and delay_minutes, kept for existing templates.
+        """
         if (departure := self.next_departure) is None:
             return None
 
