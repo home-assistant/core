@@ -1,22 +1,22 @@
 """Helper sensor for calculating utility costs."""
 
 import asyncio
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 import copy
 from dataclasses import dataclass
 import logging
-from typing import Any, Final, Literal, cast, override
+from typing import Any, Final, Literal, Self, cast, override
 
 from homeassistant.components.sensor import (
+    RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityCapabilityAttribute,
     SensorEntityStateAttribute,
+    SensorExtraStoredData,
     SensorStateClass,
 )
-from homeassistant.components.sensor.recorder import (  # pylint: disable=home-assistant-component-root-import
-    reset_detected,
-)
+from homeassistant.components.sensor.recorder import reset_detected  # pylint: disable=home-assistant-component-root-import
 from homeassistant.const import (
     EntityStateAttribute,
     UnitOfEnergy,
@@ -132,6 +132,10 @@ GRID_EXPORT_ADAPTER: Final = SourceAdapter(
 
 class EntityNotFoundError(HomeAssistantError):
     """When a referenced entity was not found."""
+
+
+class PriceUnitMismatchError(HomeAssistantError):
+    """When the price unit cannot be converted to the meter unit."""
 
 
 class SensorManager:
@@ -351,13 +355,52 @@ class SensorManager:
         to_add.append(sensor)
 
 
+def _unit_converter(unit: str) -> type[unit_conversion.BaseUnitConverter]:
+    """Return the converter for an energy or volume unit."""
+    if unit in VALID_ENERGY_UNITS:
+        return unit_conversion.EnergyConverter
+    return unit_conversion.VolumeConverter
+
+
 def _set_result_unless_done(future: asyncio.Future[None]) -> None:
     """Set the result of a future unless it is done."""
     if not future.done():
         future.set_result(None)
 
 
-class EnergyCostSensor(SensorEntity):
+@dataclass
+class EnergyCostSensorExtraStoredData(SensorExtraStoredData):
+    """Data to price the energy used while Home Assistant was stopped."""
+
+    last_energy_sensor_state: State
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the data."""
+        data = super().as_dict()
+        data["last_energy_sensor_state"] = self.last_energy_sensor_state.as_dict()
+        return data
+
+    @classmethod
+    @override
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
+        """Initialize the data from a dict, if it has the last energy state."""
+        if (
+            (extra := SensorExtraStoredData.from_dict(restored)) is None
+            or not isinstance(
+                energy_state_dict := restored.get("last_energy_sensor_state"), dict
+            )
+            or (last_energy_sensor_state := State.from_dict(energy_state_dict)) is None
+        ):
+            return None
+        return cls(
+            extra.native_value,
+            extra.native_unit_of_measurement,
+            last_energy_sensor_state,
+        )
+
+
+class EnergyCostSensor(RestoreSensor):
     """Calculate costs incurred by consuming energy.
 
     This is intended as a fallback for when no specific cost sensor is available for the
@@ -382,6 +425,7 @@ class EnergyCostSensor(SensorEntity):
 
     _wrong_state_class_reported = False
     _wrong_unit_reported = False
+    _wrong_price_unit_reported = False
 
     def __init__(
         self,
@@ -497,37 +541,68 @@ class EnergyCostSensor(SensorEntity):
                 )
             return
 
-        if (
-            state_class != SensorStateClass.TOTAL_INCREASING
-            and energy_state.attributes.get(SensorEntityStateAttribute.LAST_RESET)
-            != self._last_energy_sensor_state.attributes.get(
+        try:
+            converted_energy_price = self._convert_energy_price(
+                energy_price, energy_price_unit, energy_unit
+            )
+        except PriceUnitMismatchError:
+            if not self._wrong_price_unit_reported:
+                self._wrong_price_unit_reported = True
+                _LOGGER.warning(
+                    "Not updating cost of %s: unit %s does not match price unit"
+                    " per %s of %s",
+                    energy_state.entity_id,
+                    energy_unit,
+                    energy_price_unit,
+                    self._config["entity_energy_price"],
+                )
+            return
+
+        last_energy = float(self._last_energy_sensor_state.state)
+        last_energy_unit = self._last_energy_sensor_state.attributes.get(
+            EntityStateAttribute.UNIT_OF_MEASUREMENT
+        )
+        if last_energy_unit != energy_unit:
+            try:
+                last_energy = _unit_converter(energy_unit).convert(
+                    last_energy, last_energy_unit, energy_unit
+                )
+            except HomeAssistantError:
+                # Readings in these units can't be compared, start from this one
+                self._last_energy_sensor_state = energy_state
+                return
+
+        if state_class == SensorStateClass.TOTAL_INCREASING:
+            try:
+                meter_reset = reset_detected(
+                    self.hass,
+                    cast(str, self._config[self._adapter.stat_energy_key]),
+                    energy,
+                    last_energy,
+                    self._last_energy_sensor_state,
+                )
+            except HomeAssistantError:
+                # Negative reading, already logged by reset_detected
+                return
+        else:
+            meter_reset = energy_state.attributes.get(
+                SensorEntityStateAttribute.LAST_RESET
+            ) != self._last_energy_sensor_state.attributes.get(
                 SensorEntityStateAttribute.LAST_RESET
             )
-        ) or (
-            state_class == SensorStateClass.TOTAL_INCREASING
-            and reset_detected(
-                self.hass,
-                cast(str, self._config[self._adapter.stat_energy_key]),
-                energy,
-                float(self._last_energy_sensor_state.state),
-                self._last_energy_sensor_state,
-            )
-        ):
+
+        if meter_reset:
             # Energy meter was reset, reset cost sensor too
             energy_state_copy = copy.copy(energy_state)
             energy_state_copy.state = "0.0"
             self._reset(energy_state_copy)
+            last_energy = 0.0
 
         # Update with newly incurred cost
-        old_energy_value = float(self._last_energy_sensor_state.state)
         cur_value = cast(float, self._attr_native_value)
 
-        converted_energy_price = self._convert_energy_price(
-            energy_price, energy_price_unit, energy_unit
-        )
-
         self._attr_native_value = (
-            cur_value + (energy - old_energy_value) * converted_energy_price
+            cur_value + (energy - last_energy) * converted_energy_price
         )
 
         self._last_energy_sensor_state = energy_state
@@ -566,17 +641,21 @@ class EnergyCostSensor(SensorEntity):
     def _convert_energy_price(
         self, energy_price: float, energy_price_unit: str | None, energy_unit: str
     ) -> float:
-        """Convert the energy price to the correct unit."""
+        """Convert the energy price to the correct unit.
+
+        Raises:
+            PriceUnitMismatchError: When the price unit cannot be converted to
+                the meter unit.
+
+        """
         if energy_price_unit is None:
             return energy_price
 
-        converter: Callable[[float, str, str], float]
-        if energy_unit in VALID_ENERGY_UNITS:
-            converter = unit_conversion.EnergyConverter.convert
-        else:
-            converter = unit_conversion.VolumeConverter.convert
+        converter = _unit_converter(energy_unit)
+        if energy_price_unit not in converter.VALID_UNITS:
+            raise PriceUnitMismatchError
 
-        return converter(energy_price, energy_unit, energy_price_unit)
+        return converter.convert(energy_price, energy_unit, energy_price_unit)
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -590,6 +669,11 @@ class EnergyCostSensor(SensorEntity):
             ].replace("_", " ")
 
         self._attr_name = f"{name} {self._adapter.name_suffix}"
+
+        # Start a new cycle from the last priced reading, so the energy used
+        # while stopped is priced too
+        if (restored := await self.async_get_last_sensor_data()) is not None:
+            self._reset(restored.last_energy_sensor_state)
 
         self._update_cost()
 
@@ -610,8 +694,20 @@ class EnergyCostSensor(SensorEntity):
     @callback
     def _async_state_changed_listener(self, *_: Any) -> None:
         """Handle child updates."""
+        # Leave readings after the shutdown save to the next start
+        if self.hass.is_stopping:
+            return
         self._update_cost()
         self.async_write_ha_state()
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Update the stat ID stored for the frontend."""
+        super().async_entity_id_changed(old_entity_id)
+        self.hass.data[DOMAIN]["cost_sensors"][
+            self._config[self._adapter.stat_energy_key]
+        ] = self.entity_id
 
     @override
     async def async_will_remove_from_hass(self) -> None:
@@ -625,6 +721,34 @@ class EnergyCostSensor(SensorEntity):
     def update_config(self, config: Mapping[str, Any]) -> None:
         """Update the config."""
         self._config = config
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> SensorExtraStoredData:
+        """Return the data needed to price the energy used while stopped."""
+        # Only the save made while stopping stores the last priced reading.
+        # Restore state is also saved every 15 minutes while running. After a
+        # crash, the last of those saves holds an older reading, and restoring
+        # it would price the energy used since then a second time. A sensor
+        # removed by a config change must not price the time it was gone either.
+        if self._last_energy_sensor_state is None or not self.hass.is_stopping:
+            return super().extra_restore_state_data
+        return EnergyCostSensorExtraStoredData(
+            self.native_value,
+            self.native_unit_of_measurement,
+            self._last_energy_sensor_state,
+        )
+
+    @override
+    async def async_get_last_sensor_data(
+        self,
+    ) -> EnergyCostSensorExtraStoredData | None:
+        """Return the restored data, if it is complete."""
+        if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
+            return None
+        return EnergyCostSensorExtraStoredData.from_dict(
+            restored_last_extra_data.as_dict()
+        )
 
     @property
     @override
@@ -658,6 +782,7 @@ class EnergyPowerSensor(SensorEntity):
     _attr_device_class = SensorDeviceClass.POWER
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_has_entity_name = True
+    _wrong_unit_reported = False
 
     def __init__(
         self,
@@ -767,14 +892,26 @@ class EnergyPowerSensor(SensorEntity):
             )
 
             # Convert to Watts if units are present
-            if discharge_unit:
-                discharge = unit_conversion.PowerConverter.convert(
-                    discharge, discharge_unit, UnitOfPower.WATT
-                )
-            if charge_unit:
-                charge = unit_conversion.PowerConverter.convert(
-                    charge, charge_unit, UnitOfPower.WATT
-                )
+            try:
+                if discharge_unit:
+                    discharge = unit_conversion.PowerConverter.convert(
+                        discharge, discharge_unit, UnitOfPower.WATT
+                    )
+                if charge_unit:
+                    charge = unit_conversion.PowerConverter.convert(
+                        charge, charge_unit, UnitOfPower.WATT
+                    )
+            except HomeAssistantError as err:
+                if not self._wrong_unit_reported:
+                    self._wrong_unit_reported = True
+                    _LOGGER.warning(
+                        "Unable to combine %s and %s: %s",
+                        discharge_state.entity_id,
+                        charge_state.entity_id,
+                        err,
+                    )
+                self._attr_native_value = None
+                return
 
             self._attr_native_value = discharge - charge
 

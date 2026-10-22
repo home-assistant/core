@@ -6,7 +6,14 @@ from datetime import timedelta
 from functools import partial
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_array_fixture,
+    async_load_json_object_fixture,
+)
 from tplink_omada_client.clients import OmadaWirelessClient
 from tplink_omada_client.devices import OmadaGateway, OmadaListDevice
 from tplink_omada_client.exceptions import (
@@ -20,6 +27,7 @@ from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.controller import OmadaSiteController
 from homeassistant.components.tplink_omada.coordinator import (
     EMPTY_DEVICE_LIMIT,
+    POLL_CLIENTS,
     OmadaCoordinator,
     async_cleanup_client_trackers,
     async_cleanup_devices,
@@ -30,13 +38,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_array_fixture,
-    async_load_json_object_fixture,
-)
-
 MOCK_ENTRY_DATA = {
     "host": "https://fake.omada.host",
     "verify_ssl": True,
@@ -44,6 +45,15 @@ MOCK_ENTRY_DATA = {
     "username": "test-username",
     "password": "test-password",
 }
+
+
+async def _async_poll_devices(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Advance to the next device poll and let it complete."""
+    freezer.tick(timedelta(seconds=POLL_CLIENTS + 1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 @pytest.mark.parametrize(
@@ -721,6 +731,7 @@ async def test_cleanup_devices_requires_confirmed_empty_list(
     mock_omada_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
     empty_updates: int,
     orphan_removed: bool,
 ) -> None:
@@ -745,7 +756,7 @@ async def test_cleanup_devices_requires_confirmed_empty_list(
     site_client.get_devices = AsyncMock(return_value=[])
 
     for _ in range(empty_updates):
-        await controller.devices_coordinator.async_refresh()
+        await _async_poll_devices(hass, freezer)
         await async_cleanup_devices(hass, controller)
 
     assert (device_registry.async_get(orphan.id) is None) is orphan_removed
@@ -756,6 +767,7 @@ async def test_cleanup_devices_empty_count_resets_on_data(
     mock_omada_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the empty sweep counter resets when devices are reported again."""
     mock_config_entry.add_to_hass(hass)
@@ -770,7 +782,7 @@ async def test_cleanup_devices_empty_count_resets_on_data(
     site_client = mock_omada_client.get_site_client.return_value
 
     site_client.get_devices = AsyncMock(return_value=[])
-    await controller.devices_coordinator.async_refresh()
+    await _async_poll_devices(hass, freezer)
     await async_cleanup_devices(hass, controller)
     assert device_registry.async_get_device_by_identifier(
         (DOMAIN, switch_mac), mock_config_entry.entry_id
@@ -780,14 +792,14 @@ async def test_cleanup_devices_empty_count_resets_on_data(
     site_client.get_devices = AsyncMock(
         return_value=[OmadaListDevice(d) for d in devices_data]
     )
-    await controller.devices_coordinator.async_refresh()
+    await _async_poll_devices(hass, freezer)
     await async_cleanup_devices(hass, controller)
     assert device_registry.async_get_device_by_identifier(
         (DOMAIN, switch_mac), mock_config_entry.entry_id
     )
 
     site_client.get_devices = AsyncMock(return_value=[])
-    await controller.devices_coordinator.async_refresh()
+    await _async_poll_devices(hass, freezer)
     await async_cleanup_devices(hass, controller)
     await async_cleanup_devices(hass, controller)
     assert device_registry.async_get_device_by_identifier(
@@ -800,6 +812,7 @@ async def test_cleanup_trackers_on_empty_known_clients(
     mock_omada_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test tracker cleanup removes integration-disabled trackers on an empty known list."""
     mock_config_entry.add_to_hass(hass)
@@ -820,9 +833,11 @@ async def test_cleanup_trackers_on_empty_known_clients(
 
     site_client = mock_omada_client.get_site_client.return_value
     site_client.get_known_clients.return_value = _get_no_known_clients()
-    await controller.known_clients_coordinator.async_refresh()
 
-    await async_cleanup_client_trackers(hass, controller)
+    # The hourly cleanup refreshes the known clients before pruning trackers.
+    freezer.tick(timedelta(hours=1, seconds=1))
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entity_registry.async_get(tracker.entity_id) is None
 

@@ -13,7 +13,10 @@ from uiprotect.data import (
     Event,
     EventType,
     Light,
+    LightModeEnableType,
+    LightModeType,
     ModelType,
+    Permission,
     Sensor,
     WSAction,
 )
@@ -64,6 +67,8 @@ from .utils import (
     time_changed,
 )
 
+pytestmark = pytest.mark.usefixtures("mock_private_only_entities_registered")
+
 
 def get_sensor_by_key(sensors: tuple, key: str) -> ProtectSensorEntityDescription:
     """Get sensor description by key."""
@@ -99,11 +104,11 @@ async def test_sensor_sensor_remove(
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
     await init_entry(hass, ufp, [sensor_all])
-    assert_entity_counts(hass, Platform.SENSOR, 22, 14)
+    assert_entity_counts(hass, Platform.SENSOR, 23, 14)
     await remove_entities(hass, ufp, [sensor_all])
     assert_entity_counts(hass, Platform.SENSOR, 12, 9)
     await adopt_devices(hass, ufp, [sensor_all])
-    assert_entity_counts(hass, Platform.SENSOR, 22, 14)
+    assert_entity_counts(hass, Platform.SENSOR, 23, 14)
 
 
 async def test_sensor_sense_capability_creation_filter(
@@ -166,9 +171,10 @@ async def test_sensor_setup_sensor(
 ) -> None:
     """Test sensor entity setup for sensor devices."""
 
-    setup_public_sensor(ufp)
+    # The private fixture reports -50; the sensor must read the public value.
+    setup_public_sensor(ufp, signal_strength=-71, signal_quality=87)
     await init_entry(hass, ufp, [sensor_all])
-    assert_entity_counts(hass, Platform.SENSOR, 22, 14)
+    assert_entity_counts(hass, Platform.SENSOR, 23, 14)
 
     expected_values = (
         "10",
@@ -193,12 +199,12 @@ async def test_sensor_setup_sensor(
         assert state.state == expected_values[index]
         assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
-    # BLE signal
+    # Signal strength
     unique_id, entity_id = await ids_from_device_description(
         hass,
         Platform.SENSOR,
         sensor_all,
-        get_sensor_by_key(ALL_DEVICES_SENSORS, "ble_signal"),
+        get_sensor_by_key(SENSE_SENSORS, "signal_strength"),
     )
 
     entity = entity_registry.async_get(entity_id)
@@ -206,12 +212,27 @@ async def test_sensor_setup_sensor(
     assert entity.disabled is True
     assert entity.unique_id == unique_id
 
+    assert (
+        entity_id
+        == f"sensor.{sensor_all.name.lower().replace(' ', '_')}_signal_strength"
+    )
+
     await enable_entity(hass, ufp.entry.entry_id, entity_id)
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "-50"
+    assert state.state == "-71"
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
+
+    # Signal quality
+    _, entity_id = await ids_from_device_description(
+        hass,
+        Platform.SENSOR,
+        sensor_all,
+        get_sensor_by_key(SENSE_SENSORS, "signal_quality"),
+    )
+    await enable_entity(hass, ufp.entry.entry_id, entity_id)
+    assert hass.states.get(entity_id).state == "87"
 
 
 async def test_sensor_setup_sensor_none(
@@ -224,7 +245,7 @@ async def test_sensor_setup_sensor_none(
 
     setup_public_sensor(ufp)
     await init_entry(hass, ufp, [sensor])
-    assert_entity_counts(hass, Platform.SENSOR, 22, 14)
+    assert_entity_counts(hass, Platform.SENSOR, 23, 14)
 
     expected_values = (
         "10",
@@ -633,7 +654,7 @@ async def test_sensor_update_alarm(
     """Test sensor motion entity."""
 
     await init_entry(hass, ufp, [sensor_all])
-    assert_entity_counts(hass, Platform.SENSOR, 22, 14)
+    assert_entity_counts(hass, Platform.SENSOR, 23, 14)
 
     _, entity_id = await ids_from_device_description(
         hass,
@@ -685,9 +706,15 @@ async def test_sensor_update_alarm_with_last_trip_time(
 ) -> None:
     """Test sensor motion entity with last trip time."""
 
-    setup_public_sensor(ufp, tampering_detected_at=fixed_now - timedelta(hours=3))
+    # Distinct offsets: equal values would hide a swapped path.
+    setup_public_sensor(
+        ufp,
+        motion_detected_at=fixed_now - timedelta(hours=1),
+        open_status_changed_at=fixed_now - timedelta(hours=2),
+        tampering_detected_at=fixed_now - timedelta(hours=3),
+    )
     await init_entry(hass, ufp, [sensor_all])
-    assert_entity_counts(hass, Platform.SENSOR, 22, 22)
+    assert_entity_counts(hass, Platform.SENSOR, 23, 23)
 
     # Last Trip Time
     unique_id, entity_id = await ids_from_device_description(
@@ -744,7 +771,7 @@ async def test_sensor_precision(
     """Test sensor precision value is respected."""
 
     await init_entry(hass, ufp, [sensor_all])
-    assert_entity_counts(hass, Platform.SENSOR, 22, 14)
+    assert_entity_counts(hass, Platform.SENSOR, 23, 14)
     nvr: NVR = ufp.api.bootstrap.nvr
 
     _, entity_id = await ids_from_device_description(
@@ -794,6 +821,36 @@ async def test_sensor_light_last_motion_unavailable_without_public(
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize(
+    ("mode", "enable_at", "expected"),
+    [
+        (LightModeType.MOTION, LightModeEnableType.ALWAYS, "motion"),
+        (LightModeType.MOTION, LightModeEnableType.DARK, "motion_dark"),
+        (LightModeType.WHEN_DARK, LightModeEnableType.DARK, "always"),
+        (LightModeType.MANUAL, LightModeEnableType.DARK, "off"),
+    ],
+)
+async def test_sensor_light_mode_mirror_public(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    light: Light,
+    mode: LightModeType,
+    enable_at: LightModeEnableType,
+    expected: str,
+) -> None:
+    """The deprecated light mode mirror shows the public preset value."""
+    ufp.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict({"rawPermission": "light:read:*"})
+    ]
+    setup_public_light(ufp, light_mode=mode, light_mode_enable_at=enable_at)
+    await init_entry(hass, ufp, [light])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SENSOR, light, get_sensor_by_key(LIGHT_SENSORS, "light_motion")
+    )
+    assert hass.states.get(entity_id).state == expected
+
+
 async def test_public_only_sensor_sense_end_to_end(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -821,7 +878,13 @@ async def test_public_only_sensor_sense_end_to_end(
 
     assert ufp_public_only.entry.state is ConfigEntryState.LOADED
     keys = registered_keys(entity_registry, Platform.SENSOR, sensor_all.mac)
-    assert {"battery_level", "temperature_level", "motion_last_trip_time"} <= keys
+    assert {
+        "battery_level",
+        "temperature_level",
+        "motion_last_trip_time",
+        "signal_strength",
+        "signal_quality",
+    } <= keys
     assert not keys & {"alarm_sound", "sensitivity", "mount_type", "paired_camera"}
     assert "humidity_level" not in keys
 

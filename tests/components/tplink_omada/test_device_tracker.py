@@ -5,6 +5,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from tplink_omada_client.clients import OmadaConnectedClient
 
@@ -14,8 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
+UPDATE_INTERVAL = timedelta(seconds=10)
 POLL_INTERVAL = timedelta(seconds=POLL_CLIENTS + 10)
 
 MOCK_ENTRY_DATA = {

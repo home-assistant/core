@@ -155,6 +155,7 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_updates={CONF_NPSSO: npsso},
                 )
 
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="reauth_confirm" if self.source == SOURCE_REAUTH else "reconfigure",
             data_schema=self.add_suggested_values_to_schema(

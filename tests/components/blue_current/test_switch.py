@@ -1,5 +1,7 @@
 """The tests for Bluecurrent switches."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.blue_current import CHARGEPOINT_SETTINGS, PLUG_AND_CHARGE
 from homeassistant.components.blue_current.const import (
     ACTIVITY,
@@ -13,8 +15,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import DEFAULT_CHARGE_POINT, init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_switches(

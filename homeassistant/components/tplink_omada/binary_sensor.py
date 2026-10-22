@@ -29,7 +29,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OmadaConfigEntry
 from .const import DOMAIN
-from .controller import OmadaGatewayCoordinator
+from .coordinator import OmadaGatewayCoordinator
 from .entity import OmadaDeviceEntity
 
 PARALLEL_UPDATES = 0

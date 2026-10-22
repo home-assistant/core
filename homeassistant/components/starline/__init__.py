@@ -28,7 +28,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: StarlineConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: StarlineConfigEntry) -> None:
     """Set up the StarLine device from a config entry."""
     account = StarlineAccount(hass, entry)
     await account.update()
@@ -40,8 +40,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: StarlineConfigEntry) -> 
 
     device_registry = dr.async_get(hass)
     for device in account.api.devices.values():
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id, **account.device_info(device)
+        device_registry.async_get_or_create_from_info(
+            config_entry_id=entry.entry_id, device_info=account.device_info(device)
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -49,19 +49,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: StarlineConfigEntry) -> 
     entry.async_on_unload(entry.add_update_listener(async_options_updated))
     await async_options_updated(hass, entry)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: StarlineConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-
-    config_entry.runtime_data.unload()
-    return unload_ok
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(
+            config_entry, PLATFORMS
+        )
+    finally:
+        config_entry.runtime_data.unload()
 
 
 async def async_options_updated(

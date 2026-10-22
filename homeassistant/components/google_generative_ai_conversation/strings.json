@@ -47,6 +47,13 @@
             "thinking_level": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::thinking_level%]",
             "top_k": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::top_k%]",
             "top_p": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::top_p%]"
+          },
+          "data_description": {
+            "temperature": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data_description::temperature%]",
+            "thinking_budget": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data_description::thinking_budget%]",
+            "thinking_level": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data_description::thinking_level%]",
+            "top_k": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data_description::top_k%]",
+            "top_p": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data_description::top_p%]"
           }
         }
       }
@@ -86,8 +93,11 @@
           "data_description": {
             "enable_google_search_tool": "Only works if there is nothing selected in the \"Control Home Assistant\" setting. See docs for a workaround using it with \"Assist\".",
             "prompt": "Instruct how the LLM should respond. This can be a template.",
+            "temperature": "Only sent for older Gemini models and non-Gemini models. Newer Gemini models and the latest text aliases use model defaults; your saved setting is kept.",
             "thinking_budget": "Token budget for model reasoning (Gemini 2.5 only). Use -1 for automatic or 0 to disable (not available for Gemini 2.5 Pro).",
-            "thinking_level": "Thinking level for Gemini 3 models. Ignored for Gemini 2.5 models, which use the thinking budget instead. \"Minimal\" does not guarantee that thinking is off."
+            "thinking_level": "Thinking level for Gemini 3 and later text models, including the latest aliases. Unsupported levels use the model default; the saved choice is kept. Gemini 2.5 uses the thinking budget instead. \"Minimal\" does not guarantee that thinking is off.",
+            "top_k": "Only sent for older Gemini models and non-Gemini models. Newer Gemini models and the latest text aliases use model defaults; your saved setting is kept.",
+            "top_p": "Only sent for older Gemini models and non-Gemini models. Newer Gemini models and the latest text aliases use model defaults; your saved setting is kept."
           }
         }
       }
@@ -120,7 +130,12 @@
             "top_p": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::top_p%]"
           },
           "data_description": {
-            "prompt": "Instruct how the LLM should transcribe the audio."
+            "prompt": "Instruct how the LLM should transcribe the audio.",
+            "temperature": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data_description::temperature%]",
+            "thinking_budget": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data_description::thinking_budget%]",
+            "thinking_level": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data_description::thinking_level%]",
+            "top_k": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data_description::top_k%]",
+            "top_p": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data_description::top_p%]"
           }
         }
       }
@@ -148,6 +163,9 @@
             "temperature": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::temperature%]",
             "top_k": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::top_k%]",
             "top_p": "[%key:component::google_generative_ai_conversation::config_subentries::conversation::step::set_options::data::top_p%]"
+          },
+          "data_description": {
+            "temperature": "Only sent for older Gemini text-to-speech models. Newer models use the model default; your saved setting is kept."
           }
         }
       }

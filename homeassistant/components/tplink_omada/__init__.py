@@ -48,7 +48,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> None:
     """Set up TP-Link Omada from a config entry."""
 
     try:
@@ -133,15 +133,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
         async_track_time_interval(hass, _schedule_cleanup, timedelta(hours=1))
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> None:
     """Migrate old config entry to a new format."""
 
     if entry.version == 1:
@@ -158,5 +156,3 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> b
             unique_id=f"{entry.unique_id}_{entry.data[CONF_SITE]}",
             version=2,
         )
-
-    return True

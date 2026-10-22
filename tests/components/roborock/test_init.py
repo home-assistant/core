@@ -1,13 +1,15 @@
 """Test for Roborock init."""
 
 import asyncio
-import datetime
+import datetime as dt
 import pathlib
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.typing import ClientSessionGenerator
 from roborock import (
     RoborockInvalidCredentials,
     RoborockInvalidUserAgreement,
@@ -35,9 +37,6 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import FakeDevice, MockDeviceManagerContext
 from .mock_data import ROBOROCK_RRUID, USER_EMAIL
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import ClientSessionGenerator
 
 
 async def test_unload_entry(
@@ -425,7 +424,7 @@ async def test_update_unavailability_threshold(
     )
 
     # Move forward in time less than the threshold
-    freezer.tick(datetime.timedelta(seconds=90))
+    freezer.tick(dt.timedelta(seconds=90))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -444,7 +443,7 @@ async def test_update_unavailability_threshold(
     assert state.state == expected_state
 
     # Move forward in time to exceed the threshold
-    freezer.tick(datetime.timedelta(minutes=3))
+    freezer.tick(dt.timedelta(minutes=3))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -456,7 +455,7 @@ async def test_update_unavailability_threshold(
     # Now restore normal update behavior and refresh.
     fake_vacuum.v1_properties.status.refresh.side_effect = None
 
-    freezer.tick(datetime.timedelta(seconds=45))
+    freezer.tick(dt.timedelta(seconds=45))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -485,6 +484,7 @@ async def test_cloud_api_repair(
     # Check that both expected device names are present, regardless of order
     assert all(
         issue.translation_key == "cloud_api_used"
+        and issue.config_entry_id == mock_roborock_entry.entry_id
         for issue in issue_registry.issues.values()
     )
     names = {

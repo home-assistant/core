@@ -19,7 +19,7 @@ from homeassistant.data_entry_flow import FlowResultType
 @pytest.fixture(name="gdacs_setup", autouse=True)
 def gdacs_setup_fixture():
     """Mock gdacs entry setup."""
-    with patch("homeassistant.components.gdacs.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.gdacs.async_setup_entry", return_value=None):
         yield
 
 
@@ -70,3 +70,4 @@ async def test_step_user(hass: HomeAssistant) -> None:
         CONF_SCAN_INTERVAL: 300.0,
         CONF_CATEGORIES: [],
     }
+    assert result["result"].unique_id == "-41.2, 174.7"

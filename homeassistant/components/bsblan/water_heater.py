@@ -76,7 +76,9 @@ class BSBLANWaterHeater(BSBLanWaterHeaterDeviceEntity, WaterHeaterEntity):
         self._attr_unique_id = format_mac(data.device.MAC)
 
         # Set temperature unit
-        self._attr_temperature_unit = data.fast_coordinator.client.get_temperature_unit
+        self._attr_native_temperature_unit = (
+            data.fast_coordinator.client.get_temperature_unit
+        )
         # Initialize available attribute to resolve multiple inheritance conflict
         self._attr_available = True
 
@@ -146,7 +148,7 @@ class BSBLANWaterHeater(BSBLanWaterHeaterDeviceEntity, WaterHeaterEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if (current_temp := self._dhw.dhw_actual_value_top_temperature) is None:
             return None
@@ -154,7 +156,7 @@ class BSBLANWaterHeater(BSBLanWaterHeaterDeviceEntity, WaterHeaterEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if (target_temp := self._dhw.nominal_setpoint) is None:
             return None
@@ -174,7 +176,7 @@ class BSBLANWaterHeater(BSBLanWaterHeaterDeviceEntity, WaterHeaterEntity):
                 translation_key="set_temperature_error",
             ) from err
 
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh_hot_water()
 
     @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
@@ -192,7 +194,7 @@ class BSBLANWaterHeater(BSBLanWaterHeaterDeviceEntity, WaterHeaterEntity):
                 translation_key="set_operation_mode_error",
             ) from err
 
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh_hot_water()
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

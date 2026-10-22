@@ -16,7 +16,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import OmadaConfigEntry
 from .config_flow import CONF_SITE
 from .const import DOMAIN
-from .controller import OmadaClientsCoordinator
+from .coordinator import OmadaClientsCoordinator
 
 PARALLEL_UPDATES = 0
 
@@ -33,36 +33,44 @@ async def async_setup_entry(
     site_id = config_entry.data[CONF_SITE]
     known_clients_coordinator = controller.known_clients_coordinator
 
-    def _has_live_entity(unique_id: str) -> bool:
-        """Return if a registry entry is already handled.
+    added_unique_ids: set[str] = set()
 
-        A disabled entry needs no entity, and an enabled entry with a state
-        has a live entity. An enabled entry without a state is preserved from
-        an earlier session but was never instantiated.
+    def _should_add(unique_id: str) -> bool:
+        """Return if a tracker should be added by this platform run.
+
+        A disabled registry entry needs no entity, so it is skipped. Every
+        other entry is added, because a registry entry alone does not mean the
+        entity exists: Home Assistant writes a restored state for enabled
+        entries that no platform has added yet.
         """
         entity_registry = er.async_get(hass)
         entity_id = entity_registry.async_get_entity_id(
             DEVICE_TRACKER_DOMAIN, DOMAIN, unique_id
         )
-        if (
-            entity_id is None
-            or (entity_entry := entity_registry.async_get(entity_id)) is None
-        ):
+        if entity_id is None:
+            # The entry no longer exists, for example because stale tracker
+            # cleanup removed it. Allow the tracker to be created again.
+            added_unique_ids.discard(unique_id)
+            return True
+        entity_entry = entity_registry.async_get(entity_id)
+        if entity_entry is not None and entity_entry.disabled_by is not None:
             return False
-        return (
-            entity_entry.disabled_by is not None
-            or hass.states.get(entity_id) is not None
-        )
+        return unique_id not in added_unique_ids
 
     def _new_trackers() -> list[OmadaClientScannerEntity]:
-        """Return trackers for known clients without a live entity."""
-        return [
-            OmadaClientScannerEntity(
-                site_id, client.mac, client.name, controller.clients_coordinator
+        """Return trackers for known clients that this platform has not added."""
+        entities: list[OmadaClientScannerEntity] = []
+        for client in (known_clients_coordinator.data or {}).values():
+            unique_id = f"scanner_{site_id}_{client.mac}"
+            if not _should_add(unique_id):
+                continue
+            added_unique_ids.add(unique_id)
+            entities.append(
+                OmadaClientScannerEntity(
+                    site_id, client.mac, client.name, controller.clients_coordinator
+                )
             )
-            for client in (known_clients_coordinator.data or {}).values()
-            if not _has_live_entity(f"scanner_{site_id}_{client.mac}")
-        ]
+        return entities
 
     @callback
     def _handle_known_clients_update() -> None:
