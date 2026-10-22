@@ -1,6 +1,7 @@
 {
   "domain": "hausbus",
   "name": "Haus-Bus",
+  "categories": ["hubs_protocols.building_automation"],
   "codeowners": ["@hausbus"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hausbus",
