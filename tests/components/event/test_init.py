@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from datetime import timedelta
+from types import ModuleType
 from typing import Any
 
 from freezegun import freeze_time
@@ -11,6 +12,7 @@ from pytest_homeassistant.common import (
     MockModule,
     MockPlatform,
     async_mock_restore_state_shutdown_restart,
+    import_and_test_deprecated_constant,
     mock_config_flow,
     mock_integration,
     mock_platform,
@@ -19,6 +21,7 @@ from pytest_homeassistant.common import (
     setup_test_component_platform,
 )
 
+from homeassistant.components import event
 from homeassistant.components.event import (
     ATTR_EVENT_TYPE,
     ATTR_EVENT_TYPES,
@@ -27,6 +30,7 @@ from homeassistant.components.event import (
     EventDeviceClass,
     EventEntity,
     EventEntityDescription,
+    const as event_const,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_PLATFORM, STATE_UNKNOWN, Platform
@@ -446,3 +450,18 @@ async def test_doorbell_missing_ring_event_type(
     assert get_error_message("event.doorbell_without_ring") in caplog.text
     assert get_error_message("event.doorbell_with_ring") not in caplog.text
     assert get_error_message("event.button") not in caplog.text
+
+
+@pytest.mark.parametrize("module", [event, event_const])
+def test_deprecated_attr_multi_press_count(
+    caplog: pytest.LogCaptureFixture, module: ModuleType
+) -> None:
+    """Test ATTR_MULTI_PRESS_COUNT deprecation in favor of ATTR_PRESS_COUNT."""
+    import_and_test_deprecated_constant(
+        caplog,
+        module,
+        "ATTR_MULTI_PRESS_COUNT",
+        "ATTR_PRESS_COUNT",
+        "multi_press_count",
+        "2027.5.0",
+    )

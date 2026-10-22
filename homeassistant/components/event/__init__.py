@@ -1,12 +1,18 @@
 """Component for handling incoming events as a platform."""
 
 from datetime import timedelta
+from functools import partial
 import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstant,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
@@ -14,7 +20,7 @@ from homeassistant.util.hass_dict import HassKey
 from .const import (
     ATTR_EVENT_TYPE,
     ATTR_EVENT_TYPES,
-    ATTR_MULTI_PRESS_COUNT,
+    ATTR_PRESS_COUNT,
     DOMAIN,
     ButtonEventType,
     DoorbellEventType,
@@ -31,11 +37,16 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=30)
 
+_DEPRECATED_ATTR_MULTI_PRESS_COUNT = DeprecatedConstant(
+    "multi_press_count", "ATTR_PRESS_COUNT", "2027.5.0"
+)
+
 
 __all__ = [
     "ATTR_EVENT_TYPE",
     "ATTR_EVENT_TYPES",
     "ATTR_MULTI_PRESS_COUNT",
+    "ATTR_PRESS_COUNT",
     "DOMAIN",
     "PLATFORM_SCHEMA",
     "PLATFORM_SCHEMA_BASE",
@@ -47,6 +58,12 @@ __all__ = [
     "EventEntityDescription",
     "EventEntityStateAttribute",
 ]
+
+# These can be removed if no deprecated constants are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
 
 # mypy: disallow-any-generics
 
