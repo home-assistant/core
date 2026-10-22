@@ -88,7 +88,7 @@ def mock_controller_patch_get_host():
 
 @pytest.fixture(name="patch_is_file", autouse=True)
 def mock_controller_patch_is_file():
-    """Mock call to os path.isfile function."""
+    """Mock the config flow _is_file helper."""
     with patch(
         f"{ASUSWRT_BASE}.config_flow._is_file", return_value=True
     ) as is_file_mock:
