@@ -28,14 +28,18 @@ from .const import (
     EVENT_VALUE_UPDATED,
     LOGGER,
 )
-from .discovery_data_template import BaseDiscoverySchemaDataTemplate
 from .helpers import (
     get_device_id,
     get_device_info,
     get_unique_id,
     get_valueless_base_unique_id,
 )
-from .models import PlatformZwaveDiscoveryInfo, ZwaveDiscoveryInfo, ZwaveJSConfigEntry
+from .models import (
+    BaseDiscoverySchemaDataTemplate,
+    PlatformZwaveDiscoveryInfo,
+    ZwaveDiscoveryInfo,
+    ZwaveJSConfigEntry,
+)
 
 
 @dataclass(kw_only=True)

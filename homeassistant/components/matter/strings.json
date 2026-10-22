@@ -158,6 +158,11 @@
         "name": "Temporary mute"
       }
     },
+    "camera": {
+      "camera": {
+        "name": "[%key:component::camera::title%]"
+      }
+    },
     "climate": {
       "thermostat": {
         "name": "Thermostat",
@@ -266,6 +271,9 @@
       },
       "on_transition_time": {
         "name": "On transition time"
+      },
+      "power_on_color_temperature": {
+        "name": "Power-on color temperature"
       },
       "power_on_level": {
         "name": "Power-on level"

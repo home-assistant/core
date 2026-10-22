@@ -25,8 +25,8 @@
           "password": "[%key:component::icloud::config::step::user::data::password%]",
           "username": "[%key:common::config_flow::data::email%]"
         },
-        "description": "Your previously entered password for {username} is no longer working. Update your password to keep using this integration.",
-        "title": "[%key:common::config_flow::title::reauth%]"
+        "description": "Your previously entered password for {username} is no longer working. Update your password to keep using the iCloud integration.",
+        "title": "iCloud authentication expired for {name}"
       },
       "trusted_device": {
         "data": {

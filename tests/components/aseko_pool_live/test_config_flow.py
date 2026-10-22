@@ -36,7 +36,7 @@ async def test_async_step_user_success(hass: HomeAssistant, user: User) -> None:
         ),
         patch(
             "homeassistant.components.aseko_pool_live.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -97,7 +97,7 @@ async def test_async_step_user_exception(
         ),
         patch(
             "homeassistant.components.aseko_pool_live.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -151,7 +151,7 @@ async def test_get_account_info_exceptions(
         ),
         patch(
             "homeassistant.components.aseko_pool_live.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -190,7 +190,7 @@ async def test_async_step_reauth_success(hass: HomeAssistant, user: User) -> Non
         ),
         patch(
             "homeassistant.components.aseko_pool_live.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -233,7 +233,7 @@ async def test_async_step_reauth_mismatch(hass: HomeAssistant, user: User) -> No
         ),
         patch(
             "homeassistant.components.aseko_pool_live.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -297,7 +297,7 @@ async def test_async_step_reauth_exception(
         ),
         patch(
             "homeassistant.components.aseko_pool_live.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(

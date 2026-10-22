@@ -31,11 +31,11 @@ from .bot import (
 
 # The ATTR_* below are unused here, but re-exported for the telegram integration.
 from .const import (
-    ATTR_CHAT_ID,  # noqa: F401
-    ATTR_DISABLE_NOTIF,  # noqa: F401
-    ATTR_DISABLE_WEB_PREV,  # noqa: F401
-    ATTR_MESSAGE_TAG,  # noqa: F401
-    ATTR_MESSAGE_THREAD_ID,  # noqa: F401
+    ATTR_CHAT_ID,
+    ATTR_DISABLE_NOTIF,
+    ATTR_DISABLE_WEB_PREV,
+    ATTR_MESSAGE_TAG,
+    ATTR_MESSAGE_THREAD_ID,
     ATTR_PARSER,
     CONF_API_ENDPOINT,
     CONF_CHAT_ID,
@@ -51,6 +51,16 @@ from .services import async_setup_services
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+__all__ = [
+    "ATTR_CHAT_ID",
+    "ATTR_DISABLE_NOTIF",
+    "ATTR_DISABLE_WEB_PREV",
+    "ATTR_MESSAGE_TAG",
+    "ATTR_MESSAGE_THREAD_ID",
+    "ATTR_PARSER",
+    "DOMAIN",
+]
 
 
 class BotPlatformModule(Protocol):

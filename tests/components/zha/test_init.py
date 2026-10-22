@@ -70,7 +70,7 @@ def config_entry_v1(hass: HomeAssistant):
 
 
 @pytest.mark.parametrize("config", [{}, {DOMAIN: {}}])
-@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=None))
 async def test_migration_from_v1_no_baudrate(
     hass: HomeAssistant, config_entry_v1, config
 ) -> None:
@@ -85,7 +85,7 @@ async def test_migration_from_v1_no_baudrate(
     assert config_entry_v1.version == 5
 
 
-@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=None))
 async def test_migration_from_v1_with_baudrate(
     hass: HomeAssistant, config_entry_v1
 ) -> None:
@@ -102,7 +102,7 @@ async def test_migration_from_v1_with_baudrate(
     assert config_entry_v1.version == 5
 
 
-@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=None))
 async def test_migration_from_v1_wrong_baudrate(
     hass: HomeAssistant, config_entry_v1
 ) -> None:
@@ -151,7 +151,7 @@ async def test_config_depreciation(hass: HomeAssistant, zha_config) -> None:
         ("socket://[::1]", "socket://[::1]:6638"),
     ],
 )
-@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=None))
 async def test_migration_v5_explicit_socket_port(
     old_path: str,
     new_path: str,
@@ -188,7 +188,7 @@ async def test_migration_v5_explicit_socket_port(
         pytest.param(1, 0, ConfigEntryState.MIGRATION_ERROR, id="major_blocked"),
     ],
 )
-@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=None))
 async def test_migration_version_downgrade_guard(
     version_delta: int,
     minor_delta: int,
@@ -230,7 +230,7 @@ async def test_migration_version_downgrade_guard(
         ("deconz", 115200, None, 115200, None),
     ],
 )
-@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=None))
 async def test_migration_baudrate_and_flow_control(
     radio_type: str,
     old_baudrate: int,

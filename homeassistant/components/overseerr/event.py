@@ -10,7 +10,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, EVENT_KEY
+from .const import DOMAIN, EVENT_KEY
 from .coordinator import OverseerrConfigEntry, OverseerrCoordinator
 from .entity import OverseerrEntity
 
