@@ -135,6 +135,16 @@
       ],
       "supported_by": "opower"
     },
+    "aerosmart": {
+      "name": "aerosmart",
+      "integration_type": "device",
+      "categories": [
+        "climate.fans_ventilation",
+        "climate.heat_pumps_air_conditioning"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "aftership": {
       "name": "AfterShip",
       "integration_type": "service",
@@ -322,6 +332,7 @@
       "iot_class": "local_push"
     },
     "alert": {
+      "name": "Alert",
       "integration_type": "hub",
       "categories": [
         "helpers",
@@ -653,7 +664,8 @@
           "iot_class": "local_push",
           "categories": [
             "hubs_protocols"
-          ]
+          ],
+          "name": "HomeKit Device"
         },
         "homekit": {
           "integration_type": "hub",
@@ -953,6 +965,7 @@
       }
     },
     "aurora": {
+      "name": "Aurora",
       "integration_type": "service",
       "categories": [
         "weather_alerts.forecasts"
@@ -1581,6 +1594,7 @@
       "iot_class": "cloud_polling"
     },
     "cert_expiry": {
+      "name": "Certificate Expiry",
       "integration_type": "service",
       "categories": [
         "computers_network.monitoring"
@@ -1789,6 +1803,7 @@
       "iot_class": "cloud_polling"
     },
     "collection_image": {
+      "name": "Collection image",
       "integration_type": "service",
       "categories": [
         "helpers",
@@ -1963,6 +1978,7 @@
       "supported_by": "overkiz"
     },
     "cpuspeed": {
+      "name": "CPU Speed",
       "integration_type": "device",
       "categories": [
         "computers_network.monitoring"
@@ -2133,6 +2149,7 @@
       "iot_class": "local_polling"
     },
     "demo": {
+      "name": "Demo",
       "integration_type": "hub",
       "categories": [
         "computers_network.cloud_developer_tools"
@@ -2862,6 +2879,7 @@
       "iot_class": "local_push"
     },
     "emulated_roku": {
+      "name": "Emulated Roku",
       "integration_type": "hub",
       "categories": [
         "other_ecosystems",
@@ -2871,6 +2889,7 @@
       "iot_class": "local_push"
     },
     "energenie_power_sockets": {
+      "name": "Energenie Power Sockets",
       "integration_type": "device",
       "categories": [
         "plugs_switches"
@@ -3258,6 +3277,7 @@
       "iot_class": "local_polling"
     },
     "filesize": {
+      "name": "File size",
       "integration_type": "hub",
       "categories": [
         "computers_network.monitoring"
@@ -3774,6 +3794,7 @@
       "iot_class": "cloud_polling"
     },
     "garages_amsterdam": {
+      "name": "Garages Amsterdam",
       "integration_type": "service",
       "categories": [
         "local_services"
@@ -3817,6 +3838,7 @@
       "iot_class": "cloud_polling"
     },
     "generic": {
+      "name": "Generic Camera",
       "integration_type": "device",
       "categories": [
         "security_safety.cameras"
@@ -4158,7 +4180,8 @@
           "iot_class": "cloud_polling",
           "categories": [
             "vehicles_transport"
-          ]
+          ],
+          "name": "Google Maps Travel Time"
         },
         "google_weather": {
           "integration_type": "service",
@@ -4342,6 +4365,7 @@
       "iot_class": "local_push"
     },
     "growatt_server": {
+      "name": "Growatt",
       "integration_type": "hub",
       "categories": [
         "energy.solar_batteries"
@@ -4699,6 +4723,7 @@
       "iot_class": "local_push"
     },
     "holiday": {
+      "name": "Holiday",
       "integration_type": "hub",
       "categories": [
         "productivity_information.calendars_todos"
@@ -5434,6 +5459,7 @@
       "iot_class": "cloud_polling"
     },
     "irm_kmi": {
+      "name": "IRM KMI Weather Belgium",
       "integration_type": "service",
       "categories": [
         "weather_alerts.forecasts"
@@ -5469,6 +5495,7 @@
       "iot_class": "local_polling"
     },
     "islamic_prayer_times": {
+      "name": "Islamic Prayer Times",
       "integration_type": "service",
       "categories": [
         "productivity_information.calendars_todos"
@@ -6317,6 +6344,7 @@
       "iot_class": "cloud_push"
     },
     "local_calendar": {
+      "name": "Local calendar",
       "integration_type": "hub",
       "categories": [
         "productivity_information.calendars_todos"
@@ -6335,6 +6363,7 @@
       "iot_class": "local_polling"
     },
     "local_ip": {
+      "name": "Local IP Address",
       "integration_type": "hub",
       "categories": [
         "computers_network.routers_network"
@@ -6344,6 +6373,7 @@
       "single_config_entry": true
     },
     "local_todo": {
+      "name": "Local to-do",
       "integration_type": "hub",
       "categories": [
         "productivity_information.calendars_todos"
@@ -7047,6 +7077,7 @@
       "iot_class": "local_push"
     },
     "mobile_app": {
+      "name": "Mobile App",
       "integration_type": "device",
       "categories": [
         "presence_location.phones_companion_apps"
@@ -7092,6 +7123,7 @@
       "iot_class": "local_polling"
     },
     "moehlenhoff_alpha2": {
+      "name": "M\u00f6hlenhoff Alpha 2",
       "integration_type": "hub",
       "categories": [
         "climate.thermostats_heating"
@@ -7135,6 +7167,7 @@
       "iot_class": "cloud_polling"
     },
     "moon": {
+      "name": "Moon",
       "integration_type": "service",
       "categories": [
         "weather_alerts"
@@ -7580,6 +7613,7 @@
       "supported_by": "overkiz"
     },
     "nextbus": {
+      "name": "NextBus",
       "integration_type": "service",
       "categories": [
         "vehicles_transport.public_transport"
@@ -7688,6 +7722,7 @@
       "iot_class": "cloud_polling"
     },
     "nmap_tracker": {
+      "name": "Nmap Tracker",
       "integration_type": "hub",
       "categories": [
         "presence_location.network_presence"
@@ -8708,6 +8743,7 @@
       "iot_class": "cloud_push"
     },
     "plant": {
+      "name": "Plant Monitor",
       "integration_type": "hub",
       "categories": [
         "garden_plants",
@@ -8906,6 +8942,7 @@
       "iot_class": "cloud_push"
     },
     "proximity": {
+      "name": "Proximity",
       "integration_type": "hub",
       "categories": [
         "presence_location",
@@ -9292,7 +9329,8 @@
           "categories": [
             "diy_makers.boards_hardware",
             "computers_network.monitoring"
-          ]
+          ],
+          "name": "Raspberry Pi Power Supply Checker"
         },
         "remote_rpi_gpio": {
           "integration_type": "hub",
@@ -9407,6 +9445,7 @@
       "iot_class": "cloud_polling"
     },
     "remote_calendar": {
+      "name": "Remote Calendar",
       "integration_type": "service",
       "categories": [
         "productivity_information.calendars_todos"
@@ -9920,6 +9959,7 @@
       "iot_class": "local_push"
     },
     "season": {
+      "name": "Season",
       "integration_type": "service",
       "categories": [
         "helpers.calculate_value"
@@ -10160,6 +10200,7 @@
       "iot_class": "cloud_polling"
     },
     "shopping_list": {
+      "name": "Shopping list",
       "integration_type": "hub",
       "categories": [
         "productivity_information.shopping_groceries"
@@ -10942,6 +10983,7 @@
       "iot_class": "cloud_polling"
     },
     "sun": {
+      "name": "Sun",
       "integration_type": "service",
       "categories": [
         "weather_alerts.forecasts"
@@ -11594,6 +11636,7 @@
       }
     },
     "time_date": {
+      "name": "Time & Date",
       "integration_type": "service",
       "categories": [
         "helpers.calculate_value"
@@ -12122,6 +12165,7 @@
       "supported_by": "motion_blinds"
     },
     "uptime": {
+      "name": "Uptime",
       "integration_type": "service",
       "categories": [
         "computers_network.monitoring"
@@ -12212,6 +12256,7 @@
       "iot_class": "cloud_polling"
     },
     "vegehub": {
+      "name": "Vegetronix VegeHub",
       "integration_type": "hub",
       "categories": [
         "garden_plants"
@@ -12283,6 +12328,7 @@
       "iot_class": "local_polling"
     },
     "version": {
+      "name": "Version",
       "integration_type": "hub",
       "categories": [
         "computers_network.monitoring"
@@ -12553,6 +12599,7 @@
       "iot_class": "local_polling"
     },
     "waze_travel_time": {
+      "name": "Waze Travel Time",
       "integration_type": "service",
       "categories": [
         "vehicles_transport"
@@ -12745,6 +12792,7 @@
       "iot_class": "cloud_polling"
     },
     "workday": {
+      "name": "Workday",
       "integration_type": "service",
       "categories": [
         "productivity_information.calendars_todos",
@@ -13175,6 +13223,7 @@
       "iot_class": "cloud_polling"
     },
     "zodiac": {
+      "name": "Zodiac",
       "integration_type": "hub",
       "categories": [
         "helpers.calculate_value"
@@ -13242,6 +13291,7 @@
   },
   "helper": {
     "counter": {
+      "name": "Counter",
       "integration_type": "helper",
       "categories": [
         "helpers.store_value"
@@ -13249,6 +13299,7 @@
       "config_flow": false
     },
     "derivative": {
+      "name": "Derivative",
       "integration_type": "helper",
       "categories": [
         "helpers.calculate_value"
@@ -13257,6 +13308,7 @@
       "iot_class": "calculated"
     },
     "filter": {
+      "name": "Filter",
       "integration_type": "helper",
       "categories": [
         "helpers.calculate_value"
@@ -13265,6 +13317,7 @@
       "iot_class": "local_push"
     },
     "generic_hygrostat": {
+      "name": "Generic hygrostat",
       "integration_type": "helper",
       "categories": [
         "helpers",
@@ -13274,6 +13327,7 @@
       "iot_class": "local_polling"
     },
     "generic_thermostat": {
+      "name": "Generic Thermostat",
       "integration_type": "helper",
       "categories": [
         "helpers",
@@ -13283,6 +13337,7 @@
       "iot_class": "local_polling"
     },
     "group": {
+      "name": "Group",
       "integration_type": "helper",
       "categories": [
         "helpers.calculate_value"
@@ -13291,6 +13346,7 @@
       "iot_class": "calculated"
     },
     "history_stats": {
+      "name": "History Stats",
       "integration_type": "helper",
       "categories": [
         "helpers.calculate_value"
@@ -13299,6 +13355,7 @@
       "iot_class": "local_polling"
     },
     "input_boolean": {
+      "name": "Input boolean",
       "integration_type": "helper",
       "categories": [
         "helpers.store_value"
@@ -13306,6 +13363,7 @@
       "config_flow": false
     },
     "input_button": {
+      "name": "Input button",
       "integration_type": "helper",
       "categories": [
         "helpers"
@@ -13313,6 +13371,7 @@
       "config_flow": false
     },
     "input_datetime": {
+      "name": "Input Datetime",
       "integration_type": "helper",
       "categories": [
         "helpers.store_value"
@@ -13320,6 +13379,7 @@
       "config_flow": false
     },
     "input_number": {
+      "name": "Input number",
       "integration_type": "helper",
       "categories": [
         "helpers.store_value"
@@ -13327,6 +13387,7 @@
       "config_flow": false
     },
     "input_select": {
+      "name": "Input select",
       "integration_type": "helper",
       "categories": [
         "helpers.store_value"
@@ -13334,6 +13395,7 @@
       "config_flow": false
     },
     "input_text": {
+      "name": "Input text",
       "integration_type": "helper",
       "categories": [
         "helpers.store_value"
@@ -13341,6 +13403,7 @@
       "config_flow": false
     },
     "integration": {
+      "name": "Integral",
       "integration_type": "helper",
       "categories": [
         "helpers.calculate_value",
@@ -13360,6 +13423,7 @@
       "iot_class": "calculated"
     },
     "min_max": {
+      "name": "Min/Max",
       "integration_type": "helper",
       "categories": [
         "helpers.calculate_value"
@@ -13368,6 +13432,7 @@
       "iot_class": "calculated"
     },
     "mold_indicator": {
+      "name": "Mold Indicator",
       "integration_type": "helper",
       "categories": [
         "helpers.calculate_value",
@@ -13386,6 +13451,7 @@
       "iot_class": "local_polling"
     },
     "random": {
+      "name": "Random",
       "integration_type": "helper",
       "categories": [
         "helpers"
@@ -13394,6 +13460,7 @@
       "iot_class": "calculated"
     },
     "schedule": {
+      "name": "Schedule",
       "integration_type": "helper",
       "categories": [
         "helpers.store_value"
@@ -13401,6 +13468,7 @@
       "config_flow": false
     },
     "statistics": {
+      "name": "Statistics",
       "integration_type": "helper",
       "categories": [
         "helpers.calculate_value"
@@ -13409,6 +13477,7 @@
       "iot_class": "local_polling"
     },
     "switch_as_x": {
+      "name": "Change device type of a switch",
       "integration_type": "helper",
       "categories": [
         "helpers"
@@ -13426,6 +13495,7 @@
       "iot_class": "local_push"
     },
     "threshold": {
+      "name": "Threshold",
       "integration_type": "helper",
       "categories": [
         "helpers.calculate_value"
@@ -13434,6 +13504,7 @@
       "iot_class": "local_polling"
     },
     "timer": {
+      "name": "Timer",
       "integration_type": "helper",
       "categories": [
         "helpers.store_value"
@@ -13441,6 +13512,7 @@
       "config_flow": false
     },
     "tod": {
+      "name": "Times of the Day",
       "integration_type": "helper",
       "categories": [
         "helpers.calculate_value"
@@ -13449,6 +13521,7 @@
       "iot_class": "calculated"
     },
     "trend": {
+      "name": "Trend",
       "integration_type": "helper",
       "categories": [
         "helpers.calculate_value"
@@ -13457,6 +13530,7 @@
       "iot_class": "calculated"
     },
     "utility_meter": {
+      "name": "Utility Meter",
       "integration_type": "helper",
       "categories": [
         "helpers.calculate_value",
@@ -13466,70 +13540,5 @@
       "iot_class": "local_push"
     }
   },
-  "translated_name": [
-    "alert",
-    "aurora",
-    "cert_expiry",
-    "collection_image",
-    "counter",
-    "cpuspeed",
-    "demo",
-    "derivative",
-    "emulated_roku",
-    "energenie_power_sockets",
-    "filesize",
-    "filter",
-    "garages_amsterdam",
-    "generic",
-    "generic_hygrostat",
-    "generic_thermostat",
-    "google_travel_time",
-    "group",
-    "growatt_server",
-    "history_stats",
-    "holiday",
-    "homekit_controller",
-    "input_boolean",
-    "input_button",
-    "input_datetime",
-    "input_number",
-    "input_select",
-    "input_text",
-    "integration",
-    "irm_kmi",
-    "islamic_prayer_times",
-    "local_calendar",
-    "local_ip",
-    "local_todo",
-    "min_max",
-    "mobile_app",
-    "moehlenhoff_alpha2",
-    "mold_indicator",
-    "moon",
-    "nextbus",
-    "nmap_tracker",
-    "plant",
-    "proximity",
-    "random",
-    "remote_calendar",
-    "rpi_power",
-    "schedule",
-    "season",
-    "shopping_list",
-    "statistics",
-    "sun",
-    "switch_as_x",
-    "threshold",
-    "time_date",
-    "timer",
-    "tod",
-    "trend",
-    "uptime",
-    "utility_meter",
-    "vegehub",
-    "version",
-    "waze_travel_time",
-    "workday",
-    "zodiac"
-  ]
+  "translated_name": []
 }
