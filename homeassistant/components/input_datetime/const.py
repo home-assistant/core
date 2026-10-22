@@ -46,3 +46,19 @@ class InputDatetimeEntityStateAttribute(StrEnum):
     MINUTE = "minute"
     SECOND = "second"
     TIMESTAMP = "timestamp"
+
+
+class InputDatetimeService(StrEnum):
+    """Store keys for input datetime services."""
+
+    RELOAD = "reload"
+    SET_DATETIME = "set_datetime"
+
+
+class InputDatetimeServiceArgument(StrEnum):
+    """Store keys for input datetime service arguments."""
+
+    DATE = "date"
+    DATETIME = "datetime"
+    TIME = "time"
+    TIMESTAMP = "timestamp"
