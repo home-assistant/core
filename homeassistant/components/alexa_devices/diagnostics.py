@@ -80,4 +80,8 @@ def build_device_data(device: AmazonDevice) -> dict[str, Any]:
             key: {instance: asdict(feature) for instance, feature in instances.items()}
             for key, instances in device.features.items()
         },
+        "unsupported features": {
+            key: {instance: asdict(feature) for instance, feature in instances.items()}
+            for key, instances in device.unsupported_features.items()
+        },
     }

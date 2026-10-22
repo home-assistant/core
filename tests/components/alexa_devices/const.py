@@ -108,7 +108,25 @@ TEST_DEVICE_1 = AmazonDevice(
             )
         }
     },
-    unsupported_features={},
+    unsupported_features={
+        "toggle": {
+            "11": AmazonDeviceFeature(
+                properties=["toggleState"],
+                supported_operations=["turnOn", "turnOff"],
+                supported_modes=[],
+                friendly_name="Enable LED Indicator",
+                minimum_value=None,
+                maximum_value=None,
+                precision=None,
+                unit_of_measure=None,
+                raw_configuration={
+                    "__typename": "ToggleConfiguration",
+                    "friendlyName": {"value": {"text": "Enable LED Indicator"}},
+                },
+                sensor_keys={},
+            )
+        },
+    },
 )
 
 TEST_DEVICE_2_SN = "echo_test_2_serial_number"

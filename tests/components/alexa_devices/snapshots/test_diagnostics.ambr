@@ -64,6 +64,36 @@
     }),
     'serial number': 'echo_test_serial_number',
     'software version': 'echo_test_software_version',
+    'unsupported features': dict({
+      'toggle': dict({
+        '11': dict({
+          'friendly_name': 'Enable LED Indicator',
+          'maximum_value': None,
+          'minimum_value': None,
+          'precision': None,
+          'properties': list([
+            'toggleState',
+          ]),
+          'raw_configuration': dict({
+            '__typename': 'ToggleConfiguration',
+            'friendlyName': dict({
+              'value': dict({
+                'text': 'Enable LED Indicator',
+              }),
+            }),
+          }),
+          'sensor_keys': dict({
+          }),
+          'supported_modes': list([
+          ]),
+          'supported_operations': list([
+            'turnOn',
+            'turnOff',
+          ]),
+          'unit_of_measure': None,
+        }),
+      }),
+    }),
   })
 # ---
 # name: test_entry_diagnostics
@@ -134,6 +164,36 @@
           }),
           'serial number': 'echo_test_serial_number',
           'software version': 'echo_test_software_version',
+          'unsupported features': dict({
+            'toggle': dict({
+              '11': dict({
+                'friendly_name': 'Enable LED Indicator',
+                'maximum_value': None,
+                'minimum_value': None,
+                'precision': None,
+                'properties': list([
+                  'toggleState',
+                ]),
+                'raw_configuration': dict({
+                  '__typename': 'ToggleConfiguration',
+                  'friendlyName': dict({
+                    'value': dict({
+                      'text': 'Enable LED Indicator',
+                    }),
+                  }),
+                }),
+                'sensor_keys': dict({
+                }),
+                'supported_modes': list([
+                ]),
+                'supported_operations': list([
+                  'turnOn',
+                  'turnOff',
+                ]),
+                'unit_of_measure': None,
+              }),
+            }),
+          }),
         }),
       ]),
       'last_exception': 'None',
