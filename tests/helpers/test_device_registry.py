@@ -13541,7 +13541,6 @@ async def test_get_or_create_child_from_info(
     child_device = device_registry.async_get_or_create_child_from_info(
         config_entry_id=config_entry_id,
         config_subentry_id="mock-subentry-id-1-1",
-        disabled_by=dr.DeviceEntryDisabler.INTEGRATION,
         device_info=dr.ChildDeviceInfo(
             identifiers={("test", "strip_outlet_1")},
             parent_device_id=parent.id,
@@ -13550,7 +13549,7 @@ async def test_get_or_create_child_from_info(
     )
     assert isinstance(child_device, dr.ChildDeviceEntry)
     assert child_device.config_subentry_id == "mock-subentry-id-1-1"
-    assert child_device.disabled_by is dr.DeviceEntryDisabler.INTEGRATION
+    assert child_device.disabled_by is None
     assert child_device.identifiers == {("test", "strip_outlet_1")}
     assert child_device.name == "Outlet 1"
     assert child_device.parent_device_id == parent.id
@@ -13576,14 +13575,13 @@ async def test_get_or_create_from_info(
     device = device_registry.async_get_or_create_from_info(
         config_entry_id=config_entry_id,
         config_subentry_id="mock-subentry-id-1-1",
-        disabled_by=dr.DeviceEntryDisabler.INTEGRATION,
         device_info=dr.DeviceInfo(
             identifiers={("test", "strip")}, manufacturer="Acme", name="Power strip"
         ),
     )
     assert isinstance(device, dr.DeviceEntry)
     assert device.config_subentry_id == "mock-subentry-id-1-1"
-    assert device.disabled_by is dr.DeviceEntryDisabler.INTEGRATION
+    assert device.disabled_by is None
     assert device.identifiers == {("test", "strip")}
     assert device.manufacturer == "Acme"
     assert device.name == "Power strip"
