@@ -1594,6 +1594,101 @@ async def test_filter_on_load(
     assert entry_disabled_user.disabled_by is er.RegistryEntryDisabler.USER
 
 
+@pytest.mark.parametrize("load_registries", [False])
+async def test_reconcile_disabled_by_on_load(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test stale config entry and device disables are reconciled when loading."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    disabled_config_entry = MockConfigEntry(
+        domain="light", disabled_by=config_entries.ConfigEntryDisabler.USER
+    )
+    disabled_config_entry.add_to_hass(hass)
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("test", "enabled")}
+    )
+    disabled_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "disabled")},
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+
+    def entity(entity_id: str, **data: Any) -> dict[str, Any]:
+        return {
+            "entity_id": entity_id,
+            "platform": "hue",
+            "unique_id": entity_id,
+            "config_entry_id": config_entry.entry_id,
+            **data,
+        }
+
+    hass_storage[er.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "data": {
+            "entities": [
+                entity("light.stale_device", disabled_by="device", device_id=device.id),
+                entity(
+                    "light.disabled_device",
+                    disabled_by="device",
+                    device_id=disabled_device.id,
+                ),
+                entity(
+                    "light.device_on_disabled_config_entry",
+                    disabled_by="device",
+                    device_id=device.id,
+                    config_entry_id=disabled_config_entry.entry_id,
+                ),
+                entity("light.missing_device", disabled_by="device", device_id="gone"),
+                entity("light.stale_config_entry", disabled_by="config_entry"),
+                entity(
+                    "light.disabled_config_entry",
+                    disabled_by="config_entry",
+                    config_entry_id=disabled_config_entry.entry_id,
+                ),
+                entity("light.user", disabled_by="user", device_id=device.id),
+                entity(
+                    "light.enabled_on_disabled_device", device_id=disabled_device.id
+                ),
+                entity(
+                    "light.enabled_on_disabled_config_entry",
+                    config_entry_id=disabled_config_entry.entry_id,
+                ),
+            ]
+        },
+    }
+
+    await er.async_load(hass)
+    registry = er.async_get(hass)
+
+    assert registry.async_get("light.stale_device").disabled_by is None
+    assert registry.async_get("light.disabled_device").disabled_by is (
+        er.RegistryEntryDisabler.DEVICE
+    )
+    assert registry.async_get("light.device_on_disabled_config_entry").disabled_by is (
+        er.RegistryEntryDisabler.CONFIG_ENTRY
+    )
+    assert registry.async_get("light.missing_device").disabled_by is None
+    assert registry.async_get("light.stale_config_entry").disabled_by is None
+    assert registry.async_get("light.disabled_config_entry").disabled_by is (
+        er.RegistryEntryDisabler.CONFIG_ENTRY
+    )
+    assert registry.async_get("light.user").disabled_by is (
+        er.RegistryEntryDisabler.USER
+    )
+    assert registry.async_get("light.enabled_on_disabled_device").disabled_by is (
+        er.RegistryEntryDisabler.DEVICE
+    )
+    assert registry.async_get("light.enabled_on_disabled_config_entry").disabled_by is (
+        er.RegistryEntryDisabler.CONFIG_ENTRY
+    )
+
+
 async def test_async_load_twice_raises(hass: HomeAssistant) -> None:
     """Test loading the entity registry twice raises."""
     registry = er.async_get(hass)
@@ -3294,8 +3389,8 @@ async def test_update_entity_recalculates_original_name_unprefixed(
         (
             None,
             er.RegistryEntryDisabler.DEVICE,
-            er.RegistryEntryDisabler.DEVICE,
-            {},
+            None,
+            {"disabled_by": er.RegistryEntryDisabler.DEVICE},
         ),
         (
             None,
@@ -3329,11 +3424,13 @@ async def test_update_entity_recalculates_original_name_unprefixed(
             er.RegistryEntryDisabler.CONFIG_ENTRY,
             {},
         ),
+        # Config entry disabled, entity was disabled by device.
+        # The config entry takes precedence when updated.
         (
             config_entries.ConfigEntryDisabler.USER,
             er.RegistryEntryDisabler.DEVICE,
-            er.RegistryEntryDisabler.DEVICE,
-            {},
+            er.RegistryEntryDisabler.CONFIG_ENTRY,
+            {"disabled_by": er.RegistryEntryDisabler.DEVICE},
         ),
         (
             config_entries.ConfigEntryDisabler.USER,
@@ -3467,7 +3564,11 @@ async def test_update_entity_disabled_by(
             None,
             {"disabled_by": er.RegistryEntryDisabler.CONFIG_ENTRY},
         ),
-        (er.RegistryEntryDisabler.DEVICE, er.RegistryEntryDisabler.DEVICE, {}),
+        (
+            er.RegistryEntryDisabler.DEVICE,
+            None,
+            {"disabled_by": er.RegistryEntryDisabler.DEVICE},
+        ),
         (er.RegistryEntryDisabler.HASS, er.RegistryEntryDisabler.HASS, {}),
         (
             er.RegistryEntryDisabler.INTEGRATION,
@@ -3575,6 +3676,123 @@ async def test_update_entity_disabled_by_2(
     }
 
 
+@pytest.mark.parametrize(
+    ("entity_disabled_by", "entity_disabled_by_on_disabled_device"),
+    [
+        (None, er.RegistryEntryDisabler.DEVICE),
+        (er.RegistryEntryDisabler.USER, er.RegistryEntryDisabler.USER),
+    ],
+)
+async def test_update_entity_device_id_disabled_by(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    entity_disabled_by: er.RegistryEntryDisabler | None,
+    entity_disabled_by_on_disabled_device: er.RegistryEntryDisabler | None,
+) -> None:
+    """Check the disabled_by flag follows the device when an entity is moved."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    disabled_device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "AB:CD:EF:12:34:56")},
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        disabled_by=entity_disabled_by,
+    )
+    assert entry.disabled_by is entity_disabled_by
+
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, device_id=disabled_device_entry.id
+    )
+    assert entry.disabled_by is entity_disabled_by_on_disabled_device
+
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, device_id=device_entry.id
+    )
+    assert entry.disabled_by is entity_disabled_by
+
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, device_id=disabled_device_entry.id
+    )
+    entry = entity_registry.async_update_entity(entry.entity_id, device_id=None)
+    assert entry.disabled_by is entity_disabled_by
+
+
+@pytest.mark.parametrize(
+    ("entity_disabled_by", "expected_disabled_by"),
+    [
+        (None, er.RegistryEntryDisabler.DEVICE),
+        (er.RegistryEntryDisabler.USER, er.RegistryEntryDisabler.USER),
+    ],
+)
+async def test_create_entity_on_disabled_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    entity_disabled_by: er.RegistryEntryDisabler | None,
+    expected_disabled_by: er.RegistryEntryDisabler | None,
+) -> None:
+    """Check an entity created on a disabled device is disabled by it."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        disabled_by=entity_disabled_by,
+    )
+    assert entry.disabled_by is expected_disabled_by
+
+
+async def test_remove_disabled_device_enables_unlinked_entities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Check an entity of another config entry is enabled when its disabled device is removed."""
+    owner_config_entry = MockConfigEntry(domain="light")
+    owner_config_entry.add_to_hass(hass)
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=owner_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        "light", "hue", "5678", config_entry=config_entry, device_id=device_entry.id
+    )
+    device_registry.async_update_device(
+        device_entry.id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    entry = entity_registry.async_get(entry.entity_id)
+    assert entry.disabled_by is er.RegistryEntryDisabler.DEVICE
+
+    device_registry.async_remove_device(device_entry.id)
+    await hass.async_block_till_done()
+    entry = entity_registry.async_get(entry.entity_id)
+    assert entry.device_id is None
+    assert entry.disabled_by is None
+
+
 async def test_update_entity_options(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
@@ -3656,6 +3874,31 @@ async def test_disabled_by_config_entry_pref(
         disabled_by=er.RegistryEntryDisabler.USER,
     )
     assert entry2.disabled_by is er.RegistryEntryDisabler.USER
+
+
+async def test_disabled_by_config_entry_pref_on_disabled_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the config entry preference takes precedence over a disabled device."""
+    config_entry = MockConfigEntry(domain="light", pref_disable_new_entities=True)
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
+    entry = entity_registry.async_get_or_create(
+        "light", "hue", "5678", config_entry=config_entry, device_id=device_entry.id
+    )
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    # The entity stays disabled by the integration when the device is enabled
+    device_registry.async_update_device(device_entry.id, disabled_by=None)
+    await hass.async_block_till_done()
+    entry = entity_registry.async_get(entry.entity_id)
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 async def test_hidden_by(entity_registry: er.EntityRegistry) -> None:
@@ -4555,9 +4798,10 @@ async def test_disable_device_disables_entities(
     entry2 = entity_registry.async_get(entry2.entity_id)
     assert entry2.disabled
     assert entry2.disabled_by is er.RegistryEntryDisabler.USER
+    # The config entry is not disabled, so the entity follows the device
     entry3 = entity_registry.async_get(entry3.entity_id)
     assert entry3.disabled
-    assert entry3.disabled_by is er.RegistryEntryDisabler.CONFIG_ENTRY
+    assert entry3.disabled_by is er.RegistryEntryDisabler.DEVICE
 
     device_registry.async_update_device(device_entry.id, disabled_by=None)
     await hass.async_block_till_done()
@@ -4568,8 +4812,7 @@ async def test_disable_device_disables_entities(
     assert entry2.disabled
     assert entry2.disabled_by is er.RegistryEntryDisabler.USER
     entry3 = entity_registry.async_get(entry3.entity_id)
-    assert entry3.disabled
-    assert entry3.disabled_by is er.RegistryEntryDisabler.CONFIG_ENTRY
+    assert not entry3.disabled_by
 
 
 async def test_disable_config_entry_disables_entities(
@@ -4625,9 +4868,10 @@ async def test_disable_config_entry_disables_entities(
     entry2 = entity_registry.async_get(entry2.entity_id)
     assert entry2.disabled
     assert entry2.disabled_by is er.RegistryEntryDisabler.USER
+    # The config entry takes precedence over the device
     entry3 = entity_registry.async_get(entry3.entity_id)
     assert entry3.disabled
-    assert entry3.disabled_by is er.RegistryEntryDisabler.DEVICE
+    assert entry3.disabled_by is er.RegistryEntryDisabler.CONFIG_ENTRY
 
     await hass.config_entries.async_set_disabled_by(config_entry.entry_id, None)
     await hass.async_block_till_done()
@@ -4637,9 +4881,157 @@ async def test_disable_config_entry_disables_entities(
     entry2 = entity_registry.async_get(entry2.entity_id)
     assert entry2.disabled
     assert entry2.disabled_by is er.RegistryEntryDisabler.USER
-    # The device was re-enabled, so entity disabled by the device will be re-enabled too
+    # Neither the config entry nor the device is disabled anymore
     entry3 = entity_registry.async_get(entry3.entity_id)
     assert not entry3.disabled_by
+
+
+async def test_enable_config_entry_with_user_disabled_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test enabling a config entry keeps entities of a user disabled device disabled."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        "light", "hue", "5678", config_entry=config_entry, device_id=device_entry.id
+    )
+    assert entry.disabled_by is None
+
+    await hass.config_entries.async_set_disabled_by(
+        config_entry.entry_id, config_entries.ConfigEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    entry = entity_registry.async_get(entry.entity_id)
+    assert entry.disabled_by is er.RegistryEntryDisabler.CONFIG_ENTRY
+
+    # Disabling the device while the config entry is disabled
+    device_registry.async_update_device(
+        device_entry.id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    entry = entity_registry.async_get(entry.entity_id)
+    assert entry.disabled_by is er.RegistryEntryDisabler.CONFIG_ENTRY
+
+    # Enabling the config entry while the device is disabled
+    await hass.config_entries.async_set_disabled_by(config_entry.entry_id, None)
+    await hass.async_block_till_done()
+    assert device_registry.async_get(device_entry.id).disabled_by is (
+        dr.DeviceEntryDisabler.USER
+    )
+    entry = entity_registry.async_get(entry.entity_id)
+    assert entry.disabled_by is er.RegistryEntryDisabler.DEVICE
+
+    device_registry.async_update_device(device_entry.id, disabled_by=None)
+    await hass.async_block_till_done()
+    entry = entity_registry.async_get(entry.entity_id)
+    assert entry.disabled_by is None
+
+
+async def test_enable_device_with_disabled_config_entry(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test enabling a device keeps entities of a disabled config entry disabled.
+
+    The device is owned by another config entry, so it can be enabled while the
+    entity's config entry is disabled.
+    """
+    owner_config_entry = MockConfigEntry(domain="light")
+    owner_config_entry.add_to_hass(hass)
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=owner_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        "light", "hue", "5678", config_entry=config_entry, device_id=device_entry.id
+    )
+    assert entry.disabled_by is None
+
+    device_registry.async_update_device(
+        device_entry.id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    entry = entity_registry.async_get(entry.entity_id)
+    assert entry.disabled_by is er.RegistryEntryDisabler.DEVICE
+
+    # The config entry takes precedence over the device
+    await hass.config_entries.async_set_disabled_by(
+        config_entry.entry_id, config_entries.ConfigEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    entry = entity_registry.async_get(entry.entity_id)
+    assert entry.disabled_by is er.RegistryEntryDisabler.CONFIG_ENTRY
+
+    # Enabling the device while the entity's config entry is disabled
+    device_registry.async_update_device(device_entry.id, disabled_by=None)
+    await hass.async_block_till_done()
+    assert device_registry.async_get(device_entry.id).disabled_by is None
+    entry = entity_registry.async_get(entry.entity_id)
+    assert entry.disabled_by is er.RegistryEntryDisabler.CONFIG_ENTRY
+
+    await hass.config_entries.async_set_disabled_by(config_entry.entry_id, None)
+    await hass.async_block_till_done()
+    entry = entity_registry.async_get(entry.entity_id)
+    assert entry.disabled_by is None
+
+
+async def test_disable_config_entry_disables_entities_on_its_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test disabling a config entry disables other config entries' entities on its devices."""
+    owner_config_entry = MockConfigEntry(domain="light")
+    owner_config_entry.add_to_hass(hass)
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=owner_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        "light", "hue", "5678", config_entry=config_entry, device_id=device_entry.id
+    )
+    assert entry.disabled_by is None
+
+    await hass.config_entries.async_set_disabled_by(
+        owner_config_entry.entry_id, config_entries.ConfigEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    assert device_registry.async_get(device_entry.id).disabled_by is (
+        dr.DeviceEntryDisabler.CONFIG_ENTRY
+    )
+    entry = entity_registry.async_get(entry.entity_id)
+    assert entry.disabled_by is er.RegistryEntryDisabler.DEVICE
+
+    # The config entry takes precedence over the device
+    await hass.config_entries.async_set_disabled_by(
+        config_entry.entry_id, config_entries.ConfigEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    entry = entity_registry.async_get(entry.entity_id)
+    assert entry.disabled_by is er.RegistryEntryDisabler.CONFIG_ENTRY
+
+    # Enabling the device's config entry while the entity's config entry is disabled
+    await hass.config_entries.async_set_disabled_by(owner_config_entry.entry_id, None)
+    await hass.async_block_till_done()
+    assert device_registry.async_get(device_entry.id).disabled_by is None
+    entry = entity_registry.async_get(entry.entity_id)
+    assert entry.disabled_by is er.RegistryEntryDisabler.CONFIG_ENTRY
+
+    await hass.config_entries.async_set_disabled_by(config_entry.entry_id, None)
+    await hass.async_block_till_done()
+    entry = entity_registry.async_get(entry.entity_id)
+    assert entry.disabled_by is None
 
 
 async def test_disabled_entities_excluded_from_entity_list(
@@ -5824,8 +6216,8 @@ async def test_restore_migrated_entity_initial_options(
             None,
             None,
         ),
-        # Config entry not disabled, entity was disabled by config entry.
-        # Entity not disabled when restored.
+        # Config entry and device not disabled, entity was disabled by config
+        # entry or device. Entity not disabled when restored.
         (
             None,
             er.RegistryEntryDisabler.CONFIG_ENTRY,
@@ -5834,7 +6226,7 @@ async def test_restore_migrated_entity_initial_options(
         (
             None,
             er.RegistryEntryDisabler.DEVICE,
-            er.RegistryEntryDisabler.DEVICE,
+            None,
         ),
         (
             None,
@@ -5863,10 +6255,12 @@ async def test_restore_migrated_entity_initial_options(
             er.RegistryEntryDisabler.CONFIG_ENTRY,
             er.RegistryEntryDisabler.CONFIG_ENTRY,
         ),
+        # Config entry disabled, entity was disabled by device.
+        # The config entry takes precedence when restored.
         (
             config_entries.ConfigEntryDisabler.USER,
             er.RegistryEntryDisabler.DEVICE,
-            er.RegistryEntryDisabler.DEVICE,
+            er.RegistryEntryDisabler.CONFIG_ENTRY,
         ),
         (
             config_entries.ConfigEntryDisabler.USER,
@@ -6003,10 +6397,10 @@ async def test_restore_entity_disabled_by(
     ("entity_disabled_by_initial", "entity_disabled_by_restored"),
     [
         (None, None),
-        # Config entry not disabled, entity was disabled by config entry.
-        # Entity not disabled when restored.
+        # Config entry and device not disabled, entity was disabled by config
+        # entry or device. Entity not disabled when restored.
         (er.RegistryEntryDisabler.CONFIG_ENTRY, None),
-        (er.RegistryEntryDisabler.DEVICE, er.RegistryEntryDisabler.DEVICE),
+        (er.RegistryEntryDisabler.DEVICE, None),
         (er.RegistryEntryDisabler.HASS, er.RegistryEntryDisabler.HASS),
         (er.RegistryEntryDisabler.INTEGRATION, er.RegistryEntryDisabler.INTEGRATION),
         (er.RegistryEntryDisabler.USER, er.RegistryEntryDisabler.USER),
@@ -6126,6 +6520,172 @@ async def test_restore_entity_disabled_by_2(
     assert update_events[0].data == {"action": "create", "entity_id": "light.hue_5678"}
     assert update_events[1].data == {"action": "remove", "entity_id": "light.hue_5678"}
     assert update_events[2].data == {"action": "create", "entity_id": "light.hue_5678"}
+
+
+@pytest.mark.parametrize(
+    (
+        "entity_disabled_by_initial",
+        "device_disabled_by_restore",
+        "config_entry_disabled_by_restore",
+        "entity_disabled_by_restored",
+    ),
+    [
+        pytest.param(None, None, None, None, id="device_enabled"),
+        pytest.param(
+            None,
+            dr.DeviceEntryDisabler.USER,
+            None,
+            er.RegistryEntryDisabler.DEVICE,
+            id="device_still_disabled",
+        ),
+        pytest.param(
+            None,
+            dr.DeviceEntryDisabler.USER,
+            config_entries.ConfigEntryDisabler.USER,
+            er.RegistryEntryDisabler.CONFIG_ENTRY,
+            id="config_entry_takes_precedence",
+        ),
+        pytest.param(
+            er.RegistryEntryDisabler.USER,
+            dr.DeviceEntryDisabler.USER,
+            None,
+            er.RegistryEntryDisabler.USER,
+            id="user_disable_kept",
+        ),
+    ],
+)
+async def test_restore_entity_disabled_by_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    entity_disabled_by_initial: er.RegistryEntryDisabler | None,
+    device_disabled_by_restore: dr.DeviceEntryDisabler | None,
+    config_entry_disabled_by_restore: config_entries.ConfigEntryDisabler | None,
+    entity_disabled_by_restored: er.RegistryEntryDisabler | None,
+) -> None:
+    """Check the disabled_by flag of an entity removed while its device was disabled.
+
+    The device disable stored in the deleted entity is a stale snapshot, so the
+    restored entity must derive it from the device's state at restore time.
+    """
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "1234",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        disabled_by=entity_disabled_by_initial,
+    )
+
+    device_registry.async_update_device(
+        device_entry.id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    entity_registry.async_remove(entry.entity_id)
+    assert entity_registry.deleted_entities[("light", "hue", "1234")].disabled_by is (
+        entity_disabled_by_initial or er.RegistryEntryDisabler.DEVICE
+    )
+
+    device_registry.async_update_device(
+        device_entry.id, disabled_by=device_disabled_by_restore
+    )
+    await hass.config_entries.async_set_disabled_by(
+        config_entry.entry_id, config_entry_disabled_by_restore
+    )
+    await hass.async_block_till_done()
+
+    entry_restored = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "1234",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+    )
+    assert entry_restored.disabled_by is entity_disabled_by_restored
+
+
+@pytest.mark.parametrize(
+    ("device_disabled_by_removal", "entity_disabled_by_restored"),
+    [
+        pytest.param(None, None, id="device_enabled"),
+        pytest.param(
+            dr.DeviceEntryDisabler.USER,
+            er.RegistryEntryDisabler.DEVICE,
+            id="device_disabled",
+        ),
+    ],
+)
+async def test_restore_entity_disabled_by_device_on_recreated_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    device_disabled_by_removal: dr.DeviceEntryDisabler | None,
+    entity_disabled_by_restored: er.RegistryEntryDisabler | None,
+) -> None:
+    """Check the disabled_by flag of an entity restored on a re-created device.
+
+    The re-created device is restored from the deleted device, so it keeps a user
+    disable, and the entity must follow the restored device's state.
+    """
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "1234",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+    )
+
+    device_registry.async_update_device(
+        device_entry.id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    assert (
+        entity_registry.async_get(entry.entity_id).disabled_by
+        is er.RegistryEntryDisabler.DEVICE
+    )
+    device_registry.async_update_device(
+        device_entry.id, disabled_by=device_disabled_by_removal
+    )
+    await hass.async_block_till_done()
+    assert entity_registry.async_get(entry.entity_id).disabled_by is (
+        entity_disabled_by_restored
+    )
+
+    # Removing the device removes the entity, keeping its disabled_by in the
+    # deleted entity
+    device_registry.async_remove_device(device_entry.id)
+    await hass.async_block_till_done()
+    assert entity_registry.async_get(entry.entity_id) is None
+    assert entity_registry.deleted_entities[("light", "hue", "1234")].disabled_by is (
+        entity_disabled_by_restored
+    )
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    assert device_entry.disabled_by is device_disabled_by_removal
+    entry_restored = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "1234",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+    )
+    assert entry_restored.id == entry.id
+    assert entry_restored.disabled_by is entity_disabled_by_restored
 
 
 async def test_async_migrate_entry_delete_self(

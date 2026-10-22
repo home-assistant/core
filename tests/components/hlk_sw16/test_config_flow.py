@@ -75,7 +75,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ) as mock_setup,
         patch(
             "homeassistant.components.hlk_sw16.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -140,7 +140,7 @@ async def test_import(hass: HomeAssistant) -> None:
         ) as mock_setup,
         patch(
             "homeassistant.components.hlk_sw16.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -194,7 +194,7 @@ async def test_form_invalid_data(hass: HomeAssistant) -> None:
         patch("homeassistant.components.hlk_sw16.async_setup", return_value=True),
         patch(
             "homeassistant.components.hlk_sw16.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -240,7 +240,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         patch("homeassistant.components.hlk_sw16.async_setup", return_value=True),
         patch(
             "homeassistant.components.hlk_sw16.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(

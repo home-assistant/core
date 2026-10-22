@@ -48,6 +48,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import (
+    set_attribute_value,
     setup_integration,
     snapshot_smartthings_entities,
     trigger_health_update,
@@ -548,6 +549,51 @@ async def test_select_sound_mode(
             ATTR_SOUND_MODE
         ]
         == "adaptive_sound"
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["vd_stv_2017_k"])
+async def test_tv_sound_mode(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a TV exposes custom.soundmode as the media player sound mode."""
+    set_attribute_value(
+        devices,
+        Capability.CUSTOM_SOUND_MODE,
+        Attribute.SUPPORTED_SOUND_MODES,
+        ["Standard", "Amplify", "Kino"],
+    )
+    set_attribute_value(
+        devices, Capability.CUSTOM_SOUND_MODE, Attribute.SOUND_MODE, "Amplify"
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("media_player.theater_tv_samsung_8_series_49")
+    assert state
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] & (
+        MediaPlayerEntityFeature.SELECT_SOUND_MODE
+    )
+    # An unmapped name, like a localized one, passes through unchanged.
+    assert state.attributes[ATTR_SOUND_MODE_LIST] == ["standard", "amplify", "Kino"]
+    assert state.attributes[ATTR_SOUND_MODE] == "amplify"
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOUND_MODE,
+        {
+            ATTR_ENTITY_ID: "media_player.theater_tv_samsung_8_series_49",
+            ATTR_SOUND_MODE: "standard",
+        },
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1",
+        Capability.CUSTOM_SOUND_MODE,
+        Command.SET_SOUND_MODE,
+        MAIN,
+        argument="Standard",
     )
 
 
