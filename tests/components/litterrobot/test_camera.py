@@ -8,6 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pylitterbot.camera import CameraSession
 from pylitterbot.exceptions import CameraNotAvailableException, CameraStreamException
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components.camera import (
@@ -23,8 +24,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 
 from .conftest import create_mock_robot, setup_integration
-
-from tests.common import async_fire_time_changed
 
 # the LR5 Pro fixture's robot is named "Test Pro", not "Test"
 CAMERA_ENTITY_ID = "camera.test_pro_camera"
