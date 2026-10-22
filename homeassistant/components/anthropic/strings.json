@@ -68,8 +68,7 @@
             "name": "[%key:component::anthropic::config_subentries::conversation::step::init::data_description::name%]",
             "prompt_caching": "[%key:component::anthropic::config_subentries::conversation::step::init::data_description::prompt_caching%]",
             "recommended": "[%key:component::anthropic::config_subentries::conversation::step::init::data_description::recommended%]"
-          },
-          "title": "[%key:component::anthropic::config_subentries::conversation::step::init::title%]"
+          }
         },
         "model": {
           "data": {
@@ -132,8 +131,7 @@
             "prompt": "Instruct how the LLM should respond. This can be a template.",
             "prompt_caching": "Optimize your API cost and response times based on your usage.",
             "recommended": "Use default configuration"
-          },
-          "title": "Basic settings"
+          }
         },
         "model": {
           "data": {
