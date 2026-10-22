@@ -93,18 +93,16 @@ def _preregister_devices(
     device_registry = dr.async_get(hass)
     for thermostat_id in nexia_home.get_thermostat_ids():
         thermostat = nexia_home.get_thermostat_by_id(thermostat_id)
-        device_registry.async_get_or_create_device(
+        device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            device_info=dr.DeviceInfo(identifiers={(DOMAIN, str(thermostat_id))}),
+            identifiers={(DOMAIN, str(thermostat_id))},
         )
         for zone_id in thermostat.get_zone_ids():
             zone = thermostat.get_zone_by_id(zone_id)
-            device_registry.async_get_or_create_device(
+            device_registry.async_get_or_create(
                 config_entry_id=entry.entry_id,
-                device_info=dr.DeviceInfo(
-                    identifiers={(DOMAIN, str(zone_id))},
-                    suggested_area=zone.get_name(),
-                ),
+                identifiers={(DOMAIN, str(zone_id))},
+                suggested_area=zone.get_name(),
             )
 
 

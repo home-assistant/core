@@ -40,6 +40,7 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.UPDATE,
     Platform.VACUUM,
+    Platform.WATER_HEATER,
     Platform.WEATHER,
 ]
 

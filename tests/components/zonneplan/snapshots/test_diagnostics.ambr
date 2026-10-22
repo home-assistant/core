@@ -50,6 +50,16 @@
                   'type': 'home_battery_installation',
                   'uuid': '**REDACTED**',
                 }),
+                dict({
+                  'end_date': None,
+                  'label': 'Laadpaal',
+                  'meta': dict({
+                    'show_in_contract_screen': True,
+                  }),
+                  'start_date': '2023-10-08T22:00:00+00:00',
+                  'type': 'charge_point_installation',
+                  'uuid': '**REDACTED**',
+                }),
               ]),
               'ean': '**REDACTED**',
               'features': list([
@@ -149,6 +159,102 @@
         'uuid': '**REDACTED**',
       }),
     ]),
+    'battery_control_modes': list([
+      dict({
+        'control_mode': 'self_consumption',
+        'modes': dict({
+          'day_ahead_arbitrage': dict({
+            'available': False,
+            'enabled': False,
+            'unavailability_reason_code': 'disallowed_by_project',
+          }),
+          'dynamic_charging': dict({
+            'available': True,
+            'enabled': False,
+            'unavailability_reason_code': None,
+          }),
+          'home_optimization': dict({
+            'available': True,
+            'enabled': False,
+            'unavailability_reason_code': None,
+          }),
+          'self_consumption': dict({
+            'available': True,
+            'enabled': True,
+            'unavailability_reason_code': None,
+          }),
+        }),
+        'processing': False,
+      }),
+    ]),
+    'charge_points': list([
+      dict({
+        'charge_schedules': list([
+          dict({
+            'end_time': '2026-09-29T14:00:00+00:00',
+            'start_time': '2026-09-29T12:00:00+00:00',
+            'suppress_home_battery': None,
+          }),
+          dict({
+            'end_time': '2026-09-30T04:00:00+00:00',
+            'start_time': '2026-09-30T02:00:00+00:00',
+            'suppress_home_battery': True,
+          }),
+        ]),
+        'end_date': None,
+        'label': 'Laadpaal',
+        'meta': dict({
+          'average_cost_in_cents': 2500000,
+          'charge_point_model_name': 'Example Charger 11',
+          'charged_energy': 600000,
+          'charging_cost_total': 1500000000,
+          'first_measured_at': '2026-01-15T08:00:00.000000Z',
+          'flex_result': None,
+          'identifier': '**REDACTED**',
+          'last_measured_at': '2026-09-29T11:55:00.000000Z',
+          'serial_number': '**REDACTED**',
+          'session_average_cost_in_cents': 2500000,
+          'session_charged_energy': 10000,
+          'session_charging_cost_total': 25000000,
+          'session_flex_result': 2000000,
+          'show_in_contract_screen': True,
+        }),
+        'start_date': '2023-10-08T22:00:00+00:00',
+        'state': dict({
+          'can_charge': True,
+          'can_schedule': True,
+          'charge_on_solar_active': False,
+          'charge_on_solar_enabled': False,
+          'charge_point_session': dict({
+            'charged_distance_in_kilometers': 60,
+            'start_time': '2026-09-29T10:00:00+00:00',
+          }),
+          'charging_automatically': True,
+          'charging_manually': False,
+          'connectivity_state': True,
+          'dynamic_charging_enabled': True,
+          'dynamic_charging_flex_enabled': True,
+          'dynamic_charging_flex_suppressed': False,
+          'dynamic_charging_user_constraints': dict({
+            'desired_additional_battery_percentage': None,
+            'desired_distance_in_kilometers': 150,
+            'desired_end_time': '2026-09-30T05:00:00+00:00',
+          }),
+          'dynamic_load_balancing_health': 'HEALTHY',
+          'energy_delivered_session': 10000,
+          'last_known_vehicle_uuid': '**REDACTED**',
+          'overload_protection_active': False,
+          'plug_and_charge': False,
+          'plugged_in_at': '2026-09-29T09:55:00+00:00',
+          'power_actual': 11000,
+          'processing': False,
+          'start_mode': 'always_flex',
+          'state': 'charging',
+        }),
+        'type': 'charge_point_installation',
+        'uuid': '**REDACTED**',
+      }),
+    ]),
     'connections': list([
       dict({
         'contracts': list([
@@ -183,6 +289,16 @@
             }),
             'start_date': '2026-04-09T22:00:00+00:00',
             'type': 'home_battery_installation',
+            'uuid': '**REDACTED**',
+          }),
+          dict({
+            'end_date': None,
+            'label': 'Laadpaal',
+            'meta': dict({
+              'show_in_contract_screen': True,
+            }),
+            'start_date': '2023-10-08T22:00:00+00:00',
+            'type': 'charge_point_installation',
             'uuid': '**REDACTED**',
           }),
         ]),

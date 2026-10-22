@@ -233,19 +233,17 @@ async def mock_config_entry_setup(
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.TTS]
         )
-        return True
 
     async def async_unload_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Unload test config entry."""
         await hass.config_entries.async_forward_entry_unload(config_entry, Platform.TTS)
-        return True
 
     mock_integration(
         hass,

@@ -1169,12 +1169,13 @@
     },
     "bitcoin": {
       "name": "Bitcoin",
-      "integration_type": "hub",
+      "integration_type": "service",
       "categories": [
         "finance"
       ],
-      "config_flow": false,
-      "iot_class": "cloud_polling"
+      "config_flow": true,
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "bitvis": {
       "name": "Bitvis Power Hub",
@@ -3441,7 +3442,7 @@
       "iot_class": "cloud_push"
     },
     "flow_it": {
-      "name": "Flow-it",
+      "name": "AriaQ",
       "integration_type": "device",
       "categories": [
         "climate.fans_ventilation"
@@ -3512,6 +3513,15 @@
         "sensors.air_quality"
       ],
       "config_flow": false,
+      "iot_class": "cloud_polling"
+    },
+    "foreca": {
+      "name": "Foreca",
+      "integration_type": "service",
+      "categories": [
+        "weather_alerts.forecasts"
+      ],
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "forecast_solar": {
@@ -11475,13 +11485,27 @@
     },
     "thethingsnetwork": {
       "name": "The Things Network",
-      "integration_type": "hub",
-      "categories": [
-        "hubs_protocols.wireless_protocols",
-        "diy_makers.web_data_connectors"
-      ],
-      "config_flow": true,
-      "iot_class": "cloud_polling"
+      "integrations": {
+        "thethingsnetwork_lorawan": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "categories": [
+            "hubs_protocols.wireless_protocols"
+          ],
+          "name": "The Things Network"
+        },
+        "thethingsnetwork": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "categories": [
+            "hubs_protocols.wireless_protocols",
+            "diy_makers.web_data_connectors"
+          ],
+          "name": "The Things Network (Cloud Storage)"
+        }
+      }
     },
     "thingspeak": {
       "name": "ThingSpeak",

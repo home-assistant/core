@@ -1,4 +1,4 @@
-"""Creates Water Heater entities for the my-PV Home Assistant integration."""
+"""Creates Water Heater entities for the my-PV integration."""
 
 from typing import Any, override
 
@@ -19,6 +19,8 @@ from .const import DOMAIN
 from .coordinator import MyPVConfigEntry, MyPVCoordinator
 from .entity import MyPVBaseEntity
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -27,26 +29,21 @@ async def async_setup_entry(
 ) -> None:
     """Set up the my-PV water heater."""
     coordinator = config_entry.runtime_data
-    entities = []
 
     if (
         coordinator.device.supports_main_mode(MyPVDeviceMainMode.HOT_WATER)
         and coordinator.device.current_temperature is not None
         and (configuration := coordinator.device.get_setup_configuration("ww1target"))
     ):
-        entity_description = WaterHeaterEntityDescription(
-            key="temp1",
+        async_add_entities(
+            [
+                MyPVWaterHeater(
+                    coordinator,
+                    WaterHeaterEntityDescription(key="temp1"),
+                    configuration=configuration,
+                )
+            ]
         )
-        entities.append(
-            MyPVWaterHeater(
-                coordinator,
-                entity_description,
-                coordinator.device.serial_number,
-                configuration=configuration,
-            )
-        )
-
-    async_add_entities(entities)
 
 
 class MyPVWaterHeater(MyPVBaseEntity, WaterHeaterEntity):
@@ -64,11 +61,10 @@ class MyPVWaterHeater(MyPVBaseEntity, WaterHeaterEntity):
         self,
         coordinator: MyPVCoordinator,
         entity_description: WaterHeaterEntityDescription,
-        serial_number: str,
         configuration: dict[str, Any],
     ) -> None:
         """Initialize the water_heater."""
-        super().__init__(coordinator, entity_description, serial_number)
+        super().__init__(coordinator, entity_description)
 
         self._attr_target_temperature_step = configuration["step"]
         self._attr_native_temperature_unit = configuration["unit"]
