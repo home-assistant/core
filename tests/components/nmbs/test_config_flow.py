@@ -166,12 +166,13 @@ async def test_unavailable_api(
         pytest.param(MissingField("name", "str", "StationDetails"), id="missing_field"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_unavailable_api_errors(
     hass: HomeAssistant,
     mock_nmbs_client: AsyncMock,
     stations_side_effect: Exception | type[Exception],
 ) -> None:
-    """Test the flow aborts when the station list cannot be fetched."""
+    """Test the flow aborts when the station list cannot be fetched and recovers."""
     mock_nmbs_client.get_stations.side_effect = stations_side_effect
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -186,8 +187,18 @@ async def test_unavailable_api_errors(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
-
     assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_STATION_FROM: DUMMY_DATA["STAT_BRUSSELS_NORTH"],
+            CONF_STATION_TO: DUMMY_DATA["STAT_BRUSSELS_SOUTH"],
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == f"{STATION_FROM}_{STATION_TO}"
 
 
 async def test_reconfigure_route(
@@ -415,7 +426,7 @@ async def test_reconfigure_unavailable_api(
     mock_nmbs_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test reconfiguration aborts when the station list is unavailable."""
+    """Test reconfiguration aborts when the station list is unavailable and recovers."""
     mock_config_entry.add_to_hass(hass)
     mock_nmbs_client.get_stations.side_effect = ApiUnavailableError("API unavailable")
 
@@ -423,3 +434,21 @@ async def test_reconfigure_unavailable_api(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "api_unavailable"
+
+    mock_nmbs_client.get_stations.side_effect = None
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_STATION_FROM: DUMMY_DATA["STAT_BRUSSELS_CENTRAL"],
+            CONF_STATION_TO: DUMMY_DATA["STAT_BRUSSELS_SOUTH"],
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert (
+        mock_config_entry.data[CONF_STATION_FROM] == DUMMY_DATA["STAT_BRUSSELS_CENTRAL"]
+    )
