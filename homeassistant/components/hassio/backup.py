@@ -54,6 +54,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import dt as dt_util, slugify
+from homeassistant.util.async_iterator import async_close_iterator
 from homeassistant.util.enum import try_parse_enum
 
 from .config_entry import async_get_update_options
@@ -595,11 +596,15 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         if manager.backup_agents[agent_id].domain != DOMAIN:
             # Download the backup to the supervisor. Supervisor will clean up the backup
             # two days after the restore is done.
-            await self.async_receive_backup(
-                agent_ids=[],
-                stream=await open_stream(),
-                suggested_filename=f"{backup_id}.tar",
-            )
+            stream = await open_stream()
+            try:
+                await self.async_receive_backup(
+                    agent_ids=[],
+                    stream=stream,
+                    suggested_filename=f"{backup_id}.tar",
+                )
+            finally:
+                await async_close_iterator(stream)
             restore_location = LOCATION_CLOUD_BACKUP
         else:
             agent = cast(SupervisorBackupAgent, manager.backup_agents[agent_id])
