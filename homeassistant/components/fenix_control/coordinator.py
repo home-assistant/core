@@ -1,6 +1,6 @@
 """Data update coordinator for the FENIX Control integration."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import override
 
 from pyfenixcontrol import (
@@ -66,7 +66,23 @@ class FenixControlCoordinator(DataUpdateCoordinator[FenixControlData]):
                 translation_domain=DOMAIN, translation_key="update_failed"
             ) from err
 
-        return FenixControlData(devices={device.id: device for device in devices})
+        # Some thermostats stop reporting their own name; the room keeps it
+        room_names = {
+            (installation.id, room.id): room.name
+            for installation in installations
+            for room in installation.rooms
+        }
+        return FenixControlData(
+            devices={
+                device.id: device
+                if device.name
+                else replace(
+                    device,
+                    name=room_names.get((device.installation_id, device.room_id)),
+                )
+                for device in devices
+            }
+        )
 
     async def _trigger_installation_update(self, installation_id: str) -> None:
         """Ask the thermostats of an installation to report fresh values."""

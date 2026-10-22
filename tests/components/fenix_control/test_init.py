@@ -1,5 +1,6 @@
 """Test the FENIX Control setup and coordinator."""
 
+from dataclasses import replace
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -17,7 +18,7 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import DEVICE_ID, INSTALLATION_ID
+from .conftest import DEVICE, DEVICE_ID, INSTALLATION_ID
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -147,3 +148,23 @@ async def test_device_info(
         (DOMAIN, DEVICE_ID), init_integration.entry_id
     )
     assert device == snapshot
+
+
+async def test_device_name_falls_back_to_room(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_fenix_client: MagicMock,
+) -> None:
+    """Test a thermostat without its own name is named after its room."""
+    mock_fenix_client.get_devices.return_value = [replace(DEVICE, name=None)]
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, DEVICE_ID), mock_config_entry.entry_id
+    )
+    assert device.name == "Home Living room"
+    assert hass.states.get(ENTITY_ID) is not None
