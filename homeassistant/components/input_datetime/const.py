@@ -52,7 +52,7 @@ class InputDatetimeService(StrEnum):
     """Store keys for input datetime services."""
 
     RELOAD = "reload"
-    SET_DATETIME = "set_datetime"
+    SET = "set_datetime"
 
 
 class InputDatetimeServiceArgument(StrEnum):

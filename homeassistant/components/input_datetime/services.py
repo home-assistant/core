@@ -62,7 +62,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
 
     hass.data[DATA_INPUT_DATETIME].component.async_register_entity_service(
-        InputDatetimeService.SET_DATETIME,
+        InputDatetimeService.SET,
         probatio.All(
             cv.make_entity_service_schema(
                 {

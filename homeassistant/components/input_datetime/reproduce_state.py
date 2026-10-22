@@ -77,7 +77,7 @@ async def _async_reproduce_state(
 
     await hass.services.async_call(
         DOMAIN,
-        InputDatetimeService.SET_DATETIME,
+        InputDatetimeService.SET,
         service_data,
         context=context,
         blocking=True,
