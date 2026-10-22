@@ -1522,6 +1522,57 @@ async def test_release_uses_uri_from_its_own_event(
 
 
 @pytest.mark.usefixtures("async_autosetup_sonos")
+async def test_release_skipped_when_paused_media_replayed(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    no_media_event: SonosMockEvent,
+) -> None:
+    """Test playing the same paused media again does not release it."""
+    hass.config.internal_url = "http://10.0.0.1:8123"
+    variables = no_media_event.variables | {"current_track_uri": HASS_MEDIA_URI}
+    events = [
+        variables | {"transport_state": "STOPPED", "av_transport_uri": HASS_MEDIA_URI},
+        variables | {"transport_state": "PLAYING"},
+        variables | {"transport_state": "PAUSED_PLAYBACK"},
+        # Loading the same URL again reports it with STOPPED
+        variables | {"transport_state": "STOPPED", "av_transport_uri": HASS_MEDIA_URI},
+        variables | {"transport_state": "PLAYING"},
+    ]
+    for event_vars in events:
+        event = SonosMockEvent(soco, soco.avTransport, event_vars)
+        soco.avTransport.subscribe.return_value.callback(event)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    soco.avTransport.SetAVTransportURI.assert_not_called()
+
+
+async def test_release_skipped_when_loading_after_startup_transition(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_setup_sonos: Callable[[], Coroutine[Any, Any, None]],
+    no_media_event: SonosMockEvent,
+) -> None:
+    """Test media loaded right after startup is not released before it plays."""
+    hass.config.internal_url = "http://10.0.0.1:8123"
+    soco.get_current_transport_info.return_value = {
+        "current_transport_state": "TRANSITIONING"
+    }
+    await async_setup_sonos()
+
+    variables = no_media_event.variables | {"current_track_uri": HASS_MEDIA_URI}
+    events = [
+        variables | {"transport_state": "STOPPED", "av_transport_uri": HASS_MEDIA_URI},
+        variables | {"transport_state": "PLAYING"},
+    ]
+    for event_vars in events:
+        event = SonosMockEvent(soco, soco.avTransport, event_vars)
+        soco.avTransport.subscribe.return_value.callback(event)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    soco.avTransport.SetAVTransportURI.assert_not_called()
+
+
+@pytest.mark.usefixtures("async_autosetup_sonos")
 async def test_release_skipped_for_stale_update(
     hass: HomeAssistant,
     soco: MockSoCo,

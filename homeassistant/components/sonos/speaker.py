@@ -598,6 +598,7 @@ class SonosSpeaker:
         self.hass.async_add_executor_job(
             self.media.update_media_from_event,
             event.variables | {"av_transport_uri": self._av_transport_uri},
+            "av_transport_uri" in event.variables,
         )
 
     @callback

@@ -148,13 +148,17 @@ class SonosMedia:
 
         self.update_media_position(track_info, force_update=update_position)
 
-    def update_media_from_event(self, evars: dict[str, Any]) -> None:
+    def update_media_from_event(
+        self, evars: dict[str, Any], transport_uri_set: bool
+    ) -> None:
         """Update information about currently playing media using an event payload."""
         new_status = evars["transport_state"]
         state_changed = new_status != self.playback_status
-        self.release_finished_hass_media(
-            evars["av_transport_uri"], new_status, self.playback_status is None
-        )
+        # Sonos reports STOPPED with the URI when loading media, even the same one
+        if not (new_status == SONOS_STATE_STOPPED and transport_uri_set):
+            self.release_finished_hass_media(
+                evars["av_transport_uri"], new_status, self.playback_status is None
+            )
 
         self.play_mode = evars["current_play_mode"]
         self.playback_status = new_status
