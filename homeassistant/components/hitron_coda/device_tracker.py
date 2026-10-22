@@ -1,26 +1,33 @@
-"""Support for the Hitron CODA-4582U, provided by Rogers."""
+"""Track devices connected to a Hitron CODA router."""
 
-from collections import namedtuple
-from http import HTTPStatus
-import logging
 from typing import override
 
 import probatio
-import requests
 
 from homeassistant.components.device_tracker import (
-    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    CONF_SCAN_INTERVAL as CONF_INTERVAL_SECONDS,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
-    DeviceScanner,
+    AsyncSeeCallback,
+    ScannerEntity,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TYPE, CONF_USERNAME
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    CONF_TYPE,
+    CONF_USERNAME,
+)
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-_LOGGER = logging.getLogger(__name__)
-
-DEFAULT_TYPE = "rogers"
+from .const import DEFAULT_TYPE, DOMAIN
+from .coordinator import HitronCodaConfigEntry, HitronCodaDataUpdateCoordinator
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
@@ -32,110 +39,99 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(
-    _hass: HomeAssistant, config: ConfigType
-) -> HitronCODADeviceScanner | None:
-    """Validate the configuration and return a Hitron CODA-4582U scanner."""
-    scanner = HitronCODADeviceScanner(config[DEVICE_TRACKER_DOMAIN])
+async def async_setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    _async_see: AsyncSeeCallback,
+    _discovery_info: DiscoveryInfoType | None = None,
+) -> bool:
+    """Import legacy YAML configuration into a config entry."""
+    data = {
+        key: config[key] for key in (CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_TYPE)
+    }
+    if CONF_INTERVAL_SECONDS in config:
+        data[CONF_SCAN_INTERVAL] = config[CONF_INTERVAL_SECONDS].total_seconds()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=data
+    )
+    if (
+        result["type"] is FlowResultType.ABORT
+        and result["reason"] != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "yaml_import_failed",
+            is_fixable=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="yaml_import_failed",
+            translation_placeholders={CONF_HOST: config[CONF_HOST]},
+        )
+        return False
 
-    return scanner if scanner.success_init else None
+    ir.async_delete_issue(hass, DOMAIN, "yaml_import_failed")
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Rogers Hitron CODA",
+        },
+    )
+    return True
 
 
-Device = namedtuple("Device", ["mac", "name"])  # noqa: PYI024
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: HitronCodaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up device trackers for the router."""
+    coordinator = entry.runtime_data
+    tracked: set[str] = set()
 
-
-class HitronCODADeviceScanner(DeviceScanner):
-    """Scanner for devices using the CODA's web interface."""
-
-    def __init__(self, config):
-        """Initialize the scanner."""
-        self.last_results = []
-        host = config[CONF_HOST]
-        self._url = f"http://{host}/data/getConnectInfo.asp"
-        self._loginurl = f"http://{host}/goform/login"
-
-        self._username = config.get(CONF_USERNAME)
-        self._password = config.get(CONF_PASSWORD)
-
-        if config.get(CONF_TYPE) == "shaw":
-            self._type = "pwd"
-        else:
-            self._type = "pws"
-
-        self._userid = None
-
-        self.success_init = self._update_info()
-
-    @override
-    def scan_devices(self):
-        """Scan for new devices and return a list with found device IDs."""
-        self._update_info()
-
-        return [device.mac for device in self.last_results]
-
-    @override
-    def get_device_name(self, device):
-        """Return the name of the device with the given MAC address."""
-        return next(
-            (result.name for result in self.last_results if result.mac == device), None
+    @callback
+    def async_add_devices() -> None:
+        """Add devices first seen in a successful update."""
+        new_macs = coordinator.data.keys() - tracked
+        tracked.update(new_macs)
+        async_add_entities(
+            HitronCodaScannerEntity(coordinator, mac) for mac in sorted(new_macs)
         )
 
-    def _login(self):
-        """Log in to the router. This is required for subsequent api calls."""
-        _LOGGER.debug("Logging in to CODA")
+    entry.async_on_unload(coordinator.async_add_listener(async_add_devices))
+    async_add_devices()
 
-        try:
-            data = [("user", self._username), (self._type, self._password)]
-            res = requests.post(self._loginurl, data=data, timeout=10)
-        except requests.exceptions.Timeout:
-            _LOGGER.error("Connection to the router timed out at URL %s", self._url)
-            return False
-        if res.status_code != HTTPStatus.OK:
-            _LOGGER.error("Connection failed with http code %s", res.status_code)
-            return False
-        try:
-            self._userid = res.cookies["userid"]
-        except KeyError:
-            _LOGGER.error("Failed to log in to router")
-            return False
-        return True
 
-    def _update_info(self):
-        """Get ARP from router."""
-        _LOGGER.debug("Fetching")
+class HitronCodaScannerEntity(
+    CoordinatorEntity[HitronCodaDataUpdateCoordinator], ScannerEntity
+):
+    """Represent a client seen on the router's network."""
 
-        if self._userid is None and not self._login():
-            _LOGGER.error("Could not obtain a user ID from the router")
-            return False
-        last_results = []
+    def __init__(self, coordinator: HitronCodaDataUpdateCoordinator, mac: str) -> None:
+        """Initialize a client using its stable MAC address."""
+        super().__init__(coordinator)
+        self._mac = mac
+        self._attr_mac_address = format_mac(mac)
+        self._attr_hostname = coordinator.data[mac]
+        self._attr_name = self._attr_hostname or self._attr_mac_address
 
-        # doing a request
-        try:
-            res = requests.get(self._url, timeout=10, cookies={"userid": self._userid})
-        except requests.exceptions.Timeout:
-            _LOGGER.error("Connection to the router timed out at URL %s", self._url)
-            return False
-        if res.status_code != HTTPStatus.OK:
-            _LOGGER.error("Connection failed with http code %s", res.status_code)
-            return False
-        try:
-            result = res.json()
-        except ValueError:
-            # If json decoder could not parse the response
-            _LOGGER.error("Failed to parse response from router")
-            return False
+    @property
+    @override
+    def is_connected(self) -> bool:
+        """Return whether the client was seen in the latest successful scan."""
+        return self._mac in self.coordinator.data
 
-        # parsing response
-        for info in result:
-            mac = info["macAddr"]
-            name = info["hostName"]
-            # No address = no item :)
-            if mac is None:
-                continue
-
-            last_results.append(Device(mac.upper(), name))
-
-        self.last_results = last_results
-
-        _LOGGER.debug("Request successful")
-        return True
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Update client names, retaining them while a client is disconnected."""
+        if self._mac in self.coordinator.data:
+            self._attr_hostname = self.coordinator.data[self._mac]
+            self._attr_name = self._attr_hostname or self._attr_mac_address
+        super()._handle_coordinator_update()

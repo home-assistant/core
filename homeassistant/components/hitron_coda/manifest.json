@@ -3,6 +3,7 @@
   "name": "Rogers Hitron CODA",
   "categories": ["presence_location.network_presence"],
   "codeowners": [],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hitron_coda",
   "iot_class": "local_polling",
   "quality_scale": "legacy"
