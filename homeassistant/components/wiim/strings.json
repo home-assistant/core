@@ -35,14 +35,11 @@
   "entity": {
     "select": {
       "audio_output": {
-        "name": "Audio Output"
+        "name": "Audio output"
       }
     }
   },
   "exceptions": {
-    "audio_output_setup_failed": {
-      "message": "Unable to read audio output for {device}"
-    },
     "callback_host_unavailable": {
       "message": "Failed to determine a local address for WiiM device events"
     },

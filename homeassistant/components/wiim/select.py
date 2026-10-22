@@ -10,12 +10,13 @@ from wiim.wiim_device import WiimDevice
 from homeassistant.components.select import SelectEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     DOMAIN,
+    LOGGER,
     SIGNAL_DEVICE_GENERAL_UPDATED,
     SIGNAL_DEVICE_RENDERING_CONTROL_UPDATED,
     WiimConfigEntry,
@@ -36,18 +37,7 @@ async def async_setup_entry(
     if not entry.runtime_data.supports_http_api:
         return
 
-    device = entry.runtime_data
-    try:
-        await device.async_refresh_audio_capabilities()
-        entity = WiimOutputSelect(device)
-        await entity.async_update()
-    except (WiimException, UpnpError, aiohttp.ClientError, TimeoutError) as err:
-        raise PlatformNotReady(
-            translation_domain=DOMAIN,
-            translation_key="audio_output_setup_failed",
-            translation_placeholders={"device": device.name},
-        ) from err
-    async_add_entities([entity])
+    async_add_entities([WiimOutputSelect(entry.runtime_data)], True)
 
 
 class WiimOutputSelect(WiimBaseEntity, SelectEntity):
@@ -105,7 +95,13 @@ class WiimOutputSelect(WiimBaseEntity, SelectEntity):
         self._attr_options = [
             mode for mode in self._device.supported_output_modes if mode != OTHER_OUTPUT
         ]
-        current = await self._device.get_audio_output_hw_mode()
+        try:
+            current = await self._device.get_audio_output_hw_mode()
+        except (WiimException, UpnpError, aiohttp.ClientError, TimeoutError) as err:
+            LOGGER.debug(
+                "Unable to read audio output for %s: %s", self._device.name, err
+            )
+            return
         self._attr_current_option = current if current in self._attr_options else None
 
     @override

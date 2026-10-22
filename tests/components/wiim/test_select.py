@@ -1,6 +1,5 @@
 """Tests for WiiM audio output selection."""
 
-from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 import aiohttp
@@ -27,11 +26,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from . import fire_general_update, setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 ENTITY_ID = "select.test_wiim_device_audio_output"
 OPTIONS = ["Line Out", "Optical Out", "Other Out"]
@@ -45,7 +43,6 @@ def mock_audio_output(mock_wiim_device: AsyncMock) -> None:
     mock_wiim_device.supports_http_api = True
     mock_wiim_device.supported_output_modes = tuple(OPTIONS)
     mock_wiim_device.output_mode = "Line Out"
-    mock_wiim_device.async_refresh_audio_capabilities = AsyncMock()
     mock_wiim_device.get_audio_output_hw_mode.return_value = "Line Out"
 
     async def set_output_mode(option: str) -> None:
@@ -55,13 +52,17 @@ def mock_audio_output(mock_wiim_device: AsyncMock) -> None:
     mock_wiim_device.async_set_output_mode = AsyncMock(side_effect=set_output_mode)
 
 
-@pytest.mark.parametrize("current", ["Line Out", "Other Out"])
+@pytest.mark.parametrize(
+    ("current", "expected"),
+    [("Line Out", "Line Out"), ("Other Out", STATE_UNKNOWN)],
+)
 async def test_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_wiim_device: AsyncMock,
     entity_registry: er.EntityRegistry,
     current: str,
+    expected: str,
 ) -> None:
     """Initialize the selector from device capabilities and active output."""
     mock_wiim_device.output_mode = current
@@ -69,12 +70,11 @@ async def test_setup(
     await setup_integration(hass, mock_config_entry)
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.state == (STATE_UNKNOWN if current == "Other Out" else current)
+    assert state.state == expected
     assert state.attributes[ATTR_OPTIONS] == ["Line Out", "Optical Out"]
     registry_entry = entity_registry.async_get(ENTITY_ID)
     assert registry_entry is not None
     assert registry_entry.entity_category is EntityCategory.CONFIG
-    mock_wiim_device.async_refresh_audio_capabilities.assert_awaited_once_with()
     mock_wiim_device.get_audio_output_hw_mode.assert_awaited_once_with()
 
 
@@ -87,13 +87,8 @@ async def test_no_http_api(
     mock_wiim_device.supports_http_api = False
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get(ENTITY_ID) is None
-    mock_wiim_device.async_refresh_audio_capabilities.assert_not_awaited()
 
 
-@pytest.mark.parametrize(
-    "method_name",
-    ["async_refresh_audio_capabilities", "get_audio_output_hw_mode"],
-)
 @pytest.mark.parametrize(
     "error",
     [
@@ -103,63 +98,66 @@ async def test_no_http_api(
         TimeoutError(),
     ],
 )
-async def test_initial_read_retries(
+async def test_initial_read_failure_recovers_from_event(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_wiim_device: AsyncMock,
-    method_name: str,
     error: Exception,
 ) -> None:
-    """Retry platform setup after a transient initial output read failure."""
-    await hass.async_start()
-    method = getattr(mock_wiim_device, method_name)
-    method.side_effect = error
+    """Keep the entity after a failed read and recover through a device event."""
+    mock_wiim_device.output_mode = None
+    mock_wiim_device.get_audio_output_hw_mode.side_effect = error
     await setup_integration(hass, mock_config_entry)
-    assert hass.states.get(ENTITY_ID) is None
-    method.assert_awaited_once_with()
-
-    method.side_effect = None
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=31))
-    await hass.async_block_till_done()
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.state == "Line Out"
-    assert method.await_count == 2
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_OPTIONS] == ["Line Out", "Optical Out"]
+    mock_wiim_device.get_audio_output_hw_mode.assert_awaited_once_with()
+    mock_wiim_device.output_mode = "Optical Out"
+    await fire_general_update(hass, mock_wiim_device)
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == "Optical Out"
+    mock_wiim_device.get_audio_output_hw_mode.assert_awaited_once_with()
 
 
-@pytest.mark.parametrize("option", ["Optical Out", "Other Out"])
 async def test_select_option(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_wiim_device: AsyncMock,
-    option: str,
 ) -> None:
-    """Select a known output or reject an unsupported option at the platform boundary."""
+    """Select a known output through the select service."""
     await setup_integration(hass, mock_config_entry)
-    if option == "Other Out":
-        with pytest.raises(ServiceValidationError):
-            await hass.services.async_call(
-                SELECT_DOMAIN,
-                SERVICE_SELECT_OPTION,
-                {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: option},
-                blocking=True,
-            )
-        mock_wiim_device.async_set_output_mode.assert_not_awaited()
-        state = hass.states.get(ENTITY_ID)
-        assert state is not None
-        assert state.state == "Line Out"
-        return
-
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: option},
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "Optical Out"},
         blocking=True,
     )
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    mock_wiim_device.async_set_output_mode.assert_awaited_once_with(option)
-    assert state.state == option
+    mock_wiim_device.async_set_output_mode.assert_awaited_once_with("Optical Out")
+    assert state.state == "Optical Out"
+
+
+async def test_non_selectable_output_rejected(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: AsyncMock,
+) -> None:
+    """Reject the SDK fallback at the select platform's option validation."""
+    await setup_integration(hass, mock_config_entry)
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_OPTION: "Other Out"},
+            blocking=True,
+        )
+    mock_wiim_device.async_set_output_mode.assert_not_awaited()
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == "Line Out"
 
 
 async def test_select_cycle_and_last(
@@ -169,17 +167,17 @@ async def test_select_cycle_and_last(
 ) -> None:
     """Cycle through selectable outputs and select the last real output."""
     await setup_integration(hass, mock_config_entry)
-    for service, expected in (
-        (SERVICE_SELECT_NEXT, "Optical Out"),
-        (SERVICE_SELECT_NEXT, "Line Out"),
-        (SERVICE_SELECT_LAST, "Optical Out"),
+    for service, service_data, expected in (
+        (SERVICE_SELECT_NEXT, {ATTR_CYCLE: True}, "Optical Out"),
+        (SERVICE_SELECT_NEXT, {ATTR_CYCLE: True}, "Line Out"),
+        (SERVICE_SELECT_LAST, {}, "Optical Out"),
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
             service,
             {
                 ATTR_ENTITY_ID: ENTITY_ID,
-                **({ATTR_CYCLE: True} if service == SERVICE_SELECT_NEXT else {}),
+                **service_data,
             },
             blocking=True,
         )
@@ -222,14 +220,14 @@ async def test_select_failure(
 
 
 @pytest.mark.parametrize(
-    ("options", "current", "expected"),
+    ("options", "current", "expected", "expected_options"),
     [
-        (OPTIONS, "Optical Out", "Optical Out"),
-        (OPTIONS, "Other Out", STATE_UNKNOWN),
-        (OPTIONS, "Unknown output", STATE_UNKNOWN),
-        (["USB Out", "Other Out"], "USB Out", "USB Out"),
-        ([], None, STATE_UNAVAILABLE),
-        (["Other Out"], "Other Out", STATE_UNAVAILABLE),
+        (OPTIONS, "Optical Out", "Optical Out", ["Line Out", "Optical Out"]),
+        (OPTIONS, "Other Out", STATE_UNKNOWN, ["Line Out", "Optical Out"]),
+        (OPTIONS, "Unknown output", STATE_UNKNOWN, ["Line Out", "Optical Out"]),
+        (["USB Out", "Other Out"], "USB Out", "USB Out", ["USB Out"]),
+        ([], None, STATE_UNAVAILABLE, []),
+        (["Other Out"], "Other Out", STATE_UNAVAILABLE, []),
     ],
 )
 async def test_output_event(
@@ -239,6 +237,7 @@ async def test_output_event(
     options: list[str],
     current: str | None,
     expected: str,
+    expected_options: list[str],
 ) -> None:
     """Refresh through the SDK callback and real dispatcher, without HTTP reads."""
     await setup_integration(hass, mock_config_entry)
@@ -249,10 +248,7 @@ async def test_output_event(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == expected
-    assert state.attributes[ATTR_OPTIONS] == [
-        option for option in options if option != "Other Out"
-    ]
-    mock_wiim_device.async_refresh_audio_capabilities.assert_awaited_once_with()
+    assert state.attributes[ATTR_OPTIONS] == expected_options
     mock_wiim_device.get_audio_output_hw_mode.assert_awaited_once_with()
 
 
