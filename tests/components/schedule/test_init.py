@@ -28,8 +28,8 @@ from homeassistant.components.schedule.const import (
     CONF_TUESDAY,
     CONF_WEDNESDAY,
     DOMAIN,
-    SERVICE_GET,
 )
+from homeassistant.components.schedule.services import ScheduleService
 from homeassistant.const import (
     ATTR_EDITABLE,
     ATTR_FRIENDLY_NAME,
@@ -754,7 +754,7 @@ async def test_service_get(
     # Test retrieving a single schedule via service call
     service_result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET,
+        ScheduleService.GET_SCHEDULE,
         {
             CONF_ENTITY_ID: entity_id,
         },
@@ -790,7 +790,7 @@ async def test_service_get(
     # Test retrieving the schedule via service call after WS update
     service_result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET,
+        ScheduleService.GET_SCHEDULE,
         {
             CONF_ENTITY_ID: entity_id,
         },
