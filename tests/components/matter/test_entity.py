@@ -1,5 +1,6 @@
 """Test Matter entity behavior."""
 
+import copy
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -12,6 +13,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import (
+    _setup_integration_with_nodes,
+    create_node_from_fixture,
+    set_node_attribute,
     set_node_attribute_and_notify,
     setup_integration_with_node_fixture,
     trigger_subscription_callback,
@@ -643,3 +647,470 @@ async def test_entity_removal_unsubscribes_events(
 
     assert hass.states.get(entity_id) is None
     assert all(unsubscribe.called for _, unsubscribe in entity_subscriptions)
+
+
+async def _remove_attributes(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    paths: list[str],
+) -> None:
+    """Remove attributes the way the server reports it.
+
+    Each attribute is first sent as a null value, then a node_updated without the
+    attribute follows.
+    """
+    for path in paths:
+        endpoint, cluster, attribute = (int(part) for part in path.split("/"))
+        await set_node_attribute_and_notify(
+            hass,
+            matter_client,
+            matter_node,
+            endpoint=endpoint,
+            cluster_id=cluster,
+            attribute_id=attribute,
+            value=None,
+        )
+    node_data = copy.deepcopy(matter_node.node_data)
+    for path in paths:
+        del node_data.attributes[path]
+    matter_node.update(node_data)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.NODE_UPDATED,
+        matter_node,
+        node_id=matter_node.node_id,
+    )
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "entity_id", "removed_paths"),
+    [
+        (
+            "aqara_door_window_p2",
+            "number.aqara_door_and_window_sensor_p2_sensitivity",
+            ["1/128/0", "1/128/1"],
+        ),
+        (
+            "aqara_thermostat_w500",
+            "number.floor_heating_thermostat_occupied_setback",
+            ["1/513/52", "1/513/53", "1/513/54"],
+        ),
+        (
+            "mock_oven",
+            "number.mock_oven_temperature_setpoint",
+            ["2/86/0", "2/86/1", "2/86/2"],
+        ),
+        ("mock_oven", "select.mock_oven_temperature_level", ["4/86/4", "4/86/5"]),
+        (
+            "silabs_laundrywasher",
+            "select.laundrywasher_spin_speed",
+            ["1/83/0", "1/83/1"],
+        ),
+        (
+            "silabs_laundrywasher",
+            "select.laundrywasher_number_of_rinses",
+            ["1/83/2", "1/83/3"],
+        ),
+        (
+            "mock_microwave_oven",
+            "select.mock_microwave_oven_power_level_w",
+            ["1/95/6", "1/95/7"],
+        ),
+    ],
+)
+async def test_entity_removed_with_required_attribute(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+    removed_paths: list[str],
+) -> None:
+    """Test an entity is removed when the device removes a required attribute."""
+    assert hass.states.get(entity_id) is not None
+
+    await _remove_attributes(hass, matter_client, matter_node, removed_paths)
+
+    assert entity_registry.async_get(entity_id) is None
+    assert hass.states.get(entity_id) is None
+
+
+@pytest.mark.parametrize("node_fixture", ["silabs_laundrywasher"])
+async def test_entity_added_again_with_required_attribute(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test an entity removed with a required attribute comes back with it."""
+    entity_id = "select.laundrywasher_spin_speed"
+    removed_paths = ["1/83/0", "1/83/1"]
+    old_values = {
+        path: matter_node.node_data.attributes[path] for path in removed_paths
+    }
+
+    await _remove_attributes(hass, matter_client, matter_node, removed_paths)
+    assert entity_registry.async_get(entity_id) is None
+
+    for path, value in old_values.items():
+        endpoint, cluster, attribute = (int(part) for part in path.split("/"))
+        matter_node.node_data.attributes[path] = value
+        set_node_attribute(matter_node, endpoint, cluster, attribute, value)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.NODE_UPDATED,
+        matter_node,
+        node_id=matter_node.node_id,
+    )
+
+    assert entity_registry.async_get(entity_id) is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "Off"
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "entity_id", "path"),
+    [
+        # null when the current mode has no spin speed
+        ("silabs_laundrywasher", "select.laundrywasher_spin_speed", "1/83/1"),
+        # null when the device presents no phases
+        ("silabs_laundrywasher", "sensor.laundrywasher_current_phase", "1/96/0"),
+        ("silabs_laundrywasher", "sensor.laundrywasher_current_phase", "1/96/1"),
+    ],
+)
+async def test_null_list_index(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+    path: str,
+) -> None:
+    """Test a null list or list index leaves the entity state unknown."""
+    endpoint, cluster, attribute = (int(part) for part in path.split("/"))
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=endpoint,
+        cluster_id=cluster,
+        attribute_id=attribute,
+        value=None,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "unknown"
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "entity_id", "updates", "check_attribute"),
+    [
+        ("silabs_fan", "fan.sl_fan", [("1/514/10", None)], "preset_mode"),
+        (
+            "extended_color_light",
+            "light.mock_extended_color_light",
+            [("1/768/0", None)],
+            "hs_color",
+        ),
+        (
+            "extended_color_light",
+            "light.mock_extended_color_light",
+            [("1/768/8", 1), ("1/768/3", None)],
+            "xy_color",
+        ),
+    ],
+)
+async def test_null_optional_attribute(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+    updates: list[tuple[str, Any]],
+    check_attribute: str,
+) -> None:
+    """Test a null optional attribute leaves the derived state empty."""
+    for path, value in updates:
+        endpoint, cluster, attribute = (int(part) for part in path.split("/"))
+        await set_node_attribute_and_notify(
+            hass,
+            matter_client,
+            matter_node,
+            endpoint=endpoint,
+            cluster_id=cluster,
+            attribute_id=attribute,
+            value=value,
+        )
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "on"
+    assert check_attribute in state.attributes
+    if check_attribute != "preset_mode":
+        assert state.attributes[check_attribute] is None
+
+
+@pytest.mark.parametrize("node_fixture", ["silabs_laundrywasher"])
+async def test_entities_removed_in_one_node_update(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    node_fixture: str,
+) -> None:
+    """Test all entities that lose a required attribute in one update are removed.
+
+    Like the client, the subscribers are called from the list that removing an
+    entity unsubscribes it from.
+    """
+    subscribers: dict[str, list[Any]] = {}
+
+    def _subscribe_events(**kwargs: Any) -> Any:
+        key = (
+            f"{kwargs.get('event_filter')}/{kwargs.get('node_filter')}/"
+            f"{kwargs.get('attr_path_filter')}"
+        )
+        subscribers.setdefault(key, []).append(kwargs["callback"])
+        return lambda: subscribers[key].remove(kwargs["callback"])
+
+    matter_client.subscribe_events.side_effect = _subscribe_events
+    node = await setup_integration_with_node_fixture(hass, node_fixture, matter_client)
+    removed = {
+        "select.laundrywasher_spin_speed": ["1/83/0", "1/83/1"],
+        "select.laundrywasher_number_of_rinses": ["1/83/2", "1/83/3"],
+    }
+
+    node_data = copy.deepcopy(node.node_data)
+    for paths in removed.values():
+        for path in paths:
+            del node_data.attributes[path]
+    node.update(node_data)
+    for callback in subscribers[f"{EventType.NODE_UPDATED}/{node.node_id}/None"]:
+        callback(EventType.NODE_UPDATED, node)
+    await hass.async_block_till_done()
+
+    for entity_id in removed:
+        assert entity_registry.async_get(entity_id) is None
+
+
+@pytest.mark.parametrize("node_fixture", ["silabs_laundrywasher"])
+async def test_entity_kept_when_endpoint_leaves_node_data(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test entities of an endpoint missing from the node data are not removed.
+
+    The endpoint is removed with its device when endpoint_removed arrives.
+    """
+    entity_id = "select.laundrywasher_spin_speed"
+    node_data = copy.deepcopy(matter_node.node_data)
+    node_data.attributes = {
+        path: value
+        for path, value in node_data.attributes.items()
+        if not path.startswith("1/")
+    }
+    matter_node.update(node_data)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.NODE_UPDATED,
+        matter_node,
+        node_id=matter_node.node_id,
+    )
+
+    assert entity_registry.async_get(entity_id) is not None
+
+
+def _dispatch(
+    matter_client: MagicMock, event: EventType, data: Any, path: str | None
+) -> None:
+    """Call the matching subscribers without running the event loop."""
+    for sub in matter_client.subscribe_events.call_args_list:
+        kwargs = sub.kwargs
+        if kwargs.get("event_filter") != event:
+            continue
+        if path is not None and kwargs.get("attr_path_filter") != path:
+            continue
+        kwargs["callback"](event, data)
+
+
+@pytest.mark.parametrize("node_fixture", ["silabs_laundrywasher"])
+async def test_entity_kept_when_attribute_comes_back_in_same_batch(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test an entity is kept when a later update of the same batch restores it."""
+    entity_id = "select.laundrywasher_spin_speed"
+    full = copy.deepcopy(matter_node.node_data)
+    partial = copy.deepcopy(full)
+    for path in ("1/83/0", "1/83/1"):
+        del partial.attributes[path]
+
+    matter_node.update(partial)
+    _dispatch(matter_client, EventType.NODE_UPDATED, matter_node, None)
+    matter_node.update(full)
+    _dispatch(matter_client, EventType.NODE_UPDATED, matter_node, None)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(entity_id) is not None
+
+
+@pytest.mark.parametrize("node_fixture", ["aqara_door_window_p2"])
+async def test_entity_kept_when_feature_comes_back_in_same_batch(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test an entity is kept when its feature leaves and returns in one batch."""
+    entity_id = "number.aqara_door_and_window_sensor_p2_sensitivity"
+    path = "1/128/65532"
+    feature_map = matter_node.node_data.attributes[path]
+
+    for value in (0, feature_map):
+        set_node_attribute(matter_node, 1, 128, 65532, value)
+        _dispatch(matter_client, EventType.ATTRIBUTE_UPDATED, value, path)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(entity_id) is not None
+
+    set_node_attribute(matter_node, 1, 128, 65532, 0)
+    _dispatch(matter_client, EventType.ATTRIBUTE_UPDATED, 0, path)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(entity_id) is None
+
+
+@pytest.mark.parametrize("node_fixture", ["aqara_door_window_p2"])
+async def test_entity_removed_for_other_reason_in_same_batch(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test a returning feature does not keep an entity missing a required attribute."""
+    entity_id = "number.aqara_door_and_window_sensor_p2_sensitivity"
+    node_data = copy.deepcopy(matter_node.node_data)
+    del node_data.attributes["1/128/0"]
+
+    set_node_attribute(matter_node, 1, 128, 65532, 0)
+    _dispatch(matter_client, EventType.ATTRIBUTE_UPDATED, 0, "1/128/65532")
+    matter_node.update(node_data)
+    _dispatch(matter_client, EventType.NODE_UPDATED, matter_node, None)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(entity_id) is None
+
+
+@pytest.mark.parametrize("node_fixture", ["silabs_fan"])
+async def test_node_update_without_wind_setting(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test a fan falls back to its fan mode preset without a wind setting."""
+    entity_id = "fan.sl_fan"
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=1,
+        cluster_id=514,
+        attribute_id=10,
+        value=2,
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["preset_mode"] == "natural_wind"
+
+    node_data = copy.deepcopy(matter_node.node_data)
+    del node_data.attributes["1/514/10"]
+    matter_node.update(node_data)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.NODE_UPDATED,
+        matter_node,
+        node_id=matter_node.node_id,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["preset_mode"] == "low"
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "entity_id", "removed_path", "check_attribute"),
+    [
+        (
+            "extended_color_light",
+            "light.mock_extended_color_light",
+            "1/8/0",
+            "brightness",
+        ),
+        (
+            "extended_color_light",
+            "light.mock_extended_color_light",
+            "1/768/0",
+            "hs_color",
+        ),
+    ],
+)
+async def test_node_update_without_optional_attribute(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+    removed_path: str,
+    check_attribute: str,
+) -> None:
+    """Test a node update without an optional attribute the entity reads.
+
+    The client resets the endpoint to the node update, so the attribute reads as
+    None even without a null value before it.
+    """
+    node_data = copy.deepcopy(matter_node.node_data)
+    del node_data.attributes[removed_path]
+    matter_node.update(node_data)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.NODE_UPDATED,
+        matter_node,
+        node_id=matter_node.node_id,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "on"
+    assert state.attributes[check_attribute] is None
+
+
+async def test_bridged_node_without_device_info(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test a Bridged Node without BridgedDeviceBasicInformation is set up."""
+    node = create_node_from_fixture("fritz_bridge")
+    node_data = copy.deepcopy(node.node_data)
+    node_data.attributes = {
+        path: value
+        for path, value in node_data.attributes.items()
+        if not path.startswith("42/57/")
+    }
+
+    await _setup_integration_with_nodes(hass, matter_client, [MatterNode(node_data)])
+
+    # the entities of endpoints 40 and 41 belong to the device of the Bridged Node (42)
+    for endpoint_id in (40, 41):
+        assert any(
+            entity.platform == "matter" and f"-42-{endpoint_id}-" in entity.unique_id
+            for entity in entity_registry.entities.values()
+        )

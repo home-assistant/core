@@ -7,6 +7,7 @@ from enum import StrEnum
 import logging
 from typing import Any, override
 
+from pynintendoparental.device import Device
 from pynintendoparental.exceptions import BedtimeOutOfRangeError
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
@@ -23,7 +24,7 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import NintendoParentalControlsConfigEntry, NintendoUpdateCoordinator
-from .entity import Device, NintendoDevice
+from .entity import NintendoDevice
 
 _LOGGER = logging.getLogger(__name__)
 

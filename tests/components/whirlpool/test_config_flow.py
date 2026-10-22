@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import aiohttp
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from whirlpool.auth import AccountLockedError
 from whirlpool.backendselector import Brand, Region
 
@@ -14,8 +15,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-
-from tests.common import MockConfigEntry
 
 CONFIG_INPUT = {
     CONF_USERNAME: "test-username",
@@ -69,7 +68,7 @@ def assert_successful_reauth_flow(
 def fixture_mock_whirlpool_setup_entry():
     """Set up async_setup_entry fixture."""
     with patch(
-        "homeassistant.components.whirlpool.async_setup_entry", return_value=True
+        "homeassistant.components.whirlpool.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

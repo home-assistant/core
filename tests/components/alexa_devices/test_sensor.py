@@ -12,6 +12,11 @@ from aioamazondevices.exceptions import (
 from aioamazondevices.structures import AmazonDevice, AmazonDeviceSensor
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
@@ -28,8 +33,6 @@ from .const import (
     TEST_DEVICE_AQM,
     TEST_DEVICE_AQM_SN,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.parametrize(
@@ -140,18 +143,17 @@ async def test_device_removed_and_readded(
 
 
 @pytest.mark.parametrize(
-    ("sensor", "feature_name", "api_value", "scale", "state_value", "unit"),
+    ("sensor", "api_value", "scale", "state_value", "unit"),
     [
         (
             "temperature",
-            "temperatureSensor",
             "86",
             "FAHRENHEIT",
             "30.0",  # State machine converts to °C
             "°C",  # State machine converts to °C
         ),
-        ("temperature", "temperatureSensor", "22.5", "CELSIUS", "22.5", "°C"),
-        ("illuminance", "lightSensor", "800", None, "800", "lx"),
+        ("temperature", "22.5", "CELSIUS", "22.5", "°C"),
+        ("illuminance", "800", None, "800", "lx"),
     ],
 )
 async def test_unit_of_measurement(
@@ -160,7 +162,6 @@ async def test_unit_of_measurement(
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     sensor: str,
-    feature_name: str,
     api_value: Any,
     scale: str | None,
     state_value: Any,
@@ -180,8 +181,9 @@ async def test_unit_of_measurement(
             error_msg=None,
             error_type=None,
             scale=scale,
-            feature_name=feature_name,
-            instance="",
+            feature_name="sensor",
+            property_name="sensor",
+            instance="1",
         )
     }
 
@@ -213,7 +215,8 @@ async def test_sensor_unavailable(
             error_type=None,
             scale=None,
             feature_name="lightSensor",
-            instance="",
+            property_name="illuminance",
+            instance="1",
         )
     }
 

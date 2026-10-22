@@ -14,11 +14,10 @@ from powerfox import (
     WaterMeter,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.powerfox.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-
-from tests.common import MockConfigEntry
 
 
 def _power_meter() -> PowerMeter:
@@ -83,7 +82,7 @@ def _gas_report() -> DeviceReport:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.powerfox.async_setup_entry", return_value=True
+        "homeassistant.components.powerfox.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

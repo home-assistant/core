@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_ENABLED,
     CONF_ENTITY_ID,
     CONF_EVENT_DATA,
+    CONF_EXCLUDE,
     CONF_ID,
     CONF_OPTIONS,
     CONF_PLATFORM,
@@ -859,9 +860,11 @@ def async_extract_targets(
     config: dict,
     target: Literal["entity_id", "device_id", "area_id", "floor_id", "label_id"],
 ) -> list[str]:
-    """Extract targets from a target config."""
+    """Extract targets from a target config, including the exclude block."""
     if not (target_conf := config.get(CONF_TARGET)):
         return []
-    if not (targets := target_conf.get(target)):
-        return []
-    return [targets] if isinstance(targets, str) else targets
+    found: list[str] = []
+    for conf in (target_conf, target_conf.get(CONF_EXCLUDE, {})):
+        if targets := conf.get(target):
+            found.extend([targets] if isinstance(targets, str) else targets)
+    return found

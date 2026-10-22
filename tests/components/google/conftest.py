@@ -11,6 +11,8 @@ from aiohttp.client_exceptions import ClientError
 from gcal_sync.auth import API_BASE_URL
 from oauth2client.client import OAuth2Credentials
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 import yaml
 
 from homeassistant.components.application_credentials import (
@@ -22,9 +24,6 @@ from homeassistant.components.google import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 type ApiResult = Callable[[dict[str, Any]], None]
 type ComponentSetup = Callable[[], Awaitable[bool]]

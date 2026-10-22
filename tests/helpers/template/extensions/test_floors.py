@@ -1,5 +1,7 @@
 """Test floor template functions."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -8,7 +10,6 @@ from homeassistant.helpers import (
     floor_registry as fr,
 )
 
-from tests.common import MockConfigEntry
 from tests.helpers.template.helpers import assert_result_info, render_to_info
 
 

@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from aioacaia.exceptions import AcaiaDeviceNotFound, AcaiaError, AcaiaUnknownDevice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.acaia.const import CONF_IS_NEW_STYLE_SCALE, DOMAIN
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
@@ -12,8 +13,6 @@ from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
-
-from tests.common import MockConfigEntry
 
 service_info = BluetoothServiceInfo(
     name="LUNAR-DDEEFF",

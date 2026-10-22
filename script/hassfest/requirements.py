@@ -142,7 +142,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # - package is the package (can be transitive) referencing the dependency
     # - reasonX should be the name of the invalid dependency
     "adax": {"adax": {"async-timeout"}, "adax-local": {"async-timeout"}},
-    "airthings": {"airthings-cloud": {"async-timeout"}},
     "apache_kafka": {"aiokafka": {"async-timeout"}},
     "aseko_pool_live": {"gql": {"backoff"}},
     "coinbase": {"coinbase-advanced-py": {"backoff"}},
@@ -337,8 +336,6 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     },
     # https://github.com/smappee/pysmappee
     "smappee": {"homeassistant": {"pysmappee"}},
-    # https://github.com/mosquito/caio/pull/75
-    "velbus": {"aiofile": {"caio"}},
     # https://github.com/watergate-ai/watergate-local-api-python
     "watergate": {"homeassistant": {"watergate-local-api"}},
     # https://github.com/markusressel/xs1-api-client

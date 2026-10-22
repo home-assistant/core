@@ -24,7 +24,7 @@
         'entity_id': '11111111-2222-3333-4444-555555555555',
         'features': dict({
           'temperatureSensor': dict({
-            '': dict({
+            '1': dict({
               'friendly_name': None,
               'maximum_value': None,
               'minimum_value': None,
@@ -33,6 +33,9 @@
                 'temperature',
               ]),
               'raw_configuration': dict({
+              }),
+              'sensor_keys': dict({
+                'temperature': 'temperature',
               }),
               'supported_modes': list([
               ]),
@@ -76,9 +79,10 @@
             'error': False,
             'error_msg': None,
             'error_type': None,
-            'feature_name': '',
+            'feature_name': 'dnd',
             'instance': '',
             'name': 'dnd',
+            'property_name': 'dnd',
             'scale': None,
             'time_of_sample': None,
             'value': False,
@@ -88,8 +92,9 @@
             'error_msg': None,
             'error_type': None,
             'feature_name': 'temperatureSensor',
-            'instance': '',
+            'instance': '1',
             'name': 'temperature',
+            'property_name': 'temperature',
             'scale': 'CELSIUS',
             'time_of_sample': None,
             'value': '22.5',
@@ -97,6 +102,8 @@
         }),
         'serial_number': 'echo_test_serial_number',
         'software_version': 'echo_test_software_version',
+        'unsupported_features': dict({
+        }),
         'voice_control_supported': True,
       }),
       'Alexa.Joke.Play',
@@ -130,7 +137,7 @@
         'entity_id': '11111111-2222-3333-4444-555555555555',
         'features': dict({
           'temperatureSensor': dict({
-            '': dict({
+            '1': dict({
               'friendly_name': None,
               'maximum_value': None,
               'minimum_value': None,
@@ -139,6 +146,9 @@
                 'temperature',
               ]),
               'raw_configuration': dict({
+              }),
+              'sensor_keys': dict({
+                'temperature': 'temperature',
               }),
               'supported_modes': list([
               ]),
@@ -182,9 +192,10 @@
             'error': False,
             'error_msg': None,
             'error_type': None,
-            'feature_name': '',
+            'feature_name': 'dnd',
             'instance': '',
             'name': 'dnd',
+            'property_name': 'dnd',
             'scale': None,
             'time_of_sample': None,
             'value': False,
@@ -194,8 +205,9 @@
             'error_msg': None,
             'error_type': None,
             'feature_name': 'temperatureSensor',
-            'instance': '',
+            'instance': '1',
             'name': 'temperature',
+            'property_name': 'temperature',
             'scale': 'CELSIUS',
             'time_of_sample': None,
             'value': '22.5',
@@ -203,6 +215,8 @@
         }),
         'serial_number': 'echo_test_serial_number',
         'software_version': 'echo_test_software_version',
+        'unsupported_features': dict({
+        }),
         'voice_control_supported': True,
       }),
       'bell_02',
@@ -236,7 +250,7 @@
         'entity_id': '11111111-2222-3333-4444-555555555555',
         'features': dict({
           'temperatureSensor': dict({
-            '': dict({
+            '1': dict({
               'friendly_name': None,
               'maximum_value': None,
               'minimum_value': None,
@@ -245,6 +259,9 @@
                 'temperature',
               ]),
               'raw_configuration': dict({
+              }),
+              'sensor_keys': dict({
+                'temperature': 'temperature',
               }),
               'supported_modes': list([
               ]),
@@ -288,9 +305,10 @@
             'error': False,
             'error_msg': None,
             'error_type': None,
-            'feature_name': '',
+            'feature_name': 'dnd',
             'instance': '',
             'name': 'dnd',
+            'property_name': 'dnd',
             'scale': None,
             'time_of_sample': None,
             'value': False,
@@ -300,8 +318,9 @@
             'error_msg': None,
             'error_type': None,
             'feature_name': 'temperatureSensor',
-            'instance': '',
+            'instance': '1',
             'name': 'temperature',
+            'property_name': 'temperature',
             'scale': 'CELSIUS',
             'time_of_sample': None,
             'value': '22.5',
@@ -309,6 +328,8 @@
         }),
         'serial_number': 'echo_test_serial_number',
         'software_version': 'echo_test_software_version',
+        'unsupported_features': dict({
+        }),
         'voice_control_supported': True,
       }),
       'Play B.B.C. radio on TuneIn',

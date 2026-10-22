@@ -2,12 +2,11 @@
 
 from boschshcpy import ShutterContactService
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
 
 from .conftest import setup_integration, shutter_contact_device
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

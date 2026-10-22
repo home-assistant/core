@@ -14,6 +14,7 @@ from pyatv.exceptions import (
     ProtocolError,
 )
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.apple_tv.const import DOMAIN
 from homeassistant.components.media_player import (
@@ -35,8 +36,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.typing import WebSocketGenerator
 
 ENTITY_ID = "media_player.living_room_living_room"
 _MUSIC_URL = "http://example.local:8123/api/tts_proxy/abc.mp3"

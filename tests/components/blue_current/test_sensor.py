@@ -3,13 +3,12 @@
 from datetime import datetime
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import DEFAULT_CHARGE_POINT, init_integration
-
-from tests.common import MockConfigEntry
 
 charge_point_status = {
     "actual_v1": 14,

@@ -1,11 +1,54 @@
 """Tests for the gen_requirements_all script."""
 
+from pathlib import Path
+import tomllib
 from unittest.mock import patch
 
 import pytest
 
 from script import gen_requirements_all
 from script.hassfest.requirements_util import _normalize_package_name
+
+
+def test_pytest_package_dependency_versions(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Sync base and optional pins without changing publish metadata or extras."""
+    monkeypatch.chdir(tmp_path)
+    Path("pyproject.toml").write_text('[project]\ndependencies = ["core-lib==2.0.0"]\n')
+    Path("requirements_test.txt").write_text(
+        "# Test dependencies\n-c constraints.txt\n\ntest_lib==3.0.0\n"
+    )
+    package = gen_requirements_all.PYTEST_PACKAGE_PATH
+    package.parent.mkdir(parents=True)
+    package.write_text(
+        """[project]
+version = "0.0.0"
+dependencies = ["homeassistant", "core-lib==1.0.0", "test-lib==1.0.0"]
+
+[project.optional-dependencies]
+radio = ["radio-lib[scan]==1.0.0; sys_platform == 'linux'"]
+
+[project.entry-points.pytest11]
+pytest_homeassistant = "pytest_homeassistant.bootstrap"
+"""
+    )
+    output = gen_requirements_all.pytest_package_output(
+        {"radio-lib[other]==4.0.0": ["homeassistant.components.radio"]}
+    )
+    project = tomllib.loads(output)["project"]
+    assert project["version"] == "0.0.0"
+    assert project["dependencies"] == [
+        "homeassistant",
+        "core-lib==2.0.0",
+        "test-lib==3.0.0",
+    ]
+    assert project["optional-dependencies"] == {
+        "radio": ['radio-lib[scan]==4.0.0; sys_platform == "linux"']
+    }
+    assert project["entry-points"] == {
+        "pytest11": {"pytest_homeassistant": "pytest_homeassistant.bootstrap"}
+    }
 
 
 def test_overrides_normalized() -> None:

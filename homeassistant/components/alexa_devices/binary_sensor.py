@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Final, override
 
+from aioamazondevices.const.sensors import SENSOR_STATE_OFF
 from aioamazondevices.structures import AmazonDevice
 
 from homeassistant.components.binary_sensor import (
@@ -45,7 +46,9 @@ BINARY_SENSORS: Final = (
     AmazonBinarySensorEntityDescription(
         key="detectionState",
         device_class=BinarySensorDeviceClass.MOTION,
-        is_on_fn=lambda device, key: bool(device.sensors[key].value != "NOT_FOUND"),
+        is_on_fn=lambda device, key: bool(
+            device.sensors[key].value != SENSOR_STATE_OFF
+        ),
         is_supported_fn=lambda device, key: device.sensors.get(key) is not None,
         is_available_fn=lambda device, key: (
             device.online
