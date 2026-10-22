@@ -34,6 +34,16 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
+def _rate_limited_error(err: GkpRateLimitError) -> UpdateFailed:
+    """Return an update failure retrying after the delay requested by the API."""
+    return UpdateFailed(
+        translation_domain=DOMAIN,
+        translation_key="rate_limited",
+        translation_placeholders={"retry_after": str(err.retry_after)},
+        retry_after=err.retry_after,
+    )
+
+
 @dataclass
 class GkpDeviceData:
     """Data class for device coordinator."""
@@ -107,6 +117,8 @@ class GkpHubCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
                 translation_domain=DOMAIN,
                 translation_key="authentication_failed",
             ) from err
+        except GkpRateLimitError as err:
+            raise _rate_limited_error(err) from err
 
         self.installations = {
             installation.installation_id: installation for installation in installations
@@ -124,6 +136,8 @@ class GkpHubCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
                     translation_domain=DOMAIN,
                     translation_key="authentication_failed",
                 ) from err
+            except GkpRateLimitError as err:
+                raise _rate_limited_error(err) from err
             except GkpError as err:
                 _LOGGER.debug(
                     "Failed to wake up devices of installation %s: %s",
@@ -145,12 +159,7 @@ class GkpHubCoordinator(DataUpdateCoordinator[dict[str, Thermostat]]):
                 translation_key="authentication_failed",
             ) from err
         except GkpRateLimitError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="rate_limited",
-                translation_placeholders={"retry_after": str(err.retry_after)},
-                retry_after=err.retry_after,
-            ) from err
+            raise _rate_limited_error(err) from err
 
         if result.errors and not result.thermostats:
             raise UpdateFailed(
@@ -250,6 +259,8 @@ class GkpDeviceCoordinator(DataUpdateCoordinator[GkpDeviceData]):
             thermostat = await self.client.get_thermostat(
                 self.device_id, self.installation
             )
+        except GkpRateLimitError as err:
+            raise _rate_limited_error(err) from err
         except GkpError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

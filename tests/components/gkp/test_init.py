@@ -509,3 +509,88 @@ async def test_rate_limited(
     state = hass.states.get(LIVING_ROOM_ENTITY_ID)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
+
+
+async def test_setup_entry_rate_limited(
+    hass: HomeAssistant,
+    mock_gkp_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the setup is retried after the delay requested by the API."""
+    get_installations = mock_gkp_client.get_installations.side_effect
+    mock_gkp_client.get_installations.side_effect = GkpRateLimitError(
+        "limited", RETRY_AFTER
+    )
+
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    mock_gkp_client.get_installations.side_effect = get_installations
+    await advance_time(hass, freezer, timedelta(seconds=RETRY_AFTER - 1))
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    await advance_time(hass, freezer, timedelta(seconds=1))
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    ("method", "interval"),
+    [
+        pytest.param("get_installations", DISCOVERY_INTERVAL, id="discovery"),
+        pytest.param("notify_user_connected", USER_CONNECTED_INTERVAL, id="wake_up"),
+    ],
+)
+async def test_rate_limited_before_fetching_thermostats(
+    hass: HomeAssistant,
+    mock_gkp_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    method: str,
+    interval: timedelta,
+) -> None:
+    """Test a rate limit stops the hub update until the requested delay."""
+    await setup_integration(hass, mock_config_entry)
+    rate_limited_method = getattr(mock_gkp_client, method)
+    rate_limited_method.side_effect = GkpRateLimitError("limited", RETRY_AFTER)
+    mock_gkp_client.get_thermostats.reset_mock()
+
+    await advance_time(hass, freezer, interval)
+
+    mock_gkp_client.get_thermostats.assert_not_called()
+    rate_limited_method.reset_mock()
+
+    await advance_time(hass, freezer, timedelta(seconds=RETRY_AFTER - 1))
+    rate_limited_method.assert_not_called()
+
+    await advance_time(hass, freezer, timedelta(seconds=1))
+    assert rate_limited_method.called
+
+
+async def test_refresh_after_command_rate_limited(
+    hass: HomeAssistant,
+    mock_gkp_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test fast polling waits for the delay requested by the API."""
+    await setup_integration(hass, mock_config_entry)
+    mock_gkp_client.get_thermostat.side_effect = GkpRateLimitError(
+        "limited", RETRY_AFTER
+    )
+
+    # A command starts fast polling of the device
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: LIVING_ROOM_ENTITY_ID, ATTR_TEMPERATURE: 23.5},
+        blocking=True,
+    )
+    mock_gkp_client.get_thermostat.assert_called_once()
+    mock_gkp_client.get_thermostat.reset_mock()
+
+    await advance_time(hass, freezer, timedelta(seconds=RETRY_AFTER - 1))
+    mock_gkp_client.get_thermostat.assert_not_called()
+
+    await advance_time(hass, freezer, timedelta(seconds=1))
+    assert mock_gkp_client.get_thermostat.called
