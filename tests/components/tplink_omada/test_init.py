@@ -356,6 +356,54 @@ async def test_cleanup_recreates_device_when_reappears(
     )
 
 
+async def test_returning_device_kept_on_transient_empty_update(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a transient empty update does not delete a returning device."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    controller = hass.config_entries.async_get_entry(
+        mock_config_entry.entry_id
+    ).runtime_data
+    switch_mac = "54-AF-97-00-00-01"
+    site_client = mock_omada_client.get_site_client.return_value
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, switch_mac), mock_config_entry.entry_id
+    )
+    assert device_entry is not None
+    await controller.async_remove_device(switch_mac, device_entry)
+
+    async def _register(device: OmadaListDevice) -> None:
+        """Recreate the device, then let a transient empty update land."""
+        device_registry.async_get_or_create(
+            config_entry_id=mock_config_entry.entry_id,
+            identifiers={(DOMAIN, device.mac)},
+            manufacturer="TP-Link",
+            model="Test",
+            name="Returning switch",
+        )
+        site_client.get_devices = AsyncMock(return_value=[])
+        await controller.devices_coordinator.async_refresh()
+
+    await controller.async_register_device_entities(
+        lambda device: dr.format_mac(device.mac) == dr.format_mac(switch_mac),
+        _register,
+    )
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, switch_mac), mock_config_entry.entry_id
+        )
+        is not None
+    )
+
+
 async def test_gateway_entities_created_when_gateway_appears_later(
     hass: HomeAssistant,
     mock_omada_client: MagicMock,

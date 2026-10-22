@@ -24,6 +24,7 @@ from .coordinator import (
     OmadaDevicesCoordinator,
     OmadaGatewayCoordinator,
     OmadaSwitchPortCoordinator,
+    device_removal_is_confirmed,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -140,6 +141,11 @@ class OmadaSiteController:
                     continue
 
                 if mac not in self._removed_device_macs:
+                    continue
+
+                if not device_removal_is_confirmed(self._devices_coordinator):
+                    # A transient empty or failed device list says nothing about
+                    # this device, so keep the entry the callback just created.
                     continue
 
                 current_macs = {

@@ -328,27 +328,32 @@ class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):
         )
 
 
+def device_removal_is_confirmed(coordinator: OmadaDevicesCoordinator) -> bool:
+    """Return True when the device list can be trusted for removal decisions."""
+    if not coordinator.last_update_success:
+        return False
+
+    if coordinator.data:
+        return True
+
+    # A successful but empty response is likely a transient controller glitch,
+    # and removal also deletes the device's entities from the registry, so only
+    # clean once the empty list is confirmed over consecutive updates.
+    return coordinator.consecutive_empty_updates >= EMPTY_DEVICE_LIMIT
+
+
 async def async_cleanup_devices(
     hass: HomeAssistant,
     controller: OmadaSiteController,
 ) -> None:
     """Remove devices from the registry when Omada no longer reports them."""
-    if not controller.devices_coordinator.last_update_success:
+    devices_coordinator = controller.devices_coordinator
+    if not device_removal_is_confirmed(devices_coordinator):
         return
 
-    devices = controller.devices_coordinator.data
-    if not devices:
-        # A successful but empty response is likely a transient controller glitch,
-        # and removal also deletes the device's entities from the registry, so only
-        # clean once the empty list is confirmed over consecutive updates.
-        if (
-            controller.devices_coordinator.consecutive_empty_updates
-            < EMPTY_DEVICE_LIMIT
-        ):
-            return
-
+    devices = devices_coordinator.data
     device_registry = dr.async_get(hass)
-    entry_id = controller.devices_coordinator.config_entry.entry_id
+    entry_id = devices_coordinator.config_entry.entry_id
     known_devices = {dr.format_mac(mac) for mac in devices}
     # The controller device is not part of the site's device list.
     controller_mac = dr.format_mac(controller.controller_status_coordinator.data.mac)
