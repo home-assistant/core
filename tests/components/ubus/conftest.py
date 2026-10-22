@@ -31,7 +31,7 @@ MAC_GUEST = "99:88:77:66:55:44"
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.ubus.async_setup_entry", return_value=True
+        "homeassistant.components.ubus.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
