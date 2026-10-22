@@ -10,11 +10,9 @@ from typing import TYPE_CHECKING, Any, final
 import probatio
 
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_ANNOUNCE,
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as MP_DOMAIN,
-    SERVICE_PLAY_MEDIA,
+    MediaPlayerService,
+    MediaPlayerServiceArgument,
     MediaType,
 )
 from homeassistant.config import config_per_platform
@@ -152,10 +150,10 @@ async def async_setup_legacy(
 
             await hass.services.async_call(
                 MP_DOMAIN,
-                SERVICE_PLAY_MEDIA,
+                MediaPlayerService.PLAY_MEDIA,
                 {
                     ATTR_ENTITY_ID: entity_ids,
-                    ATTR_MEDIA_CONTENT_ID: generate_media_source_id(
+                    MediaPlayerServiceArgument.MEDIA_CONTENT_ID: generate_media_source_id(
                         hass,
                         engine=p_type,
                         message=service.data[ATTR_MESSAGE],
@@ -163,8 +161,8 @@ async def async_setup_legacy(
                         options=service.data.get(ATTR_OPTIONS),
                         cache=service.data.get(ATTR_CACHE),
                     ),
-                    ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-                    ATTR_MEDIA_ANNOUNCE: True,
+                    MediaPlayerServiceArgument.MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                    MediaPlayerServiceArgument.ANNOUNCE: True,
                 },
                 blocking=True,
                 context=service.context,
