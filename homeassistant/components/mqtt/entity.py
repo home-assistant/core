@@ -1073,6 +1073,11 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
             )
             try:
                 await self.async_update(discovery_payload)
+            except probatio.Invalid as err:
+                # Keep the current payload, so the update is validated again
+                # when it is received again
+                async_handle_schema_error(discovery_payload, err)
+                return
             except dr.DeviceInfoError as err:
                 # Cancel the update, the current config remains active
                 _log_device_info_error(err)

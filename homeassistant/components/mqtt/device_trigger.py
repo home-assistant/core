@@ -262,9 +262,10 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdateMixin):
                 config,
             )
             return
-        # Update the device before the trigger, so a failing update does not change it
+        # Update the device first, so a failing update does not change the trigger
         update_device(self.hass, self._config_entry, config)
-        # The debug info shares the discovery data that holds the current payload
+        # The debug info shares the discovery data that holds the current payload,
+        # so it is only updated when the update is accepted
         debug_info.update_trigger_discovery_data(
             self.hass, discovery_hash, discovery_data
         )
