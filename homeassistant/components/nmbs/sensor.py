@@ -142,8 +142,10 @@ class NMBSSensor(NMBSEntity, SensorEntity):
 
         attrs["canceled"] = connection.departure.canceled
         if attrs["canceled"]:
+            attrs["departure"] = None
             attrs["departure_minutes"] = None
         else:
+            attrs["departure"] = f"In {departure} minutes"
             attrs["departure_minutes"] = departure
 
         if self._show_on_map:
@@ -165,6 +167,7 @@ class NMBSSensor(NMBSEntity, SensorEntity):
             ) + get_delay_in_minutes(via.departure.delay)
 
         attrs["delay_seconds"] = connection.departure.delay
+        attrs["delay"] = f"{delay} minutes"
         attrs["delay_minutes"] = delay
 
         return attrs
@@ -229,6 +232,7 @@ class NMBSLiveBoard(NMBSEntity, SensorEntity):
 
         attrs: dict[str, Any] = {
             "departure_time": departure.time,
+            "departure": f"In {departure_minutes} minutes",
             "departure_minutes": departure_minutes,
             "extra_train": departure.is_extra,
             "vehicle_id": departure.vehicle,
@@ -237,6 +241,7 @@ class NMBSLiveBoard(NMBSEntity, SensorEntity):
 
         if delay > 0:
             attrs["delay_seconds"] = departure.delay
+            attrs["delay"] = f"{delay} minutes"
             attrs["delay_minutes"] = delay
 
         return attrs

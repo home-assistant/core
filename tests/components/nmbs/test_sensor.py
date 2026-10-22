@@ -140,9 +140,11 @@ async def test_connection_sensor(
     assert attrs["platform_departing"] == "5"
     assert attrs["vehicle_id"] == "BE.NMBS.IC1832"
     assert attrs["canceled"] is False
+    assert attrs["departure"] == "In 10 minutes"
     assert attrs["departure_minutes"] == 10
     assert attrs["departure_time"] is not None
     assert attrs["delay_seconds"] == 600
+    assert attrs["delay"] == "10 minutes"
     assert attrs["delay_minutes"] == 10
     assert attrs["via"] == "Brussel-Centraal/Bruxelles-Central"
     assert attrs["via_arrival_platform"] == "12"
@@ -178,9 +180,11 @@ async def test_connection_sensor_exclude_vias(
     assert state is not None
     assert state.state == "10"
     attrs = state.attributes
+    assert attrs["departure"] == "In 30 minutes"
     assert attrs["departure_minutes"] == 30
     assert attrs["departure_time"] is not None
     assert attrs["delay_seconds"] == 0
+    assert attrs["delay"] == "0 minutes"
     assert attrs["delay_minutes"] == 0
     assert attrs["icon"] == "mdi:train"
     assert "via" not in attrs
@@ -253,6 +257,7 @@ async def test_connection_sensor_canceled(
     state = hass.states.get(_get_entity_id(entity_registry, CONNECTION_UNIQUE_ID))
     assert state is not None
     assert state.attributes["canceled"] is True
+    assert state.attributes["departure"] is None
     assert state.attributes["departure_time"] is not None
     assert state.attributes["departure_minutes"] is None
 
@@ -298,11 +303,13 @@ async def test_liveboard_sensors(
     assert from_state.state == "Track 3 - Blankenberge"
     attrs = from_state.attributes
     assert attrs["monitored_station"] == "Brussel-Noord/Bruxelles-Nord"
+    assert attrs["departure"] == "In 5 minutes"
     assert attrs["departure_minutes"] == 5
     assert attrs["departure_time"] is not None
     assert attrs["extra_train"] is False
     assert attrs["vehicle_id"] == "BE.NMBS.IC1832"
     assert attrs["delay_seconds"] == 600
+    assert attrs["delay"] == "10 minutes"
     assert attrs["delay_minutes"] == 10
     assert attrs["icon"] == "mdi:alert-octagon"
 
@@ -312,10 +319,12 @@ async def test_liveboard_sensors(
     assert to_state.state == "Track 7 - Gent-Sint-Pieters"
     to_attrs = to_state.attributes
     assert to_attrs["monitored_station"] == "Brussel-Zuid/Bruxelles-Midi"
+    assert to_attrs["departure"] == "In 5 minutes"
     assert to_attrs["departure_minutes"] == 5
     assert to_attrs["extra_train"] is False
     assert to_attrs["vehicle_id"] == "BE.NMBS.IC3536"
     assert "delay_seconds" not in to_attrs
+    assert "delay" not in to_attrs
     assert "delay_minutes" not in to_attrs
     assert to_attrs["icon"] == "mdi:train"
 
@@ -363,6 +372,7 @@ async def test_liveboard_sensor_no_delay(
     attrs = state.attributes
     assert attrs["icon"] == "mdi:train"
     assert "delay_seconds" not in attrs
+    assert "delay" not in attrs
     assert "delay_minutes" not in attrs
 
 
@@ -683,6 +693,7 @@ async def test_departure_minutes_decrease_with_unchanged_data(
     connection_id = _get_entity_id(entity_registry, CONNECTION_UNIQUE_ID)
     state = hass.states.get(connection_id)
     assert state is not None
+    assert state.attributes["departure"] == "In 10 minutes"
     assert state.attributes["departure_time"] is not None
     assert state.attributes["departure_minutes"] == 10
 
@@ -692,6 +703,7 @@ async def test_departure_minutes_decrease_with_unchanged_data(
 
     state = hass.states.get(connection_id)
     assert state is not None
+    assert state.attributes["departure"] == "In 9 minutes"
     assert state.attributes["departure_time"] is not None
     assert state.attributes["departure_minutes"] == 9
 
