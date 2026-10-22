@@ -1625,6 +1625,15 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "chirpstack": {
+      "name": "ChirpStack",
+      "integration_type": "hub",
+      "categories": [
+        "hubs_protocols.wireless_protocols"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "cielo_home": {
       "name": "Cielo Home",
       "integration_type": "hub",
@@ -1666,6 +1675,16 @@
             "messaging_notifications.chat_apps"
           ],
           "name": "Cisco Webex Teams"
+        },
+        "meraki": {
+          "integration_type": "hub",
+          "config_flow": false,
+          "iot_class": "cloud_polling",
+          "categories": [
+            "presence_location.network_presence",
+            "computers_network.routers_network"
+          ],
+          "name": "Meraki"
         }
       }
     },
@@ -3422,7 +3441,7 @@
       "iot_class": "cloud_push"
     },
     "flow_it": {
-      "name": "Flow-it",
+      "name": "AriaQ",
       "integration_type": "device",
       "categories": [
         "climate.fans_ventilation"
@@ -6707,16 +6726,6 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "meraki": {
-      "name": "Meraki",
-      "integration_type": "hub",
-      "categories": [
-        "presence_location.network_presence",
-        "computers_network.routers_network"
-      ],
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
     "message_bird": {
       "name": "MessageBird",
       "integration_type": "hub",
@@ -6932,6 +6941,16 @@
       "iot_class": "cloud_push",
       "single_config_entry": true
     },
+    "mijn_farmad_apotheek": {
+      "name": "Mijn Farmad Apotheek",
+      "integration_type": "service",
+      "categories": [
+        "health_wellbeing"
+      ],
+      "config_flow": true,
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
+    },
     "mijndomein_energie": {
       "name": "Mijndomein Energie",
       "integration_type": "virtual",
@@ -6992,7 +7011,7 @@
         "melcloud_home": {
           "integration_type": "hub",
           "config_flow": true,
-          "iot_class": "cloud_polling",
+          "iot_class": "cloud_push",
           "categories": [
             "climate.heat_pumps_air_conditioning"
           ],
@@ -9926,6 +9945,16 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "sensecap_lorawan": {
+      "name": "SenseCAP",
+      "integration_type": "hub",
+      "categories": [
+        "sensors"
+      ],
+      "config_flow": true,
+      "iot_class": "local_push",
+      "single_config_entry": true
+    },
     "sensereo": {
       "name": "Sensereo",
       "iot_standards": [
@@ -10734,6 +10763,15 @@
       ],
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "spin_ble": {
+      "name": "Spin EV Charger",
+      "integration_type": "device",
+      "categories": [
+        "energy.ev_charging"
+      ],
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "splunk": {
       "name": "Splunk",

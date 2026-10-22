@@ -88,8 +88,13 @@ async def async_migrate_entry(
         )
         _LOGGER.debug("Imported configured client_id as application credential")
 
+        token_path = hass.config.path(STORAGE_DIR, VICARE_TOKEN_FILENAME)
         token = await hass.async_add_executor_job(
-            obtain_token_via_basic_auth_pkce, client_id, username, password
+            _obtain_token_and_remove_token_file,
+            client_id,
+            username,
+            password,
+            token_path,
         )
 
         data.pop(CONF_USERNAME)
@@ -98,9 +103,6 @@ async def async_migrate_entry(
 
         data["auth_implementation"] = DOMAIN
         data[CONF_TOKEN] = token
-
-        token_path = hass.config.path(STORAGE_DIR, VICARE_TOKEN_FILENAME)
-        await hass.async_add_executor_job(_remove_token_file, token_path)
 
         hass.config_entries.async_update_entry(
             config_entry, data=data, version=2, minor_version=1
@@ -246,9 +248,9 @@ async def _async_register_zigbee_gateway_devices(
             continue
         gateway_serial = device.config.getConfig().serial
         identifier = f"{gateway_serial}_{device_serial.replace('-', '_')}"
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, identifier)},
+            device_info=dr.DeviceInfo(identifiers={(DOMAIN, identifier)}),
         )
 
 
@@ -256,6 +258,15 @@ def _remove_token_file(token_path: str) -> None:
     """Remove legacy token file if it exists."""
     with suppress(FileNotFoundError):
         os.remove(token_path)
+
+
+def _obtain_token_and_remove_token_file(
+    client_id: str, username: str, password: str, token_path: str
+) -> dict[str, object]:
+    """Obtain an OAuth token and remove the legacy token file."""
+    token = obtain_token_via_basic_auth_pkce(client_id, username, password)
+    _remove_token_file(token_path)
+    return token
 
 
 def _setup_vicare_api(

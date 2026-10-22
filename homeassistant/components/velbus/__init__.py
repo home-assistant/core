@@ -65,17 +65,19 @@ async def velbus_scan_task(
     # create all modules
     dev_reg = dr.async_get(hass)
     for module in controller.get_modules().values():
-        dev_reg.async_get_or_create(
+        dev_reg.async_get_or_create_device(
             config_entry_id=entry_id,
-            identifiers={
-                (DOMAIN, str(module.get_addresses()[0])),
-            },
-            manufacturer="Velleman",
-            model=module.get_type_name(),
-            model_id=str(module.get_type()),
-            name=f"{module.get_name()} ({module.get_type_name()})",
-            sw_version=module.get_sw_version(),
-            serial_number=module.get_serial(),
+            device_info=dr.DeviceInfo(
+                identifiers={
+                    (DOMAIN, str(module.get_addresses()[0])),
+                },
+                manufacturer="Velleman",
+                model=module.get_type_name(),
+                model_id=str(module.get_type()),
+                name=f"{module.get_name()} ({module.get_type_name()})",
+                sw_version=module.get_sw_version(),
+                serial_number=module.get_serial(),
+            ),
         )
 
 
