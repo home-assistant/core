@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 from freezegun.api import FrozenDateTimeFactory
 from openrgb.utils import ControllerParsingError, OpenRGBDisconnected, SDKVersionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.openrgb import async_remove_config_entry_device
 from homeassistant.components.openrgb.const import DOMAIN, SCAN_INTERVAL, UID_SEPARATOR
@@ -14,8 +15,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_entry_setup_unload(

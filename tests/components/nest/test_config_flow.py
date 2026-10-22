@@ -8,6 +8,9 @@ from unittest.mock import patch
 from aiohttp import ClientError
 from google_nest_sdm.exceptions import AuthException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries
 from homeassistant.components.nest.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
@@ -28,10 +31,6 @@ from .common import (
     NestTestConfig,
 )
 from .conftest import FakeAuth, PlatformSetup
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 WEB_REDIRECT_URL = "https://example.com/auth/external/callback"
 APP_REDIRECT_URL = "urn:ietf:wg:oauth:2.0:oob"
@@ -222,7 +221,7 @@ class OAuthFixture:
     ) -> FlowResult:
         """Finish the OAuth flow exchanging auth token for refresh token."""
         with patch(
-            "homeassistant.components.nest.async_setup_entry", return_value=True
+            "homeassistant.components.nest.async_setup_entry", return_value=None
         ) as mock_setup:
             new_result = await self.async_configure(result, user_input)
             assert len(mock_setup.mock_calls) == 1

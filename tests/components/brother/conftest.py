@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 from brother import BrotherSensors
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.brother.const import (
     CONF_COMMUNITY,
@@ -13,8 +14,6 @@ from homeassistant.components.brother.const import (
     SECTION_ADVANCED_SETTINGS,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
-
-from tests.common import MockConfigEntry
 
 BROTHER_DATA = BrotherSensors(
     belt_unit_remaining_life=97,
@@ -89,7 +88,7 @@ BROTHER_DATA = BrotherSensors(
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.brother.async_setup_entry", return_value=True
+        "homeassistant.components.brother.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

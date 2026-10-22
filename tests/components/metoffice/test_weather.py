@@ -7,6 +7,12 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 import requests_mock
 from requests_mock.adapter import _Matcher
 from syrupy.assertion import SnapshotAssertion
@@ -29,19 +35,12 @@ from .const import (
     WAVERTREE_SENSOR_RESULTS,
 )
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-)
-from tests.typing import WebSocketGenerator
-
 
 @pytest.fixture
 def no_sensor():
     """Remove sensors."""
     with patch(
-        "homeassistant.components.metoffice.sensor.async_setup_entry", return_value=True
+        "homeassistant.components.metoffice.sensor.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

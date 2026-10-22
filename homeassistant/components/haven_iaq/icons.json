@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "sensor": {
+      "airflow_duration": { "default": "mdi:timer-outline" },
+      "nox_index": { "default": "mdi:molecule" },
+      "pm05_count": { "default": "mdi:blur" },
+      "pm10_count": { "default": "mdi:blur" },
+      "pm1_count": { "default": "mdi:blur" },
+      "pm25_count": { "default": "mdi:blur" },
+      "pm4_count": { "default": "mdi:blur" },
+      "tvoc_index": { "default": "mdi:molecule" }
+    }
+  }
+}

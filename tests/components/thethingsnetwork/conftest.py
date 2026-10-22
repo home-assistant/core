@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from ttn_client import TTNSensorValue
 
 from homeassistant.components.thethingsnetwork.const import (
@@ -11,8 +12,6 @@ from homeassistant.components.thethingsnetwork.const import (
     TTN_API_HOST,
 )
 from homeassistant.const import CONF_API_KEY, CONF_HOST
-
-from tests.common import MockConfigEntry
 
 HOST = "example.com"
 APP_ID = "my_app"

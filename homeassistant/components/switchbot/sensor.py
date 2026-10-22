@@ -25,6 +25,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfRatio,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -153,6 +154,14 @@ SENSOR_TYPES: dict[str, SwitchBotSensorEntityDescription] = {
         native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PM25,
+    ),
+    "filter element working time": SwitchBotSensorEntityDescription(
+        key="filter element working time",
+        translation_key="filter_usage",
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "pir_triggered_level": SwitchBotSensorEntityDescription(
         key="pir_triggered_level",

@@ -8,6 +8,7 @@ from aiomelcloudhome.exceptions import (
     MelCloudHomeTimeoutError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.melcloud_home.const import DOMAIN
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import MOCK_REAUTH_INPUT, MOCK_USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_melcloud_client")

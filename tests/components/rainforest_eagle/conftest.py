@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.rainforest_eagle.const import (
     CONF_CLOUD_ID,
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import MOCK_200_RESPONSE_WITHOUT_PRICE, MOCK_CLOUD_ID
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

@@ -6,12 +6,11 @@ import json
 
 from env_canada.ec_weather import MetaData
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.environment_canada.const import DOMAIN
 
 from . import FIXTURE_USER_INPUT
-
-from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture

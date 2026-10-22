@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from pyituran.exceptions import IturanApiError, IturanAuthError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ituran.const import (
     CONF_ID_OR_PASSPORT,
@@ -18,8 +19,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_integration
 from .const import MOCK_CONFIG_DATA
-
-from tests.common import MockConfigEntry
 
 
 async def __do_successful_user_step(

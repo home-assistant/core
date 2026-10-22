@@ -1,0 +1,27 @@
+{
+  "vehicle": {
+    "vin": "TMBJM7NP2M1TMP511"
+  },
+  "errors": [
+    {
+      "type": "ODOMETER_UNAVAILABLE",
+      "description": "Odometer is temporarily unavailable."
+    },
+    {
+      "type": "CHARGING_UNAVAILABLE",
+      "description": "Charging is temporarily unavailable."
+    },
+    {
+      "type": "FUEL_STATUS_UNAVAILABLE",
+      "description": "Fuel status is temporarily unavailable."
+    },
+    {
+      "type": "AIR_CONDITIONING_UNAVAILABLE",
+      "description": "Air conditioning is temporarily unavailable."
+    },
+    {
+      "type": "AUXILIARY_HEATING_UNAVAILABLE",
+      "description": "Auxiliary heating is temporarily unavailable."
+    }
+  ]
+}

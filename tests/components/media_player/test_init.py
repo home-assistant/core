@@ -6,6 +6,9 @@ from unittest.mock import patch
 from aiohttp import hdrs
 import probatio
 import pytest
+from pytest_homeassistant.common import MockEntityPlatform
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components import media_player
 from homeassistant.components.media_player import (
@@ -29,10 +32,6 @@ from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockEntityPlatform
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)

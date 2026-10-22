@@ -12,7 +12,7 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.components.twilio import DATA_TWILIO
+from homeassistant.components.twilio import get_client
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -39,9 +39,7 @@ def get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> TwilioCallNotificationService:
     """Get the Twilio Call notification service."""
-    return TwilioCallNotificationService(
-        hass.data[DATA_TWILIO], config[CONF_FROM_NUMBER]
-    )
+    return TwilioCallNotificationService(get_client(hass), config[CONF_FROM_NUMBER])
 
 
 class TwilioCallNotificationService(BaseNotificationService):

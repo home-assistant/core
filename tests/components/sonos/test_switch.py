@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from soco.exceptions import SoCoException, SoCoUPnPException
 
 from homeassistant.components.sonos.const import (
@@ -51,8 +52,6 @@ from .conftest import (
     SonosMockEvent,
     create_rendering_control_event,
 )
-
-from tests.common import async_fire_time_changed
 
 
 async def test_entity_registry(

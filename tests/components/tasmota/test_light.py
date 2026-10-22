@@ -12,6 +12,8 @@ from hatasmota.utils import (
     get_topic_tele_will,
 )
 import pytest
+from pytest_homeassistant.common import async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClient, MqttMockPahoClient
 
 from homeassistant.components.light import LightEntityFeature
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
@@ -33,9 +35,7 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
 )
 
-from tests.common import async_fire_mqtt_message
 from tests.components.light import common
-from tests.typing import MqttMockHAClient, MqttMockPahoClient
 
 
 async def test_attributes_on_off(

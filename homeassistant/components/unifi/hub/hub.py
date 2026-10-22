@@ -1,11 +1,14 @@
 """UniFi Network abstraction."""
 
 from datetime import datetime
+import re
 from typing import TYPE_CHECKING
 
 import aiounifi
 
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import (
     DeviceEntry,
@@ -14,14 +17,18 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from ..const import ATTR_MANUFACTURER, CONF_SITE_ID, DOMAIN, PLATFORMS
+from ..const import ATTR_MANUFACTURER, CONF_SITE_ID, DOMAIN, LOGGER, PLATFORMS
 from .config import UnifiConfig
+from .connection import UnifiConnectionManager
 from .entity_helper import UnifiEntityHelper
 from .entity_loader import UnifiEntityLoader
 from .websocket import UnifiWebsocket
 
 if TYPE_CHECKING:
     from .. import UnifiConfigEntry
+
+OBJECT_ID = re.compile(r"[0-9a-f]{24}")
+UUID = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
 
 
 class UnifiHub:
@@ -37,17 +44,31 @@ class UnifiHub:
         self.hass = hass
         self.api = api
         self.config = UnifiConfig.from_config_entry(config_entry)
+        self.connection = UnifiConnectionManager(
+            hass,
+            config_entry,
+            api,
+            self.signal_reachable,
+            self._async_connection_recovered,
+        )
+        config_entry.async_on_unload(self.connection.stop)
+        self.websocket = UnifiWebsocket(self.connection)
         self.entity_loader = UnifiEntityLoader(self)
         self._entity_helper = UnifiEntityHelper(hass, api)
-        self.websocket = UnifiWebsocket(hass, api, self.signal_reachable)
 
         self.site = config_entry.data[CONF_SITE_ID]
         self.is_admin = False
 
     @property
     def available(self) -> bool:
-        """Websocket connection state."""
-        return self.websocket.available
+        """Shared UniFi session state."""
+        return self.connection.available
+
+    async def _async_connection_recovered(self) -> None:
+        """Resync data before push updates resume after app recovery."""
+        await self.entity_loader.async_resync()
+        if self.available and self.websocket.running:
+            self.websocket.start_websocket()
 
     @property
     def signal_heartbeat_missed(self) -> str:
@@ -83,15 +104,53 @@ class UnifiHub:
 
     async def initialize(self) -> None:
         """Set up a UniFi Network instance."""
+        await self.entity_loader.async_load_sites()
+        # Requests for a site that is gone get 401, check it before using it
+        unique_id = self.config.entry.unique_id
+        assert unique_id is not None
+        if unique_id not in self.api.sites:
+            unique_id = self._async_update_site_unique_id(unique_id)
+        if (site := self.api.sites.get(unique_id)) is None:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN, translation_key="site_not_found"
+            )
+        self.is_admin = site.role == "admin"
+
         await self.entity_loader.initialize()
         self._entity_helper.initialize()
-
-        assert self.config.entry.unique_id is not None
-        self.is_admin = self.api.sites[self.config.entry.unique_id].role == "admin"
+        self.config.entry.async_on_unload(self._entity_helper.reset)
 
         self.config.entry.async_on_unload(
             self.config.entry.add_update_listener(self.async_config_entry_updated)
         )
+
+    @callback
+    def _async_update_site_unique_id(self, old_id: str) -> str:
+        """Move the entry from the ObjectId to the UUID UniFi Network 11 gives sites.
+
+        The site name is kept and is unique per controller.
+        """
+        if not OBJECT_ID.fullmatch(old_id):
+            return old_id
+        site_ids = {site.name: site.site_id for site in self.api.sites.values()}
+        new_id = site_ids.get(self.site)
+        if new_id is None or not UUID.fullmatch(new_id):
+            return old_id
+        if self.hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, new_id):
+            return old_id
+
+        LOGGER.info("UniFi site %s changed ID from %s to %s", self.site, old_id, new_id)
+        device_registry = dr.async_get(self.hass)
+        for domain in (DOMAIN, SWITCH_DOMAIN):
+            device = device_registry.async_get_device_by_identifier(
+                (domain, old_id), self.config.entry.entry_id
+            )
+            if device:
+                device_registry.async_update_device(
+                    device.id, new_identifiers={(domain, new_id)}
+                )
+        self.hass.config_entries.async_update_entry(self.config.entry, unique_id=new_id)
+        return new_id
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -115,8 +174,8 @@ class UnifiHub:
     def async_update_device_registry(self) -> DeviceEntry:
         """Update device registry."""
         device_registry = dr.async_get(self.hass)
-        return device_registry.async_get_or_create(
-            config_entry_id=self.config.entry.entry_id, **self.device_info
+        return device_registry.async_get_or_create_from_info(
+            config_entry_id=self.config.entry.entry_id, device_info=self.device_info
         )
 
     @staticmethod
@@ -137,6 +196,7 @@ class UnifiHub:
 
         Used as an argument to EventBus.async_listen_once.
         """
+        self.connection.stop()
         self.websocket.stop()
 
     async def async_reset(self) -> bool:
@@ -145,15 +205,9 @@ class UnifiHub:
         Will cancel any scheduled setup retry and will unload
         the config entry.
         """
+        await self.connection.stop_and_wait()
         await self.websocket.stop_and_wait()
 
-        unload_ok = await self.hass.config_entries.async_unload_platforms(
+        return await self.hass.config_entries.async_unload_platforms(
             self.config.entry, PLATFORMS
         )
-
-        if not unload_ok:
-            return False
-
-        self._entity_helper.reset()
-
-        return True

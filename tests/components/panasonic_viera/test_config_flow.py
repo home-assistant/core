@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from panasonic_viera import SOAPError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.panasonic_viera.const import (
@@ -26,15 +27,13 @@ from .conftest import (
     get_mock_remote,
 )
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture(autouse=True)
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.panasonic_viera.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         yield mock_setup
 

@@ -10,6 +10,12 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_load_fixture,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from telegram import (
     Chat,
     File,
@@ -115,9 +121,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.issue_registry import IssueRegistry
 from homeassistant.util import dt as dt_util, json as json_util
 from homeassistant.util.file import write_utf8_file
-
-from tests.common import MockConfigEntry, async_capture_events, async_load_fixture
-from tests.typing import ClientSessionGenerator
 
 
 async def test_webhook_platform_init(hass: HomeAssistant, webhook_bot) -> None:
