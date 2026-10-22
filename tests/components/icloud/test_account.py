@@ -14,6 +14,7 @@ from pyicloud.exceptions import (
 )
 from pyicloud.services.findmyiphone import AppleDevice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from requests import Response
 
 from homeassistant.components.icloud.account import IcloudAccount
@@ -40,8 +41,6 @@ from .const import (
     USER_INFO,
     USERNAME,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture(name="mock_store")

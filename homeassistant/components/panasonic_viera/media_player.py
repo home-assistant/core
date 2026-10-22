@@ -71,15 +71,6 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
     _attr_name = None
     _attr_device_class = MediaPlayerDeviceClass.TV
 
-    @property
-    @override
-    def supported_features(self) -> MediaPlayerEntityFeature:
-        """Flag media player features that are supported."""
-        features = self._attr_supported_features
-        if self._remote.source_list:
-            features |= MediaPlayerEntityFeature.SELECT_SOURCE
-        return features
-
     def __init__(self, remote, name, device_info) -> None:
         """Initialize the entity."""
         self._remote = remote
@@ -93,6 +84,15 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
             self._attr_unique_id = device_info[ATTR_UDN]
         else:
             self._attr_name = name
+
+    @property
+    @override
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        """Flag media player features that are supported."""
+        features = self._attr_supported_features
+        if self._remote.source_list:
+            features |= MediaPlayerEntityFeature.SELECT_SOURCE
+        return features
 
     @property
     @override

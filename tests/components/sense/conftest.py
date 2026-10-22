@@ -5,6 +5,7 @@ import datetime as dt
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from sense_energy import Scale
 
 from homeassistant.components.sense.binary_sensor import SenseDevice
@@ -23,14 +24,12 @@ from .const import (
     MONITOR_ID,
 )
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.sense.async_setup_entry", return_value=True
+        "homeassistant.components.sense.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

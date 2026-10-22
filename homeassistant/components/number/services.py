@@ -7,7 +7,7 @@ import probatio
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 
-from .const import ATTR_VALUE, DATA_COMPONENT, DOMAIN, SERVICE_SET_VALUE
+from .const import DATA_COMPONENT, DOMAIN, NumberService, NumberServiceArgument
 
 if TYPE_CHECKING:
     from .entity import NumberEntity
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 async def _async_set_value(entity: NumberEntity, service_call: ServiceCall) -> None:
     """Service call wrapper to set a new value."""
-    value = service_call.data["value"]
+    value = service_call.data[NumberServiceArgument.VALUE]
     if value < entity.min_value or value > entity.max_value:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
@@ -43,7 +43,7 @@ async def _async_set_value(entity: NumberEntity, service_call: ServiceCall) -> N
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register the number services."""
     hass.data[DATA_COMPONENT].async_register_entity_service(
-        SERVICE_SET_VALUE,
-        {probatio.Required(ATTR_VALUE): probatio.Coerce(float)},
+        NumberService.SET_VALUE,
+        {probatio.Required(NumberServiceArgument.VALUE): probatio.Coerce(float)},
         _async_set_value,
     )

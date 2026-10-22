@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant import core
 from homeassistant.components.alexa import errors, state_report
@@ -20,8 +21,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .test_common import TEST_URL, get_default_config
-
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_report_state(

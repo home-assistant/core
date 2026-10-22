@@ -1,5 +1,7 @@
 """The tests for the Remote component, adapted from Light Test."""
 
+from pytest_homeassistant.common import async_mock_service
+
 from homeassistant.components import remote
 from homeassistant.components.remote import (
     ATTR_ALTERNATIVE,
@@ -20,8 +22,6 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import async_mock_service
 
 TEST_PLATFORM = {DOMAIN: {CONF_PLATFORM: "test"}}
 SERVICE_SEND_COMMAND = "send_command"

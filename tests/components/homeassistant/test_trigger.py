@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components import automation
 from homeassistant.components.homeassistant.trigger import RestartRequiredTrigger
@@ -14,8 +15,6 @@ from homeassistant.helpers import system_state
 from homeassistant.helpers.trigger import TriggerConfig
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_mock_service
 
 UPDATED_AUTOMATION = {
     automation.DOMAIN: {

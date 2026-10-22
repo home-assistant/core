@@ -10,6 +10,9 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import mock_stream
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from python_dropbox_api import DropboxAuthException
 
 from homeassistant.components.backup import (
@@ -31,10 +34,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .conftest import CONFIG_ENTRY_TITLE, TEST_AGENT_ID
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import mock_stream
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 TEST_AGENT_BACKUP = AgentBackup(
     addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],

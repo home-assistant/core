@@ -456,7 +456,9 @@ def create_engine_test_for_schema_version_postfix(
 
 def get_schema_module_path(schema_version_postfix: str) -> str:
     """Return the path to the schema module."""
-    return f"tests.components.recorder.db_schema_{schema_version_postfix}"
+    return (
+        f"pytest_homeassistant.components.recorder.db_schema_{schema_version_postfix}"
+    )
 
 
 def get_patched_live_version(old_db_schema: ModuleType) -> int:

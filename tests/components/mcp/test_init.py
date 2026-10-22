@@ -22,6 +22,7 @@ from mcp.types import (
 )
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 import respx
 
 from homeassistant.components.mcp.const import CONF_SLUG, DOMAIN
@@ -42,8 +43,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.httpx_client import SERVER_SOFTWARE
 
 from .conftest import MCP_SERVER_URL, TEST_API_NAME
-
-from tests.common import MockConfigEntry
 
 SEARCH_MEMORY_TOOL = Tool(
     name="search_memory",

@@ -56,3 +56,27 @@ class FanEntityFeature(IntFlag):
     PRESET_MODE = 8
     TURN_OFF = 16
     TURN_ON = 32
+
+
+class FanService(StrEnum):
+    """Store keys for fan services."""
+
+    DECREASE_SPEED = "decrease_speed"
+    INCREASE_SPEED = "increase_speed"
+    OSCILLATE = "oscillate"
+    SET_DIRECTION = "set_direction"
+    SET_PERCENTAGE = "set_percentage"
+    SET_PRESET_MODE = "set_preset_mode"
+    TOGGLE = "toggle"
+    TURN_OFF = "turn_off"
+    TURN_ON = "turn_on"
+
+
+class FanServiceArgument(StrEnum):
+    """Store keys for fan service arguments."""
+
+    DIRECTION = "direction"
+    OSCILLATING = "oscillating"
+    PERCENTAGE = "percentage"
+    PERCENTAGE_STEP = "percentage_step"
+    PRESET_MODE = "preset_mode"

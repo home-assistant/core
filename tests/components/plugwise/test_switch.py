@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from plugwise.exceptions import PlugwiseException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
@@ -22,8 +23,6 @@ from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 DHW_CM_SWITCH_UNIQUE_ID = "36b937e44ad145bab165fa0fe99d742d-dhw_cm_switch"
 DHW_CM_SWITCH_ISSUE_ID = "deprecated_dhw_cm_switch_36b937e44ad145bab165fa0fe99d742d"
@@ -160,6 +159,7 @@ async def test_deprecated_dhw_comfort_switch_warning(
     issue = issue_registry.async_get_issue(DOMAIN, DHW_CM_SWITCH_ISSUE_ID)
     assert issue is not None
     assert issue.translation_key == "deprecated_dhw_cm_switch"
+    assert issue.config_entry_id == mock_config_entry.entry_id
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -185,6 +185,10 @@ async def test_deprecated_dhw_comfort_switch_warning(
     mock_smile_anna.set_switch_state.assert_any_call(
         "36b937e44ad145bab165fa0fe99d742d", None, "dhw_cm_switch", STATE_OFF
     )
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, DHW_CM_SWITCH_ISSUE_ID) is None
 
 
 @pytest.mark.parametrize("chosen_env", ["anna_p1"], indirect=True)
@@ -361,9 +365,14 @@ async def test_deprecated_dhw_comfort_switch_kept_when_referenced(
     issue = issue_registry.async_get_issue(DOMAIN, DHW_CM_SWITCH_ISSUE_ID)
     assert issue is not None
     assert issue.translation_key == "deprecated_dhw_cm_switch_scripts"
+    assert issue.config_entry_id == mock_config_entry.entry_id
     assert issue.translation_placeholders is not None
     assert "automation.test_automation" in issue.translation_placeholders["items"]
     assert "/config/script/edit/test_script" in issue.translation_placeholders["items"]
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, DHW_CM_SWITCH_ISSUE_ID) is None
 
 
 async def test_stretch_switch_changes(

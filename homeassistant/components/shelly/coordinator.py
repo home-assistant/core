@@ -901,7 +901,8 @@ class ShellyRpcPollingCoordinator(ShellyCoordinatorBase[RpcDevice]):
     @override
     async def _async_update_data(self) -> None:
         """Fetch data."""
-        if not self.device.connected:
+        # The websocket is connected before initialization completes on reconnect
+        if not self.device.connected or not self.device.initialized:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_error_device_disconnected",

@@ -8,6 +8,8 @@ from caldav.calendarobjectresource import Todo
 from caldav.lib.error import DAVError, NotFoundError
 from caldav.lib.url import URL
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.todo import (
     ATTR_DESCRIPTION,
@@ -22,9 +24,6 @@ from homeassistant.components.todo import (
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 CALENDAR_NAME = "My Tasks"
 ENTITY_NAME = "My tasks"

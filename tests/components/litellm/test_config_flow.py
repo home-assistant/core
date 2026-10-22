@@ -10,6 +10,7 @@ from openai import (
     PermissionDeniedError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.litellm.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.litellm.const import (
@@ -27,8 +28,6 @@ from homeassistant.helpers import llm
 
 from . import get_subentry_id, setup_integration
 from .conftest import TEST_URL, models_response
-
-from tests.common import MockConfigEntry
 
 CONVERSATION_MODEL_OPTIONS = [
     {"value": "gpt-3.5-turbo", "label": "gpt-3.5-turbo"},

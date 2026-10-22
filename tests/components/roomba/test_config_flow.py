@@ -6,6 +6,7 @@ from ssl import SSLContext
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from roombapy import RoombaClient, RoombaConnectionError, RoombaInfo, RoombaPassword
 
 from homeassistant.components.roomba import config_flow
@@ -21,8 +22,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from tests.common import MockConfigEntry
 
 MOCK_IP = "1.2.3.4"
 VALID_CONFIG = {CONF_HOST: MOCK_IP, CONF_BLID: "BLID", CONF_PASSWORD: "password"}
@@ -191,7 +190,7 @@ async def test_form_user_discovery_and_password_fetch(hass: HomeAssistant) -> No
         ),
         patch(
             "homeassistant.components.roomba.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -314,7 +313,7 @@ async def test_form_user_discovery_manual_and_auto_password_fetch(
         ),
         patch(
             "homeassistant.components.roomba.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result4 = await hass.config_entries.flow.async_configure(
@@ -480,7 +479,7 @@ async def test_form_user_discovery_no_devices_found_and_auto_password_fetch(
         ),
         patch(
             "homeassistant.components.roomba.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -551,7 +550,7 @@ async def test_form_user_discovery_no_devices_found_and_password_fetch_fails(
         ),
         patch(
             "homeassistant.components.roomba.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result4 = await hass.config_entries.flow.async_configure(
@@ -623,7 +622,7 @@ async def test_form_user_no_devices_password_fetch_fails_cannot_connect(
         ),
         patch(
             "homeassistant.components.roomba.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result4 = await hass.config_entries.flow.async_configure(
@@ -644,7 +643,7 @@ async def test_form_user_no_devices_password_fetch_fails_cannot_connect(
         ),
         patch(
             "homeassistant.components.roomba.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result5 = await hass.config_entries.flow.async_configure(
@@ -695,7 +694,7 @@ async def test_dhcp_discovery_and_roomba_discovery_finds(
         ),
         patch(
             "homeassistant.components.roomba.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -771,7 +770,7 @@ async def test_dhcp_discovery_falls_back_to_manual(
         ),
         patch(
             "homeassistant.components.roomba.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result4 = await hass.config_entries.flow.async_configure(
@@ -839,7 +838,7 @@ async def test_dhcp_discovery_no_devices_falls_back_to_manual(
         ),
         patch(
             "homeassistant.components.roomba.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result3 = await hass.config_entries.flow.async_configure(

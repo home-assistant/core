@@ -6,7 +6,7 @@ from typing import cast, override
 
 import probatio
 
-from homeassistant.components.button import SERVICE_PRESS  # noqa: F401
+from homeassistant.components.button import SERVICE_PRESS
 from homeassistant.const import CONF_ICON, CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection, config_validation as cv
@@ -42,6 +42,12 @@ CONFIG_SCHEMA = probatio.Schema(
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
+
+__all__ = [
+    "DOMAIN",
+    "SERVICE_PRESS",
+    "STORAGE_FIELDS",
+]
 
 
 class InputButtonStorageCollection(collection.DictStorageCollection):

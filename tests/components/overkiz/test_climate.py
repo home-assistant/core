@@ -8,6 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import OverkizState
 from pyoverkiz.models import Event
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -31,8 +32,6 @@ from .helpers import (
     device_state_changed_event,
     device_unavailable_event,
 )
-
-from tests.common import snapshot_platform
 
 # io:HeatingValveIOComponent
 VALVE = FixtureDevice(

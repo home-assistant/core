@@ -9,6 +9,7 @@ from aioshelly.const import MODEL_1PM, MODEL_CAMERA, MODEL_MOTION, MODEL_WALL_DI
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, mock_restore_cache
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
@@ -45,8 +46,6 @@ from . import (
     register_sub_device,
 )
 from .conftest import MOCK_LEDSTRIP_STATUS
-
-from tests.common import async_fire_time_changed, mock_restore_cache
 
 DEVICE_BLOCK_ID = 4
 LIGHT_BLOCK_ID = 2

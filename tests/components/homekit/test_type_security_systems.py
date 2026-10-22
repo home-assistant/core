@@ -2,6 +2,7 @@
 
 from pyhap.loader import get_loader
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
@@ -17,8 +18,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant
-
-from tests.common import async_mock_service
 
 
 async def test_switch_set_state(

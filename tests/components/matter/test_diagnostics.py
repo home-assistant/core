@@ -7,6 +7,12 @@ from matter_server.client.models.node import MatterNode
 from matter_server.common.helpers.util import dataclass_from_dict
 from matter_server.common.models import ServerDiagnostics
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
+from pytest_homeassistant.components.diagnostics import (
+    get_diagnostics_for_config_entry,
+    get_diagnostics_for_device,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.components.matter.const import DOMAIN
@@ -16,13 +22,6 @@ from homeassistant.components.matter.diagnostics import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry, load_json_object_fixture
-from tests.components.diagnostics import (
-    get_diagnostics_for_config_entry,
-    get_diagnostics_for_device,
-)
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(name="config_entry_diagnostics")

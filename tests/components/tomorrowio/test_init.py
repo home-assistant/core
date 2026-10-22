@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from pytomorrowio.exceptions import CantConnectException
 
 from homeassistant.components.tomorrowio.const import (
@@ -34,8 +35,6 @@ from . import (
     make_v2_config_entry,
 )
 from .const import API_KEY
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 HOME_LOCATION = {CONF_LATITUDE: 80.0, CONF_LONGITUDE: 80.0}
 WORK_LOCATION = {CONF_LATITUDE: 81.0, CONF_LONGITUDE: 81.0}

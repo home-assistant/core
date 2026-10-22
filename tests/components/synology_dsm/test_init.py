@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from synology_dsm.exceptions import (
     SynologyDSMLogin2SAForcedException,
     SynologyDSMLoginInvalidException,
@@ -29,8 +30,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
-
-from tests.common import MockConfigEntry
 
 
 async def test_services_registered(hass: HomeAssistant, mock_dsm: MagicMock) -> None:

@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from jaraco.abode.helpers import timeline
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.abode.const import DOMAIN
@@ -15,8 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 CAMERA_ENTITY_ID = "camera.test_cam"
 RENAMED_CAMERA_ENTITY_ID = "camera.renamed_cam"
