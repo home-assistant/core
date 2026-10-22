@@ -163,13 +163,6 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     AerosmartSensorEntityDescription(
-        key="outside_temperature_vereisungsschutz",
-        translation_key="outside_temperature_vereisungsschutz",
-        component="outside_temperature",
-        attribute="vereisungsschutz",
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    AerosmartSensorEntityDescription(
         key="outside_temperature_betriebsstunden_sole_kreis_aussenluft",
         translation_key="outside_temperature_betriebsstunden_sole_kreis_aussenluft",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -179,13 +172,6 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
         native_unit_of_measurement="h",
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
-    AerosmartSensorEntityDescription(
-        key="carbon_dioxide_co2_measurement",
-        translation_key="carbon_dioxide_co2_measurement",
-        component="carbon_dioxide",
-        attribute="co2_measurement",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     AerosmartSensorEntityDescription(
         key="carbon_dioxide_co2",
@@ -293,13 +279,6 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     AerosmartSensorEntityDescription(
-        key="ventilation_betriebsart",
-        translation_key="ventilation_betriebsart",
-        component="ventilation",
-        attribute="betriebsart",
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    AerosmartSensorEntityDescription(
         key="ventilation_betriebsstunden_beschattung",
         translation_key="ventilation_betriebsstunden_beschattung",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -386,13 +365,6 @@ SENSOR_DESCRIPTIONS: tuple[AerosmartSensorEntityDescription, ...] = (
         native_unit_of_measurement="h",
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
-    AerosmartSensorEntityDescription(
-        key="ventilation_beschattungsfunktion",
-        translation_key="ventilation_beschattungsfunktion",
-        component="ventilation",
-        attribute="beschattungsfunktion",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     AerosmartSensorEntityDescription(
         key="ventilation_befoerderte_kubikmeter",

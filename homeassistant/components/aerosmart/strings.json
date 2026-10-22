@@ -30,9 +30,6 @@
       "carbon_dioxide_co2": {
         "name": "CO2"
       },
-      "carbon_dioxide_co2_measurement": {
-        "name": "CO2 measurement"
-      },
       "coarse_dust_filter_betriebsstunden_grobstaubfilter": {
         "name": "Coarse dust filter operating hours"
       },
@@ -186,9 +183,6 @@
       "outside_temperature_temp_aussenluft": {
         "name": "Outdoor air temperature"
       },
-      "outside_temperature_vereisungsschutz": {
-        "name": "Freeze protection"
-      },
       "room_temperature_raum_temp_beschattung": {
         "name": "Room temperature shading"
       },
@@ -209,12 +203,6 @@
       },
       "ventilation_befoerderte_luftmenge_seit_filterwechsel": {
         "name": "Conveyed air volume since filter change"
-      },
-      "ventilation_beschattungsfunktion": {
-        "name": "Shading function"
-      },
-      "ventilation_betriebsart": {
-        "name": "Operating mode"
       },
       "ventilation_betriebsstunden_beschattung": {
         "name": "Shading operating hours"
