@@ -3,5 +3,11 @@
     "child_service_not_found": {
       "message": "Action {domain}.{service} uses action {child_domain}.{child_service} which was not found."
     }
+  },
+  "issues": {
+    "deprecated_long_lived_access_token_step_up": {
+      "description": "The long-lived access token \"{client_name}\" was used for `{command}`. Changes like this need a recent sign-in or a confirmation of your identity, which a long-lived access token can't give. From Home Assistant 2027.5, they will be refused for long-lived access tokens.\n\nIf a tool uses this token to manage users or passwords, check if it supports signing in instead, or make these changes in **Settings** > **People**.",
+      "title": "Long-lived access token \"{client_name}\" needs to stop changing passwords"
+    }
   }
 }

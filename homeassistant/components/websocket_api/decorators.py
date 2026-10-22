@@ -6,9 +6,11 @@ from typing import TYPE_CHECKING, Any
 
 import probatio
 
+from homeassistant.auth.models import TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
 from homeassistant.components.http.const import DATA_SUPERVISOR_USER
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.typing import VolDictType
 
 from . import const, messages
@@ -79,7 +81,9 @@ def require_step_up(
         hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
     ) -> None:
         """Check the step up window and call function."""
-        if not hass.auth.async_has_step_up(connection.refresh_token_id):
+        if not hass.auth.async_has_step_up(
+            connection.refresh_token_id
+        ) and not _async_allow_long_lived_access_token(hass, connection, msg):
             connection.send_error(
                 msg["id"],
                 const.ERR_STEP_UP_REQUIRED,
@@ -90,6 +94,39 @@ def require_step_up(
         func(hass, connection, msg)
 
     return with_step_up
+
+
+@callback
+def _async_allow_long_lived_access_token(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> bool:
+    """Let a long-lived access token through for now, raising a repair issue."""
+    if (
+        connection.refresh_token_id is None
+        or (
+            refresh_token := hass.auth.async_get_refresh_token(
+                connection.refresh_token_id
+            )
+        )
+        is None
+        or refresh_token.token_type != TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
+    ):
+        return False
+    # Long-lived access tokens can't step up. Deprecated in 2026.11.
+    ir.async_create_issue(
+        hass,
+        const.DOMAIN,
+        f"deprecated_long_lived_access_token_step_up_{refresh_token.id}",
+        breaks_in_ha_version="2027.5.0",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_long_lived_access_token_step_up",
+        translation_placeholders={
+            "client_name": refresh_token.client_name or refresh_token.id,
+            "command": msg["type"],
+        },
+    )
+    return True
 
 
 def ws_require_user(

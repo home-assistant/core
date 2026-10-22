@@ -1893,6 +1893,4 @@ async def test_step_up_refuses_long_lived_access_token(
             refresh_token.id, local_auth, {"password": "test-pass"}, None
         )
     # Not even as a recent sign in for a user nothing can re-verify.
-    assert hass.auth.async_get_step_up_expiry(refresh_token.id) is None
-    # It keeps the access it had before step-up, until that is decided separately.
-    assert hass.auth.async_has_step_up(refresh_token.id)
+    assert not hass.auth.async_has_step_up(refresh_token.id)

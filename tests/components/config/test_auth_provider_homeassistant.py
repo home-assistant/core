@@ -14,6 +14,7 @@ from homeassistant.auth.models import TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
 from homeassistant.auth.providers import InvalidStepUpError, homeassistant as prov_ha
 from homeassistant.components.config import auth_provider_homeassistant as auth_ha
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 
 
 @pytest.fixture(autouse=True)
@@ -952,15 +953,16 @@ async def test_create_needs_a_step_up(
         await auth_provider.async_validate_login("owner", "chosen-pass")
 
 
-async def test_long_lived_access_token_keeps_setting_passwords(
+async def test_long_lived_access_token_setting_passwords_is_deprecated(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     hass_ws_client: WebSocketGenerator,
     hass_owner_user: MockUser,
     hass_admin_user: MockUser,
     auth_provider: prov_ha.HassAuthProvider,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test a long-lived access token keeps setting passwords without a step-up."""
+    """Test a long-lived access token still sets passwords, raising a repair issue."""
     refresh_token = await hass.auth.async_create_refresh_token(
         hass_owner_user,
         client_name="Script",
@@ -983,6 +985,17 @@ async def test_long_lived_access_token_keeps_setting_passwords(
     result = await client.receive_json()
     assert result["success"], result
     await auth_provider.async_validate_login("test-user", "new-pass")
+
+    issue = issue_registry.async_get_issue(
+        "websocket_api",
+        f"deprecated_long_lived_access_token_step_up_{refresh_token.id}",
+    )
+    assert issue is not None
+    assert issue.breaks_in_ha_version == "2027.5.0"
+    assert issue.translation_placeholders == {
+        "client_name": "Script",
+        "command": "config/auth_provider/homeassistant/admin_change_password",
+    }
 
 
 # The access token fixture links the password of the admin user.

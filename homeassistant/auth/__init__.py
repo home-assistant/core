@@ -414,14 +414,6 @@ class AuthManager:
     @callback
     def async_has_step_up(self, refresh_token_id: str | None) -> bool:
         """Return if the session may make sensitive changes right now."""
-        # Long-lived access tokens keep the access they had until it is decided
-        # separately how they relate to step-up, as they can't step up.
-        if (
-            refresh_token_id is not None
-            and (refresh_token := self.async_get_refresh_token(refresh_token_id))
-            and refresh_token.token_type == models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
-        ):
-            return True
         return self.async_get_step_up_expiry(refresh_token_id) is not None
 
     async def async_get_or_create_user(
