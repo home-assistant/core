@@ -8,7 +8,7 @@ from urllib.error import URLError
 from panasonic_viera import TV_TYPE_ENCRYPTED, RemoteControl, SOAPError
 import probatio
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT
 
 from .const import (
@@ -69,6 +69,10 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except (URLError, SOAPError, OSError) as err:
                 _LOGGER.error("Could not establish remote connection: %s", err)
+                # The YAML configuration is imported again at the next start, while
+                # a form left behind shows up as a discovery that cannot be ignored
+                if self.source == SOURCE_IMPORT:
+                    return self.async_abort(reason="cannot_connect")
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("An unknown error occurred")
@@ -181,7 +185,6 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
         self._data[CONF_PORT] = self._data.get(CONF_PORT, DEFAULT_PORT)
         self._data[CONF_ON_ACTION] = self._data.get(CONF_ON_ACTION)
 
-        # Uses the host/IP value from CONF_HOST as unique ID, which is no longer allowed
-        # pylint: disable-next=home-assistant-unique-id-ip-based
-        await self.async_set_unique_id(self._data[CONF_HOST])
-        self._abort_if_unique_id_configured()
+        # The unique ID of an entry is the UDN of the TV, which is only known once
+        # the TV has been reached, so look for an existing entry by host first
+        self._async_abort_entries_match({CONF_HOST: self._data[CONF_HOST]})

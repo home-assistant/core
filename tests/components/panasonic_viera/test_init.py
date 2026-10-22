@@ -193,11 +193,10 @@ async def test_setup_entry_unencrypted_missing_device_info_none(
         assert state_remote.name == DEFAULT_NAME
 
 
-async def test_setup_config_flow_initiated(hass: HomeAssistant) -> None:
+async def test_setup_config_flow_initiated(
+    hass: HomeAssistant, mock_remote: Mock
+) -> None:
     """Test if config flow is initiated in setup."""
-    mock_remote = get_mock_remote()
-    mock_remote.get_device_info = Mock(side_effect=OSError)
-
     with patch(
         "homeassistant.components.panasonic_viera.config_flow.RemoteControl",
         return_value=mock_remote,
@@ -210,8 +209,9 @@ async def test_setup_config_flow_initiated(hass: HomeAssistant) -> None:
             )
             is True
         )
+        await hass.async_block_till_done()
 
-    assert len(hass.config_entries.flow.async_progress()) == 1
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
 async def test_setup_unload_entry(hass: HomeAssistant, mock_remote) -> None:
