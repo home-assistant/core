@@ -1,10 +1,15 @@
 """The tests for the Met Office sensor component."""
 
-import datetime
+import datetime as dt
 import json
 import re
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    get_sensor_display_state,
+)
 import requests_mock
 
 from homeassistant.components.metoffice.const import ATTRIBUTION, DOMAIN
@@ -24,14 +29,8 @@ from .const import (
     WAVERTREE_SENSOR_RESULTS,
 )
 
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_object_fixture,
-    get_sensor_display_state,
-)
 
-
-@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2024, 11, 23, 12, tzinfo=dt.UTC))
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_one_sensor_site_running(
     hass: HomeAssistant,
@@ -82,7 +81,7 @@ async def test_one_sensor_site_running(
         assert sensor.attributes.get("attribution") == ATTRIBUTION
 
 
-@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2024, 11, 23, 12, tzinfo=dt.UTC))
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_two_sensor_sites_running(
     hass: HomeAssistant,
@@ -171,7 +170,7 @@ async def test_two_sensor_sites_running(
             assert sensor.attributes.get("attribution") == ATTRIBUTION
 
 
-@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2024, 11, 23, 12, tzinfo=dt.UTC))
 @pytest.mark.parametrize(
     ("old_unique_id"),
     [

@@ -12,7 +12,7 @@ from aiowebdav2.exceptions import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import CONF_BACKUP_PATH, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 from .helpers import async_create_client, async_ensure_path_exists
@@ -35,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebDavConfigEntry) -> No
     try:
         result = await client.check()
     except UnauthorizedError as err:
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="invalid_username_password",
         ) from err

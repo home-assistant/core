@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock
 
 from hyponcloud import AuthenticationError, RequestError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hypontech.const import CONF_OEM, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -12,8 +13,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

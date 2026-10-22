@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from lifx import LifxTimeoutError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lifx import DOMAIN
 from homeassistant.components.lifx.const import (
@@ -25,8 +26,6 @@ from homeassistant.setup import async_setup_component
 
 from . import IP_ADDRESS, SERIAL
 from .helpers import create_mock_hev_light
-
-from tests.common import MockConfigEntry
 
 SERVICES = (
     SERVICE_EFFECT_COLORLOOP,

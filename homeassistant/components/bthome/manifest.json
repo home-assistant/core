@@ -15,6 +15,7 @@
       "service_data_uuid": "0000fcd2-0000-1000-8000-00805f9b34fb"
     }
   ],
+  "categories": ["sensors", "diy_makers"],
   "codeowners": ["@Ernst79", "@thecode"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],

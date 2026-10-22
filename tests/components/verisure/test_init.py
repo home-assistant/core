@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from verisure import (
     AuthenticationError,
     CookieReadError,
@@ -26,8 +27,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, update_coordinator
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 ALARM_ENTITY_ID = "alarm_control_panel.verisure_alarm"
 

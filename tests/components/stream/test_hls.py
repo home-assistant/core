@@ -7,6 +7,8 @@ from urllib.parse import urlparse
 
 import av
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.stream import Stream, create_stream
 from homeassistant.components.stream.const import (
@@ -28,9 +30,6 @@ from .common import (
     assert_mp4_has_transform_matrix,
     dynamic_stream_settings,
 )
-
-from tests.common import async_fire_time_changed
-from tests.typing import ClientSessionGenerator
 
 STREAM_SOURCE = "some-stream-source"
 INIT_BYTES = b"\x00\x00\x00\x08moov"

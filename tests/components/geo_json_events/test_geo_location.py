@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun import freeze_time
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.geo_json_events.const import (
     ATTR_EXTERNAL_ID,
@@ -33,8 +34,6 @@ from homeassistant.util import dt as dt_util
 
 from . import _generate_mock_feed_entry
 from .conftest import URL
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 CONFIG_LEGACY = {
     GEO_LOCATION_DOMAIN: [

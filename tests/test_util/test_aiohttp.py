@@ -1,8 +1,7 @@
 """Tests for our aiohttp mocker."""
 
 import pytest
-
-from .aiohttp import AiohttpClientMocker
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_matching_url() -> None:

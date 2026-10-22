@@ -20,11 +20,12 @@ PLATFORMS: list[Platform] = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.UPDATE,
     Platform.WATER_HEATER,
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> None:
     """Set up my-PV from a config entry."""
 
     device = MyPVLocalDevice(entry.data[CONF_HOST], entry.data.get(CONF_PASSWORD))
@@ -58,12 +59,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> None:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.async_disconnect()
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    await entry.runtime_data.async_disconnect()

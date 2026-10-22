@@ -10,6 +10,11 @@ from pyportainer.exceptions import (
 )
 from pyportainer.models.stacks import Stack, StackType
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_array_fixture,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import SERVICE_PRESS
@@ -21,12 +26,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_array_fixture,
-    snapshot_platform,
-)
 
 BUTTON_DOMAIN = "button"
 UPDATE_STACK_ENTITY_ID = "button.webstack_update_stack"

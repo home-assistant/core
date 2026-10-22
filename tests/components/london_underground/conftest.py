@@ -6,12 +6,11 @@ from unittest.mock import AsyncMock, patch
 
 from london_tube_status import parse_api_response
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_fixture
+from pytest_homeassistant.plugins import AiohttpClientMocker
 
 from homeassistant.components.london_underground.const import CONF_LINE, DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, async_load_fixture
-from tests.conftest import AiohttpClientMocker
 
 
 @pytest.fixture
@@ -19,7 +18,7 @@ def mock_setup_entry():
     """Prevent setup of integration during tests."""
     with patch(
         "homeassistant.components.london_underground.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup:
         yield mock_setup
 

@@ -4,6 +4,11 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.infrared import (
+    EMITTER_ENTITY_ID,
+    RECEIVER_ENTITY_ID,
+)
 
 from homeassistant.components.led_infrared.const import (
     CONF_DEVICE_TYPE,
@@ -13,15 +18,12 @@ from homeassistant.components.led_infrared.const import (
     LEDIrDeviceType,
 )
 
-from tests.common import MockConfigEntry
-from tests.components.infrared import EMITTER_ENTITY_ID, RECEIVER_ENTITY_ID
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.led_infrared.async_setup_entry", return_value=True
+        "homeassistant.components.led_infrared.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

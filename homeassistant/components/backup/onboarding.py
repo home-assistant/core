@@ -18,13 +18,9 @@ from homeassistant.components.onboarding import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from . import (
-    BackupManager,
-    Folder,
-    IncorrectPasswordError,
-    async_get_manager,
-    http as backup_http,
-)
+from . import async_get_manager, http as backup_http
+from .manager import BackupManager, IncorrectPasswordError
+from .models import Folder
 
 if TYPE_CHECKING:
     from homeassistant.components.onboarding import OnboardingStoreData

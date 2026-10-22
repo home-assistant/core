@@ -1,6 +1,7 @@
 {
   "domain": "ezviz",
   "name": "EZVIZ",
+  "categories": ["security_safety.cameras"],
   "codeowners": ["@RenierM26"],
   "config_flow": true,
   "dependencies": ["ffmpeg"],

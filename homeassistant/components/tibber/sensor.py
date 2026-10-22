@@ -537,6 +537,7 @@ DATA_API_SENSORS: tuple[SensorEntityDescription, ...] = (
         translation_key="range_remaining",
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.METERS,
+        suggested_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
@@ -732,7 +733,7 @@ class TibberSensor(SensorEntity):
             manufacturer=MANUFACTURER,
         )
         if self._model is not None:
-            device_info["model"] = self._model
+            device_info.model = self._model
         return device_info
 
 
