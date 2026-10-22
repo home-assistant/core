@@ -262,6 +262,8 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdateMixin):
                 config,
             )
             return
+        # Update the device first, so a failing update does not change the trigger
+        update_device(self.hass, self._config_entry, config)
         # The debug info shares the discovery data that holds the current payload,
         # so it is only updated when the update is accepted
         debug_info.update_trigger_discovery_data(
@@ -274,7 +276,6 @@ class MqttDeviceTrigger(MqttDiscoveryDeviceUpdateMixin):
             )
             self.trigger_id = new_trigger_id
 
-        update_device(self.hass, self._config_entry, config)
         device_trigger: Trigger = self._mqtt_data.device_triggers[self.trigger_id]
         await device_trigger.update_trigger(config)
 
