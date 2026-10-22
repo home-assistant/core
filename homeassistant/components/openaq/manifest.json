@@ -1,6 +1,7 @@
 {
   "domain": "openaq",
   "name": "OpenAQ",
+  "categories": ["weather_alerts.air_quality_pollen"],
   "codeowners": ["@jeeftor"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/openaq",

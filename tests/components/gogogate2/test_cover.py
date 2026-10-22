@@ -15,6 +15,7 @@ from ismartgate.common import (
     TransitionDoorStatus,
     Wifi,
 )
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
@@ -46,8 +47,6 @@ from . import (
     _mocked_gogogate_open_door_response,
     _mocked_ismartgate_closed_door_response,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @patch("homeassistant.components.gogogate2.common.GogoGate2Api")

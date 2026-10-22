@@ -2,7 +2,7 @@
 
 import logging
 
-import voluptuous as vol
+import probatio
 from zoneminder.monitor import Monitor, TimePeriod
 from zoneminder.zm import ZoneMinder
 
@@ -18,7 +18,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,11 +53,11 @@ SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(
+        probatio.Optional(
             CONF_INCLUDE_ARCHIVED, default=DEFAULT_INCLUDE_ARCHIVED
         ): cv.boolean,
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=["all"]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_KEYS)]
+        probatio.Optional(CONF_MONITORED_CONDITIONS, default=["all"]): probatio.All(
+            probatio.EnsureList(), [probatio.In(SENSOR_KEYS)]
         ),
     }
 )

@@ -20,12 +20,11 @@ from openaq.core.responses import (
     SensorBase,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.openaq.const import CONF_LOCATION_ID, DOMAIN
 from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.const import CONF_API_KEY, UnitOfDensity
-
-from tests.common import MockConfigEntry
 
 API_KEY = "test-api-key"
 LOCATION_ID = 2178
@@ -137,7 +136,7 @@ def make_latest(sensor_id: int, value: float) -> Latest:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.openaq.async_setup_entry", return_value=True
+        "homeassistant.components.openaq.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

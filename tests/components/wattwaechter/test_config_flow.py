@@ -10,6 +10,7 @@ from aio_wattwaechter import (
     WattwaechterConnectionError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.wattwaechter.const import CONF_FW_VERSION, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -33,8 +34,6 @@ from .conftest import (
     MOCK_MODEL,
     MOCK_TOKEN,
 )
-
-from tests.common import MockConfigEntry
 
 MOCK_ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     ip_address=ip_address(MOCK_HOST),

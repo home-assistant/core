@@ -4,7 +4,7 @@ from enum import Enum
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
@@ -77,20 +77,20 @@ SCRIPT_FIELDS = (
 
 DEFAULT_NAME = "Template Alarm Control Panel"
 
-ALARM_CONTROL_PANEL_COMMON_SCHEMA = vol.Schema(
+ALARM_CONTROL_PANEL_COMMON_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_ARM_AWAY_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_ARM_CUSTOM_BYPASS_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_ARM_HOME_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_ARM_NIGHT_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_ARM_VACATION_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
-        vol.Optional(CONF_CODE_FORMAT, default=TemplateCodeFormat.number.name): cv.enum(
-            TemplateCodeFormat
-        ),
-        vol.Optional(CONF_DISARM_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_STATE): cv.template,
-        vol.Optional(CONF_TRIGGER_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_ARM_AWAY_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_ARM_CUSTOM_BYPASS_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_ARM_HOME_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_ARM_NIGHT_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_ARM_VACATION_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
+        probatio.Optional(
+            CONF_CODE_FORMAT, default=TemplateCodeFormat.number.name
+        ): cv.enum(TemplateCodeFormat),
+        probatio.Optional(CONF_DISARM_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Optional(CONF_STATE): cv.template,
+        probatio.Optional(CONF_TRIGGER_ACTION): cv.SCRIPT_SCHEMA,
     }
 )
 

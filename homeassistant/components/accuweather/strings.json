@@ -237,9 +237,6 @@
       "wind_gust_speed_night": {
         "name": "Wind gust speed night {forecast_day}"
       },
-      "wind_speed": {
-        "name": "[%key:component::weather::entity_component::_::state_attributes::wind_speed::name%]"
-      },
       "wind_speed_day": {
         "name": "Wind speed day {forecast_day}"
       },

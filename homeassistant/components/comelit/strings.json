@@ -68,9 +68,6 @@
       },
       "faulty": {
         "name": "Faulty"
-      },
-      "motion": {
-        "name": "Motion"
       }
     },
     "climate": {

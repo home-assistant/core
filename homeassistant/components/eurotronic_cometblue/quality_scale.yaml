@@ -43,7 +43,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: This integration relies on MAC-based BLE connections.
@@ -56,9 +56,7 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: todo
   dynamic-devices: done
-  entity-category:
-    status: exempt
-    comment: This integration only provides one primary entity.
+  entity-category: done
   entity-device-class:
     status: exempt
     comment: This integration does not provide sensors.
@@ -68,7 +66,7 @@ rules:
   entity-translations:
     status: exempt
     comment: This integration only provides one primary entity.
-  exception-translations: todo
+  exception-translations: done
   icon-translations:
     status: exempt
     comment: Not required.
@@ -85,4 +83,4 @@ rules:
   inject-websession:
     status: exempt
     comment: This integration does not make any HTTP requests.
-  strict-typing: todo
+  strict-typing: done

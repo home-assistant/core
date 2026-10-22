@@ -2,25 +2,35 @@
 
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 from openaq import NotAuthorizedError, TimeoutError as OpenAQTimeoutError
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.openaq.const import DOMAIN
+from homeassistant.components.openaq.coordinator import UPDATE_INTERVAL
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, UnitOfDensity
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    UnitOfDensity,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.translation import async_get_translations
 
 from . import setup_integration
 from .conftest import LOCATION_ID, make_latest, make_response, make_sensor
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def async_load_entity_translations(hass: HomeAssistant) -> None:
@@ -114,15 +124,16 @@ async def test_missing_latest_values_create_unknown_entity(
 
 async def test_entity_unavailable_on_update_failure(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test sensors become unavailable when refresh fails."""
     await setup_integration(hass, mock_config_entry)
-    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
     mock_openaq_client.locations.latest.side_effect = OpenAQTimeoutError("Timeout")
 
-    await coordinator.async_refresh()
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (state := hass.states.get("sensor.del_norte_pm2_5")) is not None
@@ -131,17 +142,18 @@ async def test_entity_unavailable_on_update_failure(
 
 async def test_entity_unavailable_on_auth_failure(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test sensors become unavailable when runtime authentication fails."""
     await setup_integration(hass, mock_config_entry)
-    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
     mock_openaq_client.locations.latest.side_effect = NotAuthorizedError(
         "Invalid API key"
     )
 
-    await coordinator.async_refresh()
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.config_entries.flow.async_progress() == []
@@ -151,18 +163,51 @@ async def test_entity_unavailable_on_auth_failure(
 
 async def test_entity_unknown_when_measurement_disappears(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test sensors handle measurements disappearing after setup."""
     await setup_integration(hass, mock_config_entry)
-    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
     mock_openaq_client.locations.latest.return_value = make_response(
         [make_latest(1, 8.5)]
     )
 
-    await coordinator.async_refresh()
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (state := hass.states.get("sensor.del_norte_pm2_5")) is not None
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("readings", "expected_state"),
+    [
+        pytest.param(((1, 0.4),), "0.4", id="selected-sensor-only"),
+        pytest.param(((2, 400.0),), STATE_UNKNOWN, id="other-sensor-only"),
+        pytest.param(((1, 0.4), (2, 400.0)), "0.4", id="selected-sensor-first"),
+        pytest.param(((2, 400.0), (1, 0.4)), "0.4", id="selected-sensor-last"),
+    ],
+)
+async def test_duplicate_parameter_keeps_reading_and_unit_from_same_sensor(
+    hass: HomeAssistant,
+    mock_openaq_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    readings: tuple[tuple[int, float], ...],
+    expected_state: str,
+) -> None:
+    """Test repeated parameters keep the first eligible sensor's unit and value."""
+    await async_load_entity_translations(hass)
+    mock_openaq_client.locations.sensors.return_value = make_response(
+        [make_sensor(1, "co", "ppm"), make_sensor(2, "co", "ppb")]
+    )
+    mock_openaq_client.locations.latest.return_value = make_response(
+        [make_latest(sensor_id, value) for sensor_id, value in readings]
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get("sensor.del_norte_carbon_monoxide")) is not None
+    assert state.state == expected_state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "ppm"

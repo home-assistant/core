@@ -85,13 +85,13 @@ def normalize_parameter(parameter: Parameter | ParameterBase) -> str:
 def build_sensor_metadata(
     sensors: Sequence[Sensor | SensorBase],
 ) -> tuple[dict[int, str], MappingProxyType[str, str]]:
-    """Return sensor parameter name and unit mappings keyed by sensor id."""
+    """Return metadata for the first eligible sensor of each parameter."""
     by_id: dict[int, str] = {}
     units: dict[str, str] = {}
 
     for sensor in sensors:
         parameter = normalize_parameter(sensor.parameter)
-        if parameter not in PARAMETER_DEVICE_CLASSES:
+        if parameter not in PARAMETER_DEVICE_CLASSES or parameter in units:
             continue
         unit = OPENAQ_UNIT_ALIASES.get(sensor.parameter.units, sensor.parameter.units)
         device_class = PARAMETER_DEVICE_CLASSES[parameter]

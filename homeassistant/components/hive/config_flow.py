@@ -11,18 +11,11 @@ from apyhiveapi.helper.hive_exceptions import (
     HiveInvalidPassword,
     HiveInvalidUsername,
 )
-import voluptuous as vol
+import probatio
 
-from homeassistant.config_entries import (
-    SOURCE_REAUTH,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
-from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
-from homeassistant.core import callback
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from . import HiveConfigEntry
 from .const import CONF_CODE, CONF_DEVICE_NAME, CONFIG_ENTRY_VERSION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,12 +43,14 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
         # Login to Hive with user data.
         if user_input is not None:
             self.data.update(user_input)
+            username = self.data[CONF_USERNAME].lower()
             self.hive_auth = Auth(
-                username=self.data[CONF_USERNAME], password=self.data[CONF_PASSWORD]
+                username=username,
+                password=self.data[CONF_PASSWORD],
             )
 
             # Get user from existing entry and abort if already setup
-            await self.async_set_unique_id(self.data[CONF_USERNAME])
+            await self.async_set_unique_id(username)
             if self.context["source"] != SOURCE_REAUTH:
                 self._abort_if_unique_id_configured()
 
@@ -92,8 +87,11 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "unknown"
 
         # Show User Input form.
-        schema = vol.Schema(
-            {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+        schema = probatio.Schema(
+            {
+                probatio.Required(CONF_USERNAME): str,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+            }
         )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
@@ -136,7 +134,7 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
                     self.device_registration = True
                     return await self.async_step_configuration()
 
-        schema = vol.Schema({vol.Required(CONF_CODE): str})
+        schema = probatio.Schema({probatio.Required(CONF_CODE): str})
         return self.async_show_form(step_id="2fa", data_schema=schema, errors=errors)
 
     async def async_step_configuration(
@@ -157,10 +155,10 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
             except UnknownHiveError:
                 errors["base"] = "unknown"
 
-        schema = vol.Schema(
+        schema = probatio.Schema(
             # Name field is no longer allowed in config flow schemas
             # pylint: disable-next=home-assistant-config-flow-name-field
-            {vol.Optional(CONF_DEVICE_NAME, default=self.device_name): str}
+            {probatio.Optional(CONF_DEVICE_NAME, default=self.device_name): str}
         )
         return self.async_show_form(
             step_id="configuration", data_schema=schema, errors=errors
@@ -195,55 +193,6 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
         }
         _LOGGER.debug("Reauthenticating user")
         return await self.async_step_user(data)
-
-    @staticmethod
-    @callback
-    @override
-    def async_get_options_flow(
-        config_entry: HiveConfigEntry,
-    ) -> HiveOptionsFlowHandler:
-        """Hive options callback."""
-        return HiveOptionsFlowHandler(config_entry)
-
-
-class HiveOptionsFlowHandler(OptionsFlow):
-    """Config flow options for Hive."""
-
-    config_entry: HiveConfigEntry
-
-    def __init__(self, config_entry: HiveConfigEntry) -> None:
-        """Initialize Hive options flow."""
-        self.hive = None
-        self.interval = config_entry.options.get(CONF_SCAN_INTERVAL, 120)
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
-        return await self.async_step_user()
-
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a flow initialized by the user."""
-        self.hive = self.config_entry.runtime_data
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            new_interval = user_input.get(CONF_SCAN_INTERVAL)
-            assert self.hive
-            await self.hive.updateInterval(new_interval)
-            return self.async_create_entry(title="", data=user_input)
-
-        schema = vol.Schema(
-            {
-                # Polling interval is user-configurable, which is no longer allowed
-                # pylint: disable-next=home-assistant-config-flow-polling-field
-                vol.Optional(CONF_SCAN_INTERVAL, default=self.interval): vol.All(
-                    vol.Coerce(int), vol.Range(min=30)
-                )
-            }
-        )
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
 
 class UnknownHiveError(Exception):

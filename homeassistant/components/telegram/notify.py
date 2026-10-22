@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -42,7 +42,7 @@ ATTR_DOCUMENT = "document"
 CONF_CHAT_ID = "chat_id"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_CHAT_ID): vol.Coerce(int)}
+    {probatio.Required(CONF_CHAT_ID): probatio.Coerce(int)}
 )
 
 

@@ -1,7 +1,6 @@
 """The Matter integration."""
 
 import asyncio
-from functools import cache
 from typing import TYPE_CHECKING
 
 from aiohasupervisor.models import InterfaceMethod
@@ -26,7 +25,7 @@ from homeassistant.components.hassio import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
@@ -63,20 +62,21 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @callback
-@cache
 def get_matter_device_info(
     hass: HomeAssistant, device_id: str
 ) -> MatterDeviceInfo | None:
     """Return Matter device info or None if device does not exist."""
-    if not hass.config_entries.async_loaded_entries(DOMAIN) or not (
-        node := node_from_ha_device_id(hass, device_id)
+    if (
+        not hass.config_entries.async_loaded_entries(DOMAIN)
+        or not (node := node_from_ha_device_id(hass, device_id))
+        or (device_info := node.device_info) is None
     ):
         return None
 
     return MatterDeviceInfo(
-        unique_id=node.device_info.uniqueID or "",
-        vendor_id=hex(node.device_info.vendorID),
-        product_id=hex(node.device_info.productID),
+        unique_id=device_info.uniqueID or "",
+        vendor_id=hex(device_info.vendorID),
+        product_id=hex(device_info.productID),
     )
 
 
@@ -86,7 +86,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> None:
     """Set up Matter from a config entry."""
     if use_addon := entry.data.get(CONF_USE_ADDON):
         await _async_ensure_addon_running(hass, entry)
@@ -123,6 +123,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
         raise ConfigEntryNotReady(f"Invalid server version: {err}") from err
 
     except Exception as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         LOGGER.exception("Failed to connect to matter server")
         raise ConfigEntryNotReady(
             "Unknown error connecting to the Matter server"
@@ -230,7 +231,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
             setup_error = listen_err
 
     if setup_error is None:
-        return True
+        return
 
     await hass.config_entries.async_unload_platforms(entry, SUPPORTED_PLATFORMS)
     try:
@@ -333,13 +334,13 @@ async def _client_listen(
         hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        entry, SUPPORTED_PLATFORMS
-    )
+    try:
+        await hass.config_entries.async_unload_platforms_or_raise(
+            entry, SUPPORTED_PLATFORMS
+        )
 
-    if unload_ok:
         # Disconnect the BLE proxy first so it stops accepting new GATT/BTP
         # traffic before the matter client (which originates that traffic) is
         # torn down.
@@ -350,17 +351,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> b
                 LOGGER.exception("Failed to disconnect BLE proxy during unload")
         entry.runtime_data.listen_task.cancel()
         await entry.runtime_data.adapter.matter_client.disconnect()
-
-    if entry.data.get(CONF_USE_ADDON) and entry.disabled_by:
-        addon_manager: AddonManager = get_addon_manager(hass)
-        LOGGER.debug("Stopping Matter Server add-on")
-        try:
-            await addon_manager.async_stop_addon()
-        except AddonError as err:
-            LOGGER.error("Failed to stop the Matter Server add-on: %s", err)
-            return False
-
-    return unload_ok
+    finally:
+        if entry.data.get(CONF_USE_ADDON) and entry.disabled_by:
+            addon_manager: AddonManager = get_addon_manager(hass)
+            LOGGER.debug("Stopping Matter Server add-on")
+            try:
+                await addon_manager.async_stop_addon()
+            except AddonError as err:
+                raise ConfigEntryError(
+                    translation_domain=DOMAIN,
+                    translation_key="addon_stop_failed",
+                ) from err
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> None:

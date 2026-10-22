@@ -4,8 +4,9 @@ from contextlib import AbstractContextManager, nullcontext
 from datetime import datetime, timedelta
 
 from freezegun import freeze_time
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import automation
 from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
@@ -15,8 +16,6 @@ from homeassistant.helpers.condition import async_validate_condition_config
 from homeassistant.helpers.sun import get_astral_event_next
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.typing import WebSocketGenerator
 
 # San Diego (default test location), Kotzebue, Alaska (just inside the Arctic
 # Circle - brief midnight sun in June) and Longyearbyen, Svalbard (deep polar -
@@ -1457,7 +1456,7 @@ async def test_sun_state_condition_takes_no_options(
 ) -> None:
     """Test the sun state conditions accept no target and reject options."""
     await async_validate_condition_config(hass, {"condition": condition_key})
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await async_validate_condition_config(
             hass, {"condition": condition_key, "options": {"unknown": True}}
         )
@@ -1917,11 +1916,11 @@ async def test_midnight_sun_polar_night_condition_flips_at_crossing(
         ("sun.is_golden_hour", "any", nullcontext()),
         ("sun.is_golden_hour", "morning", nullcontext()),
         ("sun.is_golden_hour", "evening", nullcontext()),
-        ("sun.is_golden_hour", "invalid", pytest.raises(vol.Invalid)),
+        ("sun.is_golden_hour", "invalid", pytest.raises(probatio.Invalid)),
         ("sun.is_blue_hour", "any", nullcontext()),
         ("sun.is_blue_hour", "morning", nullcontext()),
         ("sun.is_blue_hour", "evening", nullcontext()),
-        ("sun.is_blue_hour", "invalid", pytest.raises(vol.Invalid)),
+        ("sun.is_blue_hour", "invalid", pytest.raises(probatio.Invalid)),
     ],
 )
 async def test_golden_blue_hour_condition_period_validation(

@@ -2,7 +2,7 @@
 
 from typing import override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, State
@@ -11,14 +11,11 @@ from homeassistant.helpers import config_validation as cv, intent, translation
 from . import (
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
-    ATTR_TEMPERATURE,
-    DOMAIN,
     INTENT_SET_FAN_MODE,
     INTENT_SET_TEMPERATURE,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
 )
+from .const import DOMAIN, ClimateService, ClimateServiceArgument
 
 FAN_MODE_TRANSLATION_PREFIX = (
     f"component.{DOMAIN}.entity_component._.state_attributes.{ATTR_FAN_MODE}.state."
@@ -37,12 +34,12 @@ class SetTemperatureIntent(intent.IntentHandler):
     intent_type = INTENT_SET_TEMPERATURE
     description = "Sets the target temperature of a climate device or entity"
     slot_schema = {
-        vol.Required("temperature"): vol.Coerce(float),
-        vol.Optional("area"): intent.non_empty_string,
-        vol.Optional("name"): intent.non_empty_string,
-        vol.Optional("floor"): intent.non_empty_string,
-        vol.Optional("preferred_area_id"): cv.string,
-        vol.Optional("preferred_floor_id"): cv.string,
+        probatio.Required("temperature"): probatio.Coerce(float),
+        probatio.Optional("area"): intent.non_empty_string,
+        probatio.Optional("name"): intent.non_empty_string,
+        probatio.Optional("floor"): intent.non_empty_string,
+        probatio.Optional("preferred_area_id"): cv.string,
+        probatio.Optional("preferred_floor_id"): cv.string,
     }
     platforms = {DOMAIN}
 
@@ -92,8 +89,8 @@ class SetTemperatureIntent(intent.IntentHandler):
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            service_data={ATTR_TEMPERATURE: temperature},
+            ClimateService.SET_TEMPERATURE,
+            service_data={ClimateServiceArgument.TEMPERATURE: temperature},
             target={ATTR_ENTITY_ID: climate_state.entity_id},
             blocking=True,
         )
@@ -118,12 +115,12 @@ class SetFanModeIntent(intent.IntentHandler):
     intent_type = INTENT_SET_FAN_MODE
     description = "Sets the fan mode of a climate device or entity"
     slot_schema = {
-        vol.Required("fan_mode"): intent.non_empty_string,
-        vol.Optional("area"): intent.non_empty_string,
-        vol.Optional("name"): intent.non_empty_string,
-        vol.Optional("floor"): intent.non_empty_string,
-        vol.Optional("preferred_area_id"): cv.string,
-        vol.Optional("preferred_floor_id"): cv.string,
+        probatio.Required("fan_mode"): intent.non_empty_string,
+        probatio.Optional("area"): intent.non_empty_string,
+        probatio.Optional("name"): intent.non_empty_string,
+        probatio.Optional("floor"): intent.non_empty_string,
+        probatio.Optional("preferred_area_id"): cv.string,
+        probatio.Optional("preferred_floor_id"): cv.string,
     }
     platforms = {DOMAIN}
 
@@ -182,8 +179,8 @@ class SetFanModeIntent(intent.IntentHandler):
 
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            service_data={ATTR_FAN_MODE: fan_mode},
+            ClimateService.SET_FAN_MODE,
+            service_data={ClimateServiceArgument.FAN_MODE: fan_mode},
             target={ATTR_ENTITY_ID: climate_state.entity_id},
             blocking=True,
             context=intent_obj.context,

@@ -1,6 +1,7 @@
 {
   "domain": "ghost",
   "name": "Ghost",
+  "categories": ["news_social_media"],
   "codeowners": ["@johnonolan"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ghost",

@@ -84,7 +84,7 @@ class VilfoRouterSensor(SensorEntity):
         # The router does not always report a MAC address (e.g. when set up by
         # host), so only attach the connection when one is available.
         if api.mac_address:
-            self._attr_device_info["connections"] = {
+            self._attr_device_info.connections = {
                 (CONNECTION_NETWORK_MAC, api.mac_address)
             }
         self._attr_unique_id = f"{api.unique_id}_{description.key}"

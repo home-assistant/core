@@ -6,7 +6,7 @@ from typing import Any, Final, cast
 
 from aiohttp import ClientError
 from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import (
@@ -40,7 +40,7 @@ def _amount_to_minor_units(value: Any) -> int:
         amount = Decimal(str(value))
         minor_units = amount * 100
     except (DecimalException, ValueError) as err:
-        raise vol.Invalid("Amount must be a number") from err
+        raise probatio.Invalid("Amount must be a number") from err
 
     if (
         not amount.is_finite()
@@ -48,7 +48,9 @@ def _amount_to_minor_units(value: Any) -> int:
         or minor_units <= 0
         or minor_units != minor_units.to_integral_value()
     ):
-        raise vol.Invalid("Amount must be positive with no more than 2 decimal places")
+        raise probatio.Invalid(
+            "Amount must be positive with no more than 2 decimal places"
+        )
 
     return int(minor_units)
 
@@ -64,9 +66,9 @@ def _transfer_rejection_reason(error: InvalidMonzoAPIResponseError) -> str | Non
     return message
 
 
-TRANSFER_SCHEMA = vol.Schema(
+TRANSFER_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_ACCOUNT): selector.DeviceSelector(
+        probatio.Required(ATTR_ACCOUNT): selector.DeviceSelector(
             {
                 "filter": {
                     "integration": DOMAIN,
@@ -74,7 +76,7 @@ TRANSFER_SCHEMA = vol.Schema(
                 }
             }
         ),
-        vol.Required(ATTR_POT): selector.DeviceSelector(
+        probatio.Required(ATTR_POT): selector.DeviceSelector(
             {
                 "filter": {
                     "integration": DOMAIN,
@@ -82,13 +84,13 @@ TRANSFER_SCHEMA = vol.Schema(
                 }
             }
         ),
-        vol.Required(ATTR_AMOUNT): _amount_to_minor_units,
+        probatio.Required(ATTR_AMOUNT): _amount_to_minor_units,
     }
 )
 
 
 @callback
-def _async_get_resource_id(device: dr.DeviceEntry) -> str:
+def _async_get_resource_id(device: dr.AnyDeviceEntry) -> str:
     """Get the Monzo resource ID represented by a device."""
     for domain, resource_id in device.identifiers:
         if domain == DOMAIN:
@@ -99,7 +101,7 @@ def _async_get_resource_id(device: dr.DeviceEntry) -> str:
     )
 
 
-def _device_name(device: dr.DeviceEntry) -> str:
+def _device_name(device: dr.AnyDeviceEntry) -> str:
     """Return the best available name for a device."""
     return device.name_by_user or device.name or device.id
 

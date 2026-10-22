@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from openaq import NotAuthorizedError, OpenAQ, ServerError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.openaq.const import CONF_LOCATION_ID, DOMAIN
 from homeassistant.components.openaq.coordinator import (
@@ -21,8 +22,6 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .conftest import API_KEY, LOCATION_ID, make_latest, make_sensor
-
-from tests.common import MockConfigEntry
 
 
 def test_create_openaq_client_uses_sync_openaq_client() -> None:

@@ -1,14 +1,13 @@
 """The tests for the Rfxtrx sensor platform."""
 
 import pytest
+from pytest_homeassistant.common import mock_restore_cache
 
 from homeassistant.components.rfxtrx.const import ATTR_EVENT
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 
 from .conftest import create_rfx_test_entry
-
-from tests.common import mock_restore_cache
 
 EVENT_SMOKE_DETECTOR_PANIC = "08200300a109000670"
 EVENT_SMOKE_DETECTOR_NO_PANIC = "08200300a109000770"

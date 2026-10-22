@@ -1,5 +1,7 @@
 """Tests for the Switch as X Light platform."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
@@ -29,8 +31,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 async def test_default_state(hass: HomeAssistant) -> None:

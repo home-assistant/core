@@ -6,18 +6,20 @@ import threading
 import time
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from openaq import ApiKeyMissingError, ForbiddenError, NotAuthorizedError, ServerError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.openaq.const import CONF_LOCATION_ID, DOMAIN
+from homeassistant.components.openaq.coordinator import UPDATE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentryDataWithId
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 
 from . import setup_integration
 from .conftest import API_KEY, LOCATION_ID, make_latest, make_response
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_success(
@@ -136,6 +138,7 @@ async def test_setup_stops_after_a_failed_location_refresh(
 
 async def test_refreshes_serialize_shared_client_calls(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_openaq_client: MagicMock,
 ) -> None:
     """Test coordinators serialize calls to the shared client."""
@@ -162,7 +165,6 @@ async def test_refreshes_serialize_shared_client_calls(
         ],
     )
     await setup_integration(hass, config_entry)
-    coordinators = list(config_entry.runtime_data.coordinators.values())
     active_lock = threading.Lock()
     active_calls = 0
     max_active_calls = 0
@@ -179,7 +181,12 @@ async def test_refreshes_serialize_shared_client_calls(
         return make_response([])
 
     mock_openaq_client.locations.latest.side_effect = latest
-    await asyncio.gather(*(coordinator.async_refresh() for coordinator in coordinators))
+    mock_openaq_client.locations.latest.reset_mock()
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_openaq_client.locations.latest.call_count == 2
 
     assert max_active_calls == 1
 
@@ -199,12 +206,12 @@ async def test_setup_fetches_location_data(
 
 async def test_refresh_uses_cached_location_metadata(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test refresh polls latest measurements without refetching metadata."""
     await setup_integration(hass, mock_config_entry)
-    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
     mock_openaq_client.locations.get.reset_mock()
     mock_openaq_client.locations.latest.reset_mock()
     mock_openaq_client.locations.sensors.reset_mock()
@@ -212,7 +219,8 @@ async def test_refresh_uses_cached_location_metadata(
         [make_latest(2, 21.2)]
     )
 
-    await coordinator.async_refresh()
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     mock_openaq_client.locations.get.assert_not_called()
@@ -234,14 +242,15 @@ async def test_unload_closes_client(
     mock_openaq_client.close.assert_called_once()
 
 
+@pytest.mark.freeze_time(tick=True)
 async def test_unload_does_not_close_during_client_call(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test unloading does not close the client during a client call."""
     await setup_integration(hass, mock_config_entry)
-    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
     loop = asyncio.get_running_loop()
     call_started = asyncio.Event()
     close_started = asyncio.Event()
@@ -264,7 +273,8 @@ async def test_unload_does_not_close_during_client_call(
     mock_openaq_client.locations.latest.side_effect = latest
     mock_openaq_client.close.side_effect = close_client
     with patch.object(hass, "async_add_executor_job", side_effect=run_in_thread):
-        refresh_task = asyncio.create_task(coordinator.async_refresh())
+        freezer.tick(UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
         await asyncio.wait_for(call_started.wait(), timeout=1)
         unload_task = asyncio.create_task(
             hass.config_entries.async_unload(mock_config_entry.entry_id)
@@ -279,7 +289,7 @@ async def test_unload_does_not_close_during_client_call(
             release_call.set()
 
         assert await asyncio.wait_for(unload_task, timeout=1)
-        await asyncio.wait_for(refresh_task, timeout=1)
+        await asyncio.wait_for(hass.async_block_till_done(), timeout=1)
 
     assert not closed_during_call
     assert close_started.is_set()
@@ -294,7 +304,9 @@ async def test_failed_unload_does_not_close_client(
     await setup_integration(hass, mock_config_entry)
 
     with patch.object(
-        hass.config_entries, "async_unload_platforms", return_value=False
+        hass.config_entries,
+        "async_unload_platforms_or_raise",
+        side_effect=ConfigEntryError("Unable to unload platforms"),
     ):
         assert not await hass.config_entries.async_unload(mock_config_entry.entry_id)
 

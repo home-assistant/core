@@ -16,7 +16,7 @@ from homewizard_energy.errors import (
     UnsupportedError,
 )
 from homewizard_energy.models import Device
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import onboarding
 from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
@@ -72,9 +72,9 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_IP_ADDRESS, default=user_input.get(CONF_IP_ADDRESS)
                     ): TextSelector(),
                 }
@@ -302,9 +302,9 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_IP_ADDRESS,
                         default=reconfigure_entry.data.get(CONF_IP_ADDRESS),
                     ): TextSelector(),

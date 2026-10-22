@@ -785,7 +785,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'CONN123',
   })
 # ---
 # name: test_sensor_entities[sensor.nrgkick_test_connector_type-entry]
@@ -2649,7 +2649,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '-45',
   })
 # ---
 # name: test_sensor_entities[sensor.nrgkick_test_ssid-entry]
@@ -2699,7 +2699,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'TestNetwork',
   })
 # ---
 # name: test_sensor_entities[sensor.nrgkick_test_status-entry]

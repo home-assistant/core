@@ -1,6 +1,7 @@
 {
   "domain": "microsoft",
   "name": "Microsoft Text-to-Speech (TTS)",
+  "categories": ["ai_voice.speech"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/microsoft",
   "iot_class": "cloud_push",

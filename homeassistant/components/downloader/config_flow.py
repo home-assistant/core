@@ -3,7 +3,7 @@
 import os
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import exceptions
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -34,9 +34,9 @@ class DownloaderConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_DOWNLOAD_DIR): cv.string,
+                    probatio.Required(CONF_DOWNLOAD_DIR): cv.string,
                 }
             ),
             errors=errors,

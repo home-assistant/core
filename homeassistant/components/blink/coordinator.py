@@ -62,6 +62,11 @@ class BlinkUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Async update wrapper."""
         try:
-            return await self.api.refresh(force=True)
+            # Do not force the refresh. BlinkPy turns a forced refresh into
+            # force_cache=True, which makes every sync module re-download media
+            # it already has, so cached clips are fetched again on every poll.
+            # The scan interval is far longer than BlinkPy's refresh rate, so a
+            # normal refresh still happens on schedule.
+            return await self.api.refresh()
         except UnauthorizedError as ex:
             raise ConfigEntryAuthFailed("Blink API authorization failed") from ex

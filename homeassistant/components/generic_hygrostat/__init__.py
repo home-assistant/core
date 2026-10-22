@@ -2,7 +2,7 @@
 
 import logging
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.humidifier import HumidifierDeviceClass
 from homeassistant.config_entries import ConfigEntry
@@ -41,34 +41,42 @@ CONF_STALE_DURATION = "sensor_stale_duration"
 DEFAULT_TOLERANCE = 3
 DEFAULT_NAME = "Generic Hygrostat"
 
-HYGROSTAT_SCHEMA = vol.Schema(
+HYGROSTAT_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HUMIDIFIER): cv.entity_id,
-        vol.Required(CONF_SENSOR): cv.entity_id,
-        vol.Optional(CONF_DEVICE_CLASS): vol.In(
+        probatio.Required(CONF_HUMIDIFIER): cv.entity_id,
+        probatio.Required(CONF_SENSOR): cv.entity_id,
+        probatio.Optional(CONF_DEVICE_CLASS): probatio.In(
             [HumidifierDeviceClass.HUMIDIFIER, HumidifierDeviceClass.DEHUMIDIFIER]
         ),
-        vol.Optional(CONF_MAX_HUMIDITY): vol.Coerce(float),
-        vol.Optional(CONF_MIN_DUR): vol.All(cv.time_period, cv.positive_timedelta),
-        vol.Optional(CONF_MIN_HUMIDITY): vol.Coerce(float),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_DRY_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
-        vol.Optional(CONF_WET_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
-        vol.Optional(CONF_TARGET_HUMIDITY): vol.Coerce(float),
-        vol.Optional(CONF_KEEP_ALIVE): vol.All(cv.time_period, cv.positive_timedelta),
-        vol.Optional(CONF_INITIAL_STATE): cv.boolean,
-        vol.Optional(CONF_AWAY_HUMIDITY): vol.Coerce(int),
-        vol.Optional(CONF_AWAY_FIXED): cv.boolean,
-        vol.Optional(CONF_STALE_DURATION): vol.All(
+        probatio.Optional(CONF_MAX_HUMIDITY): probatio.Coerce(float),
+        probatio.Optional(CONF_MIN_DUR): probatio.All(
             cv.time_period, cv.positive_timedelta
         ),
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Optional(CONF_MIN_HUMIDITY): probatio.Coerce(float),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(
+            CONF_DRY_TOLERANCE, default=DEFAULT_TOLERANCE
+        ): probatio.Coerce(float),
+        probatio.Optional(
+            CONF_WET_TOLERANCE, default=DEFAULT_TOLERANCE
+        ): probatio.Coerce(float),
+        probatio.Optional(CONF_TARGET_HUMIDITY): probatio.Coerce(float),
+        probatio.Optional(CONF_KEEP_ALIVE): probatio.All(
+            cv.time_period, cv.positive_timedelta
+        ),
+        probatio.Optional(CONF_INITIAL_STATE): cv.boolean,
+        probatio.Optional(CONF_AWAY_HUMIDITY): probatio.Coerce(int),
+        probatio.Optional(CONF_AWAY_FIXED): cv.boolean,
+        probatio.Optional(CONF_STALE_DURATION): probatio.All(
+            cv.time_period, cv.positive_timedelta
+        ),
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [HYGROSTAT_SCHEMA])},
-    extra=vol.ALLOW_EXTRA,
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: probatio.All(probatio.EnsureList(), [HYGROSTAT_SCHEMA])},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -89,7 +97,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up from a config entry."""
 
     def set_humidifier_entity_id_or_uuid(source_entity_id: str) -> None:
@@ -138,10 +146,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, (Platform.HUMIDIFIER,))
-    return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
@@ -169,11 +176,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         config_entry.minor_version,
     )
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(
+    await hass.config_entries.async_unload_platforms_or_raise(
         entry, (Platform.HUMIDIFIER,)
     )

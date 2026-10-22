@@ -17,7 +17,7 @@ from .coordinator import (
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OpenAQConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OpenAQConfigEntry) -> None:
     """Set up OpenAQ from a config entry."""
     client = create_openaq_client(entry.data[CONF_API_KEY])
     client_lock = asyncio.Lock()
@@ -40,7 +40,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenAQConfigEntry) -> bo
     )
     entry.async_on_unload(entry.add_update_listener(async_update_entry))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def async_update_entry(hass: HomeAssistant, entry: OpenAQConfigEntry) -> None:
@@ -48,10 +47,8 @@ async def async_update_entry(hass: HomeAssistant, entry: OpenAQConfigEntry) -> N
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: OpenAQConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OpenAQConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        async with entry.runtime_data.client_lock:
-            await hass.async_add_executor_job(entry.runtime_data.client.close)
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
+    async with entry.runtime_data.client_lock:
+        await hass.async_add_executor_job(entry.runtime_data.client.close)

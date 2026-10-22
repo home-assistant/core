@@ -359,6 +359,128 @@
     'state': 'unknown',
   })
 # ---
+# name: test_selects[twunby-entity_ids3][select.t90_pro_omni_auto_empty_frequency:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'auto',
+        'smart',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.t90_pro_omni_auto_empty_frequency',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Auto-empty frequency',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Auto-empty frequency',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'auto_empty',
+    'unique_id': '8516fbb1-17f1-4194-0000003_auto_empty',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[twunby-entity_ids3][select.t90_pro_omni_auto_empty_frequency:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'T90 PRO OMNI Auto-empty frequency',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'auto',
+        'smart',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.t90_pro_omni_auto_empty_frequency',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
+  })
+# ---
+# name: test_selects[twunby-entity_ids3][select.t90_pro_omni_work_mode:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'mop',
+        'mop_after_vacuum',
+        'vacuum',
+        'vacuum_and_mop',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.t90_pro_omni_work_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Work mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Work mode',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'work_mode',
+    'unique_id': '8516fbb1-17f1-4194-0000003_work_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[twunby-entity_ids3][select.t90_pro_omni_work_mode:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'T90 PRO OMNI Work mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'mop',
+        'mop_after_vacuum',
+        'vacuum',
+        'vacuum_and_mop',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.t90_pro_omni_work_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'vacuum',
+  })
+# ---
 # name: test_selects[yna5x1-entity_ids0][select.ozmo_950_active_map:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

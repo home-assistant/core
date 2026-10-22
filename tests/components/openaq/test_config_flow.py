@@ -13,6 +13,7 @@ from openaq import (
 )
 from openaq.core.exceptions import APIError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.openaq.config_flow import (
@@ -33,8 +34,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.selector import SelectOptionDict, SelectSelector
 
 from .conftest import API_KEY, make_location, make_response, make_sensor_base
-
-from tests.common import MockConfigEntry
 
 
 def _get_select_options(
@@ -132,7 +131,9 @@ async def test_duplicate_parent_entry(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data={CONF_API_KEY: API_KEY},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: API_KEY}
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -153,7 +154,9 @@ async def test_different_api_key_parent_entry(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data={CONF_API_KEY: "other-api-key"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "other-api-key"}
     )
     await hass.async_block_till_done()
 
@@ -652,6 +655,24 @@ async def test_location_subentry_no_locations_found(
         mock_openaq_client.locations.list.call_args.kwargs["radius"] == expected_radius
     )
 
+    mock_openaq_client.locations.list.return_value = make_response(
+        [make_location(location_id=9999)]
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            ATTR_LOCATION: {
+                ATTR_LATITUDE: 35.1,
+                ATTR_LONGITUDE: -106.6,
+                CONF_RADIUS: radius,
+            },
+        },
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_LOCATION_ID: "9999"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 def test_location_select_label_without_supported_parameters() -> None:
     """Test location select label with no supported parameters."""
@@ -702,6 +723,25 @@ async def test_location_subentry_map_flow_errors(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": error}
     mock_openaq_client.close.assert_called_once()
+
+    mock_openaq_client.locations.list.side_effect = None
+    mock_openaq_client.locations.list.return_value = make_response(
+        [make_location(location_id=9999)]
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            ATTR_LOCATION: {
+                ATTR_LATITUDE: 35.1,
+                ATTR_LONGITUDE: -106.6,
+                CONF_RADIUS: 5000,
+            },
+        },
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_LOCATION_ID: "9999"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_location_subentry_map_flow_omits_configured_locations(
@@ -768,6 +808,24 @@ async def test_duplicate_location_subentry_across_entries(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "no_locations_found"}
+
+    mock_openaq_client.locations.list.return_value = make_response(
+        [make_location(location_id=9999)]
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            ATTR_LOCATION: {
+                ATTR_LATITUDE: 35.1,
+                ATTR_LONGITUDE: -106.6,
+                CONF_RADIUS: 5000,
+            },
+        },
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_LOCATION_ID: "9999"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(

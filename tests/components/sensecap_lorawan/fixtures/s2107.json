@@ -1,0 +1,10 @@
+{
+  "source": "Synthetic frame using the SenseCAP decoder protocol test vectors.",
+  "f_port": 3,
+  "payload": "470000ff9c07d0",
+  "expected": {
+    "probe_1_temperature": 0.0,
+    "probe_2_temperature": -1.0,
+    "probe_3_temperature": 20.0
+  }
+}

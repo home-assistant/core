@@ -1,6 +1,7 @@
 {
   "domain": "manual",
   "name": "Manual alarm control panel",
+  "categories": ["helpers", "security_safety.alarm_systems"],
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/manual",
   "integration_type": "helper",
