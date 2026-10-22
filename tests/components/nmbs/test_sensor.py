@@ -545,7 +545,7 @@ async def test_connection_feed_logs_failure_and_recovery_once(
     await _setup_entry(hass, mock_config_entry)
     mock_nmbs_client.get_connections.side_effect = PyRailError("API unavailable")
 
-    with caplog.at_level(logging.WARNING):
+    with caplog.at_level(logging.INFO):
         freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)

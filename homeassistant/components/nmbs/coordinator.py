@@ -127,7 +127,7 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
     def _log_feed_changes(self, reasons: dict[str, str], names: dict[str, str]) -> None:
         """Log the feeds that became unavailable or recovered since the last refresh."""
         for feed in reasons.keys() - self._failed_feeds:
-            _LOGGER.warning("Unable to fetch %s: %s", names[feed], reasons[feed])
+            _LOGGER.info("Unable to fetch %s: %s", names[feed], reasons[feed])
         for feed in (self._failed_feeds - reasons.keys()) & names.keys():
             _LOGGER.info("Recovered feed: %s", names[feed])
         self._failed_feeds = set(reasons)
