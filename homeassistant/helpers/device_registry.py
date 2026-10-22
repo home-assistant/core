@@ -2505,7 +2505,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "async_get_or_create() got unexpected keyword arguments "
                 f"{', '.join(map(repr, kwargs))}"
             )
-        return self.async_get_or_create_from_info(
+        return self._async_get_or_create_from_info(
             config_entry_id=config_entry_id,
             config_subentry_id=config_subentry_id,
             disabled_by=disabled_by,
@@ -2531,13 +2531,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         )
 
     @callback
-    def async_get_or_create_from_info(  # noqa: C901
+    def async_get_or_create_from_info(
         self,
         *,
         config_entry_id: str,
         config_subentry_id: str | UndefinedType | None = UNDEFINED,
-        # To disable a device if it gets created, does not affect existing devices
-        disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
         device_info: DeviceInfo,
     ) -> DeviceEntry:
         """Get device. Create if it doesn't exist.
@@ -2546,6 +2544,24 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         If identifiers overlap with a child device, the method raises.
         """
+        return self._async_get_or_create_from_info(
+            config_entry_id=config_entry_id,
+            config_subentry_id=config_subentry_id,
+            disabled_by=UNDEFINED,
+            device_info=device_info,
+        )
+
+    @callback
+    def _async_get_or_create_from_info(  # noqa: C901
+        self,
+        *,
+        config_entry_id: str,
+        config_subentry_id: str | UndefinedType | None,
+        # To disable a device if it gets created, does not affect existing devices
+        disabled_by: DeviceEntryDisabler | UndefinedType | None,
+        device_info: DeviceInfo,
+    ) -> DeviceEntry:
+        """Get device. Create if it doesn't exist."""
         # The deprecated fields are hidden from type checkers
         deprecated_values = {
             parameter: getattr(device_info, parameter)
@@ -2914,7 +2930,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         If identifiers match those of an existing device, that device is converted to
         a child device, preserving its id.
         """
-        return self.async_get_or_create_child_from_info(
+        return self._async_get_or_create_child_from_info(
             config_entry_id=config_entry_id,
             config_subentry_id=config_subentry_id,
             disabled_by=disabled_by,
@@ -2934,8 +2950,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         *,
         config_entry_id: str,
         config_subentry_id: str | UndefinedType | None = UNDEFINED,
-        # To disable a device if it gets created, does not affect existing devices
-        disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
         device_info: ChildDeviceInfo,
     ) -> ChildDeviceEntry:
         """Get child device. Create if it doesn't exist.
@@ -2943,6 +2957,24 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         If identifiers match those of an existing device, that device is converted to
         a child device, preserving its id.
         """
+        return self._async_get_or_create_child_from_info(
+            config_entry_id=config_entry_id,
+            config_subentry_id=config_subentry_id,
+            disabled_by=UNDEFINED,
+            device_info=device_info,
+        )
+
+    @callback
+    def _async_get_or_create_child_from_info(
+        self,
+        *,
+        config_entry_id: str,
+        config_subentry_id: str | UndefinedType | None,
+        # To disable a device if it gets created, does not affect existing devices
+        disabled_by: DeviceEntryDisabler | UndefinedType | None,
+        device_info: ChildDeviceInfo,
+    ) -> ChildDeviceEntry:
+        """Get child device. Create if it doesn't exist."""
         config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
         if config_entry is None:
             raise HomeAssistantError(
