@@ -47,6 +47,7 @@
       "entry_type": "AI task",
       "error": {
         "api_error": "[%key:component::anthropic::config_subentries::conversation::error::api_error%]",
+        "effort_requires_thinking": "[%key:component::anthropic::config_subentries::conversation::error::effort_requires_thinking%]",
         "model_not_found": "[%key:component::anthropic::config_subentries::conversation::error::model_not_found%]",
         "model_retired": "[%key:component::anthropic::config_subentries::conversation::error::model_retired%]",
         "thinking_budget_too_large": "[%key:component::anthropic::config_subentries::conversation::error::thinking_budget_too_large%]"
@@ -81,9 +82,10 @@
         "model": {
           "data": {
             "code_execution": "[%key:component::anthropic::config_subentries::conversation::step::model::data::code_execution%]",
+            "effort": "[%key:component::anthropic::config_subentries::conversation::step::model::data::effort%]",
             "max_tokens": "[%key:component::anthropic::config_subentries::conversation::step::model::data::max_tokens%]",
             "thinking_budget": "[%key:component::anthropic::config_subentries::conversation::step::model::data::thinking_budget%]",
-            "thinking_effort": "[%key:component::anthropic::config_subentries::conversation::step::model::data::thinking_effort%]",
+            "thinking_type": "[%key:component::anthropic::config_subentries::conversation::step::model::data::thinking_type%]",
             "tool_search": "[%key:component::anthropic::config_subentries::conversation::step::model::data::tool_search%]",
             "user_location": "[%key:component::anthropic::config_subentries::conversation::step::model::data::user_location%]",
             "web_fetch": "[%key:component::anthropic::config_subentries::conversation::step::model::data::web_fetch%]",
@@ -93,9 +95,10 @@
           },
           "data_description": {
             "code_execution": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::code_execution%]",
+            "effort": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::effort%]",
             "max_tokens": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::max_tokens%]",
             "thinking_budget": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::thinking_budget%]",
-            "thinking_effort": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::thinking_effort%]",
+            "thinking_type": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::thinking_type%]",
             "tool_search": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::tool_search%]",
             "user_location": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::user_location%]",
             "web_fetch": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::web_fetch%]",
@@ -114,6 +117,7 @@
       "entry_type": "Conversation agent",
       "error": {
         "api_error": "Unable to get model info: {message}",
+        "effort_requires_thinking": "This effort level requires thinking to be enabled for the selected model.",
         "model_not_found": "Model not found",
         "model_retired": "This model is retired. Select another model.",
         "thinking_budget_too_large": "Thinking budget must be less than the Maximum tokens."
@@ -152,9 +156,10 @@
         "model": {
           "data": {
             "code_execution": "Code execution",
+            "effort": "Effort",
             "max_tokens": "Maximum tokens to return in response",
             "thinking_budget": "Thinking budget",
-            "thinking_effort": "Thinking effort",
+            "thinking_type": "Thinking type",
             "tool_search": "Enable tool search tool",
             "user_location": "Include home location",
             "web_fetch": "Enable web fetch",
@@ -164,9 +169,10 @@
           },
           "data_description": {
             "code_execution": "Allow the model to execute code in a secure sandbox environment, enabling it to analyze data and perform complex calculations.",
+            "effort": "Control how many tokens Claude uses when responding, trading off between response thoroughness and token efficiency",
             "max_tokens": "Limit the number of response tokens.",
-            "thinking_budget": "The number of tokens the model can use to think about the response out of the total maximum number of tokens. Set to 1024 or greater to enable extended thinking.",
-            "thinking_effort": "Control how many tokens Claude uses when responding, trading off between response thoroughness and token efficiency",
+            "thinking_budget": "Tokens available for extended thinking when the thinking type is enabled. Must be less than the maximum response tokens.",
+            "thinking_type": "Controls when Claude spends additional tokens reasoning through requests or tool results.",
             "tool_search": "Enable dynamic tool discovery instead of preloading all tools into the context",
             "user_location": "Localize search results based on home location",
             "web_fetch": "The web fetch tool allows Claude to retrieve full content from specified web pages and PDF documents to augment Claude's context with live web content",
@@ -269,6 +275,15 @@
     }
   },
   "selector": {
+    "effort": {
+      "options": {
+        "high": "[%key:common::state::high%]",
+        "low": "[%key:common::state::low%]",
+        "max": "Max",
+        "medium": "[%key:common::state::medium%]",
+        "xhigh": "X-High"
+      }
+    },
     "prompt_caching": {
       "options": {
         "automatic": "Full",
@@ -276,14 +291,11 @@
         "prompt": "System prompt"
       }
     },
-    "thinking_effort": {
+    "thinking_type": {
       "options": {
-        "high": "[%key:common::state::high%]",
-        "low": "[%key:common::state::low%]",
-        "max": "Max",
-        "medium": "[%key:common::state::medium%]",
-        "none": "None",
-        "xhigh": "X-High"
+        "adaptive": "Adaptive",
+        "disabled": "Disabled",
+        "enabled": "Enabled"
       }
     }
   }

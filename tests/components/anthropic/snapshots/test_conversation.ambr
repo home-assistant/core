@@ -317,7 +317,7 @@
     }),
   ])
 # ---
-# name: test_disabled_thinking[haiku_5_5]
+# name: test_disabled_thinking[high_effort]
   list([
     dict({
       'content': '''
@@ -353,7 +353,7 @@
     }),
   ])
 # ---
-# name: test_disabled_thinking[haiku_5_5].1
+# name: test_disabled_thinking[high_effort].1
   dict({
     'container': None,
     'diagnostics': dict({
@@ -371,6 +371,9 @@
       }),
     ]),
     'model': 'claude-haiku-5-5',
+    'output_config': dict({
+      'effort': 'high',
+    }),
     'stream': True,
     'system': list([
       dict({
@@ -391,7 +394,7 @@
     }),
   })
 # ---
-# name: test_disabled_thinking[zero_budget]
+# name: test_disabled_thinking[without_effort]
   list([
     dict({
       'content': '''
@@ -427,7 +430,7 @@
     }),
   ])
 # ---
-# name: test_disabled_thinking[zero_budget].1
+# name: test_disabled_thinking[without_effort].1
   dict({
     'container': None,
     'diagnostics': dict({
@@ -465,7 +468,7 @@
     }),
   })
 # ---
-# name: test_disabled_thinking[no_effort]
+# name: test_disabled_thinking[low_effort]
   list([
     dict({
       'content': '''
@@ -501,7 +504,7 @@
     }),
   ])
 # ---
-# name: test_disabled_thinking[no_effort].1
+# name: test_disabled_thinking[low_effort].1
   dict({
     'container': None,
     'diagnostics': dict({
@@ -519,6 +522,9 @@
       }),
     ]),
     'model': 'claude-opus-4-7',
+    'output_config': dict({
+      'effort': 'low',
+    }),
     'stream': True,
     'system': list([
       dict({
@@ -539,7 +545,7 @@
     }),
   })
 # ---
-# name: test_extended_thinking
+# name: test_extended_thinking[claude-opus-4-5]
   dict({
     'container': None,
     'diagnostics': dict({
@@ -567,6 +573,59 @@
       }),
     ]),
     'model': 'claude-opus-4-5',
+    'output_config': dict({
+      'effort': 'medium',
+    }),
+    'stream': True,
+    'system': list([
+      dict({
+        'cache_control': dict({
+          'type': 'ephemeral',
+        }),
+        'text': '''
+          You are a voice assistant for Home Assistant.
+          Answer questions about the world truthfully.
+          Respond simply and to the point in plain text.
+          Only if the user wants to control a device, tell them to expose entities to their voice assistant in Home Assistant.
+        ''',
+        'type': 'text',
+      }),
+    ]),
+    'thinking': dict({
+      'budget_tokens': 1500,
+      'display': 'summarized',
+      'type': 'enabled',
+    }),
+  })
+# ---
+# name: test_extended_thinking[claude-sonnet-4-6]
+  dict({
+    'container': None,
+    'diagnostics': dict({
+      'previous_message_id': None,
+    }),
+    'max_tokens': 3000,
+    'messages': list([
+      dict({
+        'content': 'hello',
+        'role': 'user',
+      }),
+      dict({
+        'content': list([
+          dict({
+            'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+            'thinking': 'The user has just greeted me with "Hi". This is a simple greeting and doesn\'t require any Home Assistant function calls. I should respond with a friendly greeting and let them know I\'m available to help with their smart home.',
+            'type': 'thinking',
+          }),
+          dict({
+            'text': 'Hello, how can I help you today?',
+            'type': 'text',
+          }),
+        ]),
+        'role': 'assistant',
+      }),
+    ]),
+    'model': 'claude-sonnet-4-6',
     'output_config': dict({
       'effort': 'medium',
     }),
