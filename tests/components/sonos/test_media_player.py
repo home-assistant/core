@@ -95,6 +95,8 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import MockMusicServiceItem, MockSoCo, SoCoMockFactory, SonosMockEvent
 
+from tests.common import MockConfigEntry
+
 
 @pytest.fixture(autouse=True)
 def mock_token() -> Generator[MagicMock]:
@@ -1663,6 +1665,45 @@ async def test_release_skipped_when_polled_media_replayed(
         }
         soco.get_current_track_info.return_value = current_track_info | {"uri": uri}
         await hass.async_add_executor_job(media.poll_media)
+
+    soco.avTransport.SetAVTransportURI.assert_not_called()
+
+
+@pytest.mark.usefixtures("async_autosetup_sonos")
+async def test_release_skipped_when_polled_paused_media_replayed(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    config_entry: MockConfigEntry,
+    current_track_info: dict[str, Any],
+) -> None:
+    """Test polling does not release paused media that is played again."""
+    hass.config.internal_url = "http://10.0.0.1:8123"
+    media = config_entry.runtime_data.discovered["RINCON_test"].media
+    soco.avTransport.GetMediaInfo.return_value = {"CurrentURI": HASS_MEDIA_URI}
+    soco.get_current_track_info.return_value = current_track_info | {
+        "uri": HASS_MEDIA_URI
+    }
+
+    async def poll(state: str) -> None:
+        soco.get_current_transport_info.return_value = {
+            "current_transport_state": state
+        }
+        await hass.async_add_executor_job(media.poll_media)
+
+    await poll("PLAYING")
+    await poll("PAUSED_PLAYBACK")
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "music",
+            ATTR_MEDIA_CONTENT_ID: HASS_MEDIA_URI,
+        },
+        blocking=True,
+    )
+    # Sonos reports STOPPED while loading the same media again
+    await poll("STOPPED")
 
     soco.avTransport.SetAVTransportURI.assert_not_called()
 
