@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.marantz_rs232.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -13,14 +14,12 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import MOCK_DEVICE
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Prevent config-entry creation tests from setting up the integration."""
     with patch(
-        "homeassistant.components.marantz_rs232.async_setup_entry", return_value=True
+        "homeassistant.components.marantz_rs232.async_setup_entry", return_value=None
     ) as mock:
         yield mock
 

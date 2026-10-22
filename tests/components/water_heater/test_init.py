@@ -8,6 +8,15 @@ from unittest.mock import AsyncMock, MagicMock, call
 import probatio
 from propcache.api import cached_property
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    async_mock_service,
+    mock_integration,
+    mock_platform,
+    setup_test_component_platform,
+)
 
 from homeassistant.components.water_heater import (
     DOMAIN,
@@ -32,16 +41,6 @@ from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
     UnitSystem,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    async_mock_service,
-    mock_integration,
-    mock_platform,
-    setup_test_component_platform,
 )
 
 
@@ -146,12 +145,11 @@ async def test_operation_mode_validation(
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.WATER_HEATER]
         )
-        return True
 
     async def async_setup_entry_water_heater_platform(
         hass: HomeAssistant,

@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODES,
@@ -37,8 +38,6 @@ from homeassistant.helpers.entityfilter import (
 )
 
 from .util import PATH_HOMEKIT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

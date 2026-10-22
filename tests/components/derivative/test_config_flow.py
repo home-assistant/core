@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
 
 from homeassistant import config_entries
 from homeassistant.components.derivative.const import DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import selector
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 @pytest.mark.parametrize("platform", ["sensor"])
@@ -30,7 +29,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
 
     with patch(
         "homeassistant.components.derivative.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
