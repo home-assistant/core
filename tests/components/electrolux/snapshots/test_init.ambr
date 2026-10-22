@@ -2,8 +2,8 @@
 # name: test_all_appliances[700series_vacuum]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -24,7 +24,6 @@
     'model_id': None,
     'name': '700series vacuum',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '22400095',
     'sw_version': None,
     'via_device_id': None,
@@ -63,8 +62,8 @@
 # name: test_all_appliances[cybele_vacuum]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -85,7 +84,6 @@
     'model_id': None,
     'name': 'Cybele vacuum',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '52400051',
     'sw_version': None,
     'via_device_id': None,
@@ -274,8 +272,8 @@
 # name: test_all_appliances[gordias_vacuum]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -296,7 +294,6 @@
     'model_id': None,
     'name': 'Gordias vacuum',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '33200020',
     'sw_version': None,
     'via_device_id': None,
@@ -365,8 +362,8 @@
 # name: test_all_appliances[purei9_vacuum]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -387,7 +384,6 @@
     'model_id': None,
     'name': 'Pure i9 vacuum',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '04300049',
     'sw_version': None,
     'via_device_id': None,
