@@ -833,6 +833,7 @@ FLOWS = {
         "thermobeacon",
         "thermopro",
         "thethingsnetwork",
+        "thethingsnetwork_lorawan",
         "thread",
         "threema",
         "tibber",

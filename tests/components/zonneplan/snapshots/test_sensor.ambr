@@ -13,6 +13,7 @@
     'binary_sensor.thuisbatterij_home_optimization_active',
     'binary_sensor.thuisbatterij_load_balancing_overload',
     'binary_sensor.zonneplan_electricity_price_low',
+    'select.thuisbatterij_control_mode',
     'sensor.thuisbatterij_backup_power_capacity',
     'sensor.thuisbatterij_battery',
     'sensor.thuisbatterij_battery_state',
