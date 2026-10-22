@@ -39,7 +39,7 @@ class LinknLinkSensorEntityDescription(SensorEntityDescription):
 
 
 def _environment_value(key: str) -> Callable[[LinknLinkData], StateType]:
-    """Return a function that reads an environmental value."""
+    """Return a function that reads a polled environmental value."""
 
     def _value(data: LinknLinkData) -> StateType:
         if data.environment_state is None:
@@ -50,8 +50,8 @@ def _environment_value(key: str) -> Callable[[LinknLinkData], StateType]:
 
 
 def _environment_available(data: LinknLinkData) -> bool:
-    """Return whether environmental state is available."""
-    return data.environment_available and data.environment_state is not None
+    """Return whether polled environmental state is available."""
+    return data.environment_state is not None
 
 
 def _optional_environment_available(
@@ -61,55 +61,31 @@ def _optional_environment_available(
 
     def _available(data: LinknLinkData) -> bool:
         return (
-            _environment_available(data)
-            and data.environment_state is not None
+            data.environment_state is not None
             and key in data.environment_state.available_fields
         )
 
     return _available
 
 
-def _position_available(data: LinknLinkData) -> bool:
-    """Return whether local target positions are available."""
-    return data.position_state is not None and data.position_state.subscribed
+def _target_available(data: LinknLinkData) -> bool:
+    """Return whether fresh radar target updates are available."""
+    state = data.target_state
+    return state is not None and state.subscribed and not state.stale
 
 
-def _latest_position_value(
+def _latest_target_value(
     value_fn: Callable[[UltraPositionUpdate], StateType],
 ) -> Callable[[LinknLinkData], StateType]:
-    """Return a function that reads a value from the latest target positions."""
+    """Return a function that reads a value from the latest radar targets."""
 
     def _value(data: LinknLinkData) -> StateType:
-        state = data.position_state
+        state = data.target_state
         if state is None or state.stale or state.latest_update is None:
             return None
         return value_fn(state.latest_update)
 
     return _value
-
-
-def _target_count(data: LinknLinkData) -> StateType:
-    """Return the freshest available detected-target count."""
-    state = data.position_state
-    if (
-        state is not None
-        and state.subscribed
-        and not state.stale
-        and state.latest_update is not None
-    ):
-        return state.latest_update.target_count
-    return _environment_value("target_count")(data)
-
-
-def _target_count_available(data: LinknLinkData) -> bool:
-    """Return whether either source for detected-target count is available."""
-    state = data.position_state
-    return (
-        state is not None
-        and state.subscribed
-        and not state.stale
-        and state.latest_update is not None
-    ) or _environment_available(data)
 
 
 SENSOR_DESCRIPTIONS: tuple[LinknLinkSensorEntityDescription, ...] = (
@@ -120,10 +96,10 @@ SENSOR_DESCRIPTIONS: tuple[LinknLinkSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfLength.METERS,
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=_latest_position_value(
+        value_fn=_latest_target_value(
             lambda update: update.nearest_horizontal_distance
         ),
-        available_fn=_position_available,
+        available_fn=_target_available,
     ),
     LinknLinkSensorEntityDescription(
         key="nearest_distance",
@@ -132,8 +108,8 @@ SENSOR_DESCRIPTIONS: tuple[LinknLinkSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfLength.METERS,
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=_latest_position_value(lambda update: update.nearest_distance),
-        available_fn=_position_available,
+        value_fn=_latest_target_value(lambda update: update.nearest_distance),
+        available_fn=_target_available,
     ),
     LinknLinkSensorEntityDescription(
         key="temperature",
@@ -171,24 +147,28 @@ SENSOR_DESCRIPTIONS: tuple[LinknLinkSensorEntityDescription, ...] = (
         value_fn=_environment_value("wifi_signal"),
         available_fn=_environment_available,
     ),
+    # People the radar detects anywhere in its detection area, taken from
+    # the same pushed radar update as the distance sensors.
     LinknLinkSensorEntityDescription(
-        key="target_count",
-        translation_key="target_count",
+        key="detected_people",
+        translation_key="detected_people",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=_target_count,
-        available_fn=_target_count_available,
+        value_fn=_latest_target_value(lambda update: update.target_count),
+        available_fn=_target_available,
     ),
+    # People inside any of the zones configured on the device.
     LinknLinkSensorEntityDescription(
-        key="persons_in_fenced_zones",
-        translation_key="persons_in_fenced_zones",
+        key="people_in_zones",
+        translation_key="people_in_zones",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=_environment_value("persons_in_fenced_zones"),
         available_fn=_environment_available,
     ),
     *(
         LinknLinkSensorEntityDescription(
-            key=f"zone_{zone}_target_counts",
-            translation_key=f"zone_{zone}_target_count",
+            key=f"zone_{zone}_people",
+            translation_key="zone_people",
+            translation_placeholders={"zone_number": str(zone)},
             state_class=SensorStateClass.MEASUREMENT,
             value_fn=_environment_value(f"zone_{zone}_target_counts"),
             available_fn=_environment_available,

@@ -30,5 +30,4 @@ class LinknLinkEntity(CoordinatorEntity[LinknLinkCoordinator]):
             manufacturer="LinknLink",
             model=DISPLAY_MODEL,
             name=DISPLAY_MODEL,
-            serial_number=device.mac,
         )

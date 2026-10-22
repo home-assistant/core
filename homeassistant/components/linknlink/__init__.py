@@ -2,50 +2,40 @@
 
 from aiolinknlink import UltraClient, UltraDevice
 
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT, Platform
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DISPLAY_MODEL, DOMAIN
+from .const import DEFAULT_PORT, DISPLAY_MODEL
 from .coordinator import LinknLinkConfigEntry, LinknLinkCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: LinknLinkConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LinknLinkConfigEntry) -> None:
     """Set up LinknLink from a config entry."""
     assert entry.unique_id is not None
-    port = entry.data[CONF_PORT]
     device = UltraDevice(
         id=entry.unique_id,
         ip=entry.data[CONF_HOST],
-        port=port,
-        mac=entry.data[CONF_MAC],
+        port=DEFAULT_PORT,
+        mac=entry.unique_id,
         name=DISPLAY_MODEL,
         model=DISPLAY_MODEL,
     )
-    client = UltraClient(default_port=port)
+    client = UltraClient(default_port=DEFAULT_PORT)
     coordinator = LinknLinkCoordinator(hass, entry, client, device)
 
-    await coordinator.async_config_entry_first_refresh()
-    device.name = DISPLAY_MODEL
-    device.model = DISPLAY_MODEL
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady:
+        await coordinator.async_shutdown()
+        raise
     entry.runtime_data = coordinator
 
-    dr.async_get(hass).async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, device.mac)},
-        identifiers={(DOMAIN, device.id)},
-        manufacturer="LinknLink",
-        model=device.model,
-        name=device.name,
-        serial_number=device.mac,
-    )
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: LinknLinkConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LinknLinkConfigEntry) -> None:
     """Unload a LinknLink config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

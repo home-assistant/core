@@ -4,6 +4,7 @@ from dataclasses import replace
 from unittest.mock import AsyncMock, MagicMock
 
 from aiolinknlink import UltraConnectionError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.linknlink.const import DISPLAY_MODEL, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -13,8 +14,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .conftest import DEVICE, MAC, SESSION
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_preserves_custom_title(
@@ -41,7 +40,7 @@ async def test_setup_and_unload(
     entity_registry: er.EntityRegistry,
     mock_linknlink_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_position_subscription: tuple[MagicMock, MagicMock],
+    mock_target_subscription: tuple[MagicMock, MagicMock],
 ) -> None:
     """Test setting up and unloading an entry."""
     mock_linknlink_client.connect.return_value = replace(
@@ -52,7 +51,7 @@ async def test_setup_and_unload(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_linknlink_client.connect.assert_awaited_once()
     mock_linknlink_client.get_environment_state.assert_awaited_once_with(SESSION)
-    subscription_class, subscription = mock_position_subscription
+    subscription_class, subscription = mock_target_subscription
     subscription_class.assert_called_once()
     subscription.start.assert_awaited_once()
     subscription.wait_confirmed.assert_awaited_once_with(60.0)
@@ -88,10 +87,10 @@ async def test_setup_retries_when_subscription_is_not_confirmed(
     hass: HomeAssistant,
     mock_linknlink_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_position_subscription: tuple[MagicMock, MagicMock],
+    mock_target_subscription: tuple[MagicMock, MagicMock],
 ) -> None:
     """Test setup retry and socket cleanup after confirmation times out."""
-    _, subscription = mock_position_subscription
+    _, subscription = mock_target_subscription
     subscription.wait_confirmed.side_effect = TimeoutError
 
     await setup_integration(hass, mock_config_entry)
@@ -100,15 +99,31 @@ async def test_setup_retries_when_subscription_is_not_confirmed(
     subscription.stop.assert_awaited_once()
 
 
-async def test_setup_retries_when_position_listener_fails(
+async def test_setup_retries_when_target_listener_fails(
     hass: HomeAssistant,
     mock_linknlink_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_position_subscription: tuple[MagicMock, MagicMock],
+    mock_target_subscription: tuple[MagicMock, MagicMock],
 ) -> None:
     """Test setup retry when the local UDP listener cannot start."""
-    _, subscription = mock_position_subscription
+    _, subscription = mock_target_subscription
     subscription.start.side_effect = OSError("cannot bind")
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    subscription.stop.assert_awaited_once()
+
+
+async def test_setup_retries_when_initial_poll_fails(
+    hass: HomeAssistant,
+    mock_linknlink_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_target_subscription: tuple[MagicMock, MagicMock],
+) -> None:
+    """Test setup retry and socket cleanup when the first poll fails."""
+    _, subscription = mock_target_subscription
+    mock_linknlink_client.get_environment_state.side_effect = ValueError("bad data")
 
     await setup_integration(hass, mock_config_entry)
 

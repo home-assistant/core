@@ -15,35 +15,26 @@
         "data_description": {
           "host": "The IP address or hostname of the eMotion Ultra device."
         },
-        "description": "The device must already be connected to Wi-Fi and be reachable from Home Assistant on the same local network."
+        "description": "Before adding the device, connect it to Wi-Fi with the LinknLink app. The device must be reachable from Home Assistant on the same local network."
       }
     }
   },
   "entity": {
     "sensor": {
+      "detected_people": {
+        "name": "Detected people"
+      },
       "nearest_distance": {
-        "name": "Nearest target 3D distance"
+        "name": "Nearest person distance"
       },
       "nearest_horizontal_distance": {
-        "name": "Nearest target horizontal distance"
+        "name": "Nearest person horizontal distance"
       },
-      "persons_in_fenced_zones": {
-        "name": "Persons in fenced zones"
+      "people_in_zones": {
+        "name": "People in zones"
       },
-      "target_count": {
-        "name": "Detected targets"
-      },
-      "zone_1_target_count": {
-        "name": "Zone 1 target count"
-      },
-      "zone_2_target_count": {
-        "name": "Zone 2 target count"
-      },
-      "zone_3_target_count": {
-        "name": "Zone 3 target count"
-      },
-      "zone_4_target_count": {
-        "name": "Zone 4 target count"
+      "zone_people": {
+        "name": "People in zone {zone_number}"
       }
     }
   },

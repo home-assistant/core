@@ -14,11 +14,10 @@ from aiolinknlink import (
     UltraTargetPosition,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.linknlink.const import DISPLAY_MODEL, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
-
-from tests.common import MockConfigEntry
+from homeassistant.const import CONF_HOST
 
 HOST = "192.0.2.1"
 MAC = "02:00:00:00:00:01"
@@ -38,17 +37,17 @@ SESSION = UltraSession(
     session_key=b"0123456789abcdef",
     auth_status="ok",
 )
-POSITION_UPDATE = UltraPositionUpdate(
+TARGET_UPDATE = UltraPositionUpdate(
     source_ip=HOST,
     targets=(UltraTargetPosition(x=0.3, y=0.4, z=1.2),),
     received_at=datetime(2026, 7, 14, 12, tzinfo=UTC),
 )
-POSITION_STATE = UltraPositionSubscriptionState(
+TARGET_STATE = UltraPositionSubscriptionState(
     subscribed=True,
     stale=False,
     local_port=25826,
     confirmation_count=1,
-    latest_update=POSITION_UPDATE,
+    latest_update=TARGET_UPDATE,
     last_subscribed_at=datetime(2026, 7, 14, 11, 59, tzinfo=UTC),
 )
 ENVIRONMENT_STATE = UltraEnvironmentState(
@@ -108,14 +107,14 @@ def mock_linknlink_client() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(autouse=True)
-def mock_position_subscription() -> Generator[tuple[MagicMock, MagicMock]]:
+def mock_target_subscription() -> Generator[tuple[MagicMock, MagicMock]]:
     """Mock the aiolinknlink local UDP subscription."""
     with patch(
         "homeassistant.components.linknlink.coordinator.UltraPositionSubscription",
         autospec=True,
     ) as subscription_class:
         subscription = subscription_class.return_value
-        subscription.state = POSITION_STATE
+        subscription.state = TARGET_STATE
         subscription.start = AsyncMock()
         subscription.stop = AsyncMock()
         yield subscription_class, subscription
@@ -137,6 +136,6 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title=DISPLAY_MODEL,
-        data={CONF_HOST: HOST, CONF_MAC: MAC, CONF_PORT: PORT},
+        data={CONF_HOST: HOST},
         unique_id=MAC,
     )

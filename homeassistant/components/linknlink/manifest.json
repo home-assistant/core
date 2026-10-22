@@ -1,6 +1,7 @@
 {
   "domain": "linknlink",
   "name": "LinknLink",
+  "categories": ["sensors.motion_presence"],
   "codeowners": ["@linknlink"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/linknlink",
