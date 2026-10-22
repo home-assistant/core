@@ -23,7 +23,6 @@ from homeassistant.components.nmbs.const import (
     CONF_STATION_TO,
     DOMAIN,
 )
-from homeassistant.components.nmbs.coordinator import UPDATE_INTERVAL
 from homeassistant.const import (
     CONF_NAME,
     CONF_SHOW_ON_MAP,
@@ -36,6 +35,7 @@ from homeassistant.helpers import entity_registry as er
 from .conftest import STATION_FROM, STATION_TO
 
 FROZEN_TIME = "2025-10-09T12:00:00+00:00"
+UPDATE_INTERVAL = timedelta(seconds=60)
 
 CONNECTION_UNIQUE_ID = f"nmbs_connection_{STATION_FROM}_{STATION_TO}"
 LIVEBOARD_FROM_UNIQUE_ID = f"nmbs_live_{STATION_FROM}_{STATION_FROM}_{STATION_TO}"

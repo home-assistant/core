@@ -13,9 +13,7 @@ from homeassistant.components.nmbs.const import (
     CONF_EXCLUDE_VIAS,
     CONF_STATION_FROM,
     CONF_STATION_TO,
-    CONNECTION_UNIQUE_ID_PREFIX,
     DOMAIN,
-    LIVEBOARD_UNIQUE_ID_PREFIX,
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_NAME, CONF_SHOW_ON_MAP
@@ -238,16 +236,16 @@ async def test_reconfigure_migrates_entities(
     await hass.async_block_till_done()
 
     connection_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{CONNECTION_UNIQUE_ID_PREFIX}{entry.unique_id}"
+        "sensor", DOMAIN, f"nmbs_connection_{entry.unique_id}"
     )
     old_entry_unique_id = entry.unique_id
     liveboard_from_id = entity_registry.async_get_entity_id(
         "sensor",
         DOMAIN,
-        f"{LIVEBOARD_UNIQUE_ID_PREFIX}{STATION_FROM}_{entry.unique_id}",
+        f"nmbs_live_{STATION_FROM}_{entry.unique_id}",
     )
     liveboard_to_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{LIVEBOARD_UNIQUE_ID_PREFIX}{STATION_TO}_{entry.unique_id}"
+        "sensor", DOMAIN, f"nmbs_live_{STATION_TO}_{entry.unique_id}"
     )
     assert connection_id is not None
     assert liveboard_from_id is not None
@@ -268,7 +266,7 @@ async def test_reconfigure_migrates_entities(
     new_entry_unique_id = f"{STATION_FROM}_{STATION_TO}_excl_vias"
     assert (
         entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{CONNECTION_UNIQUE_ID_PREFIX}{new_entry_unique_id}"
+            "sensor", DOMAIN, f"nmbs_connection_{new_entry_unique_id}"
         )
         == connection_id
     )
@@ -276,7 +274,7 @@ async def test_reconfigure_migrates_entities(
         entity_registry.async_get_entity_id(
             "sensor",
             DOMAIN,
-            f"{LIVEBOARD_UNIQUE_ID_PREFIX}{STATION_FROM}_{new_entry_unique_id}",
+            f"nmbs_live_{STATION_FROM}_{new_entry_unique_id}",
         )
         == liveboard_from_id
     )
@@ -284,13 +282,13 @@ async def test_reconfigure_migrates_entities(
         entity_registry.async_get_entity_id(
             "sensor",
             DOMAIN,
-            f"{LIVEBOARD_UNIQUE_ID_PREFIX}{STATION_TO}_{new_entry_unique_id}",
+            f"nmbs_live_{STATION_TO}_{new_entry_unique_id}",
         )
         == liveboard_to_id
     )
     assert (
         entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{CONNECTION_UNIQUE_ID_PREFIX}{old_entry_unique_id}"
+            "sensor", DOMAIN, f"nmbs_connection_{old_entry_unique_id}"
         )
         is None
     )
@@ -339,7 +337,7 @@ async def test_reconfigure_abort_when_route_configured(
     assert entry.unique_id == f"{STATION_FROM}_{STATION_TO}"
     assert (
         entity_registry.async_get_entity_id(
-            "sensor", DOMAIN, f"{CONNECTION_UNIQUE_ID_PREFIX}{entry.unique_id}"
+            "sensor", DOMAIN, f"nmbs_connection_{entry.unique_id}"
         )
         is not None
     )
@@ -357,10 +355,10 @@ async def test_reconfigure_skips_taken_unique_id(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    old_liveboard_unique_id = (
-        f"{LIVEBOARD_UNIQUE_ID_PREFIX}{STATION_FROM}_{entry.unique_id}"
+    old_liveboard_unique_id = f"nmbs_live_{STATION_FROM}_{entry.unique_id}"
+    new_liveboard_unique_id = (
+        f"nmbs_live_{STATION_FROM}_{STATION_FROM}_{STATION_TO}_excl_vias"
     )
-    new_liveboard_unique_id = f"{LIVEBOARD_UNIQUE_ID_PREFIX}{STATION_FROM}_{STATION_FROM}_{STATION_TO}_excl_vias"
     liveboard_id = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, old_liveboard_unique_id
     )
@@ -409,7 +407,7 @@ async def test_options_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert mock_config_entry.options == {CONF_SHOW_ON_MAP: True}
     connection_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{CONNECTION_UNIQUE_ID_PREFIX}{mock_config_entry.unique_id}"
+        "sensor", DOMAIN, f"nmbs_connection_{mock_config_entry.unique_id}"
     )
     assert connection_id is not None
     state = hass.states.get(connection_id)
