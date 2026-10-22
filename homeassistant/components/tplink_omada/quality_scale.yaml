@@ -68,7 +68,9 @@ rules:
   icon-translations: done
   reconfiguration-flow: todo
   repair-issues: todo
-  stale-devices: done
+  stale-devices:
+    status: todo
+    comment: Stale devices are auto-deleted at startup, not yet during runtime.
 
   # Platinum
   async-dependency: done

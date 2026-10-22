@@ -1,10 +1,9 @@
 """Tests for TP-Link Omada integration init."""
 
-import asyncio
 from collections.abc import AsyncGenerator
 from datetime import timedelta
 from functools import partial
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -12,10 +11,8 @@ from pytest_homeassistant.common import (
     MockConfigEntry,
     async_fire_time_changed,
     async_load_json_array_fixture,
-    async_load_json_object_fixture,
 )
 from tplink_omada_client.clients import OmadaWirelessClient
-from tplink_omada_client.devices import OmadaGateway, OmadaListDevice
 from tplink_omada_client.exceptions import (
     ConnectionFailed,
     LoginFailed,
@@ -24,17 +21,13 @@ from tplink_omada_client.exceptions import (
 )
 
 from homeassistant.components.tplink_omada.const import DOMAIN
-from homeassistant.components.tplink_omada.controller import OmadaSiteController
 from homeassistant.components.tplink_omada.coordinator import (
-    EMPTY_DEVICE_LIMIT,
-    POLL_CLIENTS,
     OmadaCoordinator,
     async_cleanup_client_trackers,
-    async_cleanup_devices,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -45,15 +38,6 @@ MOCK_ENTRY_DATA = {
     "username": "test-username",
     "password": "test-password",
 }
-
-
-async def _async_poll_devices(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> None:
-    """Advance to the next device poll and let it complete."""
-    freezer.tick(timedelta(seconds=POLL_CLIENTS + 1))
-    async_fire_time_changed(hass, dt_util.utcnow())
-    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 @pytest.mark.parametrize(
@@ -123,41 +107,6 @@ async def test_coordinator_update_failure_is_translated(
 
     assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == "api_error"
-
-
-async def test_automatic_missing_device_cleanup(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mock_omada_client: MagicMock,
-) -> None:
-    """Test missing devices are removed during initial startup cleanup.
-
-    This validates the cleanup mechanism scheduled immediately on entry setup,
-    which runs as a background task.
-    """
-    mock_config_entry = MockConfigEntry(
-        title="Test Omada Controller",
-        domain=DOMAIN,
-        data=dict(MOCK_ENTRY_DATA),
-        unique_id="12345_SiteId",
-        version=2,
-    )
-    mock_config_entry.add_to_hass(hass)
-
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "99:99:99:99:99:99")},
-        manufacturer="TPLink",
-        name="Old Device",
-        model="Some old model",
-    )
-
-    assert device_registry.async_get(device_entry.id) == device_entry
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert device_registry.async_get(device_entry.id) is None
 
 
 async def test_automatic_missing_client_cleanup(
@@ -313,102 +262,6 @@ async def test_cleanup_helpers_remove_unknown_clients(
     assert entity_registry.async_get(malformed_octets.entity_id) is not None
 
 
-async def test_cleanup_devices_removes_orphans(
-    hass: HomeAssistant,
-    mock_omada_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test cleanup helper removes orphaned device registry entries."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    controller = hass.config_entries.async_get_entry(
-        mock_config_entry.entry_id
-    ).runtime_data
-
-    orphan = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "99:99:99:99:99:99")},
-        manufacturer="TP-Link",
-        model="Test",
-        name="Orphan",
-    )
-    assert device_registry.async_get(orphan.id)
-
-    await async_cleanup_devices(hass, controller)
-
-    assert device_registry.async_get(orphan.id) is None
-
-
-async def test_cleanup_preserves_controller_device(
-    hass: HomeAssistant,
-    mock_omada_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test device cleanup keeps the controller device entry."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    controller = hass.config_entries.async_get_entry(
-        mock_config_entry.entry_id
-    ).runtime_data
-
-    controller_mac = "00-11-22-33-44-55"
-    assert device_registry.async_get_device_by_identifier(
-        (DOMAIN, controller_mac), mock_config_entry.entry_id
-    )
-
-    await async_cleanup_devices(hass, controller)
-
-    assert device_registry.async_get_device_by_identifier(
-        (DOMAIN, controller_mac), mock_config_entry.entry_id
-    )
-
-
-async def test_cleanup_task_guard_prevents_redundant_tasks(
-    hass: HomeAssistant,
-    mock_omada_clients_only_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test in-flight task guard prevents scheduling a second cleanup concurrently."""
-    cleanup_call_count = 0
-    cleanup_started = asyncio.Event()
-    cleanup_proceed = asyncio.Event()
-
-    async def blocking_cleanup(h: HomeAssistant, c: OmadaSiteController) -> None:
-        nonlocal cleanup_call_count
-        cleanup_call_count += 1
-        cleanup_started.set()
-        await cleanup_proceed.wait()
-
-    with patch(
-        "homeassistant.components.tplink_omada.async_cleanup_devices",
-        new=blocking_cleanup,
-    ):
-        mock_config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        # With eager_start=True the background task runs synchronously until its
-        # first await, so cleanup_started is set before async_setup_entry returns.
-        assert cleanup_started.is_set()
-
-        # In-flight task guard is now active — the 1-hour interval should be a no-op
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
-        await hass.async_block_till_done()
-
-        # Release the first cleanup
-        cleanup_proceed.set()
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-    # The second _schedule_cleanup call returned early due to the in-flight task guard
-    assert cleanup_call_count == 1
-
-
 async def _get_known_clients_without(
     hass: HomeAssistant, excluded_mac: str
 ) -> AsyncGenerator[OmadaWirelessClient]:
@@ -425,18 +278,6 @@ async def _get_no_known_clients() -> AsyncGenerator[OmadaWirelessClient]:
     """Yield no known clients."""
     for client in ():
         yield client
-
-
-async def _get_devices_without(
-    hass: HomeAssistant, excluded_mac: str
-) -> list[OmadaListDevice]:
-    """Return devices from the devices fixture, skipping one MAC."""
-    devices_data = await async_load_json_array_fixture(hass, "devices.json", DOMAIN)
-    return [
-        OmadaListDevice(device)
-        for device in devices_data
-        if device["mac"] != excluded_mac
-    ]
 
 
 async def test_cleanup_runs_hourly(
@@ -547,266 +388,6 @@ async def test_preserved_tracker_recreated_when_client_returns(
     assert hass.states.get(tracker.entity_id) is not None
 
 
-async def test_cleanup_recreates_device_when_reappears(
-    hass: HomeAssistant,
-    mock_omada_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test a device removed by cleanup is re-registered when it returns."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    removed_mac = "54-AF-97-00-00-01"
-    update_unique_id = f"{removed_mac}_firmware"
-    assert device_registry.async_get_device_by_identifier(
-        (DOMAIN, removed_mac), mock_config_entry.entry_id
-    )
-    assert (
-        entity_registry.async_get_entity_id("update", DOMAIN, update_unique_id)
-        is not None
-    )
-
-    site_client = mock_omada_client.get_site_client.return_value
-
-    # Remove the switch from the controller's device list and clean up
-    site_client.get_devices = AsyncMock(
-        side_effect=partial(_get_devices_without, hass, removed_mac)
-    )
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
-    await hass.async_block_till_done(wait_background_tasks=True)
-    assert (
-        device_registry.async_get_device_by_identifier(
-            (DOMAIN, removed_mac), mock_config_entry.entry_id
-        )
-        is None
-    )
-    assert (
-        entity_registry.async_get_entity_id("update", DOMAIN, update_unique_id) is None
-    )
-
-    # Switch returns to the controller — the next interval run re-registers it
-    devices_data = await async_load_json_array_fixture(hass, "devices.json", DOMAIN)
-    site_client.get_devices = AsyncMock(
-        return_value=[OmadaListDevice(d) for d in devices_data]
-    )
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=2, seconds=1))
-    await hass.async_block_till_done(wait_background_tasks=True)
-    assert device_registry.async_get_device_by_identifier(
-        (DOMAIN, removed_mac), mock_config_entry.entry_id
-    )
-    assert (
-        entity_registry.async_get_entity_id("update", DOMAIN, update_unique_id)
-        is not None
-    )
-
-
-async def test_gateway_entities_created_when_gateway_appears_later(
-    hass: HomeAssistant,
-    mock_omada_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test gateway entities are created when a gateway appears after setup."""
-    gateway_mac = "AA-BB-CC-DD-EE-FF"
-    site_client = mock_omada_client.get_site_client.return_value
-    site_client.get_devices = AsyncMock(
-        side_effect=partial(_get_devices_without, hass, gateway_mac)
-    )
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert hass.states.get("binary_sensor.test_router_port_1_lan_status") is None
-    assert hass.states.get("switch.test_router_port_4_internet_connected") is None
-
-    # Gateway appears on the controller — the next interval run registers it
-    devices_data = await async_load_json_array_fixture(hass, "devices.json", DOMAIN)
-    site_client.get_devices = AsyncMock(
-        return_value=[OmadaListDevice(d) for d in devices_data]
-    )
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert hass.states.get("binary_sensor.test_router_port_1_lan_status") is not None
-    assert hass.states.get("switch.test_router_port_4_internet_connected") is not None
-
-
-async def test_cleanup_recreates_gateway_when_it_reappears(
-    hass: HomeAssistant,
-    mock_omada_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test a gateway removed by cleanup is re-registered when it returns."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    gateway_mac = "AA-BB-CC-DD-EE-FF"
-    site_client = mock_omada_client.get_site_client.return_value
-    assert hass.states.get("binary_sensor.test_router_port_1_lan_status") is not None
-
-    # Remove the gateway from the controller's device list and clean up
-    site_client.get_devices = AsyncMock(
-        side_effect=partial(_get_devices_without, hass, gateway_mac)
-    )
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
-    await hass.async_block_till_done(wait_background_tasks=True)
-    assert (
-        device_registry.async_get_device_by_identifier(
-            (DOMAIN, gateway_mac), mock_config_entry.entry_id
-        )
-        is None
-    )
-    assert hass.states.get("binary_sensor.test_router_port_1_lan_status") is None
-
-    # Gateway returns — the next interval run re-registers it with fresh data
-    devices_data = await async_load_json_array_fixture(hass, "devices.json", DOMAIN)
-    site_client.get_devices = AsyncMock(
-        return_value=[OmadaListDevice(d) for d in devices_data]
-    )
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=2, seconds=1))
-    await hass.async_block_till_done(wait_background_tasks=True)
-    assert hass.states.get("binary_sensor.test_router_port_1_lan_status") is not None
-
-
-async def test_gateway_registration_retries_after_failed_refresh(
-    hass: HomeAssistant,
-    mock_omada_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test gateway entity registration retries when the initial fetch fails."""
-    gateway_mac = "AA-BB-CC-DD-EE-FF"
-    site_client = mock_omada_client.get_site_client.return_value
-    site_client.get_devices = AsyncMock(
-        side_effect=partial(_get_devices_without, hass, gateway_mac)
-    )
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    gateway_data = await async_load_json_object_fixture(
-        hass, "gateway-TL-ER7212PC.json", DOMAIN
-    )
-    gateway = OmadaGateway(gateway_data)
-    gateway_available = False
-
-    async def _get_gateway(mac: str) -> OmadaGateway:
-        if not gateway_available:
-            raise OmadaClientException("Gateway fetch failed")
-        return gateway
-
-    site_client.get_gateway = AsyncMock(side_effect=_get_gateway)
-    devices_data = await async_load_json_array_fixture(hass, "devices.json", DOMAIN)
-    site_client.get_devices = AsyncMock(
-        return_value=[OmadaListDevice(d) for d in devices_data]
-    )
-
-    # The gateway appears but cannot be fetched, so no entities are registered
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
-    await hass.async_block_till_done(wait_background_tasks=True)
-    assert hass.states.get("binary_sensor.test_router_port_1_lan_status") is None
-
-    # Once the gateway is fetchable, the next run retries registration
-    gateway_available = True
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=2, seconds=1))
-    await hass.async_block_till_done(wait_background_tasks=True)
-    assert hass.states.get("binary_sensor.test_router_port_1_lan_status") is not None
-
-
-@pytest.mark.parametrize(
-    ("empty_updates", "orphan_removed"),
-    [
-        (1, False),
-        (EMPTY_DEVICE_LIMIT - 1, False),
-        (EMPTY_DEVICE_LIMIT, True),
-    ],
-)
-async def test_cleanup_devices_requires_confirmed_empty_list(
-    hass: HomeAssistant,
-    mock_omada_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-    freezer: FrozenDateTimeFactory,
-    empty_updates: int,
-    orphan_removed: bool,
-) -> None:
-    """Test device cleanup removes entries only after repeated empty responses."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    controller = hass.config_entries.async_get_entry(
-        mock_config_entry.entry_id
-    ).runtime_data
-
-    orphan = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "99:99:99:99:99:99")},
-        manufacturer="TP-Link",
-        model="Test",
-        name="Orphan",
-    )
-
-    site_client = mock_omada_client.get_site_client.return_value
-    site_client.get_devices = AsyncMock(return_value=[])
-
-    for _ in range(empty_updates):
-        await _async_poll_devices(hass, freezer)
-        await async_cleanup_devices(hass, controller)
-
-    assert (device_registry.async_get(orphan.id) is None) is orphan_removed
-
-
-async def test_cleanup_devices_empty_count_resets_on_data(
-    hass: HomeAssistant,
-    mock_omada_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test the empty sweep counter resets when devices are reported again."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    controller = hass.config_entries.async_get_entry(
-        mock_config_entry.entry_id
-    ).runtime_data
-
-    switch_mac = "54-AF-97-00-00-01"
-    site_client = mock_omada_client.get_site_client.return_value
-
-    site_client.get_devices = AsyncMock(return_value=[])
-    await _async_poll_devices(hass, freezer)
-    await async_cleanup_devices(hass, controller)
-    assert device_registry.async_get_device_by_identifier(
-        (DOMAIN, switch_mac), mock_config_entry.entry_id
-    )
-
-    devices_data = await async_load_json_array_fixture(hass, "devices.json", DOMAIN)
-    site_client.get_devices = AsyncMock(
-        return_value=[OmadaListDevice(d) for d in devices_data]
-    )
-    await _async_poll_devices(hass, freezer)
-    await async_cleanup_devices(hass, controller)
-    assert device_registry.async_get_device_by_identifier(
-        (DOMAIN, switch_mac), mock_config_entry.entry_id
-    )
-
-    site_client.get_devices = AsyncMock(return_value=[])
-    await _async_poll_devices(hass, freezer)
-    await async_cleanup_devices(hass, controller)
-    await async_cleanup_devices(hass, controller)
-    assert device_registry.async_get_device_by_identifier(
-        (DOMAIN, switch_mac), mock_config_entry.entry_id
-    )
-
-
 async def test_cleanup_trackers_on_empty_known_clients(
     hass: HomeAssistant,
     mock_omada_client: MagicMock,
@@ -818,10 +399,6 @@ async def test_cleanup_trackers_on_empty_known_clients(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
-
-    controller = hass.config_entries.async_get_entry(
-        mock_config_entry.entry_id
-    ).runtime_data
 
     tracker = entity_registry.async_get_or_create(
         domain="device_tracker",
@@ -840,67 +417,6 @@ async def test_cleanup_trackers_on_empty_known_clients(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entity_registry.async_get(tracker.entity_id) is None
-
-
-async def test_cleanup_skipped_when_polling_disabled(
-    hass: HomeAssistant,
-    mock_omada_clients_only_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the hourly cleanup does not poll while polling is disabled."""
-    mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(mock_config_entry, pref_disable_polling=True)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    site_client = mock_omada_clients_only_client.get_site_client.return_value
-    calls_before = site_client.get_devices.call_count
-
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert site_client.get_devices.call_count == calls_before
-
-
-async def test_unload_cancels_cleanup_and_interval(
-    hass: HomeAssistant,
-    mock_omada_clients_only_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test entry unload cancels in-flight cleanup task and removes interval."""
-    cleanup_started = asyncio.Event()
-    cleanup_cancelled = False
-
-    async def blocking_cleanup(h: HomeAssistant, c: OmadaSiteController) -> None:
-        nonlocal cleanup_cancelled
-        cleanup_started.set()
-        try:
-            await asyncio.Event().wait()  # block forever until cancelled
-        except asyncio.CancelledError:
-            cleanup_cancelled = True
-            raise
-
-    with patch(
-        "homeassistant.components.tplink_omada.async_cleanup_devices",
-        new=blocking_cleanup,
-    ):
-        mock_config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert cleanup_started.is_set()
-
-        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert cleanup_cancelled is True
-    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-
-    # Firing the interval after unload must not start a new cleanup task
-    cleanup_started.clear()
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
-    await hass.async_block_till_done(wait_background_tasks=True)
-    assert not cleanup_started.is_set()
 
 
 async def test_migrate_entry_v1_to_v2(

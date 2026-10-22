@@ -42,11 +42,6 @@ POLL_CONTROLLER = 300
 POLL_CONTROLLER_UPDATE = 3600
 POLL_UPGRADE = 60
 
-# Number of consecutive empty device-list updates required before removing
-# device entries, to tolerate transient empty responses from the controller.
-# Device polls run every five minutes, so this is about one hour of emptiness.
-EMPTY_DEVICE_LIMIT = 12
-
 
 class OmadaCoordinator[_T](DataUpdateCoordinator[dict[str, _T]]):
     """Coordinator for synchronizing bulk Omada data."""
@@ -217,17 +212,11 @@ class OmadaDevicesCoordinator(OmadaCoordinator[OmadaListDevice]):
     ) -> None:
         """Initialize my coordinator."""
         super().__init__(hass, config_entry, omada_client, "DeviceList", POLL_CLIENTS)
-        self.consecutive_empty_updates = 0
 
     @override
     async def poll_update(self) -> dict[str, OmadaListDevice]:
         """Poll the site's current registered Omada devices."""
-        devices = {d.mac: d for d in await self.omada_client.get_devices()}
-        if devices:
-            self.consecutive_empty_updates = 0
-        else:
-            self.consecutive_empty_updates += 1
-        return devices
+        return {d.mac: d for d in await self.omada_client.get_devices()}
 
 
 class OmadaClientsCoordinator(OmadaCoordinator[OmadaWirelessClient]):
@@ -391,49 +380,3 @@ async def async_cleanup_client_trackers(
             and entity.disabled_by is er.RegistryEntryDisabler.INTEGRATION
         ):
             entity_registry.async_remove(entity.entity_id)
-
-
-async def async_cleanup_devices(
-    hass: HomeAssistant,
-    controller: OmadaSiteController,
-) -> None:
-    """Remove devices from the registry when Omada no longer reports them."""
-    if not controller.devices_coordinator.last_update_success:
-        return
-
-    devices = controller.devices_coordinator.data
-    if not devices:
-        # A successful but empty response is likely a transient controller glitch,
-        # and removal also deletes the device's entities from the registry, so only
-        # clean once the empty list is confirmed over consecutive updates.
-        if (
-            controller.devices_coordinator.consecutive_empty_updates
-            < EMPTY_DEVICE_LIMIT
-        ):
-            return
-
-    device_registry = dr.async_get(hass)
-    entry_id = controller.devices_coordinator.config_entry.entry_id
-    known_devices = {dr.format_mac(mac) for mac in devices}
-    # The controller device is not part of the site's device list.
-    controller_mac = dr.format_mac(controller.controller_status_coordinator.data.mac)
-
-    for device_entry in dr.async_entries_for_config_entry(device_registry, entry_id):
-        mac = next(
-            (
-                fmt
-                for identifier in device_entry.identifiers
-                if identifier[0] == DOMAIN
-                and len(fmt := dr.format_mac(identifier[1])) == 17
-                and fmt.count(":") == 5
-            ),
-            None,
-        )
-
-        if mac and mac not in known_devices and mac != controller_mac:
-            _LOGGER.debug(
-                "Removing stale Omada device %s from entry %s",
-                mac,
-                entry_id,
-            )
-            await controller.async_remove_device(mac, device_entry)
