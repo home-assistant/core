@@ -201,6 +201,10 @@ async def _async_replace_subscription(
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="authentication_failed"
             ) from err
+        except SmartThingsForbiddenError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="entitlement_required"
+            ) from err
 
     _LOGGER.debug("Trying to create a new subscription")
     try:
