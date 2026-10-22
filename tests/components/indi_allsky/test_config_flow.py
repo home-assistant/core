@@ -539,6 +539,18 @@ async def test_zeroconf_credentials_errors(
     assert result["step_id"] == "credentials"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    mock_indi_allsky_client.fetch_image.side_effect = RuntimeError("Unexpected failure")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "password",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "credentials"
+    assert result["errors"] == {"base": "unknown"}
+
     mock_indi_allsky_client.fetch_image.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -551,6 +563,81 @@ async def test_zeroconf_credentials_errors(
     assert result["data"][CONF_USERNAME] == "correct-user"
     assert result["data"][CONF_PASSWORD] == "correct-password"
     assert result["data"][CONF_SSL] is False
+
+
+async def test_zeroconf_cannot_connect_non_ssl(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+) -> None:
+    """Test Zeroconf discovery aborts immediately if non-SSL connection fails."""
+    mock_indi_allsky_client.fetch_image.side_effect = IndiAllSkyConnectionError(
+        "Cannot connect"
+    )
+
+    discovery_info = ZeroconfServiceInfo(
+        ip_address="192.168.1.50",
+        ip_addresses=["192.168.1.50"],
+        port=80,
+        hostname="indi-allsky.local.",
+        type="_indi-allsky._tcp.local.",
+        name="INDI Allsky._indi-allsky._tcp.local.",
+        properties={"path": "/indi-allsky", "ssl": "false", "mac": "aa:bb:cc:dd:ee:ff"},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_zeroconf_unverified_ssl_fallback_requires_auth(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_indi_allsky_client: AsyncMock,
+) -> None:
+    """Test Zeroconf discovery falls back to unverified SSL and requests auth."""
+    mock_indi_allsky_client.fetch_image.side_effect = [
+        IndiAllSkyConnectionError("SSL verification failed"),
+        IndiAllSkyAuthError("Unauthorized"),
+    ]
+
+    discovery_info = ZeroconfServiceInfo(
+        ip_address="192.168.1.50",
+        ip_addresses=["192.168.1.50"],
+        port=443,
+        hostname="indi-allsky.local.",
+        type="_indi-allsky._tcp.local.",
+        name="INDI Allsky._indi-allsky._tcp.local.",
+        properties={"path": "/indi-allsky", "mac": "aa:bb:cc:dd:ee:ff"},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "credentials"
+
+    mock_indi_allsky_client.fetch_image.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-user",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "aa:bb:cc:dd:ee:ff"
+    assert result["data"][CONF_VERIFY_SSL] is False
+    assert result["data"][CONF_USERNAME] == "test-user"
+    assert result["data"][CONF_PASSWORD] == "test-password"
 
 
 async def test_zeroconf_adopts_existing_unlinked_manual_entry(
