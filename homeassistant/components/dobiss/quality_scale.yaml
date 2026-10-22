@@ -3,7 +3,9 @@ rules:
     status: exempt
     comment: No custom actions are defined.
   appropriate-polling: done
-  brands: todo
+  brands:
+    status: done
+    comment: Branding submitted in https://github.com/home-assistant/brands/pull/11345; merge pending.
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
