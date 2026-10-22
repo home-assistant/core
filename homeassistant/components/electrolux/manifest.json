@@ -1,6 +1,7 @@
 {
   "domain": "electrolux",
   "name": "Electrolux",
+  "categories": ["appliances_cleaning", "climate"],
   "codeowners": ["@electrolux-oss"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/electrolux",

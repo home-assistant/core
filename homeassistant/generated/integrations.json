@@ -2728,6 +2728,10 @@
     "electrolux": {
       "name": "Electrolux",
       "integration_type": "hub",
+      "categories": [
+        "appliances_cleaning",
+        "climate"
+      ],
       "config_flow": true,
       "iot_class": "cloud_push"
     },
