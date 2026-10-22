@@ -1,6 +1,13 @@
 """Common helpers for the Backup integration tests."""
 
-from collections.abc import AsyncIterator, Buffer, Callable, Coroutine, Iterable
+from collections.abc import (
+    AsyncGenerator,
+    AsyncIterator,
+    Buffer,
+    Callable,
+    Coroutine,
+    Iterable,
+)
 from pathlib import Path
 from typing import Any, cast
 from unittest.mock import AsyncMock, Mock, patch
@@ -17,7 +24,7 @@ from homeassistant.components.backup import (
     Folder,
 )
 from homeassistant.components.backup.backup import CoreLocalBackupAgent
-from homeassistant.components.backup.const import DATA_MANAGER
+from homeassistant.components.backup.const import BUF_SIZE, DATA_MANAGER
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -60,6 +67,35 @@ async def aiter_from_iter(iterable: Iterable) -> AsyncIterator:
     """Convert an iterable to an async iterator."""
     for i in iterable:
         yield i
+
+
+async def aiter_padded_chunks(data: bytes) -> AsyncGenerator[bytes]:
+    """Yield data in chunks, followed by padding.
+
+    The padding is larger than the buffer of tar readers, so the stream is not
+    exhausted by readers which stop at the end of the tar archive.
+    """
+    for i in range(0, len(data), 1024):
+        yield data[i : i + 1024]
+    for _ in range(3):
+        yield b"\0" * BUF_SIZE
+
+
+def mock_download_from_file(
+    mock_agent: Mock, path: Path
+) -> list[AsyncGenerator[bytes]]:
+    """Make an agent download a file, and return the opened download streams."""
+    data = path.read_bytes()
+    streams: list[AsyncGenerator[bytes]] = []
+
+    async def download_backup(backup_id: str, **kwargs: Any) -> AsyncIterator[bytes]:
+        """Mock download."""
+        stream = aiter_padded_chunks(data)
+        streams.append(stream)
+        return stream
+
+    mock_agent.async_download_backup.side_effect = download_backup
+    return streams
 
 
 def mock_backup_agent(name: str, backups: list[AgentBackup] | None = None) -> Mock:
