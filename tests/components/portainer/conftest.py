@@ -47,7 +47,7 @@ TEST_CONTAINER_ID = "ee20facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.portainer.async_setup_entry", return_value=True
+        "homeassistant.components.portainer.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
