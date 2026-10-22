@@ -194,3 +194,57 @@ async def test_unavailable_api_errors(
     )
 
     assert result["type"] is FlowResultType.FORM
+
+
+async def test_reconfigure_route(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test changing the stations from the reconfigure flow."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_STATION_FROM: DUMMY_DATA["STAT_BRUSSELS_NORTH"],
+            CONF_STATION_TO: DUMMY_DATA["STAT_BRUSSELS_NORTH"],
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "same_station"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_STATION_FROM: DUMMY_DATA["STAT_BRUSSELS_CENTRAL"],
+            CONF_STATION_TO: DUMMY_DATA["STAT_BRUSSELS_SOUTH"],
+            CONF_EXCLUDE_VIAS: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert (
+        mock_config_entry.data[CONF_STATION_FROM] == DUMMY_DATA["STAT_BRUSSELS_CENTRAL"]
+    )
+    assert mock_config_entry.unique_id == (
+        f"{DUMMY_DATA['STAT_BRUSSELS_CENTRAL']}_{DUMMY_DATA['STAT_BRUSSELS_SOUTH']}_excl_vias"
+    )
+
+
+async def test_reconfigure_unavailable_api(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguration aborts when the station list is unavailable."""
+    mock_config_entry.add_to_hass(hass)
+    mock_nmbs_client.get_stations.side_effect = ApiUnavailableError("API unavailable")
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "api_unavailable"

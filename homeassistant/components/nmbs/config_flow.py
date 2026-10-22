@@ -115,6 +115,81 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the monitored route."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+        try:
+            choices = await self._fetch_stations_choices()
+        except CannotConnect, TimeoutError, ValueError, LookupError:
+            return self.async_abort(reason="api_unavailable")
+
+        if user_input is not None:
+            station_from = next(
+                station
+                for station in self.stations
+                if station.id == user_input[CONF_STATION_FROM]
+            )
+            station_to = next(
+                station
+                for station in self.stations
+                if station.id == user_input[CONF_STATION_TO]
+            )
+            if station_from.id == station_to.id:
+                errors["base"] = "same_station"
+            else:
+                unique_id = (
+                    f"{station_from.id}_{station_to.id}"
+                    f"{'_excl_vias' if user_input.get(CONF_EXCLUDE_VIAS) else ''}"
+                )
+                if unique_id != entry.unique_id:
+                    await self.async_set_unique_id(unique_id)
+                    self._abort_if_unique_id_configured()
+                return self.async_update_reload_and_abort(
+                    entry,
+                    unique_id=unique_id,
+                    title=(
+                        f"Train from {station_from.standard_name}"
+                        f" to {station_to.standard_name}"
+                    ),
+                    data=user_input,
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_STATION_FROM, default=entry.data[CONF_STATION_FROM]
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=choices,
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
+                    probatio.Required(
+                        CONF_STATION_TO, default=entry.data[CONF_STATION_TO]
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=choices,
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
+                    probatio.Optional(
+                        CONF_EXCLUDE_VIAS,
+                        default=entry.data.get(CONF_EXCLUDE_VIAS, False),
+                    ): BooleanSelector(),
+                    probatio.Optional(
+                        CONF_SHOW_ON_MAP,
+                        default=entry.data.get(CONF_SHOW_ON_MAP, False),
+                    ): BooleanSelector(),
+                }
+            ),
+            errors=errors,
+        )
+
 
 class CannotConnect(Exception):
     """Error to indicate we cannot connect to NMBS."""

@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from datetime import timedelta
+import logging
 from unittest.mock import AsyncMock
 
 from freezegun import freeze_time
@@ -519,6 +520,40 @@ async def test_connection_failure_only_affects_its_sensor(
     )
     assert connection_state is not None
     assert connection_state.state == "20"
+
+
+async def test_connection_feed_logs_failure_and_recovery_once(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test connection feed transitions are logged once."""
+    await _setup_entry(hass, mock_config_entry)
+    mock_nmbs_client.get_connections.side_effect = PyRailError("API unavailable")
+
+    with caplog.at_level(logging.WARNING):
+        for _ in range(2):
+            freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        sum(
+            "Unable to fetch the connection" in record.message
+            for record in caplog.records
+        )
+        == 1
+    )
+
+    mock_nmbs_client.get_connections.side_effect = None
+    with caplog.at_level(logging.INFO):
+        freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert sum("Recovered feed" in record.message for record in caplog.records) == 1
 
 
 async def test_disabled_connection_is_not_fetched(

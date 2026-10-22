@@ -64,7 +64,7 @@ def _find_station(hass: HomeAssistant, station_id: str) -> StationDetails | None
     return next(
         (
             station
-            for station in hass.data[NMBS_STATION_DATA]
+            for station in hass.data[NMBS_STATION_DATA].stations
             if station.id == station_id
         ),
         None,
@@ -98,16 +98,23 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
         self.exclude_vias = entry.data.get(CONF_EXCLUDE_VIAS, False)
         self._connection_response: ConnectionsApiResponse | None = None
         self._liveboard_responses: dict[str, LiveboardApiResponse] = {}
+        self._failed_feeds: set[str] = set()
 
     async def _async_fetch_feed[T](
         self, feed: str, fetch: Callable[[], Awaitable[T | None]]
     ) -> FeedResult[T]:
         """Fetch one feed and record whether the request failed."""
         try:
-            return FeedResult(await fetch(), False)
+            result = await fetch()
         except (PyRailError, TimeoutError, ValueError, LookupError) as err:
-            _LOGGER.warning("Unable to fetch %s: %s", feed, err)
+            if feed not in self._failed_feeds:
+                _LOGGER.warning("Unable to fetch %s: %s", feed, err)
+            self._failed_feeds.add(feed)
             return FeedResult(None, True)
+        if feed in self._failed_feeds:
+            _LOGGER.info("Recovered feed: %s", feed)
+            self._failed_feeds.remove(feed)
+        return FeedResult(result, False)
 
     def _connection_entity_enabled(self, entries: list[er.RegistryEntry]) -> bool:
         """Return True if the connection entity is enabled or not registered."""
