@@ -579,10 +579,13 @@ async def test_cleanup_devices_empty_count_resets_on_data(
         (DOMAIN, switch_mac), mock_config_entry.entry_id
     )
 
+    # A reported device must clear the streak rather than only keep it low.
+    assert controller.devices_coordinator.consecutive_empty_updates == 0
+
     site_client.get_devices = AsyncMock(return_value=[])
     await _async_poll_devices(hass, freezer)
     await async_cleanup_devices(hass, controller)
-    await async_cleanup_devices(hass, controller)
+    assert controller.devices_coordinator.consecutive_empty_updates == 1
     assert device_registry.async_get_device_by_identifier(
         (DOMAIN, switch_mac), mock_config_entry.entry_id
     )
@@ -678,14 +681,15 @@ async def test_unload_cancels_cleanup_and_interval(
         assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert cleanup_cancelled is True
-    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+        assert cleanup_cancelled is True
+        assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
-    # Firing the interval after unload must not start a new cleanup task
-    cleanup_started.clear()
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
-    await hass.async_block_till_done(wait_background_tasks=True)
-    assert not cleanup_started.is_set()
+        # Firing the interval after unload must not start a new cleanup task.
+        # This stays inside the patch, so a leaked interval would be visible.
+        cleanup_started.clear()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert not cleanup_started.is_set()
 
 
 async def test_migrate_entry_v1_to_v2(

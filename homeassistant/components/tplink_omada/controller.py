@@ -150,12 +150,14 @@ class OmadaSiteController:
                     continue
 
                 # The device was removed while its callback was in flight.
-                # Drop the device entry the callback just recreated.
+                # Drop the device entry the callback just recreated, and forget
+                # the registration so a returning device is registered again.
                 device_registry = dr.async_get(self._hass)
                 device_entry = device_registry.async_get_device_by_identifier(
                     (DOMAIN, device.mac), self._config_entry.entry_id
                 )
                 if device_entry is not None:
+                    self._forget_device_registration(mac)
                     device_registry.async_remove_device(device_entry.id)
 
         @callback
@@ -169,12 +171,16 @@ class OmadaSiteController:
         # Call once on initial setup
         await _async_register_entities()
 
-    async def async_remove_device(self, mac: str, device_entry: dr.DeviceEntry) -> None:
-        """Remove a device entry and allow it to be re-registered if it reappears."""
+    def _forget_device_registration(self, mac: str) -> None:
+        """Drop a device from the registration state so it can be added again."""
         mac = dr.format_mac(mac)
         for processed in self._device_entity_registrations:
             processed.discard(mac)
-        self._removed_device_macs.add(mac)
+
+    async def async_remove_device(self, mac: str, device_entry: dr.DeviceEntry) -> None:
+        """Remove a device entry and allow it to be re-registered if it reappears."""
+        self._forget_device_registration(mac)
+        self._removed_device_macs.add(dr.format_mac(mac))
         dr.async_get(self._hass).async_remove_device(device_entry.id)
 
     @property
