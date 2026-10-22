@@ -5,6 +5,13 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import attr
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
@@ -14,14 +21,6 @@ from homeassistant.helpers.helper_integration import (
     async_handle_source_entity_changes,
     async_remove_helper_config_entry_from_source_device,
     async_remove_helper_devices,
-)
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
 )
 
 HELPER_DOMAIN = "helper"

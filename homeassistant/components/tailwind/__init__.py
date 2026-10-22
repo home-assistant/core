@@ -21,13 +21,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TailwindConfigEntry) -> 
     # This prevents a child device being created before the parent ending up
     # with a missing via_device.
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, coordinator.data.device_id)},
-        connections={(dr.CONNECTION_NETWORK_MAC, coordinator.data.mac_address)},
-        manufacturer="Tailwind",
-        model=coordinator.data.product,
-        sw_version=coordinator.data.firmware_version,
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, coordinator.data.device_id)},
+            connections={(dr.CONNECTION_NETWORK_MAC, coordinator.data.mac_address)},
+            manufacturer="Tailwind",
+            model=coordinator.data.product,
+            sw_version=coordinator.data.firmware_version,
+        ),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

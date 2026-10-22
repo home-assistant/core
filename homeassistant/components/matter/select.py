@@ -145,13 +145,13 @@ class MatterMapSelectEntity(MatterAttributeSelectEntity):
         """Update from device."""
         # the options can dynamically change based on the state of the device
         available_values = cast(
-            list[int],
+            list[int] | None,
             self.get_matter_attribute_value(self.entity_description.list_attribute),
         )
         # map available (int) values to string representation
         self._attr_options = [
             mapped_value
-            for value in available_values
+            for value in available_values or []
             if (mapped_value := self.entity_description.device_to_ha(value))
         ]
         # use base implementation from
@@ -293,15 +293,15 @@ class MatterListSelectEntity(MatterEntity, SelectEntity):
         list_values_raw = self.get_matter_attribute_value(
             self.entity_description.list_attribute
         )
-        if TYPE_CHECKING:
-            assert list_values_raw is not None
-
         # Accept both list[str] and list[int], convert to str
-        list_values = [str(v) for v in list_values_raw]
+        list_values = [str(v) for v in list_values_raw or []]
         self._attr_options = list_values
-        current_option_idx: int = self.get_matter_attribute_value(
+        current_option_idx: int | None = self.get_matter_attribute_value(
             self._entity_info.primary_attribute
         )
+        if current_option_idx is None:
+            self._attr_current_option = None
+            return
         try:
             self._attr_current_option = list_values[current_option_idx]
         except IndexError:

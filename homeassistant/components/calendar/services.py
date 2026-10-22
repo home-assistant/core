@@ -47,7 +47,7 @@ from .helper import (
 )
 
 if TYPE_CHECKING:
-    from . import CalendarEntity
+    from .entity import CalendarEntity
 
 CREATE_EVENT_SCHEMA = probatio.All(
     probatio.AtLeastOne(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),

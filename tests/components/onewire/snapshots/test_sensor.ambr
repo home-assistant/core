@@ -802,7 +802,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
-      'device_file': '/22.111111111111/temperature',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '22.111111111111 Temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
@@ -812,7 +811,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[sensor.26_111111111111_hih3600_humidity-entry]
@@ -1026,7 +1025,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
-      'device_file': '/26.111111111111/HTM1735/humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '26.111111111111 HTM1735 humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
@@ -1036,7 +1034,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[sensor.26_111111111111_humidity-entry]
@@ -2651,7 +2649,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
-      'device_file': '/A6.111111111111/HTM1735/humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'A6.111111111111 HTM1735 humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
@@ -2661,7 +2658,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[sensor.a6_111111111111_humidity-entry]

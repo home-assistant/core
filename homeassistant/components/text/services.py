@@ -11,7 +11,7 @@ from homeassistant.helpers import config_validation as cv
 from .const import ATTR_VALUE, DATA_COMPONENT, DOMAIN, SERVICE_SET_VALUE
 
 if TYPE_CHECKING:
-    from . import TextEntity
+    from .entity import TextEntity
 
 
 async def _async_set_value(entity: TextEntity, service_call: ServiceCall) -> None:

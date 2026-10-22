@@ -269,10 +269,12 @@ async def async_setup_entry(
 
     # ensure host device is setup before connected camera devices that use via_device
     device_registry = dr.async_get(hass)
-    host_device = device_registry.async_get_or_create(
+    host_device = device_registry.async_get_or_create_device(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, host.unique_id)},
-        connections={(dr.CONNECTION_NETWORK_MAC, host.api.mac_address)},
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, host.unique_id)},
+            connections={(dr.CONNECTION_NETWORK_MAC, host.api.mac_address)},
+        ),
     )
 
     if host.api.is_nvr and host.api.model in DUAL_LENS_DUAL_MOTION_MODELS:
@@ -283,10 +285,11 @@ async def async_setup_entry(
                 camera_dev_id = f"{host.unique_id}_{host.api.camera_uid(channel)}"
             else:
                 camera_dev_id = f"{host.unique_id}_ch{channel}"
-            device_registry.async_get_or_create(
+            device_registry.async_get_or_create_device(
                 config_entry_id=config_entry.entry_id,
-                identifiers={(DOMAIN, camera_dev_id)},
-                via_device_id=host_device.id,
+                device_info=dr.DeviceInfo(
+                    identifiers={(DOMAIN, camera_dev_id)}, via_device_id=host_device.id
+                ),
             )
 
     # ensure the camera devices that chimes connect through are setup
@@ -298,10 +301,11 @@ async def async_setup_entry(
             camera_dev_id = f"{host.unique_id}_{host.api.camera_uid(chime.channel)}"
         else:
             camera_dev_id = f"{host.unique_id}_ch{chime.channel}"
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=config_entry.entry_id,
-            identifiers={(DOMAIN, camera_dev_id)},
-            via_device_id=host_device.id,
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, camera_dev_id)}, via_device_id=host_device.id
+            ),
         )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)

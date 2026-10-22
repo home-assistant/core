@@ -1,6 +1,7 @@
 {
   "domain": "waze_travel_time",
   "name": "Waze Travel Time",
+  "categories": ["vehicles_transport"],
   "codeowners": ["@eifinger"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/waze_travel_time",

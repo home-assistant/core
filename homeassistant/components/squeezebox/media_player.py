@@ -156,17 +156,21 @@ async def async_setup_entry(
             # the server device itself; don't link it to itself.
             via_device_id = None
 
-        device = device_registry.async_get_or_create(
+        device = device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, player.player_id)},
-            connections={(CONNECTION_NETWORK_MAC, player.player_id)},
-            name=name,
-            model=model,
-            manufacturer=manufacturer,
-            model_id=model_id,
-            hw_version=str(player.firmware) if player.firmware is not None else None,
-            sw_version=sw_version,
-            via_device_id=via_device_id,
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, player.player_id)},
+                connections={(CONNECTION_NETWORK_MAC, player.player_id)},
+                name=name,
+                model=model,
+                manufacturer=manufacturer,
+                model_id=model_id,
+                hw_version=str(player.firmware)
+                if player.firmware is not None
+                else None,
+                sw_version=sw_version,
+                via_device_id=via_device_id,
+            ),
         )
         _LOGGER.debug("Creating / Updating player device %s", device)
         async_add_entities([SqueezeBoxMediaPlayerEntity(coordinator)])

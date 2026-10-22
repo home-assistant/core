@@ -9,11 +9,16 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import ClimateEntity
+    from .entity import ClimateEntity
 
 DOMAIN: Final = "climate"
 
 DATA_COMPONENT: HassKey[EntityComponent[ClimateEntity]] = HassKey(DOMAIN)
+
+DEFAULT_MIN_TEMP = 7
+DEFAULT_MAX_TEMP = 35
+DEFAULT_MIN_HUMIDITY = 30
+DEFAULT_MAX_HUMIDITY = 99
 
 
 class HVACMode(StrEnum):

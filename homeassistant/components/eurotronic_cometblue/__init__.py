@@ -8,7 +8,6 @@ from homeassistant.components.bluetooth import (
     async_address_reachability_diagnostics,
     async_ble_device_from_address,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_PIN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
@@ -73,14 +72,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) ->
         ) from ex
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, address)},
-        connections={(dr.CONNECTION_BLUETOOTH, address)},
-        name=f"{ble_device_info['model']} {address}",
-        manufacturer=ble_device_info["manufacturer"],
-        model=ble_device_info["model"],
-        sw_version=ble_device_info["version"],
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, address)},
+            connections={(dr.CONNECTION_BLUETOOTH, address)},
+            name=f"{ble_device_info['model']} {address}",
+            manufacturer=ble_device_info["manufacturer"],
+            model=ble_device_info["model"],
+            sw_version=ble_device_info["version"],
+        ),
     )
 
     coordinator = CometBlueDataUpdateCoordinator(
@@ -100,6 +101,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_unload_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

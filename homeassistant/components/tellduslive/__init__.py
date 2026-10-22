@@ -76,13 +76,15 @@ async def async_new_client(
     dev_reg = dr.async_get(hass)
     for hub in await client.async_get_hubs():
         _LOGGER.debug("Connected hub %s", hub["name"])
-        dev_reg.async_get_or_create(
+        dev_reg.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, hub["id"])},
-            manufacturer="Telldus",
-            name=hub["name"],
-            model=hub["type"],
-            sw_version=hub["version"],
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, hub["id"])},
+                manufacturer="Telldus",
+                name=hub["name"],
+                model=hub["type"],
+                sw_version=hub["version"],
+            ),
         )
     await client.update()
 

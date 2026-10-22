@@ -3,12 +3,11 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
-
-from tests.typing import WebSocketGenerator
 
 
 class _StubAPI(llm.API):

@@ -85,13 +85,15 @@ def _register_bridge(
     manufacturer, model = DEVICE_DESCRIPTION_MAP.get(
         module.device_type, (MANUFACTURER, module.device_type.value)
     )
-    device_entry = device_registry.async_get_or_create(
+    device_entry = device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, module_id)},
-        manufacturer=manufacturer,
-        model=model,
-        name=module.name,
-        via_device_id=via_device_id,
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, module_id)},
+            manufacturer=manufacturer,
+            model=model,
+            name=module.name,
+            via_device_id=via_device_id,
+        ),
     )
     parent_device_ids[module_id] = device_entry.id
     return device_entry.id
@@ -133,13 +135,15 @@ def async_register_parent_devices(
     parent_device_ids: dict[str, str] = {}
 
     for home_id, home_name in account.all_home_names.items():
-        device_entry = device_registry.async_get_or_create(
+        device_entry = device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, home_id)},
-            manufacturer=MANUFACTURER,
-            model="Home",
-            name=home_name,
-            configuration_url=CONF_URL_CONTROL,
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, home_id)},
+                manufacturer=MANUFACTURER,
+                model="Home",
+                name=home_name,
+                configuration_url=CONF_URL_CONTROL,
+            ),
         )
         parent_device_ids[home_id] = device_entry.id
 

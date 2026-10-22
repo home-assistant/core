@@ -34,6 +34,8 @@ from aiohasupervisor.models.mounts import MountsInfo
 from aiohttp import FormData
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_load_json_object_fixture, mock_platform
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup import (
@@ -53,9 +55,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .test_init import MOCK_ENVIRON
-
-from tests.common import async_load_json_object_fixture, mock_platform
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 TEST_BACKUP = supervisor_backups.Backup(
     compressed=False,
@@ -3006,6 +3005,7 @@ async def test_restore_progress_after_restart_unknown_job(
                         "retention": {"copies": None, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
+                        "last_completed_automatic_backup_size": None,
                         "schedule": {
                             "days": [],
                             "recurrence": "never",
@@ -3038,6 +3038,7 @@ async def test_restore_progress_after_restart_unknown_job(
                         "retention": {"copies": None, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
+                        "last_completed_automatic_backup_size": None,
                         "schedule": {
                             "days": [],
                             "recurrence": "never",

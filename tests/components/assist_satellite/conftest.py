@@ -4,6 +4,14 @@ import pathlib
 from unittest.mock import Mock
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+    setup_test_component_platform,
+)
 
 from homeassistant.components.assist_pipeline import PipelineEvent
 from homeassistant.components.assist_satellite import (
@@ -20,15 +28,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util.ulid import ulid_hex
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-    setup_test_component_platform,
-)
 
 TEST_DOMAIN = "test"
 

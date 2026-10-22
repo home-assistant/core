@@ -114,14 +114,16 @@ async def async_setup_entry(
 
     protocol: Final = "https" if config_entry.data[CONF_SSL] else "http"
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, config_entry.entry_id)},
-        manufacturer="Transmission",
-        entry_type=DeviceEntryType.SERVICE,
-        sw_version=api.server_version,
-        configuration_url=(
-            f"{protocol}://{config_entry.data[CONF_HOST]}:{config_entry.data[CONF_PORT]}"
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, config_entry.entry_id)},
+            manufacturer="Transmission",
+            entry_type=DeviceEntryType.SERVICE,
+            sw_version=api.server_version,
+            configuration_url=(
+                f"{protocol}://{config_entry.data[CONF_HOST]}:{config_entry.data[CONF_PORT]}"
+            ),
         ),
     )
 

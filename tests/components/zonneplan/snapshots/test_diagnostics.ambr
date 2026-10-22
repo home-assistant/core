@@ -149,6 +149,34 @@
         'uuid': '**REDACTED**',
       }),
     ]),
+    'battery_control_modes': list([
+      dict({
+        'control_mode': 'self_consumption',
+        'modes': dict({
+          'day_ahead_arbitrage': dict({
+            'available': False,
+            'enabled': False,
+            'unavailability_reason_code': 'disallowed_by_project',
+          }),
+          'dynamic_charging': dict({
+            'available': True,
+            'enabled': False,
+            'unavailability_reason_code': None,
+          }),
+          'home_optimization': dict({
+            'available': True,
+            'enabled': False,
+            'unavailability_reason_code': None,
+          }),
+          'self_consumption': dict({
+            'available': True,
+            'enabled': True,
+            'unavailability_reason_code': None,
+          }),
+        }),
+        'processing': False,
+      }),
+    ]),
     'connections': list([
       dict({
         'contracts': list([

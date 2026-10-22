@@ -54,12 +54,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: WolflinkConfigEntry) -> 
                 device.id,
             )
             return None
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, str(device.id))},
-            configuration_url="https://www.wolf-smartset.com/",
-            manufacturer=MANUFACTURER,
-            name=device.name,
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, str(device.id))},
+                configuration_url="https://www.wolf-smartset.com/",
+                manufacturer=MANUFACTURER,
+                name=device.name,
+            ),
         )
         return device.id, coordinator
 

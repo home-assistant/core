@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, patch
 import aiohttp
 from pyisy import ISYConnectionError, ISYInvalidAuthError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.isy994.const import (
@@ -26,8 +27,6 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
-
-from tests.common import MockConfigEntry
 
 MOCK_HOSTNAME = "1.1.1.1"
 MOCK_USERNAME = "test-username"
@@ -833,7 +832,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE),
         patch(
             "homeassistant.components.isy994.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result4 = await hass.config_entries.flow.async_configure(

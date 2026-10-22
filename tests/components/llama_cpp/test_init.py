@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock, patch
 import httpx2
 import openai
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_unload_entry(

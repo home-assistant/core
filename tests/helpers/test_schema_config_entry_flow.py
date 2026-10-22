@@ -6,6 +6,12 @@ from unittest.mock import AsyncMock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.core import HomeAssistant, callback
@@ -21,8 +27,6 @@ from homeassistant.helpers.schema_config_entry_flow import (
     wrapped_entity_config_entry_title,
 )
 from homeassistant.util.decorator import Registry
-
-from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
 
 TEST_DOMAIN = "test"
 

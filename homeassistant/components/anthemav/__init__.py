@@ -56,13 +56,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthemavConfigEntry) -> 
     # via device when their entities are created.
     mac_address = entry.data[CONF_MAC]
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, mac_address)},
-        connections={(CONNECTION_NETWORK_MAC, mac_address)},
-        name=entry.title,
-        manufacturer=MANUFACTURER,
-        model=entry.data[CONF_MODEL],
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, mac_address)},
+            connections={(CONNECTION_NETWORK_MAC, mac_address)},
+            name=entry.title,
+            manufacturer=MANUFACTURER,
+            model=entry.data[CONF_MODEL],
+        ),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

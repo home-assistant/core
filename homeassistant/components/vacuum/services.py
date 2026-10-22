@@ -29,7 +29,7 @@ from .const import (
 )
 
 if TYPE_CHECKING:
-    from . import StateVacuumEntity
+    from .entity import StateVacuumEntity
 
 _LOGGER = logging.getLogger(__name__)
 

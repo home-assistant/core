@@ -6,6 +6,19 @@ from unittest.mock import MagicMock, patch
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockEntityPlatform,
+    MockModule,
+    MockPlatform,
+    MockUser,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+    mock_restore_cache,
+    setup_test_component_platform,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.update import (
     ATTR_BACKUP,
@@ -51,20 +64,6 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 
 from .common import MockUpdateEntity
-
-from tests.common import (
-    MockConfigEntry,
-    MockEntityPlatform,
-    MockModule,
-    MockPlatform,
-    MockUser,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-    mock_restore_cache,
-    setup_test_component_platform,
-)
-from tests.typing import WebSocketGenerator
 
 TEST_DOMAIN = "test"
 

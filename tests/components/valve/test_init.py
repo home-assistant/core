@@ -3,6 +3,14 @@
 from collections.abc import Generator
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.valve import (
@@ -25,15 +33,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-)
 
 TEST_DOMAIN = "test"
 

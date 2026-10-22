@@ -31,11 +31,11 @@ from .bot import (
 
 # The ATTR_* below are unused here, but re-exported for the telegram integration.
 from .const import (
-    ATTR_CHAT_ID,  # noqa: F401
-    ATTR_DISABLE_NOTIF,  # noqa: F401
-    ATTR_DISABLE_WEB_PREV,  # noqa: F401
-    ATTR_MESSAGE_TAG,  # noqa: F401
-    ATTR_MESSAGE_THREAD_ID,  # noqa: F401
+    ATTR_CHAT_ID,
+    ATTR_DISABLE_NOTIF,
+    ATTR_DISABLE_WEB_PREV,
+    ATTR_MESSAGE_TAG,
+    ATTR_MESSAGE_THREAD_ID,
     ATTR_PARSER,
     CONF_API_ENDPOINT,
     CONF_CHAT_ID,
@@ -51,6 +51,16 @@ from .services import async_setup_services
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+__all__ = [
+    "ATTR_CHAT_ID",
+    "ATTR_DISABLE_NOTIF",
+    "ATTR_DISABLE_WEB_PREV",
+    "ATTR_MESSAGE_TAG",
+    "ATTR_MESSAGE_THREAD_ID",
+    "ATTR_PARSER",
+    "DOMAIN",
+]
 
 
 class BotPlatformModule(Protocol):
@@ -129,11 +139,15 @@ async def async_migrate_entry(
                 if entity.config_subentry_id is not None
             }
             for subentry_id, subentry in config_entry.subentries.items():
-                per_chat_device = device_registry.async_get_or_create(
+                per_chat_device = device_registry.async_get_or_create_device(
                     config_entry_id=config_entry.entry_id,
                     config_subentry_id=subentry_id,
-                    identifiers={(DOMAIN, f"{bot_id}_{subentry.data[CONF_CHAT_ID]}")},
-                    via_device_id=bot_device.id,
+                    device_info=dr.DeviceInfo(
+                        identifiers={
+                            (DOMAIN, f"{bot_id}_{subentry.data[CONF_CHAT_ID]}")
+                        },
+                        via_device_id=bot_device.id,
+                    ),
                 )
                 if entity := notify_entities.get(subentry_id):
                     entity_registry.async_update_entity(
@@ -200,8 +214,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
 
     # Create the bot device before the platforms are set up, so the per-chat devices can
     # resolve it as their via_device no matter which platform is set up first
-    dr.async_get(hass).async_get_or_create(
-        config_entry_id=entry.entry_id, **bot_device_info(entry, bot.id)
+    dr.async_get(hass).async_get_or_create_device(
+        config_entry_id=entry.entry_id, device_info=bot_device_info(entry, bot.id)
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

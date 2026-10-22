@@ -73,15 +73,17 @@ class AxisHub:
     async def async_update_device_registry(self) -> None:
         """Update device registry."""
         device_registry = dr.async_get(self.hass)
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=self.config.entry.entry_id,
-            configuration_url=self.api.config.url,
-            connections={(CONNECTION_NETWORK_MAC, self.unique_id)},
-            identifiers={(DOMAIN, self.unique_id)},
-            manufacturer=ATTR_MANUFACTURER,
-            model=f"{self.config.model} {self.product_type}",
-            name=self.config.name,
-            sw_version=self.fw_version,
+            device_info=dr.DeviceInfo(
+                configuration_url=self.api.config.url,
+                connections={(CONNECTION_NETWORK_MAC, self.unique_id)},
+                identifiers={(DOMAIN, self.unique_id)},
+                manufacturer=ATTR_MANUFACTURER,
+                model=f"{self.config.model} {self.product_type}",
+                name=self.config.name,
+                sw_version=self.fw_version,
+            ),
         )
 
     # Setup and teardown methods

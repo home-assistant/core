@@ -274,8 +274,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
             # Create the energy site device regardless of it having entities
             # This is so users with a Wall Connector but
             # without a Powerwall can still make service calls
-            device_registry.async_get_or_create(
-                config_entry_id=entry.entry_id, **device
+            device_registry.async_get_or_create_device(
+                config_entry_id=entry.entry_id, device_info=device
             )
 
             energysites.append(

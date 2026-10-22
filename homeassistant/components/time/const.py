@@ -7,7 +7,7 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import TimeEntity
+    from .entity import TimeEntity
 
 DOMAIN: Final = "time"
 DATA_COMPONENT: HassKey[EntityComponent[TimeEntity]] = HassKey(DOMAIN)

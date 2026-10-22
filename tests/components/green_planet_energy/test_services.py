@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from freezegun import freeze_time
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.green_planet_energy.const import DOMAIN
@@ -16,8 +17,6 @@ from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 
 async def _call_get_prices(hass: HomeAssistant, hours: float, entry_id: str) -> dict:

@@ -1,6 +1,7 @@
 {
   "domain": "hase_iq",
   "name": "Hase iQ",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@bbayszczak"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hase_iq",

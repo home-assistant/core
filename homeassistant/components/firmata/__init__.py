@@ -193,13 +193,15 @@ async def async_setup_entry(
     )
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=config_entry.entry_id,
-        connections=set(),
-        identifiers={(DOMAIN, board.name)},
-        manufacturer=FIRMATA_MANUFACTURER,
-        name=board.name,
-        sw_version=board.firmware_version,
+        device_info=dr.DeviceInfo(
+            connections=set(),
+            identifiers={(DOMAIN, board.name)},
+            manufacturer=FIRMATA_MANUFACTURER,
+            name=board.name,
+            sw_version=board.firmware_version,
+        ),
     )
 
     await hass.config_entries.async_forward_entry_setups(

@@ -1238,13 +1238,15 @@ async def websocket_provision_smart_start_node(
             )
 
         # Create an empty device
-        device = dev_reg.async_get_or_create(
+        device = dev_reg.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={device_identifier},
-            name=device_name,
-            manufacturer=manufacturer,
-            model=model,
-            via_device_id=via_device_id,
+            device_info=dr.DeviceInfo(
+                identifiers={device_identifier},
+                name=device_name,
+                manufacturer=manufacturer,
+                model=model,
+                via_device_id=via_device_id,
+            ),
         )
         dev_reg.async_update_device(
             device.id, area_id=msg.get(AREA_ID), name_by_user=device_name

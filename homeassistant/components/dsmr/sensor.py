@@ -674,9 +674,11 @@ def rename_old_gas_to_mbus(
                             entity.entity_id,
                         )
                         continue
-                    new_device = dev_reg.async_get_or_create(
+                    new_device = dev_reg.async_get_or_create_device(
                         config_entry_id=entry.entry_id,
-                        identifiers={(DOMAIN, mbus_device_id)},
+                        device_info=dr.DeviceInfo(
+                            identifiers={(DOMAIN, mbus_device_id)}
+                        ),
                     )
                     ent_reg.async_update_entity(
                         entity.entity_id,

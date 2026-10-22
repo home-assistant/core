@@ -5,6 +5,7 @@ from unittest.mock import Mock
 from aioshelly.const import MODEL_2PM_G3, MODEL_BLU_GATEWAY_G3, MODEL_PRO_EM3
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_load_json_object_fixture
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.shelly.const import (
@@ -16,8 +17,6 @@ from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import MOCK_MAC, force_uptime_value, init_integration, snapshot_device_entities
-
-from tests.common import async_load_json_object_fixture
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

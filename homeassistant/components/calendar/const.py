@@ -8,13 +8,15 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import CalendarEntity
+    from .entity import CalendarEntity
 
 DOMAIN: Final = "calendar"
 
 CREATE_EVENT_SERVICE: Final = "create_event"
 SERVICE_GET_EVENTS: Final = "get_events"
 DATA_COMPONENT: HassKey[EntityComponent[CalendarEntity]] = HassKey(DOMAIN)
+
+EVENT_LISTENER_DEBOUNCE_COOLDOWN = 1.0  # seconds
 
 
 class CalendarEntityStateAttribute(StrEnum):

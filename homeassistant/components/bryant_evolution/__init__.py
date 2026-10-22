@@ -35,11 +35,13 @@ async def async_setup_entry(
     # Add a device for the SAM itself.
     sam_uid = names.sam_device_uid(entry)
     device_registry = dr.async_get(hass)
-    sam_device = device_registry.async_get_or_create(
+    sam_device = device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, sam_uid)},
-        manufacturer="Bryant",
-        name="System Access Module",
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, sam_uid)},
+            manufacturer="Bryant",
+            name="System Access Module",
+        ),
     )
 
     # Add a device for each system.
@@ -52,12 +54,14 @@ async def async_setup_entry(
                 entry.data[CONF_SYSTEM_ZONE],
             )
             continue
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, names.system_device_uid(sam_uid, sys_id))},
-            via_device_id=sam_device.id,
-            manufacturer="Bryant",
-            name=f"System {sys_id}",
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, names.system_device_uid(sam_uid, sys_id))},
+                via_device_id=sam_device.id,
+                manufacturer="Bryant",
+                name=f"System {sys_id}",
+            ),
         )
 
     # Create a client for every zone.

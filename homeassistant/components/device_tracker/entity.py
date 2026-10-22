@@ -723,11 +723,13 @@ class ScannerEntity(
         # Register our own device now that the tracked device is known to another
         # integration; matching the split of a pre-migration composite device prunes
         # the identifiers and connections copied from the composite.
-        device_entry = dr.async_get(self.hass).async_get_or_create(
+        device_entry = dr.async_get(self.hass).async_get_or_create_device(
             config_entry_id=self.platform.config_entry.entry_id,
             config_subentry_id=self.registry_entry.config_subentry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
-            name=self.hostname or self.mac_address,
+            device_info=dr.DeviceInfo(
+                connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
+                name=self.hostname or self.mac_address,
+            ),
         )
 
         # Link the entity's registry entry to the device

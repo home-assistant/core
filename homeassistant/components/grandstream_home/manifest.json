@@ -1,6 +1,7 @@
 {
   "domain": "grandstream_home",
   "name": "Grandstream Home",
+  "categories": ["security_safety.doorbells_intercoms"],
   "codeowners": ["@wtxu-gs"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/grandstream_home",

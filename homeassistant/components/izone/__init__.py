@@ -119,12 +119,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: IZoneConfigEntry) -> Non
     # Register the controller device before forwarding platforms so zone
     # entities can resolve their via_device_id parent at construction time.
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, controller.device_uid)},
-        manufacturer="IZone",
-        model=controller.sys_type,
-        name=f"iZone Controller {controller.device_uid}",
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, controller.device_uid)},
+            manufacturer="IZone",
+            model=controller.sys_type,
+            name=f"iZone Controller {controller.device_uid}",
+        ),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

@@ -33,19 +33,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: DirecTVConfigEntry) -> N
 
     # Register the receiver device so client entities can link to it via_device_id.
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, dtv.device.info.receiver_id)},
-        manufacturer=dtv.device.info.brand,
-        name=next(
-            (
-                str.title(location.name)
-                for location in dtv.device.locations
-                if not location.client
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, dtv.device.info.receiver_id)},
+            manufacturer=dtv.device.info.brand,
+            name=next(
+                (
+                    str.title(location.name)
+                    for location in dtv.device.locations
+                    if not location.client
+                ),
+                None,
             ),
-            None,
+            sw_version=dtv.device.info.version,
         ),
-        sw_version=dtv.device.info.version,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

@@ -59,6 +59,7 @@ from .entity import (
     async_all_device_entities,
     async_remove_unsupported_sense_entities,
 )
+from .migrate import async_is_new_private_only_entity
 from .utils import async_get_light_motion_current_public
 
 _LOGGER = logging.getLogger(__name__)
@@ -867,6 +868,10 @@ def _async_nvr_entities(
     entities: list[BaseProtectEntity] = []
     device = data.api.bootstrap.nvr
     for description in NVR_SENSORS + NVR_DISABLED_SENSORS:
+        if async_is_new_private_only_entity(
+            data.hass, ModelType.NVR, device.mac, description.key
+        ):
+            continue
         entities.append(ProtectNVRSensor(data, device, description))
         _LOGGER.debug("Adding NVR sensor entity %s", description.name)
 

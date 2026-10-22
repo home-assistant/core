@@ -118,12 +118,14 @@ class SmartTubController:
         """Register devices with the device registry for all spas."""
         device_registry = dr.async_get(self._hass)
         for spa in self.spas:
-            device_registry.async_get_or_create(
+            device_registry.async_get_or_create_device(
                 config_entry_id=entry.entry_id,
-                identifiers={(DOMAIN, spa.id)},
-                manufacturer=spa.brand,
-                name=get_spa_name(spa),
-                model=spa.model,
+                device_info=dr.DeviceInfo(
+                    identifiers={(DOMAIN, spa.id)},
+                    manufacturer=spa.brand,
+                    name=get_spa_name(spa),
+                    model=spa.model,
+                ),
             )
 
     async def login(self, email: str, password: str) -> Account:

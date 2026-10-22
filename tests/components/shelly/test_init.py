@@ -21,6 +21,11 @@ from aioshelly.exceptions import (
 )
 from aioshelly.rpc_device.utils import bluetooth_mac_from_primary_mac
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_load_json_object_fixture,
+)
 
 from homeassistant.components.shelly.const import (
     BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID,
@@ -55,12 +60,6 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.setup import async_setup_component
 
 from . import MOCK_MAC, init_integration, mutate_rpc_device_status, register_sub_device
-
-from tests.common import (
-    MockConfigEntry,
-    async_capture_events,
-    async_load_json_object_fixture,
-)
 
 
 async def test_custom_coap_port(
@@ -206,10 +205,13 @@ async def test_device_unsupported_firmware(
 
     entry = await init_integration(hass, gen)
     assert entry.state is ConfigEntryState.SETUP_RETRY
-    assert (
-        DOMAIN,
-        "firmware_unsupported_123456789ABC",
-    ) in issue_registry.issues
+    issue_id = "firmware_unsupported_123456789ABC"
+    assert (issue := issue_registry.async_get_issue(DOMAIN, issue_id))
+    assert issue.config_entry_id == entry.entry_id
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
 @pytest.mark.parametrize("gen", [1, 2, 3])

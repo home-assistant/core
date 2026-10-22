@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.velbus.const import (
     CONF_CONFIG_ENTRY,
@@ -22,8 +23,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_global_services_with_config_entry(

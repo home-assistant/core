@@ -111,38 +111,44 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> N
         if ws_data is not None:
             mac = ws_data.get(AZD_MAC, "")
 
-            ws_device = device_registry.async_get_or_create(
+            ws_device = device_registry.async_get_or_create_device(
                 config_entry_id=entry.entry_id,
-                connections={(dr.CONNECTION_NETWORK_MAC, mac)},
-                identifiers={(DOMAIN, f"{entry.entry_id}_ws")},
-                manufacturer=MANUFACTURER,
-                model=ws_data.get(AZD_MODEL),
-                name=ws_data.get(AZD_FULL_NAME),
-                sw_version=ws_data.get(AZD_FIRMWARE),
+                device_info=dr.DeviceInfo(
+                    connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+                    identifiers={(DOMAIN, f"{entry.entry_id}_ws")},
+                    manufacturer=MANUFACTURER,
+                    model=ws_data.get(AZD_MODEL),
+                    name=ws_data.get(AZD_FULL_NAME),
+                    sw_version=ws_data.get(AZD_FIRMWARE),
+                ),
             )
             ws_device_id = ws_device.id
 
         for system_data in coordinator.data.get(AZD_SYSTEMS, {}).values():
             system_id = system_data[AZD_ID]
-            device_registry.async_get_or_create(
+            device_registry.async_get_or_create_device(
                 config_entry_id=entry.entry_id,
-                identifiers={(DOMAIN, f"{entry.entry_id}_{system_id}")},
-                manufacturer=MANUFACTURER,
-                model=system_data.get(AZD_MODEL),
-                name=f"System {system_id}",
-                sw_version=system_data.get(AZD_FIRMWARE),
-                via_device_id=ws_device_id,
+                device_info=dr.DeviceInfo(
+                    identifiers={(DOMAIN, f"{entry.entry_id}_{system_id}")},
+                    manufacturer=MANUFACTURER,
+                    model=system_data.get(AZD_MODEL),
+                    name=f"System {system_id}",
+                    sw_version=system_data.get(AZD_FIRMWARE),
+                    via_device_id=ws_device_id,
+                ),
             )
 
         dhw_data: dict[str, Any] | None = coordinator.data.get(AZD_HOT_WATER)
         if dhw_data is not None:
-            device_registry.async_get_or_create(
+            device_registry.async_get_or_create_device(
                 config_entry_id=entry.entry_id,
-                identifiers={(DOMAIN, f"{entry.entry_id}_dhw")},
-                manufacturer=MANUFACTURER,
-                model="DHW",
-                name=dhw_data.get(AZD_NAME),
-                via_device_id=ws_device_id,
+                device_info=dr.DeviceInfo(
+                    identifiers={(DOMAIN, f"{entry.entry_id}_dhw")},
+                    manufacturer=MANUFACTURER,
+                    model="DHW",
+                    name=dhw_data.get(AZD_NAME),
+                    via_device_id=ws_device_id,
+                ),
             )
 
     # Register the parents before forwarding platforms, and keep them registered

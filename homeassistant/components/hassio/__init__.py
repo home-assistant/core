@@ -53,10 +53,12 @@ from . import (  # noqa: F401
 from .addon_manager import AddonError, AddonInfo, AddonManager, AddonState
 from .addon_panel import async_setup_addon_panel, async_setup_addon_panel_coordinator
 from .auth import async_setup_auth_view
+from .auto_update import AutoUpdateManager
 from .config import HassioConfigStore, StoredHassioConfig
 from .config_entry import async_get_hassio_entry
 from .const import (
     ADDONS_COORDINATOR,
+    DATA_AUTO_UPDATE,
     DATA_COMPONENT,
     DATA_HASSIO_HOST,
     DATA_KEY_SUPERVISOR_ISSUES,
@@ -104,6 +106,7 @@ from .websocket_api import async_load_websocket_api
 # All references to addons will eventually be refactored and deprecated
 get_apps_list = get_addons_list
 __all__ = [
+    "DOMAIN",
     "AddonError",
     "AddonInfo",
     "AddonManager",
@@ -456,6 +459,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     issues_coordinator = SupervisorIssuesCoordinator(hass, entry)
     hass.data[DATA_KEY_SUPERVISOR_ISSUES] = issues_coordinator
 
+    auto_update = AutoUpdateManager(hass, entry, coordinator)
+    await auto_update.async_setup()
+    hass.data[DATA_AUTO_UPDATE] = auto_update
+
     @callback
     def _refresh_main_coordinator_on_mount_issue(_: IssueSubscriptionEvent) -> None:
         coordinator.config_entry.async_create_task(hass, coordinator.async_refresh())
@@ -584,3 +591,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         hass.data.pop(STATS_COORDINATOR, None)
         hass.data.pop(JOBS_COORDINATOR, None)
         hass.data.pop(DATA_KEY_SUPERVISOR_ISSUES, None)
+        hass.data.pop(DATA_AUTO_UPDATE, None)

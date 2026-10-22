@@ -2387,6 +2387,24 @@
     },
     "cannot_connect": {
       "message": "Cannot connect to the GX device at {host}."
+    },
+    "error_during_check": {
+      "message": "The GX device reported an error while checking for firmware updates."
+    },
+    "error_during_update": {
+      "message": "The GX device reported an error while installing the firmware update."
+    },
+    "no_update_available": {
+      "message": "No firmware update is available."
+    },
+    "update_already_in_progress": {
+      "message": "A firmware update is already in progress."
+    },
+    "update_file_not_found": {
+      "message": "The firmware update file was not found."
+    },
+    "update_timed_out": {
+      "message": "The firmware update timed out."
     }
   },
   "issues": {

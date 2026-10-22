@@ -1,6 +1,7 @@
 {
   "domain": "intellifire",
   "name": "IntelliFire",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@jeeftor"],
   "config_flow": true,
   "dhcp": [

@@ -756,15 +756,19 @@ class ControllerEvents:
         else:
             ids = {device_id}
 
-        device = self.dev_reg.async_get_or_create(
+        device = self.dev_reg.async_get_or_create_device(
             config_entry_id=self.config_entry.entry_id,
-            identifiers=ids,
-            sw_version=node.firmware_version,
-            name=node.name or node.device_config.description or f"Node {node.node_id}",
-            model=node.device_config.label,
-            manufacturer=node.device_config.manufacturer,
-            suggested_area=node.location or UNDEFINED,
-            via_device_id=via_device_id,
+            device_info=dr.DeviceInfo(
+                identifiers=ids,
+                sw_version=node.firmware_version,
+                name=node.name
+                or node.device_config.description
+                or f"Node {node.node_id}",
+                model=node.device_config.label,
+                manufacturer=node.device_config.manufacturer,
+                suggested_area=node.location or UNDEFINED,
+                via_device_id=via_device_id,
+            ),
         )
 
         async_dispatcher_send(self.hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)

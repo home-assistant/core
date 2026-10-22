@@ -1,6 +1,7 @@
 {
   "domain": "smartyplants",
   "name": "SmartyPlants",
+  "categories": ["garden_plants"],
   "codeowners": ["@bigbimbs"],
   "config_flow": true,
   "dependencies": ["webhook"],

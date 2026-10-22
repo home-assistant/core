@@ -3,15 +3,17 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, MockModule, mock_integration
+from pytest_homeassistant.components.repairs import (
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.notify import DOMAIN, migrate_notify_issue
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry, MockModule, mock_integration
-from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
-from tests.typing import ClientSessionGenerator
 
 THERMOSTAT_ID = 0
 

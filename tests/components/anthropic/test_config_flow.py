@@ -1,6 +1,7 @@
 """Test the Anthropic config flow."""
 
 import datetime as dt
+from typing import Literal
 from unittest.mock import AsyncMock, patch
 
 from anthropic import (
@@ -18,6 +19,7 @@ from anthropic.pagination import AsyncPage
 from anthropic.types import ModelInfo
 from httpx2 import URL, Request, Response
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
@@ -54,7 +56,26 @@ from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
 from . import model_list
 
-from tests.common import MockConfigEntry
+
+@pytest.fixture
+def mock_model_catalogue(mock_model_list: AsyncMock) -> list[ModelInfo]:
+    """Allow tests to update the catalogue returned by the API."""
+    models = list(model_list)
+
+    def models_list(
+        *,
+        lifecycle: list[Literal["active", "deprecated", "retired"]] | None = None,
+        timeout: float = 10.0,
+    ) -> AsyncPage[ModelInfo]:
+        """Return the catalogue matching the requested lifecycle stages."""
+        lifecycles = lifecycle if lifecycle is not None else ["active", "deprecated"]
+        return AsyncPage(
+            data=[model for model in models if model.lifecycle in lifecycles],
+            has_more=False,
+        )
+
+    mock_model_list.side_effect = models_list
+    return models
 
 
 async def test_form(
@@ -678,6 +699,7 @@ async def test_reconfigure_subentry_thinking_options(
 async def test_reconfigure_subentry_server_tools(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_model_catalogue: list[ModelInfo],
     subentry_type: str,
     code_execution_supported: bool,
     web_search_supported: bool,
@@ -718,7 +740,7 @@ async def test_reconfigure_subentry_server_tools(
         },
     )
     await hass.async_block_till_done()
-    mock_config_entry.runtime_data.async_set_updated_data([model])
+    mock_model_catalogue[:] = [model]
 
     result = await mock_config_entry.start_subentry_reconfigure_flow(
         hass, subentry.subentry_id
@@ -858,13 +880,111 @@ async def test_subentry_web_search_user_location(
     }
 
 
+@pytest.mark.parametrize(
+    "subentry_type",
+    [
+        pytest.param("conversation", id="conversation"),
+        pytest.param("ai_task_data", id="ai_task"),
+    ],
+)
+@pytest.mark.usefixtures("mock_init_component")
+async def test_model_list_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_model_list: AsyncMock,
+    mock_model_catalogue: list[ModelInfo],
+    subentry_type: str,
+) -> None:
+    """Refresh the catalogue before showing it and reuse it on submission."""
+    mock_model_catalogue[:] = [
+        model_list[0].model_copy(
+            update={"id": "new-model", "display_name": "New model"}
+        )
+    ]
+    subentry = next(
+        subentry
+        for subentry in mock_config_entry.subentries.values()
+        if subentry.subentry_type == subentry_type
+    )
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    mock_model_list.reset_mock()
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_RECOMMENDED: False}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "additional"
+    assert result["data_schema"].schema[CONF_CHAT_MODEL].config["options"] == [
+        {"label": "New model", "value": "new-model"}
+    ]
+    assert mock_model_list.await_count == 2
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_CHAT_MODEL: "new-model"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "model"
+    assert mock_model_list.await_count == 2
+
+
+@pytest.mark.parametrize(
+    "subentry_type",
+    [
+        pytest.param("conversation", id="conversation"),
+        pytest.param("ai_task_data", id="ai_task"),
+    ],
+)
+@pytest.mark.usefixtures("mock_init_component")
+async def test_model_list_refresh_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_model_list: AsyncMock,
+    subentry_type: str,
+) -> None:
+    """Keep the cached catalogue available when its refresh fails."""
+    subentry = next(
+        subentry
+        for subentry in mock_config_entry.subentries.values()
+        if subentry.subentry_type == subentry_type
+    )
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    mock_model_list.reset_mock()
+    mock_model_list.side_effect = APIConnectionError(request=None)
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_RECOMMENDED: False}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "additional"
+    assert not result["errors"]
+    models = result["data_schema"].schema[CONF_CHAT_MODEL].config["options"]
+    assert len(models) == len(model_list)
+    assert models[0] == {
+        "label": model_list[0].display_name,
+        "value": model_list[0].id,
+    }
+    mock_model_list.assert_awaited_once_with(lifecycle=["active"], timeout=10.0)
+
+
 @pytest.mark.usefixtures("mock_init_component")
 async def test_model_list(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_model_catalogue: list[ModelInfo],
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test fetching and processing the list of models."""
+    """Test the model selector excludes retired models from the catalogue."""
+    mock_model_catalogue.append(
+        model_list[0].model_copy(update={"id": "retired-model", "lifecycle": "retired"})
+    )
+    mock_config_entry.runtime_data.async_set_updated_data(mock_model_catalogue)
     subentry = next(iter(mock_config_entry.subentries.values()))
     options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
         hass, subentry.subentry_id
@@ -881,6 +1001,169 @@ async def test_model_list(
     assert options["type"] is FlowResultType.FORM
     assert options["step_id"] == "additional"
     assert options["data_schema"].schema["chat_model"].config["options"] == snapshot
+
+
+@pytest.mark.parametrize(
+    ("subentry_type", "expected_values"),
+    [
+        pytest.param(
+            "ai_task_data", ["supported-model"], id="ai_task_structured_outputs"
+        ),
+        pytest.param(
+            "conversation",
+            ["supported-model", "unsupported-model", "unknown-model"],
+            id="conversation_all_models",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_init_component")
+async def test_model_list_structured_outputs(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_model_catalogue: list[ModelInfo],
+    subentry_type: str,
+    expected_values: list[str],
+) -> None:
+    """Only offer models with known structured output support for AI Tasks."""
+    supported_model = model_list[0].model_copy(update={"id": "supported-model"})
+    unsupported_model = model_list[0].model_copy(
+        update={"id": "unsupported-model"}, deep=True
+    )
+    assert unsupported_model.capabilities is not None
+    unsupported_model.capabilities.structured_outputs.supported = False
+    unknown_model = model_list[0].model_copy(
+        update={"id": "unknown-model", "capabilities": None}
+    )
+    mock_model_catalogue[:] = [supported_model, unsupported_model, unknown_model]
+    subentry = next(
+        subentry
+        for subentry in mock_config_entry.subentries.values()
+        if subentry.subentry_type == subentry_type
+    )
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_RECOMMENDED: False}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "additional"
+    assert [
+        option["value"]
+        for option in result["data_schema"].schema[CONF_CHAT_MODEL].config["options"]
+    ] == expected_values
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.freeze_time("2026-10-16T12:00:00Z")
+@pytest.mark.parametrize(
+    ("sdk_dates", "expected_values"),
+    [
+        pytest.param(
+            {"sdk-model-20260101": "October 15th, 2026"},
+            ["active-model"],
+            id="sdk_retired",
+        ),
+        pytest.param(
+            {"sdk-model-20260101": "October 17th, 2026"},
+            ["active-model", "sdk-model"],
+            id="sdk_deprecated",
+        ),
+        pytest.param(
+            {
+                "sdk-model": "October 15th, 2026",
+                "sdk-model-20260101": "October 17th, 2026",
+            },
+            ["active-model"],
+            id="submitted_alias_retired",
+        ),
+        pytest.param(
+            {
+                "sdk-model": "October 17th, 2026",
+                "sdk-model-20260101": "October 15th, 2026",
+            },
+            ["active-model", "sdk-model"],
+            id="submitted_alias_deprecated",
+        ),
+    ],
+)
+async def test_model_list_sdk_lifecycle(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_model_catalogue: list[ModelInfo],
+    sdk_dates: dict[str, str],
+    expected_values: list[str],
+) -> None:
+    """Filter models using the lifecycle of the alias submitted by the selector."""
+    mock_model_catalogue[:] = [
+        model_list[0].model_copy(update={"id": "active-model"}),
+        model_list[0].model_copy(update={"id": "sdk-model-20260101"}),
+    ]
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+
+    with patch.dict(
+        "homeassistant.components.anthropic.coordinator.DEPRECATED_MODELS",
+        sdk_dates,
+        clear=True,
+    ):
+        options = await hass.config_entries.subentries.async_configure(
+            options_flow["flow_id"],
+            {CONF_RECOMMENDED: False},
+        )
+
+    assert options["type"] is FlowResultType.FORM
+    assert options["step_id"] == "additional"
+    assert [
+        option["value"]
+        for option in options["data_schema"].schema[CONF_CHAT_MODEL].config["options"]
+    ] == expected_values
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize("cached_model_count", [0, 1], ids=["retrieved", "cached"])
+async def test_retired_model(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_model_catalogue: list[ModelInfo],
+    cached_model_count: int,
+) -> None:
+    """Reject retired models entered as a custom model ID."""
+    retired_model = model_list[0].model_copy(
+        update={"id": "retired-model", "lifecycle": "retired"}
+    )
+    mock_model_catalogue[:] = [retired_model][:cached_model_count]
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "conversation"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_NAME: "Claude", CONF_RECOMMENDED: False}
+    )
+    with patch(
+        "anthropic.resources.models.AsyncModels.retrieve", return_value=retired_model
+    ):
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_CHAT_MODEL: retired_model.id}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "additional"
+    assert result["errors"] == {CONF_CHAT_MODEL: "model_retired"}
+
+    with patch(
+        "anthropic.resources.models.AsyncModels.retrieve", return_value=model_list[0]
+    ):
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_CHAT_MODEL: model_list[0].id}
+        )
+    assert result["step_id"] == "model"
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_CHAT_MODEL] == model_list[0].id
 
 
 @pytest.mark.usefixtures("mock_init_component")
@@ -1428,7 +1711,7 @@ async def setup_api_key_entry(
         with patch(
             "anthropic.resources.models.AsyncModels.list",
             new_callable=AsyncMock,
-            return_value=AsyncPage(data=model_list),
+            return_value=AsyncPage(data=model_list, has_more=False),
         ):
             assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
             await hass.async_block_till_done()
@@ -1485,7 +1768,7 @@ async def test_update_api_key(
         patch(
             "anthropic.resources.models.AsyncModels.list",
             new_callable=AsyncMock,
-            return_value=AsyncPage(data=model_list),
+            return_value=AsyncPage(data=model_list, has_more=False),
         ),
         patch.object(
             hass.config_entries, "async_reload", wraps=hass.config_entries.async_reload

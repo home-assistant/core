@@ -72,11 +72,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: WyomingConfigEntry) -> N
 
         # Use config entry id since only one satellite per entry is supported
         satellite_id = entry.entry_id
-        device = dev_reg.async_get_or_create(
+        device = dev_reg.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, satellite_id)},
-            name=satellite_info.name,
-            suggested_area=satellite_info.area,
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, satellite_id)},
+                name=satellite_info.name,
+                suggested_area=satellite_info.area,
+            ),
         )
 
         item.device = SatelliteDevice(

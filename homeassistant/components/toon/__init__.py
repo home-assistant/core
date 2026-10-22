@@ -114,40 +114,48 @@ async def async_setup_entry(hass: HomeAssistant, entry: ToonConfigEntry) -> None
     # child devices created by the entities can deterministically resolve their
     # via_device_id.
     device_registry = dr.async_get(hass)
-    display_device = device_registry.async_get_or_create(
+    display_device = device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, agreement_id)},
-        manufacturer="Eneco",
-        model=agreement.display_hardware_version.rpartition("/")[0],
-        name="Toon Display",
-        sw_version=agreement.display_software_version.rpartition("/")[-1],
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, agreement_id)},
+            manufacturer="Eneco",
+            model=agreement.display_hardware_version.rpartition("/")[0],
+            name="Toon Display",
+            sw_version=agreement.display_software_version.rpartition("/")[-1],
+        ),
     )
     # The Meter Adapter has no entities of its own.
-    meter_adapter_device = device_registry.async_get_or_create(
+    meter_adapter_device = device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={
-            (DOMAIN, agreement_id, "meter_adapter"),  # type: ignore[arg-type]
-        },
-        manufacturer="Eneco",
-        name="Meter Adapter",
-        via_device_id=display_device.id,
+        device_info=dr.DeviceInfo(
+            identifiers={
+                (DOMAIN, agreement_id, "meter_adapter"),  # type: ignore[arg-type]
+            },
+            manufacturer="Eneco",
+            name="Meter Adapter",
+            via_device_id=display_device.id,
+        ),
     )
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={
-            (DOMAIN, agreement_id, "electricity"),  # type: ignore[arg-type]
-        },
-        name="Electricity Meter",
-        via_device_id=meter_adapter_device.id,
+        device_info=dr.DeviceInfo(
+            identifiers={
+                (DOMAIN, agreement_id, "electricity"),  # type: ignore[arg-type]
+            },
+            name="Electricity Meter",
+            via_device_id=meter_adapter_device.id,
+        ),
     )
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={
-            (DOMAIN, agreement_id, "boiler_module"),  # type: ignore[arg-type]
-        },
-        manufacturer="Eneco",
-        name="Boiler Module",
-        via_device_id=display_device.id,
+        device_info=dr.DeviceInfo(
+            identifiers={
+                (DOMAIN, agreement_id, "boiler_module"),  # type: ignore[arg-type]
+            },
+            manufacturer="Eneco",
+            name="Boiler Module",
+            via_device_id=display_device.id,
+        ),
     )
 
     # Spin up the platforms

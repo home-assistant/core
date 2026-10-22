@@ -41,13 +41,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TedeeConfigEntry) -> Non
     await coordinator.async_config_entry_first_refresh()
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, coordinator.bridge.serial)},
-        manufacturer="Tedee",
-        name=coordinator.bridge.name,
-        model="Bridge",
-        serial_number=coordinator.bridge.serial,
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, coordinator.bridge.serial)},
+            manufacturer="Tedee",
+            name=coordinator.bridge.name,
+            model="Bridge",
+            serial_number=coordinator.bridge.serial,
+        ),
     )
 
     entry.runtime_data = coordinator

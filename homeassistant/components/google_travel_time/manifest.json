@@ -1,6 +1,7 @@
 {
   "domain": "google_travel_time",
   "name": "Google Maps Travel Time",
+  "categories": ["vehicles_transport"],
   "codeowners": ["@eifinger"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/google_travel_time",

@@ -114,13 +114,15 @@ class HortimaxCoordinator(DataUpdateCoordinator[dict[str, HortimaxDeviceData]]):
         """
         registry = dr.async_get(self.hass)
         for device in devices:
-            registry.async_get_or_create(
+            registry.async_get_or_create_device(
                 config_entry_id=self.config_entry.entry_id,
-                identifiers={(DOMAIN, device.name)},
-                manufacturer=MANUFACTURER,
-                name=device.label or device.name,
-                model="HortiMaX Pro",
-                serial_number=device.name,
+                device_info=dr.DeviceInfo(
+                    identifiers={(DOMAIN, device.name)},
+                    manufacturer=MANUFACTURER,
+                    name=device.label or device.name,
+                    model="HortiMaX Pro",
+                    serial_number=device.name,
+                ),
             )
 
     @callback

@@ -1,6 +1,7 @@
 {
   "domain": "schlage",
   "name": "Schlage",
+  "categories": ["security_safety.locks_access"],
   "codeowners": ["@dknowles2"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/schlage",

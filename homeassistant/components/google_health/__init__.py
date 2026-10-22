@@ -112,11 +112,13 @@ async def async_setup_entry(
     # it as their via_device parent even when only the device scope is granted
     # (the account-level sensors that would otherwise create it are gated on
     # different scopes).
-    dr.async_get(hass).async_get_or_create(
+    dr.async_get(hass).async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.entry_id)},
-        manufacturer="Google",
-        entry_type=dr.DeviceEntryType.SERVICE,
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+            manufacturer="Google",
+            entry_type=dr.DeviceEntryType.SERVICE,
+        ),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)

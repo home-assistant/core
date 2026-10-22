@@ -94,43 +94,43 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
 
     device_registry = dr.async_get(hass)
 
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.unique_id)},
-        name=info_api.data.name,
-        manufacturer=MANUFACTURER,
-        sw_version=info_api.data.version,
-        hw_version=coordinator_info.data.device.pcb,
-        configuration_url=entry.data[CONF_URL],
-        serial_number=str(info_api.data.device.serial),
-        model=info_api.data.product_name,
-        model_id=(
-            f"{coordinator_info.data.device.article_number}{coordinator_info.data.article_suffix}"
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, entry.unique_id)},
+            name=info_api.data.name,
+            manufacturer=MANUFACTURER,
+            sw_version=info_api.data.version,
+            hw_version=coordinator_info.data.device.pcb,
+            configuration_url=entry.data[CONF_URL],
+            serial_number=str(info_api.data.device.serial),
+            model=info_api.data.product_name,
+            model_id=(
+                f"{coordinator_info.data.device.article_number}{coordinator_info.data.article_suffix}"
+            ),
         ),
     )
 
     for line_id, line_info in info_api.data.lines.items():
         line_unique_id = f"{entry.unique_id}-line{line_id}"
 
-        extra_info: dict = {}
-        if line_info.device.serial != info_api.data.device.serial:
-            extra_info.update(
-                serial_number=str(line_info.device.serial),
-                hw_version=line_info.device.pcb,
-                model_id=(
-                    f"{line_info.device.article_number}{line_info.device.article_info}"
-                ),
-            )
-
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
+        device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, line_unique_id)},
             translation_key="dali_line",
             translation_placeholders={"line_id": str(line_id)},
             via_device_id=dr.async_get_device_id_by_identifier(
                 hass, (DOMAIN, entry.unique_id), config_entry_id=entry.entry_id
             ),
-            **extra_info,
+        )
+        if line_info.device.serial != info_api.data.device.serial:
+            device_info.serial_number = str(line_info.device.serial)
+            device_info.hw_version = line_info.device.pcb
+            device_info.model_id = (
+                f"{line_info.device.article_number}{line_info.device.article_info}"
+            )
+
+        device_registry.async_get_or_create_device(
+            config_entry_id=entry.entry_id, device_info=device_info
         )
 
     devices_api = Devices(auth_api, info_api.data.version)

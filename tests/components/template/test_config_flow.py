@@ -5,6 +5,8 @@ from unittest.mock import patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
+from pytest_homeassistant.typing import WebSocketGenerator
 from pytest_unordered import unordered
 
 from homeassistant import config_entries
@@ -18,9 +20,6 @@ from homeassistant.helpers import (
     device_registry as dr,
     selector,
 )
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
-from tests.typing import WebSocketGenerator
 
 SWITCH_BEFORE_OPTIONS = {
     "name": "test_template_switch",
@@ -391,6 +390,44 @@ async def test_config_flow(
     assert state.state == template_state
     for key, value in extra_attrs.items():
         assert state.attributes[key] == value
+
+
+async def test_config_flow_sensor_unit_of_measurement_context(
+    hass: HomeAssistant,
+) -> None:
+    """Test the unit of measurement field context refers to fields in the form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "sensor"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "sensor"
+
+    # Serialize the form the way it is sent to the frontend
+    fields = {
+        field["name"]: field
+        for field in probatio.to_field_list(
+            result["data_schema"], custom_serializer=cv.custom_serializer
+        )
+    }
+    expected_context = {
+        "filter_device_class": "device_class",
+        "filter_state_class": "state_class",
+    }
+    assert (
+        fields["unit_of_measurement"]["selector"]["unit_of_measurement"]["context"]
+        == expected_context
+    )
+    # The frontend reads the context values from sibling fields in the same form
+    allowed_context_keys = selector.UnitOfMeasurementSelector().allowed_context_keys
+    for context_key, field_name in expected_context.items():
+        assert (
+            next(iter(fields[field_name]["selector"]))
+            in allowed_context_keys[context_key]
+        )
 
 
 @pytest.mark.parametrize(

@@ -14,6 +14,7 @@ from uiprotect.data import (
     ChannelQuality,
     LightModeEnableType,
     LightModeType,
+    ModelType,
     ProtectAdoptableDeviceModel,
 )
 from uiprotect.data.public_devices import (
@@ -44,7 +45,6 @@ from .const import (
     DEVICES_FOR_SUBSCRIBE,
     DEVICES_WS_SUBSCRIBED_MODELS,
     DOMAIN,
-    ModelType,
 )
 
 if TYPE_CHECKING:

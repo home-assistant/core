@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from teltasync import TeltonikaAuthenticationError, TeltonikaConnectionError
 from teltasync.unauthorized import UnauthorizedStatusData
 
@@ -14,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

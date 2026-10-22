@@ -7,6 +7,11 @@ from aioshelly.const import MODEL_2PM_G3, MODEL_BULB, MODEL_BUTTON1
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    mock_restore_cache,
+)
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -50,12 +55,6 @@ from . import (
     mock_rest_update,
     register_device,
     register_entity,
-)
-
-from tests.common import (
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-    mock_restore_cache,
 )
 
 RECONNECT_ERROR = "An error occurred while reconnecting to Test name"

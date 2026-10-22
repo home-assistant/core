@@ -53,13 +53,15 @@ async def async_setup_entry(
     # Register the system device so child devices can resolve it as their
     # via_device parent regardless of platform setup order.
     system = coordinator.data["system"]
-    dr.async_get(hass).async_get_or_create(
+    dr.async_get(hass).async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, system["rid"])},
-        manufacturer="Advantage Air",
-        model=system["sysType"],
-        name=system["name"],
-        sw_version=system["myAppRev"],
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, system["rid"])},
+            manufacturer="Advantage Air",
+            model=system["sysType"],
+            name=system["name"],
+            sw_version=system["myAppRev"],
+        ),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

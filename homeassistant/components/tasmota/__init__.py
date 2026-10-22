@@ -127,14 +127,16 @@ def _update_device(
 ) -> None:
     """Add or update device registry."""
     _LOGGER.debug("Adding or updating tasmota device %s", config[CONF_MAC])
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=config_entry.entry_id,
-        configuration_url=f"http://{config[CONF_IP]}/",
-        connections={(CONNECTION_NETWORK_MAC, config[CONF_MAC])},
-        manufacturer=config[CONF_MANUFACTURER],
-        model=config[CONF_MODEL],
-        name=config[CONF_NAME],
-        sw_version=config[CONF_SW_VERSION],
+        device_info=dr.DeviceInfo(
+            configuration_url=f"http://{config[CONF_IP]}/",
+            connections={(CONNECTION_NETWORK_MAC, config[CONF_MAC])},
+            manufacturer=config[CONF_MANUFACTURER],
+            model=config[CONF_MODEL],
+            name=config[CONF_NAME],
+            sw_version=config[CONF_SW_VERSION],
+        ),
     )
 
 

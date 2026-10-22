@@ -76,11 +76,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> No
 
     assert entry.unique_id
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.unique_id)},
-        entry_type=DeviceEntryType.SERVICE,
-        sw_version=about.version,
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, entry.unique_id)},
+            entry_type=DeviceEntryType.SERVICE,
+            sw_version=about.version,
+        ),
     )
 
     mealplan_coordinator = MealieMealplanCoordinator(hass, entry, client)

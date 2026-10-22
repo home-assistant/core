@@ -13,12 +13,19 @@ from aiohttp.client_exceptions import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.google import DOMAIN
 from homeassistant.components.google.const import CONF_CALENDAR_ACCESS
 from homeassistant.components.google.services import SERVICE_CREATE_EVENT
+from homeassistant.components.google.store import STORAGE_SAVE_DELAY_SECONDS
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
+    STATE_OFF,
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -37,9 +44,6 @@ from .conftest import (
     ApiResult,
     ComponentSetup,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 EXPIRED_TOKEN_TIMESTAMP = dt.datetime(2022, 4, 8).timestamp()
 
@@ -900,8 +904,10 @@ async def test_remove_entry(
     component_setup: ComponentSetup,
     test_api_calendar: dict[str, Any],
     mock_events_list: ApiResult,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test load and remove of a ConfigEntry."""
+    """Removing a loaded entry also cancels delayed cache writes."""
     mock_calendars_list({"items": [test_api_calendar]})
     mock_events_list({})
     assert await component_setup()
@@ -910,9 +916,60 @@ async def test_remove_entry(
     assert len(entries) == 1
     entry = entries[0]
     assert entry.state is ConfigEntryState.LOADED
+    storage_key = f"google.{entry.entry_id}"
+    assert await entry.runtime_data.store.async_load()
+    assert storage_key not in hass_storage
 
     assert await hass.config_entries.async_remove(entry.entry_id)
     assert entry.state is ConfigEntryState.NOT_LOADED
+    assert storage_key not in hass_storage
+
+    freezer.tick(STORAGE_SAVE_DELAY_SECONDS + 1)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert storage_key not in hass_storage
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+    await hass.async_block_till_done()
+    assert storage_key not in hass_storage
+
+
+async def test_remove_entry_after_failed_unload(
+    hass: HomeAssistant,
+    mock_calendars_list: ApiResult,
+    component_setup: ComponentSetup,
+    test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Removal prevents pending and future writes after an unload failure."""
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
+    assert await component_setup()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    store = entry.runtime_data.store
+    data = await store.async_load()
+    assert data
+    storage_key = f"google.{entry.entry_id}"
+
+    with patch.object(
+        hass.config_entries, "async_unload_platforms", return_value=False
+    ):
+        assert await hass.config_entries.async_remove(entry.entry_id) == {
+            "require_restart": True
+        }
+
+    assert entry.state is ConfigEntryState.FAILED_UNLOAD
+    assert storage_key not in hass_storage
+
+    # A platform that failed to unload can still update its calendar store.
+    await store.async_save(data)
+    freezer.tick(STORAGE_SAVE_DELAY_SECONDS + 1)
+    async_fire_time_changed(hass)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
+    await hass.async_block_till_done()
+    assert storage_key not in hass_storage
 
 
 async def test_oauth_implementation_not_available(

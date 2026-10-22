@@ -85,11 +85,13 @@ async def async_setup_entry(
     entry.runtime_data = coordinator
 
     reg = dr.async_get(hass)
-    device_entry = reg.async_get_or_create(
+    device_entry = reg.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.unique_id or entry.entry_id)},
-        manufacturer="NIBE Energy Systems",
-        name=heatpump.model.name,
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, entry.unique_id or entry.entry_id)},
+            manufacturer="NIBE Energy Systems",
+            name=heatpump.model.name,
+        ),
     )
 
     def _on_product_info(product_info: ProductInfo):

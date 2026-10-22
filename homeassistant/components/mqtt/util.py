@@ -458,12 +458,14 @@ def learn_more_url(platform: str) -> str:
 
 
 @callback
-def _async_device_has_entities(hass: HomeAssistant, device_id: str) -> bool:
+def _async_device_has_entities(
+    hass: HomeAssistant, device_id: str, *, include_disabled_entities: bool
+) -> bool:
     """Return if entities that keep the device remain.
 
-    Disabled entities only keep the device if they were discovered through
-    device discovery, as removing the device would remove them while they are
-    still part of the device discovery payload.
+    Disabled entities only keep the device if include_disabled_entities is set,
+    or if they were discovered through device discovery, as removing the device
+    would remove them while they are still part of the device discovery payload.
     """
     device_discovered_disabled_entities = {
         disabled_entity.registry_key
@@ -474,6 +476,7 @@ def _async_device_has_entities(hass: HomeAssistant, device_id: str) -> bool:
     }
     return any(
         not entry.disabled
+        or include_disabled_entities
         or (entry.domain, entry.platform, entry.unique_id)
         in device_discovered_disabled_entities
         for entry in er.async_entries_for_device(
@@ -483,12 +486,17 @@ def _async_device_has_entities(hass: HomeAssistant, device_id: str) -> bool:
 
 
 async def async_cleanup_device_registry(
-    hass: HomeAssistant, device_id: str | None, config_entry_id: str | None
+    hass: HomeAssistant,
+    device_id: str | None,
+    config_entry_id: str | None,
+    *,
+    include_disabled_entities: bool = False,
 ) -> None:
     """Clean up the device registry after MQTT removal.
 
     Remove MQTT from the device registry entry if there are no remaining
-    entities, triggers or tags.
+    entities, triggers or tags. With include_disabled_entities,
+    all disabled entities keep the device.
     """
     # Local import to avoid circular dependencies
     from . import device_trigger, tag  # noqa: PLC0415
@@ -500,7 +508,9 @@ async def async_cleanup_device_registry(
         and (device := device_registry.async_get(device_id)) is not None
         # Only remove the device if it is owned by the MQTT config entry
         and device.config_entry_id == config_entry_id
-        and not _async_device_has_entities(hass, device_id)
+        and not _async_device_has_entities(
+            hass, device_id, include_disabled_entities=include_disabled_entities
+        )
         and not await device_trigger.async_get_triggers(hass, device_id)
         and not tag.async_has_tags(hass, device_id)
     ):

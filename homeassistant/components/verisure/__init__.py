@@ -55,13 +55,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: VerisureConfigEntry) -> 
 
     # Register the alarm (VBox) device so children can link to it via via_device_id
     # regardless of platform setup order.
-    dr.async_get(hass).async_get_or_create(
+    dr.async_get(hass).async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.data[CONF_GIID])},
-        manufacturer="Verisure",
-        model="VBox",
-        name="Verisure Alarm",
-        configuration_url="https://mypages.verisure.com",
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, entry.data[CONF_GIID])},
+            manufacturer="Verisure",
+            model="VBox",
+            name="Verisure Alarm",
+            configuration_url="https://mypages.verisure.com",
+        ),
     )
 
     # Set up all platforms for this device/entry.

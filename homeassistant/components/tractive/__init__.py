@@ -35,15 +35,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> 
     # their via_device link at construction time.
     device_registry = dr.async_get(hass)
     for trackable in coordinator.trackables:
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=entry.entry_id,
-            configuration_url="https://my.tractive.com/",
-            identifiers={(DOMAIN, trackable.tracker_id)},
-            translation_key="tracker",
-            translation_placeholders={"id": trackable.tracker_id},
-            manufacturer="Tractive GmbH",
-            sw_version=trackable.tracker_details["fw_version"],
-            model_id=trackable.tracker_details["model_number"],
+            device_info=dr.DeviceInfo(
+                configuration_url="https://my.tractive.com/",
+                identifiers={(DOMAIN, trackable.tracker_id)},
+                translation_key="tracker",
+                translation_placeholders={"id": trackable.tracker_id},
+                manufacturer="Tractive GmbH",
+                sw_version=trackable.tracker_details["fw_version"],
+                model_id=trackable.tracker_details["model_number"],
+            ),
         )
 
     entry.async_create_background_task(hass, client.listen(), "tractive_listen")

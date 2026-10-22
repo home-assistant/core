@@ -7,6 +7,8 @@ from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, async_mock_service
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup import (
@@ -40,9 +42,6 @@ from .common import (
     setup_backup_platform,
 )
 
-from tests.common import async_fire_time_changed, async_mock_service
-from tests.typing import WebSocketGenerator
-
 BACKUP_CALL = call(
     agent_ids=["test.test-agent"],
     backup_name="test-name",
@@ -72,6 +71,7 @@ DEFAULT_STORAGE_DATA: dict[str, Any] = {
         },
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "last_completed_automatic_backup_size": None,
         "retention": {
             "copies": None,
             "days": None,
@@ -569,6 +569,7 @@ async def test_generate_calls_create(
         "expected_call_params",
         "side_effect",
         "last_completed_automatic_backup",
+        "last_completed_automatic_backup_size",
     ),
     [
         (
@@ -598,6 +599,7 @@ async def test_generate_calls_create(
             },
             None,
             "2024-11-13T12:01:01+01:00",
+            4194304,
         ),
         (
             {
@@ -626,6 +628,7 @@ async def test_generate_calls_create(
             },
             None,
             "2024-11-13T12:01:01+01:00",
+            4194304,
         ),
         (
             {
@@ -654,6 +657,7 @@ async def test_generate_calls_create(
             },
             BackupAgentError("Boom!"),
             None,
+            None,
         ),
     ],
 )
@@ -667,6 +671,7 @@ async def test_generate_with_default_settings_calls_create(
     expected_call_params: dict[str, Any],
     side_effect: Exception | None,
     last_completed_automatic_backup: str,
+    last_completed_automatic_backup_size: int | None,
 ) -> None:
     """Test backup/generate_with_automatic_settings calls async_initiate_backup."""
     created_backup: MagicMock = create_backup.return_value[1].result().backup
@@ -700,6 +705,10 @@ async def test_generate_with_default_settings_calls_create(
         hass_storage[DOMAIN]["data"]["config"]["last_completed_automatic_backup"]
         is None
     )
+    assert (
+        hass_storage[DOMAIN]["data"]["config"]["last_completed_automatic_backup_size"]
+        is None
+    )
 
     mock_agents["test.remote"].async_upload_backup.side_effect = side_effect
     await client.send_json_auto_id({"type": "backup/generate_with_automatic_settings"})
@@ -722,6 +731,10 @@ async def test_generate_with_default_settings_calls_create(
     assert (
         hass_storage[DOMAIN]["data"]["config"]["last_completed_automatic_backup"]
         == last_completed_automatic_backup
+    )
+    assert (
+        hass_storage[DOMAIN]["data"]["config"]["last_completed_automatic_backup_size"]
+        == last_completed_automatic_backup_size
     )
 
 
@@ -1033,6 +1046,7 @@ async def test_agents_info(
                         "retention": {"copies": 3, "days": 7},
                         "last_attempted_automatic_backup": "2024-10-26T04:45:00+01:00",
                         "last_completed_automatic_backup": "2024-10-26T04:45:00+01:00",
+                        "last_completed_automatic_backup_size": None,
                         "schedule": {
                             "days": DAILY,
                             "recurrence": "custom_days",
@@ -1064,6 +1078,7 @@ async def test_agents_info(
                         "retention": {"copies": 3, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
+                        "last_completed_automatic_backup_size": None,
                         "schedule": {
                             "days": [],
                             "recurrence": "never",
@@ -1095,6 +1110,7 @@ async def test_agents_info(
                         "retention": {"copies": None, "days": 7},
                         "last_attempted_automatic_backup": "2024-10-27T04:45:00+01:00",
                         "last_completed_automatic_backup": "2024-10-26T04:45:00+01:00",
+                        "last_completed_automatic_backup_size": None,
                         "schedule": {
                             "days": [],
                             "recurrence": "never",
@@ -1126,6 +1142,7 @@ async def test_agents_info(
                         "retention": {"copies": None, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
+                        "last_completed_automatic_backup_size": None,
                         "schedule": {
                             "days": ["mon"],
                             "recurrence": "custom_days",
@@ -1157,6 +1174,7 @@ async def test_agents_info(
                         "retention": {"copies": None, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
+                        "last_completed_automatic_backup_size": None,
                         "schedule": {
                             "days": [],
                             "recurrence": "never",
@@ -1188,6 +1206,7 @@ async def test_agents_info(
                         "retention": {"copies": None, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
+                        "last_completed_automatic_backup_size": None,
                         "schedule": {
                             "days": ["mon", "sun"],
                             "recurrence": "custom_days",
@@ -1222,6 +1241,7 @@ async def test_agents_info(
                         "retention": {"copies": None, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
+                        "last_completed_automatic_backup_size": None,
                         "schedule": {
                             "days": ["mon", "sun"],
                             "recurrence": "custom_days",
@@ -1253,6 +1273,7 @@ async def test_agents_info(
                         "retention": {"copies": None, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
+                        "last_completed_automatic_backup_size": None,
                         "schedule": {
                             "days": [],
                             "recurrence": "never",
@@ -1284,6 +1305,7 @@ async def test_agents_info(
                         "retention": {"copies": None, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
+                        "last_completed_automatic_backup_size": None,
                         "schedule": {
                             "days": [],
                             "recurrence": "never",
@@ -1324,6 +1346,7 @@ async def test_agents_info(
                         "retention": {"copies": None, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
+                        "last_completed_automatic_backup_size": None,
                         "schedule": {
                             "days": ["mon", "sun"],
                             "recurrence": "custom_days",
@@ -1974,6 +1997,7 @@ async def test_config_schedule_logic(
             "retention": {"copies": None, "days": None},
             "last_attempted_automatic_backup": last_completed_automatic_backup,
             "last_completed_automatic_backup": last_completed_automatic_backup,
+            "last_completed_automatic_backup_size": None,
             "schedule": {
                 "days": [],
                 "recurrence": "daily",
@@ -2883,6 +2907,7 @@ async def test_config_retention_copies_logic(
             "retention": {"copies": None, "days": None},
             "last_attempted_automatic_backup": None,
             "last_completed_automatic_backup": last_backup_time,
+            "last_completed_automatic_backup_size": None,
             "schedule": {
                 "days": [],
                 "recurrence": "daily",
@@ -2935,14 +2960,16 @@ async def test_config_retention_copies_logic(
 
 
 @pytest.mark.parametrize(
-    ("backup_command", "backup_time"),
+    ("backup_command", "backup_time", "backup_size"),
     [
         (
             {"type": "backup/generate_with_automatic_settings"},
             "2024-11-11T12:00:00+01:00",
+            4194304,
         ),
         (
             {"type": "backup/generate", "agent_ids": ["test.test-agent"]},
+            None,
             None,
         ),
     ],
@@ -3135,6 +3162,7 @@ async def test_config_retention_copies_logic_manual_backup(
     backups: dict[str, Any],
     get_backups_agent_errors: dict[str, Exception],
     backup_time: str,
+    backup_size: int | None,
     backup_calls: int,
     get_backups_calls: int,
     delete_calls: dict[str, Any],
@@ -3161,6 +3189,7 @@ async def test_config_retention_copies_logic_manual_backup(
             "retention": {"copies": None, "days": None},
             "last_attempted_automatic_backup": None,
             "last_completed_automatic_backup": None,
+            "last_completed_automatic_backup_size": None,
             "schedule": {
                 "days": [],
                 "recurrence": "daily",
@@ -3210,6 +3239,10 @@ async def test_config_retention_copies_logic_manual_backup(
     assert (
         hass_storage[DOMAIN]["data"]["config"]["last_completed_automatic_backup"]
         == backup_time
+    )
+    assert (
+        hass_storage[DOMAIN]["data"]["config"]["last_completed_automatic_backup_size"]
+        == backup_size
     )
 
 
@@ -3825,6 +3858,7 @@ async def test_config_retention_days_logic(
             "retention": {"copies": None, "days": stored_retained_days},
             "last_attempted_automatic_backup": None,
             "last_completed_automatic_backup": last_backup_time,
+            "last_completed_automatic_backup_size": None,
             "schedule": {
                 "days": [],
                 "recurrence": "never",
@@ -3896,6 +3930,7 @@ async def test_configured_agents_unavailable_repair(
                         "retention": {"copies": None, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
+                        "last_completed_automatic_backup_size": None,
                         "schedule": {
                             "days": ["mon"],
                             "recurrence": "custom_days",

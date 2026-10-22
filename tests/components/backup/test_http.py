@@ -13,6 +13,8 @@ from unittest.mock import patch
 from aiohttp import web
 from aiohttp.hdrs import CONTENT_DISPOSITION, CONTENT_TYPE
 import pytest
+from pytest_homeassistant.common import MockUser, get_fixture_path
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.backup import (
     AddonInfo,
@@ -30,9 +32,6 @@ from .common import (
     aiter_from_iter,
     setup_backup_integration,
 )
-
-from tests.common import MockUser, get_fixture_path
-from tests.typing import ClientSessionGenerator
 
 PROTECTED_BACKUP = AgentBackup(
     addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],

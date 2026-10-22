@@ -5,6 +5,8 @@ from typing import Any
 from aioesphomeapi import APIClient
 from aioesphomeapi.model import SerialProxyInfo, SerialProxyPortType, SubDeviceInfo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.esphome.const import CONF_NOISE_PSK, DOMAIN
 from homeassistant.components.esphome.serial_proxy import build_url
@@ -14,9 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import MockESPHomeDeviceType
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 def _device_id_for_mac(
@@ -100,22 +99,22 @@ async def test_get_device_capabilities(
             {
                 "name": "uart0",
                 "port_type": "TTL",
-                "url": str(build_url(device.entry.entry_id, "uart0")),
+                "url": str(build_url(device.entry.entry_id, port_name="uart0")),
             },
             {
                 "name": "amp",
                 "port_type": "RS232",
-                "url": str(build_url(device.entry.entry_id, "amp")),
+                "url": str(build_url(device.entry.entry_id, port_name="amp")),
             },
             {
                 "name": "bus",
                 "port_type": "RS485",
-                "url": str(build_url(device.entry.entry_id, "bus")),
+                "url": str(build_url(device.entry.entry_id, port_name="bus")),
             },
             {
                 "name": "unknown",
                 "port_type": None,
-                "url": str(build_url(device.entry.entry_id, "unknown")),
+                "url": str(build_url(device.entry.entry_id, port_name="unknown")),
             },
         ],
     }

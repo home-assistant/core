@@ -76,12 +76,14 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
         self._packet_listeners: list[Callable[[Packet], None]] = []
 
         device_registry = dr.async_get(self.hass)
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=config_entry.entry_id,
-            connections={(CONNECTION_BLUETOOTH, self.address)},
-            identifiers={(DOMAIN, self.address)},
-            name=config_entry.data[CONF_MODEL],
-            model_id=config_entry.data[CONF_MODEL],
+            device_info=dr.DeviceInfo(
+                connections={(CONNECTION_BLUETOOTH, self.address)},
+                identifiers={(DOMAIN, self.address)},
+                name=config_entry.data[CONF_MODEL],
+                model_id=config_entry.data[CONF_MODEL],
+            ),
         )
 
         config_entry.async_on_unload(
@@ -160,10 +162,12 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
         config_entry = self.config_entry
 
         device_registry = dr.async_get(self.hass)
-        device_registry.async_get_or_create(
+        device_registry.async_get_or_create_device(
             config_entry_id=config_entry.entry_id,
-            identifiers={(DOMAIN, self.address)},
-            sw_version=get_version_string(packet_a0),
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, self.address)},
+                sw_version=get_version_string(packet_a0),
+            ),
         )
 
         return client

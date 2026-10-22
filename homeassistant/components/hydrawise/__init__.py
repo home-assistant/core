@@ -8,6 +8,7 @@ from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, Plat
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import APP_ID, DOMAIN, MANUFACTURER
@@ -54,6 +55,7 @@ async def async_setup_entry(
             config_entry.data[CONF_USERNAME],
             config_entry.data[CONF_PASSWORD],
             config_entry.data[CONF_API_KEY],
+            session=async_get_clientsession(hass),
         ),
         app_id=APP_ID,
     )
@@ -78,12 +80,16 @@ async def async_setup_entry(
         entities would never be added.
         """
         for controller in controllers:
-            device_registry.async_get_or_create(
+            device_registry.async_get_or_create_device(
                 config_entry_id=config_entry.entry_id,
-                identifiers={(DOMAIN, str(controller.id))},
-                manufacturer=MANUFACTURER,
-                model=controller.hardware.model.description,
-                name=controller.name,
+                device_info=dr.DeviceInfo(
+                    identifiers={(DOMAIN, str(controller.id))},
+                    manufacturer=MANUFACTURER,
+                    model=controller.hardware.model.description,
+                    name=controller.name,
+                    serial_number=controller.hardware.serial_number or None,
+                    sw_version=controller.software_version or None,
+                ),
             )
 
     # Register the controllers known at setup before the platforms construct

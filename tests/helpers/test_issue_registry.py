@@ -6,14 +6,17 @@ from functools import partial
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    flush_store,
+)
 
 from homeassistant.config_entries import ConfigEntryDisabler
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_capture_events, flush_store
 
 
 async def test_load_save_issues(hass: HomeAssistant) -> None:

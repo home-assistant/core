@@ -98,14 +98,16 @@ def create_devices(
         devices_in_system = [x.id for x in system.devices]
         for device_id, device in coordinator.data.devices.items():
             if device_id in devices_in_system:
-                device_registry.async_get_or_create(
+                device_registry.async_get_or_create_device(
                     config_entry_id=config_entry.entry_id,
-                    identifiers={(DOMAIN, device_id)},
-                    name=get_system_name(system),
-                    manufacturer=get_manufacturer(device),
-                    model=get_model(device),
-                    sw_version=device.firmwareCurrent,
-                    serial_number=device.product_serial_number,
+                    device_info=dr.DeviceInfo(
+                        identifiers={(DOMAIN, device_id)},
+                        name=get_system_name(system),
+                        manufacturer=get_manufacturer(device),
+                        model=get_model(device),
+                        sw_version=device.firmwareCurrent,
+                        serial_number=device.product_serial_number,
+                    ),
                 )
 
 

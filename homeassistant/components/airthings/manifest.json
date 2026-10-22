@@ -1,6 +1,7 @@
 {
   "domain": "airthings",
   "name": "Airthings",
+  "categories": ["sensors.air_quality"],
   "codeowners": ["@danielhiversen", "@LaStrada"],
   "config_flow": true,
   "dhcp": [

@@ -65,17 +65,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: MusicCastConfigEntry) ->
     # Register the main device before forwarding platforms so the zone sub-devices
     # can resolve it as their via_device parent when they are added.
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, coordinator.data.device_id)},
-        connections={
-            (dr.CONNECTION_NETWORK_MAC, mac)
-            for mac in coordinator.data.mac_addresses.values()
-        },
-        name=coordinator.data.zones[DEFAULT_ZONE].name,
-        manufacturer=BRAND,
-        model=coordinator.data.model_name,
-        sw_version=str(coordinator.data.system_version),
+        device_info=dr.DeviceInfo(
+            identifiers={(DOMAIN, coordinator.data.device_id)},
+            connections={
+                (dr.CONNECTION_NETWORK_MAC, mac)
+                for mac in coordinator.data.mac_addresses.values()
+            },
+            name=coordinator.data.zones[DEFAULT_ZONE].name,
+            manufacturer=BRAND,
+            model=coordinator.data.model_name,
+            sw_version=str(coordinator.data.system_version),
+        ),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

@@ -1,12 +1,12 @@
 """Test config flow."""
 
+from pytest_homeassistant.typing import MqttMockHAClient
+
 from homeassistant import config_entries
 from homeassistant.components.drop_connect.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
-
-from tests.typing import MqttMockHAClient
 
 
 async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:

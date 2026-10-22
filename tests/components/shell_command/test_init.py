@@ -9,6 +9,7 @@ import tempfile
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockUser
 
 from homeassistant.components import shell_command
 from homeassistant.components.shell_command import DOMAIN
@@ -17,8 +18,6 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockUser
 
 
 def mock_process_creator(error: bool = False):
@@ -71,7 +70,9 @@ async def test_config_not_valid_service_names(hass: HomeAssistant) -> None:
     )
 
 
-@patch("homeassistant.components.shell_command.asyncio.create_subprocess_shell")
+@patch(
+    "homeassistant.components.shell_command.services.asyncio.create_subprocess_shell"
+)
 async def test_template_render_no_template(mock_call, hass: HomeAssistant) -> None:
     """Ensure shell_commands without templates get rendered properly."""
     mock_call.return_value = mock_process_creator(error=False)
@@ -91,7 +92,9 @@ async def test_template_render_no_template(mock_call, hass: HomeAssistant) -> No
     assert cmd == "ls /bin"
 
 
-@patch("homeassistant.components.shell_command.asyncio.create_subprocess_shell")
+@patch(
+    "homeassistant.components.shell_command.services.asyncio.create_subprocess_shell"
+)
 async def test_incorrect_template(mock_call, hass: HomeAssistant) -> None:
     """Ensure shell_commands with invalid templates are handled properly."""
     mock_call.return_value = mock_process_creator(error=False)
@@ -113,7 +116,7 @@ async def test_incorrect_template(mock_call, hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-@patch("homeassistant.components.shell_command.asyncio.create_subprocess_exec")
+@patch("homeassistant.components.shell_command.services.asyncio.create_subprocess_exec")
 async def test_template_render(mock_call, hass: HomeAssistant) -> None:
     """Ensure shell_commands with templates get rendered properly."""
     hass.states.async_set("sensor.test_state", "Works")
@@ -137,8 +140,10 @@ async def test_template_render(mock_call, hass: HomeAssistant) -> None:
     assert cmd == ("ls", "/bin", "Works")
 
 
-@patch("homeassistant.components.shell_command.asyncio.create_subprocess_shell")
-@patch("homeassistant.components.shell_command._LOGGER.error")
+@patch(
+    "homeassistant.components.shell_command.services.asyncio.create_subprocess_shell"
+)
+@patch("homeassistant.components.shell_command.services._LOGGER.error")
 async def test_subprocess_error(mock_error, mock_call, hass: HomeAssistant) -> None:
     """Test subprocess that returns an error."""
     mock_call.return_value = mock_process_creator(error=True)
@@ -160,7 +165,7 @@ async def test_subprocess_error(mock_error, mock_call, hass: HomeAssistant) -> N
         assert response["returncode"] == 1
 
 
-@patch("homeassistant.components.shell_command._LOGGER.debug")
+@patch("homeassistant.components.shell_command.services._LOGGER.debug")
 async def test_stdout_captured(mock_output, hass: HomeAssistant) -> None:
     """Test subprocess that has stdout."""
     test_phrase = "I have output"
@@ -181,7 +186,7 @@ async def test_stdout_captured(mock_output, hass: HomeAssistant) -> None:
     assert response["returncode"] == 0
 
 
-@patch("homeassistant.components.shell_command._LOGGER.debug")
+@patch("homeassistant.components.shell_command.services._LOGGER.debug")
 async def test_non_text_stdout_capture(mock_output, hass: HomeAssistant) -> None:
     """Test handling of non-text output."""
     non_utf8_cmd = (
@@ -219,7 +224,7 @@ async def test_non_text_stdout_capture(mock_output, hass: HomeAssistant) -> None
     assert not response
 
 
-@patch("homeassistant.components.shell_command._LOGGER.debug")
+@patch("homeassistant.components.shell_command.services._LOGGER.debug")
 async def test_stderr_captured(mock_output, hass: HomeAssistant) -> None:
     """Test subprocess that has stderr."""
     test_phrase = "I have error"
@@ -260,9 +265,9 @@ async def test_do_not_run_forever(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     with (
-        patch.object(shell_command, "COMMAND_TIMEOUT", 0.001),
+        patch("homeassistant.components.shell_command.services.COMMAND_TIMEOUT", 0.001),
         patch(
-            "homeassistant.components.shell_command.asyncio.create_subprocess_shell",
+            "homeassistant.components.shell_command.services.asyncio.create_subprocess_shell",
             side_effect=mock_create_subprocess_shell,
         ),
     ):
