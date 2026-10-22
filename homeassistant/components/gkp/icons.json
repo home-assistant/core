@@ -11,10 +11,5 @@
         }
       }
     }
-  },
-  "services": {
-    "activate_boost": {
-      "service": "mdi:rocket-launch"
-    }
   }
 }

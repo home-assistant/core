@@ -1,7 +1,6 @@
 """Climate platform for GKP integration."""
 
 from collections.abc import Coroutine
-from datetime import timedelta
 import logging
 from typing import Any, override
 
@@ -185,40 +184,6 @@ class GkpClimate(GkpEntity, ClimateEntity):
             "Successfully set temperature to %s in %s mode for %s",
             temperature,
             mode.name,
-            self.device_id,
-        )
-        await self._async_refresh_after_command()
-
-    async def async_activate_boost(
-        self, temperature: float, duration: timedelta
-    ) -> None:
-        """Activate boost mode with a target temperature and duration."""
-        if not SETPOINT_MIN <= temperature <= SETPOINT_MAX:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="boost_temperature_out_of_range",
-                translation_placeholders={
-                    "temperature": str(temperature),
-                    "min_temp": str(SETPOINT_MIN),
-                    "max_temp": str(SETPOINT_MAX),
-                },
-            )
-
-        # Round up so the boost lasts at least the requested duration
-        duration_minutes, remainder = divmod(duration, timedelta(minutes=1))
-        if remainder:
-            duration_minutes += 1
-
-        await self._async_send_command(
-            self.coordinator.client.activate_boost(
-                self.device_id, temperature, duration_minutes
-            ),
-            "activate_boost_error",
-        )
-        _LOGGER.debug(
-            "Successfully activated boost at %s for %d min on %s",
-            temperature,
-            duration_minutes,
             self.device_id,
         )
         await self._async_refresh_after_command()
