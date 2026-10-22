@@ -25,7 +25,7 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ArcamFmjConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ArcamFmjConfigEntry) -> None:
     """Set up config entry."""
     client = Client(entry.data[CONF_HOST], entry.data[CONF_PORT])
 
@@ -37,13 +37,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ArcamFmjConfigEntry) -> 
     # Register the zone 1 device before forwarding platforms so the other zones'
     # entities can link to it via via_device_id.
     device_registry = dr.async_get(hass)
-    zone1_device = device_registry.async_get_or_create(
+    zone1_device = device_registry.async_get_or_create_from_info(
         config_entry_id=entry.entry_id,
-        **coordinators[1].device_info,
+        device_info=coordinators[1].device_info,
     )
     for zone, coordinator in coordinators.items():
         if zone != 1:
-            coordinator.device_info["via_device_id"] = zone1_device.id
+            coordinator.device_info.via_device_id = zone1_device.id
 
     entry.runtime_data = ArcamFmjRuntimeData(client, coordinators)
 
@@ -54,12 +54,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ArcamFmjConfigEntry) -> 
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ArcamFmjConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ArcamFmjConfigEntry) -> None:
     """Cleanup before removing config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def _run_client(

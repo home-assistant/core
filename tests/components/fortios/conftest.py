@@ -4,12 +4,11 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.fortios.client import FortiOSDevice
 from homeassistant.components.fortios.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_TOKEN, CONF_VERIFY_SSL
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {CONF_HOST: "192.168.1.1", CONF_TOKEN: "test-token", CONF_VERIFY_SSL: True}
 MAC = "AA:BB:CC:DD:EE:FF"

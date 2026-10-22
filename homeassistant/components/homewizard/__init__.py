@@ -20,7 +20,7 @@ from .coordinator import HomeWizardConfigEntry, HWEnergyDeviceUpdateCoordinator
 from .entity import create_main_device_info
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HomeWizardConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HomeWizardConfigEntry) -> None:
     """Set up Homewizard from a config entry."""
 
     api: HomeWizardEnergy
@@ -64,21 +64,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeWizardConfigEntry) -
     # Register the main device up front so external sub-device sensors can
     # resolve it as their via_device parent regardless of entity add order.
     if coordinator.data.device.serial is not None:
-        dr.async_get(hass).async_get_or_create(
+        dr.async_get(hass).async_get_or_create_from_info(
             config_entry_id=entry.entry_id,
-            **create_main_device_info(coordinator),
+            device_info=create_main_device_info(coordinator),
         )
 
     # Finalize
     entry.async_on_unload(coordinator.api.close)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: HomeWizardConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HomeWizardConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 def get_main_device(
@@ -126,6 +124,7 @@ async def async_check_v2_support_and_create_issue(
         hass,
         DOMAIN,
         f"migrate_to_v2_api_{entry.entry_id}",
+        config_entry_id=entry.entry_id,
         is_fixable=True,
         is_persistent=False,
         learn_more_url="https://home-assistant.io/integrations/homewizard/#which-button-do-i-need-to-press-to-configure-the-device",

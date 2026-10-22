@@ -68,7 +68,7 @@ PLATFORMS = [
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: SolarEdgeModbusConfigEntry
-) -> bool:
+) -> None:
     """Set up SolarEdge Modbus from a config entry."""
     serial_number = entry.unique_id
     if TYPE_CHECKING:
@@ -154,8 +154,8 @@ async def async_setup_entry(
     # Registered up front: a meter sub-device can only name the inverter it
     # hangs off once that device has an ID.
     device_info = inverter_device_info(solaredge, serial_number)
-    inverter = dr.async_get(hass).async_get_or_create(
-        config_entry_id=entry.entry_id, **device_info
+    inverter = dr.async_get(hass).async_get_or_create_from_info(
+        config_entry_id=entry.entry_id, device_info=device_info
     )
     # The readings poll already proved the link; a control block that refuses
     # one read leaves its own entities unavailable instead of failing setup.
@@ -192,8 +192,6 @@ async def async_setup_entry(
             ATTACHMENT_SCAN_INTERVAL,
         )
     )
-
-    return True
 
 
 def _known_silent_blocks(entry: SolarEdgeModbusConfigEntry) -> frozenset[str]:
@@ -353,6 +351,6 @@ def _async_remove_stale_devices(
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: SolarEdgeModbusConfigEntry
-) -> bool:
+) -> None:
     """Unload SolarEdge Modbus config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

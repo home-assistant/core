@@ -204,7 +204,10 @@ async def _extract_media_url(call: ServiceCall) -> ServiceResponse:
         if entries:
             selected_media = entries[0]
         else:
-            raise HomeAssistantError("Playlist is empty")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="playlist_empty",
+            )
     else:
         selected_media = result
     if "formats" in selected_media:

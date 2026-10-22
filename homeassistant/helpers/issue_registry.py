@@ -9,7 +9,8 @@ from typing import Any, Literal, TypedDict, cast, override
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
 from homeassistant.const import __version__ as ha_version
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback, verify_event_loop_thread
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.event_type import EventType
@@ -25,7 +26,7 @@ EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED: EventType[EventIssueRegistryUpdatedData] =
 )
 STORAGE_KEY = "repairs.issue_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 2
+STORAGE_VERSION_MINOR = 3
 
 # Issues that are handled entirely by the frontend and don't need
 # a description or fix_flow.
@@ -57,6 +58,7 @@ class IssueEntry:
 
     active: bool
     breaks_in_ha_version: str | None
+    config_entry_id: str | None
     created: datetime
     data: dict[str, str | int | float | None] | None
     dismissed_version: str | None
@@ -74,6 +76,7 @@ class IssueEntry:
     def to_json(self) -> dict[str, Any]:
         """Return a JSON serializable representation for storage."""
         result = {
+            "config_entry_id": self.config_entry_id,
             "created": self.created.isoformat(),
             "dismissed_version": self.dismissed_version,
             "domain": self.domain,
@@ -109,6 +112,10 @@ class IssueRegistryStore(Store[dict[str, list[dict[str, Any]]]]):
             # Version 1.2 adds is_persistent
             for issue in old_data["issues"]:
                 issue["is_persistent"] = False
+        if old_major_version == 1 and old_minor_version < 3:
+            # Version 1.3 adds config_entry_id
+            for issue in old_data["issues"]:
+                issue["config_entry_id"] = None
         return old_data
 
 
@@ -133,12 +140,14 @@ class IssueRegistry(BaseRegistry):
         return self.issues.get((domain, issue_id))
 
     @callback
+    @verify_event_loop_thread("issue_registry.async_get_or_create")
     def async_get_or_create(
         self,
         domain: str,
         issue_id: str,
         *,
         breaks_in_ha_version: str | None = None,
+        config_entry_id: str | None = None,
         data: dict[str, str | int | float | None] | None = None,
         is_fixable: bool,
         is_persistent: bool,
@@ -149,11 +158,18 @@ class IssueRegistry(BaseRegistry):
         translation_placeholders: dict[str, str] | None = None,
     ) -> IssueEntry:
         """Get issue. Create if it doesn't exist."""
-        self.hass.verify_event_loop_thread("issue_registry.async_get_or_create")
+        if (
+            config_entry_id is not None
+            and self.hass.config_entries.async_get_entry(config_entry_id) is None
+        ):
+            raise HomeAssistantError(
+                f"Can't link issue to unknown config entry {config_entry_id}"
+            )
         if (issue := self.async_get_issue(domain, issue_id)) is None:
             issue = IssueEntry(
                 active=True,
                 breaks_in_ha_version=breaks_in_ha_version,
+                config_entry_id=config_entry_id,
                 created=dt_util.utcnow(),
                 data=data,
                 dismissed_version=None,
@@ -182,6 +198,7 @@ class IssueRegistry(BaseRegistry):
                 issue,
                 active=True,
                 breaks_in_ha_version=breaks_in_ha_version,
+                config_entry_id=config_entry_id,
                 data=data,
                 is_fixable=is_fixable,
                 is_persistent=is_persistent,
@@ -207,9 +224,9 @@ class IssueRegistry(BaseRegistry):
         return issue
 
     @callback
+    @verify_event_loop_thread("issue_registry.async_delete")
     def async_delete(self, domain: str, issue_id: str) -> None:
         """Delete issue."""
-        self.hass.verify_event_loop_thread("issue_registry.async_delete")
         if self.issues.pop((domain, issue_id), None) is None:
             return
 
@@ -224,9 +241,46 @@ class IssueRegistry(BaseRegistry):
         )
 
     @callback
+    def async_clear_config_entry(self, config_entry_id: str) -> None:
+        """Delete issues linked to a config entry."""
+        for domain, issue_id in [
+            key
+            for key, issue in self.issues.items()
+            if issue.config_entry_id == config_entry_id
+        ]:
+            self.async_delete(domain, issue_id)
+
+    @callback
+    def async_config_entry_disabled_by_changed(self, config_entry_id: str) -> None:
+        """Fire update events for issues of a config entry which was (un)disabled.
+
+        Issues of disabled config entries are hidden from issue listings, so
+        listeners need to refresh them.
+        """
+        for issue in self.issues.values():
+            if issue.config_entry_id != config_entry_id:
+                continue
+            self.hass.bus.async_fire_internal(
+                EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
+                EventIssueRegistryUpdatedData(
+                    action="update",
+                    domain=issue.domain,
+                    issue_id=issue.issue_id,
+                ),
+            )
+
+    @callback
+    def async_is_hidden(self, issue: IssueEntry) -> bool:
+        """Return if an issue is hidden because its config entry is disabled."""
+        if issue.config_entry_id is None:
+            return False
+        entry = self.hass.config_entries.async_get_entry(issue.config_entry_id)
+        return entry is not None and entry.disabled_by is not None
+
+    @callback
+    @verify_event_loop_thread("issue_registry.async_ignore")
     def async_ignore(self, domain: str, issue_id: str, ignore: bool) -> IssueEntry:
         """Ignore issue."""
-        self.hass.verify_event_loop_thread("issue_registry.async_ignore")
         old = self.issues[(domain, issue_id)]
         dismissed_version = ha_version if ignore else None
         if old.dismissed_version == dismissed_version:
@@ -271,6 +325,7 @@ class IssueRegistry(BaseRegistry):
                     issues[(issue["domain"], issue["issue_id"])] = IssueEntry(
                         active=True,
                         breaks_in_ha_version=issue["breaks_in_ha_version"],
+                        config_entry_id=issue["config_entry_id"],
                         created=created,
                         data=issue["data"],
                         dismissed_version=issue["dismissed_version"],
@@ -288,6 +343,7 @@ class IssueRegistry(BaseRegistry):
                     issues[(issue["domain"], issue["issue_id"])] = IssueEntry(
                         active=False,
                         breaks_in_ha_version=None,
+                        config_entry_id=issue["config_entry_id"],
                         created=created,
                         data=None,
                         dismissed_version=issue["dismissed_version"],
@@ -302,7 +358,21 @@ class IssueRegistry(BaseRegistry):
                         translation_placeholders=None,
                     )
 
+        # Assign before waiting, config entries update their issues while loading
         self.issues = issues
+
+        if not any(issue.config_entry_id is not None for issue in issues.values()):
+            return
+
+        # Config entries load concurrently with the issue registry
+        await self.hass.config_entries.async_wait_initialized()
+        for domain, issue_id in [
+            key
+            for key, issue in self.issues.items()
+            if issue.config_entry_id is not None
+            and self.hass.config_entries.async_get_entry(issue.config_entry_id) is None
+        ]:
+            self.async_delete(domain, issue_id)
 
     @callback
     @override
@@ -342,6 +412,7 @@ def async_create_issue(
     issue_id: str,
     *,
     breaks_in_ha_version: str | None = None,
+    config_entry_id: str | None = None,
     data: dict[str, str | int | float | None] | None = None,
     is_fixable: bool,
     is_persistent: bool = False,
@@ -364,6 +435,7 @@ def async_create_issue(
         domain,
         issue_id,
         breaks_in_ha_version=breaks_in_ha_version,
+        config_entry_id=config_entry_id,
         data=data,
         is_fixable=is_fixable,
         is_persistent=is_persistent,
@@ -381,6 +453,7 @@ def create_issue(
     issue_id: str,
     *,
     breaks_in_ha_version: str | None = None,
+    config_entry_id: str | None = None,
     data: dict[str, str | int | float | None] | None = None,
     is_fixable: bool,
     is_persistent: bool = False,
@@ -399,6 +472,7 @@ def create_issue(
             domain,
             issue_id,
             breaks_in_ha_version=breaks_in_ha_version,
+            config_entry_id=config_entry_id,
             data=data,
             is_fixable=is_fixable,
             is_persistent=is_persistent,

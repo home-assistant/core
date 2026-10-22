@@ -3,13 +3,7 @@
 from typing import Any
 
 import pytest
-
-from homeassistant.components.power.trigger import TRIGGERS
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfPower
-from homeassistant.core import HomeAssistant
-
-from tests.components.common import (
+from pytest_homeassistant.components.common import (
     TargetSupport,
     TriggerStateDescription,
     assert_trigger_behavior_all,
@@ -22,6 +16,11 @@ from tests.components.common import (
     parametrize_target_entities,
     target_entities,
 )
+
+from homeassistant.components.power.trigger import TRIGGERS
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfPower
+from homeassistant.core import HomeAssistant
 
 _POWER_UNIT_ATTRIBUTES = {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT}
 

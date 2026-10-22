@@ -4,17 +4,16 @@ from unittest.mock import MagicMock
 
 from aiofortiosapi import FortiOSAuthenticationError, FortiOSConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.fortios.client import UnsupportedVersion
 from homeassistant.components.fortios.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import USER_INPUT
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -47,7 +46,10 @@ async def test_errors(
     """Show an actionable error for failed validation."""
     mock_client.connect.side_effect = exception
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
@@ -60,14 +62,29 @@ async def test_errors(
 
 
 @pytest.mark.usefixtures("mock_client")
-@pytest.mark.parametrize("source", [SOURCE_USER, SOURCE_IMPORT])
-async def test_duplicate(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, source: str
+async def test_duplicate_user(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Repeated user setup and YAML imports do not duplicate entries."""
+    """Repeated user setup does not duplicate entries."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": source}, data=USER_INPUT
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_client")
+async def test_duplicate_import(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Repeated YAML imports do not duplicate entries."""
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=USER_INPUT
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -91,11 +108,7 @@ async def test_reauth(
 ) -> None:
     """A replacement token updates the existing entry."""
     mock_config_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
-        data=USER_INPUT,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_TOKEN: "replacement"}
@@ -123,11 +136,7 @@ async def test_reauth_errors(
 ) -> None:
     """Rejected replacement credentials leave the original token intact and allow retry."""
     mock_config_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
-        data=USER_INPUT,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
     mock_client.connect.side_effect = exception
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_TOKEN: "replacement"}
@@ -148,11 +157,7 @@ async def test_reauth_different_device(
     """Never update an existing entry using credentials for a different device."""
     mock_config_entry.add_to_hass(hass)
     mock_client.connect.return_value = "OTHER-SERIAL"
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
-        data=USER_INPUT,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_TOKEN: "replacement"}
     )
@@ -170,7 +175,9 @@ async def test_duplicate_serial(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data=USER_INPUT | {"host": "other-name"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT | {"host": "other-name"}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

@@ -65,6 +65,8 @@ from .utils import (
     setup_public_sensor,
 )
 
+pytestmark = pytest.mark.usefixtures("mock_private_only_entities_registered")
+
 CAMERA_SWITCHES_BASIC = [
     d
     for d in CAMERA_SWITCHES
@@ -1147,6 +1149,15 @@ async def test_switch_sense_public_switches_ignore_local_permissions(
         hass, Platform.SWITCH, sensor_all, description
     )
     assert entity_registry.async_get(entity_id) is None
+
+    # The removed read-only mirrors of the migrated switches are not created.
+    for key in ("motion_enabled", "temperature", "humidity", "light", "alarm"):
+        assert (
+            entity_registry.async_get_entity_id(
+                Platform.BINARY_SENSOR, DOMAIN, f"{sensor_all.mac}_{key}"
+            )
+            is None
+        ), key
 
 
 _SMART_KEYS = {key for key, _, _ in CAMERA_SWITCHES_DETECTION_READ}

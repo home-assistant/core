@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "sensor": {
+      "power_state": {
+        "default": "mdi:power",
+        "state": {
+          "booting": "mdi:timer-sand",
+          "sleep": "mdi:power-sleep",
+          "standby": "mdi:power-standby"
+        }
+      }
+    }
+  }
+}

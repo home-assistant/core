@@ -64,11 +64,17 @@
       }
     },
     "button": {
+      "build_cache_prune": {
+        "name": "Prune build cache"
+      },
       "images_prune": {
         "name": "Prune unused images"
       },
       "kill_container": {
         "name": "Kill container"
+      },
+      "networks_prune": {
+        "name": "Prune unused networks"
       },
       "pause_container": {
         "name": "Pause container"

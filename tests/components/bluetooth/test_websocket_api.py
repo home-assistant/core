@@ -9,12 +9,8 @@ from bleak_retry_connector import Allocations
 from freezegun import freeze_time
 from habluetooth import BluetoothScanningMode
 import pytest
-
-from homeassistant.components.bluetooth import DOMAIN
-from homeassistant.core import HomeAssistant
-from homeassistant.util.dt import utcnow
-
-from . import (
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.bluetooth import (
     HCI0_SOURCE_ADDRESS,
     HCI1_SOURCE_ADDRESS,
     NON_CONNECTABLE_REMOTE_SOURCE_ADDRESS,
@@ -25,9 +21,11 @@ from . import (
     inject_advertisement_with_source,
     inject_advertisement_with_time_and_source_connectable,
 )
+from pytest_homeassistant.typing import WebSocketGenerator
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.typing import WebSocketGenerator
+from homeassistant.components.bluetooth import DOMAIN
+from homeassistant.core import HomeAssistant
+from homeassistant.util.dt import utcnow
 
 
 @pytest.mark.usefixtures("enable_bluetooth")

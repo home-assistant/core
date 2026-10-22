@@ -3,6 +3,7 @@
 import logging
 from typing import TYPE_CHECKING, override
 
+from homematicip.async_home import AsyncHome
 from homematicip.functionalHomes import SecurityAndAlarmHome
 
 from homeassistant.components.alarm_control_panel import (
@@ -17,7 +18,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .hap import AsyncHome, HomematicIPConfigEntry, HomematicipHAP
+from .hap import HomematicIPConfigEntry, HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -126,17 +127,6 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self._async_set_zones_activation(internal=True, external=True)
-
-    @callback
-    @override
-    def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Opt in to in-place entity_id changes.
-
-        Can be removed when backwards compatibility is disabled for core
-        integrations, i.e. once all core integrations have been migrated
-        to in-place entity ID change.
-        """
-        super().async_entity_id_changed(old_entity_id)
 
     @override
     async def async_added_to_hass(self) -> None:

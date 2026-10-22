@@ -15,7 +15,11 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_TOKEN, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -79,9 +83,23 @@ async def async_setup_entry(
     entry: FortiOSConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Create one entity per online client using the shared coordinator."""
+    """Restore registered clients and discover online clients."""
     coordinator = entry.runtime_data
     known: set[str] = set()
+    registry = er.async_get(hass)
+    prefix = f"{coordinator.client.serial}_"
+    restored = []
+    for entity in registry.entities.get_entries_for_config_entry_id(entry.entry_id):
+        if (
+            entity.domain != "device_tracker"
+            or entity.platform != DOMAIN
+            or not entity.unique_id.startswith(prefix)
+        ):
+            continue
+        mac = entity.unique_id.removeprefix(prefix)
+        known.add(mac)
+        restored.append(FortiOSTracker(coordinator, mac, entity.original_name))
+    async_add_entities(restored)
 
     @callback
     def async_discover_devices() -> None:
@@ -101,12 +119,17 @@ async def async_setup_entry(
 class FortiOSTracker(CoordinatorEntity[FortiOSCoordinator], ScannerEntity):
     """A FortiOS client whose state comes from one shared scan."""
 
-    def __init__(self, coordinator: FortiOSCoordinator, mac: str) -> None:
+    def __init__(
+        self, coordinator: FortiOSCoordinator, mac: str, name: str | None = None
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self._mac = mac
         self._attr_unique_id = f"{coordinator.client.serial}_{mac}"
-        self._attr_name = coordinator.data[mac].hostname or mac.replace(":", "_")
+        device = coordinator.data.get(mac)
+        self._attr_name = (
+            (device.hostname if device else None) or name or mac.replace(":", "_")
+        )
 
     @property
     @override
@@ -132,9 +155,9 @@ class FortiOSTracker(CoordinatorEntity[FortiOSCoordinator], ScannerEntity):
     @override
     def is_connected(self) -> bool:
         """Preserve the configured consider-home grace period."""
-        last_seen = self.coordinator.last_seen[self._mac]
-        return (
-            dt_util.utcnow() - last_seen
-        ).total_seconds() < self.coordinator.consider_home or bool(
-            (device := self.coordinator.data.get(self._mac)) and device.online
-        )
+        last_seen = self.coordinator.last_seen.get(self._mac)
+        return bool(
+            last_seen is not None
+            and (dt_util.utcnow() - last_seen).total_seconds()
+            < self.coordinator.consider_home
+        ) or bool((device := self.coordinator.data.get(self._mac)) and device.online)

@@ -267,21 +267,10 @@ class BrandsIntegrationView(_BrandsBaseView):
         ) is not None:
             return response
 
-        # 2. Try the integration image. Direct paths are used instead of the
-        # "_/" namespace so real 404s can be cached as markers.
-        if (
-            data := await self._get_image_data(
-                cdn_path=f"{domain}/{image}",
-                cache_subpath=f"integrations/{domain}/{image}",
-            )
-        ) is not None:
-            return self._build_response(data)
-
-        # 3. Fall back to the brand image, which is cached separately so the
-        # integration 404 marker is preserved.
+        # 2. Try cache / CDN (always use direct path for proper 404 caching)
         return await self._serve_from_cache_or_cdn(
             cdn_path=f"brands/{domain}/{image}",
-            cache_subpath=f"brands/{domain}/{image}",
+            cache_subpath=f"integrations/{domain}/{image}",
             fallback_placeholder=use_placeholder,
         )
 

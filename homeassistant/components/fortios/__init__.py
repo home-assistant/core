@@ -26,7 +26,7 @@ from .coordinator import FortiOSConfigEntry, FortiOSCoordinator
 PLATFORMS = [Platform.DEVICE_TRACKER]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: FortiOSConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FortiOSConfigEntry) -> None:
     """Set up FortiOS and its shared coordinator."""
     try:
         client = FortiOSClient(hass, dict(entry.data))
@@ -77,14 +77,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: FortiOSConfigEntry) -> b
         )
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: FortiOSConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FortiOSConfigEntry) -> None:
     """Unload the tracker platform."""
-    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        return False
-    return True
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def _async_check_legacy_known_devices(

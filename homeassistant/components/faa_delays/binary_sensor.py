@@ -15,8 +15,8 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FAAConfigEntry, FAADataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import FAAConfigEntry, FAADataUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)

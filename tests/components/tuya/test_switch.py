@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 import requests
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
@@ -22,8 +23,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import TuyaNotificationHelper, check_selective_state_update, initialize_entry
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -46,6 +45,77 @@ async def test_platform_setup_and_discovery(
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_devices)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("no_quirk")
+@pytest.mark.parametrize("mock_device_code", ["kg_zqq3cipq"])
+@pytest.mark.parametrize("product_id", ["zqq3cipq", "another_product"])
+@pytest.mark.parametrize(
+    "code", ["switch_1", *(f"switch_{index}" for index in range(7, 23))]
+)
+@pytest.mark.parametrize(
+    ("service", "value"),
+    [(SERVICE_TURN_ON, True), (SERVICE_TURN_OFF, False)],
+)
+async def test_kg_switch_commands(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    entity_registry: er.EntityRegistry,
+    product_id: str,
+    code: str,
+    service: str,
+    value: bool,
+) -> None:
+    """KG switch commands preserve DP codes regardless of the product ID."""
+    mock_device.product_id = product_id
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    entity_id = entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, "tuya", f"tuya.{mock_device.id}{code}"
+    )
+    assert entity_id is not None
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+
+    mock_manager.send_commands.assert_called_once_with(
+        mock_device.id, [{"code": code, "value": value}]
+    )
+
+
+@pytest.mark.usefixtures("no_quirk")
+@pytest.mark.parametrize("mock_device_code", ["kg_zqq3cipq"])
+@pytest.mark.parametrize("product_id", ["zqq3cipq", "another_product"])
+@pytest.mark.parametrize(
+    "code", ["switch_1", *(f"switch_{index}" for index in range(7, 23))]
+)
+async def test_kg_switch_reports(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    notification_helper: TuyaNotificationHelper,
+    entity_registry: er.EntityRegistry,
+    product_id: str,
+    code: str,
+) -> None:
+    """KG reports update only the corresponding switch for any product ID."""
+    mock_device.product_id = product_id
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    entity_id = entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, "tuya", f"tuya.{mock_device.id}{code}"
+    )
+    assert entity_id is not None
+
+    await notification_helper.async_send_device_update(mock_device, {code: True})
+
+    assert {
+        state.entity_id
+        for state in hass.states.async_all(SWITCH_DOMAIN)
+        if state.state == "on"
+    } == {entity_id}
 
 
 @pytest.mark.parametrize(

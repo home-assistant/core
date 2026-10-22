@@ -32,7 +32,8 @@ from .const import (
     STATUS_SENSOR_OTHER_PLAYER_COUNT,
     STATUS_SENSOR_PLAYER_COUNT,
 )
-from .entity import LMSStatusEntity, SqueezeboxEntity, SqueezeBoxPlayerUpdateCoordinator
+from .coordinator import SqueezeBoxPlayerUpdateCoordinator
+from .entity import LMSStatusEntity, SqueezeboxEntity
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0

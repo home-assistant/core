@@ -14,21 +14,15 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_EXCLUDE_CHANNELS,
-    DOMAIN,
-    SERVICE_START_RECORD,
-    SERVICE_STOP_RECORD,
-)
+from .const import CONF_EXCLUDE_CHANNELS, DOMAIN
+from .services import setup_services
 
 DEFAULT_PORT = 8080
-
-SERVICE_CHANNEL_GUID = "guid"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,13 +43,10 @@ CONFIG_SCHEMA = probatio.Schema(
     extra=probatio.ALLOW_EXTRA,
 )
 
-SERVICE_CHANNEL_RECORD_SCHEMA = probatio.Schema(
-    {probatio.Required(SERVICE_CHANNEL_GUID): cv.string}
-)
-
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the QVR Pro component."""
+    setup_services(hass)
     conf = config[DOMAIN]
     user = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
@@ -89,27 +80,5 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = {"channels": channels, "client": qvrpro}
 
     load_platform(hass, Platform.CAMERA, DOMAIN, {}, config)
-
-    # Register services
-    def handle_start_record(call: ServiceCall) -> None:
-        guid = call.data[SERVICE_CHANNEL_GUID]
-        qvrpro.start_recording(guid)
-
-    def handle_stop_record(call: ServiceCall) -> None:
-        guid = call.data[SERVICE_CHANNEL_GUID]
-        qvrpro.stop_recording(guid)
-
-    hass.services.register(
-        DOMAIN,
-        SERVICE_START_RECORD,
-        handle_start_record,
-        schema=SERVICE_CHANNEL_RECORD_SCHEMA,
-    )
-    hass.services.register(
-        DOMAIN,
-        SERVICE_STOP_RECORD,
-        handle_stop_record,
-        schema=SERVICE_CHANNEL_RECORD_SCHEMA,
-    )
 
     return True

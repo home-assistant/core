@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiofortiosapi import FortiOSAuthenticationError, FortiOSConnectionError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.components.fortios.client import FortiOSDevice, UnsupportedVersion
@@ -22,8 +23,6 @@ from homeassistant.helpers.translation import async_get_translations
 from homeassistant.setup import async_setup_component
 
 from .conftest import MAC, SERIAL, USER_INPUT
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize("failure_method", ["connect", "update"])

@@ -14,6 +14,7 @@ env:
   UV_HTTP_TIMEOUT: 60
   UV_SYSTEM_PYTHON: "true"
   # Base image version from https://github.com/home-assistant/docker
+  # If python version changes in the base image, update .python-version accordingly to match the new Python version.
   BASE_IMAGE_VERSION: "2026.10.0"
   ARCHITECTURES: '["amd64", "aarch64"]'
   MACHINES: >-
@@ -31,7 +32,7 @@ jobs:
   init:
     name: Initialize build
     if: github.repository_owner == 'home-assistant'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: read # To check out the repository
     outputs:
@@ -81,7 +82,7 @@ jobs:
         run: find ./homeassistant/components/*/translations -name "*.json" | tar zcvf translations.tar.gz -T -
 
       - name: Upload translations
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: translations
           path: translations.tar.gz
@@ -102,9 +103,9 @@ jobs:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
         include:
           - arch: amd64
-            os: ubuntu-24.04
+            os: ubuntu-26.04
           - arch: aarch64
-            os: ubuntu-24.04-arm
+            os: ubuntu-26.04-arm
     steps:
       - name: Checkout the repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -183,7 +184,7 @@ jobs:
           fi
 
       - name: Download translations
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: translations
 
@@ -227,14 +228,14 @@ jobs:
         include:
           # Default: aarch64 on native ARM runner
           - arch: aarch64
-            runs-on: ubuntu-24.04-arm
+            runs-on: ubuntu-26.04-arm
           # Overrides for amd64 machines
           - machine: generic-x86-64
             arch: amd64
-            runs-on: ubuntu-24.04
+            runs-on: ubuntu-26.04
           - machine: qemux86-64
             arch: amd64
-            runs-on: ubuntu-24.04
+            runs-on: ubuntu-26.04
     steps:
       - name: Checkout the repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -297,7 +298,7 @@ jobs:
     environment: ${{ needs.init.outputs.channel }}
     if: github.repository_owner == 'home-assistant'
     needs: ["init", "build_machine", "run_e2e_tests_machine"]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     steps:
@@ -337,7 +338,7 @@ jobs:
     environment: ${{ needs.init.outputs.channel }}
     if: github.repository_owner == 'home-assistant'
     needs: ["init", "build_base", "run_e2e_tests_base"]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: read # To check out the repository
       packages: write # To push to GHCR
@@ -472,7 +473,7 @@ jobs:
     name: Build PyPi package
     environment: ${{ needs.init.outputs.channel }}
     needs: ["init", "build_base", "run_e2e_tests_base"]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: read # To check out the repository
       id-token: write # For PyPI trusted publishing
@@ -489,7 +490,7 @@ jobs:
           python-version-file: ".python-version"
 
       - name: Download translations
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: translations
 
@@ -513,7 +514,7 @@ jobs:
 
   hassfest-image:
     name: Build and test hassfest image
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: read # To check out the repository
       packages: write # To push to GHCR

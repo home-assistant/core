@@ -28,7 +28,7 @@ PLATFORMS = [
 LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PhilipsTVConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PhilipsTVConfigEntry) -> None:
     """Set up Philips TV from a config entry."""
 
     system: SystemType | None = entry.data.get(CONF_SYSTEM)
@@ -53,14 +53,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: PhilipsTVConfigEntry) ->
 
     entry.async_on_unload(entry.add_update_listener(async_update_entry))
 
-    return True
-
 
 async def async_update_entry(hass: HomeAssistant, entry: PhilipsTVConfigEntry) -> None:
     """Update options."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: PhilipsTVConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PhilipsTVConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

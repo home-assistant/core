@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, create_autospec, patch
 from aiofortiosapi import FortiOSConnectionError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.fortios.client import FortiOSClient, FortiOSDevice
 from homeassistant.components.fortios.const import DOMAIN
@@ -14,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MAC, SERIAL, USER_INPUT
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 pytestmark = pytest.mark.usefixtures("entity_registry_enabled_by_default")
 
@@ -84,6 +83,88 @@ async def test_empty_initial_scan(
     await hass.async_block_till_done(wait_background_tasks=True)
     await hass.async_block_till_done()
     assert hass.states.get("device_tracker.phone").state == STATE_HOME
+
+
+@pytest.mark.parametrize(
+    "initial_devices", [{}, {MAC: FortiOSDevice(MAC, "phone", False)}]
+)
+async def test_restore_offline_tracker(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    initial_devices: dict[str, FortiOSDevice],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Restore a registered offline client and reuse it when it reconnects."""
+    mock_config_entry.add_to_hass(hass)
+    registered = entity_registry.async_get_or_create(
+        "device_tracker",
+        DOMAIN,
+        f"{SERIAL}_{MAC}",
+        config_entry=mock_config_entry,
+        suggested_object_id="phone",
+        original_name="phone",
+    )
+    mock_client.update.return_value = initial_devices
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(registered.entity_id)
+    assert state is not None
+    assert state.state == STATE_NOT_HOME
+    assert state.name == "phone"
+
+    mock_client.update.return_value = {MAC: FortiOSDevice(MAC, "phone", True)}
+    freezer.tick(timedelta(seconds=12))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done()
+    assert hass.states.get(registered.entity_id).state == STATE_HOME
+    assert len(hass.states.async_all("device_tracker")) == 1
+    assert entity_registry.async_get(registered.entity_id).id == registered.id
+
+
+async def test_restore_respects_registry_scope_and_disabled_entities(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Do not enable disabled clients or restore unrelated registry entries."""
+    mock_config_entry.add_to_hass(hass)
+    disabled = entity_registry.async_get_or_create(
+        "device_tracker",
+        DOMAIN,
+        f"{SERIAL}_{MAC}",
+        config_entry=mock_config_entry,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    other_entry = MockConfigEntry(domain=DOMAIN, data=USER_INPUT, unique_id="OTHER")
+    other_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "device_tracker", DOMAIN, f"OTHER_{MAC}", config_entry=other_entry
+    )
+    entity_registry.async_get_or_create(
+        "sensor", DOMAIN, f"{SERIAL}_sensor", config_entry=mock_config_entry
+    )
+    entity_registry.async_get_or_create(
+        "device_tracker", "other", f"{SERIAL}_other", config_entry=mock_config_entry
+    )
+    entity_registry.async_get_or_create(
+        "device_tracker",
+        DOMAIN,
+        "different_serial_client",
+        config_entry=mock_config_entry,
+    )
+    mock_client.update.return_value = {}
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.async_all("device_tracker") == []
+    assert (
+        entity_registry.async_get(disabled.entity_id).disabled_by
+        is er.RegistryEntryDisabler.USER
+    )
 
 
 async def test_poll_failure(

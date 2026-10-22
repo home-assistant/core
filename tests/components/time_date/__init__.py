@@ -1,11 +1,11 @@
 """Tests for the time_date component."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.time_date.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_DISPLAY_OPTIONS
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def load_int(
