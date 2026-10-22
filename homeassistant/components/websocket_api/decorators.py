@@ -72,14 +72,14 @@ def require_admin(func: const.WebSocketCommandHandler) -> const.WebSocketCommand
 def require_step_up(
     func: const.WebSocketCommandHandler,
 ) -> const.WebSocketCommandHandler:
-    """Websocket decorator to require the session to have just proved its user."""
+    """Websocket decorator to require the session to have recently proved its user."""
 
     @wraps(func)
     def with_step_up(
         hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
     ) -> None:
-        """Use up the step up proof and call function."""
-        if not hass.auth.async_consume_step_up(connection.refresh_token_id):
+        """Check the step up window and call function."""
+        if not hass.auth.async_has_step_up(connection.refresh_token_id):
             connection.send_error(
                 msg["id"],
                 const.ERR_STEP_UP_REQUIRED,

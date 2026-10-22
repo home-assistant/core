@@ -250,7 +250,7 @@ async def test_require_step_up(
 
     websocket_api.async_register_command(hass, require_step_up_request)
 
-    with patch.object(hass.auth, "async_consume_step_up", return_value=stepped_up):
+    with patch.object(hass.auth, "async_has_step_up", return_value=stepped_up):
         await websocket_client.send_json({"id": 5, "type": "test-require-step-up"})
         msg = await websocket_client.receive_json()
 

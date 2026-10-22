@@ -44,7 +44,7 @@ EVENT_USER_ADDED = "user_added"
 EVENT_USER_UPDATED = "user_updated"
 EVENT_USER_REMOVED = "user_removed"
 
-STEP_UP_VALIDITY = timedelta(minutes=5)
+STEP_UP_VALIDITY = timedelta(minutes=15)
 STEP_UP_MAX_ATTEMPTS = 5
 STEP_UP_ATTEMPT_WINDOW = timedelta(minutes=5)
 
@@ -200,11 +200,8 @@ class AuthManager:
         self._mfa_modules = mfa_modules
         self.login_flow = AuthManagerFlowManager(hass, self)
         self._revoke_callbacks: dict[str, set[CALLBACK_TYPE]] = {}
-        # Refresh token id to when its step up proof stops counting.
+        # Refresh token id to when its step up window closes.
         self._step_ups: dict[str, datetime] = {}
-        # Refresh token ids that used their recent sign in as a step up.
-        self._sign_in_step_ups_used: set[str] = set()
-        self._started_at = dt_util.utcnow()
         # User id to the monotonic times of their recent step up attempts.
         self._step_up_attempts: dict[str, deque[float]] = {}
         self._create_user_lock = asyncio.Lock()
@@ -326,12 +323,15 @@ class AuthManager:
     @callback
     def async_get_step_up_providers(self, user: models.User) -> list[AuthProvider]:
         """Return the providers the user can prove their identity with again."""
-        return [
-            provider
-            for credential in user.credentials
-            if (provider := self._async_get_auth_provider(credential)) is not None
-            and provider.support_step_up
-        ]
+        # A user can have several credentials of one provider.
+        return list(
+            dict.fromkeys(
+                provider
+                for credential in user.credentials
+                if (provider := self._async_get_auth_provider(credential)) is not None
+                and provider.support_step_up
+            )
+        )
 
     @callback
     def async_get_interactive_refresh_token(
@@ -385,29 +385,30 @@ class AuthManager:
         self._step_up_attempts.pop(user.id, None)
 
     @callback
-    def async_consume_step_up(self, refresh_token_id: str | None) -> bool:
-        """Return if the session recently proved its user, using up the proof."""
+    def async_get_step_up_expiry(self, refresh_token_id: str | None) -> datetime | None:
+        """Return until when the session may make sensitive changes, if it may."""
         if (
             refresh_token := self.async_get_interactive_refresh_token(refresh_token_id)
         ) is None:
-            return False
+            return None
 
         now = dt_util.utcnow()
-        if (expires := self._step_ups.pop(refresh_token.id, None)) is not None:
-            return now < expires
+        if (expires := self._step_ups.get(refresh_token.id)) is not None:
+            if now < expires:
+                return expires
+            del self._step_ups[refresh_token.id]
 
         # A user that no provider can verify again has to rely on having signed
-        # in moments ago, which counts once like a proof. What was used up isn't
-        # stored, so a session from before a restart can't rely on it.
-        if (
-            refresh_token.id in self._sign_in_step_ups_used
-            or refresh_token.created_at < self._started_at
-            or now >= refresh_token.created_at + STEP_UP_VALIDITY
-            or self.async_get_step_up_providers(refresh_token.user)
-        ):
-            return False
-        self._sign_in_step_ups_used.add(refresh_token.id)
-        return True
+        # in moments ago.
+        if self.async_get_step_up_providers(refresh_token.user):
+            return None
+        expires = refresh_token.created_at + STEP_UP_VALIDITY
+        return expires if now < expires else None
+
+    @callback
+    def async_has_step_up(self, refresh_token_id: str | None) -> bool:
+        """Return if the session may make sensitive changes right now."""
+        return self.async_get_step_up_expiry(refresh_token_id) is not None
 
     async def async_get_or_create_user(
         self, credentials: models.Credentials
@@ -662,7 +663,6 @@ class AuthManager:
         """Delete a refresh token."""
         self._store.async_remove_refresh_token(refresh_token)
         self._step_ups.pop(refresh_token.id, None)
-        self._sign_in_step_ups_used.discard(refresh_token.id)
 
         callbacks = self._revoke_callbacks.pop(refresh_token.id, ())
         for revoke_callback in callbacks:

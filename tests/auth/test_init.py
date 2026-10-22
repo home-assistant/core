@@ -1703,6 +1703,12 @@ async def test_get_step_up_providers(mock_hass) -> None:
     )
     assert manager.async_get_step_up_providers(user) == [hass_provider]
 
+    # A provider is offered once, however many credentials of it the user has.
+    user.credentials.append(
+        hass_provider.async_create_credentials({"username": "second-user"})
+    )
+    assert manager.async_get_step_up_providers(user) == [hass_provider]
+
 
 async def test_step_up_proof_expires(
     hass: HomeAssistant,
@@ -1717,9 +1723,13 @@ async def test_step_up_proof_expires(
         refresh_token_id, local_auth, {"password": "test-pass"}, None
     )
 
+    # The window covers several sensitive changes, not just one.
+    assert hass.auth.async_has_step_up(refresh_token_id)
+    assert hass.auth.async_has_step_up(refresh_token_id)
+
     freezer.tick(auth.STEP_UP_VALIDITY)
 
-    assert not hass.auth.async_consume_step_up(refresh_token_id)
+    assert not hass.auth.async_has_step_up(refresh_token_id)
 
 
 async def test_step_up_attempts_are_limited(
@@ -1750,7 +1760,7 @@ async def test_step_up_attempts_are_limited(
     await hass.auth.async_step_up(
         refresh_token_id, local_auth, {"password": "test-pass"}, None
     )
-    assert hass.auth.async_consume_step_up(refresh_token_id)
+    assert hass.auth.async_has_step_up(refresh_token_id)
 
 
 async def test_step_up_success_resets_the_attempts(
@@ -1813,7 +1823,7 @@ async def test_step_up_needed_when_the_user_can_step_up(
     """Test a fresh session alone does not count when the user can step up."""
     refresh_token = hass.auth.async_validate_access_token(hass_access_token)
 
-    assert not hass.auth.async_consume_step_up(refresh_token.id)
+    assert not hass.auth.async_has_step_up(refresh_token.id)
 
 
 async def test_step_up_falls_back_to_a_recent_sign_in(
@@ -1824,31 +1834,13 @@ async def test_step_up_falls_back_to_a_recent_sign_in(
         hass_admin_user, CLIENT_ID
     )
 
-    assert hass.auth.async_consume_step_up(refresh_token.id)
-    # Like a proof, the sign in only counts once.
-    assert not hass.auth.async_consume_step_up(refresh_token.id)
-
-    late = await hass.auth.async_create_refresh_token(
-        hass_admin_user, "https://other.example.com/"
+    assert hass.auth.async_get_step_up_expiry(refresh_token.id) == (
+        refresh_token.created_at + auth.STEP_UP_VALIDITY
     )
+
     freezer.tick(auth.STEP_UP_VALIDITY)
 
-    assert not hass.auth.async_consume_step_up(late.id)
-
-
-async def test_step_up_fallback_not_for_sessions_from_before_a_restart(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_admin_user: MockUser
-) -> None:
-    """Test a session restored after a restart can't rely on its sign in again."""
-    refresh_token = await hass.auth.async_create_refresh_token(
-        hass_admin_user, CLIENT_ID
-    )
-    assert hass.auth.async_consume_step_up(refresh_token.id)
-
-    freezer.tick(timedelta(seconds=1))
-    restarted = auth.AuthManager(hass, hass.auth._store, {}, {})
-
-    assert not restarted.async_consume_step_up(refresh_token.id)
+    assert not hass.auth.async_has_step_up(refresh_token.id)
 
 
 async def test_step_up_refuses_long_lived_access_token(
@@ -1866,4 +1858,4 @@ async def test_step_up_refuses_long_lived_access_token(
             refresh_token.id, local_auth, {"password": "test-pass"}, None
         )
     # Not even as a recent sign in for a user nothing can re-verify.
-    assert not hass.auth.async_consume_step_up(refresh_token.id)
+    assert not hass.auth.async_has_step_up(refresh_token.id)

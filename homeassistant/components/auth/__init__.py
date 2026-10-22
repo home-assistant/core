@@ -99,6 +99,8 @@ The result payload likes
 Send websocket command `auth/long_lived_access_token` will create
 a long-lived access token for current user. Access token will not be saved in
 Home Assistant. User need to record the token in secure place.
+The session must have proved its user again just before, see `auth/step_up`,
+otherwise the command fails with `step_up_required`.
 
 {
     "id": 11,
@@ -228,6 +230,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_refresh_token_set_expiry)
     websocket_api.async_register_command(hass, websocket_start_step_up)
     websocket_api.async_register_command(hass, websocket_step_up)
+    websocket_api.async_register_command(hass, websocket_step_up_status)
 
     login_flow.async_setup(hass, store_result)
     mfa_setup_flow.async_setup(hass)
@@ -644,6 +647,7 @@ async def websocket_current_user(
     }
 )
 @websocket_api.ws_require_user()
+@websocket_api.require_step_up
 @websocket_api.async_response
 async def websocket_create_long_lived_access_token(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
@@ -732,6 +736,33 @@ async def websocket_step_up(
         return
 
     connection.send_result(msg["id"])
+
+
+@websocket_api.websocket_command({probatio.Required("type"): "auth/step_up/status"})
+@websocket_api.ws_require_user()
+@callback
+def websocket_step_up_status(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Return until when the session may make sensitive changes, and how to step up."""
+    can_step_up = (
+        hass.auth.async_get_interactive_refresh_token(connection.refresh_token_id)
+        is not None
+    )
+    connection.send_result(
+        msg["id"],
+        {
+            "expires_at": hass.auth.async_get_step_up_expiry(
+                connection.refresh_token_id
+            ),
+            "handlers": [
+                [provider.type, provider.id]
+                for provider in hass.auth.async_get_step_up_providers(connection.user)
+            ]
+            if can_step_up
+            else [],
+        },
+    )
 
 
 @websocket_api.websocket_command({probatio.Required("type"): "auth/refresh_tokens"})
