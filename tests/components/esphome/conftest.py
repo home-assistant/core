@@ -12,6 +12,7 @@ from aioesphomeapi import (
     APIClient,
     APIVersion,
     BluetoothProxyFeature,
+    DeviceCapabilities,
     DeviceInfo,
     EntityInfo,
     EntityState,
@@ -73,6 +74,7 @@ class MockESPHomeDeviceType(Protocol):
         entry: MockConfigEntry | None = ...,
         device_info: dict[str, Any] | None = ...,
         mock_storage: bool = ...,
+        device_capabilities: dict[str, Any] | None = ...,
     ) -> MockESPHomeDevice:
         """Mock an ESPHome device."""
 
@@ -221,6 +223,9 @@ def mock_client(mock_device_info) -> Generator[APIClient]:
 
     mock_client.side_effect = mock_constructor
     mock_client.device_info = AsyncMock(return_value=mock_device_info)
+    mock_client.device_capabilities_compat = AsyncMock(
+        return_value=DeviceCapabilities()
+    )
     mock_client.connect = AsyncMock()
     mock_client.disconnect = AsyncMock()
     mock_client.subscribe_logs = Mock()
@@ -451,6 +456,7 @@ async def _mock_generic_device_entry(
     states: list[EntityState],
     entry: MockConfigEntry | None = None,
     hass_storage: dict[str, Any] | None = None,
+    device_capabilities: dict[str, Any] | None = None,
 ) -> MockESPHomeDevice:
     if not entry:
         entry = MockConfigEntry(
@@ -473,6 +479,10 @@ async def _mock_generic_device_entry(
         "mac_address": "11:22:33:44:55:AA",
     }
     device_info = DeviceInfo(**(default_device_info | mock_device_info))
+    if device_capabilities is not None:
+        mock_client.device_capabilities_compat = AsyncMock(
+            return_value=DeviceCapabilities.from_dict(device_capabilities)
+        )
 
     if hass_storage:
         storage_key = f"{DOMAIN}.{entry.entry_id}"
@@ -772,6 +782,7 @@ async def mock_esphome_device(
         entry: MockConfigEntry | None = None,
         device_info: dict[str, Any] | None = None,
         mock_storage: bool = False,
+        device_capabilities: dict[str, Any] | None = None,
     ) -> MockESPHomeDevice:
         return await _mock_generic_device_entry(
             hass,
@@ -781,6 +792,7 @@ async def mock_esphome_device(
             states or [],
             entry,
             hass_storage if mock_storage else None,
+            device_capabilities,
         )
 
     return _mock_device
