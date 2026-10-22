@@ -23,6 +23,7 @@ _UNAVAILABLE_CAPABILITIES: dict[str, Any] = {
     "bluetooth_proxy": {"supported": False},
     "zwave_proxy": {"supported": False, "home_id": 0, "config_entry_id": None},
     "serial_proxies": [],
+    "sendspin": {"supported": False},
 }
 
 
@@ -75,7 +76,7 @@ def get_device_capabilities(
     connection: websocket_api.connection.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Return cached ESPHome DeviceInfo capabilities for the device page."""
+    """Return the cached ESPHome device capabilities for the device page."""
     device, candidate = dr.async_get_device_and_config_entry_for_domain(
         hass, msg[DEVICE_ID], domain=DOMAIN, include_child_devices=False
     )
@@ -102,28 +103,24 @@ def get_device_capabilities(
         )
         return
 
-    device_info = None
+    capabilities = None
     if entry.state is ConfigEntryState.LOADED:
-        device_info = entry.runtime_data.device_info
+        capabilities = entry.runtime_data.device_capabilities
 
-    if device_info is None:
+    # Unknown until the first connect after an upgrade
+    if capabilities is None:
         connection.send_result(msg["id"], _UNAVAILABLE_CAPABILITIES)
         return
 
-    entry_data = entry.runtime_data
-    home_id = device_info.zwave_home_id or 0
+    home_id = capabilities.zwave_proxy.home_id
     connection.send_result(
         msg["id"],
         {
             "bluetooth_proxy": {
-                "supported": bool(
-                    device_info.bluetooth_proxy_feature_flags_compat(
-                        entry_data.api_version
-                    )
-                ),
+                "supported": bool(capabilities.bluetooth_proxy.feature_flags),
             },
             "zwave_proxy": {
-                "supported": bool(device_info.zwave_proxy_feature_flags),
+                "supported": bool(capabilities.zwave_proxy.feature_flags),
                 "home_id": home_id,
                 "config_entry_id": _zwave_js_config_entry_id(hass, home_id),
             },
@@ -135,8 +132,9 @@ def get_device_capabilities(
                     ),
                     "url": str(build_url(entry.entry_id, port_name=proxy.name)),
                 }
-                for proxy in device_info.serial_proxies
+                for proxy in capabilities.serial_proxies
             ],
+            "sendspin": {"supported": bool(capabilities.sendspin.feature_flags)},
         },
     )
 
