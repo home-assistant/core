@@ -10,12 +10,12 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import (
-    ATTR_SPEED,
     DOMAIN,
     CoverDeviceClass,
     CoverEntityCapabilityAttribute,
     CoverEntityFeature,
     CoverEntityStateAttribute,
+    CoverServiceArgument,
     CoverState,
 )
 
@@ -196,36 +196,36 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def async_handle_open_cover(self, **kwargs: Any) -> None:
         """Validate speed and open the cover."""
         call_kwargs = kwargs
-        if (speed := kwargs.get(ATTR_SPEED)) is not None:
+        if (speed := kwargs.get(CoverServiceArgument.SPEED)) is not None:
             if speeds := self.supported_speeds:
                 self._valid_speed_or_raise(speed, speeds)
             else:
                 call_kwargs = dict(kwargs)
-                call_kwargs.pop(ATTR_SPEED)
+                call_kwargs.pop(CoverServiceArgument.SPEED)
         await self.async_open_cover(**call_kwargs)
 
     @final
     async def async_handle_close_cover(self, **kwargs: Any) -> None:
         """Validate speed and close the cover."""
         call_kwargs = kwargs
-        if (speed := kwargs.get(ATTR_SPEED)) is not None:
+        if (speed := kwargs.get(CoverServiceArgument.SPEED)) is not None:
             if speeds := self.supported_speeds:
                 self._valid_speed_or_raise(speed, speeds)
             else:
                 call_kwargs = dict(kwargs)
-                call_kwargs.pop(ATTR_SPEED)
+                call_kwargs.pop(CoverServiceArgument.SPEED)
         await self.async_close_cover(**call_kwargs)
 
     @final
     async def async_handle_set_cover_position(self, **kwargs: Any) -> None:
         """Validate speed and move the cover to a specific position."""
         call_kwargs = kwargs
-        if (speed := kwargs.get(ATTR_SPEED)) is not None:
+        if (speed := kwargs.get(CoverServiceArgument.SPEED)) is not None:
             if speeds := self.supported_speeds:
                 self._valid_speed_or_raise(speed, speeds)
             else:
                 call_kwargs = dict(kwargs)
-                call_kwargs.pop(ATTR_SPEED)
+                call_kwargs.pop(CoverServiceArgument.SPEED)
         await self.async_set_cover_position(**call_kwargs)
 
     def open_cover(self, **kwargs: Any) -> None:
