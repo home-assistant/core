@@ -531,6 +531,8 @@
         'light.multicolor_ceiling_light_light_2': 'Light (2)',
         'number.multicolor_ceiling_light_on_level_1': 'On level (1)',
         'number.multicolor_ceiling_light_on_level_2': 'On level (2)',
+        'number.multicolor_ceiling_light_power_on_color_temperature_1': 'Power-on color temperature (1)',
+        'number.multicolor_ceiling_light_power_on_color_temperature_2': 'Power-on color temperature (2)',
         'number.multicolor_ceiling_light_power_on_level_1': 'Power-on level (1)',
         'number.multicolor_ceiling_light_power_on_level_2': 'Power-on level (2)',
         'select.multicolor_ceiling_light_power_on_behavior_1': 'Power-on behavior (1)',

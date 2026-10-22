@@ -80,7 +80,7 @@ def bypass_platform_setup_fixture():
     """Bypass platform setup."""
     with patch(
         "homeassistant.components.waze_travel_time.sensor.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         yield
 
@@ -90,6 +90,6 @@ def bypass_setup_fixture():
     """Bypass entry setup."""
     with patch(
         "homeassistant.components.waze_travel_time.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         yield

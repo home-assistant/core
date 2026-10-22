@@ -69,6 +69,17 @@
         "name": "Home optimization active"
       }
     },
+    "select": {
+      "control_mode": {
+        "name": "Control mode",
+        "state": {
+          "day_ahead_arbitrage": "Day-ahead arbitrage",
+          "dynamic_charging": "Dynamic charging",
+          "home_optimization": "Home optimization",
+          "self_consumption": "Self-consumption"
+        }
+      }
+    },
     "sensor": {
       "backup_power_capacity": {
         "name": "Backup power capacity"
@@ -207,6 +218,9 @@
     },
     "cannot_connect": {
       "message": "Error communicating with the Zonneplan API"
+    },
+    "day_ahead_arbitrage_not_set_up": {
+      "message": "Day-ahead arbitrage has not been set up for this battery yet. Set it up in the Zonneplan app first."
     },
     "invalid_auth": {
       "message": "An error occurred while trying to authenticate"

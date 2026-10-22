@@ -201,7 +201,7 @@ async def mock_test_firmware_platform(
 ) -> AsyncGenerator[None]:
     """Fixture for a test config flow."""
     mock_module = MockModule(
-        TEST_DOMAIN, async_setup_entry=AsyncMock(return_value=True)
+        TEST_DOMAIN, async_setup_entry=AsyncMock(return_value=None)
     )
     mock_integration(hass, mock_module)
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")

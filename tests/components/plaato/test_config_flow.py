@@ -211,7 +211,7 @@ async def test_show_config_form_validate_token(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "api_method"
 
-    with patch("homeassistant.components.plaato.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.plaato.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_TOKEN: "valid_token"}
         )
@@ -296,7 +296,7 @@ async def test_show_config_form_api_method_no_auth_token(
     assert len(result["errors"]) == 1
     assert result["errors"]["base"] == error
 
-    with patch("homeassistant.components.plaato.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.plaato.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_TOKEN: "valid_token"}
         )
@@ -337,7 +337,7 @@ async def test_options_webhook(hass: HomeAssistant, webhook_id) -> None:
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.plaato.async_setup_entry", return_value=True
+        "homeassistant.components.plaato.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
