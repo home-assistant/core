@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from pyforeca import ForecaAuthError, ForecaConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.foreca.const import DOMAIN, SUBENTRY_TYPE_LOCATION
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_foreca_client")

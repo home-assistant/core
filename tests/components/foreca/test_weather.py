@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from pyforeca import DailyForecast, HourlyForecast
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.weather import (
@@ -17,8 +18,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import init_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "weather.helsinki"
 

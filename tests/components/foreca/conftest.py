@@ -5,12 +5,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyforeca import CurrentWeather, DailyForecast, HourlyForecast, Location
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.foreca.const import DOMAIN, SUBENTRY_TYPE_LOCATION
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
-
-from tests.common import MockConfigEntry
 
 CURRENT = CurrentWeather(
     time="2026-09-01T17:00+03:00",

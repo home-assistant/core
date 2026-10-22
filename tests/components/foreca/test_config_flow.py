@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from pyforeca import ForecaAuthError, ForecaConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.foreca.const import DOMAIN, SUBENTRY_TYPE_LOCATION
 from homeassistant.config_entries import SOURCE_USER
@@ -15,8 +16,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {CONF_API_KEY: "test-key"}
 LOCATION_INPUT = {CONF_LOCATION: {CONF_LATITUDE: 60.17, CONF_LONGITUDE: 24.94}}
