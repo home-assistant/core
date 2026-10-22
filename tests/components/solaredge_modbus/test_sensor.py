@@ -42,7 +42,7 @@ async def _setup_sensor_platform(hass: HomeAssistant, entry: MockConfigEntry) ->
 async def _tick(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

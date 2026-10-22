@@ -408,6 +408,58 @@ async def test_to_midnight(
     assert state.attributes[ATTR_NEXT_EVENT].isoformat() == "2022-09-11T00:00:00-07:00"
 
 
+@pytest.mark.parametrize(
+    ("now", "expected_state", "expected_next_event"),
+    [
+        pytest.param(
+            "2022-11-06 01:30:00-07:00",
+            STATE_ON,
+            "2022-11-06T01:45:00-07:00",
+            id="first_occurrence",
+        ),
+        pytest.param(
+            "2022-11-06 01:30:00-08:00",
+            STATE_ON,
+            "2022-11-06T01:45:00-08:00",
+            id="repeated_occurrence",
+        ),
+        pytest.param(
+            "2022-11-06 01:50:00-08:00",
+            STATE_OFF,
+            "2022-11-13T01:00:00-08:00",
+            id="repeated_occurrence_after_range",
+        ),
+    ],
+)
+async def test_dst_fall_back_next_event(
+    hass: HomeAssistant,
+    schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
+    freezer: FrozenDateTimeFactory,
+    now: str,
+    expected_state: str,
+    expected_next_event: str,
+) -> None:
+    """Test the next event is in the future during the repeated DST hour."""
+    freezer.move_to(now)
+
+    assert await schedule_setup(
+        config={
+            DOMAIN: {
+                "from_yaml": {
+                    CONF_NAME: "from yaml",
+                    CONF_SUNDAY: [{CONF_FROM: "01:00:00", CONF_TO: "01:45:00"}],
+                }
+            }
+        },
+        items=[],
+    )
+
+    state = hass.states.get(f"{DOMAIN}.from_yaml")
+    assert state
+    assert state.state == expected_state
+    assert state.attributes[ATTR_NEXT_EVENT].isoformat() == expected_next_event
+
+
 async def test_setup_no_config(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
     """Test component setup with no config."""
     count_start = len(hass.states.async_entity_ids())

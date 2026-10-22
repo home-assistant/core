@@ -51,7 +51,7 @@ from .const import (
 @pytest.fixture(name="icloud_bypass_setup", autouse=True)
 def icloud_bypass_setup_fixture():
     """Mock component setup."""
-    with patch("homeassistant.components.icloud.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.icloud.async_setup_entry", return_value=None):
         yield
 
 
@@ -278,7 +278,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    with patch("homeassistant.components.icloud.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.icloud.async_setup_entry", return_value=None):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input={CONF_INCLUDE_COMPLETED: True}
         )

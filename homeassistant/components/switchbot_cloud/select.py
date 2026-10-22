@@ -9,7 +9,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SwitchbotCloudConfigEntry, SwitchBotCoordinator
+from . import SwitchbotCloudConfigEntry
 from .const import (
     BATTERY_CIRCULATOR_FAN_2_PRO_NIGHT_LIGHT_PARAMETERS_MAP,
     NIGHT_LIGHT_BRIGHT,
@@ -17,6 +17,7 @@ from .const import (
     NIGHT_LIGHT_SOFT,
     STANDING_FAN_NIGHT_LIGHT_PARAMETERS_MAP,
 )
+from .coordinator import SwitchBotCoordinator
 from .entity import SwitchBotCloudEntity
 
 

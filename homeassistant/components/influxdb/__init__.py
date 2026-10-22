@@ -21,6 +21,7 @@ import urllib3.exceptions
 from homeassistant import config as conf_util
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    CONF_API_VERSION,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_EXCLUDE,
@@ -62,7 +63,6 @@ from .const import (
     CODE_INVALID_INPUTS,
     COMPONENT_CONFIG_SCHEMA_CONNECTION,
     COMPONENT_CONFIG_SCHEMA_CONNECTION_VALIDATORS,
-    CONF_API_VERSION,
     CONF_BUCKET,
     CONF_COMPONENT_CONFIG,
     CONF_COMPONENT_CONFIG_DOMAIN,

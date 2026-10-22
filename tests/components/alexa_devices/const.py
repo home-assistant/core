@@ -92,6 +92,7 @@ TEST_DEVICE_1 = AmazonDevice(
     },
     voice_control_supported=True,
     features={},
+    unsupported_features={},
 )
 
 TEST_DEVICE_2_SN = "echo_test_2_serial_number"
@@ -131,6 +132,7 @@ TEST_DEVICE_2 = AmazonDevice(
     communication_settings={},
     voice_control_supported=True,
     features={},
+    unsupported_features={},
 )
 
 TEST_DEVICE_AQM_SN = "aqm_test_serial_number"
@@ -227,6 +229,7 @@ TEST_DEVICE_AQM = AmazonDevice(
     communication_settings={},
     voice_control_supported=False,
     features={},
+    unsupported_features={},
 )
 
 TEST_VOCAL_RECORD_INITIAL = AmazonVocalRecord(

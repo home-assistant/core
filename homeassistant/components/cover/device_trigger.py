@@ -7,6 +7,7 @@ from homeassistant.components.homeassistant.triggers import (
     numeric_state as numeric_state_trigger,
     state as state_trigger,
 )
+from homeassistant.components.homeassistant.triggers.state import StateTriggerArgument
 from homeassistant.const import (
     CONF_ABOVE,
     CONF_BELOW,
@@ -160,13 +161,13 @@ async def async_attach_trigger(
         elif config[CONF_TYPE] == "closing":
             to_state = CoverState.CLOSING
 
-        state_config = {
-            CONF_PLATFORM: "state",
-            CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-            state_trigger.CONF_TO: to_state,
+        state_config: ConfigType = {
+            StateTriggerArgument.PLATFORM: "state",
+            StateTriggerArgument.ENTITY_ID: config[CONF_ENTITY_ID],
+            StateTriggerArgument.TO: to_state,
         }
         if CONF_FOR in config:
-            state_config[CONF_FOR] = config[CONF_FOR]
+            state_config[StateTriggerArgument.FOR] = config[CONF_FOR]
         state_config = await state_trigger.async_validate_trigger_config(
             hass, state_config
         )

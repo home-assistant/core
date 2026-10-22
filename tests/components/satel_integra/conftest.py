@@ -29,7 +29,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override integration setup."""
     with patch(
         "homeassistant.components.satel_integra.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -58,6 +58,9 @@ def mock_satel() -> Generator[AsyncMock]:
         ),
     ):
         client = mock_client.return_value
+        client.add_connection_status_callback.return_value = MagicMock(
+            return_value=None
+        )
 
         client.partition_states = {}
         client.violated_outputs = []

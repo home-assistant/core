@@ -370,6 +370,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
+        'standard',
+      ]),
       <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'digital_tv',
         'hdmi1',
@@ -401,7 +404,7 @@
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <MediaPlayerEntityFeature: 23997>,
+    'supported_features': <MediaPlayerEntityFeature: 89533>,
     'translation_key': 'media_player',
     'unique_id': '4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1_main',
     'unit_of_measurement': None,
@@ -413,6 +416,10 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'tv',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '[TV] Samsung 8 Series (49)',
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: True,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'standard',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
+        'standard',
+      ]),
       <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'hdmi1',
       <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'digital_tv',
@@ -420,7 +427,7 @@
         'hdmi2',
         'hdmi3',
       ]),
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 23997>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 89533>,
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.13,
     }),
     'context': <ANY>,
