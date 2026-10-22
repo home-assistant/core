@@ -18,6 +18,13 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 VICARE_SCOPES = [SCOPE_IOT, SCOPE_OFFLINE_ACCESS]
 
 
+async def async_get_description_placeholders(hass: HomeAssistant) -> dict[str, str]:
+    """Return description placeholders for the credentials dialog."""
+    return {
+        "more_info_url": "https://www.home-assistant.io/integrations/vicare/#prerequisites"
+    }
+
+
 async def async_get_auth_implementation(
     hass: HomeAssistant, auth_domain: str, credential: ClientCredential
 ) -> ViCareOAuth2Implementation:

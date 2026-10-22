@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 from kiwiki import KiwiClient, KiwiException
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.lock import (
     PLATFORM_SCHEMA as LOCK_PLATFORM_SCHEMA,
@@ -13,18 +13,20 @@ from homeassistant.components.lock import (
 )
 from homeassistant.const import (
     ATTR_ID,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_PASSWORD,
     CONF_USERNAME,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
+
+DOMAIN = "kiwi"
 
 ATTR_TYPE = "hardware_type"
 ATTR_PERMISSION = "permission"
@@ -33,7 +35,10 @@ ATTR_CAN_INVITE = "can_invite_others"
 UNLOCK_MAINTAIN_TIME = 5
 
 PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
+    {
+        probatio.Required(CONF_USERNAME): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
+    }
 )
 
 
@@ -68,12 +73,8 @@ class KiwiLock(LockEntity):
         self._state = LockState.LOCKED
 
         address = kiwi_lock.get("address")
-        address.update(
-            {
-                ATTR_LATITUDE: address.pop("lat", None),
-                ATTR_LONGITUDE: address.pop("lng", None),
-            }
-        )
+        latitude = address.pop("lat", None)
+        longitude = address.pop("lng", None)
 
         self._device_attrs = {
             ATTR_ID: self.lock_id,
@@ -81,6 +82,8 @@ class KiwiLock(LockEntity):
             ATTR_PERMISSION: kiwi_lock.get("highest_permission"),
             ATTR_CAN_INVITE: kiwi_lock.get("can_invite"),
             **address,
+            EntityStateAttribute.LATITUDE: latitude,
+            EntityStateAttribute.LONGITUDE: longitude,
         }
 
     @property
@@ -115,9 +118,11 @@ class KiwiLock(LockEntity):
 
         try:
             self._client.open_door(self.lock_id)
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except KiwiException:
-            _LOGGER.error("Failed to open door")
+        except KiwiException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unlock_failed",
+            ) from err
         else:
             self._state = LockState.UNLOCKED
             self.hass.add_job(

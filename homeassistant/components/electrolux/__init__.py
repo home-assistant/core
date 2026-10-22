@@ -48,10 +48,11 @@ PLATFORMS = [
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -> None:
     """Set up Electrolux integration entry."""
 
     token_manager = create_token_manager(hass, entry)
@@ -112,10 +113,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -> None:
     """Unload a config entry."""
     # Remove SSE listeners
     coordinators = entry.runtime_data.coordinators
@@ -130,7 +129,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) 
     except CancelledError:
         _LOGGER.info("SSE stream cancelled for entry %s", entry.entry_id)
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 def create_token_manager(
@@ -206,14 +205,12 @@ async def _check_for_new_devices(
         coordinator.remove_client_listeners()
         on_livestream_opening_callback_list.remove(coordinator.async_refresh)
 
-        device_entry = device_registry.async_get_device(
-            identifiers={(DOMAIN, missing_id)}
+        device_entry = device_registry.async_get_device_by_identifier(
+            (DOMAIN, missing_id), entry.entry_id
         )
 
         if device_entry:
-            device_registry.async_update_device(
-                device_entry.id, remove_config_entry_id=entry.entry_id
-            )
+            device_registry.async_remove_device(device_entry.id)
 
 
 async def fetch_appliance_data(client: ApplianceClient) -> list[ApplianceData]:

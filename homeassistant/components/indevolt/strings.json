@@ -3,8 +3,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "Failed to connect (aborted)",
-      "different_device": "The device at the new host has a different serial number. Please ensure the new host is the same device.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "different_device": "The device at the new host has a different serial number. Please ensure the new host is the same device."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -119,7 +118,8 @@
         "name": "Battery pack 1 current"
       },
       "battery_pack_1_cycles": {
-        "name": "Battery pack 1 cycle count"
+        "name": "Battery pack 1 cycles",
+        "unit_of_measurement": "[%key:component::indevolt::entity::sensor::equivalent_full_cycles::unit_of_measurement%]"
       },
       "battery_pack_1_mos_temperature": {
         "name": "Battery pack 1 MOS temperature"
@@ -140,7 +140,8 @@
         "name": "Battery pack 2 current"
       },
       "battery_pack_2_cycles": {
-        "name": "Battery pack 2 cycle count"
+        "name": "Battery pack 2 cycles",
+        "unit_of_measurement": "[%key:component::indevolt::entity::sensor::equivalent_full_cycles::unit_of_measurement%]"
       },
       "battery_pack_2_mos_temperature": {
         "name": "Battery pack 2 MOS temperature"
@@ -161,7 +162,8 @@
         "name": "Battery pack 3 current"
       },
       "battery_pack_3_cycles": {
-        "name": "Battery pack 3 cycle count"
+        "name": "Battery pack 3 cycles",
+        "unit_of_measurement": "[%key:component::indevolt::entity::sensor::equivalent_full_cycles::unit_of_measurement%]"
       },
       "battery_pack_3_mos_temperature": {
         "name": "Battery pack 3 MOS temperature"
@@ -182,7 +184,8 @@
         "name": "Battery pack 4 current"
       },
       "battery_pack_4_cycles": {
-        "name": "Battery pack 4 cycle count"
+        "name": "Battery pack 4 cycles",
+        "unit_of_measurement": "[%key:component::indevolt::entity::sensor::equivalent_full_cycles::unit_of_measurement%]"
       },
       "battery_pack_4_mos_temperature": {
         "name": "Battery pack 4 MOS temperature"
@@ -203,7 +206,8 @@
         "name": "Battery pack 5 current"
       },
       "battery_pack_5_cycles": {
-        "name": "Battery pack 5 cycle count"
+        "name": "Battery pack 5 cycles",
+        "unit_of_measurement": "[%key:component::indevolt::entity::sensor::equivalent_full_cycles::unit_of_measurement%]"
       },
       "battery_pack_5_mos_temperature": {
         "name": "Battery pack 5 MOS temperature"
@@ -296,7 +300,8 @@
         }
       },
       "equivalent_full_cycles": {
-        "name": "Equivalent full cycles"
+        "name": "Equivalent full cycles",
+        "unit_of_measurement": "cycles"
       },
       "grid_frequency": {
         "name": "Grid frequency"
@@ -311,7 +316,8 @@
         "name": "Main current"
       },
       "main_cycles": {
-        "name": "Main cycle count"
+        "name": "Main cycles",
+        "unit_of_measurement": "[%key:component::indevolt::entity::sensor::equivalent_full_cycles::unit_of_measurement%]"
       },
       "main_mos_temperature": {
         "name": "Main MOS temperature"

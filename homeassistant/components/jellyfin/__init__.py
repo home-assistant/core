@@ -18,11 +18,11 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Jellyfin component."""
-    await async_setup_services(hass)
+    async_setup_services(hass)
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> None:
     """Set up Jellyfin from a config entry."""
     if CONF_CLIENT_DEVICE_ID not in entry.data:
         entry_data = entry.data.copy()
@@ -49,13 +49,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> 
     await coordinator.async_config_entry_first_refresh()
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device_registry.async_get_or_create_device(
         config_entry_id=entry.entry_id,
-        entry_type=dr.DeviceEntryType.SERVICE,
-        identifiers={(DOMAIN, coordinator.server_id)},
-        manufacturer=DEFAULT_NAME,
-        name=coordinator.server_name,
-        sw_version=coordinator.server_version,
+        device_info=dr.DeviceInfo(
+            entry_type=dr.DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, coordinator.server_id)},
+            manufacturer=DEFAULT_NAME,
+            name=coordinator.server_name,
+            sw_version=coordinator.server_version,
+        ),
     )
 
     entry.runtime_data = coordinator
@@ -63,25 +65,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_migrate_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> None:
     """Migrate an old config entry."""
     if entry.version == 1 and entry.minor_version < 2:
         new_data = {**entry.data, CONF_URL: entry.data[CONF_URL].rstrip("/")}
         hass.config_entries.async_update_entry(entry, data=new_data, minor_version=2)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: JellyfinConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant,
+    config_entry: JellyfinConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove device from a config entry."""
     coordinator = config_entry.runtime_data

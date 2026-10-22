@@ -5,6 +5,12 @@ from typing import Any, cast
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import (
+    get_diagnostics_for_config_entry,
+    get_diagnostics_for_device,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
@@ -23,13 +29,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .common import PROPERTY_ULTRAVIOLET
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import (
-    get_diagnostics_for_config_entry,
-    get_diagnostics_for_device,
-)
-from tests.typing import ClientSessionGenerator
 
 
 async def test_config_entry_diagnostics(
@@ -62,8 +61,8 @@ async def test_device_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the device level diagnostics data dump."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, multisensor_6)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, multisensor_6), integration.entry_id
     )
     assert device
 
@@ -166,8 +165,8 @@ async def test_device_diagnostics_missing_primary_value(
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Test that device diagnostics handles an entity with a missing primary value."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, multisensor_6)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, multisensor_6), integration.entry_id
     )
     assert device
 
@@ -259,8 +258,8 @@ async def test_device_diagnostics_secret_value(
     client.driver.controller.nodes[node.node_id] = node
     client.driver.controller.emit("node added", {"node": node})
     await hass.async_block_till_done()
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, node)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, node), integration.entry_id
     )
     assert device
 

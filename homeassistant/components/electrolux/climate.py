@@ -249,9 +249,9 @@ class ElectroluxBaseClimate[T: ACAppliance | DAMACAppliance](
         self._attr_hvac_modes = self._get_hvac_supported_mode()
         self._attr_fan_modes = self._get_fan_supported_mode()
 
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
-        self._attr_current_temperature = None
-        self._attr_target_temperature = None
+        self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+        self._attr_native_current_temperature = None
+        self._attr_native_target_temperature = None
         self._attr_target_temperature_step = (
             self._appliance_data.get_supported_step_temp()
         )
@@ -265,9 +265,9 @@ class ElectroluxBaseClimate[T: ACAppliance | DAMACAppliance](
         return {
             "hvac_mode": self._attr_hvac_mode,
             "fan_mode": self._attr_fan_mode,
-            "current_temperature": self._attr_current_temperature,
-            "target_temperature": self._attr_target_temperature,
-            "temperature_unit": self._attr_temperature_unit,
+            "current_temperature": self._attr_native_current_temperature,
+            "target_temperature": self._attr_native_target_temperature,
+            "temperature_unit": self._attr_native_temperature_unit,
             "min_temp": self._attr_min_temp,
             "max_temp": self._attr_max_temp,
             "target_temperature_step": self._attr_target_temperature_step,
@@ -278,9 +278,9 @@ class ElectroluxBaseClimate[T: ACAppliance | DAMACAppliance](
         old_state_snapshot = self._state_snapshot()
 
         # Set temperature
-        self._attr_temperature_unit = self._get_temperature_unit()
-        self._attr_current_temperature = self._get_ambient_temperature()
-        self._attr_target_temperature = self._get_target_temperature()
+        self._attr_native_temperature_unit = self._get_temperature_unit()
+        self._attr_native_current_temperature = self._get_ambient_temperature()
+        self._attr_native_target_temperature = self._get_target_temperature()
         self._attr_min_temp = self._appliance_data.get_supported_min_temp()
         self._attr_max_temp = self._appliance_data.get_supported_max_temp()
         self._attr_target_temperature_step = (
@@ -356,8 +356,7 @@ class ElectroluxBaseClimate[T: ACAppliance | DAMACAppliance](
         if fan_speed is None:
             return
         command = self._appliance_data.get_fan_speed_command(fan_speed)
-        await self.coordinator.client.send_command(self._appliance_id, command)
-        await self.coordinator.async_refresh()
+        await self.coordinator.send_command(command)
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -379,13 +378,11 @@ class ElectroluxBaseClimate[T: ACAppliance | DAMACAppliance](
 
     async def _turn_on_appliance(self) -> None:
         command = self._appliance_data.get_turn_on_command()
-        await self.coordinator.client.send_command(self._appliance_id, command)
-        await self.coordinator.async_refresh()
+        await self.coordinator.send_command(command)
 
     async def _turn_off_appliance(self) -> None:
         command = self._appliance_data.get_turn_off_command()
-        await self.coordinator.client.send_command(self._appliance_id, command)
-        await self.coordinator.async_refresh()
+        await self.coordinator.send_command(command)
 
     async def _set_appliance_mode(self, mode: HVACMode) -> None:
         current_mode = self._appliance_data.get_current_mode()
@@ -404,8 +401,7 @@ class ElectroluxBaseClimate[T: ACAppliance | DAMACAppliance](
             )
 
         if command:
-            await self.coordinator.client.send_command(self._appliance_id, command)
-            await self.coordinator.async_refresh()
+            await self.coordinator.send_command(command)
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -419,8 +415,7 @@ class ElectroluxBaseClimate[T: ACAppliance | DAMACAppliance](
         )
         command = self._get_temperature_command(rounded_temperature)
 
-        await self.coordinator.client.send_command(self._appliance_id, command)
-        await self.coordinator.async_refresh()
+        await self.coordinator.send_command(command)
 
     @abstractmethod
     def _get_temperature_command(self, temperature: float) -> dict[str, Any]:
@@ -443,7 +438,7 @@ class ElectroluxClimateEntity(ElectroluxBaseClimate[ACAppliance], ClimateEntity)
     @override
     def _get_target_temperature(self) -> float | None:
         """Return current target temperature."""
-        if self._attr_temperature_unit == UnitOfTemperature.FAHRENHEIT:
+        if self._attr_native_temperature_unit == UnitOfTemperature.FAHRENHEIT:
             return self._appliance_data.get_current_target_temperature_f()
 
         return self._appliance_data.get_current_target_temperature_c()
@@ -451,7 +446,7 @@ class ElectroluxClimateEntity(ElectroluxBaseClimate[ACAppliance], ClimateEntity)
     @override
     def _get_ambient_temperature(self) -> float | None:
         """Return current ambient temperature."""
-        if self._attr_temperature_unit == UnitOfTemperature.FAHRENHEIT:
+        if self._attr_native_temperature_unit == UnitOfTemperature.FAHRENHEIT:
             return self._appliance_data.get_current_ambient_temperature_f()
 
         return self._appliance_data.get_current_ambient_temperature_c()
@@ -459,7 +454,7 @@ class ElectroluxClimateEntity(ElectroluxBaseClimate[ACAppliance], ClimateEntity)
     @override
     def _get_temperature_command(self, temperature: float) -> dict[str, Any]:
         """Return the command payload to set the temperature."""
-        if self._attr_temperature_unit == UnitOfTemperature.FAHRENHEIT:
+        if self._attr_native_temperature_unit == UnitOfTemperature.FAHRENHEIT:
             return self._appliance_data.get_temperature_f_command(temperature)
 
         return self._appliance_data.get_temperature_c_command(temperature)

@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from zabbix_utils import ZabbixAPI
 
 from homeassistant.components.sensor import (
@@ -25,19 +25,19 @@ _CONF_TRIGGERS = "triggers"
 _CONF_HOSTIDS = "hostids"
 _CONF_INDIVIDUAL = "individual"
 
-_ZABBIX_ID_LIST_SCHEMA = vol.Schema([int])
-_ZABBIX_TRIGGER_SCHEMA = vol.Schema(
+_ZABBIX_ID_LIST_SCHEMA = probatio.Schema([int])
+_ZABBIX_TRIGGER_SCHEMA = probatio.Schema(
     {
-        vol.Optional(_CONF_HOSTIDS, default=[]): _ZABBIX_ID_LIST_SCHEMA,
-        vol.Optional(_CONF_INDIVIDUAL, default=False): cv.boolean,
-        vol.Optional(CONF_NAME): cv.string,
+        probatio.Optional(_CONF_HOSTIDS, default=[]): _ZABBIX_ID_LIST_SCHEMA,
+        probatio.Optional(_CONF_INDIVIDUAL, default=False): cv.boolean,
+        probatio.Optional(CONF_NAME): cv.string,
     }
 )
 
 # SCAN_INTERVAL = 30
 #
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {vol.Required(_CONF_TRIGGERS): vol.Any(_ZABBIX_TRIGGER_SCHEMA, None)}
+    {probatio.Required(_CONF_TRIGGERS): probatio.Any(_ZABBIX_TRIGGER_SCHEMA, None)}
 )
 
 

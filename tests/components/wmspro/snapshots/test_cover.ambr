@@ -2,8 +2,8 @@
 # name: test_cover_device[config_prod_awning_dimmer.json-status_prod_awning.json]
   DeviceRegistryEntrySnapshot({
     'area_id': 'terrasse',
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': 'http://webcontrol/control',
     'connections': set({
     }),
@@ -24,7 +24,6 @@
     'model_id': None,
     'name': 'Markise',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': '58717',
     'sw_version': None,
     'via_device_id': <ANY>,

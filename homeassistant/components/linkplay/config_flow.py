@@ -8,7 +8,7 @@ from linkplay.bridge import LinkPlayBridge
 from linkplay.discovery import linkplay_factory_httpapi_bridge
 from linkplay.exceptions import LinkPlayRequestException
 from linkplay.manufacturers import MANUFACTURER_WIIM
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MODEL
@@ -35,6 +35,17 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Do not probe the device if the host is already configured
         self._async_abort_entries_match({CONF_HOST: discovery_info.host})
+
+        # Do not probe the device if the UUID advertised over mDNS matches
+        # an existing (or ignored) entry
+        if uuid := discovery_info.properties.get("uuid"):
+            # The advertised UUID is prefixed and dashed
+            # (uuid:FF31F09E-5001-...), while the device API (and therefore
+            # the stored unique id) uses the dashless form
+            await self.async_set_unique_id(uuid.removeprefix("uuid:").replace("-", ""))
+            self._abort_if_unique_id_configured(
+                updates={CONF_HOST: discovery_info.host}
+            )
 
         session: ClientSession = await async_get_client_session(self.hass)
         bridge: LinkPlayBridge | None = None
@@ -117,6 +128,6 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_HOST): str}),
             errors=errors,
         )

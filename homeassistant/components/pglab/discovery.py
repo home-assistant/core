@@ -162,7 +162,9 @@ class PGLabDiscovery:
 
         return pglab_device
 
-    def __clean_discovered_device(self, hass: HomeAssistant, device_id: str) -> None:
+    def __clean_discovered_device(
+        self, hass: HomeAssistant, device_id: str, config_entry: PGLabConfigEntry
+    ) -> None:
         """Destroy the device and any entities connected to the device."""
 
         if device_id not in self._discovered:
@@ -180,8 +182,8 @@ class PGLabDiscovery:
 
         # Destroy the device.
         device_registry = dr.async_get(hass)
-        if device_entry := device_registry.async_get_device(
-            identifiers={(DOMAIN, device_id)}
+        if device_entry := device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), config_entry.entry_id
         ):
             device_registry.async_remove_device(device_entry.id)
 
@@ -214,22 +216,24 @@ class PGLabDiscovery:
                 # If there is a valid topic device_id clean
                 # everything relative to the device.
                 if device_id:
-                    self.__clean_discovered_device(hass, device_id)
+                    self.__clean_discovered_device(hass, device_id, config_entry)
 
                 return
 
             # Create a new device.
             device_registry = dr.async_get(hass)
-            device_registry.async_get_or_create(
+            device_registry.async_get_or_create_device(
                 config_entry_id=config_entry.entry_id,
-                configuration_url=f"http://{pglab_device.ip}/",
-                connections={(CONNECTION_NETWORK_MAC, pglab_device.mac)},
-                identifiers={(DOMAIN, pglab_device.id)},
-                manufacturer=pglab_device.manufacturer,
-                model=pglab_device.type,
-                name=pglab_device.name,
-                sw_version=pglab_device.firmware_version,
-                hw_version=pglab_device.hardware_version,
+                device_info=dr.DeviceInfo(
+                    configuration_url=f"http://{pglab_device.ip}/",
+                    connections={(CONNECTION_NETWORK_MAC, pglab_device.mac)},
+                    identifiers={(DOMAIN, pglab_device.id)},
+                    manufacturer=pglab_device.manufacturer,
+                    model=pglab_device.type,
+                    name=pglab_device.name,
+                    sw_version=pglab_device.firmware_version,
+                    hw_version=pglab_device.hardware_version,
+                ),
             )
 
             # Do some checking if previous entities must be updated.
@@ -252,7 +256,7 @@ class PGLabDiscovery:
 
                 # Something has changed, all previous entities
                 # must be destroyed and re-created.
-                self.__clean_discovered_device(hass, pglab_device.id)
+                self.__clean_discovered_device(hass, pglab_device.id, config_entry)
 
             # Add a new device.
             discovery_info = await create_discover_device_info(

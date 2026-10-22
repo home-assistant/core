@@ -1,5 +1,7 @@
 """Test the weather websocket API."""
 
+from pytest_homeassistant.typing import WebSocketGenerator
+
 from homeassistant.components.weather import Forecast, WeatherEntityFeature
 from homeassistant.components.weather.const import DOMAIN
 from homeassistant.const import UnitOfTemperature
@@ -7,8 +9,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import MockWeatherTest, create_entity
-
-from tests.typing import WebSocketGenerator
 
 
 async def test_device_class_units(
@@ -30,7 +30,7 @@ async def test_device_class_units(
     assert msg["result"] == {
         "units": {
             "precipitation_unit": ["in", "mm"],
-            "pressure_unit": ["hPa", "inHg", "mbar", "mmHg"],
+            "pressure_unit": ["hPa", "inHg", "kPa", "mbar", "mmHg"],
             "temperature_unit": ["°C", "°F"],
             "visibility_unit": ["km", "mi"],
             "wind_speed_unit": ["Beaufort", "ft/s", "km/h", "kn", "m/s", "mph"],

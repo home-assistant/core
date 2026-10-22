@@ -10,6 +10,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiounifi.models.message import MessageKey
 import orjson
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.unifi import STORAGE_KEY, STORAGE_VERSION
 from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN
@@ -25,9 +27,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 DEFAULT_CONFIG_ENTRY_ID = "1"
 DEFAULT_HOST = "1.2.3.4"
@@ -179,6 +178,7 @@ def fixture_request(
     dpi_app_payload: list[dict[str, Any]],
     dpi_group_payload: list[dict[str, Any]],
     firewall_policy_payload: list[dict[str, Any]],
+    object_oriented_network_config_payload: list[dict[str, Any]],
     port_forward_payload: list[dict[str, Any]],
     traffic_rule_payload: list[dict[str, Any]],
     traffic_route_payload: list[dict[str, Any]],
@@ -220,6 +220,10 @@ def fixture_request(
         mock_get_request(f"/api/s/{site_id}/rest/dpigroup", dpi_group_payload)
         mock_get_request(
             f"/v2/api/site/{site_id}/firewall-policies", firewall_policy_payload
+        )
+        mock_get_request(
+            f"/v2/api/site/{site_id}/object-oriented-network-configs",
+            object_oriented_network_config_payload,
         )
         mock_get_request(f"/api/s/{site_id}/rest/portforward", port_forward_payload)
         mock_get_request(f"/api/s/{site_id}/stat/sysinfo", system_information_payload)
@@ -266,6 +270,12 @@ def fixture_dpi_group_data() -> list[dict[str, Any]]:
 @pytest.fixture(name="firewall_policy_payload")
 def firewall_policy_payload_data() -> list[dict[str, Any]]:
     """Firewall policy data."""
+    return []
+
+
+@pytest.fixture(name="object_oriented_network_config_payload")
+def object_oriented_network_config_payload_data() -> list[dict[str, Any]]:
+    """Object-oriented network config data."""
     return []
 
 

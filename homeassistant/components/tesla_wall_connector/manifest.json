@@ -1,7 +1,8 @@
 {
   "domain": "tesla_wall_connector",
   "name": "Tesla Wall Connector",
-  "codeowners": ["@einarhauks"],
+  "categories": ["energy.ev_charging"],
+  "codeowners": ["@einarhauks", "@sarabveer"],
   "config_flow": true,
   "dhcp": [
     {

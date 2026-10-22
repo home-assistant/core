@@ -1,8 +1,11 @@
 """Tests for the Yale Access Bluetooth integration."""
 
-from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
 
-from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 
 YALE_ACCESS_LOCK_DISCOVERY_INFO = BluetoothServiceInfoBleak(
     name="M1012LU",
@@ -35,6 +38,23 @@ LOCK_DISCOVERY_INFO_UUID_ADDRESS = BluetoothServiceInfoBleak(
     service_data={},
     source="local",
     device=generate_ble_device(address="AA:BB:CC:DD:EE:FF", name="M1012LU"),
+    advertisement=generate_advertisement_data(),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+SAME_LOCAL_NAME_DISCOVERY_INFO = BluetoothServiceInfoBleak(
+    name="M1012LU",
+    address="A8:51:AB:91:1C:FA",
+    rssi=-40,
+    manufacturer_data={
+        76: b"\x061\x00Z\x8f\x93\xb2\xec\x85\x06\x00i\x00\x02\x02Q\xed\x1d\xf0"
+    },
+    service_uuids=[],
+    service_data={},
+    source="local",
+    device=generate_ble_device(address="A8:51:AB:91:1C:FA", name="M1012LU"),
     advertisement=generate_advertisement_data(),
     time=0,
     connectable=True,

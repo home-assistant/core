@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, PropertyMock, patch
 from zoneinfo import ZoneInfo
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ituran.const import (
     CONF_ID_OR_PASSPORT,
@@ -15,8 +16,6 @@ from homeassistant.components.ituran.const import (
 )
 
 from .const import MOCK_CONFIG_DATA
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

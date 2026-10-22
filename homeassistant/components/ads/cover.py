@@ -2,8 +2,8 @@
 
 from typing import Any, override
 
+import probatio
 import pyads
-import voluptuous as vol
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -35,14 +35,14 @@ STATE_KEY_POSITION = "position"
 
 PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ADS_VAR): cv.string,
-        vol.Optional(CONF_ADS_VAR_POSITION): cv.string,
-        vol.Optional(CONF_ADS_VAR_SET_POS): cv.string,
-        vol.Optional(CONF_ADS_VAR_CLOSE): cv.string,
-        vol.Optional(CONF_ADS_VAR_OPEN): cv.string,
-        vol.Optional(CONF_ADS_VAR_STOP): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        probatio.Required(CONF_ADS_VAR): cv.string,
+        probatio.Optional(CONF_ADS_VAR_POSITION): cv.string,
+        probatio.Optional(CONF_ADS_VAR_SET_POS): cv.string,
+        probatio.Optional(CONF_ADS_VAR_CLOSE): cv.string,
+        probatio.Optional(CONF_ADS_VAR_OPEN): cv.string,
+        probatio.Optional(CONF_ADS_VAR_STOP): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     }
 )
 

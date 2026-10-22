@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -14,8 +15,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import get_appliance_id, merge_dict_recursive, setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 DISABLED_ENTITIES: list[str] = [
     "sensor.dishwasher_end_at",

@@ -15,7 +15,7 @@ from electrolux_group_developer_sdk.client.bad_credentials_exception import (
 from electrolux_group_developer_sdk.client.failed_connection_exception import (
     FailedConnectionException,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY
@@ -127,11 +127,11 @@ class ElectroluxConfigFlow(ConfigFlow, domain=DOMAIN):
     def _show_form(self, step_id: str, errors: dict[str, str]) -> ConfigFlowResult:
         return self.async_show_form(
             step_id=step_id,
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_API_KEY): str,
-                    vol.Required(CONF_ACCESS_TOKEN): str,
-                    vol.Required(CONF_REFRESH_TOKEN): str,
+                    probatio.Required(probatio.Secret(CONF_API_KEY)): str,
+                    probatio.Required(probatio.Secret(CONF_ACCESS_TOKEN)): str,
+                    probatio.Required(probatio.Secret(CONF_REFRESH_TOKEN)): str,
                 }
             ),
             errors=errors,

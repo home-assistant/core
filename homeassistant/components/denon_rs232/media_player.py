@@ -1,6 +1,7 @@
 """Media player platform for the Denon RS-232 integration."""
 
-from typing import Literal, cast, override
+import re
+from typing import Any, Literal, cast, override
 
 from denon_rs232 import (
     MIN_VOLUME_DB,
@@ -13,13 +14,17 @@ from denon_rs232 import (
 )
 
 from homeassistant.components.media_player import (
+    BrowseError,
+    BrowseMedia,
+    MediaClass,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -70,6 +75,25 @@ INPUT_SOURCE_DENON_TO_HA: dict[InputSource, str] = {
     InputSource.HDRADIO: "hdradio",
     InputSource.DAB: "dab",
 }
+
+TUNER_PRESETS_ROOT = "presets"
+TUNER_FREQUENCY_MIN = 8750
+TUNER_FREQUENCY_MAX = 10800
+TUNER_FREQUENCY_LENGTH = 6
+#: Reported frequencies at or above this value are AM, which is not supported.
+TUNER_FREQUENCY_FM_MAX = 50000
+
+
+def _tuner_frequency_to_mhz(frequency: str | None) -> str | None:
+    """Convert a reported tuner frequency to MHz, or None if it is not FM."""
+    if frequency is None or not frequency.isdigit():
+        return None
+
+    value = int(frequency)
+    if value >= TUNER_FREQUENCY_FM_MAX:
+        return None
+
+    return f"{value / 100:.2f}"
 
 
 async def async_setup_entry(
@@ -138,7 +162,11 @@ class DenonRS232MediaPlayer(MediaPlayerEntity):
 
         if zone == "main":
             self._attr_name = None
-            self._attr_supported_features |= MediaPlayerEntityFeature.VOLUME_MUTE
+            self._attr_supported_features |= (
+                MediaPlayerEntityFeature.VOLUME_MUTE
+                | MediaPlayerEntityFeature.PLAY_MEDIA
+                | MediaPlayerEntityFeature.BROWSE_MEDIA
+            )
         else:
             self._attr_name = "Zone 2" if zone == "zone_2" else "Zone 3"
 
@@ -171,6 +199,13 @@ class DenonRS232MediaPlayer(MediaPlayerEntity):
 
         source = self._player.input_source
         self._attr_source = INPUT_SOURCE_DENON_TO_HA.get(source) if source else None
+
+        if source is InputSource.TUNER:
+            self._attr_media_channel = _tuner_frequency_to_mhz(
+                self._receiver.state.main_zone.tuner_frequency
+            )
+        else:
+            self._attr_media_channel = None
 
         volume_min = self._player.volume_min
         volume_max = self._player.volume_max
@@ -239,3 +274,62 @@ class DenonRS232MediaPlayer(MediaPlayerEntity):
             raise HomeAssistantError("Invalid source")
 
         await self._player.select_input_source(input_source)
+
+    @override
+    async def async_play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
+        """Tune to a tuner preset or an FM frequency."""
+        if media_type != MediaType.CHANNEL:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_media_type",
+                translation_placeholders={"media_type": str(media_type)},
+            )
+
+        player = cast(MainPlayer, self._player)
+        if re.fullmatch(r"[A-G][1-8]", media_id):
+            await player.set_tuner_preset(media_id)
+        elif (match := re.fullmatch(r"0*([0-9]{1,5})", media_id)) and (
+            TUNER_FREQUENCY_MIN <= (frequency := int(match[1])) <= TUNER_FREQUENCY_MAX
+        ):
+            await player.set_tuner_frequency(f"{frequency:0{TUNER_FREQUENCY_LENGTH}d}")
+        else:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_tuner_channel",
+                translation_placeholders={"media_id": media_id},
+            )
+
+    @override
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """List the tuner presets as playable channels."""
+        if media_content_id not in (None, TUNER_PRESETS_ROOT):
+            raise BrowseError(f"Media not found: {media_content_id}")
+
+        return BrowseMedia(
+            title="Tuner presets",
+            media_class=MediaClass.DIRECTORY,
+            media_content_id=TUNER_PRESETS_ROOT,
+            media_content_type=MediaType.CHANNELS,
+            can_play=False,
+            can_expand=True,
+            children_media_class=MediaClass.CHANNEL,
+            children=[
+                BrowseMedia(
+                    title=preset,
+                    media_class=MediaClass.CHANNEL,
+                    media_content_id=preset,
+                    media_content_type=MediaType.CHANNEL,
+                    can_play=True,
+                    can_expand=False,
+                )
+                for preset in (
+                    f"{bank}{number}" for bank in "ABCDEFG" for number in range(1, 9)
+                )
+            ],
+        )

@@ -1,6 +1,7 @@
 {
   "domain": "volvo",
   "name": "Volvo",
+  "categories": ["vehicles_transport.cars_evs"],
   "codeowners": ["@thomasddn"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
@@ -9,5 +10,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["volvocarsapi"],
   "quality_scale": "platinum",
-  "requirements": ["volvocarsapi==0.4.3"]
+  "requirements": ["volvocarsapi==0.4.4"]
 }

@@ -9,28 +9,15 @@ from elkm1_lib.elements import Element
 from elkm1_lib.elk import Elk
 from elkm1_lib.outputs import Output
 from elkm1_lib.thermostats import Thermostat
-import voluptuous as vol
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import VolDictType
 
 from . import ElkM1ConfigEntry
-from .const import ATTR_DURATION, DOMAIN
 from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
 from .models import ELKM1Data
-
-SERVICE_SWITCH_OUTPUT_TURN_ON_FOR = "switch_output_turn_on_for"
-
-ELK_OUTPUT_TURN_ON_FOR_SERVICE_SCHEMA: VolDictType = {
-    vol.Required(ATTR_DURATION): vol.All(
-        cv.time_period,
-        vol.Range(min=timedelta(seconds=1), max=timedelta(seconds=65535)),
-    ),
-}
 
 
 async def async_setup_entry(
@@ -47,15 +34,6 @@ async def async_setup_entry(
         elk_data, elk.thermostats, "thermostat", ElkThermostatEMHeat, entities
     )
     async_add_entities(entities)
-
-    service.async_register_platform_entity_service(
-        hass,
-        DOMAIN,
-        SERVICE_SWITCH_OUTPUT_TURN_ON_FOR,
-        entity_domain=SWITCH_DOMAIN,
-        schema=ELK_OUTPUT_TURN_ON_FOR_SERVICE_SCHEMA,
-        func="async_switch_output_turn_on_for",
-    )
 
 
 class ElkOutput(ElkAttachedEntity, SwitchEntity):
