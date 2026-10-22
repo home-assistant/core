@@ -254,6 +254,7 @@ SENSOR_STATUS: tuple[PaperlessEntityDescription[Status], ...] = (
 SENSOR_NEXT_ASN = PaperlessEntityDescription[int](
     key="next_asn",
     translation_key="next_asn",
+    state_class=SensorStateClass.MEASUREMENT,
     value_fn=lambda data: data,
 )
 
