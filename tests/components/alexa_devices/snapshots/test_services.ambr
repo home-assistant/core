@@ -81,6 +81,8 @@
         }),
         'serial_number': 'echo_test_serial_number',
         'software_version': 'echo_test_software_version',
+        'unsupported_features': dict({
+        }),
         'voice_control_supported': True,
       }),
       'Alexa.Joke.Play',
@@ -171,6 +173,8 @@
         }),
         'serial_number': 'echo_test_serial_number',
         'software_version': 'echo_test_software_version',
+        'unsupported_features': dict({
+        }),
         'voice_control_supported': True,
       }),
       'bell_02',
@@ -261,6 +265,8 @@
         }),
         'serial_number': 'echo_test_serial_number',
         'software_version': 'echo_test_software_version',
+        'unsupported_features': dict({
+        }),
         'voice_control_supported': True,
       }),
       'Play B.B.C. radio on TuneIn',

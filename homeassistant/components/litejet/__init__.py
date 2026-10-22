@@ -43,14 +43,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiteJetConfigEntry) -> N
 
     entry.runtime_data = system
 
-    dr.async_get(hass).async_get_or_create_device(
+    dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, f"{entry.entry_id}_mcp")},
-            name="LiteJet",
-            manufacturer="Centralite",
-            model=system.model_name,
-        ),
+        identifiers={(DOMAIN, f"{entry.entry_id}_mcp")},
+        name="LiteJet",
+        manufacturer="Centralite",
+        model=system.model_name,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

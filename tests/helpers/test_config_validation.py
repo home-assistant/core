@@ -152,6 +152,7 @@ def test_url() -> None:
     "value",
     [
         pytest.param("http://exa mple.com", id="space_in_host"),
+        pytest.param("http://user:pass@exa mple.com", id="space_in_host_with_userinfo"),
         pytest.param("http://example.com\x00", id="nul"),
         pytest.param("http://exam\tple.com", id="tab_in_host"),
         pytest.param("http://exam\nple.com", id="newline_in_host"),
@@ -189,10 +190,13 @@ def test_url_strips_surrounding_whitespace(value: str) -> None:
         pytest.param(
             "http://example.com/?file=snapshot image.jpg", id="space_in_query"
         ),
+        pytest.param("http://example.com/#snapshot image", id="space_in_fragment"),
+        pytest.param("http://user:pa ss@example.com/", id="space_in_password"),
+        pytest.param("http://us er@example.com/", id="space_in_username"),
     ],
 )
-def test_url_allows_spaces_after_host(value: str) -> None:
-    """Test spaces in the path and query are kept, since HTTP clients encode them."""
+def test_url_allows_spaces_outside_host(value: str) -> None:
+    """Test spaces outside the host are kept, since HTTP clients encode them."""
     assert probatio.Schema(cv.url)(value) == value
 
 
@@ -659,6 +663,71 @@ def test_entity_service_schema() -> None:
     for value in options:
         validated = schema(value)
         assert "metadata" not in validated
+
+
+def test_entity_service_schema_exclude() -> None:
+    """Test make_entity_service_schema validates the exclude block."""
+    schema = cv.make_entity_service_schema({})
+
+    invalid = (
+        # An exclude block alone doesn't target anything
+        {"exclude": {"entity_id": "light.kitchen"}},
+        # Exclude blocks can't be nested
+        {"area_id": "kitchen", "exclude": {"exclude": {"area_id": "pantry"}}},
+        # all and none are not supported in the exclude block
+        {"area_id": "kitchen", "exclude": {"entity_id": "all"}},
+        {"area_id": "kitchen", "exclude": {"entity_id": "none"}},
+        {"area_id": "kitchen", "exclude": {"unknown": "pantry"}},
+        {"area_id": "kitchen", "exclude": "light.kitchen"},
+    )
+    for value in invalid:
+        with pytest.raises(probatio.MultipleInvalid):
+            schema(value)
+
+    assert schema(
+        {
+            "entity_id": "all",
+            "exclude": {
+                "entity_id": "light.kitchen, light.pantry",
+                "device_id": "a_device",
+                "area_id": "kitchen",
+                "floor_id": "ground_floor",
+                "label_id": "christmas",
+            },
+        }
+    ) == {
+        "entity_id": "all",
+        "exclude": {
+            "entity_id": ["light.kitchen", "light.pantry"],
+            "device_id": ["a_device"],
+            "area_id": ["kitchen"],
+            "floor_id": ["ground_floor"],
+            "label_id": ["christmas"],
+        },
+    }
+
+
+@pytest.mark.parametrize(
+    "schema",
+    [
+        probatio.Schema(cv.TARGET_FIELDS),
+        probatio.Schema(cv.TARGET_SERVICE_FIELDS),
+        probatio.Schema(cv._TARGET_SERVICE_FIELDS_TEMPLATED),
+    ],
+)
+def test_target_fields_exclude(schema: probatio.Schema) -> None:
+    """Test the exclude block of the target field schemas."""
+    assert schema({"area_id": "kitchen", "exclude": {"label_id": "christmas"}}) == {
+        "area_id": ["kitchen"],
+        "exclude": {"label_id": ["christmas"]},
+    }
+
+    for value in (
+        {"area_id": "kitchen", "exclude": {"exclude": {"area_id": "pantry"}}},
+        {"area_id": "kitchen", "exclude": {"entity_id": "all"}},
+    ):
+        with pytest.raises(probatio.MultipleInvalid):
+            schema(value)
 
 
 def test_entity_service_schema_with_metadata() -> None:

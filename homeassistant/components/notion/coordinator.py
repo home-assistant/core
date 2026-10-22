@@ -42,15 +42,13 @@ def _async_register_new_bridge(
         bridge_name = str(bridge.id)
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create_device(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        device_info=dr.DeviceInfo(
-            identifiers={(DOMAIN, bridge.hardware_id)},
-            manufacturer="Silicon Labs",
-            model=str(bridge.hardware_revision),
-            name=bridge_name,
-            sw_version=bridge.firmware_version.wifi,
-        ),
+        identifiers={(DOMAIN, bridge.hardware_id)},
+        manufacturer="Silicon Labs",
+        model=str(bridge.hardware_revision),
+        name=bridge_name,
+        sw_version=bridge.firmware_version.wifi,
     )
 
 

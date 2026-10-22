@@ -6,7 +6,9 @@ from freezegun.api import FrozenDateTimeFactory
 from openevsehttp.exceptions import AuthenticationError, MissingSerial
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
+from homeassistant.components.openevse.const import DOMAIN
 from homeassistant.components.openevse.coordinator import SCAN_INTERVAL
+from homeassistant.components.openevse.services import OpenEVSEService
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -101,3 +103,16 @@ async def test_setup_entry_missing_serial(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_services_registered(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_charger: MagicMock,
+) -> None:
+    """Test component setup registers services."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(DOMAIN, OpenEVSEService.SET_OVERRIDE)
