@@ -42,7 +42,7 @@ from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -489,38 +489,44 @@ class PortainerCoordinator(
 
         for endpoint_id in endpoint_ids:
             endpoint = mapped_endpoints[endpoint_id].endpoint
-            device_registry.async_get_or_create(
+            device_registry.async_get_or_create_device(
                 config_entry_id=self.config_entry.entry_id,
-                identifiers={(DOMAIN, f"{self.config_entry.entry_id}_{endpoint_id}")},
-                configuration_url=URL(
-                    f"{self.config_entry.data[CONF_URL]}#!/{endpoint_id}/docker/dashboard"
+                device_info=DeviceInfo(
+                    identifiers={
+                        (DOMAIN, f"{self.config_entry.entry_id}_{endpoint_id}")
+                    },
+                    configuration_url=URL(
+                        f"{self.config_entry.data[CONF_URL]}#!/{endpoint_id}/docker/dashboard"
+                    ),
+                    manufacturer=DEFAULT_NAME,
+                    model="Endpoint",
+                    name=endpoint.name,
+                    entry_type=DeviceEntryType.SERVICE,
                 ),
-                manufacturer=DEFAULT_NAME,
-                model="Endpoint",
-                name=endpoint.name,
-                entry_type=DeviceEntryType.SERVICE,
             )
 
         for endpoint_id, stack_name, _stack_id in stack_keys:
             stack = mapped_endpoints[endpoint_id].stacks[stack_name].stack
-            device_registry.async_get_or_create(
+            device_registry.async_get_or_create_device(
                 config_entry_id=self.config_entry.entry_id,
-                identifiers={
-                    (
-                        DOMAIN,
-                        f"{self.config_entry.entry_id}_{endpoint_id}_stack_{stack.id}",
-                    )
-                },
-                configuration_url=URL(
-                    f"{self.config_entry.data[CONF_URL]}#!/{endpoint_id}/docker/stacks/{stack.name}"
-                ),
-                manufacturer=DEFAULT_NAME,
-                model="Stack",
-                name=stack.name,
-                via_device_id=dr.async_get_device_id_by_identifier(
-                    self.hass,
-                    (DOMAIN, f"{self.config_entry.entry_id}_{endpoint_id}"),
-                    config_entry_id=self.config_entry.entry_id,
+                device_info=DeviceInfo(
+                    identifiers={
+                        (
+                            DOMAIN,
+                            f"{self.config_entry.entry_id}_{endpoint_id}_stack_{stack.id}",
+                        )
+                    },
+                    configuration_url=URL(
+                        f"{self.config_entry.data[CONF_URL]}#!/{endpoint_id}/docker/stacks/{stack.name}"
+                    ),
+                    manufacturer=DEFAULT_NAME,
+                    model="Stack",
+                    name=stack.name,
+                    via_device_id=dr.async_get_device_id_by_identifier(
+                        self.hass,
+                        (DOMAIN, f"{self.config_entry.entry_id}_{endpoint_id}"),
+                        config_entry_id=self.config_entry.entry_id,
+                    ),
                 ),
             )
 

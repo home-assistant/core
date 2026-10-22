@@ -3,14 +3,13 @@
 from unittest.mock import patch
 
 from apyosoenergyapi.helper import osoenergy_exceptions
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.osoenergy.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 SUBSCRIPTION_KEY = "valid subscription key"
 SCAN_INTERVAL = 120
@@ -33,7 +32,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
             return_value=TEST_USER_EMAIL,
         ),
         patch(
-            "homeassistant.components.osoenergy.async_setup_entry", return_value=True
+            "homeassistant.components.osoenergy.async_setup_entry", return_value=None
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -149,7 +148,7 @@ async def test_user_flow_invalid_subscription_key(hass: HomeAssistant) -> None:
             return_value=TEST_USER_EMAIL,
         ),
         patch(
-            "homeassistant.components.osoenergy.async_setup_entry", return_value=True
+            "homeassistant.components.osoenergy.async_setup_entry", return_value=None
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -189,7 +188,7 @@ async def test_user_flow_exception_on_subscription_key_check(
             return_value=TEST_USER_EMAIL,
         ),
         patch(
-            "homeassistant.components.osoenergy.async_setup_entry", return_value=True
+            "homeassistant.components.osoenergy.async_setup_entry", return_value=None
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(

@@ -267,13 +267,6 @@ class IcloudAccount:
 
         try:
             api_devices = self.api.devices
-            if locate:
-                # Since pyicloud 2.3.0 device reads are cache-only and the
-                # library requests an active locate from Apple only at service
-                # creation, so explicitly refresh with locate=True to get a
-                # fresh GPS fix on every poll instead of Apple's cached
-                # location.
-                api_devices.refresh(locate=True)
         except Exception as err:
             if _is_auth_failure(err):
                 # Refreshing the devices is where a stored session is usually
@@ -285,6 +278,21 @@ class IcloudAccount:
             dispatcher_send(self.hass, self.signal_device_update)
             self._schedule_next_fetch()
             return
+
+        if locate:
+            # Since pyicloud 2.3.0 device reads are cache-only and the library
+            # requests an active locate from Apple only at service creation, so
+            # explicitly refresh with locate=True to get a fresh GPS fix on
+            # every poll instead of Apple's cached location.
+            try:
+                api_devices.refresh(locate=True)
+            except Exception as err:
+                if _is_auth_failure(err):
+                    raise
+                # Best effort: the devices read below still carry whichever
+                # fixes iCloud already held, which beats skipping the poll
+                # altogether.
+                _LOGGER.debug("Could not request an iCloud location refresh: %s", err)
 
         if self._owner_fullname is None and api_devices.user_info is not None:
             # setup() returns before reading these when iCloud asks for a

@@ -750,6 +750,9 @@
     "map_failure": {
       "message": "Something went wrong creating the map"
     },
+    "map_not_found": {
+      "message": "Map not found"
+    },
     "mqtt_unauthorized": {
       "message": "Roborock MQTT servers rejected the connection due to rate limiting or invalid credentials. You may either attempt to reauthenticate or wait and reload the integration."
     },

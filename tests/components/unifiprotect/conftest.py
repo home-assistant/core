@@ -10,6 +10,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
 from uiprotect import ProtectApiClient
 from uiprotect.api import RTSPSStreams
 from uiprotect.data import (
@@ -60,8 +61,6 @@ from .utils import (
     public_rtsps_for,
 )
 
-from tests.common import MockConfigEntry, load_json_object_fixture
-
 MAC_ADDR = "aa:bb:cc:dd:ee:ff"
 UNIFI_MAC = _async_unifi_mac_from_hass(MAC_ADDR)
 
@@ -81,6 +80,29 @@ DEFAULT_API_KEY = "test-api-key"
 def mock_discovery():
     """Prevent real network scanning in all unifiprotect tests."""
     with _patch_discovery(no_device=True):
+        yield
+
+
+@pytest.fixture
+def mock_private_only_entities_registered():
+    """Create the deprecated private-only entities as if they were registered.
+
+    New installs skip them; the platform tests cover existing installs.
+    """
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.entity.async_is_new_private_only_entity",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.switch.async_is_new_private_only_entity",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.sensor.async_is_new_private_only_entity",
+            return_value=False,
+        ),
+    ):
         yield
 
 
@@ -686,7 +708,7 @@ def mock_setup_fixture() -> Generator[AsyncMock]:
         ),
         patch(
             "homeassistant.components.unifiprotect.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock,
     ):
         yield mock

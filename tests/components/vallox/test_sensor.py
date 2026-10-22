@@ -4,12 +4,11 @@ from datetime import datetime, timedelta, tzinfo
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from vallox_websocket_api import MetricData
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

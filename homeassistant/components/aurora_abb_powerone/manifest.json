@@ -1,6 +1,7 @@
 {
   "domain": "aurora_abb_powerone",
   "name": "Aurora ABB PowerOne Solar PV",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@davet2001"],
   "config_flow": true,
   "dependencies": ["usb"],
