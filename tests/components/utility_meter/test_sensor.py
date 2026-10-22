@@ -22,10 +22,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.components.utility_meter import DEFAULT_OFFSET
 from homeassistant.components.utility_meter.const import (
+    ATTR_VALUE,
     DAILY,
     DOMAIN,
     HOURLY,
     QUARTER_HOURLY,
+    SERVICE_CALIBRATE_METER,
+    SERVICE_RESET,
 )
 from homeassistant.components.utility_meter.sensor import (
     ATTR_LAST_RESET,
@@ -34,10 +37,6 @@ from homeassistant.components.utility_meter.sensor import (
     PAUSED,
     UtilityMeterSensor,
     UtilitySensorExtraStoredData,
-)
-from homeassistant.components.utility_meter.services import (
-    UtilityMeterService,
-    UtilityMeterServiceArgument,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -196,11 +195,8 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
 
     await hass.services.async_call(
         DOMAIN,
-        UtilityMeterService.CALIBRATE,
-        {
-            ATTR_ENTITY_ID: "sensor.energy_bill_midpeak",
-            UtilityMeterServiceArgument.VALUE: "100",
-        },
+        SERVICE_CALIBRATE_METER,
+        {ATTR_ENTITY_ID: "sensor.energy_bill_midpeak", ATTR_VALUE: "100"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -210,11 +206,8 @@ async def test_state(hass: HomeAssistant, yaml_config, config_entry_config) -> N
 
     await hass.services.async_call(
         DOMAIN,
-        UtilityMeterService.CALIBRATE,
-        {
-            ATTR_ENTITY_ID: "sensor.energy_bill_midpeak",
-            UtilityMeterServiceArgument.VALUE: "0.123",
-        },
+        SERVICE_CALIBRATE_METER,
+        {ATTR_ENTITY_ID: "sensor.energy_bill_midpeak", ATTR_VALUE: "0.123"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -962,7 +955,7 @@ async def test_service_reset_no_tariffs(
     with freeze_time(now):
         await hass.services.async_call(
             domain=DOMAIN,
-            service=UtilityMeterService.RESET,
+            service=SERVICE_RESET,
             service_data={},
             target={"entity_id": "sensor.energy_bill"},
             blocking=True,
@@ -1101,7 +1094,7 @@ async def test_service_reset_no_tariffs_correct_with_multi(
     with freeze_time(now):
         await hass.services.async_call(
             domain=DOMAIN,
-            service=UtilityMeterService.RESET,
+            service=SERVICE_RESET,
             service_data={},
             target={"entity_id": "sensor.energy_bill"},
             blocking=True,
