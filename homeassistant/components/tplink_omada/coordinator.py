@@ -21,9 +21,8 @@ from tplink_omada_client.devices import (
 )
 from tplink_omada_client.exceptions import OmadaClientException
 
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -252,30 +251,6 @@ class OmadaClientsCoordinator(OmadaCoordinator[OmadaWirelessClient]):
         }
 
 
-class OmadaKnownClientsCoordinator(OmadaCoordinator[OmadaWirelessClient]):
-    """Coordinator for getting details about all wireless clients known to the controller."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: OmadaConfigEntry,
-        omada_client: OmadaSiteClient,
-    ) -> None:
-        """Initialize my coordinator."""
-        super().__init__(
-            hass, config_entry, omada_client, "KnownClientsList", poll_delay=None
-        )
-
-    @override
-    async def poll_update(self) -> dict[str, OmadaWirelessClient]:
-        """Poll the site's all-time known wireless clients."""
-        return {
-            client.mac: client
-            async for client in self.omada_client.get_known_clients()
-            if isinstance(client, OmadaWirelessClient)
-        }
-
-
 class FirmwareUpdateStatus(NamedTuple):
     """Firmware update information for Omada SDN devices."""
 
@@ -340,57 +315,6 @@ class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):
         self._config_entry.async_create_background_task(
             self.hass, self.async_request_refresh(), "Omada Firmware Update Refresh"
         )
-
-
-def _unique_id_to_mac(unique_id: str | None) -> str | None:
-    """Extract the client MAC address from a tracker unique ID."""
-    if not unique_id or not unique_id.startswith("scanner_"):
-        return None
-    # The format is scanner_<site_id>_<mac>. Strip the prefix and split from the
-    # right so site_ids that contain underscores are handled correctly.
-    remainder = unique_id.removeprefix("scanner_")
-    site_id, sep, mac = remainder.rpartition("_")
-    if not sep or not site_id or not mac:
-        return None
-
-    # format_mac lowercases and reformats recognized separators without
-    # validating, so require six octets of exactly two hex digits.
-    mac = dr.format_mac(mac)
-    octets = mac.split(":")
-    if len(octets) != 6 or any(
-        len(octet) != 2 or any(char not in "0123456789abcdef" for char in octet)
-        for octet in octets
-    ):
-        return None
-    return mac
-
-
-async def async_cleanup_client_trackers(
-    hass: HomeAssistant,
-    controller: OmadaSiteController,
-) -> None:
-    """Remove stale client tracker entities for the Omada integration."""
-    if not controller.known_clients_coordinator.last_update_success:
-        return
-
-    known_clients = controller.known_clients_coordinator.data or {}
-    entity_registry = er.async_get(hass)
-    entry_id = controller.known_clients_coordinator.config_entry.entry_id
-    known_macs = {dr.format_mac(mac) for mac in known_clients}
-
-    for entity in er.async_entries_for_config_entry(entity_registry, entry_id):
-        if entity.domain != DEVICE_TRACKER_DOMAIN:
-            continue
-
-        client_mac = _unique_id_to_mac(entity.unique_id)
-        if client_mac is None:
-            continue
-
-        if (
-            client_mac not in known_macs
-            and entity.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-        ):
-            entity_registry.async_remove(entity.entity_id)
 
 
 async def async_cleanup_devices(

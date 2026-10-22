@@ -23,7 +23,7 @@ from homeassistant.helpers.typing import ConfigType
 from .config_flow import CONF_SITE, create_omada_client
 from .const import DOMAIN
 from .controller import OmadaSiteController
-from .coordinator import async_cleanup_client_trackers, async_cleanup_devices
+from .coordinator import async_cleanup_devices
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -95,17 +95,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> Non
             # instead of polling the controller while polling is disabled.
             return
         else:
-            # Refresh coordinators so cleanup doesn't use stale data.
+            # Refresh the coordinator so cleanup doesn't use stale data.
             await controller.devices_coordinator.async_refresh()
-            await controller.known_clients_coordinator.async_refresh()
-        await async_cleanup_devices(
-            hass,
-            controller,
-        )
-        await async_cleanup_client_trackers(
-            hass,
-            controller,
-        )
+        await async_cleanup_devices(hass, controller)
 
     @callback
     def _schedule_cleanup(_now: datetime | None = None) -> None:

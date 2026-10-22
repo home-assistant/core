@@ -4,18 +4,13 @@ from typing import override
 
 from tplink_omada_client.clients import OmadaWirelessClient
 
-from homeassistant.components.device_tracker import (
-    DOMAIN as DEVICE_TRACKER_DOMAIN,
-    ScannerEntity,
-)
+from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import OmadaConfigEntry
 from .config_flow import CONF_SITE
-from .const import DOMAIN
 from .coordinator import OmadaClientsCoordinator
 
 PARALLEL_UPDATES = 0
@@ -31,60 +26,18 @@ async def async_setup_entry(
     controller = config_entry.runtime_data
 
     site_id = config_entry.data[CONF_SITE]
-    known_clients_coordinator = controller.known_clients_coordinator
-
-    added_unique_ids: set[str] = set()
-
-    def _should_add(unique_id: str) -> bool:
-        """Return if a tracker should be added by this platform run.
-
-        A disabled registry entry needs no entity, so it is skipped. Every
-        other entry is added, because a registry entry alone does not mean the
-        entity exists: Home Assistant writes a restored state for enabled
-        entries that no platform has added yet.
-        """
-        entity_registry = er.async_get(hass)
-        entity_id = entity_registry.async_get_entity_id(
-            DEVICE_TRACKER_DOMAIN, DOMAIN, unique_id
-        )
-        if entity_id is None:
-            # The entry no longer exists, for example because stale tracker
-            # cleanup removed it. Allow the tracker to be created again.
-            added_unique_ids.discard(unique_id)
-            return True
-        entity_entry = entity_registry.async_get(entity_id)
-        if entity_entry is not None and entity_entry.disabled_by is not None:
-            return False
-        return unique_id not in added_unique_ids
-
-    def _new_trackers() -> list[OmadaClientScannerEntity]:
-        """Return trackers for known clients that this platform has not added."""
-        entities: list[OmadaClientScannerEntity] = []
-        for client in (known_clients_coordinator.data or {}).values():
-            unique_id = f"scanner_{site_id}_{client.mac}"
-            if not _should_add(unique_id):
-                continue
-            added_unique_ids.add(unique_id)
-            entities.append(
-                OmadaClientScannerEntity(
-                    site_id, client.mac, client.name, controller.clients_coordinator
-                )
-            )
-        return entities
-
-    @callback
-    def _handle_known_clients_update() -> None:
-        """Add trackers for clients that reappeared on the controller."""
-        if entities := _new_trackers():
-            async_add_entities(entities)
-
-    config_entry.async_on_unload(
-        known_clients_coordinator.async_add_listener(_handle_known_clients_update)
-    )
 
     # Add all known WiFi devices as potentially tracked devices. They will only be
     # tracked if the user enables the entity.
-    async_add_entities(_new_trackers())
+    async_add_entities(
+        [
+            OmadaClientScannerEntity(
+                site_id, client.mac, client.name, controller.clients_coordinator
+            )
+            async for client in controller.omada_client.get_known_clients()
+            if isinstance(client, OmadaWirelessClient)
+        ]
+    )
 
 
 class OmadaClientScannerEntity(

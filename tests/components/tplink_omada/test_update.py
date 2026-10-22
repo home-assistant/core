@@ -98,7 +98,6 @@ async def test_firmware_download_in_progress(
 ) -> None:
     """Test update entity when firmware download is in progress."""
     entity_id = "update.test_poe_switch_firmware"
-    controller = init_integration.runtime_data
 
     # Rebuild device list with fwDownload set to True for the switch
     updated_devices = await _rebuild_device_list_with_update(
