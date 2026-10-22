@@ -129,6 +129,9 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                 )
             )
 
+        # Sort by timestamp, as datetimes in the same time zone are compared by
+        # wall time, which puts events in the wrong order when clocks fall back
+        event_list.sort(key=lambda event: event.start_datetime_local.timestamp())
         return event_list
 
     @override

@@ -6,6 +6,11 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    assert_platform_setup_creates_issue,
+    async_fire_time_changed,
+)
 
 from homeassistant.components.scrape.const import (
     CONF_ENCODING,
@@ -46,12 +51,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import MockRestData, return_integration_config
-
-from tests.common import (
-    MockConfigEntry,
-    assert_platform_setup_creates_issue,
-    async_fire_time_changed,
-)
 
 DOMAIN = "scrape"
 

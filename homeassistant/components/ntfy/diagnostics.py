@@ -8,7 +8,7 @@ from homeassistant.components.diagnostics import REDACTED
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 
-from . import NtfyConfigEntry
+from .coordinator import NtfyConfigEntry
 
 
 async def async_get_config_entry_diagnostics(

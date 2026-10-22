@@ -15,7 +15,8 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 
 from ..const import DOMAIN
-from ..entity import OverkizDataUpdateCoordinator, OverkizEntity
+from ..coordinator import OverkizDataUpdateCoordinator
+from ..entity import OverkizEntity
 
 OVERKIZ_TO_HVAC_MODE: dict[str, HVACMode] = {
     OverkizCommandParam.MANU: HVACMode.HEAT,

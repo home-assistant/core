@@ -16,6 +16,7 @@ from pytest_homeassistant.components.recorder.common import (
     convert_pending_events_to_event_types,
     convert_pending_states_to_meta,
 )
+from pytest_homeassistant.typing import RecorderInstanceContextManager
 from sqlalchemy.exc import DatabaseError, OperationalError
 from sqlalchemy.orm.session import Session
 
@@ -49,8 +50,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.typing import RecorderInstanceContextManager
 
 TEST_EVENT_TYPES = (
     "EVENT_TEST_AUTOPURGE",

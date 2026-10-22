@@ -4,14 +4,13 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.iseo_argo_ble.const import CONF_PRIV_SCALAR, DOMAIN
 from homeassistant.const import CONF_ADDRESS, CONF_UUID
 from homeassistant.helpers.device_registry import format_mac
 
 from . import MOCK_ADDRESS, MOCK_PRIV_SCALAR, MOCK_UUID_HEX
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

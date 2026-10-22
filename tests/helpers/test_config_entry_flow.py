@@ -6,13 +6,17 @@ from contextlib import contextmanager
 from unittest.mock import Mock, PropertyMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_integration,
+    mock_platform,
+)
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers import config_entry_flow
-
-from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
 
 
 @contextmanager
@@ -431,8 +435,8 @@ async def test_webhook_create_cloudhook(
     """Test cloudhook will be created if subscribed."""
     assert await setup.async_setup_component(hass, "cloud", {})
 
-    async_setup_entry = Mock(return_value=True)
-    async_unload_entry = Mock(return_value=True)
+    async_setup_entry = Mock(return_value=None)
+    async_unload_entry = Mock(return_value=None)
 
     mock_integration(
         hass,
@@ -492,8 +496,8 @@ async def test_webhook_create_cloudhook_aborts_not_connected(
     """Test cloudhook aborts if subscribed but not connected."""
     assert await setup.async_setup_component(hass, "cloud", {})
 
-    async_setup_entry = Mock(return_value=True)
-    async_unload_entry = Mock(return_value=True)
+    async_setup_entry = Mock(return_value=None)
+    async_unload_entry = Mock(return_value=None)
 
     mock_integration(
         hass,
