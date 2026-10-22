@@ -73,7 +73,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
     }
 )
 
-REAUTH_CONFIRM_SCHEMA = probatio.Schema(
+STEP_CREDENTIALS_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): TextSelector(
             TextSelectorConfig(
@@ -89,6 +89,8 @@ REAUTH_CONFIRM_SCHEMA = probatio.Schema(
         ),
     }
 )
+
+REAUTH_CONFIRM_SCHEMA = STEP_CREDENTIALS_SCHEMA
 
 
 async def validate_input(hass: HomeAssistant, data: Mapping[str, Any]) -> None:
@@ -186,21 +188,15 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
                 if user_input.get(CONF_PASSWORD):
                     entry_data[CONF_PASSWORD] = user_input[CONF_PASSWORD]
 
-                if self._discovered_data and user_input[
-                    CONF_HOST
-                ] != self._discovered_data.get(CONF_HOST):
-                    await self.async_set_unique_id(None)
-
                 return self.async_create_entry(
                     title=f"INDI Allsky ({host_str})",
                     data=entry_data,
                 )
 
-        suggested_values = user_input or getattr(self, "_discovered_data", None)
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, suggested_values
+                STEP_USER_DATA_SCHEMA, user_input
             ),
             errors=errors,
         )
@@ -261,39 +257,91 @@ class IndiAllSkyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await validate_input(self.hass, self._discovered_data)
-        except CannotConnect, InvalidAuth, Unknown:
-            return await self.async_step_user()
+        except InvalidAuth:
+            return await self.async_step_credentials()
+        except CannotConnect, Unknown:
+            if ssl:
+                try:
+                    unverified_data = {**self._discovered_data, CONF_VERIFY_SSL: False}
+                    await validate_input(self.hass, unverified_data)
+                except InvalidAuth:
+                    self._discovered_data[CONF_VERIFY_SSL] = False
+                    return await self.async_step_credentials()
+                except CannotConnect, Unknown:
+                    return self.async_abort(reason="cannot_connect")
+                else:
+                    self._discovered_data[CONF_VERIFY_SSL] = False
+                    return await self.async_step_discovery_confirm()
+            return self.async_abort(reason="cannot_connect")
 
         return await self.async_step_discovery_confirm()
+
+    def _create_discovered_entry(self) -> ConfigFlowResult:
+        """Create a config entry from discovered data."""
+        assert self._discovered_data is not None
+        self._async_abort_entries_match(
+            {
+                CONF_HOST: self._discovered_data[CONF_HOST],
+                CONF_PORT: self._discovered_data[CONF_PORT],
+            }
+        )
+        port = self._discovered_data[CONF_PORT]
+        default_port = 443 if self._discovered_data[CONF_SSL] else 80
+        host_str = (
+            f"{self._discovered_data[CONF_HOST]}:{port}"
+            if port != default_port
+            else self._discovered_data[CONF_HOST]
+        )
+        return self.async_create_entry(
+            title=f"INDI Allsky ({host_str})",
+            data=self._discovered_data,
+        )
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle user confirmation of discovery."""
         if user_input is not None:
-            assert self._discovered_data is not None
-            self._async_abort_entries_match(
-                {
-                    CONF_HOST: self._discovered_data[CONF_HOST],
-                    CONF_PORT: self._discovered_data[CONF_PORT],
-                }
-            )
-            port = self._discovered_data[CONF_PORT]
-            default_port = 443 if self._discovered_data[CONF_SSL] else 80
-            host_str = (
-                f"{self._discovered_data[CONF_HOST]}:{port}"
-                if port != default_port
-                else self._discovered_data[CONF_HOST]
-            )
-            return self.async_create_entry(
-                title=f"INDI Allsky ({host_str})",
-                data=self._discovered_data,
-            )
+            return self._create_discovered_entry()
 
         self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders=self.context.get("title_placeholders", {}),
+        )
+
+    async def async_step_credentials(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle credentials for a discovered INDI Allsky device."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            assert self._discovered_data is not None
+            data = {
+                **self._discovered_data,
+                CONF_USERNAME: user_input[CONF_USERNAME],
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+            }
+
+            try:
+                await validate_input(self.hass, data)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                self._discovered_data = data
+                return self._create_discovered_entry()
+
+        return self.async_show_form(
+            step_id="credentials",
+            data_schema=STEP_CREDENTIALS_SCHEMA,
+            description_placeholders=self.context.get("title_placeholders", {}),
+            errors=errors,
         )
 
     async def async_step_reauth(

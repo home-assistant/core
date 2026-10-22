@@ -12,6 +12,17 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "credentials": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "Password for your INDI Allsky user account.",
+          "username": "Username for your INDI Allsky user account."
+        },
+        "description": "Please enter credentials for INDI Allsky."
+      },
       "discovery_confirm": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
       },
