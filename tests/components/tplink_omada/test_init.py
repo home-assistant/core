@@ -361,6 +361,7 @@ async def test_returning_device_kept_on_transient_empty_update(
     mock_omada_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a transient empty update does not delete a returning device."""
     mock_config_entry.add_to_hass(hass)
@@ -379,8 +380,11 @@ async def test_returning_device_kept_on_transient_empty_update(
     assert device_entry is not None
     await controller.async_remove_device(switch_mac, device_entry)
 
+    registration_started = asyncio.Event()
+    registration_proceed = asyncio.Event()
+
     async def _register(device: OmadaListDevice) -> None:
-        """Recreate the device, then let a transient empty update land."""
+        """Recreate the device and hold the callback until the list is empty."""
         device_registry.async_get_or_create(
             config_entry_id=mock_config_entry.entry_id,
             identifiers={(DOMAIN, device.mac)},
@@ -388,13 +392,23 @@ async def test_returning_device_kept_on_transient_empty_update(
             model="Test",
             name="Returning switch",
         )
-        site_client.get_devices = AsyncMock(return_value=[])
-        await controller.devices_coordinator.async_refresh()
+        registration_started.set()
+        await registration_proceed.wait()
 
-    await controller.async_register_device_entities(
-        lambda device: dr.format_mac(device.mac) == dr.format_mac(switch_mac),
-        _register,
+    registration = asyncio.create_task(
+        controller.async_register_device_entities(
+            lambda device: dr.format_mac(device.mac) == dr.format_mac(switch_mac),
+            _register,
+        )
     )
+    await registration_started.wait()
+
+    # A transient empty device update lands while the callback is in flight
+    site_client.get_devices = AsyncMock(return_value=[])
+    await _async_poll_devices(hass, freezer)
+
+    registration_proceed.set()
+    await registration
 
     assert (
         device_registry.async_get_device_by_identifier(
