@@ -22,6 +22,7 @@ import enum
 import functools
 import inspect
 import logging
+import operator
 import re
 import threading
 import time
@@ -29,9 +30,11 @@ from time import monotonic
 from typing import (
     TYPE_CHECKING,
     Any,
+    Concatenate,
     Final,
     Generic,
     NotRequired,
+    Protocol,
     Self,
     TypedDict,
     TypeVar,
@@ -212,6 +215,72 @@ def callback[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
     """Annotation to mark method as safe to call from within the event loop."""
     setattr(func, "_hass_callback", True)  # noqa: B010
     return func
+
+
+class _HasHass(Protocol):
+    """An object with a reference to Home Assistant."""
+
+    @property
+    def hass(self) -> HomeAssistant:
+        """Return Home Assistant."""
+
+
+class _HasPrivateHass(Protocol):
+    """An object with a private reference to Home Assistant."""
+
+    @property
+    def _hass(self) -> HomeAssistant:
+        """Return Home Assistant."""
+
+
+def _get_hass_identity(obj: HomeAssistant) -> HomeAssistant:
+    """Return the HomeAssistant instance passed in."""
+    return obj
+
+
+_get_hass_public = operator.attrgetter("hass")
+_get_hass_private = operator.attrgetter("_hass")
+
+
+def verify_event_loop_thread[
+    _T: HomeAssistant | _HasHass | _HasPrivateHass,
+    **_P,
+    _R,
+](
+    what: str,
+) -> Callable[[Callable[Concatenate[_T, _P], _R]], Callable[Concatenate[_T, _P], _R]]:
+    """Report and raise if the decorated function is not called from the event loop.
+
+    The first argument of the decorated function must be either the
+    HomeAssistant instance or an object with a hass or _hass attribute.
+    Where hass is found is resolved on the first call and then reused.
+    """
+
+    def decorator(
+        func: Callable[Concatenate[_T, _P], _R],
+    ) -> Callable[Concatenate[_T, _P], _R]:
+        get_hass: Callable[[Any], HomeAssistant]
+
+        def resolve_get_hass(obj: Any) -> HomeAssistant:
+            nonlocal get_hass
+            if isinstance(obj, HomeAssistant):
+                get_hass = _get_hass_identity
+            elif hasattr(obj, "hass"):
+                get_hass = _get_hass_public
+            else:
+                get_hass = _get_hass_private
+            return get_hass(obj)
+
+        get_hass = resolve_get_hass
+
+        @functools.wraps(func)
+        def wrapper(obj: _T, /, *args: _P.args, **kwargs: _P.kwargs) -> _R:
+            get_hass(obj).verify_event_loop_thread(what)
+            return func(obj, *args, **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 @callback
@@ -2724,6 +2793,7 @@ class ServiceRegistry:
         ).result()
 
     @callback
+    @verify_event_loop_thread("hass.services.async_register")
     def async_register(
         self,
         domain: str,
@@ -2747,7 +2817,6 @@ class ServiceRegistry:
 
         This method must be run in the event loop.
         """
-        self._hass.verify_event_loop_thread("hass.services.async_register")
         self._async_register(
             domain,
             service,
@@ -2809,12 +2878,12 @@ class ServiceRegistry:
         ).result()
 
     @callback
+    @verify_event_loop_thread("hass.services.async_remove")
     def async_remove(self, domain: str, service: str) -> None:
         """Remove a registered service from service handler.
 
         This method must be run in the event loop.
         """
-        self._hass.verify_event_loop_thread("hass.services.async_remove")
         self._async_remove(domain, service)
 
     @callback
