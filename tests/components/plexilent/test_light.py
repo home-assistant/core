@@ -1,10 +1,11 @@
 """Tests for the Plexilent lights."""
 
+import asyncio
 from dataclasses import replace
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from pyplexilent import PlexilentError
+from pyplexilent import Device, PlexilentError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
@@ -202,6 +203,44 @@ async def test_rgbww_turn_on_without_color_bounds(
         {ATTR_ENTITY_ID: hall, ATTR_RGBWW_COLOR: (255, 0, 0, 128, 128)},
         blocking=True,
     )
+    assert hass.states.get(hall).state == STATE_ON
+
+
+async def test_poll_does_not_revert_command(
+    hass: HomeAssistant,
+    client: MagicMock,
+    entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A poll in flight when a command lands must not revert the command."""
+    await setup_integration(hass, entry)
+    hall = _entity_id(hass, "m:4")
+
+    poll_started = asyncio.Event()
+    finish_poll = asyncio.Event()
+
+    async def slow_devices() -> list[Device]:
+        poll_started.set()
+        await finish_poll.wait()
+        return list(DEVICES)  # stale snapshot: m:4 is off
+
+    client.devices.side_effect = slow_devices
+
+    # Start a poll; it blocks holding the coordinator lock.
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await poll_started.wait()
+
+    # A command arrives mid-poll; it must serialize behind the poll.
+    command = hass.async_create_task(
+        hass.services.async_call(
+            LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: hall}, blocking=True
+        )
+    )
+    finish_poll.set()
+    await command
+    await hass.async_block_till_done()
+
     assert hass.states.get(hall).state == STATE_ON
 
 

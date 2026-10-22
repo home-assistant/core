@@ -54,15 +54,11 @@ class PlexilentEntity(CoordinatorEntity[PlexilentCoordinator]):
     async def _send(self, **fields: Any) -> None:
         """Command the device; its answer is the new state until the next poll."""
         try:
-            device = await self.coordinator.client.command(self._id, **fields)
+            await self.coordinator.async_command(self._id, **fields)
         except PlexilentError as err:
             raise HomeAssistantError(
                 f"Could not control {self.device.name}: {err}"
             ) from err
-        # Apply the device's answer at once, but leave the next poll on its
-        # schedule instead of pushing it out on every command.
-        self.coordinator.data = {**self.coordinator.data, self._id: device}
-        self.coordinator.async_update_listeners()
 
 
 def add_entities(
