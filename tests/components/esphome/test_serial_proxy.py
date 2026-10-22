@@ -361,6 +361,85 @@ async def test_scan_serial_ports_usb_vendor_specific_interface(
     ]
 
 
+@pytest.mark.parametrize(
+    ("serial_number", "product", "vid", "pid", "port_udev_id"),
+    [
+        pytest.param(
+            "",
+            "USB Serial",
+            0x1A86,
+            0x7523,
+            "usb-1a86_USB_Serial-if00-port0",
+            id="no_serial_number",
+        ),
+        pytest.param(
+            "0001",
+            "CP2102 USB to UART Bridge Controller",
+            0x10C4,
+            0xEA60,
+            "usb-10c4_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0",
+            id="placeholder_serial_number",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_scan_serial_ports_usb_non_unique_serial_number(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    serial_number: str,
+    product: str,
+    vid: int,
+    pid: int,
+    port_udev_id: str,
+) -> None:
+    """An adapter without a unique serial number is also matched on its port name."""
+    _mock_identities(
+        mock_client,
+        [
+            SerialProxyIdentity(
+                instance=0,
+                source=SerialProxyIdentitySource.USB,
+                flags=SerialProxyIdentityFlag.CONNECTED,
+                product=product,
+                serial_number=serial_number,
+                usb=UsbDeviceDescriptor(
+                    vendor_id=vid,
+                    product_id=pid,
+                    bcd_device=0x0264,
+                    interface_number=0,
+                    interface_class=0xFF,
+                    port_number=0,
+                ),
+            )
+        ],
+    )
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={"serial_proxies": USB_PROXIES[:1]},
+    )
+
+    url = str(
+        serial_proxy.build_url(
+            device.entry.entry_id, port_udev_id=port_udev_id, port_name="USB (Zigbee)"
+        )
+    )
+    assert _async_scan_serial_ports(hass) == [
+        USBDevice(
+            device=url,
+            resolved_device=url,
+            vid=f"{vid:04X}",
+            pid=f"{pid:04X}",
+            serial_number=serial_number or None,
+            manufacturer=None,
+            description=product,
+            bcd_device=0x0264,
+            interface_description=None,
+            interface_num=0,
+        )
+    ]
+
+
 @pytest.mark.usefixtures("mock_zeroconf")
 async def test_scan_serial_ports_identity_without_usb_descriptor(
     hass: HomeAssistant,

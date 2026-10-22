@@ -37,6 +37,7 @@ from .consumers import UNSCANNABLE_PORT_SCHEMES, async_get_serial_port_consumers
 from .models import SerialDevice, SerialPortConsumer, USBDevice
 from .serial_proxy_stub import register_serialx_transport
 from .utils import (
+    has_unique_serial_number,
     scan_serial_ports,
     serial_path_udev_id,
     usb_device_from_path,
@@ -70,6 +71,7 @@ __all__ = [
     "async_register_scan_request_callback",
     "async_register_serial_port_scanner",
     "async_scan_serial_ports",
+    "has_unique_serial_number",
     "scan_serial_ports",
     "serial_path_udev_id",
     "usb_device_from_path",
@@ -415,9 +417,13 @@ class USBDiscovery:
         if any(port.device == device_path for port in ports):
             return None
 
-        # Identical devices without serial numbers share a name and cannot be told apart
+        # Identical devices without a unique serial number share a name, so a lone match
+        # may be another device while the configured one is unplugged
         candidates = [
-            port.device for port in ports if serial_path_udev_id(port.device) == udev_id
+            port.device
+            for port in ports
+            if has_unique_serial_number(port)
+            and serial_path_udev_id(port.device) == udev_id
         ]
         if len(candidates) != 1:
             return None

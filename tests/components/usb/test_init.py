@@ -159,6 +159,15 @@ MOVED_RADIO_PROXY = (
     "esphome-hass://esphome/01M0EP649N48N88Z52ZG2B21VT"
     "?port_udev_id=usb-Nabu_Casa_ZBT-2_10B41DE589E4-if00"
 )
+SERIAL_LESS_PROXY = (
+    "esphome-hass://esphome/01M0EP649N48N88Z52ZG2B21VT"
+    "?port_name=USB&port_udev_id=usb-1a86_USB_Serial-if00-port0"
+)
+PLACEHOLDER_SERIAL_PROXY = (
+    "esphome-hass://esphome/01M0EP649N48N88Z52ZG2B21VT"
+    "?port_name=USB&port_udev_id="
+    "usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0"
+)
 
 
 def _zbt2_at(device: str) -> USBDevice:
@@ -169,6 +178,28 @@ def _zbt2_at(device: str) -> USBDevice:
         serial_number="10B41DE589E4",
         manufacturer="Nabu Casa",
         description="ZBT-2",
+    )
+
+
+def _ch340_at(device: str) -> USBDevice:
+    return USBDevice(
+        device=device,
+        vid="1A86",
+        pid="7523",
+        serial_number=None,
+        manufacturer=None,
+        description="USB Serial",
+    )
+
+
+def _cp2102_at(device: str) -> USBDevice:
+    return USBDevice(
+        device=device,
+        vid="10C4",
+        pid="EA60",
+        serial_number="0001",
+        manufacturer="Silicon Labs",
+        description="CP2102 USB to UART Bridge Controller",
     )
 
 
@@ -214,6 +245,29 @@ def _zbt2_at(device: str) -> USBDevice:
             ],
             None,
             id="ambiguous",
+        ),
+        # The configured proxy is offline and an identical adapter remains elsewhere
+        pytest.param(
+            SERIAL_LESS_PROXY,
+            [
+                _ch340_at(
+                    SERIAL_LESS_PROXY.replace("01M0EP649N48N88Z52ZG2B21VT", "other")
+                )
+            ],
+            None,
+            id="no_serial_number",
+        ),
+        pytest.param(
+            PLACEHOLDER_SERIAL_PROXY,
+            [
+                _cp2102_at(
+                    PLACEHOLDER_SERIAL_PROXY.replace(
+                        "01M0EP649N48N88Z52ZG2B21VT", "other"
+                    )
+                )
+            ],
+            None,
+            id="placeholder_serial_number",
         ),
         pytest.param(
             "/dev/ttyUSB0", [_zbt2_at(MOVED_RADIO_PROXY)], None, id="raw_path"
