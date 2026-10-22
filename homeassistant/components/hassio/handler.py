@@ -127,6 +127,7 @@ def get_supervisor_client(hass: HomeAssistant) -> SupervisorClient:
         str(hassio.base_url),
         os.environ.get("SUPERVISOR_TOKEN", ""),
         session=hassio.websession,
+        source="core/aiohasupervisor",
     )
 
 
