@@ -12,6 +12,9 @@ ABORT_REASON_CANNOT_CONNECT = "cannot_connect"
 
 LUTRON_CASETA_BUTTON_EVENT = "lutron_caseta_button_event"
 
+# Dispatcher signal for button events, formatted with (entry_id, button device id)
+SIGNAL_BUTTON_EVENT = "lutron_caseta_button_event_{}_{}"
+
 BRIDGE_DEVICE_ID = "1"
 
 DEVICE_TYPE_WHITE_TUNE = "WhiteTune"
