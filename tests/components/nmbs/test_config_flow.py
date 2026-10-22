@@ -25,18 +25,6 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import STATION_FROM, STATION_TO
 
-DUMMY_DATA_IMPORT: dict[str, Any] = {
-    "STAT_BRUSSELS_NORTH": "Brussel-Noord/Bruxelles-Nord",
-    "STAT_BRUSSELS_CENTRAL": "Brussel-Centraal/Bruxelles-Central",
-    "STAT_BRUSSELS_SOUTH": "Brussel-Zuid/Bruxelles-Midi",
-}
-
-DUMMY_DATA_ALTERNATIVE_IMPORT: dict[str, Any] = {
-    "STAT_BRUSSELS_NORTH": "Brussels-North",
-    "STAT_BRUSSELS_CENTRAL": "Brussels-Central",
-    "STAT_BRUSSELS_SOUTH": "Brussels-South/Brussels-Midi",
-}
-
 DUMMY_DATA: dict[str, Any] = {
     "STAT_BRUSSELS_NORTH": "BE.NMBS.008812005",
     "STAT_BRUSSELS_CENTRAL": "BE.NMBS.008813003",
@@ -334,6 +322,109 @@ async def test_reconfigure_migrates_entities(
     liveboard_state = hass.states.get(liveboard_from_id)
     assert liveboard_state is not None
     assert liveboard_state.state == "Track 3 - Blankenberge"
+
+
+async def test_reconfigure_abort_when_route_configured(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test reconfiguration aborts when another entry already monitors the route."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Train from Brussel-Noord/Bruxelles-Nord to Brussel-Zuid/Bruxelles-Midi",
+        data={
+            CONF_STATION_FROM: STATION_FROM,
+            CONF_STATION_TO: STATION_TO,
+        },
+        unique_id=f"{STATION_FROM}_{STATION_TO}",
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    other = MockConfigEntry(
+        domain=DOMAIN,
+        title="Train from Brussel-Zuid/Bruxelles-Midi to Brussel-Noord/Bruxelles-Nord",
+        data={
+            CONF_STATION_FROM: STATION_TO,
+            CONF_STATION_TO: STATION_FROM,
+        },
+        unique_id=f"{STATION_TO}_{STATION_FROM}",
+    )
+    other.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_STATION_FROM: STATION_TO,
+            CONF_STATION_TO: STATION_FROM,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.unique_id == f"{STATION_FROM}_{STATION_TO}"
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{CONNECTION_UNIQUE_ID_PREFIX}{entry.unique_id}"
+        )
+        is not None
+    )
+
+
+async def test_reconfigure_skips_taken_unique_id(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migration leaves an entity alone when its new unique ID is taken."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Train from Brussel-Noord/Bruxelles-Nord to Brussel-Zuid/Bruxelles-Midi",
+        data={
+            CONF_STATION_FROM: STATION_FROM,
+            CONF_STATION_TO: STATION_TO,
+        },
+        unique_id=f"{STATION_FROM}_{STATION_TO}",
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    old_liveboard_unique_id = (
+        f"{LIVEBOARD_UNIQUE_ID_PREFIX}{STATION_FROM}_{entry.unique_id}"
+    )
+    new_liveboard_unique_id = f"{LIVEBOARD_UNIQUE_ID_PREFIX}{STATION_FROM}_{STATION_FROM}_{STATION_TO}_excl_vias"
+    liveboard_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, old_liveboard_unique_id
+    )
+    assert liveboard_id is not None
+    taken = entity_registry.async_get_or_create(
+        "sensor", DOMAIN, new_liveboard_unique_id, config_entry=entry
+    )
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_STATION_FROM: STATION_FROM,
+            CONF_STATION_TO: STATION_TO,
+            CONF_EXCLUDE_VIAS: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert (
+        entity_registry.async_get_entity_id("sensor", DOMAIN, old_liveboard_unique_id)
+        == liveboard_id
+    )
+    assert (
+        entity_registry.async_get_entity_id("sensor", DOMAIN, new_liveboard_unique_id)
+        == taken.entity_id
+    )
 
 
 async def test_reconfigure_unavailable_api(
