@@ -1,9 +1,12 @@
 """Tests for tplink button platform."""
 
+from unittest.mock import PropertyMock
+
 from freezegun.api import FrozenDateTimeFactory
 from kasa import (
     AuthenticationError,
     Device,
+    DeviceError,
     Feature,
     KasaException,
     Module,
@@ -523,3 +526,27 @@ async def test_ptz_preset_buttons_hub_camera_paired_again(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(FRONT_CAMERA_DOOR_ENTITY_ID)
+
+
+async def test_ptz_preset_buttons_hub_camera_read_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mocked_hub_with_cameras: Device,
+) -> None:
+    """Test a preset read error on one hub camera does not drop the other buttons."""
+    hub = mocked_hub_with_cameras
+    back_pan_tilt = hub.children[1].modules[Module.PanTilt]
+    presets = PropertyMock(side_effect=DeviceError("test error"))
+    type(back_pan_tilt).presets = presets
+    await setup_platform_for_device(hass, mock_config_entry, Platform.BUTTON, hub)
+
+    assert hass.states.get(FRONT_CAMERA_DOOR_ENTITY_ID)
+    assert not hass.states.get(BACK_CAMERA_DOOR_ENTITY_ID)
+
+    presets.side_effect = None
+    presets.return_value = {"Door": "1"}
+    freezer.tick(30)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(BACK_CAMERA_DOOR_ENTITY_ID)
