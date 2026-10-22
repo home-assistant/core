@@ -400,7 +400,7 @@ class KeyboardRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
             data=data,
             options={
                 CONF_KEY_TYPES: key_types,
-                CONF_EXCLUSIVE: import_data[CONF_EXCLUSIVE],
+                CONF_EXCLUSIVE: DEFAULT_EXCLUSIVE,
                 CONF_EMULATE_KEY_HOLD: import_data[CONF_EMULATE_KEY_HOLD],
                 CONF_EMULATE_KEY_HOLD_DELAY: _clamp_imported(
                     CONF_EMULATE_KEY_HOLD_DELAY,
@@ -539,12 +539,7 @@ class KeyboardRemoteOptionsFlow(OptionsFlowWithReload):
                         ),
                     }
                 ),
-                # An entry created before the exclusive option existed has
-                # none, and an unset toggle would show as off
-                {
-                    CONF_EXCLUSIVE: DEFAULT_EXCLUSIVE,
-                    **(user_input or self.config_entry.options),
-                },
+                user_input or self.config_entry.options,
             ),
             errors=errors,
         )

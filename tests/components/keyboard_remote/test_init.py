@@ -202,7 +202,6 @@ async def test_async_setup_imports_each_normalized_block(
                 {
                     "device_name": "Keyboard",
                     "type": "key_down",
-                    "exclusive": False,
                     "emulate_key_hold_delay": 1,
                 },
             ]
@@ -227,7 +226,6 @@ async def test_async_setup_imports_each_normalized_block(
             {
                 **OPTIONS,
                 CONF_KEY_TYPES: ["key_down"],
-                CONF_EXCLUSIVE: False,
                 CONF_EMULATE_KEY_HOLD_DELAY: 1.0,
             },
         ),
@@ -281,10 +279,6 @@ async def test_async_setup_accepts_values_the_import_fits(
         pytest.param(
             {"device_descriptor": FAKE_DEVICE_REAL_PATH, "emulate_key_hold_delay": "a"},
             id="delay_not_a_number",
-        ),
-        pytest.param(
-            {"device_descriptor": FAKE_DEVICE_REAL_PATH, "exclusive": "maybe"},
-            id="exclusive_not_a_boolean",
         ),
         pytest.param({"type": "key_up"}, id="no_device"),
         pytest.param({"device_descriptor": ""}, id="empty_descriptor"),
@@ -1010,12 +1004,6 @@ async def test_unexpected_read_error_releases_device(
             "Start non-exclusive monitoring of Test Keyboard (/dev/input/event5)",
             id="non_exclusive",
         ),
-        pytest.param(
-            {},
-            True,
-            "Start exclusive monitoring of Test Keyboard (/dev/input/event5)",
-            id="created_before_the_option",
-        ),
     ],
 )
 async def test_exclusive_option_decides_the_grab(
@@ -1028,8 +1016,7 @@ async def test_exclusive_option_decides_the_grab(
 ) -> None:
     """Test the device is only grabbed when the entry is exclusive.
 
-    An entry created before the option existed grabs, as every entry did
-    then. Either way the device is read and released, and the mode is logged.
+    Either way the device is read and released, and the mode is logged.
     """
     kbd = fake_input.add(FAKE_DEVICE_REAL_PATH, FAKE_DEVICE_NAME, link=FAKE_DEVICE_PATH)
     commands = async_capture_events(hass, EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED)
@@ -1074,9 +1061,10 @@ async def test_grab_failure_warns_and_releases(
 
     await _set_up(hass, fake_input, mock_config_entry)
 
-    assert "Unable to grab Test Keyboard, it may be in use by another program" in (
-        caplog.text
-    )
+    assert (
+        "Unable to grab Test Keyboard, it may be in use by another program"
+        " (turn off Exclusive access to share it)"
+    ) in caplog.text
     kbd.close.assert_called_once()
     assert len(disconnected) == 1
 

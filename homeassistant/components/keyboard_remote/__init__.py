@@ -41,7 +41,6 @@ from .const import (
     DEFAULT_EMULATE_KEY_HOLD,
     DEFAULT_EMULATE_KEY_HOLD_DELAY,
     DEFAULT_EMULATE_KEY_HOLD_REPEAT,
-    DEFAULT_EXCLUSIVE,
     DEFAULT_KEY_TYPES,
     DEVINPUT,
     DEVINPUT_BY_ID,
@@ -110,9 +109,6 @@ CONFIG_SCHEMA = probatio.Schema(
                             ): probatio.All(
                                 probatio.EnsureList(), [probatio.In(KEY_VALUE)]
                             ),
-                            probatio.Optional(
-                                CONF_EXCLUSIVE, default=DEFAULT_EXCLUSIVE
-                            ): cv.boolean,
                             probatio.Optional(
                                 CONF_EMULATE_KEY_HOLD, default=DEFAULT_EMULATE_KEY_HOLD
                             ): cv.boolean,
@@ -804,8 +800,7 @@ class DeviceHandler:
         # this handler exists.
         options = entry.options
         self._key_values = {KEY_VALUE[key_type] for key_type in options[CONF_KEY_TYPES]}
-        # An entry created before the option existed has none, and grabs
-        self._exclusive: bool = options.get(CONF_EXCLUSIVE, DEFAULT_EXCLUSIVE)
+        self._exclusive: bool = options[CONF_EXCLUSIVE]
         self._emulate_key_hold: bool = options[CONF_EMULATE_KEY_HOLD]
         self._emulate_key_hold_delay: float = options[CONF_EMULATE_KEY_HOLD_DELAY]
         self._emulate_key_hold_repeat: float = options[CONF_EMULATE_KEY_HOLD_REPEAT]
@@ -1018,13 +1013,13 @@ class DeviceHandler:
                     await self.hass.async_add_executor_job(dev.grab)
                 except OSError as err:
                     _LOGGER.warning(
-                        "Unable to grab %s, it may be in use by another program: %s",
+                        "Unable to grab %s, it may be in use by another program"
+                        " (turn off Exclusive access to share it): %s",
                         dev.name,
                         err,
                     )
                     raise
             else:
-                # Other programs keep receiving the events, as the user asked
                 _LOGGER.debug(
                     "Start non-exclusive monitoring of %s (%s)", dev.name, dev.path
                 )
