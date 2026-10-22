@@ -4210,7 +4210,6 @@ async def test_zwave_proxy_request_home_id_change(
         # The noise PSK is taken from the config entry, not the live client
         assert call_args[0][3].noise_psk == noise_psk
 
-    assert entry.runtime_data.device_info.zwave_home_id == zwave_home_id
     # Only the home ID changes
     device_capabilities["zwave_proxy"]["home_id"] = zwave_home_id
     assert entry.runtime_data.device_capabilities == DeviceCapabilities.from_dict(
@@ -4220,7 +4219,7 @@ async def test_zwave_proxy_request_home_id_change(
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     data = hass_storage[f"{DOMAIN}.{entry.entry_id}"]["data"]
-    assert data["device_info"]["zwave_home_id"] == zwave_home_id
+    assert data["device_capabilities"]["zwave_proxy"]["home_id"] == zwave_home_id
 
 
 async def test_zwave_home_id_change_saved_after_reconnect(
@@ -4253,7 +4252,7 @@ async def test_zwave_home_id_change_saved_after_reconnect(
     with patch("homeassistant.helpers.discovery_flow.async_create_flow"):
         await report_home_id()
         stored = hass_storage[storage_key]["data"]
-        assert stored["device_info"]["zwave_home_id"] == zwave_home_id
+        assert stored["device_capabilities"]["zwave_proxy"]["home_id"] == zwave_home_id
 
         # The device reconnects with home ID 0, so the connect-time save holds 0
         await device.mock_disconnect(expected_disconnect=False)

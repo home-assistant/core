@@ -863,11 +863,8 @@ class ESPHomeManager:
         zwave_home_id: int = UNPACK_UINT32_BE(request.data[0:4])[0]
         entry_data = self.entry_data
         assert entry_data.device_info is not None
-        # Both are snapshots from connect time; keep their home IDs current.
-        entry_data.device_info = EsphomeDeviceInfo.from_dict(
-            {**entry_data.device_info.to_dict(), "zwave_home_id": zwave_home_id}
-        )
         assert entry_data.device_capabilities is not None
+        # Capabilities are a snapshot from connect time; keep the home ID current.
         device_capabilities = entry_data.device_capabilities.to_dict()
         device_capabilities["zwave_proxy"]["home_id"] = zwave_home_id
         entry_data.device_capabilities = DeviceCapabilities.from_dict(
