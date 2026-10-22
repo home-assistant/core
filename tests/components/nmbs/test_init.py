@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from mashumaro.exceptions import MissingField
 from pyrail import ApiUnavailableError
+from pyrail.models import StationsApiResponse
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -11,13 +12,11 @@ from homeassistant.components.nmbs.const import (
     CONF_STATION_FROM,
     CONF_STATION_TO,
     DOMAIN,
-    NMBS_STATION_DATA,
-    STATION_CACHE_DURATION,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import STATION_FROM, STATION_TO
+from .conftest import STATION_TO
 
 
 async def test_setup_entry(
@@ -143,30 +142,26 @@ async def test_setup_entry_unknown_station(
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_setup_uses_stale_station_cache_when_refresh_fails(
+async def test_setup_finds_new_station_after_reload(
     hass: HomeAssistant,
     mock_nmbs_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test setup uses the last station list when its refresh fails."""
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    cache = hass.data[NMBS_STATION_DATA]
-    cache.fetched_at -= STATION_CACHE_DURATION
-    mock_nmbs_client.get_stations.side_effect = ApiUnavailableError("API unavailable")
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Train from Brussel-Noord/Bruxelles-Nord to Brussel-Centraal/Bruxelles-Central",
-        data={
-            CONF_STATION_FROM: STATION_FROM,
-            CONF_STATION_TO: "BE.NMBS.008813003",
-        },
-        unique_id=f"{STATION_FROM}_BE.NMBS.008813003",
+    """Test setup fetches a fresh station list each time it runs."""
+    stations = mock_nmbs_client.get_stations.return_value
+    mock_nmbs_client.get_stations.return_value = StationsApiResponse(
+        version=stations.version,
+        timestamp=stations.timestamp,
+        stations=[station for station in stations.stations if station.id != STATION_TO],
     )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(entry.entry_id)
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    mock_nmbs_client.get_stations.return_value = stations
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED

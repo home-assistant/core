@@ -2,10 +2,10 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "api_unavailable": "The API is currently unavailable."
+      "api_unavailable": "The iRail API is unavailable. Try again later."
     },
     "error": {
-      "same_station": "The departure and arrival station cannot be the same."
+      "same_station": "The departure and arrival stations cannot be the same."
     },
     "step": {
       "reconfigure": {
@@ -15,7 +15,7 @@
         },
         "data_description": {
           "exclude_vias": "Exclude connections with transfers",
-          "show_on_map": "Show the station on the map"
+          "show_on_map": "Add the departure station's location to the travel time sensor, so it shows up on the map"
         },
         "title": "Reconfigure NMBS"
       },
@@ -28,7 +28,7 @@
         },
         "data_description": {
           "exclude_vias": "Exclude connections with transfers",
-          "show_on_map": "Show the station on the map",
+          "show_on_map": "Add the departure station's location to the travel time sensor, so it shows up on the map",
           "station_from": "Station where the train departs",
           "station_to": "Station where the train arrives"
         }

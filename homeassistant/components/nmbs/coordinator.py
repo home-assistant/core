@@ -32,7 +32,6 @@ from .const import (
     CONNECTION_UNIQUE_ID_PREFIX,
     DOMAIN,
     LIVEBOARD_UNIQUE_ID_PREFIX,
-    NMBS_STATION_DATA,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,16 +58,11 @@ class FeedResult[T]:
     failed: bool
 
 
-def _find_station(hass: HomeAssistant, station_id: str) -> StationDetails | None:
+def _find_station(
+    stations: list[StationDetails], station_id: str
+) -> StationDetails | None:
     """Return the station with the given station ID, if it exists."""
-    return next(
-        (
-            station
-            for station in hass.data[NMBS_STATION_DATA].stations
-            if station.id == station_id
-        ),
-        None,
-    )
+    return next((station for station in stations if station.id == station_id), None)
 
 
 class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
@@ -76,7 +70,12 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
 
     config_entry: NMBSConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: NMBSConfigEntry) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: NMBSConfigEntry,
+        stations: list[StationDetails],
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
@@ -86,8 +85,8 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
             update_interval=UPDATE_INTERVAL,
         )
         self.client = IRail(session=async_get_clientsession(hass))
-        station_from = _find_station(hass, entry.data[CONF_STATION_FROM])
-        station_to = _find_station(hass, entry.data[CONF_STATION_TO])
+        station_from = _find_station(stations, entry.data[CONF_STATION_FROM])
+        station_to = _find_station(stations, entry.data[CONF_STATION_TO])
         if station_from is None or station_to is None:
             raise ConfigEntryError(
                 translation_domain=DOMAIN,

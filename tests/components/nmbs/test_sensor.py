@@ -734,3 +734,57 @@ async def test_connection_sensor_unavailable_when_api_times_out(
     state = hass.states.get(connection_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+@freeze_time(FROZEN_TIME)
+async def test_liveboard_sensor_alerts_on_short_delay(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the liveboard sensor shows the alert icon for a delay under a minute."""
+    liveboard = LiveboardApiResponse.from_dict(
+        await async_load_json_object_fixture(hass, "liveboard.json", DOMAIN)
+    )
+    liveboard.departures[0].delay = 20
+    mock_nmbs_client.get_liveboard.side_effect = lambda station_id: liveboard
+    await _setup_entry(hass, mock_config_entry)
+    await _enable_liveboards(hass, entity_registry, mock_config_entry)
+
+    state = hass.states.get(_get_entity_id(entity_registry, LIVEBOARD_FROM_UNIQUE_ID))
+    assert state is not None
+    assert state.attributes["icon"] == "mdi:alert-octagon"
+
+
+@freeze_time(FROZEN_TIME)
+async def test_connection_sensor_keeps_map_location_without_connection(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the connection sensor stays on the map when no train is found."""
+    connections = ConnectionsApiResponse.from_dict(
+        await async_load_json_object_fixture(hass, "connections.json", DOMAIN)
+    )
+    for connection in connections.connections:
+        connection.departure.left = True
+    mock_nmbs_client.get_connections.return_value = connections
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Train from Brussel-Noord/Bruxelles-Nord to Brussel-Zuid/Bruxelles-Midi",
+        data={
+            CONF_STATION_FROM: STATION_FROM,
+            CONF_STATION_TO: STATION_TO,
+            CONF_SHOW_ON_MAP: True,
+        },
+        unique_id=f"{STATION_FROM}_{STATION_TO}",
+    )
+    await _setup_entry(hass, entry)
+
+    state = hass.states.get(_get_entity_id(entity_registry, CONNECTION_UNIQUE_ID))
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes["latitude"] == 50.859663
+    assert state.attributes["longitude"] == 4.360846
+    assert "destination" not in state.attributes

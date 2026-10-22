@@ -73,7 +73,14 @@ class NMBSSensor(NMBSEntity, SensorEntity):
     def __init__(self, coordinator: NMBSCoordinator) -> None:
         """Initialize the NMBS connection sensor."""
         super().__init__(coordinator)
-        self._show_on_map = coordinator.config_entry.data.get(CONF_SHOW_ON_MAP, False)
+        self._location: dict[str, float] = (
+            {
+                EntityStateAttribute.LATITUDE: coordinator.station_from.latitude,
+                EntityStateAttribute.LONGITUDE: coordinator.station_from.longitude,
+            }
+            if coordinator.config_entry.data.get(CONF_SHOW_ON_MAP, False)
+            else {}
+        )
         self._attr_translation_key = "connection"
         self._attr_translation_placeholders = {
             "station_from": coordinator.station_from.standard_name,
@@ -130,7 +137,7 @@ class NMBSSensor(NMBSEntity, SensorEntity):
         departure_minutes and delay_minutes, kept for existing templates.
         """
         if (connection := self.connection) is None:
-            return None
+            return self._location or None
 
         delay = get_delay_in_minutes(connection.departure.delay)
         departure = get_time_until(connection.departure.time)
@@ -152,13 +159,7 @@ class NMBSSensor(NMBSEntity, SensorEntity):
             attrs["departure"] = f"In {departure} minutes"
             attrs["departure_minutes"] = departure
 
-        if self._show_on_map:
-            attrs[EntityStateAttribute.LATITUDE] = (
-                connection.departure.station_info.latitude
-            )
-            attrs[EntityStateAttribute.LONGITUDE] = (
-                connection.departure.station_info.longitude
-            )
+        attrs.update(self._location)
 
         if connection.vias and not self.coordinator.exclude_vias:
             via = connection.vias[0]
@@ -212,9 +213,7 @@ class NMBSLiveBoard(NMBSEntity, SensorEntity):
     @override
     def icon(self) -> str:
         """Return the default icon or an alert icon if the next departure is delayed."""
-        if (departure := self.next_departure) and get_delay_in_minutes(
-            departure.delay
-        ) > 0:
+        if (departure := self.next_departure) and departure.delay > 0:
             return DEFAULT_ICON_ALERT
         return DEFAULT_ICON
 
