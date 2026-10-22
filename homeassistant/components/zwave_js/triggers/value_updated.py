@@ -187,30 +187,38 @@ async def async_attach_trigger(
         # can't currently be resolved are skipped (like async_get_nodes_from_targets)
         # so reachable targets still attach. A node collapses to a single listener, so
         # only the child device that covers the configured endpoint is mapped; a child
-        # targeting a different endpoint would otherwise report the wrong device id.
-        # The mapping is keyed by the network-scoped node identifier (home id plus node
-        # id), since node ids repeat across networks.
+        # that doesn't cover the configured endpoint is dropped entirely so it doesn't
+        # attach a parent listener on an unrelated endpoint. The mapping is keyed by the
+        # network-scoped node identifier (home id plus node id), since node ids repeat
+        # across networks.
+        device_ids: list[str] = []
         child_device_by_node: dict[tuple[str, str], dr.AnyDeviceEntry] = {}
         for device_id in options.get(ATTR_DEVICE_ID, []):
             if not isinstance(
                 device_entry := dev_reg.async_get(device_id), dr.ChildDeviceEntry
             ):
+                device_ids.append(device_id)
                 continue
             try:
                 target_node = async_get_node_from_device_id(hass, device_id)
             except ValueError:
                 continue
-            if endpoint in get_endpoint_indices_from_child_device(
+            if endpoint not in get_endpoint_indices_from_child_device(
                 device_entry, target_node
             ):
-                assert target_node.client.driver is not None
-                child_device_by_node[
-                    get_device_id(target_node.client.driver, target_node)
-                ] = device_entry
+                continue
+            assert target_node.client.driver is not None
+            child_device_by_node[
+                get_device_id(target_node.client.driver, target_node)
+            ] = device_entry
+            device_ids.append(device_id)
+        # Resolve listener nodes from the filtered device targets, keeping the entity and
+        # area targets untouched so mixed configurations are not broken.
+        targets = {**options, ATTR_DEVICE_ID: device_ids}
         # Nodes list can come from different drivers and we will need to listen to
         # server connections for all of them.
         drivers: set[Driver] = set()
-        for node in async_get_nodes_from_targets(hass, options, dev_reg=dev_reg):
+        for node in async_get_nodes_from_targets(hass, targets, dev_reg=dev_reg):
             driver = node.client.driver
             assert driver is not None  # The node comes from the driver.
             drivers.add(driver)

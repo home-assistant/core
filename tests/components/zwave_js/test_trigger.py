@@ -671,6 +671,74 @@ async def test_zwave_js_value_updated_child_devices_across_networks(
     assert events[1].data["device_id"] == child2.id
 
 
+async def test_zwave_js_value_updated_child_device_endpoint_mismatch(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    climate_heatit_z_trm3: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test a child target that does not cover the configured endpoint does not attach.
+
+    A trigger targeting only the endpoint 2 child device with endpoint 3 must not fall
+    back to a node listener on endpoint 3, which would fire for an unrelated endpoint.
+    """
+    trigger_type = f"{DOMAIN}.value_updated"
+    node = climate_heatit_z_trm3
+    room_child = device_registry.async_get_child_device_by_identifier(
+        get_endpoint_device_id(client.driver, node, node.endpoints[2]),
+        integration.entry_id,
+    )
+    assert room_child
+
+    events = async_capture_events(hass, "child_trigger")
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": trigger_type,
+                        "options": {
+                            "device_id": [room_child.id],
+                            "command_class": CommandClass.SENSOR_MULTILEVEL.value,
+                            "property": "Air temperature",
+                            "endpoint": 3,
+                        },
+                    },
+                    "action": {"event": "child_trigger"},
+                },
+            ]
+        },
+    )
+
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Multilevel Sensor",
+                    "commandClass": 49,
+                    "endpoint": 3,
+                    "property": "Air temperature",
+                    "propertyName": "Air temperature",
+                    "newValue": 25.5,
+                    "prevValue": 20.0,
+                },
+            },
+        )
+    )
+    await hass.async_block_till_done()
+
+    # The endpoint 2 child does not cover endpoint 3, so no listener attached and the
+    # endpoint 3 update does not fire.
+    assert len(events) == 0
+
+
 async def test_zwave_js_value_updated_bypass_dynamic_validation(
     hass: HomeAssistant, client, lock_schlage_be469, integration
 ) -> None:

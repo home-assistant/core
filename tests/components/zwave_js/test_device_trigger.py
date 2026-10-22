@@ -2005,6 +2005,40 @@ async def test_get_trigger_capabilities_value_updated_value_group_child_device(
     assert sorted(option[0] for option in endpoint_field["options"]) == ["1", "2"]
 
 
+async def test_get_trigger_capabilities_value_updated_value_stale_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    climate_heatit_z_trm3: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test capabilities for a child device whose endpoint no longer exists don't raise."""
+    node = climate_heatit_z_trm3
+    child_device = device_registry.async_get_child_device_by_identifier(
+        get_endpoint_device_id(client.driver, node, node.endpoints[2]),
+        integration.entry_id,
+    )
+    assert child_device
+    # Simulate a stale child device: its endpoint is gone from the node but the child
+    # device is still in the registry (e.g. before a re-interview prunes it).
+    del node.endpoints[2]
+
+    capabilities = await device_trigger.async_get_trigger_capabilities(
+        hass,
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "device_id": child_device.id,
+            "type": "zwave_js.value_updated.value",
+            "command_class": CommandClass.SENSOR_MULTILEVEL.value,
+            "property": "Air temperature",
+            "property_key": None,
+            "endpoint": 2,
+        },
+    )
+    assert capabilities and "extra_fields" in capabilities
+
+
 async def test_get_value_updated_config_parameter_triggers(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
