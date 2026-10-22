@@ -14,13 +14,16 @@ from homeassistant.components.application_credentials import ClientCredential
 from homeassistant.components.solaredge.application_credentials import (
     async_get_auth_implementation,
 )
-from homeassistant.components.solaredge.sensor import SENSOR_TYPES
+from homeassistant.components.solaredge.sensor import (
+    SENSOR_TYPES,
+    SUPPORTED,
+    SolarEdgeV2Sensor,
+)
 from homeassistant.components.solaredge.v2_budget import (
     MAX_CALLS,
     SolarEdgeBudget,
     get_budget,
 )
-from homeassistant.components.solaredge.v2_sensor import SUPPORTED, SolarEdgeV2Sensor
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import OAuth2TokenRequestTransientError
 from homeassistant.util import dt as dt_util
@@ -98,7 +101,8 @@ async def test_community_complete_poll_identity_cache(
     register_basic(aioclient_mock, now)
     coord = coordinator(hass, entry)
     with patch(
-        "homeassistant.components.solaredge.v2_runtime.dt_util.utcnow", return_value=now
+        "homeassistant.components.solaredge.coordinator.dt_util.utcnow",
+        return_value=now,
     ):
         data = await coord._async_update_data()
         assert len(aioclient_mock.mock_calls) == 8
@@ -146,7 +150,8 @@ async def test_device_scope_denial_keeps_production(
     coord = coordinator(hass, entry)
     coord.api.inventory = AsyncMock(side_effect=PermissionDeniedError())
     with patch(
-        "homeassistant.components.solaredge.v2_runtime.dt_util.utcnow", return_value=now
+        "homeassistant.components.solaredge.coordinator.dt_util.utcnow",
+        return_value=now,
     ):
         data = await coord._async_update_data()
     assert data["energy_today"].value == 2000
@@ -177,7 +182,7 @@ async def test_calendar_rollover_unknown_not_previous_day(hass: HomeAssistant) -
         {"energy_today": Reading(15, now), "energy_this_year": Reading(123, now)}, now
     )
     with patch(
-        "homeassistant.components.solaredge.v2_runtime.dt_util.utcnow",
+        "homeassistant.components.solaredge.coordinator.dt_util.utcnow",
         return_value=now + timedelta(days=1),
     ):
         assert coord._cached()["energy_today"].value is None

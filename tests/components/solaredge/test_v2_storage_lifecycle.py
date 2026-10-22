@@ -7,7 +7,7 @@ from aiosolaredge.v2 import PermissionDeniedError, Reading
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.solaredge.v2_runtime import SolarEdgeV2Coordinator
+from homeassistant.components.solaredge.coordinator import SolarEdgeV2Coordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -97,7 +97,8 @@ async def test_new_active_battery_does_not_disable_site_polling(
         return_value={"batteries": [battery("B1"), battery("B2")]}
     )
     with patch(
-        "homeassistant.components.solaredge.v2_runtime.dt_util.utcnow", return_value=NOW
+        "homeassistant.components.solaredge.coordinator.dt_util.utcnow",
+        return_value=NOW,
     ):
         try:
             result = await coord._async_update_data()
@@ -169,7 +170,8 @@ async def test_inventory_denial_invalidates_cached_storage(hass: HomeAssistant) 
     coord.api.inventory = AsyncMock(side_effect=PermissionDeniedError())
     coord.api.overview = AsyncMock(return_value={"energy_today": Reading(100, NOW)})
     with patch(
-        "homeassistant.components.solaredge.v2_runtime.dt_util.utcnow", return_value=NOW
+        "homeassistant.components.solaredge.coordinator.dt_util.utcnow",
+        return_value=NOW,
     ):
         result = await coord._async_update_data()
     assert result["lifetime_energy"].value == 1000
@@ -301,7 +303,8 @@ async def test_restored_missing_capability_never_republishes_old_storage(
     await coord.store.async_save(coord.state)
     restored = coordinator(hass, entry)
     with patch(
-        "homeassistant.components.solaredge.v2_runtime.dt_util.utcnow", return_value=NOW
+        "homeassistant.components.solaredge.coordinator.dt_util.utcnow",
+        return_value=NOW,
     ):
         await restored._async_setup()
         result = await restored._async_update_data()

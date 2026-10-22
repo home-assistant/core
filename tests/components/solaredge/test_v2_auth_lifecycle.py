@@ -20,11 +20,9 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.solaredge.application_credentials import (
     async_get_auth_implementation,
 )
+from homeassistant.components.solaredge.coordinator import SolarEdgeV2Coordinator
 from homeassistant.components.solaredge.v2_budget import SolarEdgeBudget, get_budget
-from homeassistant.components.solaredge.v2_runtime import (
-    SolarEdgeV2Coordinator,
-    async_repair_authorization,
-)
+from homeassistant.components.solaredge.v2_runtime import async_repair_authorization
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType

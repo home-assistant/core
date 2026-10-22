@@ -20,15 +20,9 @@ from homeassistant.components.solaredge.application_credentials import (
     async_get_auth_implementation,
 )
 from homeassistant.components.solaredge.config_flow import SolarEdgeConfigFlow
-from homeassistant.components.solaredge.v2_runtime import (
-    SolarEdgeV2Coordinator,
-    retry_deadline,
-)
-from homeassistant.components.solaredge.v2_sensor import (
-    ENERGY,
-    POWER,
-    SolarEdgeV2Sensor,
-)
+from homeassistant.components.solaredge.coordinator import SolarEdgeV2Coordinator
+from homeassistant.components.solaredge.sensor import ENERGY, POWER, SolarEdgeV2Sensor
+from homeassistant.components.solaredge.v2_budget import retry_deadline
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_RECONFIGURE, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -125,7 +119,8 @@ async def test_backoff_persists(
     coord.api = Mock(lifetime_energy=AsyncMock(side_effect=error), power=AsyncMock())
     now = dt_util.utcnow()
     with patch(
-        "homeassistant.components.solaredge.v2_runtime.dt_util.utcnow", return_value=now
+        "homeassistant.components.solaredge.coordinator.dt_util.utcnow",
+        return_value=now,
     ):
         with pytest.raises(UpdateFailed):
             await coord._async_update_data()
@@ -384,7 +379,7 @@ async def test_outage_exponential_recovery(hass: HomeAssistant) -> None:
     for hours in (1, 2, 4, 8, 16, 24):
         with (
             patch(
-                "homeassistant.components.solaredge.v2_runtime.dt_util.utcnow",
+                "homeassistant.components.solaredge.coordinator.dt_util.utcnow",
                 return_value=now,
             ),
             pytest.raises(UpdateFailed),
@@ -397,7 +392,8 @@ async def test_outage_exponential_recovery(hass: HomeAssistant) -> None:
     coord.api.site = AsyncMock(return_value={"siteId": 123})
     coord.api.inventory = AsyncMock(return_value={"batteries": []})
     with patch(
-        "homeassistant.components.solaredge.v2_runtime.dt_util.utcnow", return_value=now
+        "homeassistant.components.solaredge.coordinator.dt_util.utcnow",
+        return_value=now,
     ):
         result = await coord._async_update_data()
     assert result["lifetime_energy"].value == 17

@@ -16,9 +16,8 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from .const import CONF_SITE_ID, DATA_API_CLIENT, DATA_MODULES_COORDINATOR, DOMAIN
-from .coordinator import SolarEdgeModulesCoordinator
+from .coordinator import SolarEdgeModulesCoordinator, SolarEdgeV2Coordinator
 from .types import SolarEdgeConfigEntry, SolarEdgeData
-from .v2_runtime import SolarEdgeV2Coordinator
 
 PLATFORMS = [Platform.SENSOR]
 

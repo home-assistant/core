@@ -1,15 +1,12 @@
 """Typing for the SolarEdge Monitoring API."""
 
-from typing import TYPE_CHECKING, TypedDict
-
-if TYPE_CHECKING:
-    from .v2_runtime import SolarEdgeV2Coordinator
+from typing import TypedDict
 
 from aiosolaredge import SolarEdge
 
 from homeassistant.config_entries import ConfigEntry
 
-from .coordinator import SolarEdgeModulesCoordinator
+from .coordinator import SolarEdgeModulesCoordinator, SolarEdgeV2Coordinator
 
 type SolarEdgeConfigEntry = ConfigEntry[SolarEdgeData]
 
