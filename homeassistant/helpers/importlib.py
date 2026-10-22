@@ -7,6 +7,7 @@ import sys
 from types import ModuleType
 
 from homeassistant.core import HomeAssistant
+from homeassistant.util.async_ import wait_shared_future
 from homeassistant.util.hass_dict import HassKey
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,7 +37,7 @@ async def async_import_module(hass: HomeAssistant, name: str) -> ModuleType:
 
     import_futures = hass.data.setdefault(DATA_IMPORT_FUTURES, {})
     if future := import_futures.get(name):
-        return await future
+        return await wait_shared_future(future)
 
     if name in sys.modules:
         return _get_module(cache, name)

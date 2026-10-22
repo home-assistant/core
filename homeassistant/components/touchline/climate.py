@@ -77,7 +77,7 @@ class Touchline(ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "climate"
 
     def __init__(self, touchline_thermostat):
@@ -91,8 +91,8 @@ class Touchline(ClimateEntity):
             name=touchline_thermostat.get_name(),
             manufacturer="Roth",
         )
-        self._attr_current_temperature = self.unit.get_current_temperature()
-        self._attr_target_temperature = self.unit.get_target_temperature()
+        self._attr_native_current_temperature = self.unit.get_current_temperature()
+        self._attr_native_target_temperature = self.unit.get_target_temperature()
         self._current_operation_mode = HVACMode.HEAT
         self._attr_preset_mode = TOUCHLINE_HA_PRESETS.get(
             (self.unit.get_operation_mode(), self.unit.get_week_program())
@@ -101,8 +101,8 @@ class Touchline(ClimateEntity):
     def update(self) -> None:
         """Update thermostat attributes."""
         self.unit.update()
-        self._attr_current_temperature = self.unit.get_current_temperature()
-        self._attr_target_temperature = self.unit.get_target_temperature()
+        self._attr_native_current_temperature = self.unit.get_current_temperature()
+        self._attr_native_target_temperature = self.unit.get_target_temperature()
         self._attr_preset_mode = TOUCHLINE_HA_PRESETS.get(
             (self.unit.get_operation_mode(), self.unit.get_week_program())
         )
@@ -123,5 +123,5 @@ class Touchline(ClimateEntity):
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if kwargs.get(ATTR_TEMPERATURE) is not None:
-            self._attr_target_temperature = kwargs.get(ATTR_TEMPERATURE)
-        self.unit.set_target_temperature(self._attr_target_temperature)
+            self._attr_native_target_temperature = kwargs.get(ATTR_TEMPERATURE)
+        self.unit.set_target_temperature(self._attr_native_target_temperature)

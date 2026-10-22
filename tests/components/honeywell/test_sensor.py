@@ -3,10 +3,9 @@
 from aiosomecomfort.device import Device
 from aiosomecomfort.location import Location
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(("unit", "temp"), [("C", 5), ("F", -15)])

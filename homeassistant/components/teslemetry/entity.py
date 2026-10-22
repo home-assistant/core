@@ -20,6 +20,7 @@ from .coordinator import (
     TeslemetryEnergyHistoryCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergySiteLiveCoordinator,
+    TeslemetryLocalStatusCoordinator,
     TeslemetryVehicleDataCoordinator,
 )
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
@@ -128,6 +129,8 @@ class TeslemetryVehiclePollingEntity(TeslemetryPollingEntity):
             self._attr_entity_registry_enabled_default = False
 
         super().__init__(data.coordinator, key)
+        # Lets diagnostics name the entities keeping the vehicle polling.
+        self.coordinator_context = self
 
     @property
     @override
@@ -161,6 +164,7 @@ class TeslemetryEnergyInfoEntity(TeslemetryPollingEntity):
     """Parent class for Teslemetry Energy Site Info Entities."""
 
     api: EnergySite | EnergySiteRouter
+    coordinator: TeslemetryEnergySiteInfoCoordinator
 
     def __init__(
         self,
@@ -193,6 +197,31 @@ class TeslemetryEnergyHistoryEntity(TeslemetryPollingEntity):
         self._attr_device_info = data.device
 
         super().__init__(data.history_coordinator, key)
+
+    @override
+    async def async_update(self) -> None:
+        """Keep the streamed totals; the stream is their only source."""
+
+
+class TeslemetryEnergyLocalStatusEntity(
+    TeslemetryRootEntity, CoordinatorEntity[TeslemetryLocalStatusCoordinator]
+):
+    """Parent class for Teslemetry entities read from the local Powerwall status."""
+
+    def __init__(
+        self,
+        data: TeslemetryEnergyData,
+        key: str,
+    ) -> None:
+        """Initialize common aspects of a Teslemetry local status entity."""
+
+        assert data.local_status_coordinator
+
+        self._attr_translation_key = key
+        self._attr_unique_id = f"{data.id}-{key}"
+        self._attr_device_info = data.device
+
+        super().__init__(data.local_status_coordinator)
 
 
 class TeslemetryWallConnectorEntity(TeslemetryPollingEntity):
@@ -257,8 +286,8 @@ class TeslemetryWallConnectorEntity(TeslemetryPollingEntity):
         )
 
 
-class TeslemetryVehicleStreamEntity(TeslemetryRootEntity):
-    """Parent class for Teslemetry Vehicle Stream entities."""
+class TeslemetryVehicleEntity(TeslemetryRootEntity):
+    """Parent class for Teslemetry Vehicle entities without a coordinator."""
 
     api: Vehicle | VehicleRouter
 
@@ -267,10 +296,27 @@ class TeslemetryVehicleStreamEntity(TeslemetryRootEntity):
         self.vehicle = data
 
         self.api = data.api
-        self.stream = data.stream
         self.vin = data.vin
-        self.add_field = data.stream.get_vehicle(self.vin).add_field
 
         self._attr_translation_key = key
         self._attr_unique_id = f"{data.vin}-{key}"
         self._attr_device_info = data.device
+
+
+class TeslemetryVehicleCommandEntity(TeslemetryVehicleEntity):
+    """Parent class for Teslemetry Vehicle entities that only send commands.
+
+    They hold no state of their own, so they subscribe to neither the vehicle
+    coordinator nor a telemetry stream field.
+    """
+
+
+class TeslemetryVehicleStreamEntity(TeslemetryVehicleEntity):
+    """Parent class for Teslemetry Vehicle Stream entities."""
+
+    def __init__(self, data: TeslemetryVehicleData, key: str) -> None:
+        """Initialize common aspects of a Teslemetry entity."""
+        super().__init__(data, key)
+
+        self.stream = data.stream
+        self.add_field = data.stream.get_vehicle(self.vin).add_field

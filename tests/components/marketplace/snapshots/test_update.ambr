@@ -1,0 +1,356 @@
+# serializer version: 1
+# name: test_install_update_from_the_catalog[hacs-test-org/integration-basic-None][api_usage]
+  dict({
+    'https://github.com/hacs-test-org/integration-basic/archive/refs/tags/2.0.0.zip': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/integration-basic/2.0.0/custom_components/example/manifest.json': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/integration-basic/2.0.0/hacs.json': 1,
+  })
+# ---
+# name: test_install_update_from_the_catalog[hacs-test-org/plugin-basic-None][api_usage]
+  dict({
+    'https://github.com/hacs-test-org/plugin-basic/archive/refs/tags/2.0.0.zip': 1,
+    'https://github.com/hacs-test-org/plugin-basic/releases/download/2.0.0/plugin-basic-bundle.js': 1,
+    'https://github.com/hacs-test-org/plugin-basic/releases/download/2.0.0/plugin-basic.js': 1,
+    'https://github.com/hacs-test-org/plugin-basic/releases/download/2.0.0/plugin-basic.umd.js': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/plugin-basic/2.0.0/hacs.json': 1,
+  })
+# ---
+# name: test_install_update_from_the_catalog[hacs-test-org/template-basic-None][api_usage]
+  dict({
+    'https://github.com/hacs-test-org/template-basic/archive/refs/tags/2.0.0.zip': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/template-basic/2.0.0/hacs.json': 1,
+  })
+# ---
+# name: test_install_update_from_the_catalog[hacs-test-org/theme-basic-None][api_usage]
+  dict({
+    'https://github.com/hacs-test-org/theme-basic/archive/refs/tags/2.0.0.zip': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/theme-basic/2.0.0/hacs.json': 1,
+  })
+# ---
+# name: test_install_update_of_a_custom_repository[hacs-test-org/integration-basic-None][api_usage]
+  dict({
+    'https://api.github.com/repos/hacs-test-org/integration-basic': 1,
+    'https://api.github.com/repos/hacs-test-org/integration-basic/branches/main': 1,
+    'https://api.github.com/repos/hacs-test-org/integration-basic/contents/custom_components/example/manifest.json?ref=1.0.0': 1,
+    'https://api.github.com/repos/hacs-test-org/integration-basic/contents/hacs.json?ref=1.0.0': 1,
+    'https://api.github.com/repos/hacs-test-org/integration-basic/git/trees/1.0.0?recursive=true': 1,
+    'https://api.github.com/repos/hacs-test-org/integration-basic/releases': 1,
+    'https://github.com/hacs-test-org/integration-basic/archive/refs/tags/2.0.0.zip': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/integration-basic/1.0.0/README.md': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/integration-basic/2.0.0/hacs.json': 1,
+  })
+# ---
+# name: test_install_update_of_a_custom_repository[hacs-test-org/plugin-basic-None][api_usage]
+  dict({
+    'https://api.github.com/repos/hacs-test-org/plugin-basic': 1,
+    'https://api.github.com/repos/hacs-test-org/plugin-basic/branches/main': 1,
+    'https://api.github.com/repos/hacs-test-org/plugin-basic/contents/hacs.json?ref=1.0.0': 1,
+    'https://api.github.com/repos/hacs-test-org/plugin-basic/git/trees/1.0.0?recursive=true': 1,
+    'https://api.github.com/repos/hacs-test-org/plugin-basic/releases': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/plugin-basic/1.0.0/README.md': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/plugin-basic/1.0.0/plugin-basic.js': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/plugin-basic/2.0.0/hacs.json': 1,
+  })
+# ---
+# name: test_install_update_of_a_custom_repository[hacs-test-org/template-basic-None][api_usage]
+  dict({
+    'https://api.github.com/repos/hacs-test-org/template-basic': 1,
+    'https://api.github.com/repos/hacs-test-org/template-basic/branches/main': 1,
+    'https://api.github.com/repos/hacs-test-org/template-basic/contents/hacs.json?ref=1.0.0': 1,
+    'https://api.github.com/repos/hacs-test-org/template-basic/git/trees/1.0.0?recursive=true': 1,
+    'https://api.github.com/repos/hacs-test-org/template-basic/releases': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/template-basic/1.0.0/README.md': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/template-basic/1.0.0/example.jinja': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/template-basic/2.0.0/hacs.json': 1,
+  })
+# ---
+# name: test_install_update_of_a_custom_repository[hacs-test-org/theme-basic-None][api_usage]
+  dict({
+    'https://api.github.com/repos/hacs-test-org/theme-basic': 1,
+    'https://api.github.com/repos/hacs-test-org/theme-basic/branches/main': 1,
+    'https://api.github.com/repos/hacs-test-org/theme-basic/contents/hacs.json?ref=1.0.0': 1,
+    'https://api.github.com/repos/hacs-test-org/theme-basic/git/trees/1.0.0?recursive=true': 1,
+    'https://api.github.com/repos/hacs-test-org/theme-basic/releases': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/theme-basic/1.0.0/README.md': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/theme-basic/1.0.0/themes/example.yaml': 1,
+    'https://raw.githubusercontent.com/hacs-test-org/theme-basic/2.0.0/hacs.json': 1,
+  })
+# ---
+# name: test_release_notes
+  'Description of the release'
+# ---
+# name: test_update_device_info
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': 'homeassistant://marketplace/repository/1296269',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'marketplace',
+        '1296269',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'hacs-test-org',
+    'model': <RepositoryCategory.INTEGRATION: 'integration'>,
+    'model_id': None,
+    'name': 'Basic integration',
+    'name_by_user': None,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_update_entity[hacs-test-org/integration-basic][entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'update',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'update.basic_integration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'marketplace',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <UpdateEntityFeature: 23>,
+    'translation_key': None,
+    'unique_id': '1296269',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update_entity[hacs-test-org/integration-basic][state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/example/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Basic integration',
+      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
+      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: 'https://github.com/hacs-test-org/integration-basic',
+      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 23>,
+      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
+      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.basic_integration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_update_entity[hacs-test-org/plugin-basic][entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'update',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'update.plugin_basic',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'marketplace',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <UpdateEntityFeature: 23>,
+    'translation_key': None,
+    'unique_id': '1296267',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update_entity[hacs-test-org/plugin-basic][state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Plugin Basic',
+      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
+      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: 'https://github.com/hacs-test-org/plugin-basic',
+      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 23>,
+      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
+      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.plugin_basic',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_update_entity[hacs-test-org/template-basic][entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'update',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'update.template_basic',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'marketplace',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <UpdateEntityFeature: 23>,
+    'translation_key': None,
+    'unique_id': '1296268',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update_entity[hacs-test-org/template-basic][state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Template Basic',
+      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
+      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: 'https://github.com/hacs-test-org/template-basic',
+      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 23>,
+      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
+      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.template_basic',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_update_entity[hacs-test-org/theme-basic][entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'update',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'update.theme_basic',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'marketplace',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <UpdateEntityFeature: 23>,
+    'translation_key': None,
+    'unique_id': '1296266',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update_entity[hacs-test-org/theme-basic][state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Theme Basic',
+      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
+      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: 'https://github.com/hacs-test-org/theme-basic',
+      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 23>,
+      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
+      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.theme_basic',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

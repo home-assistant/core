@@ -214,6 +214,11 @@ class Integration:
         return self.manifest.get("iot_class")
 
     @property
+    def categories(self) -> list[str]:
+        """Return the integration categories, the primary category first."""
+        return self.manifest.get("categories", [])
+
+    @property
     def iot_standards(self) -> list[str]:
         """Return the IoT standard supported by this virtual integration."""
         return self.manifest.get("iot_standards", [])

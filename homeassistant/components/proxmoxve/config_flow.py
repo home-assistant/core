@@ -64,7 +64,7 @@ BASE_SCHEMA = probatio.Schema(
         probatio.Required(CONF_USERNAME): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT, autocomplete="username")
         ),
-        probatio.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Required(CONF_TOKEN, default=False): cv.boolean,
         probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     }
@@ -72,7 +72,7 @@ BASE_SCHEMA = probatio.Schema(
 
 PASSWORD_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -83,7 +83,7 @@ PASSWORD_SCHEMA = probatio.Schema(
 TOKEN_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_TOKEN_ID): cv.string,
-        probatio.Required(CONF_TOKEN_SECRET): cv.string,
+        probatio.Required(probatio.Secret(CONF_TOKEN_SECRET)): cv.string,
     }
 )
 

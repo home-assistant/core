@@ -5,13 +5,24 @@ from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from pyzonneplan import Account, ConsumerPrices, OtpChallenge, Token, Zonneplan
+from pytest_homeassistant.common import MockConfigEntry, load_json_object_fixture
+from pyzonneplan import (
+    Account,
+    BatteryControlMode,
+    BatteryInstallation,
+    ChargePointInstallation,
+    ConsumerPrices,
+    ElectricityChart,
+    GasChart,
+    OtpChallenge,
+    Token,
+    Zonneplan,
+)
 from pyzonneplan.const import PriceChart
 
 from homeassistant.components.zonneplan.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_TOKEN
-
-from tests.common import MockConfigEntry, load_json_object_fixture
+from homeassistant.core import HomeAssistant
 
 MOCK_EMAIL = "user@example.com"
 MOCK_USER_INPUT = {CONF_EMAIL: MOCK_EMAIL}
@@ -22,7 +33,7 @@ MOCK_ACCOUNT = Account.from_dict(load_json_object_fixture("get_account.json", DO
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.zonneplan.async_setup_entry", return_value=True
+        "homeassistant.components.zonneplan.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -59,6 +70,21 @@ def mock_zonneplan_client() -> Generator[AsyncMock]:
         ),
     }
     client.async_get_consumer_prices.side_effect = lambda chart: prices_by_chart[chart]
+    client.async_get_electricity_chart.return_value = ElectricityChart.from_dict(
+        load_json_object_fixture("get_electricity_chart_days.json", DOMAIN)
+    )
+    client.async_get_gas_chart.return_value = GasChart.from_dict(
+        load_json_object_fixture("get_gas_chart_days.json", DOMAIN)
+    )
+    client.async_get_battery.return_value = BatteryInstallation.from_dict(
+        load_json_object_fixture("get_battery_installation.json", DOMAIN)
+    )
+    client.async_get_battery_control_mode.return_value = BatteryControlMode.from_dict(
+        load_json_object_fixture("get_battery_control_mode.json", DOMAIN)
+    )
+    client.async_get_charge_point.return_value = ChargePointInstallation.from_dict(
+        load_json_object_fixture("get_charge_point.json", DOMAIN)
+    )
 
     with (
         patch("homeassistant.components.zonneplan.Zonneplan", return_value=client),
@@ -87,3 +113,14 @@ def mock_config_entry() -> MockConfigEntry:
             ).as_dict(),
         },
     )
+
+
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> MockConfigEntry:
+    """Set up the Zonneplan integration."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    return mock_config_entry

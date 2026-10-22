@@ -1,6 +1,6 @@
 """Support for Concord232 alarm control panels."""
 
-import datetime
+import datetime as dt
 import logging
 from typing import override
 
@@ -28,7 +28,7 @@ DEFAULT_NAME = "CONCORD232"
 DEFAULT_PORT = 5007
 DEFAULT_MODE = "audible"
 
-SCAN_INTERVAL = datetime.timedelta(seconds=10)
+SCAN_INTERVAL = dt.timedelta(seconds=10)
 
 PLATFORM_SCHEMA = ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
     {
@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         probatio.Optional(CONF_CODE): cv.string,
         probatio.Optional(CONF_MODE, default=DEFAULT_MODE): cv.string,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
     }
 )
 

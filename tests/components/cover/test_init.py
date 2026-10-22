@@ -1,6 +1,7 @@
 """The tests for Cover."""
 
 import pytest
+from pytest_homeassistant.common import setup_test_component_platform
 
 from homeassistant.components import cover
 from homeassistant.components.cover import ATTR_SPEED, CoverState
@@ -19,8 +20,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.setup import async_setup_component
 
 from .common import MockCover
-
-from tests.common import setup_test_component_platform
 
 
 async def test_services(

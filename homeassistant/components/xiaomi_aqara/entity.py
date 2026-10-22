@@ -71,7 +71,17 @@ class XiaomiDevice(Entity):
     async def async_added_to_hass(self) -> None:
         """Start unavailability tracking."""
         self._xiaomi_hub.callbacks[self._sid].append(self.push_data)
+        self.async_on_remove(
+            lambda: self._xiaomi_hub.callbacks[self._sid].remove(self.push_data)
+        )
         self._async_track_unavailable()
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Stop unavailability tracking."""
+        if self._remove_unavailability_tracker:
+            self._remove_unavailability_tracker()
+            self._remove_unavailability_tracker = None
 
     @property
     @override

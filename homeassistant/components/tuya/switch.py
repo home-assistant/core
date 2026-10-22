@@ -344,6 +344,12 @@ SWITCHES: dict[DeviceCategory, tuple[TuyaSwitchEntityDescription, ...]] = {
             translation_key="sleep_aid",
         ),
     ),
+    DeviceCategory.HWSB: (
+        TuyaSwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name=None,
+        ),
+    ),
     DeviceCategory.JSQ: (
         TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_SOUND,
@@ -367,53 +373,14 @@ SWITCHES: dict[DeviceCategory, tuple[TuyaSwitchEntityDescription, ...]] = {
             translation_key="child_lock",
             entity_category=EntityCategory.CONFIG,
         ),
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_1,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "1"},
-            device_class=SwitchDeviceClass.OUTLET,
-        ),
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_2,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "2"},
-            device_class=SwitchDeviceClass.OUTLET,
-        ),
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_3,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "3"},
-            device_class=SwitchDeviceClass.OUTLET,
-        ),
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_4,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "4"},
-            device_class=SwitchDeviceClass.OUTLET,
-        ),
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_5,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "5"},
-            device_class=SwitchDeviceClass.OUTLET,
-        ),
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_6,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "6"},
-            device_class=SwitchDeviceClass.OUTLET,
-        ),
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_7,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "7"},
-            device_class=SwitchDeviceClass.OUTLET,
-        ),
-        TuyaSwitchEntityDescription(
-            key=DPCode.SWITCH_8,
-            translation_key="indexed_switch",
-            translation_placeholders={"index": "8"},
-            device_class=SwitchDeviceClass.OUTLET,
+        *(
+            TuyaSwitchEntityDescription(
+                key=f"switch_{index}",
+                translation_key="indexed_switch",
+                translation_placeholders={"index": str(index)},
+                device_class=SwitchDeviceClass.OUTLET,
+            )
+            for index in range(1, 23)
         ),
         TuyaSwitchEntityDescription(
             key=DPCode.SWITCH_USB1,
@@ -511,6 +478,13 @@ SWITCHES: dict[DeviceCategory, tuple[TuyaSwitchEntityDescription, ...]] = {
             key=DPCode.SWITCH_ALARM_LIGHT,
             # This switch is called "Siren" in the official Tuya app
             translation_key="siren",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    DeviceCategory.MJJ: (
+        TuyaSwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            translation_key="child_lock",
             entity_category=EntityCategory.CONFIG,
         ),
     ),

@@ -21,7 +21,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NZBGetConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NZBGetConfigEntry) -> None:
     """Set up NZBGet from a config entry."""
     coordinator = NZBGetDataUpdateCoordinator(hass, entry)
 
@@ -33,12 +33,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: NZBGetConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: NZBGetConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NZBGetConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: NZBGetConfigEntry) -> None:

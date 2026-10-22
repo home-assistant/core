@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 
 from pynetgear import DEFAULT_USER
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.netgear.const import (
     CONF_CONSIDER_HOME,
@@ -28,8 +29,6 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_SERIAL,
     SsdpServiceInfo,
 )
-
-from tests.common import MockConfigEntry
 
 URL = "http://routerlogin.net"
 URL_SSL = "https://routerlogin.net"
@@ -74,7 +73,7 @@ SSDP_URL_SLL = f"https://{HOST}:{PORT}/rootDesc.xml"
 def mock_controller_service():
     """Mock a successful service."""
     with (
-        patch("homeassistant.components.netgear.async_setup_entry", return_value=True),
+        patch("homeassistant.components.netgear.async_setup_entry", return_value=None),
         patch("homeassistant.components.netgear.router.Netgear") as service_mock,
     ):
         service_mock.return_value.get_info = Mock(return_value=ROUTER_INFOS)
@@ -110,7 +109,7 @@ async def test_user(hass: HomeAssistant, service) -> None:
     assert result["data"][CONF_PASSWORD] == PASSWORD
 
 
-async def test_user_connect_error(hass: HomeAssistant, service) -> None:
+async def test_user_connect_error(hass: HomeAssistant, service: Mock) -> None:
     """Test user step with connection failure."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -146,6 +145,19 @@ async def test_user_connect_error(hass: HomeAssistant, service) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "config"}
+
+    service.return_value.login_try_port = Mock(return_value=True)
+    service.return_value.get_info = Mock(return_value=ROUTER_INFOS)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: HOST,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_incomplete_info(hass: HomeAssistant, service) -> None:

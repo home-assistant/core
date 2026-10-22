@@ -273,6 +273,7 @@ class OllamaBaseLLMEntity(Entity):
                     format=output_format,
                 )
             except (ollama.RequestError, ollama.ResponseError) as err:
+                # pylint: disable-next=home-assistant-log-and-raise
                 _LOGGER.error("Unexpected error talking to Ollama server: %s", err)
                 raise HomeAssistantError(
                     f"Sorry, I had a problem talking to the Ollama server: {err}"

@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from pynobo import PynoboConnectionError, nobo as pynobo_nobo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.nobo_hub.const import (
     CONF_OVERRIDE_TYPE,
@@ -24,8 +25,6 @@ from . import (
     fire_hub_update,
 )
 from .conftest import SERIAL, STORED_IP
-
-from tests.common import MockConfigEntry
 
 NEW_IP = "192.168.1.55"
 GLOBAL_ENTITY = "select.my_eco_hub_global_override"

@@ -20,13 +20,13 @@ GHOST_INTEGRATION_SETUP_URL = "https://account.ghost.org/?r=settings/integration
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_API_URL): str,
-        probatio.Required(CONF_ADMIN_API_KEY): str,
+        probatio.Required(probatio.Secret(CONF_ADMIN_API_KEY)): str,
     }
 )
 
 STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_ADMIN_API_KEY): str,
+        probatio.Required(probatio.Secret(CONF_ADMIN_API_KEY)): str,
     }
 )
 

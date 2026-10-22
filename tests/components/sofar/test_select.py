@@ -1,10 +1,11 @@
-"""Test the Sofar Inverter Modbus select platform."""
+"""Tests for the Sofar select platform."""
 
 from unittest.mock import patch
 
 from modbus_connection import ModbusError
 from modbus_connection.mock import MockModbusConnection
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
@@ -18,16 +19,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import (
+    MOCK_ENTRY_DATA,
     MOCK_HYBRID_MODEL,
     MOCK_HYBRID_SERIAL,
     MOCK_MODEL,
     MOCK_SERIAL,
-    MOCK_USER_INPUT,
     seed_hybrid_inverter,
     seed_pv_inverter,
 )
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def _setup_hybrid(
@@ -39,7 +38,7 @@ async def _setup_hybrid(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=MOCK_HYBRID_SERIAL,
-        data=MOCK_USER_INPUT,
+        data=MOCK_ENTRY_DATA,
         title=MOCK_HYBRID_MODEL,
     )
     entry.add_to_hass(hass)
@@ -64,7 +63,7 @@ async def _setup_pv(
     connection = MockModbusConnection()
     seed_pv_inverter(connection.for_unit(1))
     entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=MOCK_SERIAL, data=MOCK_USER_INPUT, title=MOCK_MODEL
+        domain=DOMAIN, unique_id=MOCK_SERIAL, data=MOCK_ENTRY_DATA, title=MOCK_MODEL
     )
     entry.add_to_hass(hass)
     with (

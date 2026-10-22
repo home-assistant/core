@@ -20,7 +20,7 @@ from homeassistant.helpers.entity import get_capability, get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import const
-from .const import DOMAIN
+from .const import DOMAIN, ClimateService, ClimateServiceArgument
 
 ACTION_TYPES = {"set_hvac_mode", "set_preset_mode"}
 
@@ -40,7 +40,9 @@ SET_PRESET_MODE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     }
 )
 
-_ACTION_SCHEMA = probatio.Any(SET_HVAC_MODE_SCHEMA, SET_PRESET_MODE_SCHEMA)
+_ACTION_SCHEMA = probatio.TaggedUnion(
+    CONF_TYPE, [SET_HVAC_MODE_SCHEMA, SET_PRESET_MODE_SCHEMA]
+)
 
 
 async def async_validate_action_config(
@@ -87,11 +89,13 @@ async def async_call_action_from_config(
     service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
 
     if config[CONF_TYPE] == "set_hvac_mode":
-        service = const.SERVICE_SET_HVAC_MODE
-        service_data[const.ATTR_HVAC_MODE] = config[const.ATTR_HVAC_MODE]
+        service = ClimateService.SET_HVAC_MODE
+        service_data[ClimateServiceArgument.HVAC_MODE] = config[const.ATTR_HVAC_MODE]
     elif config[CONF_TYPE] == "set_preset_mode":
-        service = const.SERVICE_SET_PRESET_MODE
-        service_data[const.ATTR_PRESET_MODE] = config[const.ATTR_PRESET_MODE]
+        service = ClimateService.SET_PRESET_MODE
+        service_data[ClimateServiceArgument.PRESET_MODE] = config[
+            const.ATTR_PRESET_MODE
+        ]
 
     await hass.services.async_call(
         DOMAIN, service, service_data, blocking=True, context=context

@@ -2,10 +2,17 @@
 
 from enum import StrEnum
 import logging
-from typing import Final
+from typing import TYPE_CHECKING, Final
+
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from . import ScheduleData
 
 DOMAIN: Final = "schedule"
 LOGGER = logging.getLogger(__package__)
+
+DATA_SCHEDULE: HassKey[ScheduleData] = HassKey(DOMAIN)
 
 
 class ScheduleEntityCapabilityAttribute(StrEnum):
