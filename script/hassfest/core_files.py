@@ -20,16 +20,6 @@ MISSING_ALL = {
 _COMPONENT_RE = re.compile(r"homeassistant/components/([^/]+)/\*\*")
 
 
-def get_core_integrations(root: Path) -> set[str]:
-    """Return the integrations listed in .core_files.yaml."""
-    core_files = load_yaml_dict(str(root / ".core_files.yaml"))
-    return {
-        match.group(1)
-        for entry in (*core_files["base_platforms"], *core_files.get("components", []))
-        if (match := _COMPONENT_RE.match(entry))
-    }
-
-
 def _defines_all(init_file: Path) -> bool:
     """Return True if the module assigns __all__ at module level."""
     for node in ast.parse(init_file.read_text(), str(init_file)).body:
