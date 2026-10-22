@@ -234,6 +234,7 @@ async def test_failed_schedule_poll_keeps_entities_available(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     zone_id: str,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a failed background schedule GET is logged (and retried), not a failure."""
 
@@ -250,6 +251,7 @@ async def test_failed_schedule_poll_keeps_entities_available(
         await hass.async_block_till_done()
 
     mock_fcn.assert_awaited()  # the schedules were due to be fetched
+    assert "Failed to update the schedule (keeping any previous one)" in caplog.text
 
     state = hass.states.get(zone_id)
     assert state is not None and state.state != STATE_UNAVAILABLE

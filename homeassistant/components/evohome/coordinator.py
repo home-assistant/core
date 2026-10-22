@@ -4,7 +4,7 @@ from collections.abc import Awaitable
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
-from typing import Any, override
+from typing import Any, Final, override
 
 import evohomeasync as ec1
 import evohomeasync2 as ec2
@@ -36,6 +36,10 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN, SCHEDULE_MAX_AGE
 
 type _Schedule = list[EvoDhwScheduleDayOfWeekT] | list[EvoZonScheduleDayOfWeekT]
+
+_ERR_SCHEDULE_UPDATE: Final = (
+    "%s: Failed to update the schedule (keeping any previous one): %s"
+)
 
 
 class EvoDataUpdateCoordinator(DataUpdateCoordinator):
@@ -149,12 +153,10 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         client_api: Awaitable[_T],
         *,
         request_refresh: bool = True,
-        raise_on_error: bool = True,
-    ) -> _T | None:
+    ) -> _T:
         """Call a client API and update the Coordinator state if required.
 
-        If the call fails, raise HomeAssistantError (e.g. for an action), unless
-        raise_on_error is False (e.g. for a background GET), when log it and return None.
+        If the call fails, raise HomeAssistantError.
         """
 
         try:
@@ -164,9 +166,6 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             raise
 
         except ec2.ApiCallFailedError as err:
-            if not raise_on_error:
-                self.logger.warning(err)
-                return None
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="api_call_failed",
@@ -267,22 +266,24 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch the schedule of a DHW/zone, recording when it was fetched.
 
         This is the only place a schedule is fetched. If the GET fails, raise
-        HomeAssistantError unless raise_on_error is False, in which case the fetch time
-        is not recorded (so it will be retried). An invalid schedule is logged, and is
-        not retried until it is stale.
+        HomeAssistantError unless raise_on_error is False, in which case log it and
+        don't record the fetch time (so it will be retried). An invalid schedule is
+        logged, and is not retried until it is stale. Either way, any previous schedule
+        is kept.
         """
 
         # annotated, as mypy can't infer a type from the HotWater | Zone union
         client_api: Awaitable[_Schedule] = child.get_schedule()
         try:
-            schedule = await self.call_client_api(
-                client_api, request_refresh=False, raise_on_error=raise_on_error
-            )
+            schedule = await self.call_client_api(client_api, request_refresh=False)
+        except HomeAssistantError as err:
+            if raise_on_error:
+                raise
+            self.logger.warning(_ERR_SCHEDULE_UPDATE, child, err.__cause__ or err)
+            return  # the GET failed, so retry it at the next poll
         except ec2.InvalidScheduleError as err:
-            self.logger.warning("%s: Invalid/missing schedule: %s", child, err)
+            self.logger.warning(_ERR_SCHEDULE_UPDATE, child, err)
         else:
-            if schedule is None:  # the GET failed, so retry it at the next poll
-                return
             self.logger.debug("%s: Schedule = %s", child, schedule)
 
         self._schedules_fetched[child.id] = dt_util.utcnow()
