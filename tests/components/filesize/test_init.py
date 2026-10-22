@@ -2,14 +2,14 @@
 
 from pathlib import Path
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.filesize.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_FILE_PATH
 from homeassistant.core import HomeAssistant
 
 from . import async_create_file
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_config_entry(

@@ -9,7 +9,7 @@ import mimetypes
 from time import time
 from typing import Any, override
 
-from b2sdk.v2 import FileVersion
+from b2sdk.v2 import AbstractProgressListener, FileVersion
 from b2sdk.v2.exception import B2Error
 
 from homeassistant.components.backup import (
@@ -52,16 +52,25 @@ def suggested_filenames(backup: AgentBackup) -> tuple[str, str]:
     return f"{base_name}.tar", f"{base_name}.metadata.json"
 
 
+# Other tools may write unrelated files ending in `.metadata.json` into the
+# bucket; such files must be skipped rather than crashing the backup listing.
+REQUIRED_METADATA_KEYS = frozenset({"metadata_version", "backup_id", "backup_metadata"})
+
+
 def _parse_metadata(raw_content: str) -> dict[str, Any]:
-    """Parse metadata content from JSON."""
+    """Parse metadata content from JSON and validate its schema."""
     try:
         data = json.loads(raw_content)
     except json.JSONDecodeError as err:
         raise ValueError(f"Invalid JSON format: {err}") from err
-    else:
-        if not isinstance(data, dict):
-            raise TypeError("JSON content is not a dictionary")
-        return data
+    if not isinstance(data, dict):
+        raise TypeError("JSON content is not a dictionary")
+    missing = REQUIRED_METADATA_KEYS - data.keys()
+    if missing:
+        raise ValueError(
+            f"Missing required metadata keys: {', '.join(sorted(missing))}"
+        )
+    return data
 
 
 def _find_backup_file_for_metadata(
@@ -140,6 +149,31 @@ def async_register_backup_agents_listener(
             hass.data.pop(DATA_BACKUP_AGENT_LISTENERS, None)
 
     return remove_listener
+
+
+class _ProgressListener(AbstractProgressListener):  # type: ignore[misc]
+    """Forward upload progress from B2 worker threads to the event loop."""
+
+    def __init__(self, hass: HomeAssistant, on_progress: OnProgressCallback) -> None:
+        """Initialize the listener."""
+        super().__init__()
+        self._hass = hass
+        self._on_progress = on_progress
+        # The worker thread can outlive a timed out or cancelled upload
+        self.active = True
+
+    def set_total_bytes(self, total_byte_count: int) -> None:
+        """Ignore the total, the backup size is already known."""
+
+    def bytes_completed(self, byte_count: int) -> None:
+        """Report the number of bytes uploaded so far."""
+        self._hass.loop.call_soon_threadsafe(self._report, byte_count)
+
+    @callback
+    def _report(self, byte_count: int) -> None:
+        """Report progress unless the upload has ended."""
+        if self.active:
+            self._on_progress(bytes_uploaded=byte_count)
 
 
 class BackblazeBackupAgent(BackupAgent):
@@ -263,7 +297,9 @@ class BackblazeBackupAgent(BackupAgent):
 
         tar_uploaded = False
         try:
-            await self._upload_backup_file(prefixed_tar_filename, open_stream, {})
+            await self._upload_backup_file(
+                prefixed_tar_filename, open_stream, {}, on_progress
+            )
             tar_uploaded = True
             _LOGGER.debug(
                 "Main backup file upload finished for %s", prefixed_tar_filename
@@ -312,6 +348,7 @@ class BackblazeBackupAgent(BackupAgent):
         filename: str,
         content_type: str,
         file_info: dict[str, Any],
+        progress_listener: AbstractProgressListener,
     ) -> FileVersion:
         """Synchronously upload unbound stream to B2."""
         return self._bucket.upload_unbound_stream(
@@ -319,6 +356,7 @@ class BackblazeBackupAgent(BackupAgent):
             filename,
             content_type=content_type,
             file_info=file_info,
+            progress_listener=progress_listener,
         )
 
     def _download_and_parse_metadata_sync(
@@ -334,12 +372,14 @@ class BackblazeBackupAgent(BackupAgent):
         filename: str,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         file_info: dict[str, Any],
+        on_progress: OnProgressCallback,
     ) -> None:
         """Upload backup file to B2 using streaming."""
         _LOGGER.debug("Starting streaming upload for %s", filename)
 
         stream = await open_stream()
         reader = AsyncIteratorReader(self._hass.loop, stream)
+        progress_listener = _ProgressListener(self._hass, on_progress)
 
         _LOGGER.debug("Uploading backup file %s with streaming", filename)
         try:
@@ -351,6 +391,7 @@ class BackblazeBackupAgent(BackupAgent):
                     filename,
                     content_type or "application/x-tar",
                     file_info,
+                    progress_listener,
                 ),
                 timeout=UPLOAD_TIMEOUT,
             )
@@ -368,6 +409,7 @@ class BackblazeBackupAgent(BackupAgent):
             raise
         finally:
             reader.close()
+            progress_listener.active = False
 
         _LOGGER.debug("Successfully uploaded %s (ID: %s)", filename, file_version.id_)
 
@@ -557,7 +599,13 @@ class BackblazeBackupAgent(BackupAgent):
             metadata_content = _parse_metadata(
                 download_response.content.decode("utf-8")
             )
-        except ValueError:
+        except (TypeError, ValueError) as err:
+            _LOGGER.warning(
+                "Skipping metadata file %s: not a valid Backblaze B2 backup "
+                "metadata file (%s)",
+                file_name,
+                err,
+            )
             return None, None
 
         if metadata_content["backup_id"] != target_backup_id:
@@ -633,7 +681,13 @@ class BackblazeBackupAgent(BackupAgent):
             metadata_content = _parse_metadata(
                 download_response.content.decode("utf-8")
             )
-        except ValueError:
+        except (TypeError, ValueError) as err:
+            _LOGGER.warning(
+                "Skipping metadata file %s: not a valid Backblaze B2 backup "
+                "metadata file (%s)",
+                file_name,
+                err,
+            )
             return None
 
         found_backup_file = _find_backup_file_for_metadata(

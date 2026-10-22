@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, Mock
 
 from aiohttp import ClientResponseError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from weatherflow4py.models.ws.types import EventType
 from weatherflow4py.models.ws.websocket_request import (
     ListenStartMessage,
@@ -24,8 +25,6 @@ from homeassistant.config_entries import ConfigEntryAuthFailed
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from tests.common import MockConfigEntry
-
 
 async def test_wind_coordinator_setup(
     hass: HomeAssistant,
@@ -34,7 +33,7 @@ async def test_wind_coordinator_setup(
     mock_websocket_api: AsyncMock,
     mock_stations_data: Mock,
 ) -> None:
-    """Test wind coordinator setup."""
+    """Test wind coordinator setup registers callbacks without connecting."""
 
     coordinator = WeatherFlowWindCoordinator(
         hass=hass,
@@ -46,16 +45,12 @@ async def test_wind_coordinator_setup(
 
     await coordinator.async_setup()
 
-    # Verify websocket setup
-    mock_websocket_api.connect.assert_called_once()
+    mock_websocket_api.connect.assert_not_called()
     mock_websocket_api.register_callback.assert_called_once_with(
         message_type=EventType.RAPID_WIND,
         callback=coordinator._handle_websocket_message,
     )
-    # In the refactored code, send_message is called for each device ID
     assert mock_websocket_api.send_message.called
-
-    # Verify at least one message is of the correct type
     call_args_list = mock_websocket_api.send_message.call_args_list
     assert any(
         isinstance(call.args[0], RapidWindListenStartMessage) for call in call_args_list
@@ -69,7 +64,7 @@ async def test_observation_coordinator_setup(
     mock_websocket_api: AsyncMock,
     mock_stations_data: Mock,
 ) -> None:
-    """Test observation coordinator setup."""
+    """Test observation coordinator setup registers callbacks without connecting."""
 
     coordinator = WeatherFlowObservationCoordinator(
         hass=hass,
@@ -81,16 +76,12 @@ async def test_observation_coordinator_setup(
 
     await coordinator.async_setup()
 
-    # Verify websocket setup
-    mock_websocket_api.connect.assert_called_once()
+    mock_websocket_api.connect.assert_not_called()
     mock_websocket_api.register_callback.assert_called_once_with(
         message_type=EventType.OBSERVATION,
         callback=coordinator._handle_websocket_message,
     )
-    # In the refactored code, send_message is called for each device ID
     assert mock_websocket_api.send_message.called
-
-    # Verify at least one message is of the correct type
     call_args_list = mock_websocket_api.send_message.call_args_list
     assert any(isinstance(call.args[0], ListenStartMessage) for call in call_args_list)
 

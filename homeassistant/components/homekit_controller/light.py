@@ -21,8 +21,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
-from . import KNOWN_DEVICES
 from .connection import HKDevice
+from .const import KNOWN_DEVICES
 from .entity import HomeKitEntity
 
 
@@ -188,8 +188,11 @@ class HomeKitLight(HomeKitEntity, LightEntity):
         characteristics: dict[str, Any] = {}
 
         if brightness is not None:
-            characteristics[CharacteristicsTypes.BRIGHTNESS] = int(
-                brightness * 100 / 255
+            # Some devices such as Nanoleaf Essentials treat brightness 0
+            # with on as full brightness; a real brightness 0 is handled
+            # as turn_off by the light component.
+            characteristics[CharacteristicsTypes.BRIGHTNESS] = max(
+                1, int(brightness * 100 / 255)
             )
 
         # If they send both temperature and hs_color, and the device

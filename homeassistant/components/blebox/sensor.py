@@ -33,9 +33,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import BleBoxConfigEntry
 from .const import CO2_LEVEL, OPEN_STATUS
-from .coordinator import BleBoxCoordinator
+from .coordinator import BleBoxConfigEntry, BleBoxCoordinator
 from .entity import BleBoxEntity
 
 PARALLEL_UPDATES = 0
@@ -237,6 +236,12 @@ class BleBoxSensorEntity(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], SensorEn
         elif index is not None and description.translation_key:
             self._attr_translation_key = f"{description.translation_key}_n"
             self._attr_translation_placeholders = {"index": str(index)}
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and not self._feature.is_error
 
     @property
     @override

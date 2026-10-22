@@ -1,6 +1,7 @@
 {
   "domain": "airobot",
   "name": "Airobot",
+  "categories": ["climate.thermostats_heating"],
   "codeowners": ["@mettolen"],
   "config_flow": true,
   "dhcp": [
@@ -13,5 +14,5 @@
   "iot_class": "local_polling",
   "loggers": ["pyairobotrest"],
   "quality_scale": "platinum",
-  "requirements": ["pyairobotrest==0.3.0"]
+  "requirements": ["pyairobotrest==0.4.0"]
 }

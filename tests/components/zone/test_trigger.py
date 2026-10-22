@@ -4,10 +4,24 @@ from datetime import timedelta
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import async_fire_time_changed, mock_component
+from pytest_homeassistant.components.common import (
+    TargetSupport,
+    TriggerStateDescription,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
+    assert_trigger_behavior_first,
+    assert_trigger_options_supported,
+    assert_triggers_target_support,
+    parametrize_target_entities,
+    parametrize_trigger_states,
+    target_entities,
+)
 
 from homeassistant.components import automation, zone
+from homeassistant.components.zone.trigger import TRIGGERS
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,
@@ -19,18 +33,6 @@ from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.setup import async_setup_component
-
-from tests.common import async_fire_time_changed, mock_component
-from tests.components.common import (
-    TriggerStateDescription,
-    assert_trigger_behavior_all,
-    assert_trigger_behavior_each,
-    assert_trigger_behavior_first,
-    assert_trigger_options_supported,
-    parametrize_target_entities,
-    parametrize_trigger_states,
-    target_entities,
-)
 
 
 @pytest.fixture(autouse=True)
@@ -526,6 +528,15 @@ IN_ZONES_NONE: dict[str, list[str]] = {"in_zones": []}
 TRIGGER_ZONE = ZONE_HOME
 
 
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "_": TargetSupport.NONE,
+    "entered": TargetSupport.STANDARD,
+    "left": TargetSupport.STANDARD,
+    "occupancy_detected": TargetSupport.NONE,
+    "occupancy_cleared": TargetSupport.NONE,
+}
+
+
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -550,12 +561,17 @@ async def test_zone_trigger_options_validation(
     )
 
 
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
+
+
 @pytest.mark.parametrize("trigger_key", ["zone.entered", "zone.left"])
 async def test_zone_trigger_rejects_non_zone_entity_id(
     hass: HomeAssistant, trigger_key: str
 ) -> None:
     """Test that the zone option must reference entities in the zone domain."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await async_validate_trigger_config(
             hass,
             [

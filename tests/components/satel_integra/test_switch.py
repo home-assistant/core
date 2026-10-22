@@ -5,6 +5,12 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.satel_integra.const import DOMAIN
@@ -35,13 +41,6 @@ from . import (
     trigger_connection_status_update,
 )
 
-from tests.common import (
-    MockConfigEntry,
-    async_capture_events,
-    async_fire_time_changed,
-    snapshot_platform,
-)
-
 
 @pytest.fixture(autouse=True)
 async def switches_only() -> AsyncGenerator[None]:
@@ -66,8 +65,8 @@ async def test_switches(
 
     await snapshot_platform(hass, entity_registry, snapshot, MOCK_ENTRY_ID)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "1234567890_switch_1")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1234567890_switch_1"), mock_config_entry_with_subentries.entry_id
     )
 
     assert device_entry == snapshot(name="device")

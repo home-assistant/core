@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -20,8 +21,6 @@ from .common import (
     simulate_webhook,
     snapshot_platform_entities,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -59,7 +58,7 @@ async def test_doortag_setup(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
         ) as mock_auth,
         patch(
-            "homeassistant.components.netatmo.data_handler.PLATFORMS",
+            "homeassistant.components.netatmo.coordinator.PLATFORMS",
             ["camera", "binary_sensor"],
         ),
         patch(
@@ -171,7 +170,7 @@ async def test_doortag_opening_status_change(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
         ) as mock_auth,
         patch(
-            "homeassistant.components.netatmo.data_handler.PLATFORMS",
+            "homeassistant.components.netatmo.coordinator.PLATFORMS",
             ["camera", "binary_sensor"],
         ),
         patch(
@@ -298,7 +297,7 @@ async def test_doortag_opening_category(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
         ) as mock_auth,
         patch(
-            "homeassistant.components.netatmo.data_handler.PLATFORMS",
+            "homeassistant.components.netatmo.coordinator.PLATFORMS",
             ["camera", "binary_sensor"],
         ),
         patch(

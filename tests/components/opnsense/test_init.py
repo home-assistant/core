@@ -13,6 +13,7 @@ from aiopnsense import (
     OPNsenseUnknownFirmware,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.opnsense.const import (
     CONF_API_SECRET,
@@ -22,8 +23,6 @@ from homeassistant.components.opnsense.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

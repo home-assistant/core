@@ -1,6 +1,7 @@
 """Test SMHI component setup process."""
 
 from pysmhi import SMHIFirePointForecast, SMHIPointForecast
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.smhi.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -9,8 +10,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import ENTITY_ID, TEST_CONFIG, TEST_CONFIG_MIGRATE
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_and_unload_config_entry(

@@ -6,9 +6,11 @@ from contextlib import suppress
 import os
 from typing import TYPE_CHECKING, Any, override
 
-from music_assistant_models.auth import UserRole
+from music_assistant_client.helpers import LinkedUser
+from music_assistant_models.auth import AuthProviderType
 from music_assistant_models.constants import PLAYER_CONTROL_NONE
 from music_assistant_models.enums import (
+    DashboardType,
     EventType,
     MediaType,
     PlayerFeature,
@@ -17,15 +19,17 @@ from music_assistant_models.enums import (
     QueueOption,
     RepeatMode as MassRepeatMode,
 )
-from music_assistant_models.errors import MediaNotFoundError
+from music_assistant_models.errors import MediaNotFoundError, MusicAssistantError
 from music_assistant_models.event import MassEvent
-from music_assistant_models.media_items import ItemMapping, MediaItemType, Track
+from music_assistant_models.media_items import ItemMapping, MediaItemType
 from music_assistant_models.player_queue import PlayerQueue
 
-from homeassistant.components import media_source
+from homeassistant.components import media_source, tts
 from homeassistant.components.media_player import (
     ATTR_MEDIA_EXTRA,
+    BrowseError,
     BrowseMedia,
+    MediaClass,
     MediaPlayerDeviceClass,
     MediaPlayerEnqueue,
     MediaPlayerEntity,
@@ -37,7 +41,7 @@ from homeassistant.components.media_player import (
     SearchMediaQuery,
     async_process_play_media_url,
 )
-from homeassistant.const import ATTR_NAME, STATE_OFF, Platform
+from homeassistant.const import ATTR_NAME, STATE_OFF, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -59,14 +63,20 @@ from .const import (
     ATTR_REPEAT_MODE,
     ATTR_SHUFFLE_ENABLED,
     DOMAIN,
+    LOGGER,
 )
-from .entity import MusicAssistantEntity
-from .helpers import catch_musicassistant_error
+from .entity import MusicAssistantDashboardEntity, MusicAssistantEntity
+from .helpers import (
+    catch_musicassistant_error,
+    catch_user_not_found,
+    dashboard_identifier,
+)
 from .media_browser import async_browse_media, async_search_media
 from .schemas import QUEUE_DETAILS_SCHEMA, queue_item_dict_from_mass_item
 
 if TYPE_CHECKING:
     from music_assistant_client.client import MusicAssistantClient
+    from music_assistant_models.dashboard import DashboardDevice
     from music_assistant_models.player import Player
 
 SUPPORTED_FEATURES_BASE = (
@@ -107,6 +117,58 @@ REPEAT_MODE_MAPPING_TO_HA = {
     # UNKNOWN is intentionally not mapped - will return None
 }
 
+MASS_ICON_TO_MDI: Mapping[str, str] = {
+    "bluetooth": "mdi:bluetooth",
+    "car": "mdi:car",
+    "cast": "mdi:cast",
+    "headphones": "mdi:headphones",
+    "laptop": "mdi:laptop",
+    "monitor": "mdi:monitor",
+    "radio": "mdi:radio",
+    "smartphone": "mdi:cellphone",
+    "soundbar": "mdi:soundbar",
+    "speaker": "mdi:speaker",
+    "speakers": "mdi:speaker-multiple",
+    "sun": "mdi:white-balance-sunny",
+    "tablet": "mdi:tablet",
+    "tv": "mdi:television",
+    "vinyl": "mdi:record-player",
+}
+
+
+MEDIA_CONTENT_TYPE_DASHBOARD = "dashboard"
+NOW_PLAYING_ID_PREFIX = f"{DashboardType.NOW_PLAYING.value}/"
+# the DashboardType value doubles as the provider domain for get_provider_icon
+DASHBOARD_ICON_TYPES = frozenset({DashboardType.PARTY, DashboardType.MUSIC_QUIZ})
+DASHBOARD_ICON_PROVIDER_DOMAINS = frozenset(
+    icon_type.value for icon_type in DASHBOARD_ICON_TYPES
+)
+
+
+def _get_mdi_icon(icon: str) -> str:
+    """Return an MDI icon for a Music Assistant icon."""
+    if icon.startswith("mdi:"):
+        return icon
+    if icon.startswith("mdi-"):
+        return icon.replace("mdi-", "mdi:", 1)
+    return MASS_ICON_TO_MDI.get(icon, "mdi:speaker")
+
+
+def _get_player_artwork_url(mass: MusicAssistantClient, player: Player) -> str | None:
+    """Return the artwork URL for a player's current media, or None."""
+    if player.current_media and player.current_media.image_url:
+        # prefer player.current_media which reflects the live state
+        # (e.g. current track art from radio stream metadata)
+        return player.current_media.image_url
+    if (
+        player.active_source
+        and (queue := mass.player_queues.get(player.active_source))
+        and queue.current_item
+    ):
+        # fallback to static media item image from queue
+        return mass.get_media_item_image_url(queue.current_item)
+    return None
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -123,6 +185,46 @@ async def async_setup_entry(
     # register callback to add players when they are discovered
     entry.runtime_data.platform_handlers.setdefault(Platform.MEDIA_PLAYER, add_player)
 
+    # known_dashboard_ids is scoped to this setup call, so a reload starts
+    # fresh and re-adds whatever is in the dashboard cache.
+    known_dashboard_ids: set[str] = set()
+    entity_registry = er.async_get(hass)
+
+    def add_dashboards() -> None:
+        """Add dashboard players for endpoints not yet known to HA.
+
+        An id already seen this run is skipped only while it still has a
+        registered entity - if its entity was removed in the meantime (e.g.
+        a stale device deleted via the UI), it's treated as new again so a
+        later re-registration doesn't leave it without an entity.
+        """
+        new_entities: list[MusicAssistantDashboardPlayer] = []
+        for dashboard in mass.dashboard.dashboards:
+            if dashboard.dashboard_id in known_dashboard_ids and (
+                entity_registry.async_get_entity_id(
+                    Platform.MEDIA_PLAYER,
+                    DOMAIN,
+                    dashboard_identifier(dashboard.dashboard_id),
+                )
+            ):
+                continue
+            known_dashboard_ids.add(dashboard.dashboard_id)
+            new_entities.append(
+                MusicAssistantDashboardPlayer(mass, dashboard.dashboard_id)
+            )
+        if new_entities:
+            async_add_entities(new_entities)
+
+    def handle_dashboards_updated(event: MassEvent) -> None:
+        """Handle the dashboard endpoint cache being refreshed."""
+        add_dashboards()
+
+    entry.async_on_unload(
+        mass.subscribe(handle_dashboards_updated, EventType.DASHBOARDS_UPDATED)
+    )
+
+    add_dashboards()
+
 
 class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
     """Representation of MediaPlayerEntity from Music Assistant Player."""
@@ -135,10 +237,9 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
     def __init__(self, mass: MusicAssistantClient, player_id: str) -> None:
         """Initialize MediaPlayer entity."""
         super().__init__(mass, player_id)
-        self._attr_icon = self.player.icon.replace("mdi-", "mdi:")
+        self._attr_icon = _get_mdi_icon(self.player.icon)
         self._set_supported_features()
         self._attr_device_class = MediaPlayerDeviceClass.SPEAKER
-        self._prev_time: float = 0
         self._source_list_mapping: dict[str, str] = {}
         self._sound_mode_list_mapping: dict[str, str] = {}
 
@@ -146,23 +247,6 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
-
-        # we subscribe to player queue time update but we only
-        # accept a state change on big time jumps (e.g. seeking)
-        async def queue_time_updated(event: MassEvent) -> None:
-            if event.object_id != self.player.active_source:
-                return
-            if abs((self._prev_time or 0) - event.data) > 5:
-                await self.async_on_update()
-                self.async_write_ha_state()
-            self._prev_time = event.data
-
-        self.async_on_remove(
-            self.mass.subscribe(
-                queue_time_updated,
-                EventType.QUEUE_TIME_UPDATED,
-            )
-        )
 
         # we subscribe to the player config changed event to update
         # the supported features of the player
@@ -265,7 +349,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         self._attr_volume_level = volume / 100 if volume is not None else None
         self._attr_is_volume_muted = player.volume_muted
         self._update_media_attributes(player, active_queue)
-        self._update_media_image_url(player, active_queue)
+        self._update_media_image_url(player)
 
     @catch_musicassistant_error
     @override
@@ -458,108 +542,129 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         radio_mode: bool | None = None,
         media_type: str | None = None,
         username: str | None = None,
+        start_item: str | None = None,
     ) -> None:
         """Send the play_media command to the media player."""
-        # verify username availability
-        if username is not None:
-            users = await self.mass.auth.list_users()
-            available_usernames = [
-                user.username
-                for user in users
-                if user.enabled and user.role != UserRole.GUEST
-            ]
-            if username not in available_usernames:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="invalid_username",
-                    translation_placeholders={
-                        "username": username,
-                        "available_usernames": ", ".join(available_usernames),
-                    },
-                )
+        # An explicit username impersonates that Music Assistant user (the server rejects an
+        # unknown name). When omitted, default playback to the Home Assistant user that made
+        # the call: the server resolves them by provider link, or plays as the default
+        # account (required=False) when that Home Assistant user has no linked account.
+        user: str | LinkedUser | None = username
+        ha_user_id = self._context.user_id if self._context is not None else None
+        if username is None and ha_user_id is not None:
+            user = LinkedUser(
+                provider=AuthProviderType.HOME_ASSISTANT,
+                user_id=ha_user_id,
+                required=False,
+            )
 
         media_uris: list[str] = []
         item: MediaItemType | ItemMapping | None = None
         # work out (all) uri(s) to play
-        for media_id_str in media_id:
-            assert self.mass.server_info  # for type checking
-            # pre schema 33: verify_item_uri does not exist as API method
-            # with schema 33: only local files have to be verified
-            if self.mass.server_info.schema_version < 33:
-                # URL or URI string
-                if "://" in media_id_str:
-                    media_uris.append(media_id_str)
-                    continue
-                # try content id as library id
-                if media_type and media_id_str.isnumeric():
-                    with suppress(MediaNotFoundError):
-                        item = await self.mass.music.get_item(
-                            MediaType(media_type), media_id_str, "library"
-                        )
-                        if isinstance(item, MediaItemType | ItemMapping) and item.uri:
-                            media_uris.append(item.uri)
+        with catch_user_not_found(username):
+            for media_id_str in media_id:
+                assert self.mass.server_info  # for type checking
+                # pre schema 33: verify_item_uri does not exist as API method
+                # with schema 33: only local files have to be verified
+                if self.mass.server_info.schema_version < 33:
+                    # URL or URI string
+                    if "://" in media_id_str:
+                        media_uris.append(media_id_str)
                         continue
-                # try local accessible filename
-                elif await asyncio.to_thread(os.path.isfile, media_id_str):
-                    media_uris.append(media_id_str)
-                    continue
-            else:
-                media_id_verify_str = media_id_str
-                if media_type and media_id_str.isnumeric():
-                    # construct in library uri as replacement for pre 33 isnumeric path
-                    media_id_verify_str = (
-                        f"library://{MediaType(media_type).value}/{media_id_str}"
-                    )
-                if await self.mass.music.verify_item_uri(
-                    uri=media_id_verify_str, username=username
+                    # try content id as library id
+                    if media_type and media_id_str.isnumeric():
+                        with suppress(MediaNotFoundError):
+                            item = await self.mass.music.get_item(
+                                MediaType(media_type), media_id_str, "library"
+                            )
+                            if (
+                                isinstance(item, MediaItemType | ItemMapping)
+                                and item.uri
+                            ):
+                                media_uris.append(item.uri)
+                            continue
+                    # try local accessible filename
+                    elif await asyncio.to_thread(os.path.isfile, media_id_str):
+                        media_uris.append(media_id_str)
+                        continue
+                else:
+                    media_id_verify_str = media_id_str
+                    if media_type and media_id_str.isnumeric():
+                        # construct in library uri as replacement for pre 33 isnumeric path
+                        media_id_verify_str = (
+                            f"library://{MediaType(media_type).value}/{media_id_str}"
+                        )
+                    if await self.mass.music.verify_item_uri(
+                        uri=media_id_verify_str, user=user
+                    ):
+                        media_uris.append(media_id_verify_str)
+                        continue
+                    if await asyncio.to_thread(os.path.isfile, media_id_str):
+                        media_uris.append(media_id_str)
+                        continue
+                # last resort: search for media item by name/search
+                if item := await self.mass.music.get_item_by_name(
+                    name=media_id_str,
+                    artist=artist,
+                    album=album,
+                    media_type=MediaType(media_type) if media_type else None,
+                    user=user,
                 ):
-                    media_uris.append(media_id_verify_str)
-                    continue
-                if await asyncio.to_thread(os.path.isfile, media_id_str):
-                    media_uris.append(media_id_str)
-                    continue
-            # last resort: search for media item by name/search
-            if item := await self.mass.music.get_item_by_name(
-                name=media_id_str,
-                artist=artist,
-                album=album,
-                media_type=MediaType(media_type) if media_type else None,
-                username=username,
-            ):
-                if TYPE_CHECKING:
-                    assert item.uri is not None
-                media_uris.append(item.uri)
+                    if TYPE_CHECKING:
+                        assert item.uri is not None
+                    media_uris.append(item.uri)
 
-        if not media_uris:
-            raise HomeAssistantError(
-                f"Could not resolve {media_id} to playable media item"
+            if not media_uris:
+                raise HomeAssistantError(
+                    f"Could not resolve {media_id} to playable media item"
+                )
+
+            # determine active queue to send the play request to
+            if TYPE_CHECKING:
+                assert self.player.active_source is not None
+            if queue := self.mass.player_queues.get(self.player.active_source):
+                queue_id = queue.queue_id
+            else:
+                queue_id = self.player_id
+
+            await self.mass.player_queues.play_media(
+                queue_id,
+                media=media_uris,
+                option=self._convert_queueoption_to_media_player_enqueue(enqueue),
+                radio_mode=radio_mode or False,
+                start_item=start_item,
+                user=user,
             )
-
-        # determine active queue to send the play request to
-        if TYPE_CHECKING:
-            assert self.player.active_source is not None
-        if queue := self.mass.player_queues.get(self.player.active_source):
-            queue_id = queue.queue_id
-        else:
-            queue_id = self.player_id
-
-        await self.mass.player_queues.play_media(
-            queue_id,
-            media=media_uris,
-            option=self._convert_queueoption_to_media_player_enqueue(enqueue),
-            radio_mode=radio_mode or False,
-            username=username,
-        )
 
     @catch_musicassistant_error
     async def _async_handle_play_announcement(
         self,
-        url: str,
+        url: str | None = None,
+        message: str | None = None,
+        tts_entity_id: str | None = None,
         use_pre_announce: bool | None = None,
         pre_announce_url: str | None = None,
         announce_volume: int | None = None,
     ) -> None:
         """Send the play_announcement command to the media player."""
+        if url is None:
+            if TYPE_CHECKING:
+                assert message is not None
+                assert tts_entity_id is not None
+            # a gone or unavailable entity would otherwise yield a url that plays nothing
+            tts_state = self.hass.states.get(tts_entity_id)
+            if tts_state is None or tts_state.state == STATE_UNAVAILABLE:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="tts_entity_not_available",
+                    translation_placeholders={"entity_id": tts_entity_id},
+                )
+            sourced_media = await media_source.async_resolve_media(
+                self.hass,
+                tts.generate_media_source_id(self.hass, message, engine=tts_entity_id),
+                self.entity_id,
+            )
+            url = async_process_play_media_url(self.hass, sourced_media.url)
         await self.mass.players.play_announcement(
             self.player_id,
             url,
@@ -642,20 +747,9 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             query,
         )
 
-    def _update_media_image_url(
-        self, player: Player, queue: PlayerQueue | None
-    ) -> None:
+    def _update_media_image_url(self, player: Player) -> None:
         """Update image URL."""
-        image_url: str | None
-        if player.current_media and player.current_media.image_url:
-            # prefer player.current_media which reflects the live state
-            # (e.g. current track art from radio stream metadata)
-            image_url = player.current_media.image_url
-        elif queue and queue.current_item:
-            # fallback to static media item image from queue
-            image_url = self.mass.get_media_item_image_url(queue.current_item)
-        else:
-            image_url = None
+        image_url = _get_player_artwork_url(self.mass, player)
 
         # check if the image is provided via music-assistant and therefore
         # not accessible from the outside
@@ -669,88 +763,49 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
     def _update_media_attributes(
         self, player: Player, queue: PlayerQueue | None
     ) -> None:
-        """Update media attributes for the active queue item."""
-        self._attr_media_artist = None
-        self._attr_media_album_artist = None
-        self._attr_media_album_name = None
-        self._attr_media_title = None
-        self._attr_media_content_id = None
-        self._attr_media_duration = None
-        self._attr_media_position = None
-        self._attr_media_position_updated_at = None
-
-        if queue is None and player.current_media:
-            # player has some external source active
-            self._attr_media_content_id = player.current_media.uri
+        """Update media attributes from the player's current media."""
+        # shuffle and repeat are queue concepts and not part of current_media
+        if queue is not None:
+            self._attr_app_id = DOMAIN
+            self._attr_shuffle = queue.shuffle_enabled
+            self._attr_repeat = REPEAT_MODE_MAPPING_TO_HA.get(queue.repeat_mode)
+        else:
             self._attr_app_id = player.active_source
-            self._attr_media_title = player.current_media.title
-            self._attr_media_artist = player.current_media.artist
-            self._attr_media_album_name = player.current_media.album
-            self._attr_media_duration = player.current_media.duration
-            # shuffle and repeat are not (yet) supported for external sources
             self._attr_shuffle = None
             self._attr_repeat = None
-            self._attr_media_position = int(player.elapsed_time or 0)
+
+        # the server resolves current_media for every playback scenario
+        current_media = player.current_media
+        self._attr_media_content_id = (
+            current_media.uri if current_media is not None else None
+        )
+        self._attr_media_title = (
+            current_media.title if current_media is not None else None
+        )
+        self._attr_media_artist = (
+            current_media.artist if current_media is not None else None
+        )
+        self._attr_media_album_name = (
+            current_media.album if current_media is not None else None
+        )
+        self._attr_media_album_artist = (
+            current_media.album_artist if current_media is not None else None
+        )
+        self._attr_media_duration = (
+            current_media.duration if current_media is not None else None
+        )
+
+        # the server pushes a fresh position anchor on jumps (e.g. seeking)
+        if current_media is not None and current_media.elapsed_time is not None:
+            self._attr_media_position = int(current_media.elapsed_time)
             self._attr_media_position_updated_at = (
-                utc_from_timestamp(player.elapsed_time_last_updated)
-                if player.elapsed_time_last_updated
+                utc_from_timestamp(current_media.elapsed_time_last_updated)
+                if current_media.elapsed_time_last_updated is not None
                 else None
             )
-            self._prev_time = player.elapsed_time or 0
-            return
-
-        if queue is None:
-            # player has no MA queue active
-            self._attr_source = player.active_source
-            self._attr_app_id = player.active_source
-            return
-
-        # player has an MA queue active (either its own queue or some group queue)
-        self._attr_app_id = DOMAIN
-        self._attr_shuffle = queue.shuffle_enabled
-        self._attr_repeat = REPEAT_MODE_MAPPING_TO_HA.get(queue.repeat_mode)
-        if not (cur_item := queue.current_item):
-            # queue is empty
-            return
-
-        self._attr_media_content_id = queue.current_item.uri
-        self._attr_media_duration = queue.current_item.duration
-        self._attr_media_position = int(queue.elapsed_time)
-        self._attr_media_position_updated_at = utc_from_timestamp(
-            queue.elapsed_time_last_updated
-        )
-        self._prev_time = queue.elapsed_time
-
-        # handle stream title (radio station icy metadata)
-        if (stream_details := cur_item.streamdetails) and stream_details.stream_title:
-            self._attr_media_album_name = cur_item.name
-            if " - " in stream_details.stream_title:
-                stream_title_parts = stream_details.stream_title.split(" - ", 1)
-                self._attr_media_title = stream_title_parts[1]
-                self._attr_media_artist = stream_title_parts[0]
-            else:
-                self._attr_media_title = stream_details.stream_title
-            return
-
-        if not (media_item := cur_item.media_item):
-            # queue is not playing a regular media item (edge case?!)
-            self._attr_media_title = cur_item.name
-            return
-
-        # queue is playing regular media item
-        self._attr_media_title = media_item.name
-        # for tracks we can extract more info
-        if media_item.media_type == MediaType.TRACK:
-            if TYPE_CHECKING:
-                assert isinstance(media_item, Track)
-            self._attr_media_artist = media_item.artist_str
-            if media_item.version:
-                self._attr_media_title += f" ({media_item.version})"
-            if media_item.album:
-                self._attr_media_album_name = media_item.album.name
-                self._attr_media_album_artist = getattr(
-                    media_item.album, "artist_str", None
-                )
+        else:
+            self._attr_media_position = None
+            self._attr_media_position_updated_at = None
 
     def _convert_queueoption_to_media_player_enqueue(
         self, queue_option: MediaPlayerEnqueue | QueueOption | None
@@ -778,3 +833,375 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         if PlayerFeature.SELECT_SOUND_MODE in self.player.supported_features:
             supported_features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
         self._attr_supported_features = supported_features
+
+
+class MusicAssistantDashboardPlayer(MusicAssistantDashboardEntity, MediaPlayerEntity):
+    """Representation of a Music Assistant dashboard display device."""
+
+    _attr_name = None
+    _attr_device_class = MediaPlayerDeviceClass.TV
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.BROWSE_MEDIA
+        | MediaPlayerEntityFeature.TURN_OFF
+    )
+
+    def __init__(self, mass: MusicAssistantClient, dashboard_id: str) -> None:
+        """Initialize MusicAssistantDashboardPlayer."""
+        super().__init__(mass, dashboard_id)
+        # fetched provider icons per domain, None when the provider has none
+        self._provider_icon_cache: dict[str, tuple[bytes, str] | None] = {}
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        await super().async_added_to_hass()
+        self._update_from_session()
+        self.async_on_remove(
+            self.mass.subscribe(
+                self.__on_session_updated, EventType.DASHBOARD_SESSIONS_UPDATED
+            )
+        )
+        # unscoped: the now_playing session's target player changes per session
+        self.async_on_remove(
+            self.mass.subscribe(
+                self.__on_player_or_queue_updated, EventType.PLAYER_UPDATED
+            )
+        )
+        self.async_on_remove(
+            self.mass.subscribe(
+                self.__on_player_or_queue_updated, EventType.QUEUE_UPDATED
+            )
+        )
+
+    @catch_musicassistant_error
+    @override
+    async def async_play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
+        """Show a dashboard on this display."""
+        if media_type != MEDIA_CONTENT_TYPE_DASHBOARD:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="dashboard_invalid_media_type",
+                translation_placeholders={
+                    "expected": MEDIA_CONTENT_TYPE_DASHBOARD,
+                    "media_type": str(media_type),
+                },
+            )
+        dashboard_type, player_id = self._parse_play_media_id(media_id)
+        await self.mass.dashboard.show(self.dashboard_id, dashboard_type, player_id)
+
+    @catch_musicassistant_error
+    @override
+    async def async_turn_off(self) -> None:
+        """Hide the dashboard from this display."""
+        await self.mass.dashboard.hide(self.dashboard_id)
+
+    @override
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Browse the dashboards this display can show."""
+        # the browse websocket path doesn't filter on availability
+        dashboard = self.mass.dashboard.get(self.dashboard_id)
+        if dashboard is None:
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="dashboard_display_not_available",
+                translation_placeholders={"display": self.dashboard_id},
+            )
+        if media_content_id in (None, ""):
+            return self._build_root_listing(dashboard)
+        if (
+            media_content_id == DashboardType.NOW_PLAYING.value
+            and DashboardType.NOW_PLAYING in dashboard.supported_types
+        ):
+            return self._build_now_playing_listing()
+        raise BrowseError(
+            translation_domain=DOMAIN,
+            translation_key="dashboard_media_not_found",
+            translation_placeholders={"media_content_id": str(media_content_id)},
+        )
+
+    @property
+    @override
+    def media_image_hash(self) -> str | None:
+        """Hash for the active session's icon, invalidated when the session type changes."""
+        session = self.mass.dashboard.get_session(self.dashboard_id)
+        if session is not None and session.dashboard in DASHBOARD_ICON_TYPES:
+            return session.dashboard.value
+        # fall back to the base class hash of media_image_url, so its
+        # proxy path serves MA-hosted (non-remotely-accessible) artwork
+        return super().media_image_hash
+
+    @override
+    async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
+        """Fetch the provider icon for an active party/music_quiz session."""
+        session = self.mass.dashboard.get_session(self.dashboard_id)
+        if session is None or session.dashboard not in DASHBOARD_ICON_TYPES:
+            # let the base class fetch/proxy media_image_url itself
+            return await super().async_get_media_image()
+        return await self._fetch_provider_icon(session.dashboard.value)
+
+    @override
+    async def async_get_browse_image(
+        self,
+        media_content_type: MediaType | str,
+        media_content_id: str,
+        media_image_id: str | None = None,
+    ) -> tuple[bytes | None, str | None]:
+        """Fetch a provider icon for a browse tree leaf."""
+        if media_content_id not in DASHBOARD_ICON_PROVIDER_DOMAINS:
+            return None, None
+        return await self._fetch_provider_icon(media_content_id)
+
+    async def __on_session_updated(self, event: MassEvent) -> None:
+        """Handle the dashboard's active session changing."""
+        self._update_from_session()
+        self.async_write_ha_state()
+
+    async def __on_player_or_queue_updated(self, event: MassEvent) -> None:
+        """Refresh now_playing session attributes on player/queue updates."""
+        session = self.mass.dashboard.get_session(self.dashboard_id)
+        if session is None or session.dashboard != DashboardType.NOW_PLAYING:
+            return
+        player = self.mass.players.get(session.player_id) if session.player_id else None
+        if event.event == EventType.PLAYER_UPDATED:
+            matches = event.object_id == session.player_id
+        else:
+            matches = event.object_id in (
+                player.active_source if player else None,
+                player.active_group if player else None,
+                session.player_id,
+            )
+        if not matches:
+            return
+        previous_title = self._attr_media_title
+        previous_image_url = self._attr_media_image_url
+        self._update_from_session()
+        if (
+            self._attr_media_title != previous_title
+            or self._attr_media_image_url != previous_image_url
+        ):
+            self.async_write_ha_state()
+
+    def _update_from_session(self) -> None:
+        """Update state and media attributes from the active session."""
+        session = self.mass.dashboard.get_session(self.dashboard_id)
+        if session is None:
+            self._attr_state = MediaPlayerState.IDLE
+            self._attr_media_content_type = None
+            self._attr_media_content_id = None
+            self._attr_media_title = None
+            self._clear_media_image()
+            return
+        self._attr_state = MediaPlayerState.PLAYING
+        self._attr_media_content_type = MEDIA_CONTENT_TYPE_DASHBOARD
+        if session.dashboard == DashboardType.PARTY:
+            self._attr_media_content_id = DashboardType.PARTY.value
+            self._attr_media_title = "Party"
+            self._clear_media_image()
+        elif session.dashboard == DashboardType.MUSIC_QUIZ:
+            self._attr_media_content_id = DashboardType.MUSIC_QUIZ.value
+            self._attr_media_title = "Music quiz"
+            self._clear_media_image()
+        elif session.dashboard == DashboardType.NOW_PLAYING:
+            player_id = session.player_id or ""
+            self._attr_media_content_id = f"{NOW_PLAYING_ID_PREFIX}{player_id}"
+            player = self.mass.players.get(player_id) if player_id else None
+            player_label = player.name if player is not None else player_id
+            self._attr_media_title = f"Now playing: {player_label}"
+            self._update_session_player_image(player)
+        else:
+            # a dashboard type this client doesn't recognize (UNKNOWN)
+            self._attr_media_content_id = session.dashboard.value
+            self._attr_media_title = session.dashboard.value
+            self._clear_media_image()
+
+    def _valid_content_ids(self, dashboard: DashboardDevice) -> list[str]:
+        """List this display's playable content ids, for error messages."""
+        ids = [
+            supported.value
+            for supported in dashboard.supported_types
+            if supported not in (DashboardType.UNKNOWN, DashboardType.NOW_PLAYING)
+        ]
+        if DashboardType.NOW_PLAYING in dashboard.supported_types:
+            # not directly playable on its own; it always needs a player segment
+            ids.append(f"{NOW_PLAYING_ID_PREFIX}<player_id>")
+        return sorted(ids)
+
+    def _parse_play_media_id(
+        self, media_content_id: str
+    ) -> tuple[DashboardType, str | None]:
+        """Validate a play_media content id and split it into a type and player id."""
+        dashboard = self.mass.dashboard.get(self.dashboard_id)
+        if dashboard is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="dashboard_display_not_available",
+                translation_placeholders={"display": self.dashboard_id},
+            )
+        valid_ids = self._valid_content_ids(dashboard)
+
+        if media_content_id == DashboardType.NOW_PLAYING.value:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="dashboard_now_playing_requires_player",
+                translation_placeholders={
+                    "dashboard": DashboardType.NOW_PLAYING.value,
+                    "expected": f"{NOW_PLAYING_ID_PREFIX}<player_id>",
+                },
+            )
+
+        player_id: str | None = None
+        if media_content_id.startswith(NOW_PLAYING_ID_PREFIX):
+            dashboard_type = DashboardType.NOW_PLAYING
+            player_id = media_content_id.removeprefix(NOW_PLAYING_ID_PREFIX)
+        else:
+            dashboard_type = DashboardType(media_content_id)
+
+        if dashboard_type == DashboardType.UNKNOWN:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="dashboard_unknown_type",
+                translation_placeholders={
+                    "dashboard": media_content_id,
+                    "valid_ids": ", ".join(valid_ids),
+                },
+            )
+        if dashboard_type not in dashboard.supported_types:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="dashboard_type_not_supported",
+                translation_placeholders={
+                    "display": dashboard.name,
+                    "dashboard": dashboard_type.value,
+                    "valid_ids": ", ".join(valid_ids),
+                },
+            )
+        if dashboard_type == DashboardType.NOW_PLAYING:
+            player = self.mass.players.get(player_id) if player_id else None
+            if player is None or not player.expose_to_ha:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="dashboard_player_not_available",
+                    translation_placeholders={"player_id": str(player_id)},
+                )
+        return dashboard_type, player_id
+
+    def _clear_media_image(self) -> None:
+        """Clear the media image, e.g. for sessions served by async_get_media_image."""
+        self._attr_media_image_url = None
+        self._attr_media_image_remotely_accessible = False
+
+    def _update_session_player_image(self, player: Player | None) -> None:
+        """Update the media image url from the now_playing session's player."""
+        image_url = _get_player_artwork_url(self.mass, player) if player else None
+        self._attr_media_image_remotely_accessible = bool(
+            image_url and self.mass.server_url not in image_url
+        )
+        self._attr_media_image_url = image_url
+
+    async def _fetch_provider_icon(
+        self, provider_domain: str
+    ) -> tuple[bytes | None, str | None]:
+        """Fetch a provider icon, caching definite answers but not transient errors."""
+        if provider_domain in self._provider_icon_cache:
+            return self._provider_icon_cache[provider_domain] or (None, None)
+        try:
+            icon = await self.mass.get_provider_icon(provider_domain)
+        except MusicAssistantError:
+            LOGGER.debug(
+                "Failed to fetch provider icon for %s", provider_domain, exc_info=True
+            )
+            return None, None
+        self._provider_icon_cache[provider_domain] = icon
+        if icon is None:
+            LOGGER.debug("No provider icon available for %s", provider_domain)
+            return None, None
+        return icon
+
+    def _build_root_listing(self, dashboard: DashboardDevice) -> BrowseMedia:
+        """Build the root browse listing, filtered to this display's dashboards."""
+        children: list[BrowseMedia] = []
+        if DashboardType.PARTY in dashboard.supported_types:
+            children.append(
+                BrowseMedia(
+                    media_class=MediaClass.APP,
+                    media_content_id=DashboardType.PARTY.value,
+                    media_content_type=MEDIA_CONTENT_TYPE_DASHBOARD,
+                    title="Party",
+                    can_play=True,
+                    can_expand=False,
+                    thumbnail=self.get_browse_image_url(
+                        MEDIA_CONTENT_TYPE_DASHBOARD, DashboardType.PARTY.value
+                    ),
+                )
+            )
+        if DashboardType.MUSIC_QUIZ in dashboard.supported_types:
+            children.append(
+                BrowseMedia(
+                    media_class=MediaClass.APP,
+                    media_content_id=DashboardType.MUSIC_QUIZ.value,
+                    media_content_type=MEDIA_CONTENT_TYPE_DASHBOARD,
+                    title="Music quiz",
+                    can_play=True,
+                    can_expand=False,
+                    thumbnail=self.get_browse_image_url(
+                        MEDIA_CONTENT_TYPE_DASHBOARD, DashboardType.MUSIC_QUIZ.value
+                    ),
+                )
+            )
+        if DashboardType.NOW_PLAYING in dashboard.supported_types:
+            children.append(
+                BrowseMedia(
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_id=DashboardType.NOW_PLAYING.value,
+                    media_content_type=MEDIA_CONTENT_TYPE_DASHBOARD,
+                    title="Now playing",
+                    can_play=False,
+                    can_expand=True,
+                    children_media_class=MediaClass.APP,
+                )
+            )
+
+        return BrowseMedia(
+            media_class=MediaClass.DIRECTORY,
+            media_content_id="",
+            media_content_type=MEDIA_CONTENT_TYPE_DASHBOARD,
+            title=dashboard.name,
+            can_play=False,
+            can_expand=True,
+            children=children,
+        )
+
+    def _build_now_playing_listing(self) -> BrowseMedia:
+        """Build the now playing folder, one playable child per exposed player."""
+        players = sorted(
+            (player for player in self.mass.players if player.expose_to_ha),
+            key=lambda player: player.name,
+        )
+        return BrowseMedia(
+            media_class=MediaClass.DIRECTORY,
+            media_content_id=DashboardType.NOW_PLAYING.value,
+            media_content_type=MEDIA_CONTENT_TYPE_DASHBOARD,
+            title="Now playing",
+            can_play=False,
+            can_expand=True,
+            children_media_class=MediaClass.APP,
+            children=[
+                BrowseMedia(
+                    media_class=MediaClass.APP,
+                    media_content_id=f"{NOW_PLAYING_ID_PREFIX}{player.player_id}",
+                    media_content_type=MEDIA_CONTENT_TYPE_DASHBOARD,
+                    title=player.name,
+                    can_play=True,
+                    can_expand=False,
+                    thumbnail=_get_player_artwork_url(self.mass, player),
+                )
+                for player in players
+            ],
+        )

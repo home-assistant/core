@@ -1,17 +1,26 @@
 """Tests for the BSB-LAN climate platform."""
 
+import asyncio
 from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
-from bsblan import BSBLANError, HeatingCircuitStatus
+from bsblan import BSBLANError, HeatingCircuitStatus, StaticState
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bsblan.const import DOMAIN
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_ECO,
     PRESET_NONE,
@@ -21,16 +30,94 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_with_selected_platforms
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-
 ENTITY_ID = "climate.heating_circuit_1"
+
+
+def _temp_param(value: str) -> dict[str, Any]:
+    """Build a raw BSB-LAN temperature parameter payload."""
+    return {
+        "name": "",
+        "value": value,
+        "unit": "&deg;C",
+        "desc": "",
+        "dataType": 0,
+        "readonly": 0,
+        "error": 0,
+    }
+
+
+@pytest.mark.parametrize(
+    ("static_data", "expected_min", "expected_max"),
+    [
+        pytest.param(
+            {
+                "heating_protective_setpoint": _temp_param("10.0"),
+                "comfort_setpoint_max": _temp_param("26.0"),
+            },
+            10.0,
+            26.0,
+            id="standard_device",
+        ),
+        pytest.param(
+            {
+                "min_temp": _temp_param("8.0"),
+                "max_temp": _temp_param("20.0"),
+            },
+            8.0,
+            20.0,
+            id="pps_device",
+        ),
+        pytest.param(
+            {
+                "heating_protective_setpoint": _temp_param("---"),
+                "comfort_setpoint_max": _temp_param("---"),
+                "min_temp": _temp_param("8.0"),
+                "max_temp": _temp_param("20.0"),
+            },
+            8.0,
+            20.0,
+            id="inactive_preferred_source",
+        ),
+        pytest.param(
+            {
+                "heating_protective_setpoint": _temp_param("---"),
+                "comfort_setpoint_max": _temp_param("---"),
+            },
+            DEFAULT_MIN_TEMP,
+            DEFAULT_MAX_TEMP,
+            id="all_sources_inactive",
+        ),
+    ],
+)
+async def test_climate_min_max_temperature(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    static_data: dict[str, Any],
+    expected_min: float,
+    expected_max: float,
+) -> None:
+    """Test min/max temperature bounds resolved from per-circuit static values."""
+    mock_bsblan.static_values.return_value = StaticState.model_validate(static_data)
+
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes["min_temp"] == expected_min
+    assert state.attributes["max_temp"] == expected_max
 
 
 async def test_celsius_fahrenheit(
@@ -423,3 +510,115 @@ async def test_dual_circuit_climate_entities(
     # Circuit 2 entity should exist
     state2 = hass.states.get("climate.heating_circuit_2")
     assert state2 is not None
+
+
+async def test_set_data_rereads_only_the_circuit(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a write re-reads only the written circuit."""
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+    mock_bsblan.state.reset_mock()
+    mock_bsblan.sensor.reset_mock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 19},
+        blocking=True,
+    )
+
+    mock_bsblan.state.assert_called_once()
+    mock_bsblan.sensor.assert_not_called()
+
+
+async def test_set_data_ignores_failed_reread(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a failed circuit re-read after a write leaves it to the next poll."""
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+    mock_bsblan.state.side_effect = BSBLANError("Test error")
+    mock_bsblan.sensor.reset_mock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 19},
+        blocking=True,
+    )
+
+    mock_bsblan.thermostat.assert_called_once()
+    mock_bsblan.sensor.assert_not_called()
+    assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
+
+
+async def test_write_keeps_poll_schedule(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a write between two polls does not postpone the next poll."""
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+
+    freezer.tick(timedelta(seconds=6))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 19},
+        blocking=True,
+    )
+    mock_bsblan.sensor.reset_mock()
+
+    freezer.tick(timedelta(seconds=7))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_bsblan.sensor.assert_called_once()
+
+
+async def test_reread_waits_for_running_poll(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a poll that read the circuit before a write cannot revert it."""
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+    old_state = mock_bsblan.state.return_value
+    new_state = old_state.model_copy(
+        update={"target_temperature": MagicMock(value=19.5)}
+    )
+    mock_bsblan.state.side_effect = [old_state, new_state]
+    release = asyncio.Event()
+    sensor = mock_bsblan.sensor.return_value
+
+    async def _blocked_sensor(*args: object, **kwargs: object) -> object:
+        await release.wait()
+        return sensor
+
+    mock_bsblan.sensor.side_effect = _blocked_sensor
+
+    # The poll reads the circuit, then waits on the sensors
+    freezer.tick(timedelta(seconds=12))
+    async_fire_time_changed(hass)
+    await asyncio.sleep(0)
+    write = hass.async_create_task(
+        hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 19.5},
+            blocking=True,
+        )
+    )
+    await asyncio.sleep(0)
+    release.set()
+    await write
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).attributes["temperature"] == 19.5

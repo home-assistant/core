@@ -17,6 +17,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -99,7 +100,11 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
             model=f"{self.device.metadata.description} ({self.device.type.name})",
             sw_version=self.device.metadata.version,
             serial_number=self.device.metadata.serial,
-            via_device=(DOMAIN, coordinator.entry_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, coordinator.entry_id),
+                config_entry_id=coordinator.entry_id,
+            ),
         )
 
         modes = [mode.name for mode in self.device.modes]
@@ -402,7 +407,12 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
         if self._supports_off_mode:
             await self._async_apply_mode(OpenRGBMode.OFF)
         else:
-            # If the device does not support Off mode, set color to black
+            # If the device does not support Off mode, set color to black.
+            # Color writes are ignored while a mode without PER_LED color
+            # support (e.g. a firmware effect) is active — switch to the
+            # preferred no-effect mode first so the black actually lands.
+            if self._mode not in self._supports_color_modes:
+                await self._async_apply_mode(self._preferred_no_effect_mode)
             await self._async_apply_color(OFF_COLOR, 0)
 
         await self._async_refresh_data()

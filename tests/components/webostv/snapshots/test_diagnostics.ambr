@@ -5,6 +5,8 @@
       'is_connected': True,
       'is_registered': True,
       'tv_info': dict({
+        'connection': dict({
+        }),
         'hello': dict({
           'deviceUUID': '**REDACTED**',
         }),

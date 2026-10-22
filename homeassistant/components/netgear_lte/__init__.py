@@ -1,7 +1,5 @@
 """Support for Netgear LTE modems."""
 
-from typing import Any
-
 from aiohttp.cookiejar import CookieJar
 import eternalegypt
 from eternalegypt.eternalegypt import SMS
@@ -19,7 +17,6 @@ from .const import (
     ATTR_MESSAGE,
     ATTR_SMS_ID,
     DATA_HASS_CONFIG,
-    DATA_SESSION,
     DOMAIN,
 )
 from .coordinator import NetgearLTEConfigEntry, NetgearLTEDataUpdateCoordinator
@@ -65,14 +62,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NetgearLTEConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NetgearLTEConfigEntry) -> None:
     """Set up Netgear LTE from a config entry."""
     host = entry.data[CONF_HOST]
     password = entry.data[CONF_PASSWORD]
 
-    data: dict[str, Any] = hass.data.setdefault(DOMAIN, {})
-    if not (session := data.get(DATA_SESSION)) or session.closed:
-        session = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
+    session = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
     modem = eternalegypt.Modem(hostname=host, websession=session)
 
     try:
@@ -106,13 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetgearLTEConfigEntry) -
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: NetgearLTEConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NetgearLTEConfigEntry) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if not hass.config_entries.async_loaded_entries(DOMAIN):
-        hass.data.pop(DOMAIN, None)
-
-    return unload_ok
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

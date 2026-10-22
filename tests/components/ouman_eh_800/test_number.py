@@ -10,8 +10,10 @@ from ouman_eh_800_api import (
     L1ThreePointCurve,
     OumanClientAuthenticationError,
     OumanClientCommunicationError,
+    OumanClientError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
@@ -25,8 +27,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import SCENARIOS
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize("scenario", SCENARIOS.keys(), indirect=True)
@@ -102,6 +102,11 @@ async def test_async_set_native_value(
             OumanClientCommunicationError("Network error: Connection refused"),
             "Error communicating with API",
             id="communication_failure",
+        ),
+        pytest.param(
+            OumanClientError("Endpoint ID missing from response"),
+            "Unexpected response from device",
+            id="unexpected_response",
         ),
     ],
 )

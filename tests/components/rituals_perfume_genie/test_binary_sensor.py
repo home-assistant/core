@@ -1,7 +1,7 @@
 """Tests for the Rituals Perfume Genie binary sensor platform."""
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_ON, EntityCategory
+from homeassistant.const import ATTR_DEVICE_CLASS, STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -9,6 +9,7 @@ from .common import (
     init_integration,
     mock_config_entry,
     mock_diffuser_v1_battery_cartridge,
+    mock_diffuser_v2_no_battery_no_cartridge,
 )
 
 
@@ -32,3 +33,31 @@ async def test_binary_sensors(
     assert entry
     assert entry.unique_id == f"{hublot}-charging"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
+
+
+async def test_cartridge(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test the cartridge binary sensor, with and without a cartridge."""
+    config_entry = mock_config_entry(unique_id="binary_sensor_test_cartridge")
+    await init_integration(
+        hass,
+        config_entry,
+        [
+            mock_diffuser_v1_battery_cartridge(),
+            mock_diffuser_v2_no_battery_no_cartridge(),
+        ],
+    )
+
+    state = hass.states.get("binary_sensor.genie_cartridge")
+    assert state
+    assert state.state == STATE_ON
+
+    entry = entity_registry.async_get("binary_sensor.genie_cartridge")
+    assert entry
+    assert entry.unique_id == "lot123v1-cartridge"
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+
+    state = hass.states.get("binary_sensor.genie_v2_cartridge")
+    assert state
+    assert state.state == STATE_OFF

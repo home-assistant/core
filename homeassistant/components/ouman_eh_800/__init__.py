@@ -2,10 +2,13 @@
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
+from .const import OumanDevice
 from .coordinator import OumanEh800ConfigEntry, OumanEh800Coordinator
 
 _PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.NUMBER,
     Platform.SELECT,
@@ -14,7 +17,7 @@ _PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OumanEh800ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OumanEh800ConfigEntry) -> None:
     """Set up Ouman EH-800 from a config entry."""
     coordinator = OumanEh800Coordinator(hass, entry)
 
@@ -23,11 +26,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: OumanEh800ConfigEntry) -
 
     entry.runtime_data = coordinator
 
+    # Register the main device up front so the L1/L2 sub-devices can
+    # deterministically resolve their via_device_id, regardless of which
+    # platform's entities are added first.
+    dr.async_get(hass).async_get_or_create_from_info(
+        config_entry_id=entry.entry_id,
+        device_info=coordinator.device_info(OumanDevice.MAIN),
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: OumanEh800ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OumanEh800ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, _PLATFORMS)

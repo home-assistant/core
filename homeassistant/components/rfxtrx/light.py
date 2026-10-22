@@ -5,14 +5,18 @@ from typing import Any, override
 
 import RFXtrx as rfxtrxmod
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ColorMode,
+    LightEntity,
+    LightEntityStateAttribute,
+)
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DeviceTuple, async_setup_platform_entry
+from . import DeviceTuple, RfxtrxConfigEntry, async_setup_platform_entry
 from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
 from .entity import RfxtrxCommandEntity
 
@@ -29,7 +33,7 @@ def supported(event: rfxtrxmod.RFXtrxEvent) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RfxtrxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up config entry."""
@@ -70,7 +74,9 @@ class RfxtrxLight(RfxtrxCommandEntity, LightEntity):
             old_state = await self.async_get_last_state()
             if old_state is not None:
                 self._attr_is_on = old_state.state == STATE_ON
-                if brightness := old_state.attributes.get(ATTR_BRIGHTNESS):
+                if brightness := old_state.attributes.get(
+                    LightEntityStateAttribute.BRIGHTNESS
+                ):
                     self._attr_brightness = int(brightness)
 
     @override

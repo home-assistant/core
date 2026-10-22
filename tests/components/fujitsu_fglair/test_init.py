@@ -6,6 +6,7 @@ from ayla_iot_unofficial import AylaAuthError
 from ayla_iot_unofficial.fujitsu_consts import FGLAIR_APP_CREDENTIALS
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.fujitsu_fglair.const import (
@@ -28,8 +29,6 @@ from homeassistant.helpers import aiohttp_client
 
 from . import entity_id, setup_integration
 from .conftest import TEST_PASSWORD, TEST_USERNAME
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_auth_failure(

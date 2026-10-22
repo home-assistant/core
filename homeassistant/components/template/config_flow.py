@@ -4,33 +4,44 @@ from collections.abc import Callable, Coroutine, Mapping
 from functools import partial
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.button import ButtonDeviceClass
-from homeassistant.components.cover import CoverDeviceClass
-from homeassistant.components.event import EventDeviceClass
-from homeassistant.components.number import NumberDeviceClass
+from homeassistant.components.number import (
+    DEFAULT_MAX_VALUE,
+    DEFAULT_MIN_VALUE,
+    DEFAULT_STEP,
+)
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASS_STATE_CLASSES,
     DEVICE_CLASS_UNITS,
-    SensorDeviceClass,
-    SensorStateClass,
 )
-from homeassistant.components.update import UpdateDeviceClass
+from homeassistant.components.vacuum import (
+    SERVICE_CLEAN_SPOT,
+    SERVICE_LOCATE,
+    SERVICE_PAUSE,
+    SERVICE_RETURN_TO_BASE,
+    SERVICE_SET_FAN_SPEED,
+    SERVICE_START,
+    SERVICE_STOP,
+)
 from homeassistant.const import (
+    CONF_CONDITION,
     CONF_DEVICE_CLASS,
     CONF_DEVICE_ID,
+    CONF_HS,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
+    CONF_OPTIONS,
     CONF_STATE,
+    CONF_TEMPERATURE_UNIT,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
+    DEGREE,
     Platform,
     UnitOfTemperature,
 )
@@ -45,6 +56,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowMenuStep,
 )
 
+from . import validators as tcv
 from .alarm_control_panel import (
     CONF_ARM_AWAY_ACTION,
     CONF_ARM_CUSTOM_BYPASS_ACTION,
@@ -58,11 +70,30 @@ from .alarm_control_panel import (
     TemplateCodeFormat,
     async_create_preview_alarm_control_panel,
 )
-from .binary_sensor import async_create_preview_binary_sensor
+from .binary_sensor import (
+    CONF_DELAY_OFF,
+    CONF_DELAY_ON,
+    async_create_preview_binary_sensor,
+)
+from .climate import (
+    CONF_CURRENT_TEMPERATURE,
+    CONF_HVAC_ACTION,
+    CONF_HVAC_MODE,
+    CONF_HVAC_MODES,
+    CONF_MAX_TEMPERATURE,
+    CONF_MIN_TEMPERATURE,
+    CONF_TARGET_TEMPERATURE,
+    SET_HVAC_MODE_ACTION,
+    SET_TEMPERATURE_ACTION,
+    async_create_preview_climate,
+)
 from .const import (
-    CONF_ADVANCED_OPTIONS,
+    CONF_ADDITIONAL_OPTIONS,
     CONF_AVAILABILITY,
+    CONF_MAX,
+    CONF_MIN,
     CONF_PRESS,
+    CONF_STEP,
     CONF_TURN_OFF,
     CONF_TURN_ON,
     DOMAIN,
@@ -91,7 +122,6 @@ from .fan import (
     async_create_preview_fan,
 )
 from .light import (
-    CONF_HS,
     CONF_HS_ACTION,
     CONF_LEVEL,
     CONF_LEVEL_ACTION,
@@ -100,17 +130,8 @@ from .light import (
     async_create_preview_light,
 )
 from .lock import CONF_LOCK, CONF_OPEN, CONF_UNLOCK, async_create_preview_lock
-from .number import (
-    CONF_MAX,
-    CONF_MIN,
-    CONF_SET_VALUE,
-    CONF_STEP,
-    DEFAULT_MAX_VALUE,
-    DEFAULT_MIN_VALUE,
-    DEFAULT_STEP,
-    async_create_preview_number,
-)
-from .select import CONF_OPTIONS, CONF_SELECT_OPTION, async_create_preview_select
+from .number import CONF_SET_VALUE, async_create_preview_number
+from .select import CONF_SELECT_OPTION, async_create_preview_select
 from .sensor import async_create_preview_sensor
 from .switch import async_create_preview_switch
 from .template_entity import TemplateEntity
@@ -127,55 +148,56 @@ from .update import (
     CONF_UPDATE_PERCENTAGE,
     async_create_preview_update,
 )
-from .vacuum import (
-    CONF_FAN_SPEED,
-    CONF_FAN_SPEED_LIST,
-    SERVICE_CLEAN_SPOT,
-    SERVICE_LOCATE,
-    SERVICE_PAUSE,
-    SERVICE_RETURN_TO_BASE,
-    SERVICE_SET_FAN_SPEED,
-    SERVICE_START,
-    SERVICE_STOP,
-    async_create_preview_vacuum,
+from .vacuum import CONF_FAN_SPEED, CONF_FAN_SPEED_LIST, async_create_preview_vacuum
+from .water_heater import (
+    CONF_AWAY_MODE,
+    CONF_CURRENT_TEMPERATURE as CONF_WATER_HEATER_CURRENT_TEMPERATURE,
+    CONF_MAX_TEMPERATURE as CONF_WATER_HEATER_MAX_TEMPERATURE,
+    CONF_MIN_TEMPERATURE as CONF_WATER_HEATER_MIN_TEMPERATURE,
+    CONF_OPERATION_LIST,
+    CONF_OPERATION_MODE,
+    CONF_TARGET_TEMPERATURE as CONF_WATER_HEATER_TARGET_TEMPERATURE,
+    SET_OPERATION_MODE_ACTION,
+    SET_TEMPERATURE_ACTION as SET_WATER_HEATER_TEMPERATURE_ACTION,
+    TURN_AWAY_MODE_OFF_ACTION,
+    TURN_AWAY_MODE_ON_ACTION,
+    async_create_preview_water_heater,
 )
 from .weather import (
-    CONF_CONDITION,
     CONF_FORECAST_DAILY,
     CONF_FORECAST_HOURLY,
     CONF_HUMIDITY,
     CONF_TEMPERATURE as CONF_WEATHER_TEMPERATURE,
-    CONF_TEMPERATURE_UNIT,
     async_create_preview_weather,
 )
 
-_SCHEMA_STATE: dict[vol.Marker, Any] = {
-    vol.Required(CONF_STATE): selector.TemplateSelector(),
+_SCHEMA_STATE: dict[probatio.Marker, Any] = {
+    probatio.Required(CONF_STATE): selector.TemplateSelector(),
 }
 
 
-def generate_schema(domain: str, flow_type: str) -> vol.Schema:
+def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
     """Generate schema."""
-    schema: dict[vol.Marker, Any] = {}
-    advanced_options: dict[vol.Marker, Any] = {}
+    schema: dict[probatio.Marker, Any] = {}
+    additional_options: dict[probatio.Marker, Any] = {}
 
     if flow_type == "config":
-        schema = {vol.Required(CONF_NAME): selector.TextSelector()}
+        schema = {probatio.Required(CONF_NAME): selector.TextSelector()}
 
     if domain == Platform.ALARM_CONTROL_PANEL:
         schema |= {
-            vol.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
-            vol.Optional(CONF_DISARM_ACTION): selector.ActionSelector(),
-            vol.Optional(CONF_ARM_AWAY_ACTION): selector.ActionSelector(),
-            vol.Optional(CONF_ARM_CUSTOM_BYPASS_ACTION): selector.ActionSelector(),
-            vol.Optional(CONF_ARM_HOME_ACTION): selector.ActionSelector(),
-            vol.Optional(CONF_ARM_NIGHT_ACTION): selector.ActionSelector(),
-            vol.Optional(CONF_ARM_VACATION_ACTION): selector.ActionSelector(),
-            vol.Optional(CONF_TRIGGER_ACTION): selector.ActionSelector(),
-            vol.Optional(
+            probatio.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
+            probatio.Optional(CONF_DISARM_ACTION): selector.ActionSelector(),
+            probatio.Optional(CONF_ARM_AWAY_ACTION): selector.ActionSelector(),
+            probatio.Optional(CONF_ARM_CUSTOM_BYPASS_ACTION): selector.ActionSelector(),
+            probatio.Optional(CONF_ARM_HOME_ACTION): selector.ActionSelector(),
+            probatio.Optional(CONF_ARM_NIGHT_ACTION): selector.ActionSelector(),
+            probatio.Optional(CONF_ARM_VACATION_ACTION): selector.ActionSelector(),
+            probatio.Optional(CONF_TRIGGER_ACTION): selector.ActionSelector(),
+            probatio.Optional(
                 CONF_CODE_ARM_REQUIRED, default=True
             ): selector.BooleanSelector(),
-            vol.Optional(
+            probatio.Optional(
                 CONF_CODE_FORMAT, default=TemplateCodeFormat.number.name
             ): selector.SelectSelector(
                 selector.SelectSelectorConfig(
@@ -188,87 +210,115 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
 
     if domain == Platform.BINARY_SENSOR:
         schema |= _SCHEMA_STATE | {
-            vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=[cls.value for cls in BinarySensorDeviceClass],
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                    translation_key="binary_sensor_device_class",
-                    sort=True,
-                ),
+            probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+                selector.DeviceClassSelectorConfig(domain=Platform.BINARY_SENSOR),
+            ),
+        }
+        additional_options |= {
+            probatio.Optional(CONF_DELAY_ON): selector.DurationSelector(
+                selector.DurationSelectorConfig(allow_negative=False)
+            ),
+            probatio.Optional(CONF_DELAY_OFF): selector.DurationSelector(
+                selector.DurationSelectorConfig(allow_negative=False)
             ),
         }
 
     if domain == Platform.BUTTON:
         schema |= {
-            vol.Optional(CONF_PRESS): selector.ActionSelector(),
+            probatio.Optional(CONF_PRESS): selector.ActionSelector(),
         }
         if flow_type == "config":
             schema |= {
-                vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=[cls.value for cls in ButtonDeviceClass],
-                        mode=selector.SelectSelectorMode.DROPDOWN,
-                        translation_key="button_device_class",
-                        sort=True,
-                    ),
-                )
+                probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+                    selector.DeviceClassSelectorConfig(domain=Platform.BUTTON),
+                ),
             }
 
+    if domain == Platform.CLIMATE:
+        schema |= {
+            probatio.Required(CONF_HVAC_MODES): selector.TemplateSelector(),
+            probatio.Optional(CONF_HVAC_MODE): selector.TemplateSelector(),
+            probatio.Required(SET_HVAC_MODE_ACTION): selector.ActionSelector(),
+            probatio.Optional(CONF_HVAC_ACTION): selector.TemplateSelector(),
+            probatio.Optional(CONF_CURRENT_TEMPERATURE): selector.TemplateSelector(),
+            probatio.Optional(CONF_TARGET_TEMPERATURE): selector.TemplateSelector(),
+            probatio.Optional(SET_TEMPERATURE_ACTION): selector.ActionSelector(),
+            probatio.Optional(CONF_TEMPERATURE_UNIT): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[cls.value for cls in UnitOfTemperature],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    sort=True,
+                ),
+            ),
+        }
+        additional_options |= {
+            probatio.Optional(CONF_MIN_TEMPERATURE): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    mode=selector.NumberSelectorMode.BOX,
+                    unit_of_measurement=DEGREE,
+                    step=0.1,
+                )
+            ),
+            probatio.Optional(CONF_MAX_TEMPERATURE): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    mode=selector.NumberSelectorMode.BOX,
+                    unit_of_measurement=DEGREE,
+                    step=0.1,
+                )
+            ),
+        }
+
     if domain == Platform.COVER:
-        schema |= _SCHEMA_STATE | {
-            vol.Inclusive(OPEN_ACTION, CONF_OPEN_AND_CLOSE): selector.ActionSelector(),
-            vol.Inclusive(CLOSE_ACTION, CONF_OPEN_AND_CLOSE): selector.ActionSelector(),
-            vol.Optional(STOP_ACTION): selector.ActionSelector(),
-            vol.Optional(CONF_POSITION): selector.TemplateSelector(),
-            vol.Optional(POSITION_ACTION): selector.ActionSelector(),
+        schema |= {
+            probatio.Optional(CONF_STATE): selector.TemplateSelector(),
+            probatio.Inclusive(
+                OPEN_ACTION, CONF_OPEN_AND_CLOSE
+            ): selector.ActionSelector(),
+            probatio.Inclusive(
+                CLOSE_ACTION, CONF_OPEN_AND_CLOSE
+            ): selector.ActionSelector(),
+            probatio.Optional(STOP_ACTION): selector.ActionSelector(),
+            probatio.Optional(CONF_POSITION): selector.TemplateSelector(),
+            probatio.Optional(POSITION_ACTION): selector.ActionSelector(),
         }
         if flow_type == "config":
             schema |= {
-                vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=[cls.value for cls in CoverDeviceClass],
-                        mode=selector.SelectSelectorMode.DROPDOWN,
-                        translation_key="cover_device_class",
-                        sort=True,
-                    ),
-                )
+                probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+                    selector.DeviceClassSelectorConfig(domain=Platform.COVER),
+                ),
             }
 
     if domain == Platform.DEVICE_TRACKER:
         schema |= {
-            vol.Optional(CONF_IN_ZONES): selector.TemplateSelector(),
-            vol.Optional(CONF_LATITUDE): selector.TemplateSelector(),
-            vol.Optional(CONF_LONGITUDE): selector.TemplateSelector(),
+            probatio.Optional(CONF_IN_ZONES): selector.TemplateSelector(),
+            probatio.Optional(CONF_LATITUDE): selector.TemplateSelector(),
+            probatio.Optional(CONF_LONGITUDE): selector.TemplateSelector(),
         }
-        advanced_options |= {
-            vol.Optional(CONF_LOCATION_ACCURACY): selector.TemplateSelector(),
+        additional_options |= {
+            probatio.Optional(CONF_LOCATION_ACCURACY): selector.TemplateSelector(),
         }
 
     if domain == Platform.EVENT:
         schema |= {
-            vol.Required(CONF_EVENT_TYPE): selector.TemplateSelector(),
-            vol.Required(CONF_EVENT_TYPES): selector.TemplateSelector(),
+            probatio.Required(CONF_EVENT_TYPE): selector.TemplateSelector(),
+            probatio.Required(CONF_EVENT_TYPES): selector.TemplateSelector(),
         }
 
         if flow_type == "config":
             schema |= {
-                vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=[cls.value for cls in EventDeviceClass],
-                        mode=selector.SelectSelectorMode.DROPDOWN,
-                        translation_key="event_device_class",
-                        sort=True,
-                    ),
-                )
+                probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+                    selector.DeviceClassSelectorConfig(domain=Platform.EVENT),
+                ),
             }
 
     if domain == Platform.FAN:
-        schema |= _SCHEMA_STATE | {
-            vol.Required(CONF_ON_ACTION): selector.ActionSelector(),
-            vol.Required(CONF_OFF_ACTION): selector.ActionSelector(),
-            vol.Optional(CONF_PERCENTAGE): selector.TemplateSelector(),
-            vol.Optional(CONF_SET_PERCENTAGE_ACTION): selector.ActionSelector(),
-            vol.Optional(CONF_SPEED_COUNT): selector.NumberSelector(
+        schema |= {
+            probatio.Optional(CONF_STATE): selector.TemplateSelector(),
+            probatio.Required(CONF_ON_ACTION): selector.ActionSelector(),
+            probatio.Required(CONF_OFF_ACTION): selector.ActionSelector(),
+            probatio.Optional(CONF_PERCENTAGE): selector.TemplateSelector(),
+            probatio.Optional(CONF_SET_PERCENTAGE_ACTION): selector.ActionSelector(),
+            probatio.Optional(CONF_SPEED_COUNT): selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     min=1, max=100, step=1, mode=selector.NumberSelectorMode.BOX
                 ),
@@ -277,141 +327,121 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
 
     if domain == Platform.IMAGE:
         schema |= {
-            vol.Required(CONF_URL): selector.TemplateSelector(),
-            vol.Optional(CONF_VERIFY_SSL, default=True): selector.BooleanSelector(),
+            probatio.Required(CONF_URL): selector.TemplateSelector(),
+            probatio.Optional(
+                CONF_VERIFY_SSL, default=True
+            ): selector.BooleanSelector(),
         }
 
     if domain == Platform.LIGHT:
-        schema |= _SCHEMA_STATE | {
-            vol.Required(CONF_TURN_ON): selector.ActionSelector(),
-            vol.Required(CONF_TURN_OFF): selector.ActionSelector(),
-            vol.Optional(CONF_LEVEL): selector.TemplateSelector(),
-            vol.Optional(CONF_LEVEL_ACTION): selector.ActionSelector(),
-            vol.Optional(CONF_HS): selector.TemplateSelector(),
-            vol.Optional(CONF_HS_ACTION): selector.ActionSelector(),
-            vol.Optional(CONF_TEMPERATURE): selector.TemplateSelector(),
-            vol.Optional(CONF_TEMPERATURE_ACTION): selector.ActionSelector(),
+        schema |= {
+            probatio.Optional(CONF_STATE): selector.TemplateSelector(),
+            probatio.Required(CONF_TURN_ON): selector.ActionSelector(),
+            probatio.Required(CONF_TURN_OFF): selector.ActionSelector(),
+            probatio.Optional(CONF_LEVEL): selector.TemplateSelector(),
+            probatio.Optional(CONF_LEVEL_ACTION): selector.ActionSelector(),
+            probatio.Optional(CONF_HS): selector.TemplateSelector(),
+            probatio.Optional(CONF_HS_ACTION): selector.ActionSelector(),
+            probatio.Optional(CONF_TEMPERATURE): selector.TemplateSelector(),
+            probatio.Optional(CONF_TEMPERATURE_ACTION): selector.ActionSelector(),
         }
 
     if domain == Platform.LOCK:
-        schema |= _SCHEMA_STATE | {
-            vol.Required(CONF_LOCK): selector.ActionSelector(),
-            vol.Required(CONF_UNLOCK): selector.ActionSelector(),
-            vol.Optional(CONF_CODE_FORMAT): selector.TemplateSelector(),
-            vol.Optional(CONF_OPEN): selector.ActionSelector(),
+        schema |= {
+            probatio.Optional(CONF_STATE): selector.TemplateSelector(),
+            probatio.Required(CONF_LOCK): selector.ActionSelector(),
+            probatio.Required(CONF_UNLOCK): selector.ActionSelector(),
+            probatio.Optional(CONF_CODE_FORMAT): selector.TemplateSelector(),
+            probatio.Optional(CONF_OPEN): selector.ActionSelector(),
         }
 
     if domain == Platform.NUMBER:
         schema |= {
-            vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=[cls.value for cls in NumberDeviceClass],
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                    translation_key="number_device_class",
-                    sort=True,
+            probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+                selector.DeviceClassSelectorConfig(domain=Platform.NUMBER),
+            ),
+            probatio.Optional(CONF_STATE): selector.TemplateSelector(),
+            probatio.Required(
+                CONF_MIN, default=DEFAULT_MIN_VALUE
+            ): selector.NumberSelector(
+                selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX),
+            ),
+            probatio.Required(
+                CONF_MAX, default=DEFAULT_MAX_VALUE
+            ): selector.NumberSelector(
+                selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX),
+            ),
+            probatio.Required(CONF_STEP, default=DEFAULT_STEP): selector.NumberSelector(
+                selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX),
+            ),
+            probatio.Optional(
+                CONF_UNIT_OF_MEASUREMENT
+            ): selector.UnitOfMeasurementSelector(
+                selector.UnitOfMeasurementSelectorConfig(
+                    context={"filter_device_class": CONF_DEVICE_CLASS}
                 ),
             ),
-            vol.Required(CONF_STATE): selector.TemplateSelector(),
-            vol.Required(CONF_MIN, default=DEFAULT_MIN_VALUE): selector.NumberSelector(
-                selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX),
-            ),
-            vol.Required(CONF_MAX, default=DEFAULT_MAX_VALUE): selector.NumberSelector(
-                selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX),
-            ),
-            vol.Required(CONF_STEP, default=DEFAULT_STEP): selector.NumberSelector(
-                selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX),
-            ),
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.TextSelector(
-                selector.TextSelectorConfig(
-                    type=selector.TextSelectorType.TEXT, multiline=False
-                )
-            ),
-            vol.Required(CONF_SET_VALUE): selector.ActionSelector(),
+            probatio.Required(CONF_SET_VALUE): selector.ActionSelector(),
         }
 
     if domain == Platform.SELECT:
-        schema |= _SCHEMA_STATE | {
-            vol.Required(CONF_OPTIONS): selector.TemplateSelector(),
-            vol.Optional(CONF_SELECT_OPTION): selector.ActionSelector(),
+        schema |= {
+            probatio.Optional(CONF_STATE): selector.TemplateSelector(),
+            probatio.Required(CONF_OPTIONS): selector.TemplateSelector(),
+            probatio.Optional(CONF_SELECT_OPTION): selector.ActionSelector(),
         }
 
     if domain == Platform.SENSOR:
         schema |= _SCHEMA_STATE | {
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=list(
-                        {
-                            str(unit)
-                            for units in DEVICE_CLASS_UNITS.values()
-                            for unit in units
-                            if unit is not None
-                        }
-                    ),
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                    translation_key="sensor_unit_of_measurement",
-                    custom_value=True,
-                    sort=True,
-                ),
+            probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+                selector.DeviceClassSelectorConfig(domain=Platform.SENSOR),
             ),
-            vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=[
-                        cls.value
-                        for cls in SensorDeviceClass
-                        if cls != SensorDeviceClass.ENUM
-                    ],
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                    translation_key="sensor_device_class",
-                    sort=True,
-                ),
-            ),
-            vol.Optional(CONF_STATE_CLASS): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=[cls.value for cls in SensorStateClass],
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                    translation_key="sensor_state_class",
-                    sort=True,
+            probatio.Optional(CONF_STATE_CLASS): selector.StateClassSelector(),
+            probatio.Optional(
+                CONF_UNIT_OF_MEASUREMENT
+            ): selector.UnitOfMeasurementSelector(
+                selector.UnitOfMeasurementSelectorConfig(
+                    context={
+                        "filter_device_class": CONF_DEVICE_CLASS,
+                        "filter_state_class": CONF_STATE_CLASS,
+                    }
                 ),
             ),
         }
 
     if domain == Platform.SWITCH:
         schema |= {
-            vol.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
-            vol.Optional(CONF_TURN_ON): selector.ActionSelector(),
-            vol.Optional(CONF_TURN_OFF): selector.ActionSelector(),
+            probatio.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
+            probatio.Optional(CONF_TURN_ON): selector.ActionSelector(),
+            probatio.Optional(CONF_TURN_OFF): selector.ActionSelector(),
         }
 
     if domain == Platform.UPDATE:
         schema |= {
-            vol.Optional(CONF_INSTALLED_VERSION): selector.TemplateSelector(),
-            vol.Optional(CONF_LATEST_VERSION): selector.TemplateSelector(),
-            vol.Optional(CONF_INSTALL): selector.ActionSelector(),
-            vol.Optional(CONF_IN_PROGRESS): selector.TemplateSelector(),
-            vol.Optional(CONF_RELEASE_SUMMARY): selector.TemplateSelector(),
-            vol.Optional(CONF_RELEASE_URL): selector.TemplateSelector(),
-            vol.Optional(CONF_TITLE): selector.TemplateSelector(),
-            vol.Optional(CONF_UPDATE_PERCENTAGE): selector.TemplateSelector(),
-            vol.Optional(CONF_BACKUP): selector.BooleanSelector(),
-            vol.Optional(CONF_SPECIFIC_VERSION): selector.BooleanSelector(),
+            probatio.Optional(CONF_INSTALLED_VERSION): selector.TemplateSelector(),
+            probatio.Optional(CONF_LATEST_VERSION): selector.TemplateSelector(),
+            probatio.Optional(CONF_INSTALL): selector.ActionSelector(),
+            probatio.Optional(CONF_IN_PROGRESS): selector.TemplateSelector(),
+            probatio.Optional(CONF_RELEASE_SUMMARY): selector.TemplateSelector(),
+            probatio.Optional(CONF_RELEASE_URL): selector.TemplateSelector(),
+            probatio.Optional(CONF_TITLE): selector.TemplateSelector(),
+            probatio.Optional(CONF_UPDATE_PERCENTAGE): selector.TemplateSelector(),
+            probatio.Optional(CONF_BACKUP): selector.BooleanSelector(),
+            probatio.Optional(CONF_SPECIFIC_VERSION): selector.BooleanSelector(),
         }
         if flow_type == "config":
             schema |= {
-                vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=[cls.value for cls in UpdateDeviceClass],
-                        mode=selector.SelectSelectorMode.DROPDOWN,
-                        translation_key="update_device_class",
-                        sort=True,
-                    ),
+                probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+                    selector.DeviceClassSelectorConfig(domain=Platform.UPDATE),
                 ),
             }
 
     if domain == Platform.VACUUM:
-        schema |= _SCHEMA_STATE | {
-            vol.Required(SERVICE_START): selector.ActionSelector(),
-            vol.Optional(CONF_FAN_SPEED): selector.TemplateSelector(),
-            vol.Optional(CONF_FAN_SPEED_LIST): selector.SelectSelector(
+        schema |= {
+            probatio.Optional(CONF_STATE): selector.TemplateSelector(),
+            probatio.Required(SERVICE_START): selector.ActionSelector(),
+            probatio.Optional(CONF_FAN_SPEED): selector.TemplateSelector(),
+            probatio.Optional(CONF_FAN_SPEED_LIST): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=[],
                     multiple=True,
@@ -419,44 +449,96 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                     mode=selector.SelectSelectorMode.DROPDOWN,
                 )
             ),
-            vol.Optional(SERVICE_SET_FAN_SPEED): selector.ActionSelector(),
-            vol.Optional(SERVICE_STOP): selector.ActionSelector(),
-            vol.Optional(SERVICE_PAUSE): selector.ActionSelector(),
-            vol.Optional(SERVICE_RETURN_TO_BASE): selector.ActionSelector(),
-            vol.Optional(SERVICE_CLEAN_SPOT): selector.ActionSelector(),
-            vol.Optional(SERVICE_LOCATE): selector.ActionSelector(),
+            probatio.Optional(SERVICE_SET_FAN_SPEED): selector.ActionSelector(),
+            probatio.Optional(SERVICE_STOP): selector.ActionSelector(),
+            probatio.Optional(SERVICE_PAUSE): selector.ActionSelector(),
+            probatio.Optional(SERVICE_RETURN_TO_BASE): selector.ActionSelector(),
+            probatio.Optional(SERVICE_CLEAN_SPOT): selector.ActionSelector(),
+            probatio.Optional(SERVICE_LOCATE): selector.ActionSelector(),
         }
 
-    if domain == Platform.WEATHER:
+    if domain == Platform.WATER_HEATER:
         schema |= {
-            vol.Required(CONF_CONDITION): selector.TemplateSelector(),
-            vol.Required(CONF_HUMIDITY): selector.TemplateSelector(),
-            vol.Required(CONF_WEATHER_TEMPERATURE): selector.TemplateSelector(),
-            vol.Optional(CONF_TEMPERATURE_UNIT): selector.SelectSelector(
+            probatio.Required(CONF_OPERATION_LIST): selector.TemplateSelector(),
+            probatio.Optional(CONF_OPERATION_MODE): selector.TemplateSelector(),
+            probatio.Required(SET_OPERATION_MODE_ACTION): selector.ActionSelector(),
+            probatio.Optional(
+                CONF_WATER_HEATER_CURRENT_TEMPERATURE
+            ): selector.TemplateSelector(),
+            probatio.Optional(
+                CONF_WATER_HEATER_TARGET_TEMPERATURE
+            ): selector.TemplateSelector(),
+            probatio.Optional(
+                SET_WATER_HEATER_TEMPERATURE_ACTION
+            ): selector.ActionSelector(),
+            probatio.Inclusive(
+                CONF_TURN_ON, "on_off_actions"
+            ): selector.ActionSelector(),
+            probatio.Inclusive(
+                CONF_TURN_OFF, "on_off_actions"
+            ): selector.ActionSelector(),
+            probatio.Optional(CONF_TEMPERATURE_UNIT): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=[cls.value for cls in UnitOfTemperature],
                     mode=selector.SelectSelectorMode.DROPDOWN,
                     sort=True,
                 ),
             ),
-            vol.Optional(CONF_FORECAST_DAILY): selector.TemplateSelector(),
-            vol.Optional(CONF_FORECAST_HOURLY): selector.TemplateSelector(),
+        }
+        additional_options |= {
+            probatio.Optional(CONF_AWAY_MODE): selector.TemplateSelector(),
+            probatio.Optional(TURN_AWAY_MODE_ON_ACTION): selector.ActionSelector(),
+            probatio.Optional(TURN_AWAY_MODE_OFF_ACTION): selector.ActionSelector(),
+            probatio.Optional(
+                CONF_WATER_HEATER_MIN_TEMPERATURE
+            ): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    mode=selector.NumberSelectorMode.BOX,
+                    unit_of_measurement=DEGREE,
+                    step=0.1,
+                )
+            ),
+            probatio.Optional(
+                CONF_WATER_HEATER_MAX_TEMPERATURE
+            ): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    mode=selector.NumberSelectorMode.BOX,
+                    unit_of_measurement=DEGREE,
+                    step=0.1,
+                )
+            ),
+        }
+
+    if domain == Platform.WEATHER:
+        schema |= {
+            probatio.Required(CONF_CONDITION): selector.TemplateSelector(),
+            probatio.Required(CONF_HUMIDITY): selector.TemplateSelector(),
+            probatio.Required(CONF_WEATHER_TEMPERATURE): selector.TemplateSelector(),
+            probatio.Optional(CONF_TEMPERATURE_UNIT): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[cls.value for cls in UnitOfTemperature],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    sort=True,
+                ),
+            ),
+            probatio.Optional(CONF_FORECAST_DAILY): selector.TemplateSelector(),
+            probatio.Optional(CONF_FORECAST_HOURLY): selector.TemplateSelector(),
         }
 
     schema |= {
-        vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
-        vol.Optional(CONF_ADVANCED_OPTIONS): section(
-            vol.Schema(
+        probatio.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
+        probatio.Optional(CONF_ADDITIONAL_OPTIONS): section(
+            probatio.Schema(
                 {
-                    vol.Optional(CONF_AVAILABILITY): selector.TemplateSelector(),
-                    **advanced_options,
+                    probatio.Optional(CONF_AVAILABILITY): selector.TemplateSelector(),
+                    **additional_options,
                 }
             ),
             {"collapsed": True},
         ),
     }
 
-    return vol.Schema(schema)
+    return probatio.Schema(schema)
 
 
 options_schema = partial(generate_schema, flow_type="options")
@@ -498,7 +580,7 @@ def _validate_unit(options: dict[str, Any]) -> None:
         else:
             units_string = f"one of {', '.join(sorted_units)}"
 
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"'{unit}' is not a valid unit for device class '{device_class}'; "
             f"expected {units_string}"
         )
@@ -523,7 +605,7 @@ def _validate_state_class(options: dict[str, Any]) -> None:
         else:
             state_classes_string = f"one of {', '.join(sorted_state_classes)}"
 
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"'{state_class}' is not a valid state class for device class "
             f"'{device_class}'; expected {state_classes_string}"
         )
@@ -549,6 +631,25 @@ def validate_user_input(
         if template_type == Platform.SENSOR:
             _validate_unit(user_input)
             _validate_state_class(user_input)
+        if template_type == Platform.CLIMATE:
+            tcv.requires_option(CONF_TARGET_TEMPERATURE, SET_TEMPERATURE_ACTION)(
+                user_input
+            )
+        if template_type == Platform.WATER_HEATER:
+            tcv.requires_option(
+                CONF_WATER_HEATER_TARGET_TEMPERATURE,
+                SET_WATER_HEATER_TEMPERATURE_ACTION,
+            )(user_input)
+            additional_options = user_input.get(CONF_ADDITIONAL_OPTIONS, {})
+            tcv.requires_option(CONF_AWAY_MODE, TURN_AWAY_MODE_ON_ACTION)(
+                additional_options
+            )
+            tcv.requires_option(TURN_AWAY_MODE_ON_ACTION, TURN_AWAY_MODE_OFF_ACTION)(
+                additional_options
+            )
+            tcv.requires_option(TURN_AWAY_MODE_OFF_ACTION, TURN_AWAY_MODE_ON_ACTION)(
+                additional_options
+            )
         return {"template_type": template_type} | user_input
 
     return _validate_user_input
@@ -558,6 +659,7 @@ TEMPLATE_TYPES = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CLIMATE,
     Platform.COVER,
     Platform.DEVICE_TRACKER,
     Platform.EVENT,
@@ -571,6 +673,7 @@ TEMPLATE_TYPES = [
     Platform.SWITCH,
     Platform.UPDATE,
     Platform.VACUUM,
+    Platform.WATER_HEATER,
     Platform.WEATHER,
 ]
 
@@ -589,6 +692,11 @@ CONFIG_FLOW = {
     Platform.BUTTON: SchemaFlowFormStep(
         config_schema(Platform.BUTTON),
         validate_user_input=validate_user_input(Platform.BUTTON),
+    ),
+    Platform.CLIMATE: SchemaFlowFormStep(
+        config_schema(Platform.CLIMATE),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.CLIMATE),
     ),
     Platform.COVER: SchemaFlowFormStep(
         config_schema(Platform.COVER),
@@ -612,7 +720,6 @@ CONFIG_FLOW = {
     ),
     Platform.IMAGE: SchemaFlowFormStep(
         config_schema(Platform.IMAGE),
-        preview="template",
         validate_user_input=validate_user_input(Platform.IMAGE),
     ),
     Platform.LIGHT: SchemaFlowFormStep(
@@ -655,6 +762,11 @@ CONFIG_FLOW = {
         preview="template",
         validate_user_input=validate_user_input(Platform.VACUUM),
     ),
+    Platform.WATER_HEATER: SchemaFlowFormStep(
+        config_schema(Platform.WATER_HEATER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.WATER_HEATER),
+    ),
     Platform.WEATHER: SchemaFlowFormStep(
         config_schema(Platform.WEATHER),
         preview="template",
@@ -680,6 +792,11 @@ OPTIONS_FLOW = {
         options_schema(Platform.BUTTON),
         validate_user_input=validate_user_input(Platform.BUTTON),
     ),
+    Platform.CLIMATE: SchemaFlowFormStep(
+        options_schema(Platform.CLIMATE),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.CLIMATE),
+    ),
     Platform.COVER: SchemaFlowFormStep(
         options_schema(Platform.COVER),
         preview="template",
@@ -702,7 +819,6 @@ OPTIONS_FLOW = {
     ),
     Platform.IMAGE: SchemaFlowFormStep(
         options_schema(Platform.IMAGE),
-        preview="template",
         validate_user_input=validate_user_input(Platform.IMAGE),
     ),
     Platform.LIGHT: SchemaFlowFormStep(
@@ -745,6 +861,11 @@ OPTIONS_FLOW = {
         preview="template",
         validate_user_input=validate_user_input(Platform.VACUUM),
     ),
+    Platform.WATER_HEATER: SchemaFlowFormStep(
+        options_schema(Platform.WATER_HEATER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.WATER_HEATER),
+    ),
     Platform.WEATHER: SchemaFlowFormStep(
         options_schema(Platform.WEATHER),
         preview="template",
@@ -759,6 +880,7 @@ CREATE_PREVIEW_ENTITY: dict[
 ] = {
     Platform.ALARM_CONTROL_PANEL: async_create_preview_alarm_control_panel,
     Platform.BINARY_SENSOR: async_create_preview_binary_sensor,
+    Platform.CLIMATE: async_create_preview_climate,
     Platform.COVER: async_create_preview_cover,
     Platform.DEVICE_TRACKER: async_create_preview_tracker,
     Platform.EVENT: async_create_preview_event,
@@ -771,6 +893,7 @@ CREATE_PREVIEW_ENTITY: dict[
     Platform.SWITCH: async_create_preview_switch,
     Platform.UPDATE: async_create_preview_update,
     Platform.VACUUM: async_create_preview_vacuum,
+    Platform.WATER_HEATER: async_create_preview_water_heater,
     Platform.WEATHER: async_create_preview_weather,
 }
 
@@ -782,8 +905,7 @@ class TemplateConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     options_flow = OPTIONS_FLOW
     options_flow_reloads = True
 
-    MINOR_VERSION = 2
-    VERSION = 1
+    VERSION = 2
 
     @callback
     @override
@@ -800,10 +922,10 @@ class TemplateConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "template/start_preview",
-        vol.Required("flow_id"): str,
-        vol.Required("flow_type"): vol.Any("config_flow", "options_flow"),
-        vol.Required("user_input"): dict,
+        probatio.Required("type"): "template/start_preview",
+        probatio.Required("flow_id"): str,
+        probatio.Required("flow_type"): probatio.Any("config_flow", "options_flow"),
+        probatio.Required("user_input"): dict,
     }
 )
 @callback
@@ -814,25 +936,27 @@ def ws_start_preview(
 ) -> None:
     """Generate a preview."""
 
-    def _validate(schema: vol.Schema, domain: str, user_input: dict[str, Any]) -> Any:
+    def _validate(
+        schema: probatio.Schema, domain: str, user_input: dict[str, Any]
+    ) -> Any:
         errors = {}
-        key: vol.Marker
+        key: probatio.Marker
         for key, validator in schema.schema.items():
             if key.schema not in user_input:
                 continue
             try:
                 validator(user_input[key.schema])
-            except vol.Invalid as ex:
+            except probatio.Invalid as ex:
                 errors[key.schema] = str(ex.msg)
 
         if domain == Platform.SENSOR:
             try:
                 _validate_unit(user_input)
-            except vol.Invalid as ex:
+            except probatio.Invalid as ex:
                 errors[CONF_UNIT_OF_MEASUREMENT] = str(ex.msg)
             try:
                 _validate_state_class(user_input)
-            except vol.Invalid as ex:
+            except probatio.Invalid as ex:
                 errors[CONF_STATE_CLASS] = str(ex.msg)
 
         return errors
@@ -842,7 +966,7 @@ def ws_start_preview(
         flow_status = hass.config_entries.flow.async_get(msg["flow_id"])
         template_type = flow_status["step_id"]
         form_step = cast(SchemaFlowFormStep, CONFIG_FLOW[template_type])
-        schema = cast(vol.Schema, form_step.schema)
+        schema = cast(probatio.Schema, form_step.schema)
         name = msg["user_input"]["name"]
     else:
         flow_status = hass.config_entries.options.async_get(msg["flow_id"])
@@ -851,7 +975,7 @@ def ws_start_preview(
             raise HomeAssistantError
         template_type = config_entry.options["template_type"]
         name = config_entry.options["name"]
-        schema = cast(vol.Schema, OPTIONS_FLOW[template_type].schema)
+        schema = cast(probatio.Schema, OPTIONS_FLOW[template_type].schema)
         entity_registry = er.async_get(hass)
         entries = er.async_entries_for_config_entry(
             entity_registry, flow_status["handler"]
@@ -901,9 +1025,9 @@ def ws_start_preview(
         return
 
     config: dict = msg["user_input"]
-    advanced_options = config.pop(CONF_ADVANCED_OPTIONS, {})
+    additional_options = config.pop(CONF_ADDITIONAL_OPTIONS, {})
     preview_entity = CREATE_PREVIEW_ENTITY[template_type](
-        hass, name, {**config, **advanced_options}
+        hass, name, {**config, **additional_options}
     )
     preview_entity.hass = hass
     preview_entity.registry_entry = entity_registry_entry

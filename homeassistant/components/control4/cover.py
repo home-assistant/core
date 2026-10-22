@@ -1,6 +1,5 @@
 """Platform for Control4 Covers (blinds and shades)."""
 
-from datetime import timedelta
 import logging
 from typing import Any, override
 
@@ -18,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import Control4ConfigEntry, get_items_of_category
-from .const import CONTROL4_ENTITY_TYPE
+from .const import CONTROL4_ENTITY_TYPE, SCAN_INTERVAL
 from .director_utils import update_variables_for_config_entry
 from .entity import Control4Entity
 
@@ -63,7 +62,7 @@ async def async_setup_entry(
         _LOGGER,
         name="cover",
         update_method=async_update_data,
-        update_interval=timedelta(seconds=runtime_data.scan_interval),
+        update_interval=SCAN_INTERVAL,
         config_entry=entry,
     )
 
@@ -225,5 +224,5 @@ class Control4Cover(Control4Entity, CoverEntity):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         c4_blind = self._create_api_object()
-        await c4_blind.setLevelTarget(kwargs[ATTR_POSITION])
+        await c4_blind.set_level_target(kwargs[ATTR_POSITION])
         await self.coordinator.async_request_refresh()

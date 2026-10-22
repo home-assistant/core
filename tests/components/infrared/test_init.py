@@ -6,6 +6,19 @@ from unittest.mock import AsyncMock, Mock
 from freezegun.api import FrozenDateTimeFactory
 from infrared_protocols.commands.nec import NECCommand
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+    mock_restore_cache,
+)
+from pytest_homeassistant.components.infrared.common import (
+    MockInfraredEmitterEntity,
+    MockInfraredReceiverEntity,
+)
 
 from homeassistant.components.infrared import (
     DATA_COMPONENT,
@@ -24,21 +37,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .common import MockInfraredEmitterEntity, MockInfraredReceiverEntity
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-    mock_restore_cache,
-)
-
 TEST_DOMAIN = "test"
 
-TEST_COMMAND = NECCommand(address=0x04FB, command=0x08F7, modulation=38000)
+TEST_COMMAND = NECCommand(address=0x04FB, command=0xF7, modulation=38000)
 
 
 async def test_get_entities_component_not_loaded(hass: HomeAssistant) -> None:
@@ -313,12 +314,11 @@ async def test_name(hass: HomeAssistant) -> None:
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
+    ) -> None:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
             config_entry, [Platform.INFRARED]
         )
-        return True
 
     class MockFlow(ConfigFlow):
         """Test flow."""

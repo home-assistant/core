@@ -12,6 +12,15 @@
       }
     },
     "switch": {
+      "bypass": {
+        "default": "mdi:shield-off-outline"
+      },
+      "bypass_infinite": {
+        "default": "mdi:timer-off-outline"
+      },
+      "child_lock": {
+        "default": "mdi:lock"
+      },
       "routing": {
         "default": "mdi:wifi"
       }

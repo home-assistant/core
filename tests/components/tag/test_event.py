@@ -4,6 +4,8 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import async_capture_events
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.tag import DOMAIN, EVENT_TAG_SCANNED, async_scan_tag
 from homeassistant.core import HomeAssistant
@@ -13,13 +15,11 @@ from homeassistant.util import dt as dt_util
 
 from . import TEST_DEVICE_ID, TEST_TAG_ID, TEST_TAG_NAME
 
-from tests.common import async_capture_events
-from tests.typing import WebSocketGenerator
-
 
 @pytest.fixture
 def storage_setup_named_tag(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     hass_storage: dict[str, Any],
 ):
     """Storage setup for test case of named tags."""
@@ -41,7 +41,6 @@ def storage_setup_named_tag(
             }
         else:
             hass_storage[DOMAIN] = items
-        entity_registry = er.async_get(hass)
         entry = entity_registry.async_get_or_create(DOMAIN, DOMAIN, TEST_TAG_ID)
         entity_registry.async_update_entity(entry.entity_id, name=TEST_TAG_NAME)
         config = {DOMAIN: {}}

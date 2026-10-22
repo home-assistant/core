@@ -41,5 +41,5 @@ class VenstarEntity(CoordinatorEntity[VenstarDataUpdateCoordinator]):
             name=self._client.name,
             manufacturer="Venstar",
             model=f"{self._client.model}-{self._client.get_type()}",
-            sw_version=f"{firmware_version[0]}.{firmware_version[1]}",
+            sw_version=f"{firmware_version[0]}.{firmware_version[1]:02}",
         )

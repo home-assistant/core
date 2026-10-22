@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.helpers import entity_registry as er
@@ -47,13 +47,13 @@ async def validate_sensor_setup(
     return {}
 
 
-async def get_sensor_setup_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+async def get_sensor_setup_schema(handler: SchemaCommonFlowHandler) -> probatio.Schema:
     """Return process sensor setup schema."""
     hass = handler.parent_handler.hass
     processes = list(await hass.async_add_executor_job(get_all_running_processes, hass))
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_PROCESS): SelectSelector(
+            probatio.Required(CONF_PROCESS): SelectSelector(
                 SelectSelectorConfig(
                     options=processes,
                     multiple=True,
@@ -74,7 +74,7 @@ async def get_suggested_value(handler: SchemaCommonFlowHandler) -> dict[str, Any
 
 
 CONFIG_FLOW = {
-    "user": SchemaFlowFormStep(schema=vol.Schema({})),
+    "user": SchemaFlowFormStep(schema=probatio.Schema({})),
 }
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(

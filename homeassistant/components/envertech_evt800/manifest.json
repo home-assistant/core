@@ -1,6 +1,7 @@
 {
   "domain": "envertech_evt800",
   "name": "ENVERTECH EVT800",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@daniel-bergmann-00"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/envertech_evt800",

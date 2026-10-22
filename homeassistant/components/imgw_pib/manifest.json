@@ -1,11 +1,12 @@
 {
   "domain": "imgw_pib",
   "name": "IMGW-PIB",
+  "categories": ["weather_alerts.public_warnings"],
   "codeowners": ["@bieniu"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/imgw_pib",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "quality_scale": "platinum",
-  "requirements": ["imgw_pib==2.4.0"]
+  "requirements": ["imgw_pib==2.5.3"]
 }

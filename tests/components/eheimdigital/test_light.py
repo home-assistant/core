@@ -8,6 +8,11 @@ from eheimdigital.classic_led_ctrl import EheimDigitalClassicLEDControl
 from eheimdigital.types import EheimDeviceType, EheimDigitalClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.eheimdigital.const import EFFECT_DAYCL_MODE
@@ -29,8 +34,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util.color import value_to_brightness
 
 from .conftest import init_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.parametrize(

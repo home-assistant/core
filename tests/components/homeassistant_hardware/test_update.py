@@ -8,7 +8,17 @@ from unittest.mock import Mock, patch
 
 import aiohttp
 import pytest
-from universal_silabs_flasher.flasher import DeviceSpecificFlasher, Zbt1Flasher
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    async_capture_events,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+    mock_restore_cache_with_extra_data,
+)
+from universal_silabs_flasher.flasher import DeviceSpecificFlasher
 
 from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
@@ -30,6 +40,7 @@ from homeassistant.components.homeassistant_hardware.update import (
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+    FlasherType,
     OwningIntegration,
 )
 from homeassistant.components.update import UpdateDeviceClass
@@ -50,17 +61,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
 
 from .common import TEST_DOMAIN, TEST_FIRMWARE_RELEASES_URL, TEST_MANIFEST
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    MockPlatform,
-    async_capture_events,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-    mock_restore_cache_with_extra_data,
-)
 
 TEST_DEVICE = "/dev/serial/by-id/some-unique-serial-device-12345"
 TEST_UPDATE_ENTITY_ID = "update.mock_name_firmware"
@@ -151,12 +151,11 @@ def _mock_async_create_update_entity(
 
 async def mock_async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry
-) -> bool:
+) -> None:
     """Set up test config entry."""
     await hass.config_entries.async_forward_entry_setups(
         config_entry, [Platform.UPDATE]
     )
-    return True
 
 
 async def mock_async_setup_update_entities(
@@ -176,7 +175,7 @@ async def mock_async_setup_update_entities(
 class MockFirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """Mock SkyConnect firmware update entity."""
 
-    _flasher_cls = Zbt1Flasher
+    _flasher_type = FlasherType.ZBT1
 
     def __init__(
         self,

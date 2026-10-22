@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pyvlx.exception import PyVLXException
 
 from homeassistant.components.velux import DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import update_polled_entities
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -133,6 +132,7 @@ async def test_rain_sensor_unavailability(
 
     # Simulate communication error
     mock_window.get_limitation_min.side_effect = PyVLXException("Connection failed")
+    mock_window.get_limitation_max.side_effect = PyVLXException("Connection failed")
     await update_polled_entities(hass, freezer)
 
     # Entity should now be unavailable
@@ -143,6 +143,7 @@ async def test_rain_sensor_unavailability(
     # Simulate recovery
     mock_window.get_limitation_min.side_effect = None
     mock_window.get_limitation_min.return_value.position_percent = 0
+    mock_window.get_limitation_max.side_effect = None
     await update_polled_entities(hass, freezer)
     # Entity should be available again
     state = hass.states.get(test_entity_id)

@@ -16,10 +16,8 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, MANUFACTURER
 from .entity import DaliDeviceEntity
 from .types import DaliCenterConfigEntry
 
@@ -38,7 +36,7 @@ async def async_setup_entry(
     devices = runtime_data.devices
 
     async_add_entities(
-        DaliCenterLight(device)
+        DaliCenterLight(hass, device, entry)
         for device in devices
         if is_light_device(device.dev_type)
     )
@@ -52,18 +50,12 @@ class DaliCenterLight(DaliDeviceEntity, LightEntity):
     _attr_max_color_temp_kelvin = 8000
     _white_level: int | None = None
 
-    def __init__(self, light: Device) -> None:
+    def __init__(
+        self, hass: HomeAssistant, light: Device, entry: DaliCenterConfigEntry
+    ) -> None:
         """Initialize the light entity."""
-        super().__init__(light)
+        super().__init__(hass, light, entry)
         self._light = light
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, light.dev_id)},
-            name=light.name,
-            manufacturer=MANUFACTURER,
-            model=light.model,
-            via_device=(DOMAIN, light.gw_sn),
-        )
-
         self._determine_features()
 
     def _determine_features(self) -> None:

@@ -2,36 +2,27 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.cover import (
-    ATTR_CURRENT_POSITION,
-    ATTR_CURRENT_TILT_POSITION,
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
     PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
     CoverEntity,
     CoverEntityFeature,
+    CoverEntityStateAttribute,
+    CoverService,
+    CoverServiceArgument,
     CoverState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     CONF_ENTITIES,
     CONF_NAME,
     CONF_UNIQUE_ID,
-    SERVICE_CLOSE_COVER,
-    SERVICE_CLOSE_COVER_TILT,
-    SERVICE_OPEN_COVER,
-    SERVICE_OPEN_COVER_TILT,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_SET_COVER_TILT_POSITION,
-    SERVICE_STOP_COVER,
-    SERVICE_STOP_COVER_TILT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -55,9 +46,9 @@ PARALLEL_UPDATES = 0
 
 PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITIES): cv.entities_domain(COVER_DOMAIN),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Required(CONF_ENTITIES): cv.entities_domain(COVER_DOMAIN),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -148,7 +139,7 @@ class CoverGroup(GroupEntity, CoverEntity):
                 values.discard(entity_id)
             return
 
-        features = new_state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        features = new_state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
         if features & (CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE):
             self._covers[KEY_OPEN_CLOSE].add(entity_id)
@@ -181,7 +172,11 @@ class CoverGroup(GroupEntity, CoverEntity):
         """Move the covers up."""
         data = {ATTR_ENTITY_ID: self._covers[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
-            COVER_DOMAIN, SERVICE_OPEN_COVER, data, blocking=True, context=self._context
+            COVER_DOMAIN,
+            CoverService.OPEN_COVER,
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     @override
@@ -190,7 +185,7 @@ class CoverGroup(GroupEntity, CoverEntity):
         data = {ATTR_ENTITY_ID: self._covers[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
+            CoverService.CLOSE_COVER,
             data,
             blocking=True,
             context=self._context,
@@ -201,7 +196,11 @@ class CoverGroup(GroupEntity, CoverEntity):
         """Fire the stop action."""
         data = {ATTR_ENTITY_ID: self._covers[KEY_STOP]}
         await self.hass.services.async_call(
-            COVER_DOMAIN, SERVICE_STOP_COVER, data, blocking=True, context=self._context
+            COVER_DOMAIN,
+            CoverService.STOP_COVER,
+            data,
+            blocking=True,
+            context=self._context,
         )
 
     @override
@@ -209,11 +208,11 @@ class CoverGroup(GroupEntity, CoverEntity):
         """Set covers position."""
         data = {
             ATTR_ENTITY_ID: self._covers[KEY_POSITION],
-            ATTR_POSITION: kwargs[ATTR_POSITION],
+            CoverServiceArgument.POSITION: kwargs[CoverServiceArgument.POSITION],
         }
         await self.hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_SET_COVER_POSITION,
+            CoverService.SET_COVER_POSITION,
             data,
             blocking=True,
             context=self._context,
@@ -225,7 +224,7 @@ class CoverGroup(GroupEntity, CoverEntity):
         data = {ATTR_ENTITY_ID: self._tilts[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_OPEN_COVER_TILT,
+            CoverService.OPEN_COVER_TILT,
             data,
             blocking=True,
             context=self._context,
@@ -237,7 +236,7 @@ class CoverGroup(GroupEntity, CoverEntity):
         data = {ATTR_ENTITY_ID: self._tilts[KEY_OPEN_CLOSE]}
         await self.hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_CLOSE_COVER_TILT,
+            CoverService.CLOSE_COVER_TILT,
             data,
             blocking=True,
             context=self._context,
@@ -249,7 +248,7 @@ class CoverGroup(GroupEntity, CoverEntity):
         data = {ATTR_ENTITY_ID: self._tilts[KEY_STOP]}
         await self.hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_STOP_COVER_TILT,
+            CoverService.STOP_COVER_TILT,
             data,
             blocking=True,
             context=self._context,
@@ -260,11 +259,13 @@ class CoverGroup(GroupEntity, CoverEntity):
         """Set tilt position."""
         data = {
             ATTR_ENTITY_ID: self._tilts[KEY_POSITION],
-            ATTR_TILT_POSITION: kwargs[ATTR_TILT_POSITION],
+            CoverServiceArgument.TILT_POSITION: kwargs[
+                CoverServiceArgument.TILT_POSITION
+            ],
         }
         await self.hass.services.async_call(
             COVER_DOMAIN,
-            SERVICE_SET_COVER_TILT_POSITION,
+            CoverService.SET_COVER_TILT_POSITION,
             data,
             blocking=True,
             context=self._context,
@@ -313,14 +314,14 @@ class CoverGroup(GroupEntity, CoverEntity):
         all_position_states = [self.hass.states.get(x) for x in position_covers]
         position_states: list[State] = list(filter(None, all_position_states))
         self._attr_current_cover_position = reduce_attribute(
-            position_states, ATTR_CURRENT_POSITION
+            position_states, CoverEntityStateAttribute.CURRENT_POSITION
         )
 
         tilt_covers = self._tilts[KEY_POSITION]
         all_tilt_states = [self.hass.states.get(x) for x in tilt_covers]
         tilt_states: list[State] = list(filter(None, all_tilt_states))
         self._attr_current_cover_tilt_position = reduce_attribute(
-            tilt_states, ATTR_CURRENT_TILT_POSITION
+            tilt_states, CoverEntityStateAttribute.CURRENT_TILT_POSITION
         )
 
         supported_features = CoverEntityFeature(0)

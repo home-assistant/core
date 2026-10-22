@@ -2,7 +2,7 @@
 
 from contextlib import suppress
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import (
     async_get_entity_registry_entry_or_raise,
@@ -10,7 +10,6 @@ from homeassistant.components.device_automation import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_OPTION,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
@@ -24,7 +23,6 @@ from homeassistant.helpers.entity import get_capability
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from .const import (
-    ATTR_CYCLE,
     CONF_CYCLE,
     CONF_OPTION,
     DOMAIN,
@@ -33,42 +31,46 @@ from .const import (
     SERVICE_SELECT_NEXT,
     SERVICE_SELECT_PREVIOUS,
     SelectEntityCapabilityAttribute,
+    SelectServiceArgument,
 )
 
-_ACTION_SCHEMA = vol.Any(
-    cv.DEVICE_ACTION_BASE_SCHEMA.extend(
-        {
-            vol.Required(CONF_TYPE): SERVICE_SELECT_FIRST,
-            vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        }
-    ),
-    cv.DEVICE_ACTION_BASE_SCHEMA.extend(
-        {
-            vol.Required(CONF_TYPE): SERVICE_SELECT_LAST,
-            vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        }
-    ),
-    cv.DEVICE_ACTION_BASE_SCHEMA.extend(
-        {
-            vol.Required(CONF_TYPE): SERVICE_SELECT_NEXT,
-            vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-            vol.Optional(CONF_CYCLE, default=True): cv.boolean,
-        }
-    ),
-    cv.DEVICE_ACTION_BASE_SCHEMA.extend(
-        {
-            vol.Required(CONF_TYPE): SERVICE_SELECT_PREVIOUS,
-            vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-            vol.Optional(CONF_CYCLE, default=True): cv.boolean,
-        }
-    ),
-    cv.DEVICE_ACTION_BASE_SCHEMA.extend(
-        {
-            vol.Required(CONF_TYPE): SERVICE_SELECT_OPTION,
-            vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-            vol.Required(CONF_OPTION): cv.string,
-        }
-    ),
+_ACTION_SCHEMA = probatio.TaggedUnion(
+    CONF_TYPE,
+    [
+        cv.DEVICE_ACTION_BASE_SCHEMA.extend(
+            {
+                probatio.Required(CONF_TYPE): SERVICE_SELECT_FIRST,
+                probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+            }
+        ),
+        cv.DEVICE_ACTION_BASE_SCHEMA.extend(
+            {
+                probatio.Required(CONF_TYPE): SERVICE_SELECT_LAST,
+                probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+            }
+        ),
+        cv.DEVICE_ACTION_BASE_SCHEMA.extend(
+            {
+                probatio.Required(CONF_TYPE): SERVICE_SELECT_NEXT,
+                probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+                probatio.Optional(CONF_CYCLE, default=True): cv.boolean,
+            }
+        ),
+        cv.DEVICE_ACTION_BASE_SCHEMA.extend(
+            {
+                probatio.Required(CONF_TYPE): SERVICE_SELECT_PREVIOUS,
+                probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+                probatio.Optional(CONF_CYCLE, default=True): cv.boolean,
+            }
+        ),
+        cv.DEVICE_ACTION_BASE_SCHEMA.extend(
+            {
+                probatio.Required(CONF_TYPE): SERVICE_SELECT_OPTION,
+                probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+                probatio.Required(CONF_OPTION): cv.string,
+            }
+        ),
+    ],
 )
 
 
@@ -112,9 +114,9 @@ async def async_call_action_from_config(
     """Execute a device action."""
     service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
     if config[CONF_TYPE] == SERVICE_SELECT_OPTION:
-        service_data[ATTR_OPTION] = config[CONF_OPTION]
+        service_data[SelectServiceArgument.OPTION] = config[CONF_OPTION]
     if config[CONF_TYPE] in {SERVICE_SELECT_NEXT, SERVICE_SELECT_PREVIOUS}:
-        service_data[ATTR_CYCLE] = config[CONF_CYCLE]
+        service_data[SelectServiceArgument.CYCLE] = config[CONF_CYCLE]
 
     await hass.services.async_call(
         DOMAIN,
@@ -127,12 +129,12 @@ async def async_call_action_from_config(
 
 async def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List action capabilities."""
     if config[CONF_TYPE] in {SERVICE_SELECT_NEXT, SERVICE_SELECT_PREVIOUS}:
         return {
-            "extra_fields": vol.Schema(
-                {vol.Optional(CONF_CYCLE, default=True): cv.boolean}
+            "extra_fields": probatio.Schema(
+                {probatio.Optional(CONF_CYCLE, default=True): cv.boolean}
             )
         }
 
@@ -149,7 +151,9 @@ async def async_get_action_capabilities(
                 or []
             )
         return {
-            "extra_fields": vol.Schema({vol.Required(CONF_OPTION): vol.In(options)})
+            "extra_fields": probatio.Schema(
+                {probatio.Required(CONF_OPTION): probatio.In(options)}
+            )
         }
 
     return {}

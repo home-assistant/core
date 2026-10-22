@@ -23,6 +23,8 @@ from aioautomower.model import (
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN, OAUTH2_TOKEN
@@ -37,9 +39,6 @@ from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 from .const import TEST_MOWER_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 ADDITIONAL_NUMBER_ENTITIES = 1
 ADDITIONAL_SENSOR_ENTITIES = 2
@@ -232,8 +231,8 @@ async def test_model_id_information(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    reg_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_MOWER_ID)},
+    reg_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_MOWER_ID), mock_config_entry.entry_id
     )
     assert reg_device is not None
     assert reg_device.manufacturer == "Husqvarna"
@@ -253,8 +252,8 @@ async def test_device_info(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    reg_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_MOWER_ID)},
+    reg_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_MOWER_ID), mock_config_entry.entry_id
     )
     assert reg_device == snapshot
 
@@ -470,7 +469,7 @@ async def test_add_and_remove_work_area(
                 last_time_completed=datetime(
                     2024, 10, 1, 11, 11, 0, tzinfo=dt_util.get_default_time_zone()
                 ),
-                type=WorkAreaType.RANDOM,
+                type=WorkAreaType.SYSTEMATIC,
                 use_global_cutting_height=False,
             )
         }

@@ -151,6 +151,14 @@ async def test_thermostat_base(
     assert state
     assert state.attributes["hvac_action"] == HVACAction.OFF
 
+    # running state 0 (idle) must not be treated as a missing attribute;
+    # with the system mode off this maps to hvac_action "off"
+    set_node_attribute(matter_node, 1, 513, 41, 0)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("climate.longan_link_hvac")
+    assert state
+    assert state.attributes["hvac_action"] == HVACAction.OFF
+
     # change system mode to heat
     set_node_attribute(matter_node, 1, 513, 28, 4)
     await trigger_subscription_callback(hass, matter_client)
@@ -158,6 +166,14 @@ async def test_thermostat_base(
     state = hass.states.get("climate.longan_link_hvac")
     assert state
     assert state.state == HVACMode.HEAT
+
+    # running state 0 (no relay active) while the system mode is on
+    # means the device is idle
+    set_node_attribute(matter_node, 1, 513, 41, 0)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("climate.longan_link_hvac")
+    assert state
+    assert state.attributes["hvac_action"] == HVACAction.IDLE
 
     # change occupied heating setpoint to 20
     set_node_attribute(matter_node, 1, 513, 18, 2000)
@@ -486,6 +502,11 @@ async def test_eve_thermo_v5_presets(
     entity_id = "climate.eve_thermo_20ecd1701"
     state = hass.states.get(entity_id)
     assert state
+
+    # the Eve Thermo reports ThermostatRunningState 0 (no relay active);
+    # this is a valid state and must be exposed as hvac_action idle
+    # instead of being treated as a missing attribute
+    assert state.attributes["hvac_action"] == HVACAction.IDLE
 
     # test supported features correctly parsed
     mask = (

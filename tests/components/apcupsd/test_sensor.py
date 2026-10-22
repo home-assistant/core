@@ -4,6 +4,11 @@ from datetime import timedelta
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.apcupsd.const import DOMAIN
@@ -25,8 +30,6 @@ from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
 
 from . import MOCK_MINIMAL_STATUS, MOCK_STATUS
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures(
     "entity_registry_enabled_by_default", "init_integration"
@@ -51,8 +54,9 @@ async def test_sensor(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
     # Ensure entities are correctly assigned to device
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_request_status.return_value["SERIALNO"])}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_request_status.return_value["SERIALNO"]),
+        mock_config_entry.entry_id,
     )
     assert device_entry
     entity_entries = er.async_entries_for_config_entry(
@@ -145,6 +149,20 @@ async def test_manual_update_entity(
             "sensor.apc_ups_last_self_test",
             MOCK_MINIMAL_STATUS | {"LASTSTEST": "1970-01-01 00:00:00 +0000"},
             id="last_self_test_missing",
+        ),
+        pytest.param(
+            # The transfer fields only appear after a transfer to or from the
+            # battery since the daemon started.
+            MOCK_MINIMAL_STATUS,
+            "sensor.apc_ups_transfer_to_battery",
+            MOCK_MINIMAL_STATUS | {"XONBATT": "1970-01-01 00:00:00 +0000"},
+            id="xonbatt_missing",
+        ),
+        pytest.param(
+            MOCK_MINIMAL_STATUS,
+            "sensor.apc_ups_transfer_from_battery",
+            MOCK_MINIMAL_STATUS | {"XOFFBATT": "1970-01-01 00:00:00 +0000"},
+            id="xoffbatt_missing",
         ),
         pytest.param(
             MOCK_MINIMAL_STATUS | {"XOFFBATT": "N/A"},

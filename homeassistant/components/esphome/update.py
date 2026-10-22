@@ -233,21 +233,27 @@ class ESPHomeDashboardUpdateEntity(
 
         # Ensure only one OTA per device at a time
         async with self._install_lock:
-            # Ensure only one compile at a time for ALL devices
-            async with self.hass.data.setdefault(KEY_UPDATE_LOCK, asyncio.Lock()):
-                coordinator = self.coordinator
-                api = coordinator.api
-                device = coordinator.data.get(self._device_info.name)
-                assert device is not None
-                configuration = device["configuration"]
-                if not await api.compile(configuration):
-                    raise HomeAssistantError(
-                        translation_domain=DOMAIN,
-                        translation_key="error_compiling",
-                        translation_placeholders={
-                            "configuration": configuration,
-                        },
-                    )
+            coordinator = self.coordinator
+            api = coordinator.api
+            device = coordinator.data.get(self._device_info.name)
+            assert device is not None
+            configuration = device["configuration"]
+            if coordinator.supports_build_queue:
+                # The dashboard has its own build queue
+                # and can handle concurrent compile requests
+                compiled = await api.compile(configuration)
+            else:
+                # Ensure only one compile at a time for ALL devices
+                async with self.hass.data.setdefault(KEY_UPDATE_LOCK, asyncio.Lock()):
+                    compiled = await api.compile(configuration)
+            if not compiled:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="error_compiling",
+                    translation_placeholders={
+                        "configuration": configuration,
+                    },
+                )
 
             # If the device uses deep sleep, there's a small chance it goes
             # to sleep right after the dashboard connects but before the OTA

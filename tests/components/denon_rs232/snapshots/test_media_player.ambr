@@ -44,7 +44,7 @@
     'platform': 'denon_rs232',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <MediaPlayerEntityFeature: 3468>,
+    'supported_features': <MediaPlayerEntityFeature: 135052>,
     'translation_key': 'receiver',
     'unique_id': '01KPBBPM6WCQ8148EFR0TCG1WW_main',
     'unit_of_measurement': None,
@@ -70,7 +70,7 @@
         'vcr_2',
         'vdp',
       ]),
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 3468>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 135052>,
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.5555555555555556,
     }),
     'context': <ANY>,
@@ -137,6 +137,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'receiver',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AVR-3805 Zone 2',
+      <MediaPlayerEntityStateAttribute.MEDIA_CHANNEL: 'media_channel'>: '99.30',
       <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'tuner',
       <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'cd',

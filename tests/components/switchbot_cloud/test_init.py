@@ -1,9 +1,15 @@
 """Tests for the SwitchBot Cloud integration init."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_mock_cloud_connection_status,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from switchbot_api import (
     Device,
     PowerState,
@@ -20,8 +26,9 @@ from homeassistant.components.switchbot_cloud.const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
+from homeassistant.components.switchbot_cloud.coordinator import SwitchBotCoordinator
 from homeassistant.components.webhook import DOMAIN as WEBHOOK_DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_API_TOKEN,
@@ -33,13 +40,7 @@ from homeassistant.core_config import async_process_ha_core_config
 
 from . import configure_integration
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_mock_cloud_connection_status,
-)
 from tests.components.cloud import mock_cloud
-from tests.typing import ClientSessionGenerator
 
 CLOUDHOOK_URL = "https://hooks.nabu.casa/ABCD"
 
@@ -188,6 +189,20 @@ async def test_setup_entry_fails_when_listing_devices(
     mock_get_status.assert_not_called()
 
 
+async def test_setup_entry_auth_failed_starts_reauth(
+    hass: HomeAssistant, mock_list_devices: AsyncMock
+) -> None:
+    """Test an authentication error during setup starts a reauth flow."""
+    mock_list_devices.side_effect = SwitchBotAuthenticationError
+    entry = await configure_integration(hass)
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == entry.entry_id
+
+
 async def test_setup_entry_fails_when_refreshing(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
@@ -209,6 +224,29 @@ async def test_setup_entry_fails_when_refreshing(
     await hass.async_block_till_done()
     mock_list_devices.assert_called_once()
     mock_get_status.assert_called()
+
+
+async def test_refresh_auth_failed_starts_reauth(
+    hass: HomeAssistant, mock_list_devices: AsyncMock, mock_get_status: AsyncMock
+) -> None:
+    """Test an authentication error when refreshing a device starts a reauth flow."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="test-id",
+            deviceName="test-name",
+            deviceType="Plug",
+            hubDeviceId="test-hub-id",
+        )
+    ]
+    mock_get_status.side_effect = SwitchBotAuthenticationError
+    entry = await configure_integration(hass)
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == entry.entry_id
 
 
 async def test_posting_to_webhook(
@@ -300,7 +338,6 @@ async def test_polling_is_only_disabled_after_webhook_delivery(
     entity_id = "vacuum.vacuum_name_1"
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.attributes["battery_level"] == 71
 
     # Change API return values and wait for update
     mock_get_status.return_value = {
@@ -317,7 +354,6 @@ async def test_polling_is_only_disabled_after_webhook_delivery(
     # Validate that the state was updated again via fetch
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.attributes["battery_level"] == 60
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     webhook_id = entry.data[CONF_WEBHOOK_ID]
@@ -424,6 +460,54 @@ async def test_setup_creates_cloudhook_when_cloud_active(
         assert entry.data[CONF_CLOUDHOOK_URL] == CLOUDHOOK_URL
         # ... and registered with SwitchBot's cloud.
         mock_setup_webhook.assert_called_once_with(CLOUDHOOK_URL)
+
+
+async def test_setup_survives_the_cloud_going_away(
+    hass: HomeAssistant,
+    mock_list_devices: AsyncMock,
+    mock_get_status: AsyncMock,
+    mock_get_webook_configuration: AsyncMock,
+    mock_delete_webhook: AsyncMock,
+    mock_setup_webhook: AsyncMock,
+) -> None:
+    """Test the entry still loads when the cloud goes away mid-setup.
+
+    The connection is checked before the cloudhook is created, so it can be
+    gone by the time it is used. The local URL carries it until the
+    connection change listener creates the cloudhook.
+    """
+    await async_process_ha_core_config(
+        hass,
+        {"external_url": "https://example.com"},
+    )
+    await mock_cloud(hass)
+    await hass.async_block_till_done()
+
+    mock_get_webook_configuration.return_value = {"urls": []}
+    mock_list_devices.return_value = [_water_detector()]
+    mock_get_status.return_value = {"battery": 100}
+    mock_delete_webhook.return_value = {}
+    mock_setup_webhook.return_value = {}
+
+    with (
+        patch("homeassistant.components.cloud.async_is_logged_in", return_value=True),
+        patch("homeassistant.components.cloud.async_is_connected", return_value=True),
+        patch.object(cloud, "async_active_subscription", return_value=True),
+        patch(
+            "homeassistant.components.cloud.async_get_or_create_cloudhook",
+            side_effect=CloudNotAvailable,
+        ),
+        patch("homeassistant.components.cloud.async_delete_cloudhook"),
+    ):
+        entry = await configure_integration(hass)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert CONF_CLOUDHOOK_URL not in entry.data
+    # SwitchBot was given the local URL to push to in the meantime
+    mock_setup_webhook.assert_called_once()
+    assert mock_setup_webhook.call_args[0][0].startswith(
+        "https://example.com/api/webhook/"
+    )
 
 
 async def test_setup_reuses_persisted_cloudhook(
@@ -746,3 +830,28 @@ async def test_remove_entry_with_cloud_unavailable(
         await hass.async_block_till_done()
 
         assert not hass.config_entries.async_entries("switchbot_cloud")
+
+
+async def test_single_coordinator_for_multi_platform_device(
+    hass: HomeAssistant, mock_list_devices: AsyncMock, mock_get_status: AsyncMock
+) -> None:
+    """Test that a multi-platform device creates only one coordinator."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="relay-switch-pm-id-1",
+            deviceName="relay-switch-pm-1",
+            deviceType="Relay Switch 1PM",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+    mock_get_status.return_value = {"switchStatus": 0}
+
+    with patch(
+        "homeassistant.components.switchbot_cloud.SwitchBotCoordinator",
+        wraps=SwitchBotCoordinator,
+    ) as coordinator_cls:
+        entry = await configure_integration(hass)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert coordinator_cls.call_count == 1

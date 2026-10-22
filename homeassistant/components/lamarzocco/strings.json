@@ -1,9 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -65,6 +63,9 @@
     "binary_sensor": {
       "backflush_enabled": {
         "name": "Backflush active"
+      },
+      "bluetooth_connected": {
+        "name": "Bluetooth connected"
       },
       "brew_active": {
         "name": "Brewing active"
@@ -202,6 +203,9 @@
     },
     "button_error": {
       "message": "Error while executing button {key}"
+    },
+    "migration_unsupported_version": {
+      "message": "Migration from version {version} is no longer supported, remove and re-add the integration"
     },
     "number_exception": {
       "message": "Error while setting value {value} for number {key}"

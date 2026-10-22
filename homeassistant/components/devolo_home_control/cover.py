@@ -3,14 +3,17 @@
 from typing import Any, override
 
 from homeassistant.components.cover import (
+    ATTR_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DevoloHomeControlConfigEntry
+from .const import DOMAIN
 from .entity import DevoloMultiLevelSwitchDeviceEntity
 
 
@@ -59,14 +62,22 @@ class DevoloCoverDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, CoverEntity):
     @override
     def open_cover(self, **kwargs: Any) -> None:
         """Open the blind."""
-        self._multi_level_switch_property.set(100)
+        self._set_cover_position(100)
 
     @override
     def close_cover(self, **kwargs: Any) -> None:
         """Close the blind."""
-        self._multi_level_switch_property.set(0)
+        self._set_cover_position(0)
 
     @override
     def set_cover_position(self, **kwargs: Any) -> None:
         """Set the blind to the given position."""
-        self._multi_level_switch_property.set(kwargs["position"])
+        self._set_cover_position(kwargs[ATTR_POSITION])
+
+    def _set_cover_position(self, position: int) -> None:
+        """Set the blind to the given position."""
+        if not self._multi_level_switch_property.set(position):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_failed",
+            )

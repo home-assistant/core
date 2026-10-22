@@ -102,6 +102,7 @@ async def async_setup_platform(
         db_url,
         True,
         async_add_entities,
+        None,
     )
 
 
@@ -152,6 +153,7 @@ async def async_setup_entry(
         db_url,
         False,
         async_add_entities,
+        entry.entry_id,
     )
 
 
@@ -165,6 +167,7 @@ async def async_setup_sensor(
     db_url: str,
     yaml: bool,
     async_add_entities: AddEntitiesCallback | AddConfigEntryEntitiesCallback,
+    config_entry_id: str | None,
 ) -> None:
     """Set up the SQL sensor."""
     (
@@ -174,7 +177,7 @@ async def async_setup_sensor(
     ) = await async_create_sessionmaker(hass, db_url)
     if sessmaker is None:
         return
-    validate_query(hass, query_template, uses_recorder_db, unique_id)
+    validate_query(hass, query_template, uses_recorder_db, unique_id, config_entry_id)
 
     query_str = check_and_render_sql_query(hass, query_template)
     upper_query = query_str.upper()

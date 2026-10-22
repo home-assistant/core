@@ -104,7 +104,7 @@ TRANSLATION_KEYS_PROGRAMS_MAP = {
     if program not in (ProgramKey.UNKNOWN, *FAVORITE_PROGRAMS)
 }
 
-PROGRAMS_TRANSLATION_KEYS_MAP = {
+PROGRAMS_TRANSLATION_KEYS_MAP: dict[ProgramKey, str] = {
     value: key for key, value in TRANSLATION_KEYS_PROGRAMS_MAP.items()
 }
 
@@ -180,6 +180,7 @@ COFFEE_TEMPERATURE_OPTIONS = {
         "ConsumerProducts.CoffeeMaker.EnumType.CoffeeTemperature.94C",
         "ConsumerProducts.CoffeeMaker.EnumType.CoffeeTemperature.95C",
         "ConsumerProducts.CoffeeMaker.EnumType.CoffeeTemperature.96C",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeTemperature.98C",
     )
 }
 

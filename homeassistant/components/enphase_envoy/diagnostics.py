@@ -4,12 +4,15 @@ import copy
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from aiohttp import ClientResponse
-from attr import asdict
+from aiohttp import ClientError, ClientResponse
 from pyenphase.envoy import Envoy
 from pyenphase.exceptions import EnvoyError
 
-from homeassistant.components.diagnostics import async_redact_data, entity_entry_as_dict
+from homeassistant.components.diagnostics import (
+    async_redact_data,
+    device_entry_as_dict,
+    entity_entry_as_dict,
+)
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -79,7 +82,9 @@ async def _get_fixture_collection(envoy: Envoy, serial: str) -> dict[str, Any]:
         try:
             response: ClientResponse = await envoy.request(end_point)
             fixture_data[end_point] = (
-                (await response.text()).replace("\n", "").replace(serial, CLEAN_TEXT)
+                (await response.text(errors="replace"))
+                .replace("\n", "")
+                .replace(serial, CLEAN_TEXT)
             )
             fixture_data[f"{end_point}_log"] = json_dumps(
                 {
@@ -87,6 +92,10 @@ async def _get_fixture_collection(envoy: Envoy, serial: str) -> dict[str, Any]:
                     "code": response.status,
                 }
             )
+        except ClientError as err:
+            fixture_data[f"{end_point}_log"] = {
+                "Error": f"Aiohttp Client error {type(err).__name__ if not hasattr(err, 'status') else err.status}"
+            }
         except EnvoyError as err:
             fixture_data[f"{end_point}_log"] = {"Error": repr(err)}
     return fixture_data
@@ -119,10 +128,7 @@ async def async_get_config_entry_diagnostics(
                 state_dict.pop("context", None)
             entity_dict = entity_entry_as_dict(entity)
             entities.append({"entity": entity_dict, "state": state_dict})
-        device_dict = asdict(device)
-        device_dict.pop("_cache", None)
-        # This can be removed when suggested_area is removed from DeviceEntry
-        device_dict.pop("_suggested_area")
+        device_dict = device_entry_as_dict(device)
         device_entities.append({"device": device_dict, "entities": entities})
 
     # remove envoy serial

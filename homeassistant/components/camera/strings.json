@@ -34,17 +34,26 @@
       }
     }
   },
-  "issues": {
-    "deprecated_filename_template": {
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "description": "The pre-defined template variable `entity_id` was used when performing action `{service}` targeting camera entity `{entity_id}`. The pre-defined template variable `entity_id` is being removed from the `filename` parameter of `{service}`.\n\nPlease update your automations and scripts to use a manually defined variable instead and select **Submit** to close this issue.",
-            "title": "[%key:component::camera::issues::deprecated_filename_template::title%]"
-          }
-        }
-      },
-      "title": "Detected use of deprecated template variable"
+  "exceptions": {
+    "path_not_allowed": {
+      "message": "Cannot write to {filename} because access to this path is not allowed. `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`."
+    },
+    "record_not_supported": {
+      "message": "Camera {entity_id} does not support recording."
+    },
+    "snapshot_timeout": {
+      "message": "Unable to get snapshot: timed out after {timeout} seconds."
+    },
+    "stream_not_supported": {
+      "message": "Camera {entity_id} does not support streaming."
+    }
+  },
+  "preview_features": {
+    "two_way_audio": {
+      "description": "Talk to people near your cameras and doorbells while you watch the live stream.\n\nThis works with cameras that support two-way audio and whose integration has added this capability. A talk button appears on the live stream when both conditions are met; if you don't see it for your camera, either the camera or its integration doesn't support two-way audio yet.\nTwo-way audio is currently only available when Home Assistant is opened over HTTPS, because browsers require a secure connection for microphone access. We're working on bringing it to the Home Assistant apps over HTTP as well.",
+      "disable_confirmation": "Two-way audio will be turned off for all cameras.",
+      "enable_confirmation": "This feature is still in development and may change. Two-way audio only works when Home Assistant is opened over HTTPS.",
+      "name": "Two-way audio"
     }
   },
   "selector": {},

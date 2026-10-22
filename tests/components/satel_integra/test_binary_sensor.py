@@ -5,6 +5,12 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.satel_integra.const import DOMAIN
@@ -21,13 +27,6 @@ from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import get_monitor_callbacks, setup_integration, trigger_connection_status_update
-
-from tests.common import (
-    MockConfigEntry,
-    async_capture_events,
-    async_fire_time_changed,
-    snapshot_platform,
-)
 
 
 @pytest.fixture(autouse=True)
@@ -57,14 +56,14 @@ async def test_binary_sensors(
         hass, entity_registry, snapshot, mock_config_entry_with_subentries.entry_id
     )
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "1234567890_zones_1")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1234567890_zones_1"), mock_config_entry_with_subentries.entry_id
     )
 
     assert device_entry == snapshot(name="device-zone")
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "1234567890_outputs_1")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1234567890_outputs_1"), mock_config_entry_with_subentries.entry_id
     )
     assert device_entry == snapshot(name="device-output")
 

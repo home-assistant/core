@@ -1,12 +1,17 @@
 """Support for services."""
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
 from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, RpcCallError
-import voluptuous as vol
+import probatio
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.cover import (
+    ATTR_POSITION,
+    ATTR_TILT_POSITION,
+    DOMAIN as COVER_DOMAIN,
+    CoverEntityFeature,
+)
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import (
     HomeAssistant,
@@ -16,7 +21,12 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service import (
+    async_get_device_and_config_entry,
+    async_register_platform_entity_service,
+)
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.util.json import JsonValueType
 
 from .const import ATTR_KEY, ATTR_VALUE, CONF_SLEEP_PERIOD, DOMAIN
@@ -25,19 +35,30 @@ from .utils import get_device_entry_gen
 
 SERVICE_GET_KVS_VALUE = "get_kvs_value"
 SERVICE_SET_KVS_VALUE = "set_kvs_value"
-SERVICE_GET_KVS_VALUE_SCHEMA = vol.Schema(
+SERVICE_SET_COVER_POSITION_AND_TILT = "set_cover_position_and_tilt"
+SERVICE_GET_KVS_VALUE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Required(ATTR_KEY): str,
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(ATTR_KEY): str,
     }
 )
-SERVICE_SET_KVS_VALUE_SCHEMA = vol.Schema(
+SERVICE_SET_KVS_VALUE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Required(ATTR_KEY): str,
-        vol.Required(ATTR_VALUE): vol.Any(str, int, float, bool, dict, list, None),
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(ATTR_KEY): str,
+        probatio.Required(ATTR_VALUE): probatio.Any(
+            str, int, float, bool, dict, list, None
+        ),
     }
 )
+SERVICE_SET_COVER_POSITION_AND_TILT_SCHEMA: VolDictType = {
+    probatio.Required(ATTR_POSITION): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=0, max=100)
+    ),
+    probatio.Required(ATTR_TILT_POSITION): probatio.All(
+        probatio.Coerce(int), probatio.Range(min=0, max=100)
+    ),
+}
 
 
 @callback
@@ -45,49 +66,22 @@ def async_get_config_entry_for_service_call(
     call: ServiceCall,
 ) -> ShellyConfigEntry:
     """Get the config entry related to a service call (by device ID)."""
-    device_registry = dr.async_get(call.hass)
-    device_id = call.data[ATTR_DEVICE_ID]
+    config_entry: ShellyConfigEntry
+    _, config_entry = async_get_device_and_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_DEVICE_ID]
+    )
 
-    if (device_entry := device_registry.async_get(device_id)) is None:
+    if (
+        config_entry.data.get(CONF_SLEEP_PERIOD, 0) > 0
+        or get_device_entry_gen(config_entry) not in RPC_GENERATIONS
+    ):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
-            translation_key="invalid_device_id",
-            translation_placeholders={"device_id": device_id},
+            translation_key="kvs_not_supported",
+            translation_placeholders={"device": config_entry.title},
         )
 
-    for entry_id in device_entry.config_entries:
-        config_entry = call.hass.config_entries.async_get_entry(entry_id)
-
-        if TYPE_CHECKING:
-            assert config_entry
-
-        if config_entry.domain != DOMAIN:
-            continue
-        if config_entry.state is not ConfigEntryState.LOADED:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="entry_not_loaded",
-                translation_placeholders={"device": config_entry.title},
-            )
-        if get_device_entry_gen(config_entry) not in RPC_GENERATIONS:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="kvs_not_supported",
-                translation_placeholders={"device": config_entry.title},
-            )
-        if config_entry.data.get(CONF_SLEEP_PERIOD, 0) > 0:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="kvs_not_supported",
-                translation_placeholders={"device": config_entry.title},
-            )
-        return config_entry
-
-    raise ServiceValidationError(
-        translation_domain=DOMAIN,
-        translation_key="config_entry_not_found",
-        translation_placeholders={"device_id": device_id},
-    )
+    return config_entry
 
 
 async def _async_execute_action(
@@ -168,3 +162,15 @@ def async_setup_services(hass: HomeAssistant) -> None:
             schema=schema,
             supports_response=response,
         )
+
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_SET_COVER_POSITION_AND_TILT,
+        entity_domain=COVER_DOMAIN,
+        schema=SERVICE_SET_COVER_POSITION_AND_TILT_SCHEMA,
+        func="async_set_cover_position_and_tilt",
+        required_features=[
+            CoverEntityFeature.SET_POSITION | CoverEntityFeature.SET_TILT_POSITION
+        ],
+    )

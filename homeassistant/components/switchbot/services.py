@@ -1,12 +1,11 @@
 """Services for the SwitchBot integration."""
 
-import voluptuous as vol
+import probatio
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, CONF_SENSOR_TYPE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN, SupportedModels
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
@@ -15,14 +14,14 @@ SERVICE_ADD_PASSWORD = "add_password"
 
 ATTR_PASSWORD = "password"
 
-_PASSWORD_VALIDATOR = vol.All(cv.string, cv.matches_regex(r"^\d{6,12}$"))
+_PASSWORD_VALIDATOR = probatio.All(cv.string, cv.matches_regex(r"^\d{6,12}$"))
 
-SCHEMA_ADD_PASSWORD_SERVICE = vol.Schema(
+SCHEMA_ADD_PASSWORD_SERVICE = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Required(ATTR_PASSWORD): _PASSWORD_VALIDATOR,
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(ATTR_PASSWORD): _PASSWORD_VALIDATOR,
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -31,45 +30,9 @@ def _async_get_switchbot_entry_for_device_id(
     hass: HomeAssistant, device_id: str
 ) -> SwitchbotConfigEntry:
     """Return the loaded SwitchBot config entry for a device id."""
-    device_registry = dr.async_get(hass)
-    if not (device_entry := device_registry.async_get(device_id)):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_device_id",
-            translation_placeholders={"device_id": device_id},
-        )
-
-    entries = [
-        hass.config_entries.async_get_entry(entry_id)
-        for entry_id in device_entry.config_entries
-    ]
-    switchbot_entries = [
-        entry for entry in entries if entry is not None and entry.domain == DOMAIN
-    ]
-    if not switchbot_entries:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="device_not_belonging",
-            translation_placeholders={"device_id": device_id},
-        )
-
-    if not (
-        loaded_entry := next(
-            (
-                entry
-                for entry in switchbot_entries
-                if entry.state is ConfigEntryState.LOADED
-            ),
-            None,
-        )
-    ):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="device_entry_not_loaded",
-            translation_placeholders={"device_id": device_id},
-        )
-
-    return loaded_entry
+    config_entry: SwitchbotConfigEntry
+    _, config_entry = service.async_get_device_and_config_entry(hass, DOMAIN, device_id)
+    return config_entry
 
 
 def _is_supported_keypad(entry: SwitchbotConfigEntry) -> bool:

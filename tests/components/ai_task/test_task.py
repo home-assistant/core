@@ -2,9 +2,11 @@
 
 from datetime import timedelta
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import media_source
@@ -14,18 +16,15 @@ from homeassistant.components.ai_task import (
     async_generate_image,
 )
 from homeassistant.components.ai_task.const import DATA_MEDIA_SOURCE
-from homeassistant.components.camera import Image
 from homeassistant.components.conversation import async_get_chat_log
+from homeassistant.components.llm import AssistAPI
 from homeassistant.const import STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import chat_session, llm
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import chat_session
 from homeassistant.util import dt as dt_util
 
 from .conftest import TEST_ENTITY_ID, MockAITaskEntity
-
-from tests.common import async_fire_time_changed
-from tests.typing import WebSocketGenerator
 
 
 async def test_generate_data_preferred_entity(
@@ -38,7 +37,8 @@ async def test_generate_data_preferred_entity(
     client = await hass_ws_client(hass)
 
     with pytest.raises(
-        HomeAssistantError, match="No entity_id provided and no preferred entity set"
+        ServiceValidationError,
+        match="No entity_id provided and no preferred entity set",
     ):
         await async_generate_data(
             hass,
@@ -56,7 +56,7 @@ async def test_generate_data_preferred_entity(
     assert msg["success"]
 
     with pytest.raises(
-        HomeAssistantError, match="AI Task entity ai_task.unknown not found"
+        ServiceValidationError, match="AI Task entity ai_task.unknown not found"
     ):
         await async_generate_data(
             hass,
@@ -77,14 +77,21 @@ async def test_generate_data_preferred_entity(
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
-    llm_api = llm.AssistAPI(hass)
+    context = Context()
+    llm_api = AssistAPI(hass)
     result = await async_generate_data(
         hass,
         task_name="Test Task",
         instructions="Test prompt",
         llm_api=llm_api,
+        context=context,
     )
     assert result.data == "Mock result"
+
+    # The LLM API uses the context to check permissions when calling tools
+    chat_log = mock_ai_task_entity.mock_chat_logs[0]
+    assert chat_log.llm_api is not None
+    assert chat_log.llm_api.llm_context.context is context
     as_dict = result.as_dict()
     assert as_dict["conversation_id"] == result.conversation_id
     assert as_dict["data"] == "Mock result"
@@ -100,7 +107,7 @@ async def test_generate_data_preferred_entity(
 
     mock_ai_task_entity.supported_features = AITaskEntityFeature(0)
     with pytest.raises(
-        HomeAssistantError,
+        ServiceValidationError,
         match=(
             "AI Task entity ai_task.test_task_entity does not support generating data"
         ),
@@ -119,7 +126,7 @@ async def test_generate_data_unknown_entity(
     """Test generating data with an unknown entity."""
 
     with pytest.raises(
-        HomeAssistantError, match="AI Task entity ai_task.unknown_entity not found"
+        ServiceValidationError, match="AI Task entity ai_task.unknown_entity not found"
     ):
         await async_generate_data(
             hass,
@@ -161,7 +168,7 @@ async def test_generate_data_attachments_not_supported(
     mock_ai_task_entity._attr_supported_features = AITaskEntityFeature.GENERATE_DATA
 
     with pytest.raises(
-        HomeAssistantError,
+        ServiceValidationError,
         match="AI Task entity ai_task.test_task_entity does not support attachments",
     ):
         await async_generate_data(
@@ -186,13 +193,13 @@ async def test_generate_data_mixed_attachments(
     """Test generating data with both camera and regular media source attachments."""
     with (
         patch(
-            "homeassistant.components.camera.async_get_image",
-            return_value=Image(content_type="image/jpeg", content=b"fake_camera_jpeg"),
-        ) as mock_get_camera_image,
-        patch(
-            "homeassistant.components.image.async_get_image",
-            return_value=Image(content_type="image/jpeg", content=b"fake_image_jpeg"),
-        ) as mock_get_image_image,
+            "homeassistant.components.media_source.async_get_media_image",
+            side_effect=[
+                media_source.MediaImage(b"fake_camera_jpeg", "image/jpeg"),
+                media_source.MediaImage(b"fake_image_jpeg", "image/jpeg"),
+                None,
+            ],
+        ) as mock_get_media_image,
         patch(
             "homeassistant.components.media_source.async_resolve_media",
             return_value=media_source.PlayMedia(
@@ -224,8 +231,11 @@ async def test_generate_data_mixed_attachments(
         )
 
     # Verify both methods were called
-    mock_get_camera_image.assert_called_once_with(hass, "camera.front_door")
-    mock_get_image_image.assert_called_once_with(hass, "image.floorplan")
+    assert mock_get_media_image.call_args_list == [
+        call(hass, "media-source://camera/camera.front_door"),
+        call(hass, "media-source://image/image.floorplan"),
+        call(hass, "media-source://media_player/video.mp4"),
+    ]
     mock_resolve_media.assert_called_once_with(
         hass, "media-source://media_player/video.mp4", None
     )
@@ -324,6 +334,39 @@ async def test_generate_data_content_type(
     assert media_attachment.path == Path("/media/test.png")
 
 
+async def test_generate_data_non_local_attachment(
+    hass: HomeAssistant,
+    init_components: None,
+    mock_ai_task_entity: MockAITaskEntity,
+) -> None:
+    """Test generating data with an attachment that has no local path."""
+    with (
+        patch(
+            "homeassistant.components.media_source.async_resolve_media",
+            return_value=media_source.PlayMedia(
+                url="http://example.com/test.mp4",
+                mime_type="video/mp4",
+                path=None,
+            ),
+        ),
+        pytest.raises(
+            ServiceValidationError,
+            match="Only local attachments are currently supported",
+        ),
+    ):
+        await async_generate_data(
+            hass,
+            task_name="Test Task",
+            entity_id=TEST_ENTITY_ID,
+            instructions="Describe this video",
+            attachments=[
+                {"media_content_id": "media-source://media_player/test.mp4"},
+            ],
+        )
+
+    assert not mock_ai_task_entity.mock_generate_data_tasks
+
+
 @pytest.mark.freeze_time("2025-06-14 22:59:00")
 async def test_generate_image(
     hass: HomeAssistant,
@@ -332,7 +375,7 @@ async def test_generate_image(
 ) -> None:
     """Test generating image service."""
     with pytest.raises(
-        HomeAssistantError, match="AI Task entity ai_task.unknown not found"
+        ServiceValidationError, match="AI Task entity ai_task.unknown not found"
     ):
         await async_generate_image(
             hass,
@@ -377,7 +420,7 @@ async def test_generate_image(
 
     mock_ai_task_entity.supported_features = AITaskEntityFeature(0)
     with pytest.raises(
-        HomeAssistantError,
+        ServiceValidationError,
         match=(
             "AI Task entity ai_task.test_task_entity does not support generating images"
         ),

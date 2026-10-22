@@ -21,22 +21,20 @@ from homeassistant.components.recorder.models import (
     extract_metadata_ids,
     process_timestamp_to_utc_isoformat,
 )
-from homeassistant.components.recorder.util import (
-    execute_stmt_lambda_element,
-    session_scope,
-)
+from homeassistant.components.recorder.util import execute_stmt_lambda_element
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
     ATTR_NAME,
     ATTR_SERVICE,
     EVENT_CALL_SERVICE,
     EVENT_LOGBOOK_ENTRY,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.recorder import session_scope
 from homeassistant.util import dt as dt_util
 from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.event_type import EventType
@@ -544,7 +542,9 @@ class EntityNameCache:
         if entity_id in self._names:
             return self._names[entity_id]
         if (current_state := self._hass.states.get(entity_id)) and (
-            friendly_name := current_state.attributes.get(ATTR_FRIENDLY_NAME)
+            friendly_name := current_state.attributes.get(
+                EntityStateAttribute.FRIENDLY_NAME
+            )
         ):
             self._names[entity_id] = friendly_name
         else:

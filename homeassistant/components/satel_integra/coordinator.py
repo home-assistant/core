@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from satel_integra import AlarmState
+from satel_integra import AlarmState, SatelPanelInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -26,6 +26,7 @@ class SatelIntegraData:
     """Data for the satel_integra integration."""
 
     client: SatelClient
+    panel_info: SatelPanelInfo | None
     coordinator_zones: SatelIntegraZonesCoordinator
     coordinator_outputs: SatelIntegraOutputsCoordinator
     coordinator_partitions: SatelIntegraPartitionsCoordinator
@@ -60,8 +61,10 @@ class SatelIntegraBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
 
     def setup(self) -> None:
         """Set up client callbacks for this coordinator."""
-        self.client.controller.add_connection_status_callback(
-            self._async_handle_connection_state_update
+        self.config_entry.async_on_unload(
+            self.client.controller.add_connection_status_callback(
+                self._async_handle_connection_state_update
+            )
         )
 
     @callback

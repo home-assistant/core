@@ -1,22 +1,32 @@
 """Provides conditions for media players."""
 
 from datetime import datetime
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
+import probatio
+
+from homeassistant.const import CONF_OPTIONS
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import (
+    ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL,
     Condition,
+    ConditionConfig,
     EntityConditionBase,
     EntityNumericalConditionBase,
+    EntityStateConditionBase,
     make_entity_state_condition,
 )
 
-from . import ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED
-from .const import DOMAIN, MediaPlayerState
+from .const import (
+    ATTR_INPUT_SOURCE,
+    DOMAIN,
+    MediaPlayerEntityStateAttribute,
+    MediaPlayerState,
+)
 
 VOLUME_DOMAIN_SPECS: dict[str, DomainSpec] = {
-    DOMAIN: DomainSpec(value_source=ATTR_MEDIA_VOLUME_LEVEL),
+    DOMAIN: DomainSpec(value_source=MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL),
 }
 
 
@@ -38,8 +48,10 @@ class _MediaPlayerMutedConditionBase(EntityConditionBase):
     def _has_volume_attributes(self, state: State) -> bool:
         """Check if the state has volume muted or volume level attributes."""
         return (
-            state.attributes.get(ATTR_MEDIA_VOLUME_MUTED) is not None
-            or state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) is not None
+            state.attributes.get(MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED)
+            is not None
+            or state.attributes.get(MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL)
+            is not None
         )
 
     @override
@@ -50,8 +62,10 @@ class _MediaPlayerMutedConditionBase(EntityConditionBase):
     def _is_muted(self, state: State) -> bool:
         """Check if the media player is muted."""
         return (
-            state.attributes.get(ATTR_MEDIA_VOLUME_MUTED) is True
-            or state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) == 0
+            state.attributes.get(MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED)
+            is True
+            or state.attributes.get(MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL)
+            == 0
         )
 
     @override
@@ -96,11 +110,46 @@ class MediaPlayerIsVolumeCondition(EntityNumericalConditionBase):
         """Skip media players that do not expose a volume_level attribute."""
         return (
             super()._should_include(state)
-            and state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) is not None
+            and state.attributes.get(MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL)
+            is not None
+        )
+
+
+IS_CURRENT_SOURCE_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
+    {
+        probatio.Required(CONF_OPTIONS): {
+            probatio.Required(ATTR_INPUT_SOURCE): probatio.All(
+                probatio.EnsureList(), probatio.NonEmpty(), [str]
+            ),
+        },
+    }
+)
+
+
+class MediaPlayerIsCurrentSourceCondition(EntityStateConditionBase):
+    """Condition for the media player's selected source."""
+
+    _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_INPUT_SOURCE)}
+    _schema = IS_CURRENT_SOURCE_CONDITION_SCHEMA
+
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+        """Initialize the source condition."""
+        super().__init__(hass, config)
+        if TYPE_CHECKING:
+            assert config.options is not None
+        self._states = set(config.options[ATTR_INPUT_SOURCE])
+
+    @override
+    def _should_include(self, state: State) -> bool:
+        """Skip media players that do not expose a source attribute."""
+        return (
+            super()._should_include(state)
+            and state.attributes.get(ATTR_INPUT_SOURCE) is not None
         )
 
 
 CONDITIONS: dict[str, type[Condition]] = {
+    "is_current_source": MediaPlayerIsCurrentSourceCondition,
     "is_muted": MediaPlayerIsMutedCondition,
     "is_not_playing": make_entity_state_condition(
         DOMAIN,

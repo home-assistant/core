@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
@@ -18,10 +23,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from . import setup_integration
-from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from . import assert_device_removed_and_readded, setup_integration
+from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN, TEST_DEVICE_2, TEST_DEVICE_2_SN
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -102,6 +105,24 @@ async def test_offline_device(
 
     assert (state := hass.states.get(entity_id))
     assert state.state != STATE_UNAVAILABLE
+
+
+async def test_device_removed_and_readded(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test entities are recreated when a device is removed and re-added."""
+    await assert_device_removed_and_readded(
+        hass,
+        freezer,
+        mock_amazon_devices_client,
+        mock_config_entry,
+        entity_id="notify.echo_test_2_announce",
+        devices_with={TEST_DEVICE_1_SN: TEST_DEVICE_1, TEST_DEVICE_2_SN: TEST_DEVICE_2},
+        devices_without={TEST_DEVICE_1_SN: TEST_DEVICE_1},
+    )
 
 
 async def test_announce_unavailable_when_communications_off(

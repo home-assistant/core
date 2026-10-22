@@ -6,15 +6,14 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import assert_setup_component, async_capture_events
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import frontend
 from homeassistant.components.lovelace import DOMAIN, const, dashboard
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-
-from tests.common import assert_setup_component, async_capture_events
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -363,7 +362,9 @@ async def test_lovelace_from_yaml(
 
 
 async def test_lovelace_from_yaml_creates_repair_issue(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test YAML mode creates a repair issue."""
     assert await async_setup_component(hass, DOMAIN, {"lovelace": {"mode": "YAML"}})
@@ -372,7 +373,6 @@ async def test_lovelace_from_yaml_creates_repair_issue(
     assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {"mode": "yaml"}
 
     # Repair issue should be created
-    issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue("lovelace", "yaml_mode_deprecated")
     assert issue is not None
     assert issue.severity == ir.IssueSeverity.WARNING

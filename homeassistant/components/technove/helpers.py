@@ -7,6 +7,7 @@ from technove import TechnoVEConnectionError, TechnoVEError
 
 from homeassistant.exceptions import HomeAssistantError
 
+from .const import DOMAIN
 from .entity import TechnoVEEntity
 
 
@@ -28,9 +29,15 @@ def technove_exception_handler[_TechnoVEEntityT: TechnoVEEntity, **_P](
         except TechnoVEConnectionError as error:
             self.coordinator.last_update_success = False
             self.coordinator.async_update_listeners()
-            raise HomeAssistantError("Error communicating with TechnoVE API") from error
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from error
 
         except TechnoVEError as error:
-            raise HomeAssistantError("Invalid response from TechnoVE API") from error
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_response",
+            ) from error
 
     return handler

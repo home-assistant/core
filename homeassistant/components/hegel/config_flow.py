@@ -5,7 +5,7 @@ from typing import Any, override
 
 from hegel_ip_client import HegelClient
 from hegel_ip_client.exceptions import HegelConnectionError
-import voluptuous as vol
+import probatio
 from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -64,10 +64,12 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_MODEL): vol.In(list(MODEL_INPUTS.keys())),
+                    probatio.Required(CONF_HOST): str,
+                    probatio.Required(CONF_MODEL): probatio.In(
+                        list(MODEL_INPUTS.keys())
+                    ),
                 }
             ),
             errors=errors,
@@ -139,12 +141,12 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="discovery_confirm",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_MODEL,
                         default=self._model or list(MODEL_INPUTS.keys())[0],
-                    ): vol.In(list(MODEL_INPUTS.keys())),
+                    ): probatio.In(list(MODEL_INPUTS.keys())),
                 }
             ),
             description_placeholders={

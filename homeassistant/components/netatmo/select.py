@@ -1,5 +1,4 @@
 """Support for the Netatmo climate schedule selector."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import logging
 from typing import override
@@ -10,18 +9,13 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    CONF_URL_ENERGY,
-    DATA_SCHEDULES,
-    DOMAIN,
-    EVENT_TYPE_SCHEDULE,
-    MANUFACTURER,
-    NETATMO_CREATE_SELECT,
-)
-from .data_handler import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoHome
+from .const import DOMAIN, EVENT_TYPE_SCHEDULE, NETATMO_CREATE_SELECT
+from .coordinator import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoHome
 from .entity import NetatmoBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -44,7 +38,7 @@ async def async_setup_entry(
 class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
     """Representation a Netatmo thermostat schedule selector."""
 
-    _attr_name = None
+    _attr_translation_key = "schedule"
 
     def __init__(self, netatmo_home: NetatmoHome) -> None:
         """Initialize the select entity."""
@@ -63,20 +57,24 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.home.entity_id)},
-            name=self.home.name,
-            manufacturer=MANUFACTURER,
-            model="Climate",
-            configuration_url=CONF_URL_ENERGY,
         )
 
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{self.home.entity_id}-schedule-select"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
-        schedule = self.home.get_selected_schedule()
-        assert schedule
-        self._attr_current_option = schedule.name
+        self._attr_current_option = self._selected_schedule_name()
         self._attr_options = [
             schedule.name for schedule in self.home.schedules.values() if schedule.name
         ]
+
+    def _selected_schedule_name(self) -> str | None:
+        """Return the name of the schedule selected for the current mode.
+
+        None when no schedule of the home's temperature control mode is selected,
+        such as after switching to cooling without a cooling schedule.
+        """
+        schedule = self.home.get_selected_schedule()
+        return schedule.name if schedule else None
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -100,18 +98,16 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
             return
 
         if data["event_type"] == EVENT_TYPE_SCHEDULE and "schedule_id" in data:
-            if schedule := self.hass.data[DOMAIN][DATA_SCHEDULES][
-                self.home.entity_id
-            ].get(data["schedule_id"]):
+            if schedule := self.data_handler.schedules[self.home.entity_id].get(
+                data["schedule_id"]
+            ):
                 self._attr_current_option = schedule.name
                 self.async_write_ha_state()
 
     @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        for sid, schedule in self.hass.data[DOMAIN][DATA_SCHEDULES][
-            self.home.entity_id
-        ].items():
+        for sid, schedule in self.data_handler.schedules[self.home.entity_id].items():
             if schedule.name != option:
                 continue
             _LOGGER.debug(
@@ -127,12 +123,9 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
     @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        schedule = self.home.get_selected_schedule()
-        assert schedule
-        self._attr_current_option = schedule.name
-        self.hass.data[DOMAIN][DATA_SCHEDULES][self.home.entity_id] = (
-            self.home.schedules
-        )
+        self._attr_current_option = self._selected_schedule_name()
+        self.data_handler.schedules[self.home.entity_id] = self.home.schedules
         self._attr_options = [
             schedule.name for schedule in self.home.schedules.values() if schedule.name
         ]
+        self.async_write_ha_state()

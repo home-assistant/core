@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from aioacaia.acaiascale import AcaiaScale
+from aioacaia import AcaiaScale
 from aioacaia.exceptions import AcaiaDeviceNotFound, AcaiaError
 
 from homeassistant.components.bluetooth import async_get_scanner

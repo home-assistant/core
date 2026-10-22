@@ -36,6 +36,7 @@ VS_FAN_MODE_TURBO = "turbo"
 VS_FAN_MODE_PET = "pet"
 VS_FAN_MODE_MANUAL = "manual"
 VS_FAN_MODE_NORMAL = "normal"
+VS_FAN_MODE_ECO = "eco"
 
 # not a full list as manual is used as speed not present
 VS_FAN_MODE_PRESET_LIST_HA = [
@@ -44,6 +45,7 @@ VS_FAN_MODE_PRESET_LIST_HA = [
     VS_FAN_MODE_TURBO,
     VS_FAN_MODE_PET,
     VS_FAN_MODE_NORMAL,
+    VS_FAN_MODE_ECO,
 ]
 NIGHT_LIGHT_LEVEL_BRIGHT = "bright"
 NIGHT_LIGHT_LEVEL_DIM = "dim"

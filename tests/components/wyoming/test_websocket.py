@@ -1,9 +1,9 @@
 """Websocket tests for Wyoming integration."""
 
+from pytest_homeassistant.typing import WebSocketGenerator
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-
-from tests.typing import WebSocketGenerator
 
 
 async def test_info(

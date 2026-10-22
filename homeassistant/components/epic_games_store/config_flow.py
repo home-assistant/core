@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 from epicstore_api import EpicGamesStoreAPI
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
@@ -20,12 +20,12 @@ from .const import DOMAIN, SUPPORTED_LANGUAGES
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_LANGUAGE): LanguageSelector(
+        probatio.Required(CONF_LANGUAGE): LanguageSelector(
             LanguageSelectorConfig(languages=SUPPORTED_LANGUAGES)
         ),
-        vol.Required(CONF_COUNTRY): CountrySelector(),
+        probatio.Required(CONF_COUNTRY): CountrySelector(),
     }
 )
 

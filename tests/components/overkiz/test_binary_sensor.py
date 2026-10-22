@@ -7,6 +7,7 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import OverkizState
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
@@ -19,8 +20,6 @@ from .helpers import (
     device_state_changed_event,
     device_unavailable_event,
 )
-
-from tests.common import snapshot_platform
 
 SMOKE_SENSOR = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",
@@ -36,6 +35,12 @@ CONTACT_SENSOR = FixtureDevice(
     "setup/cloud_somfy_tahoma_v2_europe.json",
     "rtds://1234-1234-6233/394781",
     "binary_sensor.family_wing_porte_contact",
+)
+# Somfy IntelliTAG air tilt sensor (io:SomfyWindowStateSensor)
+TILT_SENSOR = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "io://1234-1234-6233/8059108#1",
+    "binary_sensor.living_room_balcony_window_tilt",
 )
 
 SNAPSHOT_FIXTURES = [
@@ -103,6 +108,42 @@ async def test_binary_sensor_smoke_state_update(
     )
 
     state = hass.states.get(SMOKE_SENSOR.entity_id)
+    assert state
+    assert state.state == STATE_ON
+
+
+async def test_binary_sensor_tilt_state_update(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test event-driven state update for a tilt sensor (clear → tilted)."""
+    await setup_overkiz_integration(fixture=TILT_SENSOR.fixture)
+
+    state = hass.states.get(TILT_SENSOR.entity_id)
+    assert state
+    assert state.state == STATE_OFF
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                TILT_SENSOR.device_url,
+                [
+                    {
+                        "name": OverkizState.CORE_TILTED.value,
+                        "type": 6,
+                        "value": True,
+                    },
+                ],
+            )
+        ],
+    )
+
+    state = hass.states.get(TILT_SENSOR.entity_id)
     assert state
     assert state.state == STATE_ON
 

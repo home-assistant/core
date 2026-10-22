@@ -3,6 +3,8 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from python_picnic_api2.models import SearchResult, SearchResultItem, User
 
 from homeassistant.components.picnic import CONF_COUNTRY_CODE, DOMAIN
 from homeassistant.components.picnic.const import SERVICE_ADD_PRODUCT_TO_CART
@@ -10,8 +12,6 @@ from homeassistant.components.picnic.services import PicnicServiceException
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-
-from tests.common import MockConfigEntry
 
 UNIQUE_ID = "295-6y3-1nf4"
 
@@ -29,7 +29,7 @@ def create_picnic_api_client(unique_id):
     }
     picnic_mock = MagicMock()
     picnic_mock.session.auth_token = auth_token
-    picnic_mock.get_user.return_value = auth_data
+    picnic_mock.get_user.return_value = User.from_api(auth_data)
 
     return picnic_mock
 
@@ -98,24 +98,22 @@ async def test_add_product_using_name(
     """Test adding a product by name."""
 
     # Set the return value of the search api endpoint
-    picnic_api_client.search.return_value = [
-        {
-            "items": [
-                {
-                    "id": "2525404",
-                    "name": "Best tea",
-                    "display_price": 321,
-                    "unit_quantity": "big bags",
-                },
-                {
-                    "id": "2525500",
-                    "name": "Cheap tea",
-                    "display_price": 100,
-                    "unit_quantity": "small bags",
-                },
-            ]
-        }
-    ]
+    picnic_api_client.search.return_value = SearchResult(
+        items=[
+            SearchResultItem(
+                id="2525404",
+                name="Best tea",
+                display_price=321,
+                unit_quantity="big bags",
+            ),
+            SearchResultItem(
+                id="2525500",
+                name="Cheap tea",
+                display_price=100,
+                unit_quantity="small bags",
+            ),
+        ]
+    )
 
     await hass.services.async_call(
         DOMAIN,
@@ -137,7 +135,7 @@ async def test_add_product_using_name_no_results(
 
     # Set the search return value and check that the right exception
     # is raised during the service call
-    picnic_api_client.search.return_value = []
+    picnic_api_client.search.return_value = SearchResult(items=[])
     with pytest.raises(PicnicServiceException):
         await hass.services.async_call(
             DOMAIN,
@@ -159,7 +157,9 @@ async def test_add_product_using_name_no_named_results(
 
     # Set the search return value and check that the right exception
     # is raised during the service call
-    picnic_api_client.search.return_value = [{"items": [{"attr": "test"}]}]
+    picnic_api_client.search.return_value = SearchResult(
+        items=[SearchResultItem(id="999")]
+    )
     with pytest.raises(PicnicServiceException):
         await hass.services.async_call(
             DOMAIN,

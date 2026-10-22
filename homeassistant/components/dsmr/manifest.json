@@ -1,6 +1,7 @@
 {
   "domain": "dsmr",
   "name": "DSMR Smart Meter",
+  "categories": ["energy.meters_monitoring", "water.meters_leak_detection"],
   "codeowners": ["@Robbie1221"],
   "config_flow": true,
   "dependencies": ["usb"],
@@ -8,5 +9,5 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["dsmr_parser"],
-  "requirements": ["dsmr-parser==1.11.0"]
+  "requirements": ["dsmr-parser==1.11.1"]
 }

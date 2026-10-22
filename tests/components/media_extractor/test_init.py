@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 from syrupy.assertion import SnapshotAssertion
 from yt_dlp import DownloadError
 
@@ -21,8 +22,6 @@ from homeassistant.setup import async_setup_component
 
 from . import YOUTUBE_EMPTY_PLAYLIST, YOUTUBE_PLAYLIST, YOUTUBE_VIDEO, MockYoutubeDL
 from .const import NO_FORMATS_RESPONSE, SOUNDCLOUD_TRACK
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 async def test_play_media_service_is_registered(hass: HomeAssistant) -> None:
@@ -79,7 +78,9 @@ async def test_extracting_playlist_no_entries(
 
     await async_setup_component(hass, DOMAIN, empty_media_extractor_config)
     await hass.async_block_till_done()
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError, match="The playlist does not contain any media"
+    ) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_EXTRACT_MEDIA_URL,
@@ -87,11 +88,9 @@ async def test_extracting_playlist_no_entries(
             blocking=True,
             return_response=True,
         )
+    assert exc_info.value.translation_key == "playlist_empty"
 
 
-@pytest.mark.parametrize(
-    "config_fixture", ["empty_media_extractor_config", "audio_media_extractor_config"]
-)
 @pytest.mark.parametrize(
     ("media_content_id", "media_content_type"),
     [
@@ -105,14 +104,12 @@ async def test_play_media_service(
     mock_youtube_dl: MockYoutubeDL,
     service_calls: list[ServiceCall],
     snapshot: SnapshotAssertion,
-    request: pytest.FixtureRequest,
-    config_fixture: str,
+    empty_media_extractor_config: dict[str, Any],
     media_content_id: str,
     media_content_type: str,
 ) -> None:
     """Test play media service is registered."""
-    config: dict[str, Any] = request.getfixturevalue(config_fixture)
-    await async_setup_component(hass, DOMAIN, config)
+    await async_setup_component(hass, DOMAIN, empty_media_extractor_config)
     await hass.async_block_till_done()
 
     await hass.services.async_call(
@@ -139,7 +136,7 @@ async def test_download_error(
     """Test handling DownloadError."""
 
     with patch(
-        "homeassistant.components.media_extractor.YoutubeDL.extract_info",
+        "homeassistant.components.media_extractor.services.YoutubeDL.extract_info",
         side_effect=DownloadError("Message"),
     ):
         await async_setup_component(hass, DOMAIN, empty_media_extractor_config)
@@ -252,13 +249,13 @@ async def test_query_error(
 
     with (
         patch(
-            "homeassistant.components.media_extractor.YoutubeDL.extract_info",
+            "homeassistant.components.media_extractor.services.YoutubeDL.extract_info",
             return_value=await async_load_json_object_fixture(
                 hass, "youtube_1_info.json", DOMAIN
             ),
         ),
         patch(
-            "homeassistant.components.media_extractor.YoutubeDL.process_ie_result",
+            "homeassistant.components.media_extractor.services.YoutubeDL.process_ie_result",
             side_effect=DownloadError("Message"),
         ),
     ):

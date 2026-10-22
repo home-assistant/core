@@ -1,12 +1,12 @@
 """Tests for JustNimbus initialization."""
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.justnimbus.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .conftest import FIXTURE_OLD_USER_INPUT, FIXTURE_UNIQUE_ID
-
-from tests.common import MockConfigEntry
 
 
 async def test_config_entry_reauth_at_setup(hass: HomeAssistant) -> None:

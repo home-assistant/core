@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.vacuum import (
     DOMAIN,
@@ -15,8 +16,6 @@ from homeassistant.components.vacuum import (
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_IDLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, intent
-
-from tests.common import async_mock_service
 
 
 async def test_start(hass: HomeAssistant) -> None:
@@ -121,12 +120,11 @@ async def test_return_to_base_without_name(hass: HomeAssistant) -> None:
     assert call.data == {"entity_id": entity_id}
 
 
-async def test_clean_area(hass: HomeAssistant) -> None:
+async def test_clean_area(hass: HomeAssistant, area_registry: ar.AreaRegistry) -> None:
     """Test HassVacuumCleanArea intent."""
     await vacuum_intent.async_setup_intents(hass)
 
-    area_reg = ar.async_get(hass)
-    kitchen = area_reg.async_create("Kitchen")
+    kitchen = area_registry.async_create("Kitchen")
 
     vacuum_1 = f"{DOMAIN}.vacuum_1"
     vacuum_2 = f"{DOMAIN}.vacuum_2"
@@ -179,12 +177,13 @@ async def test_clean_area(hass: HomeAssistant) -> None:
     }
 
 
-async def test_clean_area_no_matching_vacuum(hass: HomeAssistant) -> None:
+async def test_clean_area_no_matching_vacuum(
+    hass: HomeAssistant, area_registry: ar.AreaRegistry
+) -> None:
     """Test HassVacuumCleanArea intent with no matching vacuum."""
     await vacuum_intent.async_setup_intents(hass)
 
-    area_reg = ar.async_get(hass)
-    area_reg.async_create("Kitchen")
+    area_registry.async_create("Kitchen")
 
     # No vacuums at all
     with pytest.raises(intent.MatchFailedError) as err:
@@ -234,12 +233,13 @@ async def test_clean_area_invalid_area(hass: HomeAssistant) -> None:
     assert err.value.result.no_match_name == "Nonexistent room"
 
 
-async def test_clean_area_service_failure(hass: HomeAssistant) -> None:
+async def test_clean_area_service_failure(
+    hass: HomeAssistant, area_registry: ar.AreaRegistry
+) -> None:
     """Test HassVacuumCleanArea intent when the service call fails."""
     await vacuum_intent.async_setup_intents(hass)
 
-    area_reg = ar.async_get(hass)
-    area_reg.async_create("Kitchen")
+    area_registry.async_create("Kitchen")
 
     entity_id = f"{DOMAIN}.test_vacuum"
     hass.states.async_set(
@@ -248,7 +248,7 @@ async def test_clean_area_service_failure(hass: HomeAssistant) -> None:
         {ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.CLEAN_AREA},
     )
 
-    kitchen = area_reg.async_get_area_by_name("Kitchen")
+    kitchen = area_registry.async_get_area_by_name("Kitchen")
     assert kitchen is not None
 
     with (

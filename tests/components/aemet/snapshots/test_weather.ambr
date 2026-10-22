@@ -1,4 +1,67 @@
 # serializer version: 1
+# name: test_all_entities[weather.aemet-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'weather',
+    'entity_category': None,
+    'entity_id': 'weather.aemet',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'aemet',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <WeatherEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': '40.30403754--3.72935236',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[weather.aemet-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Powered by AEMET OpenData',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AEMET',
+      <WeatherEntityStateAttribute.HUMIDITY: 'humidity'>: 99,
+      <WeatherEntityStateAttribute.PRECIPITATION_UNIT: 'precipitation_unit'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+      <WeatherEntityStateAttribute.PRESSURE: 'pressure'>: 1004.4,
+      <WeatherEntityStateAttribute.PRESSURE_UNIT: 'pressure_unit'>: <UnitOfPressure.HPA: 'hPa'>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WeatherEntityFeature: 3>,
+      <WeatherEntityStateAttribute.TEMPERATURE: 'temperature'>: -0.7,
+      <WeatherEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+      <WeatherEntityStateAttribute.VISIBILITY_UNIT: 'visibility_unit'>: <UnitOfLength.KILOMETERS: 'km'>,
+      <WeatherEntityStateAttribute.WIND_BEARING: 'wind_bearing'>: 122.0,
+      <WeatherEntityStateAttribute.WIND_GUST_SPEED: 'wind_gust_speed'>: 12.2,
+      <WeatherEntityStateAttribute.WIND_SPEED: 'wind_speed'>: 3.2,
+      <WeatherEntityStateAttribute.WIND_SPEED_UNIT: 'wind_speed_unit'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'weather.aemet',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'snowy',
+  })
+# ---
 # name: test_forecast_service[get_forecasts]
   dict({
     'weather.aemet': dict({
