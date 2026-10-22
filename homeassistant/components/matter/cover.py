@@ -27,13 +27,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import LOGGER
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import MatterConfigEntry
-from .models import MatterDiscoverySchema
+from .models import MatterDiscoverySchema, MatterEntityInfo
 
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
     from matter_server.client.models.node import MatterEndpoint
-
-    from .discovery import MatterEntityInfo
 
 # The MASK used for extracting bits 0 to 1 of the byte.
 OPERATIONAL_STATUS_MASK = 0b11

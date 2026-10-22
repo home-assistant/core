@@ -1439,10 +1439,14 @@ async def test_closure_cover_latch_only_panel_excluded(
     "attributes",
     [
         {
-            # Endpoint 0 (root) has no ClosureDimension cluster. Injecting it
-            # into the closure endpoint's PartsList exercises the guard that
-            # skips a compose child that isn't a ClosureDimension panel.
-            "1/29/3": [2, 0]
+            # Endpoint 3 is a new compose child with a Descriptor but no
+            # ClosureDimension cluster. Injecting it into the closure
+            # endpoint's PartsList exercises the guard that skips a compose
+            # child that isn't a ClosureDimension panel. It is not added to
+            # endpoint 0's PartsList, so it doesn't contend with endpoint 2
+            # for the closure endpoint's parent-of-closest-family vote.
+            "1/29/3": [2, 3],
+            "3/29/3": [],
         }
     ],
 )
