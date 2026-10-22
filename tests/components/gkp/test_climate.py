@@ -226,10 +226,11 @@ async def test_set_temperature_with_heat_hvac_mode(
 
 
 @pytest.mark.parametrize(
-    "hvac_mode",
+    ("hvac_mode", "translation_key"),
     [
-        pytest.param(HVACMode.OFF, id="off"),
-        pytest.param(HVACMode.AUTO, id="auto"),
+        pytest.param(HVACMode.OFF, "setpoint_not_adjustable", id="off"),
+        pytest.param(HVACMode.AUTO, "setpoint_not_adjustable", id="auto"),
+        pytest.param(HVACMode.COOL, "not_valid_hvac_mode", id="unsupported"),
     ],
 )
 async def test_set_temperature_with_hvac_mode_not_adjustable(
@@ -237,8 +238,9 @@ async def test_set_temperature_with_hvac_mode_not_adjustable(
     mock_gkp_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     hvac_mode: HVACMode,
+    translation_key: str,
 ) -> None:
-    """Test the temperature cannot be set with an HVAC mode without setpoint."""
+    """Test the temperature cannot be set with an invalid HVAC mode."""
     await setup_integration(hass, mock_config_entry)
 
     with pytest.raises(ServiceValidationError) as err:
@@ -253,7 +255,7 @@ async def test_set_temperature_with_hvac_mode_not_adjustable(
             blocking=True,
         )
 
-    assert err.value.translation_key == "setpoint_not_adjustable"
+    assert err.value.translation_key == translation_key
     mock_gkp_client.set_mode.assert_not_called()
     mock_gkp_client.set_temperature.assert_not_called()
 

@@ -161,6 +161,8 @@ class GkpClimate(GkpEntity, ClimateEntity):
         """
         temperature: float = kwargs[ATTR_TEMPERATURE]
         hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
+        if hvac_mode is not None:
+            self._valid_mode_or_raise("hvac", hvac_mode, self.hvac_modes)
         mode = (
             self.thermostat.mode if hvac_mode is None else HVAC_TO_GKP_MODE[hvac_mode]
         )
