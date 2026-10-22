@@ -398,3 +398,47 @@ async def test_update_streaming_restore_channel(hass: HomeAssistant) -> None:
     assert state.state == MediaPlayerState.PLAYING
     assert state.attributes[ATTR_MEDIA_CHANNEL] == "Test Station"
     assert ATTR_MEDIA_PLAYLIST not in state.attributes
+
+
+async def test_streaming_play_while_display_off(
+    hass: HomeAssistant, mock_add_listener: AsyncMock
+) -> None:
+    """Test a play command does not turn a display-off entity on."""
+
+    entity_id = "media_player.test_media_player"
+    await setup_platform(hass, [Platform.MEDIA_PLAYER])
+
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {
+                Signal.CENTER_DISPLAY: "Off",
+                Signal.MEDIA_PLAYBACK_STATUS: "Paused",
+            },
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.media_toggle_playback",
+        return_value=COMMAND_OK,
+    ) as call:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_MEDIA_PLAY,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        call.assert_called_once()
+    assert hass.states.get(entity_id).state == MediaPlayerState.OFF
+
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {Signal.CENTER_DISPLAY: "On"},
+            "createdAt": "2024-10-04T10:45:18.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == MediaPlayerState.PLAYING

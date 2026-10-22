@@ -78,6 +78,11 @@ class TeslemetryMediaEntity(TeslemetryRootEntity, MediaPlayerEntity):
         self._attr_volume_level = volume
         self.async_write_ha_state()
 
+    def _async_set_playback_state(self, state: MediaPlayerState) -> None:
+        """Apply the playback state after a play or pause command."""
+        self._attr_state = state
+        self.async_write_ha_state()
+
     @override
     async def async_media_play(self) -> None:
         """Send play command."""
@@ -85,8 +90,7 @@ class TeslemetryMediaEntity(TeslemetryRootEntity, MediaPlayerEntity):
             self.raise_for_scope(Scope.VEHICLE_CMDS)
 
             await handle_vehicle_command(self.api.media_toggle_playback())
-            self._attr_state = MediaPlayerState.PLAYING
-            self.async_write_ha_state()
+            self._async_set_playback_state(MediaPlayerState.PLAYING)
 
     @override
     async def async_media_pause(self) -> None:
@@ -96,8 +100,7 @@ class TeslemetryMediaEntity(TeslemetryRootEntity, MediaPlayerEntity):
             self.raise_for_scope(Scope.VEHICLE_CMDS)
 
             await handle_vehicle_command(self.api.media_toggle_playback())
-            self._attr_state = MediaPlayerState.PAUSED
-            self.async_write_ha_state()
+            self._async_set_playback_state(MediaPlayerState.PAUSED)
 
     @override
     async def async_media_next_track(self) -> None:
@@ -284,6 +287,12 @@ class TeslemetryStreamingMediaEntity(
                 self._async_handle_media_now_playing_station
             )
         )
+
+    @override
+    def _async_set_playback_state(self, state: MediaPlayerState) -> None:
+        """Apply the playback state after a play or pause command."""
+        self._playback_state = state
+        self._async_update_state()
 
     def _async_update_state(self) -> None:
         """Derive the state from the last display and playback values."""
