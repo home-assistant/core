@@ -139,7 +139,7 @@ async def test_step_auth_app_code_falls(hass: HomeAssistant) -> None:
         assert result["step_id"] == "auth_user"
 
         with patch(
-            "homeassistant.components.starline.async_setup_entry", return_value=True
+            "homeassistant.components.starline.async_setup_entry", return_value=None
         ):
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
@@ -191,7 +191,7 @@ async def test_step_auth_app_token_falls(hass: HomeAssistant) -> None:
         assert result["step_id"] == "auth_user"
 
         with patch(
-            "homeassistant.components.starline.async_setup_entry", return_value=True
+            "homeassistant.components.starline.async_setup_entry", return_value=None
         ):
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],

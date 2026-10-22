@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, override
 
 from homeassistant.const import EntityStateAttribute
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback, verify_event_loop_thread
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
@@ -273,6 +273,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         return self.areas.generate_id_from_name(name)
 
     @callback
+    @verify_event_loop_thread("area_registry.async_create")
     def async_create(
         self,
         name: str,
@@ -286,8 +287,6 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         temperature_entity_id: str | None = None,
     ) -> AreaEntry:
         """Create a new area."""
-
-        self.hass.verify_event_loop_thread("area_registry.async_create")
 
         if area := self.async_get_area_by_name(name):
             raise ValueError(
@@ -322,11 +321,11 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         return area
 
     @callback
+    @verify_event_loop_thread("area_registry.async_delete")
     def async_delete(self, area_id: str) -> None:
         """Delete area."""
         from . import entity_registry as er  # noqa: PLC0415  # Circular dependency
 
-        self.hass.verify_event_loop_thread("area_registry.async_delete")
         device_registry = dr.async_get(self.hass)
         entity_registry = er.async_get(self.hass)
         device_registry.async_clear_area_id(area_id)
@@ -378,6 +377,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         return updated
 
     @callback
+    @verify_event_loop_thread("area_registry.async_update")
     def _async_update(
         self,
         area_id: str,
@@ -422,17 +422,15 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
 
         new_values["modified_at"] = utcnow()
 
-        self.hass.verify_event_loop_thread("area_registry.async_update")
         new = self.areas[area_id] = dataclasses.replace(old, **new_values)
 
         self.async_schedule_save()
         return new
 
     @callback
+    @verify_event_loop_thread("area_registry.async_reorder")
     def async_reorder(self, area_ids: list[str]) -> None:
         """Reorder areas."""
-        self.hass.verify_event_loop_thread("area_registry.async_reorder")
-
         if set(area_ids) != set(self.areas.data.keys()):
             raise ValueError(
                 "The area_ids list must contain all existing area IDs exactly once"

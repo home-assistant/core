@@ -17,10 +17,12 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EVENT_LOGGING_CHANGED
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.redact import async_redact_data
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.json import json_loads
 
 from .auth import AUTH_REQUIRED_MESSAGE, AuthPhase
+from .connection import REDACT_KEYS
 from .const import (
     DATA_CONNECTIONS,
     MAX_PENDING_MSG,
@@ -428,7 +430,11 @@ class WebSocketHandler:
                 raise Disconnect("Received invalid JSON during auth phase") from err
 
             if self._debug:
-                self._logger.debug("%s: Received %s", self.description, auth_msg_data)
+                self._logger.debug(
+                    "%s: Received %s",
+                    self.description,
+                    async_redact_data(auth_msg_data, REDACT_KEYS),
+                )
             connection = await auth.async_handle(auth_msg_data)
 
         # As the webserver is now started before the start
@@ -524,7 +530,9 @@ class WebSocketHandler:
 
             if self._debug:
                 self._logger.debug(
-                    "%s: Received %s", self.description, command_msg_data
+                    "%s: Received %s",
+                    self.description,
+                    async_redact_data(command_msg_data, REDACT_KEYS),
                 )
 
             # command_msg_data is always deserialized from JSON as a list

@@ -1,0 +1,58 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This network is already configured",
+      "no_applications": "This tenant has no applications. Create an application in ChirpStack, then try again.",
+      "reauth_successful": "Authentication updated"
+    },
+    "error": {
+      "cannot_connect": "Cannot connect or access this scope",
+      "invalid_auth": "API key rejected or unable to access this tenant",
+      "invalid_endpoint": "Use an HTTP or HTTPS endpoint without a path",
+      "select_application": "Select at least one application.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "applications": {
+        "data": {
+          "application_ids": "Applications"
+        },
+        "data_description": {
+          "application_ids": "Only devices in these applications will be discovered."
+        },
+        "title": "Select applications"
+      },
+      "reauth_confirm": {
+        "data": {
+          "api_key": "API key"
+        },
+        "data_description": {
+          "api_key": "A ChirpStack API key with access to your tenant. A read-only key cannot send device commands."
+        },
+        "title": "Update API key"
+      },
+      "tenant": {
+        "data": {
+          "tenant_id": "Tenant"
+        },
+        "data_description": {
+          "tenant_id": "Select a tenant, or enter the tenant UUID for a scoped API key."
+        },
+        "description": "A tenant-scoped API key cannot list tenants. Enter its tenant UUID if needed.",
+        "title": "Select tenant"
+      },
+      "user": {
+        "data": {
+          "api_key": "API key",
+          "endpoint": "Endpoint"
+        },
+        "data_description": {
+          "api_key": "A ChirpStack API key with access to your tenant. A read-only key cannot send device commands.",
+          "endpoint": "ChirpStack server address, including http:// or https:// and its port."
+        },
+        "description": "Connect to your ChirpStack server.",
+        "title": "Connect to ChirpStack"
+      }
+    }
+  }
+}

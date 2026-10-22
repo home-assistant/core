@@ -55,7 +55,6 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from .binary_sensor import DISCOVERY_SCHEMAS as BINARY_SENSOR_SCHEMAS
 from .const import COVER_POSITION_PROPERTY_KEYS, COVER_TILT_PROPERTY_KEYS, LOGGER
 from .discovery_data_template import (
-    BaseDiscoverySchemaDataTemplate,
     ConfigurableFanValueMappingDataTemplate,
     CoverTiltDataTemplate,
     DynamicCurrentTempClimateDataTemplate,
@@ -66,6 +65,7 @@ from .discovery_data_template import (
 from .entity import NewZwaveDiscoveryInfo
 from .event import DISCOVERY_SCHEMAS as EVENT_SCHEMAS
 from .models import (
+    BaseDiscoverySchemaDataTemplate,
     FirmwareVersionRange,
     NewZWaveDiscoverySchema,
     ValueType,
