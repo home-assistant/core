@@ -51,7 +51,7 @@ def _patch_kodi_success() -> Generator[None]:
         ),
         patch(
             "homeassistant.components.kodi.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield
@@ -82,7 +82,7 @@ async def test_user_flow(hass: HomeAssistant, user_flow: str) -> None:
         ),
         patch(
             "homeassistant.components.kodi.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(user_flow, TEST_HOST)
@@ -132,7 +132,7 @@ async def test_form_valid_auth(hass: HomeAssistant, user_flow: str) -> None:
         ),
         patch(
             "homeassistant.components.kodi.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -187,7 +187,7 @@ async def test_form_valid_ws_port(hass: HomeAssistant, user_flow: str) -> None:
         ),
         patch(
             "homeassistant.components.kodi.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -234,7 +234,7 @@ async def test_form_empty_ws_port(hass: HomeAssistant, user_flow: str) -> None:
 
     with patch(
         "homeassistant.components.kodi.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"ws_port": 0}
@@ -558,7 +558,7 @@ async def test_discovery(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.kodi.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"], user_input={}

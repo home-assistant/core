@@ -22,7 +22,7 @@ MOCK_CONFIG = {
 def simplepush_setup_fixture():
     """Patch simplepush setup entry."""
     with patch(
-        "homeassistant.components.simplepush.async_setup_entry", return_value=True
+        "homeassistant.components.simplepush.async_setup_entry", return_value=None
     ):
         yield
 

@@ -465,8 +465,8 @@ class DlnaDmrEntity(MediaPlayerEntity):
 
         self._updated_registry = True
         # Create linked HA DeviceEntry now the information is known.
-        device_entry = dr.async_get(self.hass).async_get_or_create(
-            config_entry_id=self._config_entry.entry_id, **device_info
+        device_entry = dr.async_get(self.hass).async_get_or_create_from_info(
+            config_entry_id=self._config_entry.entry_id, device_info=device_info
         )
 
         # Update entity registry to link to the device
