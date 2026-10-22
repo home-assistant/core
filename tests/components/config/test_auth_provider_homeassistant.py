@@ -983,3 +983,34 @@ async def test_long_lived_access_token_keeps_setting_passwords(
     result = await client.receive_json()
     assert result["success"], result
     await auth_provider.async_validate_login("test-user", "new-pass")
+
+
+# The access token fixture links the password of the admin user.
+@pytest.mark.usefixtures("hass_access_token")
+async def test_delete_needs_a_step_up(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+    auth_provider: prov_ha.HassAuthProvider,
+) -> None:
+    """Test a session that didn't use the password can't delete it to skip a step up."""
+    # Signed in without the password, like through a trusted network.
+    refresh_token = await hass.auth.async_create_refresh_token(
+        hass_admin_user, CLIENT_ID
+    )
+    client = await hass_ws_client(
+        hass, hass.auth.async_create_access_token(refresh_token)
+    )
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "config/auth_provider/homeassistant/delete",
+            "username": "test-user",
+        }
+    )
+
+    result = await client.receive_json()
+    assert result["error"]["code"] == "step_up_required"
+    assert len(hass_admin_user.credentials) == 1
+    await auth_provider.async_validate_login("test-user", "test-pass")

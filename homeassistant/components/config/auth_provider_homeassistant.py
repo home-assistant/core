@@ -93,6 +93,9 @@ async def websocket_create(
     }
 )
 @websocket_api.require_admin
+# Removing a password could leave a session that didn't use it nothing to step
+# up with, which counts its sign in instead.
+@websocket_api.require_step_up
 @websocket_api.async_response
 async def websocket_delete(
     hass: HomeAssistant,
