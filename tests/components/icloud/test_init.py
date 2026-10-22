@@ -117,6 +117,7 @@ async def test_reload_unsubscribes_platform_listeners(
     stale listeners from the previous account would otherwise pile up on it.
     """
     config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(config_entry, pref_disable_polling=True)
 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     # The first calendars/reminders fetch runs as a background task of the
