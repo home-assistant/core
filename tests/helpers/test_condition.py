@@ -7162,6 +7162,14 @@ async def test_track_changes(
         pytest.param(
             {"entity_id": ["light.kitchen", "sensor.kitchen"]}, 0, id="entity"
         ),
+        pytest.param(
+            {
+                "entity_id": ["light.kitchen", "sensor.kitchen"],
+                "exclude": {"label_id": "excluded"},
+            },
+            1,
+            id="entity_exclude",
+        ),
         pytest.param({"area_id": "kitchen"}, 1, id="area"),
     ],
 )
@@ -7233,6 +7241,45 @@ async def test_track_changes_target_registry_update(
     entity_registry.async_update_entity(hallway.entity_id, area_id=area.id)
     await hass.async_block_till_done()
     action.assert_called_once()
+
+    unsub()
+
+
+async def test_track_changes_target_exclude_registry_update(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test a change of the entities excluded from the target is reported."""
+    label = label_registry.async_create("Excluded")
+    kitchen = entity_registry.async_get_or_create(
+        "light", "test", "kitchen", suggested_object_id="kitchen"
+    )
+    hass.states.async_set(kitchen.entity_id, "on")
+    config = await async_validate_condition_config(
+        hass,
+        cv.CONDITION_SCHEMA(
+            {
+                "condition": "light.is_on",
+                "target": {
+                    "entity_id": kitchen.entity_id,
+                    "exclude": {"label_id": label.label_id},
+                },
+            }
+        ),
+    )
+    test = await condition.async_from_config(hass, config)
+    action = Mock()
+    unsub = await test.async_track_changes(action)
+    action.assert_not_called()
+
+    entity_registry.async_update_entity(kitchen.entity_id, labels={label.label_id})
+    await hass.async_block_till_done()
+    action.assert_called_once()
+
+    entity_registry.async_update_entity(kitchen.entity_id, labels=set())
+    await hass.async_block_till_done()
+    assert action.call_count == 2
 
     unsub()
 

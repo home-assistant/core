@@ -204,12 +204,14 @@ class EntityConditionBase(Condition):
             action()
 
         selection = self._target_selection
-        # Explicit entity ids don't depend on the registries, skip the target tracker
+        # Explicit entity ids without an exclude block don't depend on the
+        # registries, skip the target tracker
         if not (
             selection.area_ids
             or selection.device_ids
             or selection.floor_ids
             or selection.label_ids
+            or selection.exclude
         ):
             return async_track_state_change_event(
                 self._hass,
