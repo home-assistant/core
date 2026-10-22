@@ -5,6 +5,7 @@ from unittest.mock import patch
 from pyhap.characteristic import Characteristic
 from pyhap.const import HAP_REPR_AID, HAP_REPR_CHARS, HAP_REPR_IID, HAP_REPR_VALUE
 import pytest
+from pytest_homeassistant.common import async_mock_service
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
@@ -87,8 +88,6 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, Event, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
-
-from tests.common import async_mock_service
 
 
 async def test_thermostat(hass: HomeAssistant, hk_driver, events: list[Event]) -> None:
@@ -1000,7 +999,20 @@ async def test_thermostat_get_temperature_range(hass: HomeAssistant, hk_driver) 
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state
-    assert acc.get_temperature_range(state) == (15.5, 21.0)
+    # 60F is 15.56C, rounded inward to the 0.1 step so the slider cannot
+    # go below the entity's own minimum
+    assert acc.get_temperature_range(state) == (15.6, 21.1)
+
+    # A range too narrow to hold a step keeps the exact limits instead
+    # of expanding beyond them
+    acc._unit = UnitOfTemperature.CELSIUS
+    hass.states.async_set(
+        entity_id, HVACMode.OFF, {ATTR_MIN_TEMP: 20.11, ATTR_MAX_TEMP: 20.14}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state
+    assert acc.get_temperature_range(state) == (20.11, 20.14)
 
 
 async def test_thermostat_temperature_step_whole(
@@ -1973,7 +1985,9 @@ async def test_water_heater_get_temperature_range(
     state = hass.states.get(entity_id)
     assert state
     await hass.async_block_till_done()
-    assert acc.get_temperature_range(state) == (15.5, 21.0)
+    # 60F is 15.56C, rounded inward to the 0.1 step so the slider cannot
+    # go below the entity's own minimum
+    assert acc.get_temperature_range(state) == (15.6, 21.1)
 
 
 async def test_water_heater_restore(

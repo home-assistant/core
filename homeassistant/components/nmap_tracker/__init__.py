@@ -32,7 +32,7 @@ from .const import (
     CONF_MAC_EXCLUDE,
     CONF_OPTIONS,
     DOMAIN,
-    NMAP_TRACKED_DEVICES,
+    NMAP_TRACKER_DATA,
     PLATFORMS,
     TRACKER_SCAN_INTERVAL,
 )
@@ -87,30 +87,26 @@ class NmapTrackedDevices:
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NmapTrackerConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NmapTrackerConfigEntry) -> None:
     """Set up Nmap Tracker from a config entry."""
-    domain_data = hass.data.setdefault(DOMAIN, {})
-    devices = domain_data.setdefault(NMAP_TRACKED_DEVICES, NmapTrackedDevices())
+    if (devices := hass.data.get(NMAP_TRACKER_DATA)) is None:
+        devices = hass.data[NMAP_TRACKER_DATA] = NmapTrackedDevices()
     scanner = NmapDeviceScanner(hass, entry, devices)
     await scanner.async_setup()
     entry.runtime_data = scanner
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: NmapTrackerConfigEntry
-) -> bool:
+) -> None:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
-    if unload_ok:
-        _async_untrack_devices(hass, entry)
-
-    return unload_ok
+    _async_untrack_devices(hass, entry)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Migrate config entry."""
     _LOGGER.debug(
         "Migrating configuration from version %s.%s", entry.version, entry.minor_version
@@ -137,15 +133,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.minor_version,
     )
 
-    return True
-
 
 @callback
 def _async_untrack_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Remove tracking for devices owned by this config entry."""
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=home-assistant-use-runtime-data
-    devices = hass.data[DOMAIN][NMAP_TRACKED_DEVICES]
+    devices = hass.data[NMAP_TRACKER_DATA]
     remove_mac_addresses = [
         mac_address
         for mac_address, entry_id in devices.config_entry_owner.items()

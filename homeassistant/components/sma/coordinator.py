@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from pysma import (
     SmaAuthenticationException,
@@ -14,13 +14,14 @@ from pysma import (
 from pysma.helpers import DeviceInfo
 from pysma.sensor import Sensors
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+
+if TYPE_CHECKING:
+    from . import SMAConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,12 +37,12 @@ class SMACoordinatorData:
 class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
     """Data Update Coordinator for SMA."""
 
-    config_entry: ConfigEntry
+    config_entry: SMAConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: SMAConfigEntry,
         sma: SMAWebConnect,
     ) -> None:
         """Initialize the SMA Data Update Coordinator."""
@@ -50,11 +51,7 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=timedelta(
-                seconds=config_entry.options.get(
-                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                )
-            ),
+            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
         self.sma = sma
         self._sma_device_info = DeviceInfo()
@@ -107,5 +104,9 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
 
     async def async_close_sma_session(self) -> None:
         """Close the SMA session."""
-        await self.sma.close_session()
+        try:
+            await self.sma.close_session()
+        except SmaConnectionException as err:
+            _LOGGER.debug("Could not close the SMA session: %s", err)
+            return
         _LOGGER.debug("SMA session closed")

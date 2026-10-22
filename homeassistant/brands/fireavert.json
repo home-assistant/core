@@ -1,0 +1,5 @@
+{
+  "domain": "fireavert",
+  "name": "FireAvert",
+  "iot_standards": ["zwave"]
+}

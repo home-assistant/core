@@ -4,19 +4,21 @@ from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import device_tracker
-from homeassistant.components.device_tracker import SourceType, TrackerEntity
+from homeassistant.components.device_tracker import (
+    SourceType,
+    TrackerEntity,
+    TrackerEntityStateAttribute,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_GPS_ACCURACY,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_NAME,
     CONF_VALUE_TEMPLATE,
     STATE_HOME,
     STATE_NOT_HOME,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -52,7 +54,7 @@ DEFAULT_SOURCE_TYPE = SourceType.GPS
 def valid_config(config: ConfigType) -> ConfigType:
     """Check if there is a state topic or json_attributes_topic."""
     if CONF_STATE_TOPIC not in config and CONF_JSON_ATTRS_TOPIC not in config:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"Invalid device tracker config, missing"
             f" {CONF_STATE_TOPIC} or"
             f" {CONF_JSON_ATTRS_TOPIC}, got: {config}"
@@ -62,22 +64,22 @@ def valid_config(config: ConfigType) -> ConfigType:
 
 PLATFORM_SCHEMA_MODERN_BASE = MQTT_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(CONF_PAYLOAD_HOME, default=STATE_HOME): cv.string,
-        vol.Optional(CONF_PAYLOAD_NOT_HOME, default=STATE_NOT_HOME): cv.string,
-        vol.Optional(CONF_PAYLOAD_RESET, default=DEFAULT_PAYLOAD_RESET): cv.string,
-        vol.Optional(CONF_SOURCE_TYPE, default=DEFAULT_SOURCE_TYPE): vol.Coerce(
-            SourceType
-        ),
+        probatio.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
+        probatio.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
+        probatio.Optional(CONF_PAYLOAD_HOME, default=STATE_HOME): cv.string,
+        probatio.Optional(CONF_PAYLOAD_NOT_HOME, default=STATE_NOT_HOME): cv.string,
+        probatio.Optional(CONF_PAYLOAD_RESET, default=DEFAULT_PAYLOAD_RESET): cv.string,
+        probatio.Optional(
+            CONF_SOURCE_TYPE, default=DEFAULT_SOURCE_TYPE
+        ): probatio.Coerce(SourceType),
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
-PLATFORM_SCHEMA_MODERN = vol.All(PLATFORM_SCHEMA_MODERN_BASE, valid_config)
+PLATFORM_SCHEMA_MODERN = probatio.All(PLATFORM_SCHEMA_MODERN_BASE, valid_config)
 
 
-DISCOVERY_SCHEMA = vol.All(
-    PLATFORM_SCHEMA_MODERN_BASE.extend({}, extra=vol.REMOVE_EXTRA), valid_config
+DISCOVERY_SCHEMA = probatio.All(
+    PLATFORM_SCHEMA_MODERN_BASE.extend({}, extra=probatio.REMOVE_EXTRA), valid_config
 )
 
 
@@ -162,16 +164,18 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
     ) -> None:
         """Extract the location from the extra state attributes."""
         if (
-            ATTR_LATITUDE in extra_state_attributes
-            or ATTR_LONGITUDE in extra_state_attributes
+            EntityStateAttribute.LATITUDE in extra_state_attributes
+            or EntityStateAttribute.LONGITUDE in extra_state_attributes
         ):
             latitude: float | None
             longitude: float | None
             gps_accuracy: float
             if isinstance(
-                latitude := extra_state_attributes.get(ATTR_LATITUDE), (int, float)
+                latitude := extra_state_attributes.get(EntityStateAttribute.LATITUDE),
+                (int, float),
             ) and isinstance(
-                longitude := extra_state_attributes.get(ATTR_LONGITUDE), (int, float)
+                longitude := extra_state_attributes.get(EntityStateAttribute.LONGITUDE),
+                (int, float),
             ):
                 self._attr_latitude = latitude
                 self._attr_longitude = longitude
@@ -187,9 +191,11 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
                     extra_state_attributes,
                 )
 
-            if ATTR_GPS_ACCURACY in extra_state_attributes:
+            if TrackerEntityStateAttribute.GPS_ACCURACY in extra_state_attributes:
                 if isinstance(
-                    gps_accuracy := extra_state_attributes[ATTR_GPS_ACCURACY],
+                    gps_accuracy := extra_state_attributes[
+                        TrackerEntityStateAttribute.GPS_ACCURACY
+                    ],
                     (int, float),
                 ):
                     self._attr_location_accuracy = gps_accuracy
@@ -210,5 +216,10 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
         self._attr_extra_state_attributes = {
             attribute: value
             for attribute, value in extra_state_attributes.items()
-            if attribute not in {ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE}
+            if attribute
+            not in {
+                TrackerEntityStateAttribute.GPS_ACCURACY,
+                EntityStateAttribute.LATITUDE,
+                EntityStateAttribute.LONGITUDE,
+            }
         }

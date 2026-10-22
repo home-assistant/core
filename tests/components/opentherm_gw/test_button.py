@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from pyotgw.vars import OTGW_MODE_RESET
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.opentherm_gw import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MINIMAL_STATUS
-
-from tests.common import MockConfigEntry
 
 
 async def test_cancel_room_setpoint_override_button(
@@ -48,6 +47,40 @@ async def test_cancel_room_setpoint_override_button(
     )
 
     mock_pyotgw.return_value.set_target_temp.assert_awaited_once_with(0, True)
+
+
+async def test_hot_water_push_button(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_pyotgw: MagicMock,
+) -> None:
+    """Test hot water push button."""
+
+    mock_pyotgw.return_value.set_hot_water_ovrd = AsyncMock(return_value="P")
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        button_entity_id := entity_registry.async_get_entity_id(
+            BUTTON_DOMAIN,
+            DOMAIN,
+            f"{mock_config_entry.data[CONF_ID]}-{OpenThermDeviceIdentifier.BOILER}-hot_water_push",
+        )
+    ) is not None
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {
+            ATTR_ENTITY_ID: button_entity_id,
+        },
+        blocking=True,
+    )
+
+    mock_pyotgw.return_value.set_hot_water_ovrd.assert_awaited_once_with("P")
 
 
 async def test_restart_button(

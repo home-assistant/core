@@ -48,5 +48,12 @@
       ]),
       'title': 'Green House',
     }),
+    'resolved': dict({
+      'azimuth': 10,
+      'declination': 30,
+      'location_source': 'fixed',
+      'planes': list([
+      ]),
+    }),
   })
 # ---

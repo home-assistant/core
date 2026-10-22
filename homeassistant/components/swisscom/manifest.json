@@ -1,10 +1,14 @@
 {
   "domain": "swisscom",
   "name": "Swisscom Internet-Box",
+  "categories": [
+    "presence_location.network_presence",
+    "computers_network.routers_network"
+  ],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/swisscom",
   "integration_type": "hub",
   "iot_class": "local_polling",
-  "requirements": ["python-swisscom-internet-box==0.1.1"]
+  "requirements": ["python-swisscom-internet-box==0.2.0"]
 }

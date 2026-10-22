@@ -7,12 +7,14 @@ from jaraco.abode.exceptions import (
     AuthenticationException as AbodeAuthenticationException,
     Exception as AbodeException,
 )
+import pytest
 
 from homeassistant.components.abode.const import DOMAIN
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .common import setup_platform
 
@@ -32,6 +34,28 @@ async def test_change_settings(hass: HomeAssistant) -> None:
         mock_set_setting.assert_called_once()
 
 
+async def test_change_settings_error(hass: HomeAssistant) -> None:
+    """Test change_setting service reports errors."""
+    await setup_platform(hass, ALARM_DOMAIN)
+
+    with (
+        patch(
+            "jaraco.abode.client.Client.set_setting",
+            side_effect=AbodeException((2, "Request failed")),
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "change_setting",
+            {"setting": "confirm_snd", "value": "loud"},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "change_setting_failed"
+    assert exc_info.value.translation_placeholders == {"error": "(2, 'Request failed')"}
+
+
 async def test_add_unique_id(hass: HomeAssistant) -> None:
     """Test unique_id is set to Abode username."""
     mock_entry = await setup_platform(hass, ALARM_DOMAIN)
@@ -41,8 +65,10 @@ async def test_add_unique_id(hass: HomeAssistant) -> None:
 
     assert mock_entry.unique_id is None
 
-    await hass.config_entries.async_reload(mock_entry.entry_id)
-    await hass.async_block_till_done()
+    # The reload creates a new client, which would otherwise open a real socket
+    with patch("jaraco.abode.event_controller.sio"):
+        await hass.config_entries.async_reload(mock_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert mock_entry.unique_id == mock_entry.data[CONF_USERNAME]
 

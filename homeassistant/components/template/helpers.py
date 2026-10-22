@@ -1,24 +1,29 @@
 """Helpers for template integration."""
 
-from collections.abc import Callable
+import asyncio
+from collections.abc import Callable, Coroutine
 import logging
 from typing import Any
 
-import voluptuous as vol
-from voluptuous.humanize import humanize_error
+import probatio
+from probatio.humanize import humanize_error
 
 from homeassistant.components import blueprint
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_ACTIONS,
+    CONF_CONDITIONS,
     CONF_NAME,
     CONF_STATE,
+    CONF_TRIGGERS,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     SERVICE_RELOAD,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
-from homeassistant.helpers import template
+from homeassistant.helpers import discovery, template
+from homeassistant.helpers.condition import async_validate_conditions_config
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -30,13 +35,17 @@ from homeassistant.helpers.script import async_validate_actions_config
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
+from homeassistant.util.hass_dict import HassKey
 
-from .const import CONF_ADVANCED_OPTIONS, CONF_DEFAULT_ENTITY_ID, DOMAIN
+from .const import CONF_ADDITIONAL_OPTIONS, CONF_DEFAULT_ENTITY_ID, DOMAIN, PLATFORMS
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
 DATA_BLUEPRINTS = "template_blueprints"
+
+DATA_COORDINATORS: HassKey[list[TriggerUpdateCoordinator]] = HassKey(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -129,29 +138,43 @@ def _get_config_breadcrumbs(config: ConfigType) -> str:
     return breadcrumb
 
 
-async def validate_template_scripts(
+async def validate_actions_and_conditions_config(
     hass: HomeAssistant,
     config: ConfigType,
     script_options: tuple[str, ...] | None = None,
-) -> None:
-    """Validate template scripts."""
-    if not script_options:
-        return
+) -> bool:
+    """Validate template entity actions and conditions.
 
-    def _humanize(err: Exception, data: Any) -> str:
-        """Humanize vol.Invalid, stringify other exceptions."""
-        if isinstance(err, vol.Invalid):
-            return humanize_error(data, err)
-        return str(err)
+    Returns True when all conditions and actions validate without error.
+    When any condition or action fails, return False.
+    """
 
     breadcrumb: str | None = None
+    if (condition_config := config.pop(CONF_CONDITIONS, None)) is not None:
+        try:
+            config[CONF_CONDITIONS] = await async_validate_conditions_config(
+                hass, condition_config
+            )
+        except (probatio.Invalid, HomeAssistantError) as err:
+            if not breadcrumb:
+                breadcrumb = _get_config_breadcrumbs(config)
+            _LOGGER.error(
+                "The condition for %s failed to setup: %s",
+                breadcrumb,
+                _humanize(err, condition_config),
+            )
+            return False
+
+    if not script_options:
+        return True
+
     for script_option in script_options:
         if (script_config := config.pop(script_option, None)) is not None:
             try:
                 config[script_option] = await async_validate_actions_config(
                     hass, script_config
                 )
-            except (vol.Invalid, HomeAssistantError) as err:
+            except (probatio.Invalid, HomeAssistantError) as err:
                 if not breadcrumb:
                     breadcrumb = _get_config_breadcrumbs(config)
                 _LOGGER.error(
@@ -160,6 +183,9 @@ async def validate_template_scripts(
                     breadcrumb,
                     _humanize(err, script_config),
                 )
+                return False
+
+    return True
 
 
 def async_create_platform_template_not_supported_issue(
@@ -199,15 +225,14 @@ async def async_setup_template_platform(
     # Trigger Configuration
     if "coordinator" in discovery_info:
         if trigger_entity_cls:
-            entities = []
-            for entity_config in discovery_info["entities"]:
-                await validate_template_scripts(hass, entity_config, script_options)
-                entities.append(
-                    trigger_entity_cls(
-                        hass, discovery_info["coordinator"], entity_config
-                    )
+            if trigger_entities := [
+                trigger_entity_cls(hass, discovery_info["coordinator"], entity_config)
+                for entity_config in discovery_info["entities"]
+                if await validate_actions_and_conditions_config(
+                    hass, entity_config, script_options
                 )
-            async_add_entities(entities)
+            ]:
+                async_add_entities(trigger_entities)
         else:
             raise PlatformNotReady(
                 f"The template {domain} platform doesn't support trigger entities"
@@ -215,16 +240,20 @@ async def async_setup_template_platform(
         return
 
     # Modern Configuration
-    for entity_config in discovery_info["entities"]:
-        await validate_template_scripts(hass, entity_config, script_options)
-
-    async_create_template_tracking_entities(
-        state_entity_cls,
-        async_add_entities,
-        hass,
-        discovery_info["entities"],
-        discovery_info["unique_id"],
-    )
+    if state_entities := [
+        entity_config
+        for entity_config in discovery_info["entities"]
+        if await validate_actions_and_conditions_config(
+            hass, entity_config, script_options
+        )
+    ]:
+        async_create_template_tracking_entities(
+            state_entity_cls,
+            async_add_entities,
+            hass,
+            state_entities,
+            discovery_info["unique_id"],
+        )
 
 
 async def async_setup_template_entry(
@@ -232,7 +261,7 @@ async def async_setup_template_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     state_entity_cls: type[TemplateEntity],
-    config_schema: vol.Schema | vol.All,
+    config_schema: probatio.Schema | probatio.All,
     replace_value_template: bool = False,
     script_options: tuple[str, ...] | None = None,
 ) -> None:
@@ -240,18 +269,19 @@ async def async_setup_template_entry(
     options = dict(config_entry.options)
     options.pop("template_type")
 
-    if advanced_options := options.pop(CONF_ADVANCED_OPTIONS, None):
-        options = {**options, **advanced_options}
+    if additional_options := options.pop(CONF_ADDITIONAL_OPTIONS, None):
+        options = {**options, **additional_options}
 
     if replace_value_template and CONF_VALUE_TEMPLATE in options:
         options[CONF_STATE] = options.pop(CONF_VALUE_TEMPLATE)
 
     validated_config = config_schema(options)
-    await validate_template_scripts(hass, validated_config, script_options)
-
-    async_add_entities(
-        [state_entity_cls(hass, validated_config, config_entry.entry_id)]
-    )
+    if await validate_actions_and_conditions_config(
+        hass, validated_config, script_options
+    ):
+        async_add_entities(
+            [state_entity_cls(hass, validated_config, config_entry.entry_id)]
+        )
 
 
 def async_setup_template_preview[T: TemplateEntity](
@@ -259,7 +289,7 @@ def async_setup_template_preview[T: TemplateEntity](
     name: str,
     config: ConfigType,
     state_entity_cls: type[T],
-    schema: vol.Schema | vol.All,
+    schema: probatio.Schema | probatio.All,
     replace_value_template: bool = False,
 ) -> T:
     """Setup the Template preview."""
@@ -268,3 +298,80 @@ def async_setup_template_preview[T: TemplateEntity](
 
     validated_config = schema(config | {CONF_NAME: name})
     return state_entity_cls(hass, validated_config, None)
+
+
+def _humanize(err: Exception, data: Any) -> str:
+    """Humanize probatio.Invalid, stringify other exceptions."""
+    if isinstance(err, probatio.Invalid):
+        return humanize_error(data, err)
+    return str(err)
+
+
+async def process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
+    """Process config."""
+    coordinators = hass.data.pop(DATA_COORDINATORS, None)
+
+    # Remove old ones
+    if coordinators:
+        for coordinator in coordinators:
+            await coordinator.async_shutdown()
+
+    async def init_coordinator(
+        hass: HomeAssistant, conf_section: dict[str, Any]
+    ) -> TriggerUpdateCoordinator:
+        coordinator = TriggerUpdateCoordinator(hass, conf_section)
+        await coordinator.async_setup(hass_config)
+        return coordinator
+
+    coordinator_tasks: list[Coroutine[Any, Any, TriggerUpdateCoordinator]] = []
+
+    for conf_section in hass_config[DOMAIN]:
+        if CONF_TRIGGERS in conf_section:
+            if actions_config := conf_section.get(CONF_ACTIONS):
+                try:
+                    conf_section[CONF_ACTIONS] = await async_validate_actions_config(
+                        hass, actions_config
+                    )
+                except (probatio.Invalid, HomeAssistantError) as err:
+                    breadcrumb = "template section"
+                    if (unique_id := conf_section.get(CONF_UNIQUE_ID)) is not None:
+                        breadcrumb = f"template section with unique_id: {unique_id}"
+
+                    _LOGGER.error(
+                        "The 'actions' for %s failed to setup: %s",
+                        breadcrumb,
+                        _humanize(err, actions_config),
+                    )
+
+                    continue
+
+            coordinator_tasks.append(init_coordinator(hass, conf_section))
+            continue
+
+        for platform_domain in PLATFORMS:
+            if platform_domain in conf_section:
+                hass.async_create_task(
+                    discovery.async_load_platform(
+                        hass,
+                        platform_domain,
+                        DOMAIN,
+                        {
+                            "unique_id": conf_section.get(CONF_UNIQUE_ID),
+                            "entities": [
+                                {
+                                    **entity_conf,
+                                    "raw_blueprint_inputs": (
+                                        conf_section.raw_blueprint_inputs
+                                    ),
+                                    "raw_configs": conf_section.raw_config,
+                                }
+                                for entity_conf in conf_section[platform_domain]
+                            ],
+                        },
+                        hass_config,
+                    ),
+                    eager_start=True,
+                )
+
+    if coordinator_tasks:
+        hass.data[DATA_COORDINATORS] = await asyncio.gather(*coordinator_tasks)

@@ -4,18 +4,22 @@ import asyncio
 import logging
 from typing import Any, override
 
+from roombapy import RoombaConnectionError, RoombaScopeError
+
 from homeassistant.components.vacuum import (
     ATTR_STATUS,
     StateVacuumEntity,
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from . import roomba_reported_state
+from .const import DOMAIN
 from .entity import IRobotEntity
 from .models import RoombaConfigEntry
 
@@ -200,31 +204,32 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
 
         return (cleaning_time, cleaned_area)
 
+    @callback
     @override
     def on_message(self, json_data):
         """Update state on message change."""
         state = json_data.get("state", {}).get("reported", {})
         if self.new_state_filter(state):
             _LOGGER.debug("Got new state from the vacuum: %s", json_data)
-            self.schedule_update_ha_state()
+            self.async_write_ha_state()
 
     @override
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""
         if self.state == VacuumActivity.PAUSED:
-            await self.hass.async_add_executor_job(self.vacuum.send_command, "resume")
+            await self._async_send_command("resume")
         else:
-            await self.hass.async_add_executor_job(self.vacuum.send_command, "start")
+            await self._async_send_command("start")
 
     @override
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""
-        await self.hass.async_add_executor_job(self.vacuum.send_command, "stop")
+        await self._async_send_command("stop")
 
     @override
     async def async_pause(self) -> None:
         """Pause the cleaning cycle."""
-        await self.hass.async_add_executor_job(self.vacuum.send_command, "pause")
+        await self._async_send_command("pause")
 
     @override
     async def async_return_to_base(self, **kwargs: Any) -> None:
@@ -235,12 +240,12 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
                 if self.state == VacuumActivity.PAUSED:
                     break
                 await asyncio.sleep(1)
-        await self.hass.async_add_executor_job(self.vacuum.send_command, "dock")
+        await self._async_send_command("dock")
 
     @override
     async def async_locate(self, **kwargs: Any) -> None:
         """Located vacuum."""
-        await self.hass.async_add_executor_job(self.vacuum.send_command, "find")
+        await self._async_send_command("find")
 
     @override
     async def async_send_command(
@@ -251,9 +256,33 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
     ) -> None:
         """Send raw command."""
         _LOGGER.debug("async_send_command %s (%s), %s", command, params, kwargs)
-        await self.hass.async_add_executor_job(
-            self.vacuum.send_command, command, params
-        )
+        await self._async_send_command(command, params)
+
+    async def _async_send_command(
+        self, command: str, params: dict[str, Any] | list[Any] | None = None
+    ) -> None:
+        """Send a command to the robot."""
+        try:
+            await self.vacuum.send_command(command, params)
+        except RoombaScopeError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="empty_regions",
+                translation_placeholders={"command": command},
+            ) from err
+        except RoombaConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="not_connected"
+            ) from err
+
+    async def _async_set_preference(self, preference: str, setting: Any) -> None:
+        """Set a preference on the robot."""
+        try:
+            await self.vacuum.set_preference(preference, setting)
+        except RoombaConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="not_connected"
+            ) from err
 
 
 class RoombaVacuum(IRobotVacuum):
@@ -317,15 +346,17 @@ class RoombaVacuumCarpetBoost(RoombaVacuum):
             high_perf = True
             carpet_boost = False
         else:
-            _LOGGER.error("No such fan speed available: %s", fan_speed)
-            return
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_fan_speed",
+                translation_placeholders={
+                    "fan_speed": fan_speed,
+                    "fan_speeds": ", ".join(FAN_SPEEDS),
+                },
+            )
 
-        # The set_preference method does only accept string values
-        def _set_fan_speed_preferences() -> None:
-            self.vacuum.set_preference("carpetBoost", str(carpet_boost))
-            self.vacuum.set_preference("vacHigh", str(high_perf))
-
-        await self.hass.async_add_executor_job(_set_fan_speed_preferences)
+        await self._async_set_preference("carpetBoost", str(carpet_boost))
+        await self._async_set_preference("vacHigh", str(high_perf))
 
 
 class BraavaJet(IRobotVacuum):
@@ -343,6 +374,12 @@ class BraavaJet(IRobotVacuum):
             for behavior in BRAAVA_MOP_BEHAVIORS
             for spray in BRAAVA_SPRAY_AMOUNT
         ]
+
+        # Combo models report a mop pad but not `rankOverlap`, which the mop
+        # behavior is derived from.
+        if self.vacuum_state.get("rankOverlap") is None:
+            self._attr_supported_features &= ~VacuumEntityFeature.FAN_SPEED
+            self._attr_fan_speed_list = []
 
     @property
     @override
@@ -371,30 +408,36 @@ class BraavaJet(IRobotVacuum):
             spray = int(split[1])
             if behavior.capitalize() in BRAAVA_MOP_BEHAVIORS:
                 behavior = behavior.capitalize()
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except IndexError:
-            _LOGGER.error(
-                "Fan speed error: expected {behavior}-{spray_amount}, got '%s'",
-                fan_speed,
-            )
-            return
-        except ValueError:
-            _LOGGER.error("Spray amount error: expected integer, got '%s'", split[1])
-            return
+        except IndexError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_fan_speed_format",
+                translation_placeholders={"fan_speed": fan_speed},
+            ) from err
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="spray_amount_not_a_number",
+                translation_placeholders={"spray_amount": split[1]},
+            ) from err
         if behavior not in BRAAVA_MOP_BEHAVIORS:
-            _LOGGER.error(
-                "Mop behavior error: expected one of %s, got '%s'",
-                str(BRAAVA_MOP_BEHAVIORS),
-                behavior,
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_mop_behavior",
+                translation_placeholders={
+                    "behavior": behavior,
+                    "behaviors": ", ".join(BRAAVA_MOP_BEHAVIORS),
+                },
             )
-            return
         if spray not in BRAAVA_SPRAY_AMOUNT:
-            _LOGGER.error(
-                "Spray amount error: expected one of %s, got '%d'",
-                str(BRAAVA_SPRAY_AMOUNT),
-                spray,
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_spray_amount",
+                translation_placeholders={
+                    "spray_amount": str(spray),
+                    "spray_amounts": ", ".join(str(s) for s in BRAAVA_SPRAY_AMOUNT),
+                },
             )
-            return
 
         overlap = 0
         if behavior == MOP_STANDARD:
@@ -404,13 +447,10 @@ class BraavaJet(IRobotVacuum):
         else:
             overlap = OVERLAP_EXTENDED
 
-        def _set_mop_preferences() -> None:
-            self.vacuum.set_preference("rankOverlap", overlap)
-            self.vacuum.set_preference(
-                "padWetness", {"disposable": spray, "reusable": spray}
-            )
-
-        await self.hass.async_add_executor_job(_set_mop_preferences)
+        await self._async_set_preference("rankOverlap", overlap)
+        await self._async_set_preference(
+            "padWetness", {"disposable": spray, "reusable": spray}
+        )
 
     @property
     @override

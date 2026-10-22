@@ -15,6 +15,7 @@ from aiohttp.hdrs import (
 )
 from aiohttp.test_utils import TestClient
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components.http import DOMAIN, StaticPathConfig
 from homeassistant.components.http.cors import setup_cors
@@ -24,14 +25,12 @@ from homeassistant.setup import async_setup_component
 
 from . import HTTP_HEADER_HA_AUTH
 
-from tests.typing import ClientSessionGenerator
-
 TRUSTED_ORIGIN = "https://home-assistant.io"
 
 
 async def test_cors_middleware_loaded_by_default(hass: HomeAssistant) -> None:
     """Test accessing to server from banned IP when feature is off."""
-    with patch("homeassistant.components.http.setup_cors") as mock_setup:
+    with patch("homeassistant.components.http.server.setup_cors") as mock_setup:
         await async_setup_component(hass, DOMAIN, {"http": {}})
 
     assert len(mock_setup.mock_calls) == 1
@@ -39,7 +38,7 @@ async def test_cors_middleware_loaded_by_default(hass: HomeAssistant) -> None:
 
 async def test_cors_middleware_loaded_from_config(hass: HomeAssistant) -> None:
     """Test accessing to server from banned IP when feature is off."""
-    with patch("homeassistant.components.http.setup_cors") as mock_setup:
+    with patch("homeassistant.components.http.server.setup_cors") as mock_setup:
         await async_setup_component(
             hass,
             DOMAIN,

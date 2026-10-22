@@ -1,6 +1,6 @@
 """Constants for Camera component."""
 
-from enum import StrEnum
+from enum import IntFlag, StrEnum
 from typing import TYPE_CHECKING, Final
 
 from homeassistant.util.hass_dict import HassKey
@@ -8,11 +8,16 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import Camera
+    from .entity import Camera
     from .prefs import CameraPreferences
 
 DOMAIN: Final = "camera"
 DATA_COMPONENT: HassKey[EntityComponent[Camera]] = HassKey(DOMAIN)
+
+DEFAULT_CONTENT_TYPE: Final = "image/jpeg"
+ENTITY_IMAGE_URL: Final = "/api/camera_proxy/{0}?token={1}"
+
+MIN_STREAM_INTERVAL: Final = 0.5  # seconds
 
 DATA_CAMERA_PREFS: HassKey[CameraPreferences] = HassKey("camera_prefs")
 
@@ -20,6 +25,14 @@ PREF_PRELOAD_STREAM: Final = "preload_stream"
 PREF_ORIENTATION: Final = "orientation"
 
 SERVICE_RECORD: Final = "record"
+SERVICE_ENABLE_MOTION: Final = "enable_motion_detection"
+SERVICE_DISABLE_MOTION: Final = "disable_motion_detection"
+SERVICE_SNAPSHOT: Final = "snapshot"
+SERVICE_PLAY_STREAM: Final = "play_stream"
+
+ATTR_FILENAME: Final = "filename"
+ATTR_MEDIA_PLAYER: Final = "media_player"
+ATTR_FORMAT: Final = "format"
 
 CONF_LOOKBACK: Final = "lookback"
 CONF_DURATION: Final = "duration"
@@ -58,3 +71,10 @@ class StreamType(StrEnum):
 
     HLS = "hls"
     WEB_RTC = "web_rtc"
+
+
+class CameraEntityFeature(IntFlag):
+    """Supported features of the camera entity."""
+
+    ON_OFF = 1
+    STREAM = 2

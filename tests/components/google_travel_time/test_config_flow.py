@@ -9,6 +9,7 @@ from google.api_core.exceptions import (
     Unauthorized,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.google_travel_time.const import (
     ARRIVAL_TIME,
@@ -29,13 +30,11 @@ from homeassistant.components.google_travel_time.const import (
     UNITS_IMPERIAL,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_LANGUAGE, CONF_MODE, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_LANGUAGE, CONF_MODE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import DEFAULT_OPTIONS, MOCK_CONFIG, RECONFIGURE_CONFIG
-
-from tests.common import MockConfigEntry
 
 
 async def assert_common_reconfigure_steps(
@@ -63,6 +62,7 @@ async def assert_common_reconfigure_steps(
         await hass.async_block_till_done()
 
         entry = hass.config_entries.async_entries(DOMAIN)[0]
+        assert entry.title == DEFAULT_NAME
         assert entry.data == RECONFIGURE_CONFIG
 
 
@@ -77,7 +77,6 @@ async def assert_common_create_steps(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == {
-        CONF_NAME: DEFAULT_NAME,
         CONF_API_KEY: "api_key",
         CONF_ORIGIN: "location1",
         CONF_DESTINATION: "49.983862755708444,8.223882827079068",

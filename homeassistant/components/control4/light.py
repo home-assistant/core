@@ -1,7 +1,6 @@
 """Platform for Control4 Lights."""
 
 import asyncio
-from datetime import timedelta
 import logging
 from typing import Any, override
 
@@ -20,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import Control4ConfigEntry, Control4RuntimeData, get_items_of_category
-from .const import CONTROL4_ENTITY_TYPE
+from .const import CONTROL4_ENTITY_TYPE, SCAN_INTERVAL
 from .director_utils import update_variables_for_config_entry
 from .entity import Control4Entity
 
@@ -38,7 +37,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up Control4 lights from a config entry."""
     runtime_data = entry.runtime_data
-    _LOGGER.debug("Scan interval = %s", runtime_data.scan_interval)
 
     async def async_update_data_non_dimmer() -> dict[int, dict[str, Any]]:
         """Fetch data from Control4 director for non-dimmer lights."""
@@ -63,7 +61,7 @@ async def async_setup_entry(
         _LOGGER,
         name="light",
         update_method=async_update_data_non_dimmer,
-        update_interval=timedelta(seconds=runtime_data.scan_interval),
+        update_interval=SCAN_INTERVAL,
         config_entry=entry,
     )
     dimmer_coordinator = DataUpdateCoordinator[dict[int, dict[str, Any]]](
@@ -71,7 +69,7 @@ async def async_setup_entry(
         _LOGGER,
         name="light",
         update_method=async_update_data_dimmer,
-        update_interval=timedelta(seconds=runtime_data.scan_interval),
+        update_interval=SCAN_INTERVAL,
         config_entry=entry,
     )
 
@@ -115,7 +113,7 @@ async def async_setup_entry(
             item_coordinator = non_dimmer_coordinator
         else:
             director = runtime_data.director
-            item_variables = await director.getItemVariables(item_id)
+            item_variables = await director.get_item_variables(item_id)
             _LOGGER.warning(
                 (
                     "Couldn't get light state data for %s, skipping setup. Available"
@@ -229,10 +227,10 @@ class Control4Light(Control4Entity, LightEntity):
                 brightness = (kwargs[ATTR_BRIGHTNESS] / 255) * 100
             else:
                 brightness = 100
-            await c4_light.rampToLevel(brightness, transition_length)
+            await c4_light.ramp_to_level(brightness, transition_length)
         else:
             transition_length = 0
-            await c4_light.setLevel(100)
+            await c4_light.set_level(100)
         if transition_length == 0:
             transition_length = 1000
         delay_time = (transition_length / 1000) + 0.7
@@ -249,10 +247,10 @@ class Control4Light(Control4Entity, LightEntity):
                 transition_length = kwargs[ATTR_TRANSITION] * 1000
             else:
                 transition_length = 0
-            await c4_light.rampToLevel(0, transition_length)
+            await c4_light.ramp_to_level(0, transition_length)
         else:
             transition_length = 0
-            await c4_light.setLevel(0)
+            await c4_light.set_level(0)
         if transition_length == 0:
             transition_length = 1500
         delay_time = (transition_length / 1000) + 0.7

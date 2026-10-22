@@ -4,12 +4,12 @@ from typing import Any, override
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AdvantageAirDataConfigEntry
 from .const import ADVANTAGE_AIR_STATE_ON, DOMAIN
-from .coordinator import AdvantageAirCoordinator
+from .coordinator import AdvantageAirCoordinator, AdvantageAirDataConfigEntry
 from .entity import AdvantageAirEntity, AdvantageAirThingEntity
 
 
@@ -55,7 +55,11 @@ class AdvantageAirLight(AdvantageAirEntity, LightEntity):
         self._attr_unique_id += f"-{self._id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
-            via_device=(DOMAIN, self.coordinator.data["system"]["rid"]),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, self.coordinator.data["system"]["rid"]),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            ),
             manufacturer="Advantage Air",
             model=light.get("moduleType"),
             name=light["name"],

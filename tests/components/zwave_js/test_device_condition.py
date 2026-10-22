@@ -2,9 +2,9 @@
 
 from unittest.mock import patch
 
+import probatio
 import pytest
-import voluptuous as vol
-import voluptuous_serialize
+from pytest_homeassistant.common import async_get_device_automations
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 
@@ -23,8 +23,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_get_device_automations
-
 
 async def test_get_conditions(
     hass: HomeAssistant,
@@ -34,8 +32,8 @@ async def test_get_conditions(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test we get the expected onditions from a zwave_js."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
     assert device
     config_value = list(lock_schlage_be469.get_configuration_values().values())[0]
@@ -74,8 +72,9 @@ async def test_get_conditions(
         assert condition in conditions
 
     # Test that we don't return actions for a controller node
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, client.driver.controller.nodes[1])}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, client.driver.controller.nodes[1]),
+        integration.entry_id,
     )
     assert device
     assert (
@@ -95,8 +94,8 @@ async def test_node_status_state(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for node_status conditions."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
     assert device
 
@@ -260,8 +259,8 @@ async def test_config_parameter_state(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for config_parameter conditions."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
     assert device
 
@@ -371,6 +370,13 @@ async def test_config_parameter_state(
     assert service_calls[1].data["some"] == "User Slot Status - event - test_event2"
 
 
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param(255, id="raw_value"),
+        pytest.param("Enable Beeper", id="state_label"),
+    ],
+)
 async def test_value_state(
     hass: HomeAssistant,
     client,
@@ -378,10 +384,11 @@ async def test_value_state(
     integration,
     service_calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
+    value: int | str,
 ) -> None:
     """Test for value conditions."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
     assert device
 
@@ -400,7 +407,7 @@ async def test_value_state(
                             "type": "value",
                             "command_class": 112,
                             "property": 3,
-                            "value": 255,
+                            "value": value,
                         }
                     ],
                     "action": {
@@ -431,8 +438,8 @@ async def test_get_condition_capabilities_node_status(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test we don't get capabilities from a node_status condition."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
     assert device
 
@@ -446,7 +453,7 @@ async def test_get_condition_capabilities_node_status(
         },
     )
     assert capabilities and "extra_fields" in capabilities
-    assert voluptuous_serialize.convert(
+    assert probatio.to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -471,8 +478,8 @@ async def test_get_condition_capabilities_value(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test we get the expected capabilities from a value condition."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
     assert device
 
@@ -499,7 +506,7 @@ async def test_get_condition_capabilities_value(
         ("134", "Version"),
     ]
 
-    assert voluptuous_serialize.convert(
+    assert probatio.to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -524,8 +531,9 @@ async def test_get_condition_capabilities_config_parameter(
 ) -> None:
     """Test we get the expected capabilities from a config_parameter condition."""
     node = climate_radio_thermostat_ct100_plus
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, climate_radio_thermostat_ct100_plus)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, climate_radio_thermostat_ct100_plus),
+        integration.entry_id,
     )
     assert device
 
@@ -543,7 +551,7 @@ async def test_get_condition_capabilities_config_parameter(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert probatio.to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -574,7 +582,7 @@ async def test_get_condition_capabilities_config_parameter(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert probatio.to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -609,8 +617,8 @@ async def test_failure_scenarios(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test failure scenarios."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, hank_binary_switch)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, hank_binary_switch), integration.entry_id
     )
     assert device
 
@@ -682,7 +690,7 @@ async def test_get_value_from_config_failure(
     hass: HomeAssistant, client, hank_binary_switch, integration
 ) -> None:
     """Test get_value_from_config invalid value ID."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         get_zwave_value_from_config(
             hank_binary_switch,
             {

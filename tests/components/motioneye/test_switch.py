@@ -13,6 +13,7 @@ from motioneye_client.const import (
     KEY_UPLOAD_ENABLED,
     KEY_VIDEO_STREAMING,
 )
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.motioneye import get_motioneye_device_identifier
 from homeassistant.components.motioneye.const import DEFAULT_SCAN_INTERVAL
@@ -31,8 +32,6 @@ from . import (
     create_mock_motioneye_client,
     setup_mock_motioneye_config_entry,
 )
-
-from tests.common import async_fire_time_changed
 
 
 async def test_switch_turn_on_off(
@@ -96,6 +95,43 @@ async def test_switch_turn_on_off(
     # Verify the switch turns on.
     entity_state = hass.states.get(TEST_SWITCH_MOTION_DETECTION_ENTITY_ID)
     assert entity_state
+    assert entity_state.state == "on"
+
+
+async def test_switch_state_updates_right_after_toggling(hass: HomeAssistant) -> None:
+    """Test the switch shows the new state without waiting for the next poll."""
+    client = create_mock_motioneye_client()
+    await setup_mock_motioneye_config_entry(hass, client=client)
+
+    client.async_get_camera = AsyncMock(return_value=copy.deepcopy(TEST_CAMERA))
+
+    updated_camera = copy.deepcopy(TEST_CAMERA)
+    updated_camera[KEY_MOTION_DETECTION] = False
+    client.async_get_cameras = AsyncMock(return_value={"cameras": [updated_camera]})
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: TEST_SWITCH_MOTION_DETECTION_ENTITY_ID},
+        blocking=True,
+    )
+
+    assert (entity_state := hass.states.get(TEST_SWITCH_MOTION_DETECTION_ENTITY_ID))
+    assert entity_state.state == "off"
+
+    # Toggle again right away, within the cooldown of a requested refresh
+    client.async_get_cameras = AsyncMock(
+        return_value={"cameras": [copy.deepcopy(TEST_CAMERA)]}
+    )
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: TEST_SWITCH_MOTION_DETECTION_ENTITY_ID},
+        blocking=True,
+    )
+
+    assert (entity_state := hass.states.get(TEST_SWITCH_MOTION_DETECTION_ENTITY_ID))
     assert entity_state.state == "on"
 
 
@@ -205,7 +241,9 @@ async def test_switch_device_info(
         config_entry.entry_id, TEST_CAMERA_ID
     )
 
-    device = device_registry.async_get_device(identifiers={device_identifer})
+    device = device_registry.async_get_device_by_identifier(
+        device_identifer, config_entry.entry_id
+    )
     assert device
 
     entities_from_device = [

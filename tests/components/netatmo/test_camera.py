@@ -9,6 +9,11 @@ from unittest.mock import AsyncMock, patch
 
 import pyatmo
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import camera
@@ -31,8 +36,6 @@ from .common import (
     simulate_webhook,
     snapshot_platform_entities,
 )
-
-from tests.common import MockConfigEntry, async_capture_events, async_fire_time_changed
 
 
 async def test_entity(
@@ -697,7 +700,7 @@ async def test_setup_component_no_devices(
     """Test setup with no devices."""
     fake_post_hits = 0
 
-    async def fake_post_no_data(*args, **kwargs):
+    async def fake_post_no_data(*args: Any, **kwargs: Any):
         """Fake error during requesting backend data."""
         nonlocal fake_post_hits
         fake_post_hits += 1

@@ -1,0 +1,12 @@
+{
+  "Items": [
+    {
+      "Id": "ARTIST-UUID",
+      "ImageTags": {},
+      "IsFolder": false,
+      "Name": "ARTIST",
+      "ServerId": "string",
+      "Type": "MusicArtist"
+    }
+  ]
+}

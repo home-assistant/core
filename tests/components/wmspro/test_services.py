@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
 from . import setup_config_entry
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -39,7 +38,7 @@ async def test_set_cover_position_and_tilt_service_is_registered(
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1
-    assert len(mock_hub_status.mock_calls) >= 1
+    assert len(mock_hub_status.mock_calls) == len(mock_hub_configuration.destinations)
 
     assert hass.services.has_service(DOMAIN, SERVICE_SET_COVER_POSITION_AND_TILT)
 
@@ -69,7 +68,7 @@ async def test_set_cover_position_and_tilt_service_executes(
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1
-    assert len(mock_hub_status.mock_calls) >= 1
+    assert len(mock_hub_status.mock_calls) == len(mock_hub_configuration.destinations)
 
     entity = hass.states.get(entity_id)
     assert entity is not None
@@ -128,7 +127,7 @@ async def test_set_cover_position_and_tilt_unsupported_entity_raises(
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1
-    assert len(mock_hub_status.mock_calls) >= 1
+    assert len(mock_hub_status.mock_calls) == len(mock_hub_configuration.destinations)
 
     before = len(mock_hub_status.mock_calls)
 

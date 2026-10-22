@@ -6,11 +6,10 @@ from typing import Any
 from electrolux_group_developer_sdk.client.dto.appliance import Appliance
 from electrolux_group_developer_sdk.client.dto.appliance_details import ApplianceDetails
 from electrolux_group_developer_sdk.client.dto.appliance_state import ApplianceState
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
 
 from homeassistant.components.electrolux.const import DOMAIN
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry, load_fixture
 
 APPLIANCE_FIXTURES = [
     "fenix_oven",

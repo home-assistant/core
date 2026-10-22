@@ -1,6 +1,6 @@
 """Provide the device conditions for Select."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import (
     async_get_entity_registry_entry_or_raise,
@@ -32,10 +32,10 @@ CONDITION_TYPES = {"selected_option"}
 
 CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
-        vol.Required(CONF_TYPE): vol.In(CONDITION_TYPES),
-        vol.Required(CONF_OPTION): str,
-        vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+        probatio.Required(CONF_TYPE): probatio.In(CONDITION_TYPES),
+        probatio.Required(CONF_OPTION): str,
+        probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
 )
 
@@ -79,7 +79,7 @@ def async_condition_from_config(
 
 async def async_get_condition_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List condition capabilities."""
 
     try:
@@ -94,10 +94,10 @@ async def async_get_condition_capabilities(
         options = []
 
     return {
-        "extra_fields": vol.Schema(
+        "extra_fields": probatio.Schema(
             {
-                vol.Required(CONF_OPTION): vol.In(options),
-                vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+                probatio.Required(CONF_OPTION): probatio.In(options),
+                probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
             }
         )
     }

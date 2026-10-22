@@ -4,6 +4,9 @@ from freezegun.api import FrozenDateTimeFactory
 from infrared_protocols.codes.lg.tv import LGTVCode
 from infrared_protocols.commands.nec import NECCommand
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
+from pytest_homeassistant.components.infrared import RECEIVER_ENTITY_ID
+from pytest_homeassistant.components.infrared.common import MockInfraredReceiverEntity
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.event import ATTR_EVENT_TYPE
@@ -12,10 +15,6 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.infrared import RECEIVER_ENTITY_ID
-from tests.components.infrared.common import MockInfraredReceiverEntity
 
 EVENT_ENTITY_ID = "event.lg_tv_received_command"
 

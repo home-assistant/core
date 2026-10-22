@@ -7,7 +7,6 @@ import contextlib
 from dataclasses import dataclass, field
 from enum import StrEnum
 import logging
-import time
 from typing import Any, Literal, final, override
 
 from hassil import Intents, recognize
@@ -28,11 +27,11 @@ from homeassistant.components.assist_pipeline import (
 )
 from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.core import Context, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import chat_session, entity
 from homeassistant.helpers.entity import EntityDescription
 
-from .const import PREANNOUNCE_URL, AssistSatelliteEntityFeature
+from .const import DOMAIN, PREANNOUNCE_URL, AssistSatelliteEntityFeature
 from .errors import AssistSatelliteError, SatelliteBusyError
 
 _LOGGER = logging.getLogger(__name__)
@@ -273,8 +272,9 @@ class AssistSatelliteEntity(entity.Entity):
         # The Home Assistant built-in agent doesn't support conversations.
         pipeline = async_get_pipeline(self.hass, self._resolve_pipeline())
         if pipeline.conversation_engine == conversation.HOME_ASSISTANT_AGENT:
-            raise HomeAssistantError(
-                "Built-in conversation agent does not support starting conversations"
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="builtin_agent_start_conversation_not_supported",
             )
 
         if start_message is None:
@@ -376,7 +376,10 @@ class AssistSatelliteEntity(entity.Entity):
             # Wait for response text
             response_text = await self._ask_question_future
             if response_text is None:
-                raise HomeAssistantError("No answer from question")
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="no_answer",
+                )
 
             if not answers:
                 return AssistSatelliteAnswer(id=None, sentence=response_text)
@@ -442,6 +445,8 @@ class AssistSatelliteEntity(entity.Entity):
         start_stage: PipelineStage = PipelineStage.STT,
         end_stage: PipelineStage = PipelineStage.TTS,
         wake_word_phrase: str | None = None,
+        *,
+        context: Context | None = None,
     ) -> None:
         """Triggers an Assist pipeline in Home Assistant from a satellite."""
         await self._cancel_running_pipeline()
@@ -485,15 +490,8 @@ class AssistSatelliteEntity(entity.Entity):
 
         device_id = self.registry_entry.device_id if self.registry_entry else None
 
-        # Refresh context if necessary
-        if (
-            (self._context is None)
-            or (self._context_set is None)
-            or ((time.time() - self._context_set) > entity.CONTEXT_RECENT_TIME_SECONDS)
-        ):
-            self.async_set_context(Context())
-
-        assert self._context is not None
+        context = context or Context()
+        self.async_set_context(context)
 
         # Set entity state based on pipeline events
         self._run_has_tts = False
@@ -511,7 +509,7 @@ class AssistSatelliteEntity(entity.Entity):
                     self.hass,
                     async_pipeline_from_audio_stream(
                         self.hass,
-                        context=self._context,
+                        context=context,
                         event_callback=self._internal_on_pipeline_event,
                         stt_metadata=stt.SpeechMetadata(
                             language="",  # set in async_pipeline_from_audio_stream
@@ -661,7 +659,11 @@ class AssistSatelliteEntity(entity.Entity):
 
             engine = tts.async_resolve_engine(self.hass, pipeline.tts_engine)
             if engine is None:
-                raise HomeAssistantError(f"TTS engine {pipeline.tts_engine} not found")
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="tts_engine_not_found",
+                    translation_placeholders={"engine": str(pipeline.tts_engine)},
+                )
 
             tts_options: dict[str, Any] = {}
             if pipeline.tts_voice is not None:

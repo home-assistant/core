@@ -47,9 +47,7 @@ def async_cleanup_stale_devices(
     """Cleanup stale heater devices and climates."""
     heater_serial_numbers = {heater.serial_no for heater in data.heaters}
     device_registry = dr.async_get(hass)
-    device_entries = device_registry.devices.get_devices_for_config_entry_id(
-        entry.entry_id
-    )
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
     stale_heater_serial_numbers: list[str] = [
         device_entry.serial_number
         for device_entry in device_entries
@@ -119,6 +117,7 @@ class InComfortDataCoordinator(DataUpdateCoordinator[InComfortData]):
                     translation_domain=DOMAIN,
                     translation_key="invalid_auth",
                 ) from exc
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.exception("Error communicating with InComfort gateway")
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -138,14 +137,16 @@ class InComfortDataCoordinator(DataUpdateCoordinator[InComfortData]):
         # Register discovered gateway device
         # Respect this as it is. Maybe later...
         device_registry = dr.async_get(self.hass)
-        gateway_device = device_registry.async_get_or_create(
+        gateway_device = device_registry.async_get_or_create_device(
             config_entry_id=self.config_entry.entry_id,
-            identifiers={(DOMAIN, self.config_entry.entry_id)},
-            connections={(dr.CONNECTION_NETWORK_MAC, self.config_entry.unique_id)}
-            if self.config_entry.unique_id is not None
-            else set(),
-            manufacturer="Intergas",
-            name="RFGateway",
+            device_info=dr.DeviceInfo(
+                identifiers={(DOMAIN, self.config_entry.entry_id)},
+                connections={(dr.CONNECTION_NETWORK_MAC, self.config_entry.unique_id)}
+                if self.config_entry.unique_id is not None
+                else set(),
+                manufacturer="Intergas",
+                name="RFGateway",
+            ),
         )
         async_cleanup_stale_devices(
             self.hass,

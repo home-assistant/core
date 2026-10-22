@@ -3,10 +3,9 @@
 from time import time
 
 from bleak.backends.scanner import AdvertisementData
+from pytest_homeassistant.components.bluetooth import generate_ble_device
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-
-from tests.components.bluetooth import generate_ble_device
 
 
 def fake_service_info(name, service_uuid, manufacturer_data):
@@ -102,6 +101,17 @@ VALID_ARANET_RADON_DATA_SERVICE_INFO = fake_service_info(
         1794: (
             b"\x03!\x04\x06\x01\x00\x00\x00\x07\x00"
             b"\xfe\x01\xc9'\xce\x01\x00d\x01X\x02\xf6\x01\x08"
+        )
+    },
+)
+
+VALID_ARANET_RADON1_DATA_SERVICE_INFO = fake_service_info(
+    "AranetRn1 12345",
+    "0000fce0-0000-1000-8000-00805f9b34fb",
+    {
+        1794: (
+            b"\x03!\x04\x06\x01\x00\x00\x00\x07\x00"
+            b"\x00\x00\xc9'\x00\x00\x00d\x01X\x02\xf6\x01\x08"
         )
     },
 )

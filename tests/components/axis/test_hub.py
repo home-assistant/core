@@ -10,6 +10,8 @@ from unittest.mock import ANY, Mock, call, patch
 
 import axis as axislib
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_mqtt_message
+from pytest_homeassistant.typing import MqttMockHAClient
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import axis
@@ -30,9 +32,6 @@ from .const import (
     NAME,
 )
 
-from tests.common import MockConfigEntry, async_fire_mqtt_message
-from tests.typing import MqttMockHAClient
-
 
 @pytest.mark.parametrize(
     "api_discovery_items", [({}), (API_DISCOVERY_BASIC_DEVICE_INFO)]
@@ -43,8 +42,8 @@ async def test_device_registry_entry(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Successful setup."""
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, config_entry_setup.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, config_entry_setup.unique_id), config_entry_setup.entry_id
     )
     assert device_entry == snapshot
 

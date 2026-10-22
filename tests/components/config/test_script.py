@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant.components import config
 from homeassistant.components.config import DOMAIN, script
@@ -14,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import yaml as yaml_util
-
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -127,7 +126,7 @@ async def test_invalid_object_id(
 @pytest.mark.parametrize(
     ("updated_config", "validation_error"),
     [
-        ({}, "required key not provided @ data['sequence']"),
+        ({}, "required key not provided at 'sequence'"),
         (
             {
                 "sequence": {

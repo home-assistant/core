@@ -1,18 +1,17 @@
 """Test Renault diagnostics."""
 
 import pytest
+from pytest_homeassistant.components.diagnostics import (
+    get_diagnostics_for_config_entry,
+    get_diagnostics_for_device,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.renault import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.components.diagnostics import (
-    get_diagnostics_for_config_entry,
-    get_diagnostics_for_device,
-)
-from tests.typing import ClientSessionGenerator
 
 pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
 
@@ -48,7 +47,9 @@ async def test_device_diagnostics(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "VF1ZOE40VIN")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "VF1ZOE40VIN"), config_entry.entry_id
+    )
     assert device is not None
 
     assert (
@@ -70,7 +71,9 @@ async def test_device_diagnostics_invalid_upstream_exception(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "VF1ZOE40VIN")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "VF1ZOE40VIN"), config_entry.entry_id
+    )
     assert device is not None
 
     data = await get_diagnostics_for_device(hass, hass_client, config_entry, device)

@@ -2,9 +2,10 @@
 
 from unittest.mock import AsyncMock, patch
 
+import probatio
 from pyopenuv.errors import InvalidApiKeyError
 import pytest
-import voluptuous as vol
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.openuv.const import (
     CONF_FROM_WINDOW,
@@ -22,8 +23,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_API_KEY, TEST_ELEVATION, TEST_LATITUDE, TEST_LONGITUDE
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -64,7 +63,14 @@ async def test_duplicate_error(
 ) -> None:
     """Test that errors are shown when duplicates are added."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=config
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=config
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -78,9 +84,9 @@ async def test_options_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    def get_schema_marker(data_schema: vol.Schema, key: str) -> vol.Marker:
+    def get_schema_marker(data_schema: probatio.Schema, key: str) -> probatio.Marker:
         for k in data_schema.schema:
-            if k == key and isinstance(k, vol.Marker):
+            if k == key and isinstance(k, probatio.Marker):
                 return k
         return None
 

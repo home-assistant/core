@@ -1,11 +1,12 @@
 {
   "domain": "jellyfin",
   "name": "Jellyfin",
+  "categories": ["media_entertainment.tv_streaming"],
   "codeowners": ["@RunC0deRun", "@ctalkington"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/jellyfin",
   "integration_type": "service",
   "iot_class": "local_polling",
   "loggers": ["jellyfin_apiclient_python"],
-  "requirements": ["jellyfin-apiclient-python==1.11.0"]
+  "requirements": ["jellyfin-apiclient-python==1.19.0"]
 }

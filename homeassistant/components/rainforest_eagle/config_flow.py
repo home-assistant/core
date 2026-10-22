@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_TYPE
@@ -21,15 +21,17 @@ from .data import CannotConnect, InvalidAuth, async_get_type
 _LOGGER = logging.getLogger(__name__)
 
 
-def create_schema(user_input: dict[str, Any] | None) -> vol.Schema:
+def create_schema(user_input: dict[str, Any] | None) -> probatio.Schema:
     """Create user schema with passed in defaults if available."""
     if user_input is None:
         user_input = {}
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_HOST, default=user_input.get(CONF_HOST)): str,
-            vol.Required(CONF_CLOUD_ID, default=user_input.get(CONF_CLOUD_ID)): str,
-            vol.Required(
+            probatio.Required(CONF_HOST, default=user_input.get(CONF_HOST)): str,
+            probatio.Required(
+                CONF_CLOUD_ID, default=user_input.get(CONF_CLOUD_ID)
+            ): str,
+            probatio.Required(
                 CONF_INSTALL_CODE, default=user_input.get(CONF_INSTALL_CODE)
             ): str,
         }

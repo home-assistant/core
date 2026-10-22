@@ -3,6 +3,9 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
+
 from homeassistant.components import media_source, spotify
 from homeassistant.components.forked_daapd.browse_media import (
     MediaContent,
@@ -16,9 +19,6 @@ from homeassistant.components.spotify.const import (  # pylint: disable=home-ass
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 TEST_MASTER_ENTITY_NAME = "media_player.owntone_server"
 
@@ -273,8 +273,13 @@ async def test_async_browse_spotify(
     assert await async_setup_component(hass, spotify.DOMAIN, {})
     await hass.async_block_till_done()
     config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.forked_daapd.ForkedDaapdAPI",
+        autospec=True,
+    ) as mock_api:
+        mock_api.return_value.get_request.return_value = {"websocket_port": 2}
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
     with patch(
         "homeassistant.components.forked_daapd.media_player.spotify_async_browse_media"
     ) as mock_spotify_browse:
@@ -325,8 +330,13 @@ async def test_async_browse_media_source(
     """Test browsing media_source."""
 
     config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.forked_daapd.ForkedDaapdAPI",
+        autospec=True,
+    ) as mock_api:
+        mock_api.return_value.get_request.return_value = {"websocket_port": 2}
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
     with patch(
         "homeassistant.components.forked_daapd.media_player.media_source.async_browse_media"
     ) as mock_media_source_browse:
@@ -399,7 +409,7 @@ async def test_async_browse_image(
         )
 
         with patch(
-            "homeassistant.components.media_player.async_fetch_image"
+            "homeassistant.components.media_player.entity.async_fetch_image"
         ) as mock_fetch_image:
             for media_type, media_id in (
                 (MediaType.ALBUM, "8009851123233197743"),

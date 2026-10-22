@@ -134,6 +134,19 @@ SSDP = {
         {
             "st": "urn:schemas-frontier-silicon-com:undok:fsapi:1",
         },
+        {
+            "st": "urn:schemas-frontier-silicon-com:invalid:fsapi:1",
+        },
+    ],
+    "harman_luxury": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "Harman Luxury Audio",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
+            "manufacturer": "Harman Luxury Audio",
+        },
     ],
     "harmony": [
         {
@@ -204,6 +217,16 @@ SSDP = {
     "lametric": [
         {
             "deviceType": "urn:schemas-upnp-org:device:LaMetric:1",
+        },
+    ],
+    "lyngdorf": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
+            "manufacturer": "Lyngdorf",
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
+            "manufacturer": "Steinway Lyngdorf",
         },
     ],
     "nanoleaf": [
@@ -371,6 +394,10 @@ SSDP = {
     "victron_gx": [
         {
             "X_MqttOnLan": "1",
+            "manufacturer": "Victron Energy",
+        },
+        {
+            "X_MqttTokenPairing": "1",
             "manufacturer": "Victron Energy",
         },
     ],

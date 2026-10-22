@@ -144,6 +144,11 @@
       "wm_water_usage": {
         "default": "mdi:water"
       }
+    },
+    "switch": {
+      "child_lock": {
+        "default": "mdi:lock"
+      }
     }
   }
 }

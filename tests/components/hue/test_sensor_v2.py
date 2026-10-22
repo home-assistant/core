@@ -2,6 +2,8 @@
 
 from unittest.mock import Mock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components import hue
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -11,8 +13,6 @@ from homeassistant.util.json import JsonArrayType
 
 from .conftest import setup_bridge, setup_platform
 from .const import FAKE_DEVICE, FAKE_SENSOR, FAKE_ZIGBEE_CONNECTIVITY
-
-from tests.common import MockConfigEntry
 
 
 async def test_sensors(
@@ -185,6 +185,24 @@ async def test_grouped_light_level_sensor(
     assert (
         sensor.state == "999"
     )  # Light level 30000 translates to 10^((30000-1)/10000) ≈ 999 lux
+
+
+async def test_temperature_sensor_none_value(
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+) -> None:
+    """Test that temperature sensor handles None value without crashing."""
+    for resource in v2_resources_test_data:
+        if resource.get("id") == "66466e14-d2fa-4b96-b2a0-e10de9cd8b8b":
+            resource["temperature"]["temperature"] = None
+            resource["temperature"]["temperature_valid"] = False
+            break
+
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+    await setup_platform(hass, mock_bridge_v2, Platform.SENSOR)
+
+    sensor = hass.states.get("sensor.hue_motion_sensor_temperature")
+    assert sensor is not None
+    assert sensor.state == STATE_UNKNOWN
 
 
 async def test_light_level_sensor_none_value(

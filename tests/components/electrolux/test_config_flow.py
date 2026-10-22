@@ -13,13 +13,12 @@ from electrolux_group_developer_sdk.client.failed_connection_exception import (
     FailedConnectionException,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.electrolux.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 valid_user_input = {
     CONF_API_KEY: "test_api_key",

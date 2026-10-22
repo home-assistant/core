@@ -59,11 +59,11 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
-    StateType,
 )
 from homeassistant.const import UnitOfDensity, UnitOfRatio, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import ELECTROLUX_TO_HA_TEMPERATURE_UNIT

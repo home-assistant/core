@@ -53,6 +53,11 @@
         }
       }
     },
+    "select": {
+      "night_light_control": {
+        "default": "mdi:lightbulb-night"
+      }
+    },
     "sensor": {
       "light_level": {
         "default": "mdi:brightness-7",

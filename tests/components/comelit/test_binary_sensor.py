@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 from aiocomelit.api import ComelitVedoAreaObject, ComelitVedoZoneObject
 from aiocomelit.const import ALARM_AREA, ALARM_ZONE, AlarmAreaState, AlarmZoneState
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.comelit.const import SCAN_INTERVAL
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_binary_sensor_entities_created(

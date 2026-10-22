@@ -1,5 +1,7 @@
 """Shared base entity helpers for Vistapool."""
 
+from typing import override
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -25,14 +27,10 @@ class VistapoolEntity(CoordinatorEntity[VistapoolDataUpdateCoordinator]):
         )
 
     @property
-    def pool_id(self) -> str:
-        """Return the pool ID for the entity."""
-        return self.coordinator.pool_id
-
-    @property
-    def pool_name(self) -> str:
-        """Return the friendly pool name for the entity."""
-        return self.coordinator.pool_name
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.coordinator.push_connected
 
     def build_unique_id(self, suffix: str) -> str:
         """Return a consistent unique ID for the entity."""

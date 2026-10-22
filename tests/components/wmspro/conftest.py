@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator, Callable, Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 from wmspro.action import Action, ActionList
 
 from homeassistant.components.wmspro.const import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from . import remove_config_entry
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.fixture
@@ -83,10 +82,12 @@ async def mock_hub_configuration(
     request: pytest.FixtureRequest, hass: HomeAssistant
 ) -> AsyncGenerator[AsyncMock]:
     """Override WebControlPro._getConfiguration with a param fixture file."""
+    hub_config = await async_load_json_object_fixture(hass, request.param, DOMAIN)
     with patch(
         "wmspro.webcontrol.WebControlPro._getConfiguration",
-        return_value=await async_load_json_object_fixture(hass, request.param, DOMAIN),
+        return_value=hub_config,
     ) as mock_hub_configuration:
+        mock_hub_configuration.configure_mock(**hub_config)
         yield mock_hub_configuration
 
 
@@ -95,10 +96,12 @@ async def mock_hub_status(
     request: pytest.FixtureRequest, hass: HomeAssistant
 ) -> AsyncGenerator[AsyncMock]:
     """Override WebControlPro._getStatus with a param fixture file."""
+    hub_status = await async_load_json_object_fixture(hass, request.param, DOMAIN)
     with patch(
         "wmspro.webcontrol.WebControlPro._getStatus",
-        return_value=await async_load_json_object_fixture(hass, request.param, DOMAIN),
+        return_value=hub_status,
     ) as mock_hub_status:
+        mock_hub_status.configure_mock(**hub_status)
         yield mock_hub_status
 
 
@@ -113,7 +116,7 @@ def mock_dest_refresh() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_action_call() -> Generator[Callable]:
+def mock_action_call() -> Generator[Callable[..., None]]:
     """Override Action.__call__."""
 
     async def fake_call(self, **kwargs):
@@ -129,7 +132,7 @@ def mock_action_call() -> Generator[Callable]:
 
 
 @pytest.fixture
-def mock_action_list_call() -> Generator[Callable]:
+def mock_action_list_call() -> Generator[Callable[..., None]]:
     """Override ActionList.__call__."""
 
     async def fake_list_call(self, **kwargs):

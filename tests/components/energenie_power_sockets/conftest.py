@@ -6,14 +6,13 @@ from unittest.mock import MagicMock, patch
 
 from pyegps.fakes.powerstrip import FakePowerStrip
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.energenie_power_sockets.const import (
     CONF_DEVICE_API_ID,
     DOMAIN,
 )
 from homeassistant.const import CONF_NAME
-
-from tests.common import MockConfigEntry
 
 DEMO_CONFIG_DATA: Final = {
     CONF_NAME: "Unit Test",
@@ -32,6 +31,7 @@ def valid_config_entry() -> MockConfigEntry:
     """Return a valid egps config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
+        version=2,
         data=DEMO_CONFIG_DATA,
         unique_id=DEMO_CONFIG_DATA[CONF_DEVICE_API_ID],
     )

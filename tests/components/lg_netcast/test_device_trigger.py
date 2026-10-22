@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_get_device_automations
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import (
@@ -19,8 +20,6 @@ from homeassistant.setup import async_setup_component
 
 from . import ENTITY_ID, UNIQUE_ID, setup_lgnetcast
 
-from tests.common import MockConfigEntry, async_get_device_automations
-
 
 @pytest.fixture(autouse=True)
 def mock_lg_netcast() -> Generator[None]:
@@ -33,9 +32,11 @@ async def test_get_triggers(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test we get the expected triggers."""
-    await setup_lgnetcast(hass)
+    entry = await setup_lgnetcast(hass)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, UNIQUE_ID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, UNIQUE_ID), entry.entry_id
+    )
     assert device is not None
 
     turn_on_trigger = {
@@ -58,9 +59,11 @@ async def test_if_fires_on_turn_on_request(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for turn_on triggers firing."""
-    await setup_lgnetcast(hass)
+    entry = await setup_lgnetcast(hass)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, UNIQUE_ID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, UNIQUE_ID), entry.entry_id
+    )
     assert device is not None
 
     assert await async_setup_component(
@@ -156,5 +159,26 @@ async def test_failure_scenarios(
     # Test that device id from non lg_netcast domain raises exception
     with pytest.raises(InvalidDeviceAutomationConfig):
         await device_trigger.async_validate_trigger_config(hass, config)
+
+    not_loaded_entry = MockConfigEntry(
+        domain=DOMAIN, data={}, unique_id="not-loaded-unique-id"
+    )
+    not_loaded_entry.add_to_hass(hass)
+
+    not_loaded_device = device_registry.async_get_or_create(
+        config_entry_id=not_loaded_entry.entry_id,
+        identifiers={(DOMAIN, "not-loaded-unique-id")},
+    )
+
+    not_loaded_config = {
+        "platform": "device",
+        "domain": DOMAIN,
+        "device_id": not_loaded_device.id,
+        "type": "lg_netcast.turn_on",
+    }
+
+    # Test that a device from a not-loaded lg_netcast config entry raises exception
+    with pytest.raises(InvalidDeviceAutomationConfig, match="is not from an existing"):
+        await device_trigger.async_validate_trigger_config(hass, not_loaded_config)
 
     # Test that only valid triggers are attached

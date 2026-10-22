@@ -24,7 +24,7 @@ class GardenaBluetoothButtonEntityDescription(ButtonEntityDescription):
     @property
     def context(self) -> set[str]:
         """Context needed for update coordinator."""
-        return {self.char.uuid}
+        return {self.char.unique_id}
 
 
 DESCRIPTIONS = (
