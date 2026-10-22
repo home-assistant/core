@@ -5,6 +5,7 @@ import threading
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from zhong_hong_hvac.protocol import (
     AcAddr,
     AcStatus,
@@ -21,8 +22,6 @@ from homeassistant.components.zhong_hong.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
-
-from tests.common import MockConfigEntry
 
 HOST = "1.2.3.4"
 DEVICE_ADDRESS = (1, 1)
@@ -191,7 +190,7 @@ def mock_gateway(gateway: FakeGateway) -> Generator[FakeGateway]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.zhong_hong.async_setup_entry", return_value=True
+        "homeassistant.components.zhong_hong.async_setup_entry", return_value=None
     ) as setup_entry:
         yield setup_entry
 

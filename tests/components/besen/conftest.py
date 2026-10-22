@@ -6,6 +6,11 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from besen.models import BesenData, ChargerConfig, ChargerInfo, ChargeStatus
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+)
 
 from homeassistant.components.besen.const import DOMAIN, PLATFORMS
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
@@ -13,9 +18,6 @@ from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN, Platform
 from homeassistant.core import HomeAssistant
 
 from . import publish_besen_state
-
-from tests.common import MockConfigEntry
-from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 FIXTURE_ADDRESS = "AA:BB"
 FIXTURE_DISCOVERY_ADDRESS = "aa:bb"
@@ -174,7 +176,7 @@ def mock_besen_client() -> Generator[Mock]:
         client = mock_client.return_value
         _configure_client_mock(client)
 
-        async def async_start_charging() -> None:
+        async def async_start_charging(**kwargs: datetime | int | None) -> None:
             publish_besen_state(client, charger_state(charger_status=True))
 
         async def async_stop_charging() -> None:
@@ -215,7 +217,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
     with patch(
         "homeassistant.components.besen.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

@@ -3,10 +3,12 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from pythonkuma import (
     UptimeKumaAuthenticationException,
     UptimeKumaConnectionException,
     UptimeKumaParseException,
+    UptimeKumaVersion,
 )
 
 from homeassistant.components.uptime_kuma.const import DOMAIN
@@ -16,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import ADDON_SERVICE_INFO
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_pythonkuma")
@@ -84,6 +84,54 @@ async def test_form_errors(
     assert result["errors"] == {"base": text_error}
 
     mock_pythonkuma.metrics.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: "https://uptime.example.org/",
+            CONF_VERIFY_SSL: True,
+            CONF_API_KEY: "apikey",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "uptime.example.org"
+    assert result["data"] == {
+        CONF_URL: "https://uptime.example.org/",
+        CONF_VERIFY_SSL: True,
+        CONF_API_KEY: "apikey",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_error_unsupported_version(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_pythonkuma: AsyncMock,
+) -> None:
+    """Test we handle unsupported version error and recover."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    mock_pythonkuma.version = UptimeKumaVersion(
+        version="1.23.16", major="1", minor="23", patch="16"
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: "https://uptime.example.org/",
+            CONF_VERIFY_SSL: True,
+            CONF_API_KEY: "apikey",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "version_unsupported"}
+
+    mock_pythonkuma.version = UptimeKumaVersion(
+        version="2.0.0", major="2", minor="0", patch="0"
+    )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {

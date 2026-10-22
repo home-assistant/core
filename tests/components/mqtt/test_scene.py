@@ -5,13 +5,8 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-
-from homeassistant.components import scene
-from homeassistant.components.mqtt.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant, State
-
-from .common import (
+from pytest_homeassistant.common import mock_restore_cache
+from pytest_homeassistant.components.mqtt.common import (
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_custom_availability_payload,
@@ -37,9 +32,12 @@ from .common import (
     help_test_update_with_json_attrs_bad_json,
     help_test_update_with_json_attrs_not_dict,
 )
+from pytest_homeassistant.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
-from tests.common import mock_restore_cache
-from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
+from homeassistant.components import scene
+from homeassistant.components.mqtt.const import DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant, State
 
 DEFAULT_CONFIG = {
     DOMAIN: {

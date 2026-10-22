@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 import av
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.stream import Stream, create_stream
 from homeassistant.components.stream.const import (
@@ -33,8 +34,6 @@ from .common import (
     generate_video_with_size_change,
     remux_with_audio,
 )
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.fixture(autouse=True)

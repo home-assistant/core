@@ -7,18 +7,36 @@ from typing import Any, cast, override
 import probatio
 
 from homeassistant.components import websocket_api
+from homeassistant.components.number import (
+    DEFAULT_MAX_VALUE,
+    DEFAULT_MIN_VALUE,
+    DEFAULT_STEP,
+)
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASS_STATE_CLASSES,
     DEVICE_CLASS_UNITS,
 )
+from homeassistant.components.vacuum import (
+    SERVICE_CLEAN_SPOT,
+    SERVICE_LOCATE,
+    SERVICE_PAUSE,
+    SERVICE_RETURN_TO_BASE,
+    SERVICE_SET_FAN_SPEED,
+    SERVICE_START,
+    SERVICE_STOP,
+)
 from homeassistant.const import (
+    CONF_CONDITION,
     CONF_DEVICE_CLASS,
     CONF_DEVICE_ID,
+    CONF_HS,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
+    CONF_OPTIONS,
     CONF_STATE,
+    CONF_TEMPERATURE_UNIT,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
     CONF_VALUE_TEMPLATE,
@@ -72,7 +90,10 @@ from .climate import (
 from .const import (
     CONF_ADDITIONAL_OPTIONS,
     CONF_AVAILABILITY,
+    CONF_MAX,
+    CONF_MIN,
     CONF_PRESS,
+    CONF_STEP,
     CONF_TURN_OFF,
     CONF_TURN_ON,
     DOMAIN,
@@ -101,7 +122,6 @@ from .fan import (
     async_create_preview_fan,
 )
 from .light import (
-    CONF_HS,
     CONF_HS_ACTION,
     CONF_LEVEL,
     CONF_LEVEL_ACTION,
@@ -110,17 +130,8 @@ from .light import (
     async_create_preview_light,
 )
 from .lock import CONF_LOCK, CONF_OPEN, CONF_UNLOCK, async_create_preview_lock
-from .number import (
-    CONF_MAX,
-    CONF_MIN,
-    CONF_SET_VALUE,
-    CONF_STEP,
-    DEFAULT_MAX_VALUE,
-    DEFAULT_MIN_VALUE,
-    DEFAULT_STEP,
-    async_create_preview_number,
-)
-from .select import CONF_OPTIONS, CONF_SELECT_OPTION, async_create_preview_select
+from .number import CONF_SET_VALUE, async_create_preview_number
+from .select import CONF_SELECT_OPTION, async_create_preview_select
 from .sensor import async_create_preview_sensor
 from .switch import async_create_preview_switch
 from .template_entity import TemplateEntity
@@ -137,25 +148,12 @@ from .update import (
     CONF_UPDATE_PERCENTAGE,
     async_create_preview_update,
 )
-from .vacuum import (
-    CONF_FAN_SPEED,
-    CONF_FAN_SPEED_LIST,
-    SERVICE_CLEAN_SPOT,
-    SERVICE_LOCATE,
-    SERVICE_PAUSE,
-    SERVICE_RETURN_TO_BASE,
-    SERVICE_SET_FAN_SPEED,
-    SERVICE_START,
-    SERVICE_STOP,
-    async_create_preview_vacuum,
-)
+from .vacuum import CONF_FAN_SPEED, CONF_FAN_SPEED_LIST, async_create_preview_vacuum
 from .weather import (
-    CONF_CONDITION,
     CONF_FORECAST_DAILY,
     CONF_FORECAST_HOURLY,
     CONF_HUMIDITY,
     CONF_TEMPERATURE as CONF_WEATHER_TEMPERATURE,
-    CONF_TEMPERATURE_UNIT,
     async_create_preview_weather,
 )
 
@@ -257,7 +255,8 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
         }
 
     if domain == Platform.COVER:
-        schema |= _SCHEMA_STATE | {
+        schema |= {
+            probatio.Optional(CONF_STATE): selector.TemplateSelector(),
             probatio.Inclusive(
                 OPEN_ACTION, CONF_OPEN_AND_CLOSE
             ): selector.ActionSelector(),
@@ -299,7 +298,8 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             }
 
     if domain == Platform.FAN:
-        schema |= _SCHEMA_STATE | {
+        schema |= {
+            probatio.Optional(CONF_STATE): selector.TemplateSelector(),
             probatio.Required(CONF_ON_ACTION): selector.ActionSelector(),
             probatio.Required(CONF_OFF_ACTION): selector.ActionSelector(),
             probatio.Optional(CONF_PERCENTAGE): selector.TemplateSelector(),
@@ -320,7 +320,8 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
         }
 
     if domain == Platform.LIGHT:
-        schema |= _SCHEMA_STATE | {
+        schema |= {
+            probatio.Optional(CONF_STATE): selector.TemplateSelector(),
             probatio.Required(CONF_TURN_ON): selector.ActionSelector(),
             probatio.Required(CONF_TURN_OFF): selector.ActionSelector(),
             probatio.Optional(CONF_LEVEL): selector.TemplateSelector(),
@@ -332,7 +333,8 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
         }
 
     if domain == Platform.LOCK:
-        schema |= _SCHEMA_STATE | {
+        schema |= {
+            probatio.Optional(CONF_STATE): selector.TemplateSelector(),
             probatio.Required(CONF_LOCK): selector.ActionSelector(),
             probatio.Required(CONF_UNLOCK): selector.ActionSelector(),
             probatio.Optional(CONF_CODE_FORMAT): selector.TemplateSelector(),
@@ -344,7 +346,7 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
                 selector.DeviceClassSelectorConfig(domain=Platform.NUMBER),
             ),
-            probatio.Required(CONF_STATE): selector.TemplateSelector(),
+            probatio.Optional(CONF_STATE): selector.TemplateSelector(),
             probatio.Required(
                 CONF_MIN, default=DEFAULT_MIN_VALUE
             ): selector.NumberSelector(
@@ -369,33 +371,28 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
         }
 
     if domain == Platform.SELECT:
-        schema |= _SCHEMA_STATE | {
+        schema |= {
+            probatio.Optional(CONF_STATE): selector.TemplateSelector(),
             probatio.Required(CONF_OPTIONS): selector.TemplateSelector(),
             probatio.Optional(CONF_SELECT_OPTION): selector.ActionSelector(),
         }
 
     if domain == Platform.SENSOR:
         schema |= _SCHEMA_STATE | {
-            probatio.Optional(CONF_UNIT_OF_MEASUREMENT): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=list(
-                        {
-                            str(unit)
-                            for units in DEVICE_CLASS_UNITS.values()
-                            for unit in units
-                            if unit is not None
-                        }
-                    ),
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                    translation_key="sensor_unit_of_measurement",
-                    custom_value=True,
-                    sort=True,
-                ),
-            ),
             probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
                 selector.DeviceClassSelectorConfig(domain=Platform.SENSOR),
             ),
             probatio.Optional(CONF_STATE_CLASS): selector.StateClassSelector(),
+            probatio.Optional(
+                CONF_UNIT_OF_MEASUREMENT
+            ): selector.UnitOfMeasurementSelector(
+                selector.UnitOfMeasurementSelectorConfig(
+                    context={
+                        "filter_device_class": CONF_DEVICE_CLASS,
+                        "filter_state_class": CONF_STATE_CLASS,
+                    }
+                ),
+            ),
         }
 
     if domain == Platform.SWITCH:
@@ -426,7 +423,8 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             }
 
     if domain == Platform.VACUUM:
-        schema |= _SCHEMA_STATE | {
+        schema |= {
+            probatio.Optional(CONF_STATE): selector.TemplateSelector(),
             probatio.Required(SERVICE_START): selector.ActionSelector(),
             probatio.Optional(CONF_FAN_SPEED): selector.TemplateSelector(),
             probatio.Optional(CONF_FAN_SPEED_LIST): selector.SelectSelector(

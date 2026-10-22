@@ -9,7 +9,7 @@ from typing import Any, Literal, TypedDict, cast, override
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
 from homeassistant.const import __version__ as ha_version
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback, verify_event_loop_thread
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -140,6 +140,7 @@ class IssueRegistry(BaseRegistry):
         return self.issues.get((domain, issue_id))
 
     @callback
+    @verify_event_loop_thread("issue_registry.async_get_or_create")
     def async_get_or_create(
         self,
         domain: str,
@@ -157,7 +158,6 @@ class IssueRegistry(BaseRegistry):
         translation_placeholders: dict[str, str] | None = None,
     ) -> IssueEntry:
         """Get issue. Create if it doesn't exist."""
-        self.hass.verify_event_loop_thread("issue_registry.async_get_or_create")
         if (
             config_entry_id is not None
             and self.hass.config_entries.async_get_entry(config_entry_id) is None
@@ -224,9 +224,9 @@ class IssueRegistry(BaseRegistry):
         return issue
 
     @callback
+    @verify_event_loop_thread("issue_registry.async_delete")
     def async_delete(self, domain: str, issue_id: str) -> None:
         """Delete issue."""
-        self.hass.verify_event_loop_thread("issue_registry.async_delete")
         if self.issues.pop((domain, issue_id), None) is None:
             return
 
@@ -251,9 +251,36 @@ class IssueRegistry(BaseRegistry):
             self.async_delete(domain, issue_id)
 
     @callback
+    def async_config_entry_disabled_by_changed(self, config_entry_id: str) -> None:
+        """Fire update events for issues of a config entry which was (un)disabled.
+
+        Issues of disabled config entries are hidden from issue listings, so
+        listeners need to refresh them.
+        """
+        for issue in self.issues.values():
+            if issue.config_entry_id != config_entry_id:
+                continue
+            self.hass.bus.async_fire_internal(
+                EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED,
+                EventIssueRegistryUpdatedData(
+                    action="update",
+                    domain=issue.domain,
+                    issue_id=issue.issue_id,
+                ),
+            )
+
+    @callback
+    def async_is_hidden(self, issue: IssueEntry) -> bool:
+        """Return if an issue is hidden because its config entry is disabled."""
+        if issue.config_entry_id is None:
+            return False
+        entry = self.hass.config_entries.async_get_entry(issue.config_entry_id)
+        return entry is not None and entry.disabled_by is not None
+
+    @callback
+    @verify_event_loop_thread("issue_registry.async_ignore")
     def async_ignore(self, domain: str, issue_id: str, ignore: bool) -> IssueEntry:
         """Ignore issue."""
-        self.hass.verify_event_loop_thread("issue_registry.async_ignore")
         old = self.issues[(domain, issue_id)]
         dismissed_version = ha_version if ignore else None
         if old.dismissed_version == dismissed_version:

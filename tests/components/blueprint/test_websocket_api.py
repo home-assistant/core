@@ -6,16 +6,15 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockUser
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import WebSocketGenerator
 import yaml
 
 from homeassistant.components.blueprint import DOMAIN
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml import UndefinedSubstitution, parse_yaml
-
-from tests.common import MockUser
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture

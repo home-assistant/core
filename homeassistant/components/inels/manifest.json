@@ -1,6 +1,7 @@
 {
   "domain": "inels",
   "name": "iNELS",
+  "categories": ["hubs_protocols.building_automation"],
   "codeowners": ["@epdevlab"],
   "config_flow": true,
   "dependencies": ["mqtt"],

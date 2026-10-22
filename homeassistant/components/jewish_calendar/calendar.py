@@ -29,7 +29,8 @@ from .const import (
     LearningScheduleEventType,
     YearlyCalendarEventType,
 )
-from .entity import JewishCalendarConfigEntry, JewishCalendarEntity
+from .coordinator import JewishCalendarConfigEntry
+from .entity import JewishCalendarEntity
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
