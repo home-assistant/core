@@ -13,7 +13,7 @@ LABS_PREVIEW_FEATURES = {
     },
     "camera": {
         "two_way_audio": {
-            "feedback_url": "",
+            "feedback_url": "https://forms.gle/YjoL6e6dtU4F9WBZ6",
             "learn_more_url": "",
             "report_issue_url": "",
         },
