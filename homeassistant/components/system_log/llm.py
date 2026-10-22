@@ -37,8 +37,10 @@ _MAX_LIMIT = 50
 LOG_QUERY_READ_LINES = 2000
 # Characters of the messages on a page, more records go to the next page
 LOG_QUERY_MAX_CHARACTERS = 10000
-# Longer messages keep their start and end, like the logger and the exception
-_LOG_QUERY_MAX_RECORD_CHARACTERS = 2000
+# Long messages keep the first line with the logger, and the end of a
+# traceback with the innermost frames and the exception
+_LOG_QUERY_RECORD_START_CHARACTERS = 300
+_LOG_QUERY_RECORD_END_CHARACTERS = 700
 _LOG_QUERY_DEFAULT_SPAN = timedelta(minutes=15)
 _LOG_QUERY_DEFAULT_LIMIT = 100
 _LOG_QUERY_MAX_LIMIT = 500
@@ -233,12 +235,17 @@ def _read_log_file(path: str, start_time: datetime, lines: int) -> list[str]:
 
 def _shorten(message: str) -> str:
     """Shorten a long message in the middle."""
-    if len(message) <= _LOG_QUERY_MAX_RECORD_CHARACTERS:
+    left_out = (
+        len(message)
+        - _LOG_QUERY_RECORD_START_CHARACTERS
+        - _LOG_QUERY_RECORD_END_CHARACTERS
+    )
+    if left_out <= 0:
         return message
-    half = _LOG_QUERY_MAX_RECORD_CHARACTERS // 2
     return (
-        f"{message[:half]}\n… {len(message) - 2 * half} characters left out …\n"
-        f"{message[-half:]}"
+        f"{message[:_LOG_QUERY_RECORD_START_CHARACTERS]}\n"
+        f"… {left_out} characters left out …\n"
+        f"{message[-_LOG_QUERY_RECORD_END_CHARACTERS:]}"
     )
 
 

@@ -608,7 +608,9 @@ async def test_get_logs_shorten_record(
     assert message.startswith("ERROR (MainThread) [core] Failed\nTraceback")
     assert "characters left out" in message
     assert message.endswith("in run\nValueError: Boom")
-    assert len(message) < 2100
+    # The end keeps the innermost frames
+    assert 'File "frame_199.py"' in message
+    assert len(message) < 1100
 
 
 @pytest.mark.parametrize(
