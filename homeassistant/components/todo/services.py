@@ -69,7 +69,9 @@ TODO_ITEM_FIELD_SCHEMA = {
 
 
 TODO_ITEM_FIELD_VALIDATIONS = [
-    probatio.AtMostOne(TodoServiceArgument.DUE_DATE, TodoServiceArgument.DUE_DATETIME)
+    probatio.AtMostOne(
+        TodoServiceArgument.DUE_DATE.value, TodoServiceArgument.DUE_DATETIME.value
+    )
 ]
 
 
@@ -233,9 +235,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
             ),
             *TODO_ITEM_FIELD_VALIDATIONS,
             probatio.AtLeastOne(
-                TodoServiceArgument.RENAME,
-                TodoServiceArgument.STATUS,
-                *[desc.service_field for desc in TODO_ITEM_FIELDS],
+                TodoServiceArgument.RENAME.value,
+                TodoServiceArgument.STATUS.value,
+                *[str(desc.service_field) for desc in TODO_ITEM_FIELDS],
             ),
         ),
         _async_update_todo_item,

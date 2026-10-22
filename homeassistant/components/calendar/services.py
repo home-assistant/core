@@ -42,14 +42,14 @@ if TYPE_CHECKING:
 
 CREATE_EVENT_SCHEMA = probatio.All(
     probatio.AtLeastOne(
-        CalendarServiceArgument.START_DATE,
-        CalendarServiceArgument.START_DATE_TIME,
-        CalendarServiceArgument.IN,
+        CalendarServiceArgument.START_DATE.value,
+        CalendarServiceArgument.START_DATE_TIME.value,
+        CalendarServiceArgument.IN.value,
     ),
     probatio.AtMostOne(
-        CalendarServiceArgument.START_DATE,
-        CalendarServiceArgument.START_DATE_TIME,
-        CalendarServiceArgument.IN,
+        CalendarServiceArgument.START_DATE.value,
+        CalendarServiceArgument.START_DATE_TIME.value,
+        CalendarServiceArgument.IN.value,
     ),
     cv.make_entity_service_schema(
         {
@@ -107,10 +107,12 @@ CREATE_EVENT_SCHEMA = probatio.All(
 
 SERVICE_GET_EVENTS_SCHEMA: Final = probatio.All(
     probatio.AtLeastOne(
-        CalendarServiceArgument.END_DATE_TIME, CalendarServiceArgument.DURATION
+        CalendarServiceArgument.END_DATE_TIME.value,
+        CalendarServiceArgument.DURATION.value,
     ),
     probatio.AtMostOne(
-        CalendarServiceArgument.END_DATE_TIME, CalendarServiceArgument.DURATION
+        CalendarServiceArgument.END_DATE_TIME.value,
+        CalendarServiceArgument.DURATION.value,
     ),
     cv.make_entity_service_schema(
         {

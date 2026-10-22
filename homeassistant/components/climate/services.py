@@ -33,9 +33,9 @@ CONVERTIBLE_ATTRIBUTE = [
 
 SET_TEMPERATURE_SCHEMA = probatio.All(
     probatio.AtLeastOne(
-        ClimateServiceArgument.TEMPERATURE,
-        ClimateServiceArgument.TARGET_TEMP_HIGH,
-        ClimateServiceArgument.TARGET_TEMP_LOW,
+        ClimateServiceArgument.TEMPERATURE.value,
+        ClimateServiceArgument.TARGET_TEMP_HIGH.value,
+        ClimateServiceArgument.TARGET_TEMP_LOW.value,
     ),
     cv.make_entity_service_schema(
         {

@@ -117,8 +117,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 }
             ),
             probatio.AtLeastOne(
-                AssistSatelliteServiceArgument.MESSAGE,
-                AssistSatelliteServiceArgument.MEDIA_ID,
+                AssistSatelliteServiceArgument.MESSAGE.value,
+                AssistSatelliteServiceArgument.MEDIA_ID.value,
             ),
         ),
         "async_internal_announce",
@@ -148,8 +148,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 }
             ),
             probatio.AtLeastOne(
-                AssistSatelliteServiceArgument.START_MESSAGE,
-                AssistSatelliteServiceArgument.START_MEDIA_ID,
+                AssistSatelliteServiceArgument.START_MESSAGE.value,
+                AssistSatelliteServiceArgument.START_MEDIA_ID.value,
             ),
         ),
         "async_internal_start_conversation",
@@ -246,8 +246,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 ],
             },
             probatio.AtLeastOne(
-                AssistSatelliteServiceArgument.QUESTION,
-                AssistSatelliteServiceArgument.QUESTION_MEDIA_ID,
+                AssistSatelliteServiceArgument.QUESTION.value,
+                AssistSatelliteServiceArgument.QUESTION_MEDIA_ID.value,
             ),
         ),
         supports_response=SupportsResponse.ONLY,
