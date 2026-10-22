@@ -4,6 +4,7 @@ Home Assistant is a Home Automation framework for observing the state
 of entities and react to changes.
 """
 
+from annotationlib import Format
 import asyncio
 from collections import UserDict, defaultdict, deque
 from collections.abc import (
@@ -30,11 +31,9 @@ from time import monotonic
 from typing import (
     TYPE_CHECKING,
     Any,
-    Concatenate,
     Final,
     Generic,
     NotRequired,
-    Protocol,
     Self,
     TypedDict,
     TypeVar,
@@ -217,22 +216,6 @@ def callback[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
     return func
 
 
-class _HasHass(Protocol):
-    """An object with a reference to Home Assistant."""
-
-    @property
-    def hass(self) -> HomeAssistant:
-        """Return Home Assistant."""
-
-
-class _HasPrivateHass(Protocol):
-    """An object with a private reference to Home Assistant."""
-
-    @property
-    def _hass(self) -> HomeAssistant:
-        """Return Home Assistant."""
-
-
 def _get_hass_identity(obj: HomeAssistant) -> HomeAssistant:
     """Return the HomeAssistant instance passed in."""
     return obj
@@ -242,23 +225,23 @@ _get_hass_public = operator.attrgetter("hass")
 _get_hass_private = operator.attrgetter("_hass")
 
 
-def verify_event_loop_thread[
-    _T: HomeAssistant | _HasHass | _HasPrivateHass,
-    **_P,
-    _R,
-](
+def verify_event_loop_thread[**_P, _R](
     what: str,
-) -> Callable[[Callable[Concatenate[_T, _P], _R]], Callable[Concatenate[_T, _P], _R]]:
+) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
     """Report and raise if the decorated function is not called from the event loop.
 
     The first argument of the decorated function must be either the
     HomeAssistant instance or an object with a hass or _hass attribute.
-    Where hass is found is resolved on the first call and then reused.
+    It may be passed by keyword. Where hass is found is resolved on the
+    first call and then reused.
     """
 
-    def decorator(
-        func: Callable[Concatenate[_T, _P], _R],
-    ) -> Callable[Concatenate[_T, _P], _R]:
+    def decorator(func: Callable[_P, _R]) -> Callable[_P, _R]:
+        first_parameter = next(
+            iter(
+                inspect.signature(func, annotation_format=Format.FORWARDREF).parameters
+            )
+        )
         get_hass: Callable[[Any], HomeAssistant]
 
         def resolve_get_hass(obj: Any) -> HomeAssistant:
@@ -274,9 +257,11 @@ def verify_event_loop_thread[
         get_hass = resolve_get_hass
 
         @functools.wraps(func)
-        def wrapper(obj: _T, /, *args: _P.args, **kwargs: _P.kwargs) -> _R:
-            get_hass(obj).verify_event_loop_thread(what)
-            return func(obj, *args, **kwargs)
+        def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+            get_hass(
+                args[0] if args else kwargs[first_parameter]
+            ).verify_event_loop_thread(what)
+            return func(*args, **kwargs)
 
         return wrapper
 

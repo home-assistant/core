@@ -3675,6 +3675,11 @@ class _DecoratedMethodPrivateOwner:
             id="hass_argument",
         ),
         pytest.param(
+            lambda hass: functools.partial(_decorated_function, hass=hass),
+            "test.function",
+            id="hass_keyword_argument",
+        ),
+        pytest.param(
             lambda hass: _DecoratedMethodOwner(hass).decorated,
             "test.method",
             id="hass_attribute",
@@ -3693,13 +3698,13 @@ async def test_verify_event_loop_thread_decorator(
 ) -> None:
     """Test the verify_event_loop_thread decorator."""
     target = get_target(hass)
-    assert target(1, extra=2) == 3
+    assert target(value=1, extra=2) == 3
 
     with pytest.raises(
         RuntimeError,
         match=re.escape(f"Detected code that calls {what} from a thread other than"),
     ):
-        await hass.async_add_executor_job(functools.partial(target, 1, extra=2))
+        await hass.async_add_executor_job(functools.partial(target, value=1, extra=2))
 
 
 async def test_async_set_updates_last_reported(hass: HomeAssistant) -> None:
