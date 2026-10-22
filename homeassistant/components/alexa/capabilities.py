@@ -92,7 +92,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, State
-from homeassistant.util import color as color_util, dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import (
     API_TEMP_UNITS,
@@ -785,9 +785,7 @@ class AlexaColorTemperatureController(AlexaCapability):
         """Read and return a property."""
         if name != "colorTemperatureInKelvin":
             raise UnsupportedProperty(name)
-        if color_temp := self.entity.attributes.get("color_temp"):
-            return color_util.color_temperature_mired_to_kelvin(color_temp)
-        return None
+        return self.entity.attributes.get(LightEntityStateAttribute.COLOR_TEMP_KELVIN)
 
 
 class AlexaSpeaker(AlexaCapability):
