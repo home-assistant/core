@@ -7,6 +7,7 @@ import xml.etree.ElementTree as ET
 import aiohttp
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.environment_canada.const import (
@@ -42,8 +43,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import build_mocks, init_integration
-
-from tests.common import MockConfigEntry
 
 FAKE_CONFIG = {
     CONF_STATION: "123",
@@ -91,7 +90,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         mocked_stations(),
         patch(
             "homeassistant.components.environment_canada.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         flow = await hass.config_entries.flow.async_init(
@@ -121,7 +120,7 @@ async def test_create_same_entry_twice(hass: HomeAssistant) -> None:
         mocked_stations(),
         patch(
             "homeassistant.components.environment_canada.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         flow = await hass.config_entries.flow.async_init(
@@ -173,7 +172,7 @@ async def test_exception_handling(
         mocked_stations(),
         patch(
             "homeassistant.components.environment_canada.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -190,7 +189,7 @@ async def test_lat_lon_not_specified(hass: HomeAssistant) -> None:
         mocked_stations(),
         patch(
             "homeassistant.components.environment_canada.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         fake_config = dict(FAKE_CONFIG)
@@ -221,7 +220,7 @@ async def test_coordinates_without_station(hass: HomeAssistant) -> None:
         mocked_stations(),
         patch(
             "homeassistant.components.environment_canada.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         # Config with coordinates but no station
@@ -352,7 +351,7 @@ async def test_options_flow_save(hass: HomeAssistant, ec_data: dict[str, Any]) -
     }
     with patch(
         "homeassistant.components.environment_canada.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], submitted

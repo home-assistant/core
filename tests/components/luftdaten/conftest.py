@@ -4,12 +4,11 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.luftdaten.const import CONF_SENSOR_ID, DOMAIN
 from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -27,7 +26,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.luftdaten.async_setup_entry", return_value=True
+        "homeassistant.components.luftdaten.async_setup_entry", return_value=None
     ):
         yield
 

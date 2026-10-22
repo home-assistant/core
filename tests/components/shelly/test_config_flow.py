@@ -23,6 +23,13 @@ from aioshelly.exceptions import (
     RpcCallError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_bluetooth_service_info_bleak,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from zeroconf.asyncio import AsyncServiceInfo
 
 from homeassistant import config_entries
@@ -57,14 +64,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import init_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.bluetooth import (
-    generate_advertisement_data,
-    generate_ble_device,
-    inject_bluetooth_service_info_bleak,
-)
-from tests.typing import WebSocketGenerator
 
 
 async def _async_inject_ble_discovery(
@@ -3540,7 +3539,7 @@ async def test_sleeping_device_gen2_with_new_firmware(
         patch("homeassistant.components.shelly.async_setup", return_value=True),
         patch(
             "homeassistant.components.shelly.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(

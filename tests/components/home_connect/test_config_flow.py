@@ -7,6 +7,9 @@ from unittest.mock import MagicMock, patch
 from aiohomeconnect.const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from aiohomeconnect.model import HomeAppliance
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
 from homeassistant import config_entries, setup
 from homeassistant.components.home_connect.const import DOMAIN
@@ -17,10 +20,6 @@ from homeassistant.helpers import config_entry_oauth2_flow, device_registry as d
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import FAKE_ACCESS_TOKEN, FAKE_REFRESH_TOKEN
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -137,7 +136,7 @@ async def test_full_flow(
     )
 
     with patch(
-        "homeassistant.components.home_connect.async_setup_entry", return_value=True
+        "homeassistant.components.home_connect.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
@@ -238,7 +237,7 @@ async def test_reauth_flow(
     )
 
     with patch(
-        "homeassistant.components.home_connect.async_setup_entry", return_value=True
+        "homeassistant.components.home_connect.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
@@ -354,7 +353,7 @@ async def test_zeroconf_flow(
     )
 
     with patch(
-        "homeassistant.components.home_connect.async_setup_entry", return_value=True
+        "homeassistant.components.home_connect.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
@@ -436,7 +435,7 @@ async def test_dhcp_flow(
     )
 
     with patch(
-        "homeassistant.components.home_connect.async_setup_entry", return_value=True
+        "homeassistant.components.home_connect.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()

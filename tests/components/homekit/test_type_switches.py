@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed, async_mock_service
 
 from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.components.homekit.const import (
@@ -62,8 +63,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, split_entity_id
 from homeassistant.util import dt as dt_util
-
-from tests.common import async_fire_time_changed, async_mock_service
 
 
 async def test_outlet_set_state(

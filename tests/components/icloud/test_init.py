@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 
 from pyicloud.exceptions import PyiCloudFailedLoginException
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.icloud import async_remove_config_entry_device
 from homeassistant.components.icloud.const import DOMAIN
@@ -13,8 +14,6 @@ from homeassistant.helpers import device_registry as dr
 
 from .conftest import MockAppleDevice
 from .const import DEVICE_2, MOCK_CONFIG, USERNAME
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="service_2fa")
