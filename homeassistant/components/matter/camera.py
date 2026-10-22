@@ -47,14 +47,6 @@ STREAM_USAGE_LIVE_VIEW = "LiveView"
 MAX_ICE_SERVERS = 10
 
 
-@dataclass
-class _MatterWebRTCSession:
-    """Bookkeeping for a single WebRTC session."""
-
-    send_message: WebRTCSendMessage
-    answered: bool = False
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: MatterConfigEntry,
@@ -86,7 +78,7 @@ class MatterCamera(MatterEntity, Camera):
         """Initialize the Matter camera."""
         # Keyed by the Home Assistant session id, which is also the session's
         # client key on the Matter server.
-        self._sessions: dict[str, _MatterWebRTCSession] = {}
+        self._sessions: dict[str, WebRTCSendMessage] = {}
 
         super().__init__(matter_client, endpoint, entity_info)
         Camera.__init__(self)
@@ -140,7 +132,7 @@ class MatterCamera(MatterEntity, Camera):
         self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
     ) -> None:
         """Handle a WebRTC offer from the frontend."""
-        self._sessions[session_id] = _MatterWebRTCSession(send_message=send_message)
+        self._sessions[session_id] = send_message
         config = self.async_get_webrtc_client_configuration()
         ice_servers: list[CameraIceServer] = []
         for server in config.configuration.ice_servers[:MAX_ICE_SERVERS]:
@@ -199,17 +191,16 @@ class MatterCamera(MatterEntity, Camera):
     def _on_webrtc_callback(self, event: EventType, data: dict[str, Any]) -> None:
         """Relay the camera's signalling to the frontend."""
         if (key := data.get("client_session_key")) is None or (
-            session := self._sessions.get(key)
+            send_message := self._sessions.get(key)
         ) is None:
             return
 
         event_type = data["event_type"]
         if event_type == "answer":
-            session.answered = True
-            session.send_message(WebRTCAnswer(data["data"]["sdp"]))
+            send_message(WebRTCAnswer(data["data"]["sdp"]))
         elif event_type == "ice_candidates":
             for candidate in data["data"]["ice_candidates"]:
-                session.send_message(
+                send_message(
                     WebRTCCandidate(
                         RTCIceCandidateInit(
                             candidate["candidate"],
@@ -224,17 +215,14 @@ class MatterCamera(MatterEntity, Camera):
         """Handle a session that ended without Home Assistant stopping it."""
         if (
             data.client_session_key is None
-            or (session := self._sessions.pop(data.client_session_key, None)) is None
+            or (send_message := self._sessions.pop(data.client_session_key, None))
+            is None
         ):
             return
         LOGGER.debug("WebRTC session %s ended: %s", data.webrtc_session_id, data.cause)
-        # Without an answer the frontend is still waiting for the offer to complete.
-        if not session.answered:
-            session.send_message(
-                WebRTCError(
-                    "webrtc_session_ended", "The camera ended the WebRTC session"
-                )
-            )
+        send_message(
+            WebRTCError("webrtc_session_ended", "The camera ended the WebRTC session")
+        )
 
     @callback
     @override

@@ -401,7 +401,7 @@ async def test_camera_webrtc_closed_during_offer(
     ("camera_events", "expected_messages"),
     [
         pytest.param((), [ENDED_MESSAGE], id="before_answer"),
-        pytest.param(("answer",), [ANSWER_MESSAGE], id="after_answer"),
+        pytest.param(("answer",), [ANSWER_MESSAGE, ENDED_MESSAGE], id="after_answer"),
     ],
 )
 @pytest.mark.parametrize("node_fixture", ["mock_camera"])
@@ -435,7 +435,7 @@ async def test_camera_webrtc_session_ended(
             data=_session_ended_data(matter_node, key),
         )
 
-    # The frontend is told only while it still waits for the answer.
+    # The frontend is told so it stops waiting or negotiating.
     for expected_message in expected_messages:
         response = await client.receive_json()
         assert response["id"] == subscription_id
