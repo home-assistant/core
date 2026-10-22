@@ -43,6 +43,7 @@ from .core import (
     HassJobType,
     HomeAssistant,
     callback,
+    verify_event_loop_thread,
 )
 from .data_entry_flow import FLOW_NOT_COMPLETE_STEPS, FlowContext, FlowResult
 from .exceptions import (
@@ -181,7 +182,7 @@ class ConfigEntryState(Enum):
         """Create new ConfigEntryState."""
         obj = object.__new__(cls)
         obj._value_ = value
-        obj._recoverable = recoverable  # noqa: SLF001
+        obj._recoverable = recoverable
         return obj
 
     @property
@@ -1929,7 +1930,7 @@ class ConfigEntriesFlowManager(
             # reconfigure to allow the user to change settings.
             # In case of non user visible flows, the integration should optionally
             # update the existing entry before aborting.
-            # see https://developers.home-assistant.io/blog/2025/03/01/config-flow-unique-id/
+            # see https://contributors.home-assistant.io/blog/2025/03/01/config-flow-unique-id/
             report_usage(
                 "creates a config entry when another entry with the same unique ID "
                 "exists",
@@ -2716,6 +2717,8 @@ class ConfigEntries:
 
         entry.disabled_by = disabled_by
         self._async_schedule_save()
+        self._async_dispatch(ConfigEntryChange.UPDATED, entry)
+
         ir.async_get(self.hass).async_config_entry_disabled_by_changed(entry_id)
 
         dev_reg = dr.async_get(self.hass)
@@ -2775,6 +2778,7 @@ class ConfigEntries:
         )
 
     @callback
+    @verify_event_loop_thread("hass.config_entries.async_update_entry")
     def _async_update_entry(
         self,
         entry: ConfigEntry,
@@ -2803,7 +2807,6 @@ class ConfigEntries:
         if entry.entry_id not in self._entries:
             raise UnknownEntry(entry.entry_id)
 
-        self.hass.verify_event_loop_thread("hass.config_entries.async_update_entry")
         changed = False
         removed_subentry_ids: set[str] = set()
         _setter = object.__setattr__
@@ -2914,6 +2917,7 @@ class ConfigEntries:
         return self._async_update_entry(entry, subentries=subentries)
 
     @callback
+    @verify_event_loop_thread("hass.config_entries.async_update_subentry")
     def async_update_subentry(
         self,
         entry: ConfigEntry,
@@ -2936,7 +2940,6 @@ class ConfigEntries:
         if subentry.subentry_id not in entry.subentries:
             raise UnknownSubEntry(subentry.subentry_id)
 
-        self.hass.verify_event_loop_thread("hass.config_entries.async_update_subentry")
         changed = False
         _setter = object.__setattr__
 

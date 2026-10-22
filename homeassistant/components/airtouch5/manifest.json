@@ -1,6 +1,7 @@
 {
   "domain": "airtouch5",
   "name": "AirTouch 5",
+  "categories": ["climate.heat_pumps_air_conditioning"],
   "codeowners": ["@danzel"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/airtouch5",

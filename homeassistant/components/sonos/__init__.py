@@ -2,7 +2,7 @@
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
-import datetime
+import datetime as dt
 from functools import partial
 from http import HTTPStatus
 from ipaddress import AddressValueError, IPv4Address
@@ -304,7 +304,7 @@ class SonosDiscoveryManager:
                 eager_start=True,
             )
 
-        async def async_subscription_failed(now: datetime.datetime) -> None:
+        async def async_subscription_failed(now: dt.datetime) -> None:
             """Fallback logic if the subscription callback never arrives."""
             addr, port = sub.event_listener.address
             listener_address = f"{addr}:{port}"
@@ -469,9 +469,7 @@ class SonosDiscoveryManager:
         except (OSError, SoCoException, Timeout) as ex:
             _LOGGER.warning("Failed to add SonosSpeaker using %s: %s", soco, ex)
 
-    async def async_poll_manual_hosts(
-        self, now: datetime.datetime | None = None
-    ) -> None:
+    async def async_poll_manual_hosts(self, now: dt.datetime | None = None) -> None:
         """Add and maintain Sonos devices from a manual configuration."""
 
         # Loop through each configured host and verify that

@@ -5,6 +5,7 @@ from http import HTTPStatus
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components.google_assistant import error, report_state
 from homeassistant.core import HomeAssistant
@@ -12,8 +13,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from . import BASIC_CONFIG, MockConfig
-
-from tests.common import async_fire_time_changed
 
 
 async def test_report_state(

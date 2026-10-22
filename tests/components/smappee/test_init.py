@@ -5,6 +5,8 @@ import re
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 import requests_mock
 
 from homeassistant.components.smappee.const import DOMAIN, TOKEN_URL
@@ -21,9 +23,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 MOCK_TOKEN_RESPONSE = {
     "refresh_token": "mock-refresh-token",

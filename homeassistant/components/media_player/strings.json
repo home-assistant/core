@@ -8,6 +8,22 @@
     "trigger_threshold_name": "Threshold"
   },
   "conditions": {
+    "is_current_source": {
+      "description": "Tests if one or more media players are set to a specific source.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::media_player::common::condition_for_name%]"
+        },
+        "source": {
+          "description": "The sources to check for.",
+          "name": "Source"
+        }
+      },
+      "name": "Media player current source"
+    },
     "is_muted": {
       "description": "Tests if one or more media players are muted.",
       "fields": {

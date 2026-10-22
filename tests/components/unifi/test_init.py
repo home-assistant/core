@@ -5,6 +5,8 @@ from unittest.mock import patch
 
 from aiounifi.models.message import MessageKey
 import pytest
+from pytest_homeassistant.common import flush_store
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components import unifi
 from homeassistant.components.unifi.const import (
@@ -25,9 +27,6 @@ from .conftest import (
     ConfigEntryFactoryType,
     WebsocketMessageMock,
 )
-
-from tests.common import flush_store
-from tests.typing import WebSocketGenerator
 
 
 async def test_setup_entry_fails_config_entry_not_ready(

@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from home_assistant_bluetooth import BluetoothServiceInfo
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.victron_ble.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS
@@ -12,14 +13,12 @@ from homeassistant.core import HomeAssistant
 
 from .fixtures import VICTRON_VEBUS_SERVICE_INFO, VICTRON_VEBUS_TOKEN
 
-from tests.common import MockConfigEntry
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.victron_ble.async_setup_entry", return_value=True
+        "homeassistant.components.victron_ble.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from openhomedevice.exceptions import OpenhomeConnectionError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
@@ -25,8 +26,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 LATEST_FIRMWARE_INSTALLED = {
     "status": "on_latest",
