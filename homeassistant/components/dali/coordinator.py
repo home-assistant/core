@@ -207,7 +207,14 @@ class DaliCoordinator(DataUpdateCoordinator[dict[int, DaliGearData]]):
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
             ) from err
-        except DALISequenceError:
+        except DALISequenceError, TransmissionError:
+            # A sequence error, or the interface rejecting a frame for this one
+            # gear (a collision, arbitration loss, or the bus sagging under the
+            # extra frames a multi-type gear needs), means this address cannot be
+            # queried this round. Treat it as a miss so one noisy gear cannot
+            # abort discovery of the rest of the bus; a genuinely bus-wide fault
+            # surfaces instead as every gear missing, taking the lights
+            # unavailable anyway.
             return None
 
         return DaliGearData(
@@ -245,23 +252,13 @@ class DaliCoordinator(DataUpdateCoordinator[dict[int, DaliGearData]]):
         if full_scan:
             LOGGER.info("Scanning DALI bus for control gear")
         data: dict[int, DaliGearData] = {}
-        try:
-            async with self._refresh_lock:
-                for address in addresses:
-                    gear = await self._query_gear(address)
-                    if gear is not None:
-                        data[address] = gear
-            if full_scan:
-                LOGGER.info("Found %d control gear", len(data))
-        except TransmissionError as err:
-            # The interface rejected a frame, e.g. because the bus lost power or
-            # sagged under load mid-operation; fail the update so entities go
-            # unavailable until it recovers.
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_failed",
-            ) from err
+        async with self._refresh_lock:
+            for address in addresses:
+                gear = await self._query_gear(address)
+                if gear is not None:
+                    data[address] = gear
         if full_scan:
+            LOGGER.info("Found %d control gear", len(data))
             self._last_full_scan = now
         self._log_availability_transitions(data)
         return data
