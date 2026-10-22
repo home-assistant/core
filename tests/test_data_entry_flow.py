@@ -1716,8 +1716,7 @@ def test_invalid_visible(visible: Any) -> None:
         data_entry_flow.Optional("a", visible=visible)
 
 
-@pytest.mark.usefixtures("mock_integration_frame")
-@pytest.mark.parametrize(
+MISSING_STEP_ID_PARAMS = pytest.mark.parametrize(
     ("method", "kwargs", "result_type"),
     [
         pytest.param(
@@ -1743,7 +1742,43 @@ def test_invalid_visible(visible: Any) -> None:
         ),
     ],
 )
-async def test_missing_step_id(
+
+
+@pytest.mark.parametrize(
+    "integration_frame_path",
+    [
+        pytest.param("homeassistant/components/hue", id="core_integration"),
+        pytest.param("homeassistant.core", id="core"),
+    ],
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+@MISSING_STEP_ID_PARAMS
+async def test_missing_step_id_core(
+    hass: HomeAssistant,
+    manager: MockFlowManager,
+    method: str,
+    kwargs: dict[str, str | list[str]],
+    result_type: data_entry_flow.FlowResultType,
+) -> None:
+    """Test a missing step_id raises for core and core integrations."""
+    manager.hass = hass
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            return getattr(self, method)(**kwargs)
+
+    with (
+        patch.object(frame, "_REPORTED_INTEGRATIONS", set()),
+        pytest.raises(RuntimeError, match=f"calls {method} without passing a step_id"),
+    ):
+        await manager.async_init("test")
+
+
+@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
+@pytest.mark.usefixtures("mock_integration_frame")
+@MISSING_STEP_ID_PARAMS
+async def test_missing_step_id_custom_integration(
     hass: HomeAssistant,
     manager: MockFlowManager,
     caplog: pytest.LogCaptureFixture,
@@ -1751,7 +1786,7 @@ async def test_missing_step_id(
     kwargs: dict[str, str | list[str]],
     result_type: data_entry_flow.FlowResultType,
 ) -> None:
-    """Test a missing step_id is deprecated and defaults to the dispatched step."""
+    """Test a missing step_id is logged and defaults to the step for custom integrations."""
     manager.hass = hass
 
     @manager.mock_reg_handler("test")
@@ -1765,7 +1800,7 @@ async def test_missing_step_id(
     assert result["type"] is result_type
     assert result["step_id"] == "init"
     assert (
-        f"Detected that integration 'hue' calls {method} without passing a step_id "
-        "at homeassistant/components/hue/light.py, line 23: self.light.is_on. "
-        "This will stop working in Home Assistant 2027.5.0"
+        f"Detected that custom integration 'my_integration' calls {method} without "
+        "passing a step_id at custom_components/my_integration/light.py, line 23: "
+        "self.light.is_on. This will stop working in Home Assistant 2027.5.0"
     ) in caplog.text

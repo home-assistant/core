@@ -664,7 +664,7 @@ def _report_missing_step_id(method: str) -> None:
     """Report a flow result built without a step id."""
     report_usage(
         f"calls {method} without passing a step_id",
-        core_behavior=ReportBehavior.LOG,
+        core_integration_behavior=ReportBehavior.ERROR,
         breaks_in_ha_version="2027.5.0",
     )
 
