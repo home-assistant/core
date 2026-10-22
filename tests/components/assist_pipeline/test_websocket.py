@@ -174,6 +174,11 @@ async def test_audio_pipeline(
         await client.send_bytes(bytes([handler_id]))
 
         msg = await client.receive_json()
+        assert msg["event"]["type"] == "stt-vad-end"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
+
+        msg = await client.receive_json()
         assert msg["event"]["type"] == "stt-end"
         assert msg["event"]["data"] == snapshot
         events.append(msg["event"])
@@ -1535,6 +1540,11 @@ async def test_audio_pipeline_debug(
         await client.send_bytes(bytes([handler_id]))
 
         msg = await client.receive_json()
+        assert msg["event"]["type"] == "stt-vad-end"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
+
+        msg = await client.receive_json()
         assert msg["event"]["type"] == "stt-end"
         assert msg["event"]["data"] == snapshot
         events.append(msg["event"])
@@ -1792,6 +1802,11 @@ async def test_audio_pipeline_with_enhancements(
 
         # End of audio stream (handler id + empty payload)
         await client.send_bytes(bytes([handler_id]))
+
+        msg = await client.receive_json()
+        assert msg["event"]["type"] == "stt-vad-end"
+        assert msg["event"]["data"] == snapshot
+        events.append(msg["event"])
 
         msg = await client.receive_json()
         assert msg["event"]["type"] == "stt-end"

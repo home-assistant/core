@@ -2549,6 +2549,8 @@ async def test_stt_vad_enabled_based_on_audio_processing(
     (
         "requires_external_vad",
         "is_vad_enabled",
+        "segmenter_in_command",
+        "segmenter_results",
         "fail_process_audio",
         "expected_events",
     ),
@@ -2556,6 +2558,8 @@ async def test_stt_vad_enabled_based_on_audio_processing(
         pytest.param(
             False,
             True,
+            False,
+            [],
             False,
             [
                 PipelineEventType.STT_VAD_START,
@@ -2568,12 +2572,16 @@ async def test_stt_vad_enabled_based_on_audio_processing(
             False,
             False,
             False,
+            [],
+            False,
             [PipelineEventType.STT_END],
             id="provider_endpointing_vad_disabled",
         ),
         pytest.param(
             True,
             True,
+            True,
+            [True, True, True],
             False,
             [
                 PipelineEventType.STT_VAD_START,
@@ -2583,8 +2591,35 @@ async def test_stt_vad_enabled_based_on_audio_processing(
             id="provider_ends_before_segmenter",
         ),
         pytest.param(
+            True,
+            True,
+            False,
+            [True, True, True],
+            False,
+            [
+                PipelineEventType.STT_VAD_END,
+                PipelineEventType.STT_END,
+            ],
+            id="provider_ends_before_speech_detected",
+        ),
+        pytest.param(
+            True,
+            True,
+            True,
+            [True, False],
+            False,
+            [
+                PipelineEventType.STT_VAD_START,
+                PipelineEventType.STT_VAD_END,
+                PipelineEventType.STT_END,
+            ],
+            id="segmenter_ends_speech",
+        ),
+        pytest.param(
             False,
             True,
+            False,
+            [],
             True,
             [
                 PipelineEventType.STT_VAD_START,
@@ -2595,18 +2630,20 @@ async def test_stt_vad_enabled_based_on_audio_processing(
         ),
     ],
 )
-async def test_stt_vad_end_sent_after_vad_start(
+@pytest.mark.usefixtures("init_components")
+async def test_stt_vad_end_sent_when_provider_ends_stream(
     hass: HomeAssistant,
     mock_stt_provider: MockSTTProvider,
-    init_components,
     pipeline_data: assist_pipeline.pipeline.PipelineData,
     mock_chat_session: chat_session.ChatSession,
     requires_external_vad: bool,
     is_vad_enabled: bool,
+    segmenter_in_command: bool,
+    segmenter_results: list[bool],
     fail_process_audio: bool,
     expected_events: list[PipelineEventType],
 ) -> None:
-    """Test STT_VAD_END follows STT_VAD_START when the provider ends the stream.
+    """Test STT_VAD_END is sent once when the provider ends the stream.
 
     Satellites rely on STT_VAD_END to stop recording, so it must be sent even when
     the segmenter doesn't run or the provider returns before it detects silence.
@@ -2639,9 +2676,8 @@ async def test_stt_vad_end_sent_after_vad_start(
         )
         mock_stt_provider.fail_process_audio = fail_process_audio
 
-        # Speech is detected but the stream ends before the segmenter detects silence
-        mock_vad.return_value.in_command = True
-        mock_vad.return_value.process.return_value = True
+        mock_vad.return_value.in_command = segmenter_in_command
+        mock_vad.return_value.process.side_effect = segmenter_results
 
         pipeline_input = assist_pipeline.pipeline.PipelineInput(
             session=mock_chat_session,
