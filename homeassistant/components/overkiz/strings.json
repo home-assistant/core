@@ -207,6 +207,12 @@
       }
     }
   },
+  "issues": {
+    "execution_failed": {
+      "title": "A command was not applied",
+      "description": "The command was not applied to {device} (error {error}). Check that your Overkiz box is online and reachable, then try again."
+    }
+  },
   "exceptions": {
     "unsupported_set_position_and_tilt": {
       "message": "This device does not support setting position and tilt simultaneously."

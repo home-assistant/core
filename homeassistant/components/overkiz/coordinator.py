@@ -1,15 +1,25 @@
 """Helpers to help coordinate updates."""
 
+import asyncio
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
+from time import monotonic
 from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import ClientConnectorError, ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
-from pyoverkiz.enums import EventName, ExecutionState, Protocol
+from pyoverkiz.enums import (
+    EventName,
+    ExecutionState,
+    FailureType,
+    OverkizCommand,
+    OverkizCommandParam,
+    Protocol,
+)
 from pyoverkiz.exceptions import (
     BadCredentialsError,
+    BaseOverkizError,
     InvalidEventListenerIdError,
     MaintenanceError,
     NotAuthenticatedError,
@@ -18,6 +28,8 @@ from pyoverkiz.exceptions import (
     TooManyRequestsError,
 )
 from pyoverkiz.models import (
+    Action,
+    Command,
     Device,
     DeviceEvent,
     DeviceRemovedEvent,
@@ -30,17 +42,24 @@ from pyoverkiz.models import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
+    HomeAssistantError,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.decorator import Registry
 
 if TYPE_CHECKING:
     from . import OverkizDataConfigEntry
 
-from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES, LOGGER, UPDATE_INTERVAL
+from .const import (
+    DOMAIN,
+    IGNORED_OVERKIZ_DEVICES,
+    LOGGER,
+    MIN_WRITE_INTERVAL,
+    UPDATE_INTERVAL,
+)
 
 # Events are a discriminated union; each handler narrows to its own subtype.
 EVENT_HANDLERS: Registry[
@@ -76,7 +95,20 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.data = {}
         self.client = client
         self.devices: dict[str, Device] = {d.device_url: d for d in devices}
-        self.executions: dict[str, list[dict[str, str]]] = {}
+        self.executions: dict[str, list[dict[str, Any]]] = {}
+        # Sequence number of the last execution that wrote each command of a
+        # device, to only replay a command that nothing has replaced since.
+        self.command_sequences: dict[tuple[str, str], int] = {}
+        self.command_sequence = 0
+        # Commands waiting for the running write of the same settings to end.
+        self.pending_commands: dict[tuple[str, tuple[str, ...]], list[Command]] = {}
+        # Writes that wait their turn, not yet registered as executions.
+        self.writes_waiting: set[tuple[str, tuple[str, ...]]] = set()
+        # Derogation state the last write that changed it left, as the states
+        # only follow once the refreshes that come after it have run.
+        self.derogation_writes: dict[str, tuple[str, float]] = {}
+        self._write_lock = asyncio.Lock()
+        self._last_write_at: float | None = None
         self.areas = self._places_to_area(places) if places else None
         self._default_update_interval = UPDATE_INTERVAL
 
@@ -86,6 +118,62 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             if device.widget not in IGNORED_OVERKIZ_DEVICES
             and device.ui_class not in IGNORED_OVERKIZ_DEVICES
         )
+
+    async def async_execute_throttled(self, actions: list[Action]) -> str:
+        """Execute actions, at least MIN_WRITE_INTERVAL after the previous write."""
+        async with self._write_lock:
+            if (
+                self._last_write_at is not None
+                and (
+                    wait := MIN_WRITE_INTERVAL.total_seconds()
+                    - (monotonic() - self._last_write_at)
+                )
+                > 0
+            ):
+                await asyncio.sleep(wait)
+            try:
+                return await self.client.execute_action_group(
+                    label="Home Assistant", actions=actions
+                )
+            finally:
+                self._last_write_at = monotonic()
+
+    def is_execution_running(self, key: tuple[str, tuple[str, ...]]) -> bool:
+        """Return whether a write of the same settings has been running lately."""
+        return key in self.writes_waiting or any(
+            record.get("key") == key and monotonic() - record["started"] < 60
+            for records in self.executions.values()
+            for record in records
+        )
+
+    def is_same_as_running(
+        self, key: tuple[str, tuple[str, ...]], commands: list[Command]
+    ) -> bool:
+        """Return whether the last running write of these settings has these values."""
+        running = [
+            record
+            for records in self.executions.values()
+            for record in records
+            if record.get("key") == key and monotonic() - record["started"] < 60
+        ]
+        if not running or not (replay := running[-1].get("replay")):
+            return False
+
+        def values(commands: list[Command]) -> list[tuple[str, tuple[Any, ...]]]:
+            return [
+                (str(command.name), tuple(command.parameters or ()))
+                for command in commands
+                if not str(command.name).startswith("refresh")
+            ]
+
+        return values(replay) == values(commands)
+
+    def is_derogation_written_on(self, device_url: str) -> bool:
+        """Return whether a recent write turned the derogation of a device on."""
+        if (write := self.derogation_writes.get(device_url)) is None:
+            return False
+        value, written_at = write
+        return value == OverkizCommandParam.ON and monotonic() - written_at < 120
 
     @override
     async def _async_update_data(self) -> dict[str, Device]:
@@ -239,8 +327,214 @@ async def on_execution_state_changed(
     coordinator: OverkizDataUpdateCoordinator, event: ExecutionStateChangedEvent
 ) -> None:
     """Handle execution changed event."""
-    if event.exec_id in coordinator.executions and event.new_state in [
-        ExecutionState.COMPLETED,
-        ExecutionState.FAILED,
-    ]:
-        del coordinator.executions[event.exec_id]
+    if event.new_state not in (ExecutionState.COMPLETED, ExecutionState.FAILED):
+        return
+
+    # The execution is over: forget it before anything is started in reaction.
+    records = coordinator.executions.pop(event.exec_id, None)
+
+    replaying = False
+    if event.new_state == ExecutionState.FAILED:
+        replaying = _report_failed_execution(coordinator, event, records)
+
+    if records is None:
+        return
+
+    _track_derogation_writes(coordinator, records, event.new_state)
+
+    if event.new_state == ExecutionState.COMPLETED:
+        for record in records:
+            if record.get("replay"):
+                ir.async_delete_issue(
+                    coordinator.hass,
+                    DOMAIN,
+                    f"execution_failed_{record['device_url']}",
+                )
+
+    # A command lost and replayed ends with the replay, which then sends what
+    # has been waiting.
+    if not replaying:
+        for record in records:
+            if (key := record.get("key")) is not None:
+                coordinator.hass.async_create_task(
+                    _send_pending_commands(coordinator, key)
+                )
+
+
+def _track_derogation_writes(
+    coordinator: OverkizDataUpdateCoordinator,
+    records: list[dict[str, Any]],
+    new_state: ExecutionState,
+) -> None:
+    """Remember the derogation a finished write left on its device."""
+    for record in records:
+        for command in record.get("replay") or ():
+            if command.name != OverkizCommand.SET_DEROGATION_ON_OFF_STATE:
+                continue
+            if new_state == ExecutionState.COMPLETED and command.parameters:
+                coordinator.derogation_writes[record["device_url"]] = (
+                    command.parameters[0],
+                    monotonic(),
+                )
+            else:
+                coordinator.derogation_writes.pop(record["device_url"], None)
+
+
+async def _send_pending_commands(
+    coordinator: OverkizDataUpdateCoordinator,
+    key: tuple[str, tuple[str, ...]],
+) -> None:
+    """Send the commands that waited for the write of the same settings."""
+    if (commands := coordinator.pending_commands.pop(key, None)) is None:
+        return
+
+    # Local import: the executor imports this module.
+    from .executor import OverkizExecutor  # noqa: PLC0415
+
+    try:
+        await OverkizExecutor(key[0], coordinator).async_execute_commands(
+            commands, coalesce=True
+        )
+    except HomeAssistantError:
+        LOGGER.warning("Sending the waiting Overkiz commands failed", exc_info=True)
+
+
+def _report_failed_execution(
+    coordinator: OverkizDataUpdateCoordinator,
+    event: ExecutionStateChangedEvent,
+    commands: list[dict[str, Any]] | None,
+    *,
+    replayed: bool = False,
+) -> bool:
+    """Tell the user that a command did not reach its device.
+
+    The service call has already returned by the time the server reports a
+    failure, so the command would otherwise fail silently. Return whether the
+    command is replayed instead.
+    """
+    # Executions started from the app or a remote are registered without any
+    # command, and a failure code the library doesn't know describes nothing
+    # the user can act on.
+    if not commands or event.failure_type_code in (
+        None,
+        FailureType.UNKNOWN,
+        FailureType.NO_FAILURE,
+    ):
+        LOGGER.debug(
+            "Overkiz execution %s failed (%s)", event.exec_id, event.failure_type_code
+        )
+        return False
+
+    # A refresh that fails (a transport error, for example) leaves the setting
+    # applied and only delays the new states: nothing for the user to act on.
+    failed_names = _failed_command_names(commands, event)
+    if failed_names is None:
+        actionable = event.failure_type_code == FailureType.PEER_DOWN
+    else:
+        actionable = any(not name.startswith("refresh") for name in failed_names)
+
+    if not actionable:
+        LOGGER.debug(
+            "Overkiz execution %s failed (%s): %s",
+            event.exec_id,
+            event.failure_type_code,
+            event.failed_commands,
+        )
+        return False
+
+    # The link between the box and the device drops a command now and then,
+    # and a second attempt goes through: replay it once before bothering the
+    # user. The replay carries no commands to replay, so it is not repeated.
+    if (
+        not replayed
+        and event.failure_type_code == FailureType.DATA_TRANSPORT_SERVICE_ERROR
+        and len(commands) == 1
+        and commands[0].get("replay")
+    ):
+        LOGGER.debug("Replaying Overkiz execution %s", event.exec_id)
+        coordinator.hass.async_create_task(
+            _replay_failed_execution(coordinator, commands[0], event)
+        )
+        return True
+
+    device_url = commands[0]["device_url"]
+    device = coordinator.devices.get(device_url)
+    ir.async_create_issue(
+        coordinator.hass,
+        DOMAIN,
+        f"execution_failed_{device_url}",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="execution_failed",
+        translation_placeholders={
+            "device": device.label if device is not None else device_url,
+            "error": event.failure_type_code.name,
+        },
+    )
+    return False
+
+
+async def _replay_failed_execution(
+    coordinator: OverkizDataUpdateCoordinator,
+    record: dict[str, Any],
+    event: ExecutionStateChangedEvent,
+) -> None:
+    """Run again a command the device did not receive, once."""
+    device_url = record["device_url"]
+    replay: list[Command] = record["replay"]
+    sequence: int = record["sequence"]
+
+    # A newer value of a setting must not be overwritten by an older one.
+    if any(
+        coordinator.command_sequences.get((device_url, command.name)) != sequence
+        for command in replay
+        if not str(command.name).startswith("refresh")
+    ):
+        LOGGER.debug("Not replaying Overkiz execution %s: superseded", event.exec_id)
+        return
+
+    try:
+        exec_id = await coordinator.async_execute_throttled(
+            [Action(device_url=device_url, commands=replay)]
+        )
+    except (
+        BaseOverkizError,
+        TimeoutError,
+        ClientConnectorError,
+        ServerDisconnectedError,
+    ):
+        LOGGER.warning("Replay of the Overkiz command failed", exc_info=True)
+        _report_failed_execution(coordinator, event, [record], replayed=True)
+        if (key := record.get("key")) is not None:
+            await _send_pending_commands(coordinator, key)
+        return
+
+    coordinator.executions.setdefault(exec_id, []).append(
+        {
+            "device_url": device_url,
+            "command_name": record["command_name"],
+            "command_names": record["command_names"],
+            "key": record.get("key"),
+            "started": monotonic(),
+        }
+    )
+
+
+def _failed_command_names(
+    commands: list[dict[str, Any]], event: ExecutionStateChangedEvent
+) -> list[str] | None:
+    """Return the names of the commands that failed, if the event says which."""
+    if len(commands) != 1 or not event.failed_commands:
+        return None
+
+    names = commands[0].get("command_names", [])
+    ranks = [
+        command["rank"]
+        for command in event.failed_commands
+        if isinstance(command, dict) and isinstance(command.get("rank"), int)
+    ]
+
+    if not ranks or any(rank >= len(names) for rank in ranks):
+        return None
+
+    return [names[rank] for rank in ranks]

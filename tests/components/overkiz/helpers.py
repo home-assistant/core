@@ -4,7 +4,7 @@ from datetime import timedelta
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
-from pyoverkiz.enums import DataType, EventName, ExecutionState
+from pyoverkiz.enums import DataType, EventName, ExecutionState, FailureType
 from pyoverkiz.models import (
     DeviceAvailableEvent,
     DeviceCreatedEvent,
@@ -104,7 +104,12 @@ def device_created_event(device_url: str) -> DeviceCreatedEvent:
 
 
 def execution_state_changed_event(
-    exec_id: str, new_state: ExecutionState, old_state: ExecutionState
+    exec_id: str,
+    new_state: ExecutionState,
+    old_state: ExecutionState,
+    *,
+    failure_type_code: FailureType | None = None,
+    failed_commands: list[dict[str, Any]] | None = None,
 ) -> ExecutionStateChangedEvent:
     """Build an EXECUTION_STATE_CHANGED event."""
     return ExecutionStateChangedEvent(
@@ -112,6 +117,8 @@ def execution_state_changed_event(
         exec_id=exec_id,
         new_state=new_state,
         old_state=old_state,
+        failure_type_code=failure_type_code,
+        failed_commands=failed_commands,
     )
 
 

@@ -744,9 +744,10 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         # The derogation only has to be started once: sending it again with
         # every step of the slider and refreshing the modes makes each step
         # slower, and a long queue of steps loses commands.
-        if (
-            self.device.states.get_value(OverkizState.CORE_DEROGATION_ON_OFF)
-            == OverkizCommandParam.ON
+        if self.device.states.get_value(
+            OverkizState.CORE_DEROGATION_ON_OFF
+        ) == OverkizCommandParam.ON or self.coordinator.is_derogation_written_on(
+            self.device_url
         ):
             await self.async_execute_and_refresh_modes(commands, ())
             return
@@ -770,8 +771,10 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         # Commands of one execution run in order, so the refreshes only start
         # once the device has applied the previous commands. Each command takes
         # seconds on the device, and a long queue makes it drop commands.
+        # The device refuses calls sent too quickly: while a write of the same
+        # setting is running, only the latest value is kept and sent after it.
         await self.executor.async_execute_commands(
-            [*commands, *(Command(name=name) for name in refresh)]
+            [*commands, *(Command(name=name) for name in refresh)], coalesce=True
         )
 
     @property

@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable, Generator
 from dataclasses import dataclass, field
+from datetime import timedelta
 from typing import NamedTuple
 from unittest.mock import AsyncMock, patch
 
@@ -99,6 +100,16 @@ class MockOverkizClient(OverkizClient):
         """Return a unique execution id for each action group."""
         self._execution_id += 1
         return f"exec-{self._execution_id}"
+
+
+@pytest.fixture(autouse=True)
+def no_write_interval() -> Generator[None]:
+    """Skip the pause between two writes, which never ends with a frozen clock."""
+    with patch(
+        "homeassistant.components.overkiz.coordinator.MIN_WRITE_INTERVAL",
+        timedelta(0),
+    ):
+        yield
 
 
 @pytest.fixture

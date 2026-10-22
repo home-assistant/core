@@ -1,5 +1,6 @@
 """Class for helpers and communication with the OverKiz API."""
 
+from time import monotonic
 from typing import Any
 
 from aiohttp import ClientConnectorError, ServerDisconnectedError
@@ -84,7 +85,11 @@ class OverkizExecutor:
             await self.coordinator.async_refresh()
 
     async def async_execute_commands(
-        self, commands: list[Command], refresh_afterwards: bool = True
+        self,
+        commands: list[Command],
+        refresh_afterwards: bool = True,
+        *,
+        coalesce: bool = False,
     ) -> None:
         """Execute multiple device commands as a single batch execution.
 
@@ -94,15 +99,46 @@ class OverkizExecutor:
         :param refresh_afterwards: Whether to refresh the device state
             after the batch is executed. Disable it to refresh only once
             when this batch is part of a larger sequence of commands.
+        :param coalesce: Whether a write of the same settings still running
+            makes these commands wait, replaced by any newer ones, and run once
+            the running one ends: the first and the last of a quick series are
+            sent. Writes are also spaced out, as the box refuses calls sent too
+            quickly.
         """
         if not commands:
             return
 
-        try:
-            exec_id = await self.coordinator.client.execute_action_group(
-                label="Home Assistant",
-                actions=[Action(device_url=self.device.device_url, commands=commands)],
+        key = None
+        if coalesce and (
+            names := tuple(
+                str(command.name)
+                for command in commands
+                if not str(command.name).startswith("refresh")
             )
+        ):
+            key = (self.device.device_url, names)
+            if self.coordinator.is_execution_running(key):
+                # The latest value is the one running: nothing left to send.
+                if self.coordinator.is_same_as_running(key, commands):
+                    self.coordinator.pending_commands.pop(key, None)
+                else:
+                    self.coordinator.pending_commands[key] = commands
+                return
+
+        actions = [Action(device_url=self.device.device_url, commands=commands)]
+        try:
+            if coalesce:
+                if key is not None:
+                    self.coordinator.writes_waiting.add(key)
+                try:
+                    exec_id = await self.coordinator.async_execute_throttled(actions)
+                finally:
+                    if key is not None:
+                        self.coordinator.writes_waiting.discard(key)
+            else:
+                exec_id = await self.coordinator.client.execute_action_group(
+                    label="Home Assistant", actions=actions
+                )
         # Catch Overkiz exceptions to support `continue_on_error` functionality
         except BaseOverkizError as exception:
             raise HomeAssistantError(exception) from exception
@@ -113,12 +149,24 @@ class OverkizExecutor:
         ) as exception:
             raise HomeAssistantError("Failed to connect") from exception
 
-        self.coordinator.executions.setdefault(exec_id, []).append(
-            {
-                "device_url": self.device.device_url,
-                "command_name": commands[-1].name,
-            }
-        )
+        # Remember what was sent, to run it once more if the device never
+        # received it. Refreshes alone are not worth replaying.
+        record: dict[str, Any] = {
+            "device_url": self.device.device_url,
+            "command_name": commands[-1].name,
+            "command_names": [command.name for command in commands],
+            "key": key,
+            "started": monotonic(),
+        }
+        if any(not str(command.name).startswith("refresh") for command in commands):
+            self.coordinator.command_sequence += 1
+            for command in commands:
+                self.coordinator.command_sequences[
+                    (self.device.device_url, command.name)
+                ] = self.coordinator.command_sequence
+            record["replay"] = commands
+            record["sequence"] = self.coordinator.command_sequence
+        self.coordinator.executions.setdefault(exec_id, []).append(record)
         if refresh_afterwards:
             await self.coordinator.async_refresh()
 
