@@ -6,6 +6,11 @@
   "dependencies": ["http", "web_rtc"],
   "documentation": "https://www.home-assistant.io/integrations/camera",
   "integration_type": "entity",
+  "preview_features": {
+    "two_way_audio": {
+      "feedback_url": "https://forms.gle/YjoL6e6dtU4F9WBZ6"
+    }
+  },
   "quality_scale": "internal",
   "requirements": ["PyTurboJPEG==1.8.3"]
 }

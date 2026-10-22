@@ -224,7 +224,8 @@
         },
         "step": {
           "system_execute_reboot": {
-            "description": "Settings were changed which require a system reboot to take effect.\n\nThis fix will initiate a system reboot which will make Home Assistant and all the apps inaccessible for a brief period."
+            "description": "Settings were changed which require a system reboot to take effect.\n\nSelect **Reboot** to reboot the system now. Home Assistant and all apps will be inaccessible for a brief period.",
+            "submit": "[%key:common::action::reboot%]"
           }
         }
       },

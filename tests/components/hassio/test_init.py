@@ -1367,7 +1367,7 @@ async def test_setup_hardware_integration(
         patch.dict(os.environ, MOCK_ENVIRON),
         patch(
             f"homeassistant.components.{integration}.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
         patch(
             "homeassistant.components.homeassistant_yellow.config_flow.probe_silabs_firmware_info",

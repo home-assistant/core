@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.sfr_box.async_setup_entry", return_value=True
+        "homeassistant.components.sfr_box.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

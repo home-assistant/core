@@ -11,6 +11,13 @@ LABS_PREVIEW_FEATURES = {
             "report_issue_url": "https://github.com/OHF-Device-Database/device-database/issues/new",
         },
     },
+    "camera": {
+        "two_way_audio": {
+            "feedback_url": "https://forms.gle/YjoL6e6dtU4F9WBZ6",
+            "learn_more_url": "",
+            "report_issue_url": "",
+        },
+    },
     "cloud": {
         "stt_v2": {
             "feedback_url": "https://forms.gle/Juf2vsxJHUX5y6Ev5",
