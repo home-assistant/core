@@ -2111,7 +2111,7 @@ async def async_api_hold(
         service = timer.SERVICE_PAUSE
 
     elif entity.domain == VACUUM_DOMAIN:
-        service = vacuum.SERVICE_START_PAUSE
+        service = vacuum.SERVICE_PAUSE
 
     else:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
@@ -2138,7 +2138,7 @@ async def async_api_resume(
         service = timer.SERVICE_START
 
     elif entity.domain == VACUUM_DOMAIN:
-        service = vacuum.SERVICE_START_PAUSE
+        service = vacuum.SERVICE_START
 
     else:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)

@@ -5595,7 +5595,7 @@ async def test_vacuum_pause(hass: HomeAssistant) -> None:
     assert configuration["allowRemoteResume"] is True
 
     await assert_request_calls_service(
-        "Alexa.TimeHoldController", "Hold", "vacuum#test_3", "vacuum.start_pause", hass
+        "Alexa.TimeHoldController", "Hold", "vacuum#test_3", "vacuum.pause", hass
     )
 
 
@@ -5622,7 +5622,7 @@ async def test_vacuum_resume(hass: HomeAssistant) -> None:
         "Alexa.TimeHoldController",
         "Resume",
         "vacuum#test_4",
-        "vacuum.start_pause",
+        "vacuum.start",
         hass,
     )
 
