@@ -31,6 +31,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "fault": {
+        "name": "Fault"
+      }
+    },
     "sensor": {
       "ac_current": {
         "name": "AC current"
