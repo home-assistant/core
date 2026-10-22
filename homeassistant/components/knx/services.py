@@ -1,5 +1,6 @@
 """KNX integration services."""
 
+from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, cast
 
@@ -11,7 +12,7 @@ from xknx.telegram import Telegram
 from xknx.telegram.address import parse_device_group_address
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
-from homeassistant.const import CONF_TYPE, SERVICE_RELOAD, Platform
+from homeassistant.const import SERVICE_RELOAD, Platform
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -27,27 +28,36 @@ from homeassistant.helpers.service import (
 )
 from homeassistant.util.json import JsonValueType
 
-from .const import (
-    DOMAIN,
-    KNX_ADDRESS,
-    KNX_MODULE_KEY,
-    SERVICE_KNX_ATTR_PAYLOAD,
-    SERVICE_KNX_ATTR_REMOVE,
-    SERVICE_KNX_ATTR_RESPONSE,
-    SERVICE_KNX_ATTR_TYPE,
-    SERVICE_KNX_EVENT_REGISTER,
-    SERVICE_KNX_EXPOSURE_REGISTER,
-    SERVICE_KNX_READ,
-    SERVICE_KNX_SAVE_SCENE,
-    SERVICE_KNX_SEND,
-)
+from .const import DOMAIN, KNX_MODULE_KEY
 from .expose import create_knx_exposure
-from .schema import ExposeSchema, dpt_base_type_validator, ga_validator
+from .schema import ExposeSchema
+from .validation import dpt_base_type_validator, ga_validator
 
 if TYPE_CHECKING:
     from .knx_module import KNXModule
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class KnxService(StrEnum):
+    """Store keys for KNX services."""
+
+    EVENT_REGISTER = "event_register"
+    EXPOSURE_REGISTER = "exposure_register"
+    READ = "read"
+    SAVE_SCENE = "save_scene"
+    SEND = "send"
+
+
+class KnxServiceArgument(StrEnum):
+    """Store keys for KNX service arguments."""
+
+    ADDRESS = "address"
+    PAYLOAD = "payload"
+    REMOVE = "remove"
+    RESPONSE = "response"
+    TYPE = "type"
+
 
 _DESCRIPTION_PLACEHOLDERS = {
     "sensor_value_types_url": "https://www.home-assistant.io/integrations/knx/#value-types"
@@ -62,35 +72,35 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Register KNX integration services."""
     hass.services.async_register(
         DOMAIN,
-        SERVICE_KNX_SEND,
+        KnxService.SEND,
         service_send_to_knx_bus,
-        schema=SERVICE_KNX_SEND_SCHEMA,
+        schema=SERVICE_SEND_SCHEMA,
         description_placeholders=_DESCRIPTION_PLACEHOLDERS,
     )
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_KNX_READ,
+        KnxService.READ,
         service_read_to_knx_bus,
-        schema=SERVICE_KNX_READ_SCHEMA,
+        schema=SERVICE_READ_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
     )
 
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_KNX_EVENT_REGISTER,
+        KnxService.EVENT_REGISTER,
         service_event_register_modify,
-        schema=SERVICE_KNX_EVENT_REGISTER_SCHEMA,
+        schema=SERVICE_EVENT_REGISTER_SCHEMA,
         description_placeholders=_DESCRIPTION_PLACEHOLDERS,
     )
 
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_KNX_EXPOSURE_REGISTER,
+        KnxService.EXPOSURE_REGISTER,
         service_exposure_register_modify,
-        schema=SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA,
+        schema=SERVICE_EXPOSURE_REGISTER_SCHEMA,
         description_placeholders=_DESCRIPTION_PLACEHOLDERS,
     )
 
@@ -104,7 +114,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_platform_entity_service(
         hass,
         DOMAIN,
-        SERVICE_KNX_SAVE_SCENE,
+        KnxService.SAVE_SCENE,
         entity_domain=Platform.SCENE,
         schema=None,
         func="async_save_scene",
@@ -122,14 +132,14 @@ def get_knx_module(hass: HomeAssistant) -> KNXModule:
         ) from err
 
 
-SERVICE_KNX_EVENT_REGISTER_SCHEMA = probatio.Schema(
+SERVICE_EVENT_REGISTER_SCHEMA = probatio.Schema(
     {
-        probatio.Required(KNX_ADDRESS): probatio.All(
+        probatio.Required(KnxServiceArgument.ADDRESS): probatio.All(
             probatio.EnsureList(),
             [ga_validator],
         ),
-        probatio.Optional(CONF_TYPE): dpt_base_type_validator,
-        probatio.Optional(SERVICE_KNX_ATTR_REMOVE, default=False): cv.boolean,
+        probatio.Optional(KnxServiceArgument.TYPE): dpt_base_type_validator,
+        probatio.Optional(KnxServiceArgument.REMOVE, default=False): cv.boolean,
     }
 )
 
@@ -138,10 +148,10 @@ async def service_event_register_modify(call: ServiceCall) -> None:
     """Service for adding or removing a GroupAddress to the knx_event filter."""
     knx_module = get_knx_module(call.hass)
 
-    attr_address = call.data[KNX_ADDRESS]
+    attr_address = call.data[KnxServiceArgument.ADDRESS]
     group_addresses = set(map(parse_device_group_address, attr_address))
 
-    if call.data.get(SERVICE_KNX_ATTR_REMOVE):
+    if call.data.get(KnxServiceArgument.REMOVE):
         _error_gas = set()
         for group_address in group_addresses:
             try:
@@ -161,7 +171,7 @@ async def service_event_register_modify(call: ServiceCall) -> None:
             },
         )
 
-    if (dpt := call.data.get(CONF_TYPE)) and (
+    if (dpt := call.data.get(KnxServiceArgument.TYPE)) and (
         transcoder := DPTBase.parse_transcoder(dpt)
     ):
         knx_module.group_address_transcoder.update(
@@ -177,17 +187,19 @@ async def service_event_register_modify(call: ServiceCall) -> None:
         )
 
 
-SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA = probatio.Any(
+SERVICE_EXPOSURE_REGISTER_SCHEMA = probatio.Any(
     ExposeSchema.EXPOSE_SENSOR_SCHEMA.extend(
         {
-            probatio.Optional(SERVICE_KNX_ATTR_REMOVE, default=False): cv.boolean,
+            probatio.Optional(KnxServiceArgument.REMOVE, default=False): cv.boolean,
         }
     ),
     probatio.Schema(
         # for removing only `address` is required
         {
-            probatio.Required(KNX_ADDRESS): ga_validator,
-            probatio.Required(SERVICE_KNX_ATTR_REMOVE): probatio.All(cv.boolean, True),
+            probatio.Required(KnxServiceArgument.ADDRESS): ga_validator,
+            probatio.Required(KnxServiceArgument.REMOVE): probatio.All(
+                cv.boolean, True
+            ),
         },
         extra=probatio.ALLOW_EXTRA,
     ),
@@ -198,9 +210,9 @@ async def service_exposure_register_modify(call: ServiceCall) -> None:
     """Service for adding or removing an exposure to KNX bus."""
     knx_module = get_knx_module(call.hass)
 
-    group_address = call.data[KNX_ADDRESS]
+    group_address = call.data[KnxServiceArgument.ADDRESS]
 
-    if call.data.get(SERVICE_KNX_ATTR_REMOVE):
+    if call.data.get(KnxServiceArgument.REMOVE):
         try:
             removed_exposure = knx_module.service_exposures.pop(group_address)
         except KeyError as err:
@@ -235,29 +247,29 @@ async def service_exposure_register_modify(call: ServiceCall) -> None:
     )
 
 
-SERVICE_KNX_SEND_SCHEMA = probatio.Any(
+SERVICE_SEND_SCHEMA = probatio.Any(
     probatio.Schema(
         {
-            probatio.Required(KNX_ADDRESS): probatio.All(
+            probatio.Required(KnxServiceArgument.ADDRESS): probatio.All(
                 probatio.EnsureList(),
                 [ga_validator],
             ),
-            probatio.Required(SERVICE_KNX_ATTR_PAYLOAD): cv.match_all,
-            probatio.Required(SERVICE_KNX_ATTR_TYPE): dpt_base_type_validator,
-            probatio.Optional(SERVICE_KNX_ATTR_RESPONSE, default=False): cv.boolean,
+            probatio.Required(KnxServiceArgument.PAYLOAD): cv.match_all,
+            probatio.Required(KnxServiceArgument.TYPE): dpt_base_type_validator,
+            probatio.Optional(KnxServiceArgument.RESPONSE, default=False): cv.boolean,
         }
     ),
     probatio.Schema(
         # without type given payload is treated as raw bytes
         {
-            probatio.Required(KNX_ADDRESS): probatio.All(
+            probatio.Required(KnxServiceArgument.ADDRESS): probatio.All(
                 probatio.EnsureList(),
                 [ga_validator],
             ),
-            probatio.Required(SERVICE_KNX_ATTR_PAYLOAD): probatio.Any(
+            probatio.Required(KnxServiceArgument.PAYLOAD): probatio.Any(
                 cv.positive_int, [cv.positive_int]
             ),
-            probatio.Optional(SERVICE_KNX_ATTR_RESPONSE, default=False): cv.boolean,
+            probatio.Optional(KnxServiceArgument.RESPONSE, default=False): cv.boolean,
         }
     ),
 )
@@ -267,10 +279,10 @@ async def service_send_to_knx_bus(call: ServiceCall) -> None:
     """Service for sending an arbitrary KNX message to the KNX bus."""
     knx_module = get_knx_module(call.hass)
 
-    attr_address = call.data[KNX_ADDRESS]
-    attr_payload = call.data[SERVICE_KNX_ATTR_PAYLOAD]
-    attr_type = call.data.get(SERVICE_KNX_ATTR_TYPE)
-    attr_response = call.data[SERVICE_KNX_ATTR_RESPONSE]
+    attr_address = call.data[KnxServiceArgument.ADDRESS]
+    attr_payload = call.data[KnxServiceArgument.PAYLOAD]
+    attr_type = call.data.get(KnxServiceArgument.TYPE)
+    attr_response = call.data[KnxServiceArgument.RESPONSE]
 
     payload: DPTBinary | DPTArray
     if attr_type is not None:
@@ -305,9 +317,9 @@ async def service_send_to_knx_bus(call: ServiceCall) -> None:
         await knx_module.xknx.telegrams.put(telegram)
 
 
-SERVICE_KNX_READ_SCHEMA = probatio.Schema(
+SERVICE_READ_SCHEMA = probatio.Schema(
     {
-        probatio.Required(KNX_ADDRESS): probatio.All(
+        probatio.Required(KnxServiceArgument.ADDRESS): probatio.All(
             probatio.EnsureList(),
             [ga_validator],
         )
@@ -318,7 +330,7 @@ SERVICE_KNX_READ_SCHEMA = probatio.Schema(
 async def service_read_to_knx_bus(call: ServiceCall) -> ServiceResponse:
     """Service for sending a GroupValueRead telegram to the KNX bus."""
     knx_module = get_knx_module(call.hass)
-    addresses: list[str] = call.data[KNX_ADDRESS]
+    addresses: list[str] = call.data[KnxServiceArgument.ADDRESS]
 
     if call.return_response:
         if len(addresses) != 1:

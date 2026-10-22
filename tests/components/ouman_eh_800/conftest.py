@@ -35,12 +35,11 @@ from ouman_eh_800_api import (
     SystemEndpoints,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ouman_eh_800.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 TEST_URL = "http://192.168.1.100"
 TEST_USERNAME = "test-user"
@@ -202,7 +201,7 @@ _DEFAULT_SCENARIO = "room_sensors"
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.ouman_eh_800.async_setup_entry", return_value=True
+        "homeassistant.components.ouman_eh_800.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 

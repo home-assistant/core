@@ -107,12 +107,14 @@ class Telegrams:
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry_id: str,
         xknx: XKNX,
         project: KNXProject,
         config: KNXConfigEntryOptions,
     ) -> None:
         """Initialize Telegrams class."""
         self.hass = hass
+        self.config_entry_id = config_entry_id
         self.project = project
         self.config = config
 
@@ -298,7 +300,7 @@ class Telegrams:
 
     async def _abort_store_init(self) -> None:
         """Create a repair issue and tear down a store that failed to init."""
-        async_create_telegram_storage_issue(self.hass)
+        async_create_telegram_storage_issue(self.hass, self.config_entry_id)
         if self._uninitialized_store is not None:
             with contextlib.suppress(Exception):
                 await self._uninitialized_store.close()

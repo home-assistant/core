@@ -5,13 +5,12 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, load_json_array_fixture
 
 from homeassistant.components.airnow.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.util.json import JsonArrayType
-
-from tests.common import MockConfigEntry, load_json_array_fixture
 
 
 @pytest.fixture(name="config_entry")

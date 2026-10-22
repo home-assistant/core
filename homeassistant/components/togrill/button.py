@@ -8,8 +8,7 @@ from homeassistant.components.button import ButtonEntity, ButtonEntityDescriptio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ToGrillConfigEntry
-from .coordinator import ToGrillCoordinator
+from .coordinator import ToGrillConfigEntry, ToGrillCoordinator
 from .entity import ToGrillEntity
 
 PARALLEL_UPDATES = 0

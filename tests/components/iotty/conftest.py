@@ -21,15 +21,17 @@ from iottycloud.verbs import (
     STATUS_STATIONATRY,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import (
+    AiohttpClientMocker,
+    mock_aiohttp_client,
+)
 
 from homeassistant import setup
 from homeassistant.components.iotty.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker, mock_aiohttp_client
 
 CLIENT_ID = "client_id"
 CLIENT_SECRET = "client_secret"
@@ -151,7 +153,7 @@ def mock_config_entries_async_forward_entry_setup() -> Generator[AsyncMock]:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.iotty.async_setup_entry", return_value=True
+        "homeassistant.components.iotty.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 

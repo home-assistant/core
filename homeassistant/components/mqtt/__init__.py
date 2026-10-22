@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_PROTOCOL,
     SERVICE_RELOAD,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
@@ -82,7 +83,6 @@ from .const import (
     PROTOCOL_311,
     SERVICE_PUBLISH,
     TEMPLATE_ERRORS,
-    Platform,
 )
 from .models import (
     DATA_MQTT,
