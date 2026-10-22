@@ -11,15 +11,11 @@
       "reconfigure": {
         "data": {
           "exclude_vias": "Direct connections only",
-          "show_on_map": "Display on map",
-          "station_from": "Departure station",
-          "station_to": "Arrival station"
+          "show_on_map": "Display on map"
         },
         "data_description": {
           "exclude_vias": "Exclude connections with transfers",
-          "show_on_map": "Show the station on the map",
-          "station_from": "Station where the train departs",
-          "station_to": "Station where the train arrives"
+          "show_on_map": "Show the station on the map"
         },
         "title": "Reconfigure NMBS"
       },

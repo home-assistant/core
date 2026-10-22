@@ -1,5 +1,6 @@
 """Config flow for NMBS integration."""
 
+from collections.abc import Mapping
 from typing import Any, override
 
 import probatio
@@ -64,31 +65,21 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
         stations = {station.id: station for station in self.stations}
         station_from = stations[user_input[CONF_STATION_FROM]]
         station_to = stations[user_input[CONF_STATION_TO]]
-        vias = "_excl_vias" if user_input.get(CONF_EXCLUDE_VIAS) else ""
-        return station_from, station_to, f"{station_from.id}_{station_to.id}{vias}"
+        return station_from, station_to, _route_unique_id(user_input)
 
-    def _async_migrate_entities(
-        self,
-        entry: ConfigEntry,
-        unique_id: str,
-        station_from: StationDetails,
-        station_to: StationDetails,
-    ) -> None:
-        """Migrate the entities of the entry to the unique IDs of the new route.
+    def _async_migrate_entities(self, entry: ConfigEntry, unique_id: str) -> None:
+        """Migrate the entities of the entry to its new unique ID.
 
-        Entity unique IDs embed the route, so they change with it.
+        Entity unique IDs embed the entry unique ID, so they change with it.
         """
         unique_ids = {
             f"{CONNECTION_UNIQUE_ID_PREFIX}{entry.unique_id}": (
                 f"{CONNECTION_UNIQUE_ID_PREFIX}{unique_id}"
             ),
-            f"{LIVEBOARD_UNIQUE_ID_PREFIX}{entry.data[CONF_STATION_FROM]}_{entry.unique_id}": (
-                f"{LIVEBOARD_UNIQUE_ID_PREFIX}{station_from.id}_{unique_id}"
-            ),
-            f"{LIVEBOARD_UNIQUE_ID_PREFIX}{entry.data[CONF_STATION_TO]}_{entry.unique_id}": (
-                f"{LIVEBOARD_UNIQUE_ID_PREFIX}{station_to.id}_{unique_id}"
-            ),
         }
+        for station_id in (entry.data[CONF_STATION_FROM], entry.data[CONF_STATION_TO]):
+            prefix = f"{LIVEBOARD_UNIQUE_ID_PREFIX}{station_id}_"
+            unique_ids[f"{prefix}{entry.unique_id}"] = f"{prefix}{unique_id}"
         entity_registry = er.async_get(self.hass)
         for old_unique_id, new_unique_id in unique_ids.items():
             entity_id = entity_registry.async_get_entity_id(
@@ -152,52 +143,24 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle reconfiguration of the monitored route."""
+        """Handle reconfiguration of the connection options."""
         entry = self._get_reconfigure_entry()
-        errors: dict[str, str] = {}
-        try:
-            choices = await self._fetch_stations_choices()
-        except CannotConnect:
-            return self.async_abort(reason="api_unavailable")
-
         if user_input is not None:
-            if user_input[CONF_STATION_FROM] == user_input[CONF_STATION_TO]:
-                errors["base"] = "same_station"
-            else:
-                station_from, station_to, unique_id = self._route(user_input)
-                if unique_id != entry.unique_id:
-                    await self.async_set_unique_id(unique_id)
-                    self._abort_if_unique_id_configured()
-                    self._async_migrate_entities(
-                        entry, unique_id, station_from, station_to
-                    )
-                return self.async_update_reload_and_abort(
-                    entry,
-                    unique_id=unique_id,
-                    title=_route_title(station_from, station_to),
-                    data_updates=user_input,
-                )
+            unique_id = _route_unique_id({**entry.data, **user_input})
+            if unique_id != entry.unique_id:
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
+                self._async_migrate_entities(entry, unique_id)
+            return self.async_update_reload_and_abort(
+                entry,
+                unique_id=unique_id,
+                data_updates=user_input,
+            )
 
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(
-                        CONF_STATION_FROM, default=entry.data[CONF_STATION_FROM]
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=choices,
-                            mode=SelectSelectorMode.DROPDOWN,
-                        )
-                    ),
-                    probatio.Required(
-                        CONF_STATION_TO, default=entry.data[CONF_STATION_TO]
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            options=choices,
-                            mode=SelectSelectorMode.DROPDOWN,
-                        )
-                    ),
                     probatio.Optional(
                         CONF_EXCLUDE_VIAS,
                         default=entry.data.get(CONF_EXCLUDE_VIAS, False),
@@ -208,8 +171,13 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
                     ): BooleanSelector(),
                 }
             ),
-            errors=errors,
         )
+
+
+def _route_unique_id(data: Mapping[str, Any]) -> str:
+    """Return the config entry unique ID of a route."""
+    vias = "_excl_vias" if data.get(CONF_EXCLUDE_VIAS) else ""
+    return f"{data[CONF_STATION_FROM]}_{data[CONF_STATION_TO]}{vias}"
 
 
 def _route_title(station_from: StationDetails, station_to: StationDetails) -> str:
