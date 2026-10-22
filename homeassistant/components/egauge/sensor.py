@@ -21,6 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import CONF_INVERT_REGISTERS
 from .coordinator import EgaugeConfigEntry, EgaugeData, EgaugeDataCoordinator
 from .entity import EgaugeEntity
 
@@ -105,6 +106,10 @@ class EgaugeSensor(EgaugeEntity, SensorEntity):
         super().__init__(coordinator, register_name)
         self._register_name = register_name
         self.entity_description = description
+        self._invertible = description.device_class in (
+            SensorDeviceClass.POWER,
+            SensorDeviceClass.ENERGY,
+        )
         self._attr_unique_id = (
             f"{coordinator.serial_number}_{register_name}_{description.key}"
         )
@@ -113,9 +118,26 @@ class EgaugeSensor(EgaugeEntity, SensorEntity):
     @override
     def native_value(self) -> float:
         """Return the sensor value using the description's value function."""
-        return self.entity_description.native_value_fn(
+        value = self.entity_description.native_value_fn(
             self.coordinator.data, self._register_name
         )
+        if self._invertible and self._register_name in self._inverted_registers():
+            return -value
+        return value
+
+    def _inverted_registers(self) -> list[str]:
+        """Return the registers the user asked to invert.
+
+        Read from the live entry rather than the coordinator's copy: an options
+        change replaces the entry object, and the coordinator keeps the one it
+        was built with.
+        """
+        entry = self.hass.config_entries.async_get_entry(
+            self.coordinator.config_entry.entry_id
+        )
+        if entry is None:
+            return []
+        return list(entry.options.get(CONF_INVERT_REGISTERS, []))
 
     @property
     @override

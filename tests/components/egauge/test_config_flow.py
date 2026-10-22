@@ -7,7 +7,7 @@ from httpx2 import ConnectError
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.egauge.const import DOMAIN
+from homeassistant.components.egauge.const import CONF_INVERT_REGISTERS, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
@@ -238,3 +238,23 @@ async def test_reauth_flow_unique_id_mismatch(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
     assert mock_config_entry.data[CONF_PASSWORD] == "secret"
+
+
+async def test_options_flow_selects_inverted_registers(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test that the options flow stores the registers to invert."""
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_INVERT_REGISTERS: ["Grid"]},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options[CONF_INVERT_REGISTERS] == ["Grid"]
