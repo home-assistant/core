@@ -1,6 +1,12 @@
 """Test Tuya diagnostics platform."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.diagnostics import (
+    get_diagnostics_for_config_entry,
+    get_diagnostics_for_device,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 from tuya_sharing import CustomerDevice, Manager
@@ -10,13 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import initialize_entry
-
-from tests.common import MockConfigEntry
-from tests.components.diagnostics import (
-    get_diagnostics_for_config_entry,
-    get_diagnostics_for_device,
-)
-from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.parametrize("mock_device_code", ["rqbj_4iqe2hsfyd86kwwc"])

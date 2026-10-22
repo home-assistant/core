@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, patch
 from aioimaplib import AioImapException
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.imap.const import (
@@ -21,8 +22,6 @@ from homeassistant.components.imap.errors import InvalidAuth, InvalidFolder
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 MOCK_CONFIG = {
     "username": "email@email.com",

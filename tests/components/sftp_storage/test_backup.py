@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, Mock, call, patch
 
 from asyncssh.sftp import SFTPError
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components.sftp_storage.backup import (
     async_get_backup_agents,
@@ -28,8 +29,6 @@ from .conftest import (
     TEST_AGENT_ID,
     ComponentSetup,
 )
-
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)

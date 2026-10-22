@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant.common import async_fire_time_changed
 
 from homeassistant.components import geonetnz_volcano
 from homeassistant.components.geo_location import ATTR_DISTANCE
@@ -29,8 +30,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import _generate_mock_feed_entry
-
-from tests.common import async_fire_time_changed
 
 CONFIG = {geonetnz_volcano.DOMAIN: {CONF_RADIUS: 200}}
 

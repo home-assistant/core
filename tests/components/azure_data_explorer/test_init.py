@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, Mock, patch
 from azure.kusto.data.exceptions import KustoAuthenticationError, KustoServiceError
 from azure.kusto.ingest import StreamDescriptor
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import azure_data_explorer
 from homeassistant.components.azure_data_explorer.const import CONF_SEND_INTERVAL
@@ -17,8 +18,6 @@ from homeassistant.util.dt import utcnow
 
 from . import FilterTest
 from .const import AZURE_DATA_EXPLORER_PATH, BASE_CONFIG_FULL, BASIC_OPTIONS
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
 

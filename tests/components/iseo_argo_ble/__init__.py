@@ -2,10 +2,10 @@
 
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 MOCK_ADDRESS = "00:15:42:AA:BB:CC"  # 00:15:42 is ISEO's OUI
 MOCK_UUID_HEX = "eaa06132486f426cb0d26c6b9b578add"

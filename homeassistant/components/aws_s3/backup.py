@@ -20,8 +20,8 @@ from homeassistant.components.backup import (
 from homeassistant.const import CONF_PREFIX
 from homeassistant.core import HomeAssistant, callback
 
-from . import S3ConfigEntry
 from .const import CONF_BUCKET, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .coordinator import S3ConfigEntry
 from .helpers import async_list_backups_from_s3
 
 _LOGGER = logging.getLogger(__name__)

@@ -14,6 +14,15 @@ from freezegun.api import FrozenDateTimeFactory
 import mutagen
 from mutagen.id3 import TIT2, TPE1, Encoding
 import pytest
+from pytest_homeassistant.common import (
+    MockModule,
+    async_fire_time_changed,
+    async_mock_service,
+    load_fixture_bytes,
+    mock_integration,
+    mock_platform,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 
 from homeassistant.components import ffmpeg, tts
 from homeassistant.components.media_player import (
@@ -46,16 +55,6 @@ from .common import (
     mock_setup,
     retrieve_media,
 )
-
-from tests.common import (
-    MockModule,
-    async_fire_time_changed,
-    async_mock_service,
-    load_fixture_bytes,
-    mock_integration,
-    mock_platform,
-)
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 ORIG_WRITE_TAGS = tts.SpeechManager.write_tags
 

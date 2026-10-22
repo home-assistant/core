@@ -3,11 +3,11 @@
 from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.forecast_solar import energy
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_energy_solar_forecast(

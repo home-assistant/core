@@ -41,7 +41,8 @@ from .const import (
 )
 from .exception import UnknownMediaType
 from .favorites import SonosFavorites
-from .speaker import SonosMedia, SonosSpeaker
+from .media import SonosMedia
+from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
 

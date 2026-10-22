@@ -16,6 +16,7 @@ from kasa import (
 from kasa.interfaces import LightEffect
 from kasa.iot import IotDevice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components import tplink
 from homeassistant.components.homeassistant.scene import (
@@ -69,8 +70,6 @@ from . import (
     _patch_single_discovery,
 )
 from .const import DEVICE_ID, MAC_ADDRESS
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(

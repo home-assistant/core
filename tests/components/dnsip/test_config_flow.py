@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from aiodns.error import DNSError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.dnsip.config_flow import DATA_SCHEMA
@@ -25,8 +26,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import RetrieveDNS
 
-from tests.common import MockConfigEntry
-
 
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
@@ -45,7 +44,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.dnsip.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -88,7 +87,7 @@ async def test_form_with_additional_options(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.dnsip.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -152,7 +151,7 @@ async def test_form_error(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.dnsip.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -195,7 +194,7 @@ async def test_flow_already_exist(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.dnsip.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.dnsip.config_flow.aiodns.DNSResolver",
@@ -374,7 +373,7 @@ async def test_options_error(hass: HomeAssistant, p_input: dict[str, str]) -> No
 
     with patch(
         "homeassistant.components.dnsip.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -410,7 +409,7 @@ async def test_options_error(hass: HomeAssistant, p_input: dict[str, str]) -> No
         ),
         patch(
             "homeassistant.components.dnsip.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.options.async_configure(

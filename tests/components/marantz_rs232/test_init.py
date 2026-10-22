@@ -9,6 +9,7 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from marantz_rs232 import V2007ReceiverState
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from serialx import SerialException
 
 from homeassistant.components.marantz_rs232.const import DOMAIN
@@ -16,8 +17,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("init_integration")

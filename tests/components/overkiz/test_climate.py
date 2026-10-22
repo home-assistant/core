@@ -11,6 +11,7 @@ from pyoverkiz.enums import ExecutionState, FailureType, OverkizState
 from pyoverkiz.exceptions import BaseOverkizError
 from pyoverkiz.models import Event
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -44,8 +45,6 @@ from .helpers import (
     device_unavailable_event,
     execution_state_changed_event,
 )
-
-from tests.common import snapshot_platform
 
 # io:HeatingValveIOComponent
 VALVE = FixtureDevice(

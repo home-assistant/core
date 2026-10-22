@@ -12,6 +12,17 @@ from aiohttp.test_utils import TestClient
 from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockUser,
+    async_capture_events,
+    async_fire_time_changed,
+)
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 
 from homeassistant.components.frontend import (
     CONF_DEVELOPMENT_PR,
@@ -25,6 +36,7 @@ from homeassistant.components.frontend import (
     EVENT_PANELS_UPDATED,
     THEMES_STORAGE_KEY,
     add_extra_js_url,
+    async_get_theme_names,
     async_panel_exists,
     async_register_built_in_panel,
     async_remove_panel,
@@ -36,14 +48,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockUser, async_capture_events, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import (
-    ClientSessionGenerator,
-    MockHAClientWebSocket,
-    WebSocketGenerator,
-)
 
 MOCK_THEMES = {
     "happy": {"primary-color": "red", "app-header-background-color": "blue"},
@@ -757,6 +761,15 @@ async def test_async_panel_exists(hass: HomeAssistant) -> None:
 
     async_remove_panel(hass, "test_panel")
     assert async_panel_exists(hass, "test_panel") is False
+
+
+@pytest.mark.usefixtures("ignore_frontend_deps")
+async def test_async_get_theme_names(hass: HomeAssistant) -> None:
+    """Test async_get_theme_names helper."""
+    assert async_get_theme_names(hass) == []
+
+    assert await async_setup_component(hass, DOMAIN, CONFIG_THEMES)
+    assert async_get_theme_names(hass) == sorted(MOCK_THEMES)
 
 
 async def test_register_panel_collision_names_the_owner(hass: HomeAssistant) -> None:

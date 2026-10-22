@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from thinqconnect import ThinQAPIException
 
 from homeassistant.config_entries import ConfigEntryState
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_load_unload_entry(

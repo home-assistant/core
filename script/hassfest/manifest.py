@@ -144,6 +144,10 @@ NO_CATEGORIES_INTEGRATION_TYPES = {
     IntegrationType.SYSTEM,
 }
 
+CATEGORIES_DOCUMENTATION_URL = (
+    "https://contributors.home-assistant.io/core/integrations/categories/"
+)
+
 
 def core_documentation_url(value: str) -> str:
     """Validate that a documentation url has the correct path and domain."""
@@ -408,6 +412,16 @@ def load_known_categories(config: Config) -> set[str] | None:
 def validate_categories(integration: Integration, known_categories: set[str]) -> None:
     """Validate the categories of an integration."""
     if not (categories := integration.manifest.get("categories")):
+        # Every core integration people browse for has a place. Virtual
+        # integrations show the categories of the integration they point to.
+        if integration.core and integration.integration_type not in (
+            NO_CATEGORIES_INTEGRATION_TYPES | {IntegrationType.VIRTUAL}
+        ):
+            integration.add_error(
+                "manifest",
+                f"Integrations of type {integration.integration_type} need categories, "
+                f"see {CATEGORIES_DOCUMENTATION_URL} to pick them",
+            )
         return
 
     if integration.integration_type in NO_CATEGORIES_INTEGRATION_TYPES:

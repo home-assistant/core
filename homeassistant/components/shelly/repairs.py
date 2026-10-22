@@ -80,6 +80,7 @@ def async_manage_ble_scanner_firmware_unsupported_issue(
                     "firmware": firmware,
                 },
                 data={"entry_id": entry.entry_id},
+                config_entry_id=entry.entry_id,
             )
             return
 
@@ -121,6 +122,7 @@ def async_manage_deprecated_firmware_issue(
                     "ha_version": ha_version,
                 },
                 data={"entry_id": entry.entry_id},
+                config_entry_id=entry.entry_id,
             )
             return
 
@@ -163,6 +165,7 @@ def async_manage_outbound_websocket_incorrectly_enabled_issue(
                 "ip_address": device.ip_address,
             },
             data={"entry_id": entry.entry_id},
+            config_entry_id=entry.entry_id,
         )
         return
 
@@ -205,6 +208,7 @@ def async_manage_open_wifi_ap_issue(
                 "ip_address": device.ip_address,
             },
             data={"entry_id": entry.entry_id},
+            config_entry_id=entry.entry_id,
         )
         return
 
@@ -252,6 +256,7 @@ def async_manage_rtsp_disabled_issue(
                 "ip_address": device.ip_address,
             },
             data={"entry_id": entry.entry_id},
+            config_entry_id=entry.entry_id,
         )
         return
 
@@ -323,6 +328,7 @@ class CoiotConfigureFlow(ShellyBlockRepairsFlow):
             description_placeholders = issue.translation_placeholders
 
         return self.async_show_menu(
+            step_id="init",
             menu_options=["confirm", "ignore"],
             description_placeholders=description_placeholders,
         )
@@ -451,6 +457,7 @@ class ShellyRpcMenuRepairsFlow(RepairsFlow):
             description_placeholders = issue.translation_placeholders
 
         return self.async_show_menu(
+            step_id="init",
             menu_options=["confirm", "ignore"],
             description_placeholders=description_placeholders,
         )

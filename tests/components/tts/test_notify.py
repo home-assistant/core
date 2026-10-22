@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import assert_setup_component, async_mock_service
 
 from homeassistant.components import notify, tts
 from homeassistant.components.media_player import (
@@ -14,8 +15,6 @@ from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
 
 from .common import MockTTSEntity, mock_config_entry_setup
-
-from tests.common import assert_setup_component, async_mock_service
 
 
 @pytest.fixture(autouse=True)

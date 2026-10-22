@@ -3,10 +3,10 @@
 from collections.abc import Iterable
 import copy
 from enum import StrEnum
+from importlib.resources import files
 import inspect
 import itertools
 import logging
-from pathlib import Path
 import re
 from typing import Any, TypedDict
 
@@ -49,7 +49,6 @@ from homeassistant.helpers.trigger import (
 )
 from homeassistant.helpers.typing import UNDEFINED, TemplateVarsType, UndefinedType
 from homeassistant.util.yaml import load_yaml_dict
-from pytest_homeassistant import _paths
 from pytest_homeassistant.common import MockConfigEntry, mock_device_registry
 
 
@@ -1731,13 +1730,7 @@ async def _validate_condition_options(
 def _get_yaml_fields(automation_key: str, yaml_type: str) -> dict[str, Any]:
     """Load a conditions.yaml or triggers.yaml and return the fields for a key."""
     domain, key = automation_key.split(".", 1)
-    yaml_path = (
-        Path(_paths.TESTS_DIR).parent
-        / "homeassistant"
-        / "components"
-        / domain
-        / f"{yaml_type}.yaml"
-    )
+    yaml_path = files("homeassistant.components") / domain / f"{yaml_type}.yaml"
     data = load_yaml_dict(str(yaml_path))
     # YAML anchors (keys starting with '.') are included in the parsed dict;
     # the actual entry uses the plain key name.
