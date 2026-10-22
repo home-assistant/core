@@ -1,5 +1,6 @@
 """Main-side :class:`ConfigEntryRouter` implementation."""
 
+import asyncio
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -11,7 +12,7 @@ from homeassistant.loader import async_get_integration
 
 from ._proto import sandbox_pb2 as pb
 from .channel import ChannelClosedError, ChannelRemoteError
-from .classifier import SandboxAssignment, classify
+from .classifier import GROUP_BUILT_IN, GROUP_CUSTOM, MAIN, SandboxAssignment, classify
 from .manager import SandboxManager
 from .messages import (
     MSG_ENTRY_SETUP,
@@ -37,11 +38,28 @@ class SandboxFlowRouter:
         manager: SandboxManager,
         *,
         data: SandboxData | None = None,
+        domains: frozenset[str] | None = None,
     ) -> None:
         """Initialise the router with the active sandbox manager."""
         self._hass = hass
         self._manager = manager
         self._data = data
+        self._domains = domains
+
+    async def async_setup_component(self, domain: str) -> bool | None:
+        """Set up only config entries for selected domains, without running YAML setup."""
+        if self._domains is None or domain not in self._domains:
+            return None
+        self._hass.config.components.add(domain)
+        await asyncio.gather(
+            *(
+                entry.async_setup_locked(self._hass)
+                for entry in self._hass.config_entries.async_entries(
+                    domain, include_ignore=False, include_disabled=False
+                )
+            )
+        )
+        return True
 
     async def async_create_flow(
         self,
@@ -76,10 +94,22 @@ class SandboxFlowRouter:
 
     async def async_setup_entry(self, entry: ConfigEntry) -> bool | None:
         """Hand a sandboxed entry to the manager and run its setup remotely."""
+        if self._domains is not None:
+            if entry.domain not in self._domains:
+                return None
+            # Own-domain proxy registration must not re-enter this entry's setup lock.
+            self._hass.config.components.add(entry.domain)
         group = entry.sandbox
-        if group is None:
+        if group is None and self._domains is None:
             return None
         try:
+            if group is None:
+                assignment = await self._assignment_for_new_flow(entry.domain)
+                group = assignment.group
+                assert group is not None
+                # Placement is derived before setup; invalidate any cached storage view.
+                object.__setattr__(entry, "sandbox", group)
+                entry.clear_storage_cache()
             sandbox = await self._manager.ensure_started(group)
         except Exception as err:
             raise ConfigEntryError("Sandbox failed to start") from err
@@ -168,11 +198,17 @@ class SandboxFlowRouter:
 
     async def _assignment_for_new_flow(self, handler_key: str) -> SandboxAssignment:
         """Decide where a new flow for ``handler_key`` should run."""
+        if self._domains is not None and handler_key not in self._domains:
+            return MAIN
         for existing in self._hass.config_entries.async_entries(handler_key):
             if (group := existing.sandbox) is not None:
                 return SandboxAssignment(group=group)
         integration = await async_get_integration(self._hass, handler_key)
-        return classify(integration)
+        if self._domains is None:
+            return classify(integration)
+        return SandboxAssignment(
+            group=GROUP_BUILT_IN if integration.is_built_in else GROUP_CUSTOM
+        )
 
 
 async def _entry_setup_payload(

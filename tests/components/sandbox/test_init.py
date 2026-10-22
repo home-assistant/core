@@ -12,7 +12,9 @@ async def test_setup_installs_manager_router_and_hook(
     hass: HomeAssistant,
 ) -> None:
     """async_setup wires the manager/router and registers the config-entry hook."""
-    assert await async_setup_component(hass, "sandbox", {})
+    assert await async_setup_component(
+        hass, "sandbox", {"sandbox": {"integrations": ["test"]}}
+    )
     data = hass.data[DATA_SANDBOX]
     assert isinstance(data, SandboxData)
     assert isinstance(data.manager, SandboxManager)

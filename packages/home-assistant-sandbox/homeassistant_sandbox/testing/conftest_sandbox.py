@@ -110,10 +110,10 @@ async def async_setup_subprocess_sandbox(
     """Set up ``sandbox`` and spawn a real subprocess for ``group``."""
     # Lazy import: testing package must not pull the HA integration
     # tree at import time.
+    from homeassistant.components.sandbox import async_setup_runtime  # noqa: PLC0415
     from homeassistant.components.sandbox.const import DATA_SANDBOX  # noqa: PLC0415
-    from homeassistant.setup import async_setup_component  # noqa: PLC0415
 
-    assert await async_setup_component(hass, "sandbox", {})
+    await async_setup_runtime(hass, domains=None)
     data = hass.data[DATA_SANDBOX]
     manager = data.manager
     if manager is None:  # pragma: no cover — defensive only

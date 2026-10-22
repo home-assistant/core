@@ -541,6 +541,9 @@ async def async_from_config_dict(
     if not await async_load_base_functionality(hass):
         return None
 
+    if "sandbox" in config and not await async_setup_component(hass, "sandbox", config):
+        return None
+
     # Set up core.
     _LOGGER.debug("Setting up %s", CORE_INTEGRATIONS)
 
@@ -897,6 +900,10 @@ async def _async_set_up_integrations(
     hass: core.HomeAssistant, config: dict[str, Any]
 ) -> None:
     """Set up all the integrations."""
+    # Routing must precede dependency setup as well as config-entry setup.
+    if "sandbox" in config and not await async_setup_component(hass, "sandbox", config):
+        return
+
     watcher = _WatchPendingSetups(hass, _setup_started(hass))
     watcher.async_start()
 

@@ -2324,6 +2324,9 @@ class ConfigEntryRouter(Protocol):
     the default behaviour and a concrete value to take over.
     """
 
+    async def async_setup_component(self, domain: str) -> bool | None:
+        """Set up a component remotely, or return None for normal local setup."""
+
     async def async_create_flow(
         self,
         handler_key: str,

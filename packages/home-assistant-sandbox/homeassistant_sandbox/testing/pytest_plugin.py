@@ -176,11 +176,11 @@ async def async_setup_inprocess_sandbox(
     # Lazy import to keep ``homeassistant_sandbox.testing`` import-time free of HA
     # integration code (the testing package may be imported even when
     # the integration isn't installed).
+    from homeassistant.components.sandbox import async_setup_runtime  # noqa: PLC0415
     from homeassistant.components.sandbox.bridge import async_create_bridge  # noqa: PLC0415
     from homeassistant.components.sandbox.const import DATA_SANDBOX  # noqa: PLC0415
-    from homeassistant.setup import async_setup_component  # noqa: PLC0415
 
-    assert await async_setup_component(hass, "sandbox", {})
+    await async_setup_runtime(hass, domains=None)
     data = hass.data[DATA_SANDBOX]
     manager = data.manager
     if manager is None:  # pragma: no cover — defensive only

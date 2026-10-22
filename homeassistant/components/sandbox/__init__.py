@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 import logging
 from typing import Any
 
+import probatio
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
@@ -23,7 +25,14 @@ from .translation import SandboxTranslationProvider
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+CONFIG_SCHEMA = probatio.Schema(
+    {
+        DOMAIN: probatio.Schema(
+            {probatio.Optional("integrations", default=[]): [cv.slug]}
+        )
+    },
+    extra=probatio.ALLOW_EXTRA,
+)
 
 
 @dataclass
@@ -41,6 +50,16 @@ class SandboxData:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Sandbox integration."""
+    domains = frozenset(config.get(DOMAIN, {}).get("integrations", ()))
+    if domains:
+        await async_setup_runtime(hass, domains=domains)
+    return True
+
+
+async def async_setup_runtime(
+    hass: HomeAssistant, *, domains: frozenset[str] | None
+) -> None:
+    """Install routing; None selects the compatibility test harness's automatic mode."""
     data = SandboxData()
     hass.data[DATA_SANDBOX] = data
 
@@ -117,7 +136,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         on_ready=_on_ready,
         on_shutdown_reply=_on_shutdown_reply,
     )
-    router = SandboxFlowRouter(hass, manager, data=data)
+    router = SandboxFlowRouter(hass, manager, data=data, domains=domains)
     data.manager = manager
     data.router = router
 
@@ -140,5 +159,3 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         data.pending_teardown.clear()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_stop)
-
-    return True
