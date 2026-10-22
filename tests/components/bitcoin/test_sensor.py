@@ -5,6 +5,11 @@ from unittest.mock import MagicMock
 from blockchain.exchangerates import Currency
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bitcoin.const import DOMAIN
@@ -17,12 +22,10 @@ from homeassistant.const import (
     CONF_DISPLAY_OPTIONS,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_EXCHANGE_RATE = "sensor.exchange_rate_1_btc"
 
@@ -39,15 +42,13 @@ YAML_CONFIG = {
 async def test_entities(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the sensor entities and their states."""
     await setup_integration(hass, mock_config_entry)
 
-    states = hass.states.async_all(SENSOR_DOMAIN)
-    assert len(states) == 21
-    for state in sorted(states, key=lambda state: state.entity_id):
-        assert state == snapshot(name=state.entity_id)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.usefixtures("mock_exchangerates")

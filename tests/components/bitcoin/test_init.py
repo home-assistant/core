@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from blockchain.exchangerates import Currency
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bitcoin.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -11,8 +12,6 @@ from homeassistant.const import CONF_CURRENCY
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_statistics", "mock_exchangerates")

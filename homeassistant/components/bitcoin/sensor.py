@@ -229,7 +229,7 @@ async def async_setup_entry(
     previous = entry.data.get(CONF_DISPLAY_OPTIONS, [])
     async_add_entities(
         (
-            BitcoinSensor(data, currency, description)
+            BitcoinSensor(data, entry.entry_id, currency, description)
             for description in sorted(
                 SENSOR_TYPES, key=lambda description: description.key not in previous
             )
@@ -245,10 +245,15 @@ class BitcoinSensor(SensorEntity):
     _attr_icon = "mdi:currency-btc"
 
     def __init__(
-        self, data: BitcoinData, currency: str, description: SensorEntityDescription
+        self,
+        data: BitcoinData,
+        entry_id: str,
+        currency: str,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
+        self._attr_unique_id = f"{entry_id}_{description.key}"
         self.data = data
         self._currency = currency
 
