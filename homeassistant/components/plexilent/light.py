@@ -47,9 +47,9 @@ class PlexilentLight(PlexilentEntity, LightEntity):
 
     @property
     @override
-    def is_on(self) -> bool:
-        """Return whether the light is on."""
-        return bool(self.device.on)
+    def is_on(self) -> bool | None:
+        """Return whether the light is on, or None when the cloud is unsure."""
+        return self.device.on
 
     @property
     @override
@@ -70,14 +70,15 @@ class PlexilentLight(PlexilentEntity, LightEntity):
     @property
     @override
     def min_color_temp_kelvin(self) -> int:
-        """Return the warmest white temperature; it follows the device."""
-        return self.device.cct_min
+        """Return the warmest white temperature, or the default if unset."""
+        # cct_min/cct_max are None for devices without a configured range.
+        return self.device.cct_min or super().min_color_temp_kelvin
 
     @property
     @override
     def max_color_temp_kelvin(self) -> int:
-        """Return the coldest white temperature; it follows the device."""
-        return self.device.cct_max
+        """Return the coldest white temperature, or the default if unset."""
+        return self.device.cct_max or super().max_color_temp_kelvin
 
     @property
     @override

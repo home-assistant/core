@@ -12,12 +12,20 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
+    ATTR_RGBWW_COLOR,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
 from homeassistant.components.plexilent.const import DOMAIN, SCAN_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -137,6 +145,64 @@ async def test_light_unavailable_when_device_drops(
     await hass.async_block_till_done()
 
     assert hass.states.get(kitchen).state == STATE_UNAVAILABLE
+
+
+async def test_power_state_unknown(
+    hass: HomeAssistant,
+    client: MagicMock,
+    entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """An online light with no power state is unknown, not off."""
+    await setup_integration(hass, entry)
+    gate = _entity_id(hass, "m:6")
+    assert hass.states.get(gate).state == STATE_ON
+
+    client.devices.return_value = [
+        replace(d, on=None) if d.id == "m:6" else d for d in DEVICES
+    ]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(gate).state == STATE_UNKNOWN
+
+
+async def test_color_temp_bounds_fall_back(
+    hass: HomeAssistant,
+    client: MagicMock,
+    entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Missing device limits fall back to Home Assistant's defaults."""
+    await setup_integration(hass, entry)
+    kitchen = _entity_id(hass, "m:2")
+
+    client.devices.return_value = [
+        replace(DEVICES[0], cct_min=None, cct_max=None),
+        *DEVICES[1:],
+    ]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    attrs = hass.states.get(kitchen).attributes
+    assert attrs["min_color_temp_kelvin"] == DEFAULT_MIN_KELVIN
+    assert attrs["max_color_temp_kelvin"] == DEFAULT_MAX_KELVIN
+
+
+async def test_rgbww_turn_on_without_color_bounds(
+    hass: HomeAssistant, client: MagicMock, entry: MockConfigEntry
+) -> None:
+    """An rgbww turn-on does not fail on a light whose colour bounds are unset."""
+    await setup_integration(hass, entry)
+    hall = _entity_id(hass, "m:4")  # dim: cct_min/cct_max are None
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: hall, ATTR_RGBWW_COLOR: (255, 0, 0, 128, 128)},
+        blocking=True,
+    )
+    assert hass.states.get(hall).state == STATE_ON
 
 
 async def test_command_keeps_poll_schedule(
