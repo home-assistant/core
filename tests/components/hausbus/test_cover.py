@@ -12,6 +12,7 @@ from pyhausbus.de.hausbus.homeassistant.proxy.rollladen.params.EDirection import
 )
 from pyhausbus.ObjectId import ObjectId
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -30,8 +31,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-
-from tests.common import MockConfigEntry
 
 _OBJECT_ID = 0x12345678
 

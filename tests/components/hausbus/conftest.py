@@ -4,11 +4,10 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hausbus import gateway as hausbus_gateway
 from homeassistant.components.hausbus.const import DOMAIN
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)

@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.hausbus.const import DOMAIN, NEW_CHANNEL_ADDED
 from homeassistant.components.hausbus.gateway import (
@@ -10,10 +11,8 @@ from homeassistant.components.hausbus.gateway import (
     async_acquire_home_server,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-
-from tests.common import MockConfigEntry
 
 
 def _make_channel(object_id: int) -> MagicMock:
@@ -112,7 +111,7 @@ async def test_unload_buffers_channel_discovered_during_platform_unload(
 
     received: list[tuple] = []
     async_dispatcher_connect(
-        hass, NEW_CHANNEL_ADDED, lambda *args: received.append(args)
+        hass, NEW_CHANNEL_ADDED, callback(lambda *args: received.append(args))
     )
 
     channel = _make_channel(99)
@@ -151,7 +150,7 @@ async def test_unload_flushes_buffered_channel_if_platform_unload_fails(
 
     received: list[tuple] = []
     async_dispatcher_connect(
-        hass, NEW_CHANNEL_ADDED, lambda *args: received.append(args)
+        hass, NEW_CHANNEL_ADDED, callback(lambda *args: received.append(args))
     )
 
     channel = _make_channel(100)

@@ -20,7 +20,7 @@ LOGGER = logging.getLogger(__name__)
 type HausbusConfigEntry = ConfigEntry[HausbusGateway]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> None:
     """Set up Haus-Bus integration from a config entry."""
     try:
         gateway = await HausbusGateway.async_create(hass, entry)
@@ -48,10 +48,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> b
     gateway.discovery_task = entry.async_create_background_task(
         hass, gateway.start_discovery(), "Haus-Bus discovery"
     )
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> None:
     """Unload a config entry."""
     gateway = entry.runtime_data
     if gateway.discovery_task is not None:
@@ -63,15 +62,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> 
     gateway.pause_channel_dispatch()
     gateway.home_server.removeBusDeviceListener(gateway)
     try:
-        unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+        await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
     except BaseException:
         gateway.home_server.addBusDeviceListener(gateway)
         await gateway.async_flush_pending_channels()
         raise
-    if not unload_ok:
-        gateway.home_server.addBusDeviceListener(gateway)
-        await gateway.async_flush_pending_channels()
-        return unload_ok
 
     gateway.home_server.removeBusEventListener(gateway)
 
@@ -80,4 +75,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> 
         await async_release_home_server(hass, gateway.home_server)
     except Exception:
         LOGGER.exception("Failed to cleanly shut down the Haus-Bus network connection")
-    return unload_ok
