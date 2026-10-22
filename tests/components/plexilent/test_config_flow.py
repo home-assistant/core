@@ -75,19 +75,32 @@ async def test_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.parametrize(
+    ("error", "key"),
+    [
+        (PlexilentAuthError, "invalid_auth"),
+        (PlexilentConnectionError, "cannot_connect"),
+        (RuntimeError, "unknown"),
+    ],
+)
 async def test_reauth(
-    hass: HomeAssistant, client: MagicMock, entry: MockConfigEntry
+    hass: HomeAssistant,
+    client: MagicMock,
+    entry: MockConfigEntry,
+    error: type[Exception],
+    key: str,
 ) -> None:
-    """Reauthentication asks for the password and stores the new refresh token."""
+    """Each reauth error redisplays the form; a correct password stores the token."""
     entry.add_to_hass(hass)
     result = await entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
 
-    client.login.side_effect = PlexilentAuthError
+    client.login.side_effect = error
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_PASSWORD: "bad"}
     )
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": key}
 
     client.login.side_effect = None
     client.login.return_value = "r2"

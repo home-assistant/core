@@ -43,11 +43,7 @@ class PlexilentLight(PlexilentEntity, LightEntity):
     def __init__(self, coordinator: PlexilentCoordinator, device_id: str) -> None:
         """Initialize the light with the color modes of its type."""
         super().__init__(coordinator, device_id)
-        device = self.device
-        self._attr_supported_color_modes = MODES[device.type]
-        if ColorMode.COLOR_TEMP in MODES[device.type]:
-            self._attr_min_color_temp_kelvin = device.cct_min
-            self._attr_max_color_temp_kelvin = device.cct_max
+        self._attr_supported_color_modes = MODES[self.device.type]
 
     @property
     @override
@@ -70,6 +66,18 @@ class PlexilentLight(PlexilentEntity, LightEntity):
         """Return the brightness, 0-255."""
         level = self.device.brightness
         return None if level is None else value_to_brightness(PERCENT, level)
+
+    @property
+    @override
+    def min_color_temp_kelvin(self) -> int:
+        """Return the warmest white temperature; it follows the device."""
+        return self.device.cct_min
+
+    @property
+    @override
+    def max_color_temp_kelvin(self) -> int:
+        """Return the coldest white temperature; it follows the device."""
+        return self.device.cct_max
 
     @property
     @override

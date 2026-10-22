@@ -1,10 +1,12 @@
 """Tests for the Plexilent lights."""
 
+from dataclasses import replace
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 from pyplexilent import PlexilentError
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -14,13 +16,14 @@ from homeassistant.components.light import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.components.plexilent.const import DOMAIN
+from homeassistant.components.plexilent.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
+from .conftest import DEVICES
 
 
 def _entity_id(hass: HomeAssistant, device_id: str) -> str:
@@ -91,6 +94,52 @@ async def test_turn_on(
         blocking=True,
     )
     client.command.assert_awaited_with("m:2", **sent)
+
+
+async def test_color_temp_limits_refresh(
+    hass: HomeAssistant,
+    client: MagicMock,
+    entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """The white-temperature range follows the latest device data."""
+    await setup_integration(hass, entry)
+    kitchen = _entity_id(hass, "m:2")
+    assert hass.states.get(kitchen).attributes["max_color_temp_kelvin"] == 6500
+
+    client.devices.return_value = [
+        replace(DEVICES[0], cct_min=2200, cct_max=4000),
+        *DEVICES[1:],
+    ]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    attrs = hass.states.get(kitchen).attributes
+    assert attrs["min_color_temp_kelvin"] == 2200
+    assert attrs["max_color_temp_kelvin"] == 4000
+
+
+async def test_command_keeps_poll_schedule(
+    hass: HomeAssistant,
+    client: MagicMock,
+    entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Commanding a light does not push out the next scheduled poll."""
+    await setup_integration(hass, entry)  # polls at t0
+    hall = _entity_id(hass, "m:4")
+
+    freezer.tick(SCAN_INTERVAL / 2)  # t0 + 15 s
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: hall}, blocking=True
+    )
+    client.devices.reset_mock()
+
+    freezer.tick(SCAN_INTERVAL / 2)  # t0 + 30 s: the original deadline
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    client.devices.assert_awaited()
 
 
 async def test_turn_off_and_error(

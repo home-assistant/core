@@ -57,9 +57,10 @@ class PlexilentEntity(CoordinatorEntity[PlexilentCoordinator]):
             raise HomeAssistantError(
                 f"Could not control {self.device.name}: {err}"
             ) from err
-        self.coordinator.async_set_updated_data(
-            {**self.coordinator.data, self._id: device}
-        )
+        # Apply the device's answer at once, but leave the next poll on its
+        # schedule instead of pushing it out on every command.
+        self.coordinator.data = {**self.coordinator.data, self._id: device}
+        self.coordinator.async_update_listeners()
 
 
 def add_entities(
