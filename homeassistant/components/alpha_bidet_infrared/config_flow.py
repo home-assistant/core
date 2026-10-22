@@ -84,9 +84,9 @@ class AlphaBidetIrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             emitter_entity_id = user_input[CONF_INFRARED_EMITTER_ENTITY_ID]
-            if emitter_entity_id != entry.unique_id:
-                await self.async_set_unique_id(emitter_entity_id)
-                self._abort_if_unique_id_configured()
+            self._async_abort_entries_match(
+                {CONF_INFRARED_EMITTER_ENTITY_ID: emitter_entity_id}
+            )
             return self.async_update_reload_and_abort(
                 entry, unique_id=emitter_entity_id, data_updates=user_input
             )
