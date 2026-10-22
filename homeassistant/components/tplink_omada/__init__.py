@@ -88,7 +88,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> Non
     async def _async_cleanup_task() -> None:
         nonlocal _first_cleanup_call
         if _first_cleanup_call:
-            # Data is already fresh from initialize_first_refresh().
+            # Data is already fresh from initialize_first_refresh(), so this run
+            # is not skipped when polling is disabled: setup always refreshes,
+            # and the preference only stops the scheduled polling.
             _first_cleanup_call = False
         elif entry.pref_disable_polling:
             # Cleanup decisions need fresh data, so skip the run entirely
