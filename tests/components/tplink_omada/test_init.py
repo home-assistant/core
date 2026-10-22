@@ -246,6 +246,16 @@ async def test_cleanup_helpers_remove_unknown_clients(
         disabled_by=er.RegistryEntryDisabler.INTEGRATION,
     )
 
+    # Hyphen-separated variant of the same malformed identifier — format_mac
+    # would regroup the digits into a valid looking MAC, so it must not be removed
+    malformed_hyphen_octets = entity_registry.async_get_or_create(
+        domain="device_tracker",
+        platform=DOMAIN,
+        unique_id="scanner_Default_0-000-00-00-00-00",
+        config_entry=mock_config_entry,
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+    )
+
     await async_cleanup_client_trackers(hass, controller)
 
     assert entity_registry.async_get(unknown_client_entity_1.entity_id) is None
@@ -260,6 +270,7 @@ async def test_cleanup_helpers_remove_unknown_clients(
     assert entity_registry.async_get(malformed_mac.entity_id) is not None
     assert entity_registry.async_get(malformed_hex.entity_id) is not None
     assert entity_registry.async_get(malformed_octets.entity_id) is not None
+    assert entity_registry.async_get(malformed_hyphen_octets.entity_id) is not None
 
 
 async def _get_known_clients_without(
@@ -315,6 +326,42 @@ async def test_cleanup_runs_hourly(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entity_registry.async_get(tracker.entity_id) is None
+
+
+async def test_cleanup_preserves_trackers_when_known_clients_fetch_fails(
+    hass: HomeAssistant,
+    mock_omada_clients_only_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test cleanup keeps trackers when the known clients fetch fails."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    stale_tracker = entity_registry.async_get_or_create(
+        domain="device_tracker",
+        platform=DOMAIN,
+        unique_id="scanner_Default_99-99-99-99-99-99",
+        config_entry=mock_config_entry,
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+    )
+
+    site_client = mock_omada_clients_only_client.get_site_client.return_value
+    site_client.get_known_clients.side_effect = OmadaClientException("boom")
+
+    # The known clients are unknown after a failed fetch, so nothing is removed
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entity_registry.async_get(stale_tracker.entity_id) is not None
+
+    # A successful fetch lets the next sweep remove the stale tracker
+    site_client.get_known_clients.side_effect = partial(
+        _get_known_clients_without, hass, ""
+    )
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=2, seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entity_registry.async_get(stale_tracker.entity_id) is None
 
 
 async def test_cleanup_recreates_tracker_when_client_reappears(

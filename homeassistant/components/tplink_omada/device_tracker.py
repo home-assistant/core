@@ -38,24 +38,25 @@ async def async_setup_entry(
     def _should_add(unique_id: str) -> bool:
         """Return if a tracker should be added by this platform run.
 
-        A disabled registry entry needs no entity, so it is skipped. Every
-        other entry is added, because a registry entry alone does not mean the
-        entity exists: Home Assistant writes a restored state for enabled
-        entries that no platform has added yet.
+        Existing registry entries are submitted again, so the entity platform
+        updates their metadata and, for disabled entries, still runs
+        ``ScannerEntity.async_prepare_to_add_to_hass`` before skipping them.
+        That registers the MAC address for automatic enabling when a matching
+        device appears. Entries removed by stale tracker cleanup are created
+        again when their client returns.
         """
         entity_registry = er.async_get(hass)
-        entity_id = entity_registry.async_get_entity_id(
-            DEVICE_TRACKER_DOMAIN, DOMAIN, unique_id
-        )
-        if entity_id is None:
-            # The entry no longer exists, for example because stale tracker
-            # cleanup removed it. Allow the tracker to be created again.
+        if unique_id in added_unique_ids:
+            entity_id = entity_registry.async_get_entity_id(
+                DEVICE_TRACKER_DOMAIN, DOMAIN, unique_id
+            )
+            if entity_id is not None:
+                return False
+            # Stale tracker cleanup removed the entry, so allow the tracker to
+            # be created again.
             added_unique_ids.discard(unique_id)
-            return True
-        entity_entry = entity_registry.async_get(entity_id)
-        if entity_entry is not None and entity_entry.disabled_by is not None:
-            return False
-        return unique_id not in added_unique_ids
+        added_unique_ids.add(unique_id)
+        return True
 
     def _new_trackers() -> list[OmadaClientScannerEntity]:
         """Return trackers for known clients that this platform has not added."""

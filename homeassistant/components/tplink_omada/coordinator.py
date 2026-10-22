@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+import re
 from typing import TYPE_CHECKING, NamedTuple, override
 
 from tplink_omada_client import (
@@ -331,6 +332,14 @@ class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):
         )
 
 
+_MAC_PATTERN = re.compile(
+    r"[0-9a-f]{12}"
+    r"|[0-9a-f]{2}([:-])(?:[0-9a-f]{2}\1){4}[0-9a-f]{2}"
+    r"|[0-9a-f]{4}\.[0-9a-f]{4}\.[0-9a-f]{4}",
+    re.IGNORECASE,
+)
+
+
 def _unique_id_to_mac(unique_id: str | None) -> str | None:
     """Extract the client MAC address from a tracker unique ID."""
     if not unique_id or not unique_id.startswith("scanner_"):
@@ -339,19 +348,12 @@ def _unique_id_to_mac(unique_id: str | None) -> str | None:
     # right so site_ids that contain underscores are handled correctly.
     remainder = unique_id.removeprefix("scanner_")
     site_id, sep, mac = remainder.rpartition("_")
-    if not sep or not site_id or not mac:
+    if not sep or not site_id or not _MAC_PATTERN.fullmatch(mac):
         return None
 
-    # format_mac lowercases and reformats recognized separators without
-    # validating, so require six octets of exactly two hex digits.
-    mac = dr.format_mac(mac)
-    octets = mac.split(":")
-    if len(octets) != 6 or any(
-        len(octet) != 2 or any(char not in "0123456789abcdef" for char in octet)
-        for octet in octets
-    ):
-        return None
-    return mac
+    # Validate the octet widths before normalizing: format_mac regroups digits,
+    # so a malformed "0-000-00-00-00-00" would otherwise become "00:00:00:00:00:00".
+    return dr.format_mac(mac)
 
 
 async def async_cleanup_client_trackers(
