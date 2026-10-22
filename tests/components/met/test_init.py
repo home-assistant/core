@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.met.const import (
     CONF_TRACK_HOME,
@@ -18,8 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:

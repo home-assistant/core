@@ -3,6 +3,7 @@
 from copy import deepcopy
 
 import pytest
+from pytest_homeassistant.common import MockEntityPlatform, async_mock_service
 
 from homeassistant.components import alert, notify
 from homeassistant.components.alert.const import (
@@ -30,8 +31,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockEntityPlatform, async_mock_service
 
 NAME = "alert_test"
 DONE_MESSAGE = "alert_gone"

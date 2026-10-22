@@ -9,6 +9,7 @@ from matter_server.client.models.node import MatterNode
 from matter_server.common.const import SCHEMA_VERSION
 from matter_server.common.models import ServerInfoMessage
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.matter import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -17,8 +18,6 @@ from .common import (
     setup_integration_with_node_fixture,
     setup_integration_with_node_fixtures,
 )
-
-from tests.common import MockConfigEntry
 
 MOCK_FABRIC_ID = 12341234
 MOCK_COMPR_FABRIC_ID = 1234
