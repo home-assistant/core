@@ -487,10 +487,15 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         if device_hvac_mode == HVACMode.HEAT_COOL or self.program_setpoints is not None:
             return None
 
-        # A derogation started from a remote or the app can apply the setpoint
-        # of the other profile, which only the applied setpoint reports.
+        # A derogation over the program, started from a remote or the app, can
+        # apply the setpoint of the other profile, which only the applied
+        # setpoint reports. In manual mode the manual setpoint applies, and it
+        # is up to date right after it is set, unlike the applied one.
         if (
-            self.device.states.get_value(OverkizState.CORE_DEROGATION_ON_OFF)
+            (program_setpoints := self.active_program_setpoints) is not None
+            and self.device.states.get_value(program_setpoints.mode_state)
+            == OverkizCommandParam.INTERNAL_SCHEDULING
+            and self.device.states.get_value(OverkizState.CORE_DEROGATION_ON_OFF)
             == OverkizCommandParam.ON
             and (
                 applied_target_temperature := self.device.states.get_value(

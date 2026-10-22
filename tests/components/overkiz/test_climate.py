@@ -1308,3 +1308,45 @@ async def test_zone_control_zone_range_while_manual(
     assert state.attributes[ATTR_TEMPERATURE] == 18.0
     assert state.attributes[ATTR_TARGET_TEMP_LOW] == 18.0
     assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 19.5
+
+
+async def test_zone_control_zone_manual_derogation_shows_manual_setpoint(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test a manual zone shows its manual setpoint as soon as it is set.
+
+    The applied setpoint is only refreshed later, and showing it would make the
+    slider fall back to the previous value right after a change.
+    """
+    await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
+    await _async_set_zone_control_operating_mode(hass, freezer, mock_client, "heating")
+    await _async_set_zone_program(hass, freezer, mock_client, "manu", "on")
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                device_url=ZONE_CONTROL_ZONE.device_url,
+                device_states=[
+                    {
+                        "name": OverkizState.CORE_HEATING_TARGET_TEMPERATURE,
+                        "type": 2,
+                        "value": 18.5,
+                    },
+                    {
+                        "name": OverkizState.CORE_TARGET_TEMPERATURE,
+                        "type": 2,
+                        "value": 18.0,
+                    },
+                ],
+            )
+        ],
+    )
+
+    state = hass.states.get(ZONE_CONTROL_ZONE.entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_TEMPERATURE] == 18.5
