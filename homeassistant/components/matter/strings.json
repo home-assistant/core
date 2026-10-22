@@ -649,6 +649,20 @@
       "rms_voltage": {
         "name": "Effective voltage"
       },
+      "setpoint_change_amount": {
+        "name": "Setpoint change amount"
+      },
+      "setpoint_change_source": {
+        "name": "Setpoint change source",
+        "state": {
+          "external": "External",
+          "manual": "Manual",
+          "schedule": "Schedule"
+        }
+      },
+      "setpoint_change_timestamp": {
+        "name": "Last setpoint change"
+      },
       "switch_current_position": {
         "name": "Current switch position"
       },
