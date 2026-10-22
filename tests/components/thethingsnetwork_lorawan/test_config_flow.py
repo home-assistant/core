@@ -27,7 +27,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Prevent connection setup after a configuration flow creates its entry."""
     with patch(
         "homeassistant.components.thethingsnetwork_lorawan.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as setup_entry:
         yield setup_entry
 
