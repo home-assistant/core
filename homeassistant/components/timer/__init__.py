@@ -6,22 +6,14 @@ from typing import Any, override
 
 import probatio
 
-from homeassistant.const import (  # noqa: F401
-    ATTR_EDITABLE,
-    ATTR_ENTITY_ID,
-    CONF_ICON,
-    CONF_ID,
-    CONF_NAME,
-    SERVICE_RELOAD,
-)
+from homeassistant.const import CONF_ICON, CONF_ID, CONF_NAME, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
-from .const import (  # noqa: F401
-    ATTR_DURATION,
+from .const import (
     CONF_DURATION,
     CONF_RESTORE,
     DATA_TIMER,
@@ -55,6 +47,21 @@ STORAGE_FIELDS: VolDictType = {
     probatio.Optional(CONF_DURATION, default=DEFAULT_DURATION): cv.time_period,
     probatio.Optional(CONF_RESTORE, default=DEFAULT_RESTORE): cv.boolean,
 }
+
+__all__ = [
+    "CONF_DURATION",
+    "DOMAIN",
+    "SERVICE_CANCEL",
+    "SERVICE_CHANGE",
+    "SERVICE_FINISH",
+    "SERVICE_PAUSE",
+    "SERVICE_RELOAD",
+    "SERVICE_START",
+    "STORAGE_FIELDS",
+    "Timer",
+    "TimerEntityStateAttribute",
+    "TimerStorageCollection",
+]
 
 
 def _none_to_empty_dict[_T](value: _T | None) -> _T | dict[Any, Any]:

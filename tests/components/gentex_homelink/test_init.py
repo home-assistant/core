@@ -4,6 +4,8 @@ import http
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.plugins import AiohttpClientMocker
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.gentex_homelink.const import DOMAIN
@@ -20,9 +22,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 import homeassistant.helpers.device_registry as dr
 
 from . import setup_integration, update_callback
-
-from tests.common import MockConfigEntry
-from tests.conftest import AiohttpClientMocker
 
 
 @pytest.mark.usefixtures("aioclient_mock_fixture")

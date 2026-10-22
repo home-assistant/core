@@ -879,9 +879,7 @@ class Config:
                 try:
                     owner = await self.hass.auth.async_get_owner()
                     if owner is not None:
-                        from .components.frontend import (  # noqa: PLC0415
-                            storage as frontend_store,
-                        )
+                        from .components.frontend import storage as frontend_store  # noqa: PLC0415
 
                         owner_store = await frontend_store.async_user_store(
                             self.hass, owner.id

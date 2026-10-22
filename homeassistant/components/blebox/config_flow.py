@@ -20,7 +20,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import get_maybe_authenticated_session
 from .const import (
     ADDRESS_ALREADY_CONFIGURED,
     CANNOT_CONNECT,
@@ -32,6 +31,7 @@ from .const import (
     UNKNOWN,
     UNSUPPORTED_VERSION,
 )
+from .helpers import get_maybe_authenticated_session
 
 _LOGGER = logging.getLogger(__name__)
 

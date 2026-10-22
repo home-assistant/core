@@ -71,7 +71,7 @@
         "data": {
           "zone_number": "Zone number"
         },
-        "description": "Enter the zone number you'd like to to add, edit, or remove.",
+        "description": "Enter the zone number you'd like to add, edit, or remove.",
         "title": "[%key:component::alarmdecoder::options::step::init::title%]"
       }
     }

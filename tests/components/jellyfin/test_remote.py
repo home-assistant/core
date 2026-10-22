@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock
 
+from pytest_homeassistant.common import MockConfigEntry
+
 from homeassistant.components.remote import (
     ATTR_COMMAND,
     ATTR_DELAY_SECS,
@@ -13,8 +15,6 @@ from homeassistant.components.remote import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 
 async def test_remote(

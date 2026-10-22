@@ -13,6 +13,7 @@ from pylamarzocco.const import MachineMode, MachineState, ModelName, WidgetType
 from pylamarzocco.exceptions import BluetoothConnectionFailed, RequestNotSuccessful
 from pylamarzocco.models import BluetoothMachineTelemetry
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lamarzocco.const import CONF_OFFLINE_MODE, DOMAIN
@@ -28,8 +29,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import async_init_integration, get_bluetooth_service_info
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 # Entities with bt_offline_mode=True
 BLUETOOTH_ONLY_BASE_ENTITIES = [

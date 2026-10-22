@@ -142,6 +142,7 @@ def create_routes_api_disabled_issue(hass: HomeAssistant, entry: ConfigEntry) ->
         hass,
         DOMAIN,
         f"routes_api_disabled_{entry.entry_id}",
+        config_entry_id=entry.entry_id,
         learn_more_url="https://www.home-assistant.io/integrations/google_travel_time#setup",
         is_fixable=False,
         severity=IssueSeverity.ERROR,

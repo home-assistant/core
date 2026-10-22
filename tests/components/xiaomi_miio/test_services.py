@@ -9,6 +9,7 @@ from miio.integrations.airpurifier.zhimi.airpurifier import OperationMode
 from miio.powerstrip import PowerMode
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.xiaomi_miio.const import (
     CONF_FLOW_TYPE,
@@ -43,8 +44,6 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import TEST_MAC
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 EYECARE_MODEL = "philips.light.sread1"
 POWER_STRIP_MODEL = "qmi.powerstrip.v1"

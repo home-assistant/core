@@ -2058,7 +2058,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '73',
   })
 # ---
 # name: test_all_entities[sensor.hydxxktl_3p_battery_config_end_of_discharge-entry]
@@ -2109,7 +2109,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '90',
   })
 # ---
 # name: test_all_entities[sensor.hydxxktl_3p_battery_config_eps_buffer-entry]
@@ -2160,7 +2160,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '5',
   })
 # ---
 # name: test_all_entities[sensor.hydxxktl_3p_battery_config_lead_acid_float_voltage-entry]
@@ -3075,6 +3075,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
+  })
+# ---
+# name: test_all_entities[sensor.hydxxktl_3p_charge_cut_off_state_of_charge-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hydxxktl_3p_charge_cut_off_state_of_charge',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charge cut-off state of charge',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charge cut-off state of charge',
+    'platform': 'sofar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'bat_config_charge_cutoff_soc',
+    'unique_id': 'SP1XXES100XX_bat_config_charge_cutoff_soc',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.hydxxktl_3p_charge_cut_off_state_of_charge-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HYDxxKTL-3P Charge cut-off state of charge',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hydxxktl_3p_charge_cut_off_state_of_charge',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '95',
   })
 # ---
 # name: test_all_entities[sensor.hydxxktl_3p_current_output_l1-entry]
@@ -5304,6 +5355,108 @@
     'state': '0.0',
   })
 # ---
+# name: test_all_entities[sensor.hydxxktl_3p_off_grid_discharge_cut_off_state_of_charge-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hydxxktl_3p_off_grid_discharge_cut_off_state_of_charge',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Off-grid discharge cut-off state of charge',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Off-grid discharge cut-off state of charge',
+    'platform': 'sofar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'off_grid_discharge_cutoff_soc',
+    'unique_id': 'SP1XXES100XX_off_grid_discharge_cutoff_soc',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.hydxxktl_3p_off_grid_discharge_cut_off_state_of_charge-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HYDxxKTL-3P Off-grid discharge cut-off state of charge',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hydxxktl_3p_off_grid_discharge_cut_off_state_of_charge',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_all_entities[sensor.hydxxktl_3p_off_grid_discharge_recovery_state_of_charge-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hydxxktl_3p_off_grid_discharge_recovery_state_of_charge',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Off-grid discharge recovery state of charge',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Off-grid discharge recovery state of charge',
+    'platform': 'sofar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'off_grid_recovery_soc',
+    'unique_id': 'SP1XXES100XX_off_grid_recovery_soc',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.hydxxktl_3p_off_grid_discharge_recovery_state_of_charge-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HYDxxKTL-3P Off-grid discharge recovery state of charge',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hydxxktl_3p_off_grid_discharge_recovery_state_of_charge',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '15',
+  })
+# ---
 # name: test_all_entities[sensor.hydxxktl_3p_off_grid_frequency-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -5989,6 +6142,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_all_entities[sensor.hydxxktl_3p_on_grid_discharge_cut_off_state_of_charge-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hydxxktl_3p_on_grid_discharge_cut_off_state_of_charge',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On-grid discharge cut-off state of charge',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'On-grid discharge cut-off state of charge',
+    'platform': 'sofar',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_grid_discharge_cutoff_soc',
+    'unique_id': 'SP1XXES100XX_on_grid_discharge_cutoff_soc',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.hydxxktl_3p_on_grid_discharge_cut_off_state_of_charge-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HYDxxKTL-3P On-grid discharge cut-off state of charge',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hydxxktl_3p_on_grid_discharge_cut_off_state_of_charge',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '27',
   })
 # ---
 # name: test_all_entities[sensor.hydxxktl_3p_passive_mode_grid_power-entry]

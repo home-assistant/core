@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from aiolyric.objects.priority import LyricPriority
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.lyric.const import DOMAIN
 from homeassistant.components.select import (
@@ -19,8 +20,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import LCC_SUPPORTED_MAC, lyric_exception
-
-from tests.common import MockConfigEntry
 
 LCC_UNIQUE_ID = f"{LCC_SUPPORTED_MAC}_room_priority"
 

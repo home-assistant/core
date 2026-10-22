@@ -7,6 +7,8 @@ from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from synology_dsm.api.file_station.models import SynoFileFile, SynoFileSharedFolder
 from synology_dsm.exceptions import (
     SynologyDSMAPIErrorException,
@@ -39,9 +41,6 @@ from homeassistant.util.aiohttp import MockStreamReader, MockStreamReaderChunked
 
 from .common import mock_dsm_hardware, mock_dsm_information
 from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
-
-from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 BASE_FILENAME = "Automatic_backup_2025.2.0.dev0_2025-01-09_20.14_35457323"
 

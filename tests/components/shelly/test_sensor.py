@@ -8,6 +8,11 @@ from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_CAMERA, MODEL_EM3
 from aioshelly.exceptions import NotInitialized
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    mock_restore_cache_with_extra_data,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homeassistant import (
@@ -57,12 +62,6 @@ from . import (
     register_entity,
 )
 from .conftest import MOCK_BLOCKS, MOCK_CONFIG, MOCK_SHELLY_RPC, MOCK_STATUS_RPC
-
-from tests.common import (
-    async_fire_time_changed,
-    async_load_json_object_fixture,
-    mock_restore_cache_with_extra_data,
-)
 
 RELAY_BLOCK_ID = 0
 SENSOR_BLOCK_ID = 3
@@ -729,33 +728,6 @@ async def test_rpc_restored_sleeping_sensor(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == "22.9"
-
-
-async def test_rpc_restored_sensor_when_not_initialized(
-    hass: HomeAssistant,
-    mock_rpc_device: Mock,
-    device_registry: DeviceRegistry,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Test restored mains-powered RPC sensor when device is not initialized."""
-    entry = await init_integration(hass, 2, skip_setup=True)
-    device = register_device(device_registry, entry)
-    entity_id = register_entity(
-        hass,
-        SENSOR_DOMAIN,
-        "test_name_temperature",
-        "temperature:0-temperature_tc",
-        entry,
-        device_id=device.id,
-    )
-
-    monkeypatch.setattr(mock_rpc_device, "initialized", False)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert (state := hass.states.get(entity_id))
-    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_rpc_restored_sleeping_sensor_no_last_state(

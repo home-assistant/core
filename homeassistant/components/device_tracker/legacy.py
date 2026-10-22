@@ -781,6 +781,7 @@ class DeviceTracker:
                 device.async_write_ha_state()
 
 
+# pylint: disable-next=home-assistant-enforce-class-module
 class Device(RestoreEntity):
     """Base class for a tracked device."""
 

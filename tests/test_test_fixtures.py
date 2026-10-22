@@ -8,16 +8,50 @@ import socket
 from _pytest.compat import get_real_func
 from aiohttp import web
 import pytest
+from pytest_homeassistant import _paths
+from pytest_homeassistant.common import MockModule, get_fixture_path, mock_integration
+from pytest_homeassistant.plugins import HASocketBlockedError, evict_faked_translations
+from pytest_homeassistant.typing import ClientSessionGenerator
 import pytest_socket
 
+from homeassistant import loader
 from homeassistant.core import HomeAssistant, async_get_hass
 from homeassistant.helpers import translation
 from homeassistant.helpers.http import HomeAssistantView
 from homeassistant.setup import async_setup_component
 
-from .common import MockModule, mock_integration
-from .conftest import HASocketBlockedError, evict_faked_translations
-from .typing import ClientSessionGenerator
+
+@pytest.mark.parametrize(
+    ("filename", "integration", "expected"),
+    [
+        ("responses/device.json", None, "nested"),
+        ("responses/device.json", "custom", "nested"),
+        ("device.json", "custom", "flat"),
+        ("core/device.json", None, "core"),
+        ("test_domain/device.json", None, "domain"),
+        ("device.json", "test_domain", "domain"),
+    ],
+)
+def test_fixture_path_fallback(
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+    filename: str,
+    integration: str | None,
+    expected: str,
+) -> None:
+    """Preserve nested fixture paths when no integration directory exists."""
+    monkeypatch.setattr(_paths, "TESTS_DIR", tmp_path)
+    for name, content in {
+        "fixtures/responses/device.json": "nested",
+        "fixtures/device.json": "flat",
+        "fixtures/core/device.json": "core",
+        "components/test_domain/fixtures/device.json": "domain",
+    }.items():
+        fixture = tmp_path / name
+        fixture.parent.mkdir(parents=True, exist_ok=True)
+        fixture.write_text(content)
+
+    assert get_fixture_path(filename, integration).read_text() == expected
 
 
 def test_sockets_disabled() -> None:
@@ -49,6 +83,20 @@ async def test_hass_cv(hass: HomeAssistant) -> None:
     in the fixture and that async_get_hass() works correctly.
     """
     assert async_get_hass() is hass
+
+
+async def test_custom_integrations_disabled(hass: HomeAssistant) -> None:
+    """Test the default custom integration policy."""
+    with pytest.raises(loader.IntegrationNotFound):
+        await loader.async_get_integration(hass, "test_package")
+
+
+@pytest.mark.parametrize("custom_integrations_enabled", [True])
+async def test_custom_integrations_enabled(hass: HomeAssistant) -> None:
+    """Load a custom integration using the enabling policy."""
+    integration = await loader.async_get_integration(hass, "test_package")
+    assert not integration.is_built_in
+    assert await async_setup_component(hass, "test_package", {})
 
 
 def register_view(hass: HomeAssistant) -> None:

@@ -5,13 +5,12 @@ from unittest.mock import patch
 from aiohttp import ClientError
 from pyeconet.errors import InvalidCredentialsError, PyeconetError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.econet.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(

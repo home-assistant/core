@@ -183,8 +183,8 @@
             }),
           ]),
           'customMessages': list([
-            'Come In!',
-            'Use Other Door',
+            '**REDACTED_NAME**',
+            '**REDACTED_NAME**',
           ]),
           'defaultMessageText': 'Welcome',
         }),
