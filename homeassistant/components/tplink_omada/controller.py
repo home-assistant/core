@@ -1,22 +1,17 @@
 """Controller for sharing Omada API coordinators between platforms."""
 
-import asyncio
 from collections.abc import Awaitable, Callable
-import logging
 from typing import TYPE_CHECKING
 
 from tplink_omada_client import OmadaClient, OmadaSiteClient
 from tplink_omada_client.devices import OmadaListDevice, OmadaSwitch
-from tplink_omada_client.exceptions import OmadaClientException
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 if TYPE_CHECKING:
     from . import OmadaConfigEntry
 
-from .const import DOMAIN
 from .coordinator import (
     OmadaClientsCoordinator,
     OmadaControllerStatusCoordinator,
@@ -24,10 +19,7 @@ from .coordinator import (
     OmadaDevicesCoordinator,
     OmadaGatewayCoordinator,
     OmadaSwitchPortCoordinator,
-    device_removal_is_confirmed,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class OmadaSiteController:
@@ -61,9 +53,6 @@ class OmadaSiteController:
         self._clients_coordinator = OmadaClientsCoordinator(
             hass, config_entry, omada_client
         )
-        self._device_entity_registrations: list[set[str]] = []
-        self._gateway_coordinator_lock = asyncio.Lock()
-        self._removed_device_macs: set[str] = set()
 
     async def initialize_first_refresh(self) -> None:
         """Initialize the all coordinators, and perform first refresh."""
@@ -95,76 +84,23 @@ class OmadaSiteController:
             device_filter: Function that returns True if a device should be processed.
             entity_callback: Given a discovered Omada device, creates entities for that device.
         """
-        # Track which devices have been processed already. Devices are marked
-        # only after successful entity creation so failed registrations retry
-        # on the next device update.
+        # Track which devices have been processed already
         processed_devices: set[str] = set()
-        self._device_entity_registrations.append(processed_devices)
 
         async def _async_register_entities() -> None:
             """Register entities for devices that match the filter."""
             devices_to_process = [
                 device
                 for device in self._devices_coordinator.data.values()
-                if device_filter(device)
-                and dr.format_mac(device.mac) not in processed_devices
+                if device_filter(device) and device.mac not in processed_devices
             ]
 
             if not devices_to_process:
                 return
 
             for device in devices_to_process:
-                mac = dr.format_mac(device.mac)
-                # Reserve the device before awaiting so concurrent
-                # registrations do not process it twice.
-                processed_devices.add(mac)
-                try:
-                    await entity_callback(device)
-                except (HomeAssistantError, OmadaClientException) as ex:
-                    # Expected fetch failures, such as a temporarily
-                    # unavailable device, are retried on the next update.
-                    processed_devices.discard(mac)
-                    _LOGGER.debug(
-                        "Failed to register entities for device %s: %s",
-                        device.mac,
-                        ex,
-                    )
-                    continue
-                except Exception:
-                    # One misbehaving device must not block registration for
-                    # the rest. Release the reservation so this device is
-                    # retried on the next update, and log the traceback.
-                    processed_devices.discard(mac)
-                    _LOGGER.exception(
-                        "Failed to register entities for device %s", device.mac
-                    )
-                    continue
-
-                if mac not in self._removed_device_macs:
-                    continue
-
-                if not device_removal_is_confirmed(self._devices_coordinator):
-                    # A transient empty or failed device list says nothing about
-                    # this device, so keep the entry the callback just created.
-                    continue
-
-                current_macs = {
-                    dr.format_mac(registered.mac)
-                    for registered in self._devices_coordinator.data.values()
-                }
-                if mac in current_macs:
-                    continue
-
-                # The device was removed while its callback was in flight.
-                # Drop the device entry the callback just recreated, and forget
-                # the registration so a returning device is registered again.
-                device_registry = dr.async_get(self._hass)
-                device_entry = device_registry.async_get_device_by_identifier(
-                    (DOMAIN, device.mac), self._config_entry.entry_id
-                )
-                if device_entry is not None:
-                    self._forget_device_registration(mac)
-                    device_registry.async_remove_device(device_entry.id)
+                processed_devices.add(device.mac)
+                await entity_callback(device)
 
         @callback
         def _handle_devices_update() -> None:
@@ -177,16 +113,11 @@ class OmadaSiteController:
         # Call once on initial setup
         await _async_register_entities()
 
-    def _forget_device_registration(self, mac: str) -> None:
-        """Drop a device from the registration state so it can be added again."""
-        mac = dr.format_mac(mac)
-        for processed in self._device_entity_registrations:
-            processed.discard(mac)
-
     async def async_remove_device(self, mac: str, device_entry: dr.DeviceEntry) -> None:
-        """Remove a device entry and allow it to be re-registered if it reappears."""
-        self._forget_device_registration(mac)
-        self._removed_device_macs.add(dr.format_mac(mac))
+        """Remove a device entry and drop its cached port coordinator."""
+        coordinator = self._switch_port_coordinators.pop(dr.format_mac(mac), None)
+        if coordinator is not None:
+            await coordinator.async_shutdown()
         dr.async_get(self._hass).async_remove_device(device_entry.id)
 
     @property
@@ -203,46 +134,13 @@ class OmadaSiteController:
         self, switch: OmadaSwitch
     ) -> OmadaSwitchPortCoordinator:
         """Get coordinator for network port information of a given switch."""
-        if switch.mac not in self._switch_port_coordinators:
-            self._switch_port_coordinators[switch.mac] = OmadaSwitchPortCoordinator(
+        mac = dr.format_mac(switch.mac)
+        if mac not in self._switch_port_coordinators:
+            self._switch_port_coordinators[mac] = OmadaSwitchPortCoordinator(
                 self._hass, self._config_entry, self._omada_client, switch
             )
 
-        return self._switch_port_coordinators[switch.mac]
-
-    async def async_get_gateway_coordinator(self, mac: str) -> OmadaGatewayCoordinator:
-        """Get the gateway coordinator, creating it for the given MAC."""
-        formatted_mac = dr.format_mac(mac)
-        async with self._gateway_coordinator_lock:
-            coordinator = self._gateway_coordinator
-            if coordinator is None or dr.format_mac(coordinator.mac) != formatted_mac:
-                coordinator = OmadaGatewayCoordinator(
-                    self._hass, self._config_entry, self._omada_client, mac
-                )
-                self._gateway_coordinator = coordinator
-                await coordinator.async_refresh()
-            elif not coordinator.data or formatted_mac in self._removed_device_macs:
-                # Refresh so a re-registered gateway is not rebuilt from stale
-                # data, and so a previous failed fetch can recover.
-                await coordinator.async_refresh()
-                current_macs = {
-                    dr.format_mac(device.mac)
-                    for device in (self._devices_coordinator.data or {}).values()
-                }
-                if (
-                    not coordinator.last_update_success
-                    or formatted_mac not in current_macs
-                ):
-                    # Cleanup may have removed the gateway while the refresh was
-                    # in flight, so keep its removal marker and let the platform
-                    # callback retry on a later device update.
-                    raise HomeAssistantError(
-                        translation_domain=DOMAIN,
-                        translation_key="gateway_unavailable",
-                        translation_placeholders={"mac": mac},
-                    )
-                self._removed_device_macs.discard(formatted_mac)
-            return coordinator
+        return self._switch_port_coordinators[mac]
 
     @property
     def controller_status_coordinator(self) -> OmadaControllerStatusCoordinator:

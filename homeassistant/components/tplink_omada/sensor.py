@@ -19,14 +19,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import OmadaConfigEntry
 from .config_flow import CONF_SITE
-from .const import DOMAIN, OmadaDeviceStatus
+from .const import OmadaDeviceStatus
 from .coordinator import (
     OmadaControllerStatusCoordinator,
     OmadaDevicesCoordinator,
@@ -104,15 +103,6 @@ async def async_setup_entry(
         switch = await controller.omada_client.get_switch(device)
         coordinator = controller.get_switch_port_coordinator(switch)
         await coordinator.async_refresh()
-        if not coordinator.last_update_success:
-            # A failed refresh keeps the previous data, so building entities
-            # from it would register stale ports. Raise so registration retries
-            # on a later device update.
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="switch_unavailable",
-                translation_placeholders={"mac": device.mac},
-            )
 
         entities: list[Entity] = [
             OmadaSwitchPortSensor(

@@ -138,9 +138,6 @@
     "firmware_update_rejected": {
       "message": "Firmware update request rejected"
     },
-    "gateway_unavailable": {
-      "message": "Gateway data for device with MAC {mac} is not available."
-    },
     "no_controllers": {
       "message": "No active TP-Link Omada controllers found"
     },
@@ -152,9 +149,6 @@
     },
     "switch_action_failed": {
       "message": "Failed to update the switch."
-    },
-    "switch_unavailable": {
-      "message": "Switch data for device with MAC {mac} is not available."
     },
     "unexpected_error": {
       "message": "Unexpected error connecting to Omada controller."
