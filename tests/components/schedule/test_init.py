@@ -754,7 +754,7 @@ async def test_service_get(
     # Test retrieving a single schedule via service call
     service_result = await hass.services.async_call(
         DOMAIN,
-        ScheduleService.GET_SCHEDULE,
+        ScheduleService.GET,
         {
             CONF_ENTITY_ID: entity_id,
         },
@@ -790,7 +790,7 @@ async def test_service_get(
     # Test retrieving the schedule via service call after WS update
     service_result = await hass.services.async_call(
         DOMAIN,
-        ScheduleService.GET_SCHEDULE,
+        ScheduleService.GET,
         {
             CONF_ENTITY_ID: entity_id,
         },

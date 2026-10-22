@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 class ScheduleService(StrEnum):
     """Store keys for schedule services."""
 
-    GET_SCHEDULE = "get_schedule"
+    GET = "get_schedule"
     RELOAD = "reload"
 
 
@@ -54,7 +54,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
 
     hass.data[DATA_SCHEDULE].component.async_register_entity_service(
-        ScheduleService.GET_SCHEDULE,
+        ScheduleService.GET,
         {},
         _async_get_schedule_service,
         supports_response=SupportsResponse.ONLY,
