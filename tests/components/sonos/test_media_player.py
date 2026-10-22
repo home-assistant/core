@@ -51,6 +51,7 @@ from homeassistant.components.sonos.const import (
     SOURCE_LINEIN,
     SOURCE_TV,
 )
+from homeassistant.components.sonos.media import SonosMedia
 from homeassistant.components.sonos.media_player import (
     LONG_SERVICE_TIMEOUT,
     VOLUME_INCREMENT,
@@ -1586,6 +1587,31 @@ async def test_release_skipped_after_joining_group(
         event = SonosMockEvent(soco, soco.avTransport, event_vars)
         soco.avTransport.subscribe.return_value.callback(event)
         await hass.async_block_till_done(wait_background_tasks=True)
+
+    soco.avTransport.SetAVTransportURI.assert_not_called()
+
+
+async def test_release_skipped_when_polled_media_replayed(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    current_track_info: dict[str, Any],
+) -> None:
+    """Test polling clears played media once another source is seen."""
+    hass.config.internal_url = "http://10.0.0.1:8123"
+    media = SonosMedia(hass, soco)
+    soco.avTransport.GetMediaInfo.return_value = {"CurrentURI": HASS_MEDIA_URI}
+    polls = [
+        ("PLAYING", HASS_MEDIA_URI),
+        ("PLAYING", "x-sonosapi-stream:s1234?sid=254"),
+        # Sonos reports STOPPED before playing the same media again
+        ("STOPPED", HASS_MEDIA_URI),
+    ]
+    for state, uri in polls:
+        soco.get_current_transport_info.return_value = {
+            "current_transport_state": state
+        }
+        soco.get_current_track_info.return_value = current_track_info | {"uri": uri}
+        await hass.async_add_executor_job(media.poll_media)
 
     soco.avTransport.SetAVTransportURI.assert_not_called()
 

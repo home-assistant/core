@@ -208,11 +208,12 @@ class SonosMedia:
 
         self.set_basic_track_info(update_position=update_position)
 
+        transport_uri = None
         if self.uri and self.is_signed_hass_url(self.uri):
             transport_uri = self.soco.avTransport.GetMediaInfo([("InstanceID", 0)])[
                 "CurrentURI"
             ]
-            self.release_finished_hass_media(transport_uri, new_status, first_update)
+        self.release_finished_hass_media(transport_uri, new_status, first_update)
 
         self.write_media_player_states()
 
