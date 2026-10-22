@@ -745,3 +745,51 @@ async def test_connection_sensor_keeps_map_location_without_connection(
     assert state.attributes["latitude"] == 50.859663
     assert state.attributes["longitude"] == 4.360846
     assert "destination" not in state.attributes
+
+
+async def test_liveboard_recovery_logged_only_when_available(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a liveboard logs recovery only once its sensor is available again."""
+    freezer.move_to(FROZEN_TIME)
+    await _setup_entry(hass, mock_config_entry)
+    await _enable_liveboards(hass, entity_registry, mock_config_entry)
+    liveboard_id = _get_entity_id(entity_registry, LIVEBOARD_FROM_UNIQUE_ID)
+    liveboard = LiveboardApiResponse.from_dict(
+        await async_load_json_object_fixture(hass, "liveboard.json", DOMAIN)
+    )
+    empty_liveboard = LiveboardApiResponse.from_dict(
+        await async_load_json_object_fixture(hass, "liveboard.json", DOMAIN)
+    )
+    empty_liveboard.departures = None
+
+    mock_nmbs_client.get_liveboard.side_effect = TimeoutError
+    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_nmbs_client.get_liveboard.side_effect = lambda station_id: empty_liveboard
+    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(liveboard_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert "Recovered feed" not in caplog.text
+
+    mock_nmbs_client.get_liveboard.side_effect = lambda station_id: liveboard
+    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(liveboard_id)
+    assert state is not None
+    assert state.state == "Track 3 - Blankenberge"
+    assert caplog.text.count("Unable to fetch the liveboard of Brussel-Noord") == 1
+    assert caplog.text.count("Recovered feed: the liveboard of Brussel-Noord") == 1

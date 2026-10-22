@@ -55,7 +55,7 @@ class FeedResult[T]:
     """Result of one pyrail feed request."""
 
     data: T | None
-    failed: bool
+    error: Exception | None
 
 
 def _find_station(
@@ -116,20 +116,21 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
         self._failed_feeds: set[str] = set()
 
     async def _async_fetch_feed[T](
-        self, feed: str, fetch: Callable[[], Awaitable[T | None]]
+        self, fetch: Callable[[], Awaitable[T | None]]
     ) -> FeedResult[T]:
-        """Fetch one feed and record whether the request failed."""
+        """Fetch one feed and keep the error when the request fails."""
         try:
-            result = await fetch()
+            return FeedResult(await fetch(), None)
         except (PyRailError, TimeoutError, ValueError, LookupError) as err:
-            if feed not in self._failed_feeds:
-                _LOGGER.warning("Unable to fetch %s: %s", feed, err)
-            self._failed_feeds.add(feed)
-            return FeedResult(None, True)
-        if feed in self._failed_feeds:
-            _LOGGER.info("Recovered feed: %s", feed)
-            self._failed_feeds.remove(feed)
-        return FeedResult(result, False)
+            return FeedResult(None, err)
+
+    def _log_feed_changes(self, reasons: dict[str, str], names: dict[str, str]) -> None:
+        """Log the feeds that became unavailable or recovered since the last refresh."""
+        for feed in reasons.keys() - self._failed_feeds:
+            _LOGGER.warning("Unable to fetch %s: %s", names[feed], reasons[feed])
+        for feed in (self._failed_feeds - reasons.keys()) & names.keys():
+            _LOGGER.info("Recovered feed: %s", names[feed])
+        self._failed_feeds = set(reasons)
 
     def _connection_entity_enabled(self, entries: list[er.RegistryEntry]) -> bool:
         """Return True if the connection entity is enabled or not registered."""
@@ -164,12 +165,19 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
             if self._liveboard_entity_enabled(station, entries)
         ]
         fetch_connection = self._connection_entity_enabled(entries)
+        names = {
+            station.id: f"the liveboard of {station.standard_name}"
+            for station in stations
+        }
+        if fetch_connection:
+            names[CONNECTION_FEED] = (
+                f"the connection from {self.station_from.standard_name}"
+                f" to {self.station_to.standard_name}"
+            )
         async with asyncio.TaskGroup() as task_group:
             connection_task = (
                 task_group.create_task(
                     self._async_fetch_feed(
-                        f"the connection from {self.station_from.standard_name}"
-                        f" to {self.station_to.standard_name}",
                         partial(
                             self.client.get_connections,
                             self.station_from.id,
@@ -183,21 +191,20 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
             liveboard_tasks = {
                 station.id: task_group.create_task(
                     self._async_fetch_feed(
-                        f"the liveboard of {station.standard_name}",
-                        partial(self.client.get_liveboard, station_id=station.id),
+                        partial(self.client.get_liveboard, station_id=station.id)
                     )
                 )
                 for station in stations
             }
-        failed_feeds: set[str] = set()
+        reasons: dict[str, str] = {}
         if connection_task is not None:
             connection_result = connection_task.result()
-            if connection_result.failed:
-                failed_feeds.add(CONNECTION_FEED)
+            if connection_result.error is not None:
+                reasons[CONNECTION_FEED] = _error_reason(connection_result.error)
             elif connection_result.data is not None:
                 self._connection_response = connection_result.data
             elif self._connection_response is None:
-                failed_feeds.add(CONNECTION_FEED)
+                reasons[CONNECTION_FEED] = "no data"
 
         connections_response = self._connection_response
 
@@ -219,25 +226,27 @@ class NMBSCoordinator(DataUpdateCoordinator[NMBSData]):
                 next_departures[station.id] = None
                 continue
             liveboard_result = liveboard_task.result()
-            if liveboard_result.failed:
-                failed_feeds.add(station.id)
+            if liveboard_result.error is not None:
+                reasons[station.id] = _error_reason(liveboard_result.error)
             elif liveboard_result.data is not None:
                 self._liveboard_responses[station.id] = liveboard_result.data
-            elif station.id not in self._liveboard_responses:
-                failed_feeds.add(station.id)
-                next_departures[station.id] = None
-                continue
             liveboard = self._liveboard_responses.get(station.id)
             if liveboard is None or liveboard.departures is None:
-                failed_feeds.add(station.id)
+                reasons.setdefault(station.id, "no departures")
                 next_departures[station.id] = None
                 continue
             next_departures[station.id] = (
                 liveboard.departures[0] if liveboard.departures else None
             )
 
+        self._log_feed_changes(reasons, names)
         return NMBSData(
             connection=upcoming[0] if upcoming else None,
             next_departures=next_departures,
-            failed_feeds=failed_feeds,
+            failed_feeds=set(reasons),
         )
+
+
+def _error_reason(err: Exception) -> str:
+    """Return a readable reason for a failed request."""
+    return str(err) or type(err).__name__
