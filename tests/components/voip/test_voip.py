@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import wave
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from syrupy.assertion import SnapshotAssertion
 from voip_utils import CallInfo
 
@@ -25,7 +26,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
 from tests.components.tts.common import MockResultStream
 
 _ONE_SECOND = 16000 * 2  # 16Khz 16-bit

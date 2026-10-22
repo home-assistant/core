@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from mcstatus import JavaServer
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.minecraft_server.const import DOMAIN
@@ -20,8 +21,6 @@ from .const import (
     TEST_JAVA_STATUS_RESPONSE,
     TEST_PORT,
 )
-
-from tests.common import MockConfigEntry
 
 DEFAULT_NAME = "Minecraft Server"
 
@@ -336,7 +335,7 @@ async def test_entry_migration_v3_failure(
     # Test config entry.
     assert v1_mock_config_entry.version == 2
     assert v1_mock_config_entry.state is ConfigEntryState.MIGRATION_ERROR
-    assert (
-        v1_mock_config_entry.reason
-        == f"Unable to look up the address of Minecraft server {TEST_HOST}"
-    )
+    assert v1_mock_config_entry.error_reason_translation_key == "address_lookup_failed"
+    assert v1_mock_config_entry.error_reason_translation_placeholders == {
+        "address": f"{TEST_HOST}:{TEST_PORT}"
+    }

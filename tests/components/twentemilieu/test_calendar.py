@@ -3,12 +3,11 @@
 from http import HTTPStatus
 
 import pytest
+from pytest_homeassistant.typing import ClientSessionGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.typing import ClientSessionGenerator
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 

@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_mock_signal
 
 from homeassistant.components.cast import DOMAIN, CastRuntimeData, home_assistant_cast
 from homeassistant.components.cast.const import SIGNAL_HASS_CAST_SHOW_VIEW
@@ -11,8 +12,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-
-from tests.common import MockConfigEntry, async_mock_signal
 
 
 async def _async_setup_ha_cast(hass: HomeAssistant) -> None:

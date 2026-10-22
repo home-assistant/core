@@ -13,6 +13,21 @@ from _pytest.python_api import ApproxBase
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import MockUser, async_fire_time_changed
+from pytest_homeassistant.components.recorder.common import (
+    async_recorder_block_till_done,
+    async_wait_recorder,
+    async_wait_recording_done,
+    create_engine_test,
+    do_adhoc_statistics,
+    get_start_time,
+    statistics_during_period,
+)
+from pytest_homeassistant.typing import (
+    RecorderInstanceContextManager,
+    RecorderInstanceGenerator,
+    WebSocketGenerator,
+)
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import Recorder
@@ -42,23 +57,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
-from .common import (
-    async_recorder_block_till_done,
-    async_wait_recorder,
-    async_wait_recording_done,
-    create_engine_test,
-    do_adhoc_statistics,
-    get_start_time,
-    statistics_during_period,
-)
 from .conftest import InstrumentedMigration
-
-from tests.common import MockUser, async_fire_time_changed
-from tests.typing import (
-    RecorderInstanceContextManager,
-    RecorderInstanceGenerator,
-    WebSocketGenerator,
-)
 
 
 @pytest.fixture

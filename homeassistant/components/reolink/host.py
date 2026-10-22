@@ -182,6 +182,7 @@ class ReolinkHost:
                     severity=ir.IssueSeverity.ERROR,
                     translation_key="password_too_long",
                     translation_placeholders={"name": self._config_entry.title},
+                    config_entry_id=self._config_entry.entry_id,
                 )
 
             raise PasswordIncompatible(

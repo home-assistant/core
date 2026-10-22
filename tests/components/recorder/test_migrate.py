@@ -7,6 +7,17 @@ import sys
 from unittest.mock import ANY, Mock, PropertyMock, call, patch
 
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
+from pytest_homeassistant.components.recorder.common import (
+    async_wait_recorder,
+    async_wait_recording_done,
+    create_engine_test,
+    db_state_to_native,
+)
+from pytest_homeassistant.typing import (
+    RecorderInstanceContextManager,
+    RecorderInstanceGenerator,
+)
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.interfaces import ReflectedForeignKeyConstraint
@@ -32,16 +43,7 @@ from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant, State
 from homeassistant.util import dt as dt_util
 
-from .common import (
-    async_wait_recorder,
-    async_wait_recording_done,
-    create_engine_test,
-    db_state_to_native,
-)
 from .conftest import InstrumentedMigration
-
-from tests.common import async_fire_time_changed
-from tests.typing import RecorderInstanceContextManager, RecorderInstanceGenerator
 
 
 @pytest.fixture
@@ -588,7 +590,7 @@ async def test_schema_migrate(
 
         This simulates an existing db with the old schema.
         """
-        module = f"tests.components.recorder.db_schema_{start_version!s}"
+        module = f"pytest_homeassistant.components.recorder.db_schema_{start_version!s}"
         importlib.import_module(module)
         old_models = sys.modules[module]
         engine = create_engine(*args, **kwargs)

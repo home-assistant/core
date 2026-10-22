@@ -14,6 +14,14 @@ import aiofiles.os
 import httpx2
 from PIL import Image
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    assert_setup_component,
+    async_mock_restore_state_shutdown_restart,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+)
+from pytest_homeassistant.typing import ClientSessionGenerator
 import respx
 from syrupy.assertion import SnapshotAssertion
 
@@ -51,15 +59,6 @@ from .conftest import (
     make_test_trigger,
     setup_entity,
 )
-
-from tests.common import (
-    MockConfigEntry,
-    assert_setup_component,
-    async_mock_restore_state_shutdown_restart,
-    mock_restore_cache,
-    mock_restore_cache_with_extra_data,
-)
-from tests.typing import ClientSessionGenerator
 
 _DEFAULT = object()
 _TEST_IMAGE = "image.template_image"

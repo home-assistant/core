@@ -52,3 +52,19 @@ class ValveState(StrEnum):
 
 
 DEVICE_CLASSES_SCHEMA = probatio.All(probatio.Lower, probatio.Coerce(ValveDeviceClass))
+
+
+class ValveService(StrEnum):
+    """Store keys for valve services."""
+
+    CLOSE_VALVE = "close_valve"
+    OPEN_VALVE = "open_valve"
+    SET_VALVE_POSITION = "set_valve_position"
+    STOP_VALVE = "stop_valve"
+    TOGGLE = "toggle"
+
+
+class ValveServiceArgument(StrEnum):
+    """Store keys for valve service arguments."""
+
+    POSITION = "position"

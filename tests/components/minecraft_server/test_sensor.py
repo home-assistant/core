@@ -11,6 +11,7 @@ from mcstatus.responses import (
     LegacyStatusResponse,
 )
 import pytest
+from pytest_homeassistant.common import async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE
@@ -23,8 +24,6 @@ from .const import (
     TEST_LEGACY_JAVA_STATUS_RESPONSE,
     TEST_PORT,
 )
-
-from tests.common import async_fire_time_changed
 
 JAVA_SENSOR_ENTITIES: list[str] = [
     "sensor.mc_dummyserver_com_25566_latency",

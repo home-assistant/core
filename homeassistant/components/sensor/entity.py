@@ -682,8 +682,8 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if native_unit_of_measurement != unit_of_measurement and (
             converter := UNIT_CONVERTERS.get(device_class)
         ):
-            # Unit conversion needed
-            value = converter.converter_factory(
+            # Unit conversion needed, 0 between inverse units converts to None
+            value = converter.converter_factory_allow_none(
                 native_unit_of_measurement, unit_of_measurement
             )(float(numerical_value))
 

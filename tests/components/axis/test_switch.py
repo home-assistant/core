@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from axis.models.api import CONTEXT
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -19,8 +20,6 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import ConfigEntryFactoryType, RtspEventMock
 from .const import API_DISCOVERY_PORT_MANAGEMENT, NAME
-
-from tests.common import snapshot_platform
 
 PORT_DATA = """root.IOPort.I0.Configurable=yes
 root.IOPort.I0.Direction=output

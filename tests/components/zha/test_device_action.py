@@ -5,6 +5,11 @@ from unittest.mock import AsyncMock, patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_get_device_automations,
+    async_mock_service,
+)
 from pytest_unordered import unordered
 from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
 from zigpy.device import Device
@@ -22,12 +27,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
-
-from tests.common import (
-    MockConfigEntry,
-    async_get_device_automations,
-    async_mock_service,
-)
 
 SHORT_PRESS = "remote_button_short_press"
 COMMAND = "command"

@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from satel_integra import (
     SatelConnectFailedError,
     SatelConnectionInitializationError,
@@ -43,8 +44,6 @@ from . import (
     MOCK_ZONE_TEMPERATURE_SUBENTRY,
     setup_integration,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -102,6 +101,39 @@ async def test_setup_flow(
     assert result["data"] == entry_data
     assert result["options"] == entry_options
 
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize("code", ["123", "12345678901234567"])
+async def test_setup_flow_rejects_invalid_code(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    code: str,
+) -> None:
+    """Test setup rejects a user code with an unsupported length."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], MOCK_CONFIG_DATA
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_CODE: code}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "code"
+    assert result["errors"] == {CONF_CODE: "invalid_code_length"}
+    assert len(mock_setup_entry.mock_calls) == 0
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_CODE: "4321"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"] == {CONF_CODE: "4321"}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -188,6 +220,37 @@ async def test_options_flow(
     assert mock_config_entry.options == entry_options
 
     # Assert the entry is reloaded to use the updated code
+    assert mock_reload_after_entry_update.call_count == 1
+
+
+@pytest.mark.parametrize("code", ["123", "12345678901234567"])
+async def test_options_flow_rejects_invalid_code(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_reload_after_entry_update: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    code: str,
+) -> None:
+    """Test options reject a user code with an unsupported length."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_CODE: code}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {CONF_CODE: "invalid_code_length"}
+    assert mock_config_entry.options == MOCK_CONFIG_OPTIONS
+    assert mock_reload_after_entry_update.call_count == 0
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_CODE: "4321"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options == {CONF_CODE: "4321"}
     assert mock_reload_after_entry_update.call_count == 1
 
 

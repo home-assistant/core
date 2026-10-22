@@ -162,7 +162,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> 
         if state is cloud.CloudConnectionState.CLOUD_DISCONNECTED:
             await webhook_manager.unregister_webhook(None)
             entry.async_on_unload(
-                async_call_later(hass, 30, webhook_manager.register_webhook)
+                async_call_later(hass, 30, webhook_manager.async_start_register_webhook)
             )
 
     @callback
@@ -170,7 +170,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> 
         """Register the webhook once Home Assistant answers for it."""
         entry.async_on_unload(
             async_call_later(
-                hass, WEBHOOK_REGISTER_DELAY, webhook_manager.register_webhook
+                hass,
+                WEBHOOK_REGISTER_DELAY,
+                webhook_manager.async_start_register_webhook,
             )
         )
 
@@ -273,6 +275,13 @@ class WithingsWebhookManager:
                 await async_unsubscribe_webhooks(self.withings_data.client)
             except WithingsError as ex:
                 LOGGER.warning("Failed to unsubscribe from Withings webhook: %s", ex)
+
+    @callback
+    def async_start_register_webhook(self, _: Any) -> None:
+        """Register webhooks in a task that is cancelled when the entry unloads."""
+        self.entry.async_create_background_task(
+            self.hass, self.register_webhook(None), "withings_register_webhook"
+        )
 
     async def register_webhook(
         self,

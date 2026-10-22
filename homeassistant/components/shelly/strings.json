@@ -31,14 +31,6 @@
     },
     "step": {
       "bluetooth_confirm": {
-        "data": {
-          "disable_ap": "Disable Wi-Fi access point after provisioning",
-          "disable_ble_rpc": "Disable Bluetooth RPC after provisioning"
-        },
-        "data_description": {
-          "disable_ap": "For improved security, disable the Wi-Fi access point after successfully connecting to your network.",
-          "disable_ble_rpc": "For improved security, disable Bluetooth RPC access after Wi-Fi is configured. Bluetooth will remain enabled for BLE sensors and buttons."
-        },
         "description": "The Shelly device {name} has been discovered via Bluetooth but is not connected to Wi-Fi.\n\nDo you want to provision Wi-Fi credentials to this device?",
         "title": "Provision Wi-Fi via Bluetooth"
       },
@@ -178,6 +170,9 @@
       "input_with_number": {
         "name": "Input {input_number}"
       },
+      "motion_with_channel_name": {
+        "name": "{channel_name} motion"
+      },
       "mute": {
         "name": "Mute"
       },
@@ -234,6 +229,9 @@
       },
       "tilt": {
         "name": "Tilt"
+      },
+      "zone_motion_with_number": {
+        "name": "Zone {zone_number} motion"
       }
     },
     "button": {
