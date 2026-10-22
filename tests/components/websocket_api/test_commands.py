@@ -4382,6 +4382,30 @@ async def test_extract_from_target(
         areas={kitchen_area.id, label_area.id},
     )
 
+    # Test excluding from mixed targets
+    msg = await call_command(
+        {
+            "entity_id": ["light.direct"],
+            "device_id": [device1.id],
+            "area_id": [kitchen_area.id],
+            "label_id": [label1.label_id],
+            "exclude": {
+                "entity_id": [device1_entity2.entity_id],
+                "area_id": [kitchen_area.id],
+            },
+        },
+    )
+    _assert_extract_from_target_command_result(
+        msg,
+        entities={
+            "light.direct",
+            device1_entity1.entity_id,
+            label_entity.entity_id,
+        },
+        devices={device1.id},
+        areas={label_area.id},
+    )
+
 
 async def test_extract_from_target_expand_group(
     hass: HomeAssistant, websocket_client: MockHAClientWebSocket

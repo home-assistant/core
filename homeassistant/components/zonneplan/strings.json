@@ -53,6 +53,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "automatic_charging_paused": {
+        "name": "Automatic charging paused"
+      },
       "backup_power_active": {
         "name": "Backup power active"
       },
@@ -67,6 +70,20 @@
       },
       "home_optimization_active": {
         "name": "Home optimization active"
+      },
+      "overload_protection": {
+        "name": "Overload protection"
+      }
+    },
+    "select": {
+      "control_mode": {
+        "name": "Control mode",
+        "state": {
+          "day_ahead_arbitrage": "Day-ahead arbitrage",
+          "dynamic_charging": "Dynamic charging",
+          "home_optimization": "Home optimization",
+          "self_consumption": "Self-consumption"
+        }
       }
     },
     "sensor": {
@@ -207,6 +224,12 @@
     },
     "cannot_connect": {
       "message": "Error communicating with the Zonneplan API"
+    },
+    "charge_point_not_found": {
+      "message": "The Zonneplan API returned no data for the charge point"
+    },
+    "day_ahead_arbitrage_not_set_up": {
+      "message": "Day-ahead arbitrage has not been set up for this battery yet. Set it up in the Zonneplan app first."
     },
     "invalid_auth": {
       "message": "An error occurred while trying to authenticate"
