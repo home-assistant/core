@@ -265,6 +265,14 @@ async def test_camera_two_way_audio_capability(
     assert camera.camera_entity_capabilities.two_way_audio is expected_two_way_audio
 
 
+@pytest.mark.parametrize("node_fixture", ["aqara_camera_hub_g350"])
+@pytest.mark.usefixtures("matter_node")
+async def test_camera_two_way_audio_capability_real_device(hass: HomeAssistant) -> None:
+    """Test two way audio on a real device's FeatureMap (Audio and Speaker bits)."""
+    camera = get_camera_from_entity_id(hass, "camera.aqara_camera_hub_g350")
+    assert camera.camera_entity_capabilities.two_way_audio is True
+
+
 @pytest.mark.parametrize("node_fixture", ["mock_camera"])
 async def test_camera_webrtc_talkback(
     hass: HomeAssistant,
