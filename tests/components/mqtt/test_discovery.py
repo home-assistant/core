@@ -4519,3 +4519,120 @@ async def test_async_removed_from_device(
     """
     event = Event(dr.EVENT_DEVICE_REGISTRY_UPDATED, event_data)
     assert async_removed_from_device(event) is expected
+
+
+# The identifiers and the connections belong to two devices registered this session
+CONFLICTING_DEVICE = {
+    "identifiers": ["device_a"],
+    "connections": [["mac", "02:5b:26:a8:dc:12"]],
+}
+DEVICE_INFO_ERROR = "Unable to register MQTT device"
+
+
+async def _discover_conflicting_devices(hass: HomeAssistant) -> None:
+    """Discover the two devices the conflicting device config refers to."""
+    for object_id, device in (
+        ("a", {"identifiers": ["device_a"]}),
+        ("b", {"connections": [["mac", "02:5b:26:a8:dc:12"]]}),
+    ):
+        async_fire_mqtt_message(
+            hass,
+            f"homeassistant/tag/{object_id}/config",
+            json.dumps({"topic": f"{object_id}/tag", "device": device}),
+        )
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("discovery_topic", "config"),
+    [
+        pytest.param(
+            "homeassistant/device_automation/c/config",
+            {
+                "automation_type": "trigger",
+                "topic": "c/trigger",
+                "type": "button_short_press",
+                "subtype": "button_1",
+            },
+            id="device_trigger",
+        ),
+        pytest.param("homeassistant/tag/c/config", {"topic": "c/tag"}, id="tag"),
+    ],
+)
+async def test_discovery_device_registration_error(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    discovery_topic: str,
+    config: dict[str, Any],
+) -> None:
+    """Test a device trigger or tag of a device that can not be registered."""
+    await mqtt_mock_entry()
+    await _discover_conflicting_devices(hass)
+
+    async_fire_mqtt_message(
+        hass, discovery_topic, json.dumps({**config, "device": CONFLICTING_DEVICE})
+    )
+    await hass.async_block_till_done()
+    assert DEVICE_INFO_ERROR in caplog.text
+    assert not [record for record in caplog.records if record.exc_info]
+
+    # The discovery is cancelled, so a valid config is discovered
+    async_fire_mqtt_message(
+        hass,
+        discovery_topic,
+        json.dumps({**config, "device": {"identifiers": ["device_c"]}}),
+    )
+    await hass.async_block_till_done()
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "device_c"), hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
+
+
+@pytest.mark.parametrize(
+    ("discovery_topic", "config"),
+    [
+        pytest.param(
+            "homeassistant/device_automation/c/config",
+            {
+                "automation_type": "trigger",
+                "topic": "c/trigger",
+                "type": "button_short_press",
+                "subtype": "button_1",
+            },
+            id="device_trigger",
+        ),
+        pytest.param("homeassistant/tag/c/config", {"topic": "c/tag"}, id="tag"),
+    ],
+)
+async def test_discovery_update_device_registration_error(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    discovery_topic: str,
+    config: dict[str, Any],
+) -> None:
+    """Test a device trigger or tag update with a device that can not be registered.
+
+    The update is cancelled, and is processed again when it is received again.
+    """
+    await mqtt_mock_entry()
+    await _discover_conflicting_devices(hass)
+    async_fire_mqtt_message(
+        hass,
+        discovery_topic,
+        json.dumps({**config, "device": {"identifiers": ["device_c"]}}),
+    )
+    await hass.async_block_till_done()
+    update = json.dumps({**config, "device": CONFLICTING_DEVICE})
+
+    async_fire_mqtt_message(hass, discovery_topic, update)
+    await hass.async_block_till_done()
+    assert DEVICE_INFO_ERROR in caplog.text
+    assert not [record for record in caplog.records if record.exc_info]
+
+    caplog.clear()
+    async_fire_mqtt_message(hass, discovery_topic, update)
+    await hass.async_block_till_done()
+    assert DEVICE_INFO_ERROR in caplog.text
