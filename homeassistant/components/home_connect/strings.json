@@ -10,7 +10,6 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "wrong_account": "Please ensure you reconfigure against the same account."
     },
     "create_entry": {
@@ -32,16 +31,6 @@
       "reauth_confirm": {
         "description": "The Home Connect integration needs to re-authenticate your account",
         "title": "[%key:common::config_flow::title::reauth%]"
-      },
-      "scopes": {
-        "data": {
-          "images_scope": "Images scope"
-        },
-        "data_description": {
-          "images_scope": "Allows Home Assistant to access images from your Home Connect devices."
-        },
-        "description": "Select the optional scopes you want to enable for Home Connect authentication.",
-        "title": "Scopes"
       }
     }
   },
@@ -150,14 +139,6 @@
             }
           }
         }
-      }
-    },
-    "image": {
-      "door_right_camera": {
-        "name": "Door right camera"
-      },
-      "interior_right_camera": {
-        "name": "Interior right camera"
       }
     },
     "light": {
@@ -576,7 +557,8 @@
           "consumer_products_coffee_maker_enum_type_coffee_temperature_92_c": "[%key:component::home_connect::selector::coffee_temperature::options::consumer_products_coffee_maker_enum_type_coffee_temperature_92_c%]",
           "consumer_products_coffee_maker_enum_type_coffee_temperature_94_c": "[%key:component::home_connect::selector::coffee_temperature::options::consumer_products_coffee_maker_enum_type_coffee_temperature_94_c%]",
           "consumer_products_coffee_maker_enum_type_coffee_temperature_95_c": "[%key:component::home_connect::selector::coffee_temperature::options::consumer_products_coffee_maker_enum_type_coffee_temperature_95_c%]",
-          "consumer_products_coffee_maker_enum_type_coffee_temperature_96_c": "[%key:component::home_connect::selector::coffee_temperature::options::consumer_products_coffee_maker_enum_type_coffee_temperature_96_c%]"
+          "consumer_products_coffee_maker_enum_type_coffee_temperature_96_c": "[%key:component::home_connect::selector::coffee_temperature::options::consumer_products_coffee_maker_enum_type_coffee_temperature_96_c%]",
+          "consumer_products_coffee_maker_enum_type_coffee_temperature_98_c": "[%key:component::home_connect::selector::coffee_temperature::options::consumer_products_coffee_maker_enum_type_coffee_temperature_98_c%]"
         }
       },
       "current_map": {
@@ -1601,17 +1583,11 @@
     "fetch_api_error": {
       "message": "Error obtaining data from the API: {error}"
     },
-    "fetch_image_error": {
-      "message": "Error obtaining image from the API: {error}"
-    },
     "fetch_program_error": {
       "message": "Error obtaining the selected or active program: {error}"
     },
     "no_program_to_start": {
       "message": "No program to start"
-    },
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
     "pause_program": {
       "message": "Error pausing program: {error}"
@@ -1783,7 +1759,8 @@
         "consumer_products_coffee_maker_enum_type_coffee_temperature_92_c": "92ºC",
         "consumer_products_coffee_maker_enum_type_coffee_temperature_94_c": "94ºC",
         "consumer_products_coffee_maker_enum_type_coffee_temperature_95_c": "95ºC",
-        "consumer_products_coffee_maker_enum_type_coffee_temperature_96_c": "96ºC"
+        "consumer_products_coffee_maker_enum_type_coffee_temperature_96_c": "96ºC",
+        "consumer_products_coffee_maker_enum_type_coffee_temperature_98_c": "98ºC"
       }
     },
     "drying_target": {

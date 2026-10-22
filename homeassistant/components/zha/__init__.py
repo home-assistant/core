@@ -4,7 +4,7 @@ import contextlib
 import logging
 from zoneinfo import ZoneInfo
 
-import voluptuous as vol
+import probatio
 from yarl import URL
 from zha.application.const import BAUD_RATES, RadioType
 from zha.application.gateway import Gateway
@@ -61,24 +61,25 @@ from .repairs.wrong_silabs_firmware import (
     AlreadyRunningEZSP,
     warn_on_wrong_silabs_firmware,
 )
+from .services import async_setup_services
 
-DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(CONF_TYPE): cv.string})
+DEVICE_CONFIG_SCHEMA_ENTRY = probatio.Schema({probatio.Optional(CONF_TYPE): cv.string})
 ZHA_CONFIG_SCHEMA = {
-    vol.Optional(CONF_BAUDRATE): cv.positive_int,
-    vol.Optional(CONF_DATABASE): cv.string,
-    vol.Optional(CONF_DEVICE_CONFIG, default={}): vol.Schema(
+    probatio.Optional(CONF_BAUDRATE): cv.positive_int,
+    probatio.Optional(CONF_DATABASE): cv.string,
+    probatio.Optional(CONF_DEVICE_CONFIG, default={}): probatio.Schema(
         {cv.string: DEVICE_CONFIG_SCHEMA_ENTRY}
     ),
-    vol.Optional(CONF_ENABLE_QUIRKS, default=True): cv.boolean,
-    vol.Optional(CONF_ZIGPY): dict,
-    vol.Optional(CONF_RADIO_TYPE): cv.enum(RadioType),
-    vol.Optional(CONF_USB_PATH): cv.string,
-    vol.Optional(CONF_CUSTOM_QUIRKS_PATH): cv.isdir,
+    probatio.Optional(CONF_ENABLE_QUIRKS, default=True): cv.boolean,
+    probatio.Optional(CONF_ZIGPY): dict,
+    probatio.Optional(CONF_RADIO_TYPE): cv.enum(RadioType),
+    probatio.Optional(CONF_USB_PATH): cv.string,
+    probatio.Optional(CONF_CUSTOM_QUIRKS_PATH): cv.isdir,
 }
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
-            vol.All(
+        DOMAIN: probatio.Schema(
+            probatio.All(
                 cv.deprecated(CONF_USB_PATH),
                 cv.deprecated(CONF_BAUDRATE),
                 cv.deprecated(CONF_RADIO_TYPE),
@@ -86,7 +87,7 @@ CONFIG_SCHEMA = vol.Schema(
             ),
         ),
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 PLATFORMS = (
@@ -96,7 +97,9 @@ PLATFORMS = (
     Platform.CLIMATE,
     Platform.COVER,
     Platform.DEVICE_TRACKER,
+    Platform.EVENT,
     Platform.FAN,
+    Platform.INFRARED,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.NUMBER,
@@ -105,6 +108,7 @@ PLATFORMS = (
     Platform.SIREN,
     Platform.SWITCH,
     Platform.UPDATE,
+    Platform.VALVE,
 )
 
 
@@ -114,6 +118,10 @@ CENTICELSIUS = "C-100"
 # Internal definitions
 _LOGGER = logging.getLogger(__name__)
 
+__all__ = [
+    "DOMAIN",
+]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up ZHA from config."""
@@ -121,6 +129,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_ZHA] = ha_zha_data
 
     async_register_firmware_info_provider(hass, DOMAIN, homeassistant_hardware)
+
+    async_setup_services(hass)
 
     return True
 
@@ -133,7 +143,7 @@ def _raise_if_port_in_use(hass: HomeAssistant, device_path: str) -> None:
         )
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Set up ZHA.
 
     Will automatically load components to support devices found on the network.
@@ -211,7 +221,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         ):
             try:
                 # Ignore all exceptions during probing, they shouldn't halt setup
-                if await warn_on_wrong_silabs_firmware(hass, device_path):
+                if await warn_on_wrong_silabs_firmware(
+                    hass, device_path, config_entry.entry_id
+                ):
                     raise ConfigEntryError("Incorrect firmware installed") from exc
             except AlreadyRunningEZSP as ezsp_exc:
                 raise ConfigEntryNotReady from ezsp_exc
@@ -278,13 +290,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     await ha_zha_data.gateway_proxy.async_initialize_devices_and_entities()
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     async_dispatcher_send(hass, SIGNAL_ADD_ENTITIES)
-    return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Unload ZHA config entry."""
-    if not await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS):
-        return False
+    await hass.config_entries.async_unload_platforms_or_raise(config_entry, PLATFORMS)
 
     ha_zha_data = get_zha_data(hass)
     ha_zha_data.config_entry = None
@@ -299,12 +309,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         for platform in PLATFORMS:
             del ha_zha_data.platforms[platform]
 
-    websocket_api.async_unload_api(hass)
 
-    return True
-
-
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating from version %s.%s",
@@ -390,4 +396,3 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         config_entry.version,
         config_entry.minor_version,
     )
-    return True

@@ -3,10 +3,10 @@
 from typing import Any, override
 
 from bleak.exc import BleakError
+import probatio
 from togrill_bluetooth import SUPPORTED_DEVICES
 from togrill_bluetooth.client import Client
 from togrill_bluetooth.packets import PacketA0Notify
-import voluptuous as vol
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -135,5 +135,7 @@ class ToGrillBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_ADDRESS): vol.In(addresses)}),
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_ADDRESS): probatio.In(addresses)}
+            ),
         )

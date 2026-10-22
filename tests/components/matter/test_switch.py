@@ -1,5 +1,7 @@
 """Test Matter switches."""
 
+import asyncio
+from typing import Any
 from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
@@ -19,6 +21,10 @@ from .common import (
     set_node_attribute,
     snapshot_matter_entities,
     trigger_subscription_callback,
+)
+
+REVERSE_MOTOR_DIRECTION_ENTITY_ID = (
+    "switch.mock_full_window_covering_reverse_motor_direction"
 )
 
 
@@ -234,6 +240,120 @@ async def test_evse_sensor(
     )
 
 
+@pytest.mark.parametrize("node_fixture", ["ikea_klippbok_water_leak"])
+async def test_boolean_state_configuration_alarm_enabled_switches(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test Boolean State Configuration alarm enabled switches."""
+
+    visual_entity_id = "switch.klippbok_water_leak_sensor_visual_alarm_enabled"
+    audible_entity_id = "switch.klippbok_water_leak_sensor_audible_alarm_enabled"
+    visual_entry = entity_registry.async_get(visual_entity_id)
+    audible_entry = entity_registry.async_get(audible_entity_id)
+    assert visual_entry
+    assert audible_entry
+
+    visual_state = hass.states.get(visual_entity_id)
+    audible_state = hass.states.get(audible_entity_id)
+    assert visual_state
+    assert audible_state
+    assert visual_entry == snapshot(name=f"{visual_entity_id}-entry")
+    assert visual_state == snapshot(name=f"{visual_entity_id}-state")
+    assert audible_entry == snapshot(name=f"{audible_entity_id}-entry")
+    assert audible_state == snapshot(name=f"{audible_entity_id}-state")
+    assert visual_state.state == "on"
+    assert audible_state.state == "on"
+
+    await hass.services.async_call(
+        "switch",
+        "turn_off",
+        {"entity_id": visual_entity_id},
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.BooleanStateConfiguration.Commands.EnableDisableAlarm(
+            alarmsToEnableDisable=2,
+        ),
+    )
+
+    set_node_attribute(matter_node, 1, 128, 5, 2)
+    await trigger_subscription_callback(hass, matter_client)
+
+    visual_state = hass.states.get(visual_entity_id)
+    audible_state = hass.states.get(audible_entity_id)
+    assert visual_state
+    assert audible_state
+    assert visual_state.state == "off"
+    assert audible_state.state == "on"
+
+    await hass.services.async_call(
+        "switch",
+        "turn_on",
+        {"entity_id": visual_entity_id},
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 2
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.BooleanStateConfiguration.Commands.EnableDisableAlarm(
+            alarmsToEnableDisable=3,
+        ),
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["ikea_klippbok_water_leak"])
+async def test_boolean_state_configuration_alarm_enabled_switches_are_serialized(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test alarm switch changes to the shared bitmap are serialized."""
+    visual_entity_id = "switch.klippbok_water_leak_sensor_visual_alarm_enabled"
+    audible_entity_id = "switch.klippbok_water_leak_sensor_audible_alarm_enabled"
+    command_started = asyncio.Event()
+    allow_commands = asyncio.Event()
+
+    async def send_device_command(*args: object, **kwargs: object) -> None:
+        command_started.set()
+        await allow_commands.wait()
+
+    matter_client.send_device_command.side_effect = send_device_command
+    task = hass.async_create_task(
+        hass.services.async_call(
+            "switch",
+            "turn_off",
+            {"entity_id": [visual_entity_id, audible_entity_id]},
+            blocking=True,
+        )
+    )
+    await command_started.wait()
+    await asyncio.sleep(0)
+
+    assert matter_client.send_device_command.call_count == 1
+
+    allow_commands.set()
+    await task
+
+    assert matter_client.send_device_command.call_count == 2
+    assert matter_client.send_device_command.call_args_list[-1] == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.BooleanStateConfiguration.Commands.EnableDisableAlarm(
+            alarmsToEnableDisable=0,
+        ),
+    )
+
+
 @pytest.mark.parametrize("node_fixture", ["mock_speaker"])
 async def test_speaker_mute_uses_onoff_commands(
     hass: HomeAssistant,
@@ -337,3 +457,179 @@ async def test_eve_child_lock(
         ),
         value=False,
     )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+async def test_door_lock_one_touch_locking(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test the DoorLock one-touch locking config switch."""
+    entity_id = "switch.mock_door_lock_one_touch_locking"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "off"
+
+    set_node_attribute(matter_node, 1, 257, 41, True)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "on"
+
+    set_node_attribute(matter_node, 1, 257, 41, False)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "off"
+
+    attribute_path = create_attribute_path_from_attribute(
+        endpoint_id=1, attribute=clusters.DoorLock.Attributes.EnableOneTouchLocking
+    )
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": entity_id}, blocking=True
+    )
+    assert matter_client.write_attribute.call_args_list == [
+        call(node_id=matter_node.node_id, attribute_path=attribute_path, value=True)
+    ]
+
+    await hass.services.async_call(
+        "switch", "turn_off", {"entity_id": entity_id}, blocking=True
+    )
+    assert matter_client.write_attribute.call_args_list[1] == call(
+        node_id=matter_node.node_id, attribute_path=attribute_path, value=False
+    )
+    assert matter_client.write_attribute.call_count == 2
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_window_covering_full"])
+async def test_window_covering_reverse_motor_direction(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test switch entity for the WindowCovering MotorDirectionReversed mode bit."""
+    state = hass.states.get(REVERSE_MOTOR_DIRECTION_ENTITY_ID)
+    assert state
+    assert state.state == "off"
+
+    set_node_attribute(matter_node, 1, 258, 23, 1)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(REVERSE_MOTOR_DIRECTION_ENTITY_ID)
+    assert state.state == "on"
+
+    # only the MotorDirectionReversed bit drives the state
+    set_node_attribute(matter_node, 1, 258, 23, 8)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(REVERSE_MOTOR_DIRECTION_ENTITY_ID)
+    assert state.state == "off"
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_window_covering_full"])
+@pytest.mark.parametrize(
+    ("mode", "service", "written_value"),
+    [
+        pytest.param(8, "turn_on", 9, id="set_keeps_led_feedback"),
+        pytest.param(9, "turn_off", 8, id="clear_keeps_led_feedback"),
+        # bits outside the Mode bitmap must survive the read-modify-write too
+        pytest.param(0x10, "turn_on", 0x11, id="set_keeps_undeclared_bit"),
+        pytest.param(0x11, "turn_off", 0x10, id="clear_keeps_undeclared_bit"),
+    ],
+)
+async def test_window_covering_reverse_motor_direction_write(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    mode: int,
+    service: str,
+    written_value: int,
+) -> None:
+    """Test writing the mode bit preserves the other bits of the Mode bitmap."""
+    set_node_attribute(matter_node, 1, 258, 23, mode)
+    await trigger_subscription_callback(hass, matter_client)
+
+    await hass.services.async_call(
+        "switch",
+        service,
+        {"entity_id": REVERSE_MOTOR_DIRECTION_ENTITY_ID},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.WindowCovering.Attributes.Mode,
+        ),
+        value=written_value,
+    )
+
+
+def _write_response(status: int) -> list[dict[str, Any]]:
+    """Build a write response as the Matter Server reports it."""
+    return [
+        {
+            "Path": {"EndpointId": 1, "ClusterId": 258, "AttributeId": 23},
+            "Status": status,
+        }
+    ]
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_window_covering_full"])
+@pytest.mark.parametrize(
+    ("status", "expected_error"),
+    [
+        pytest.param(
+            clusters.Globals.Enums.status.kConstraintError,
+            "does not support changing",
+            id="constraint_error",
+        ),
+        pytest.param(
+            clusters.Globals.Enums.status.kUnsupportedWrite,
+            "returned status",
+            id="unsupported_write",
+        ),
+        pytest.param(
+            clusters.Globals.Enums.status.kBusy,
+            "returned status",
+            id="busy",
+        ),
+    ],
+)
+async def test_window_covering_reverse_motor_direction_rejected(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    status: int,
+    expected_error: str,
+) -> None:
+    """Test a device rejecting the write raises a meaningful error."""
+    matter_client.write_attribute.return_value = _write_response(status)
+
+    with pytest.raises(HomeAssistantError, match=expected_error):
+        await hass.services.async_call(
+            "switch",
+            "turn_on",
+            {"entity_id": REVERSE_MOTOR_DIRECTION_ENTITY_ID},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_window_covering_full"])
+async def test_window_covering_reverse_motor_direction_accepted(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test a successful write response does not raise."""
+    matter_client.write_attribute.return_value = _write_response(
+        clusters.Globals.Enums.status.kSuccess
+    )
+
+    await hass.services.async_call(
+        "switch",
+        "turn_on",
+        {"entity_id": REVERSE_MOTOR_DIRECTION_ENTITY_ID},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1

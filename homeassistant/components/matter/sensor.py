@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, cast, override
+from typing import TYPE_CHECKING, Any, cast, override
 
 from chip.clusters import Objects as clusters
 from chip.clusters.ClusterObjects import ClusterAttributeDescriptor
@@ -16,6 +16,7 @@ from matter_server.common.custom_clusters import (
 )
 
 from homeassistant.components.sensor import (
+    DEVICE_CLASS_UNITS,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -32,6 +33,7 @@ from homeassistant.const import (
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
+    UnitOfFrequency,
     UnitOfPower,
     UnitOfPressure,
     UnitOfRatio,
@@ -137,6 +139,13 @@ RVC_OPERATIONAL_STATE_ERROR_MAP = {
     _rvc_err.kNavigationSensorObscured: ("navigation_sensor_obscured"),
 }
 
+SETPOINT_CHANGE_SOURCE_MAP = {
+    clusters.Thermostat.Enums.SetpointChangeSourceEnum.kManual: "manual",
+    clusters.Thermostat.Enums.SetpointChangeSourceEnum.kSchedule: "schedule",
+    clusters.Thermostat.Enums.SetpointChangeSourceEnum.kExternal: "external",
+    clusters.Thermostat.Enums.SetpointChangeSourceEnum.kUnknownEnumValue: None,
+}
+
 THREAD_ROUTING_ROLE_MAP = {
     clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kUnspecified: "unspecified",
     clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kUnassigned: "unassigned",
@@ -218,6 +227,38 @@ PUMP_CONTROL_MODE_MAP = {
     _pump_ctrl.kConstantTemperature: "constant_temperature",
     _pump_ctrl.kAutomatic: "automatic",
     _pump_ctrl.kUnknownEnumValue: None,
+}
+
+type ConcentrationMeasurementCluster = (
+    clusters.CarbonDioxideConcentrationMeasurement
+    | clusters.CarbonMonoxideConcentrationMeasurement
+    | clusters.NitrogenDioxideConcentrationMeasurement
+    | clusters.OzoneConcentrationMeasurement
+    | clusters.Pm1ConcentrationMeasurement
+    | clusters.Pm25ConcentrationMeasurement
+    | clusters.Pm10ConcentrationMeasurement
+    | clusters.RadonConcentrationMeasurement
+    | clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement
+)
+
+# Every concentration measurement cluster defines the same MeasurementUnitEnum members.
+_mu = clusters.CarbonDioxideConcentrationMeasurement.Enums.MeasurementUnitEnum
+MEASUREMENT_UNIT_MAP: dict[int, str] = {
+    _mu.kPpm: UnitOfRatio.PARTS_PER_MILLION,
+    _mu.kPpb: UnitOfRatio.PARTS_PER_BILLION,
+    # kPpt (parts per trillion) - no HA constant
+    _mu.kMgm3: UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER,
+    _mu.kUgm3: UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+    # kNgm3 (nanograms/m³) - no HA constant
+    # kPm3 (parts/m³) - deprecated HA unit, no replacement
+    _mu.kBqm3: CONCENTRATION_BECQUERELS_PER_CUBIC_METER,
+}
+
+TVOC_DEVICE_CLASS_MAP: dict[int, SensorDeviceClass] = {
+    _mu.kPpm: SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
+    _mu.kPpb: SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
+    _mu.kMgm3: SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+    _mu.kUgm3: SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
 }
 
 MATTER_2000_TO_UNIX_EPOCH_OFFSET = (
@@ -309,6 +350,53 @@ class MatterSensor(MatterEntity, SensorEntity):
         self._attr_native_value = value
 
 
+class MatterConcentrationSensor(MatterSensor):
+    """Representation of a Matter concentration measurement sensor."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the entity."""
+        super().__init__(*args, **kwargs)
+        # MeasurementUnit has Fixed quality in the Matter spec.
+        if (unit_value := self.matter_measurement_unit) is not None:
+            self._apply_measurement_unit(unit_value)
+
+    def _apply_measurement_unit(self, unit_value: int) -> None:
+        """Set the unit of measurement from the reported MeasurementUnit."""
+        if (mapped_unit := MEASUREMENT_UNIT_MAP.get(unit_value)) is None:
+            return
+        device_class = self.device_class
+        allowed_units = (
+            DEVICE_CLASS_UNITS.get(device_class) if device_class is not None else None
+        )
+        # A device class accepts only the units DEVICE_CLASS_UNITS lists for it.
+        if allowed_units is not None and mapped_unit not in allowed_units:
+            return
+        self._attr_native_unit_of_measurement = mapped_unit
+
+    @property
+    def matter_measurement_unit(self) -> int | None:
+        """Return the MeasurementUnit value from the device, if reported."""
+        cluster: ConcentrationMeasurementCluster = self._endpoint.get_cluster(
+            self._entity_info.primary_attribute.cluster_id
+        )
+        value: int | Nullable | None = cluster.measurementUnit
+        if value in (None, NullValue):
+            return None
+        return value
+
+
+class MatterTVOCConcentrationSensor(MatterConcentrationSensor):
+    """Representation of a Matter TVOC concentration sensor."""
+
+    @override
+    def _apply_measurement_unit(self, unit_value: int) -> None:
+        """Set the device class and unit from the reported MeasurementUnit."""
+        # super() validates the unit against the device class.
+        if (dc := TVOC_DEVICE_CLASS_MAP.get(unit_value)) is not None:
+            self._attr_device_class = dc
+        super()._apply_measurement_unit(unit_value)
+
+
 class MatterDraftElectricalMeasurementSensor(MatterEntity, SensorEntity):
     """Matter sensor for 1.0 draft ElectricalMeasurement cluster."""
 
@@ -388,13 +476,19 @@ class MatterListSensor(MatterSensor):
     @override
     def _update_from_device(self) -> None:
         """Update from device."""
-        self._attr_options = list_values = cast(
-            list[str],
-            self.get_matter_attribute_value(self.entity_description.list_attribute),
+        self._attr_options = list_values = (
+            cast(
+                list[str] | None,
+                self.get_matter_attribute_value(self.entity_description.list_attribute),
+            )
+            or []
         )
-        current_value: int = self.get_matter_attribute_value(
+        current_value: int | None = self.get_matter_attribute_value(
             self._entity_info.primary_attribute
         )
+        if current_value is None:
+            self._attr_native_value = None
+            return
         try:
             self._attr_native_value = list_values[current_value]
         except IndexError:
@@ -438,6 +532,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.FlowMeasurement.Attributes.MeasuredValue,),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -661,7 +756,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.CO2,
             state_class=SensorStateClass.MEASUREMENT,
         ),
-        entity_class=MatterSensor,
+        entity_class=MatterConcentrationSensor,
         required_attributes=(
             clusters.CarbonDioxideConcentrationMeasurement.Attributes.MeasuredValue,
         ),
@@ -674,7 +769,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
             state_class=SensorStateClass.MEASUREMENT,
         ),
-        entity_class=MatterSensor,
+        entity_class=MatterTVOCConcentrationSensor,
         required_attributes=(
             clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement.Attributes.MeasuredValue,
         ),
@@ -702,7 +797,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.PM1,
             state_class=SensorStateClass.MEASUREMENT,
         ),
-        entity_class=MatterSensor,
+        entity_class=MatterConcentrationSensor,
         required_attributes=(
             clusters.Pm1ConcentrationMeasurement.Attributes.MeasuredValue,
         ),
@@ -715,7 +810,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.PM25,
             state_class=SensorStateClass.MEASUREMENT,
         ),
-        entity_class=MatterSensor,
+        entity_class=MatterConcentrationSensor,
         required_attributes=(
             clusters.Pm25ConcentrationMeasurement.Attributes.MeasuredValue,
         ),
@@ -728,7 +823,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.PM10,
             state_class=SensorStateClass.MEASUREMENT,
         ),
-        entity_class=MatterSensor,
+        entity_class=MatterConcentrationSensor,
         required_attributes=(
             clusters.Pm10ConcentrationMeasurement.Attributes.MeasuredValue,
         ),
@@ -740,7 +835,7 @@ DISCOVERY_SCHEMAS = [
             translation_key="air_quality",
             device_class=SensorDeviceClass.ENUM,
             options=[x for x in AIR_QUALITY_MAP.values() if x is not None],
-            device_to_ha=lambda x: AIR_QUALITY_MAP[x],
+            device_to_ha=AIR_QUALITY_MAP.get,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.AirQuality.Attributes.AirQuality,),
@@ -753,7 +848,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.CO,
             state_class=SensorStateClass.MEASUREMENT,
         ),
-        entity_class=MatterSensor,
+        entity_class=MatterConcentrationSensor,
         required_attributes=(
             clusters.CarbonMonoxideConcentrationMeasurement.Attributes.MeasuredValue,
         ),
@@ -766,7 +861,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
-        entity_class=MatterSensor,
+        entity_class=MatterConcentrationSensor,
         required_attributes=(
             clusters.NitrogenDioxideConcentrationMeasurement.Attributes.MeasuredValue,
         ),
@@ -779,7 +874,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.OZONE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
-        entity_class=MatterSensor,
+        entity_class=MatterConcentrationSensor,
         required_attributes=(
             clusters.OzoneConcentrationMeasurement.Attributes.MeasuredValue,
         ),
@@ -792,7 +887,7 @@ DISCOVERY_SCHEMAS = [
             state_class=SensorStateClass.MEASUREMENT,
             translation_key="radon_concentration",
         ),
-        entity_class=MatterSensor,
+        entity_class=MatterConcentrationSensor,
         required_attributes=(
             clusters.RadonConcentrationMeasurement.Attributes.MeasuredValue,
         ),
@@ -1080,6 +1175,41 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
+            key="ElectricalPowerMeasurementFrequency",
+            translation_key="frequency",
+            device_class=SensorDeviceClass.FREQUENCY,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfFrequency.MILLIHERTZ,
+            suggested_unit_of_measurement=UnitOfFrequency.HERTZ,
+            suggested_display_precision=1,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.ElectricalPowerMeasurement.Attributes.Frequency,),
+        allow_none_value=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ElectricalPowerMeasurementPowerFactor",
+            translation_key="power_factor",
+            device_class=SensorDeviceClass.POWER_FACTOR,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+            suggested_display_precision=0,
+            state_class=SensorStateClass.MEASUREMENT,
+            # PowerFactor is reported as -10000 to 10000, representing -100% to 100%
+            device_to_ha=lambda x: x / 100,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.ElectricalPowerMeasurement.Attributes.PowerFactor,
+        ),
+        allow_none_value=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
             key="ElectricalEnergyMeasurementCumulativeEnergyImported",
             device_class=SensorDeviceClass.ENERGY,
             native_unit_of_measurement=UnitOfEnergy.MILLIWATT_HOUR,
@@ -1320,6 +1450,68 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterSensor,
         required_attributes=(clusters.Thermostat.Attributes.OutdoorTemperature,),
         device_type=(device_types.Thermostat, device_types.RoomAirConditioner),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ThermostatSetpointChangeSource",
+            translation_key="setpoint_change_source",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            options=[x for x in SETPOINT_CHANGE_SOURCE_MAP.values() if x is not None],
+            device_to_ha=SETPOINT_CHANGE_SOURCE_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.Thermostat.Attributes.SetpointChangeSource,
+            clusters.Thermostat.Attributes.SetpointChangeSourceTimestamp,
+        ),
+        device_type=(device_types.Thermostat, device_types.RoomAirConditioner),
+        allow_multi=True,  # also required by the other SetpointChange* schemas
+        # skip until a setpoint change has actually been recorded (0 = never)
+        secondary_value_is_not=0,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ThermostatSetpointChangeSourceTimestamp",
+            translation_key="setpoint_change_timestamp",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_to_ha=matter_epoch_seconds_to_utc,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.Thermostat.Attributes.SetpointChangeSourceTimestamp,
+        ),
+        device_type=(device_types.Thermostat, device_types.RoomAirConditioner),
+        allow_multi=True,  # also required by the other SetpointChange* schemas
+        # skip until a setpoint change has actually been recorded (0 = never)
+        value_is_not=0,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ThermostatSetpointChangeAmount",
+            translation_key="setpoint_change_amount",
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            suggested_display_precision=1,
+            device_class=SensorDeviceClass.TEMPERATURE_DELTA,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_to_ha=lambda x: x / TEMPERATURE_SCALING_FACTOR,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.Thermostat.Attributes.SetpointChangeAmount,
+            clusters.Thermostat.Attributes.SetpointChangeSourceTimestamp,
+        ),
+        device_type=(device_types.Thermostat, device_types.RoomAirConditioner),
+        allow_multi=True,  # also required by the other SetpointChange* schemas
+        # the attribute's spec fallback value is null (previous setpoint unknown)
+        allow_none_value=True,
+        # skip until a setpoint change has actually been recorded (0 = never)
+        secondary_value_is_not=0,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,

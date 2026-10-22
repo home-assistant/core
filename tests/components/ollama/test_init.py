@@ -4,9 +4,10 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import attr
-from httpx import ConnectError
+from httpx2 import ConnectError
 from ollama import ResponseError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components import ollama
 from homeassistant.components.ollama.const import DOMAIN
@@ -23,8 +24,6 @@ from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.setup import async_setup_component
 
 from . import TEST_OPTIONS
-
-from tests.common import MockConfigEntry
 
 V1_TEST_USER_DATA = {
     CONF_URL: "http://localhost:11434",
@@ -193,7 +192,7 @@ async def test_migration_from_v1(
     # Run migration
     with patch(
         "homeassistant.components.ollama.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -249,10 +248,8 @@ async def test_migration_from_v1(
     )
     assert migrated_device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert migrated_device.id == device.id
-    assert migrated_device.config_entries == {mock_config_entry.entry_id}
-    assert migrated_device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert migrated_device.config_entry_id == mock_config_entry.entry_id
+    assert migrated_device.config_subentry_id == subentry.subentry_id
 
 
 async def test_migration_from_v1_with_multiple_urls(
@@ -316,7 +313,7 @@ async def test_migration_from_v1_with_multiple_urls(
     # Run migration
     with patch(
         "homeassistant.components.ollama.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -359,8 +356,8 @@ async def test_migration_from_v1_with_multiple_urls(
             (DOMAIN, list(entry.subentries.values())[0].subentry_id), entry.entry_id
         )
         assert dev is not None
-        assert dev.config_entries == {entry.entry_id}
-        assert dev.config_entries_subentries == {entry.entry_id: {subentry.subentry_id}}
+        assert dev.config_entry_id == entry.entry_id
+        assert dev.config_subentry_id == subentry.subentry_id
 
 
 async def test_migration_from_v1_with_same_urls(
@@ -424,7 +421,7 @@ async def test_migration_from_v1_with_same_urls(
     # Run migration
     with patch(
         "homeassistant.components.ollama.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -462,10 +459,8 @@ async def test_migration_from_v1_with_same_urls(
             (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
         assert dev is not None
-        assert dev.config_entries == {mock_config_entry.entry_id}
-        assert dev.config_entries_subentries == {
-            mock_config_entry.entry_id: {subentry.subentry_id}
-        }
+        assert dev.config_entry_id == mock_config_entry.entry_id
+        assert dev.config_subentry_id == subentry.subentry_id
 
 
 @pytest.mark.parametrize(
@@ -619,7 +614,7 @@ async def test_migration_from_v1_disabled(
     # Run migration
     with patch(
         "homeassistant.components.ollama.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -675,12 +670,8 @@ async def test_migration_from_v1_disabled(
         )
         assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
         assert device.id == devices[subentry_data["device"]].id
-        assert device.config_entries == {
-            mock_config_entries[main_config_entry].entry_id
-        }
-        assert device.config_entries_subentries == {
-            mock_config_entries[main_config_entry].entry_id: {subentry.subentry_id}
-        }
+        assert device.config_entry_id == mock_config_entries[main_config_entry].entry_id
+        assert device.config_subentry_id == subentry.subentry_id
         assert device.disabled_by is subentry_data["device_disabled_by"]
 
 
@@ -758,7 +749,7 @@ async def test_migration_from_v2_1(
     # Run migration
     with patch(
         "homeassistant.components.ollama.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -801,10 +792,8 @@ async def test_migration_from_v2_1(
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert device.id == device_1.id
-    assert device.config_entries == {mock_config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.config_subentry_id == subentry.subentry_id
 
     subentry = conversation_subentries[1]
 
@@ -822,10 +811,8 @@ async def test_migration_from_v2_1(
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
     assert device.id == device_2.id
-    assert device.config_entries == {mock_config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.config_subentry_id == subentry.subentry_id
 
 
 async def test_migration_from_v2_2(hass: HomeAssistant) -> None:
@@ -851,7 +838,7 @@ async def test_migration_from_v2_2(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.ollama.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
@@ -890,7 +877,7 @@ async def test_migration_from_v3_1_without_subentry(hass: HomeAssistant) -> None
 
     with patch(
         "homeassistant.components.ollama.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
@@ -1058,10 +1045,13 @@ async def test_migrate_entry_from_v3_2(
         mock_config_entry.entry_id,
         config_entry=mock_config_entry,
         config_subentry_id=conversation_subentry_id,
-        disabled_by=entity_disabled_by,
         device_id=conversation_device.id,
         suggested_object_id="ollama",
     )
+    conversation_entity = attr.evolve(
+        conversation_entity, disabled_by=entity_disabled_by
+    )
+    entity_registry.entities[conversation_entity.entity_id] = conversation_entity
 
     # Verify initial state
     assert mock_config_entry.version == 3
@@ -1074,7 +1064,7 @@ async def test_migrate_entry_from_v3_2(
     # Run setup to trigger migration
     with patch(
         "homeassistant.components.ollama.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ):
         result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
         assert result is setup_result

@@ -1,6 +1,6 @@
 """Services for the Overkiz integration."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -28,11 +28,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_SET_COVER_POSITION_AND_TILT,
         entity_domain=COVER_DOMAIN,
         schema={
-            vol.Required(ATTR_POSITION): vol.All(
-                vol.Coerce(int), vol.Range(min=POSITION_MIN, max=POSITION_MAX)
+            probatio.Required(ATTR_POSITION): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=POSITION_MIN, max=POSITION_MAX)
             ),
-            vol.Required(ATTR_TILT_POSITION): vol.All(
-                vol.Coerce(int), vol.Range(min=POSITION_MIN, max=POSITION_MAX)
+            probatio.Required(ATTR_TILT_POSITION): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=POSITION_MIN, max=POSITION_MAX)
             ),
         },
         func="async_set_cover_position_and_tilt",

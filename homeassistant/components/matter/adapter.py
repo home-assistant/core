@@ -8,17 +8,26 @@ from matter_server.common.models import EventType, ServerInfoMessage
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .const import DOMAIN, ID_TYPE_DEVICE_ID, ID_TYPE_SERIAL, LOGGER
 from .discovery import async_discover_entities
-from .helpers import MatterConfigEntry, get_device_endpoint, get_device_id
+from .helpers import (
+    MatterConfigEntry,
+    get_device_endpoint,
+    get_device_id,
+    get_discovery_key,
+    get_entity_unique_id,
+    get_legacy_device_id,
+)
 
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
     from matter_server.client.models.node import MatterEndpoint, MatterNode
+
+    from .models import MatterEntityInfo
 
 
 def get_clean_name(name: str | None) -> str | None:
@@ -173,7 +182,9 @@ class MatterAdapter:
         # so derive that entry from the compose parent for every one of them.
         endpoint = get_device_endpoint(endpoint)
 
-        basic_info = endpoint.device_info
+        # a Bridged Node without BridgedDeviceBasicInformation gets a device without its info
+        basic_info = endpoint.device_info or clusters.BridgedDeviceBasicInformation()
+        node_info = endpoint.node.device_info
         # use (first) DeviceType of the endpoint as fallback product name
         device_type = next(
             (
@@ -220,7 +231,8 @@ class MatterAdapter:
             # which would make the identifier resolve to the bridge's device
             and not (
                 isinstance(basic_info, clusters.BridgedDeviceBasicInformation)
-                and basic_info_serial_number == endpoint.node.device_info.serialNumber
+                and node_info is not None
+                and basic_info_serial_number == node_info.serialNumber
             )
         ):
             # prefix identifier with 'serial_' to be able to filter it
@@ -257,12 +269,13 @@ class MatterAdapter:
             model_id = str(product_id) if (product_id := basic_info.productID) else None
 
         device_registry.async_get_or_create(
-            name=name,
             config_entry_id=self.config_entry.entry_id,
+            name=name,
             identifiers=identifiers,
             hw_version=basic_info.hardwareVersionString,
             sw_version=basic_info.softwareVersionString,
-            manufacturer=basic_info.vendorName or endpoint.node.device_info.vendorName,
+            manufacturer=basic_info.vendorName
+            or (node_info.vendorName if node_info is not None else None),
             model=model_name,
             model_id=model_id,
             serial_number=serial_number,
@@ -273,16 +286,20 @@ class MatterAdapter:
         """Set up a MatterEndpoint as HA Device."""
         # pre-create device registry entry
         self._create_device_registry(endpoint)
+        server_info = cast(ServerInfoMessage, self.matter_client.server_info)
+        device_id = get_device_id(server_info, endpoint)
+        legacy_device_id = get_legacy_device_id(server_info, endpoint)
         # run platform discovery from device type instances
-        for entity_info in async_discover_entities(endpoint):
-            discovery_key = (
-                f"{entity_info.platform}_{endpoint.node.node_id}_{endpoint.endpoint_id}_"
-                f"{entity_info.primary_attribute.cluster_id}_"
-                f"{entity_info.primary_attribute.attribute_id}_"
-                f"{entity_info.entity_description.key}"
-            )
+        for entity_info in async_discover_entities(
+            endpoint, server_info.schema_version
+        ):
+            discovery_key = get_discovery_key(endpoint, entity_info)
             if discovery_key in self.discovered_entities:
                 continue
+            if legacy_device_id != device_id:
+                self._migrate_legacy_unique_id(
+                    endpoint, entity_info, legacy_device_id, device_id
+                )
             LOGGER.debug(
                 "Creating %s entity for %s",
                 entity_info.platform,
@@ -293,3 +310,28 @@ class MatterAdapter:
                 self.matter_client, endpoint, entity_info
             )
             self.platform_handlers[entity_info.platform]([new_entity])
+
+    def _migrate_legacy_unique_id(
+        self,
+        endpoint: MatterEndpoint,
+        entity_info: MatterEntityInfo,
+        legacy_device_id: str,
+        device_id: str,
+    ) -> None:
+        """Rename an entity registry entry still using the pre-1.5.0 unique_id.
+
+        matter-python-client 1.5.0 changed `get_compose_parent()` to resolve to the
+        top of a composition instead of the closest parent, which changes the
+        unique_id of a part nested below another part. Rename the entity registry
+        entry so its entity_id (and any automation referencing it) survives the
+        client upgrade, instead of orphaning it and creating a new entity.
+        """
+        legacy_unique_id = get_entity_unique_id(legacy_device_id, endpoint, entity_info)
+        entity_registry = er.async_get(self.hass)
+        if entity_id := entity_registry.async_get_entity_id(
+            entity_info.platform, DOMAIN, legacy_unique_id
+        ):
+            entity_registry.async_update_entity(
+                entity_id,
+                new_unique_id=get_entity_unique_id(device_id, endpoint, entity_info),
+            )

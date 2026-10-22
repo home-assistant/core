@@ -4,14 +4,14 @@ from collections.abc import Callable
 import json
 from typing import Any
 
+from pytest_homeassistant.common import MockConfigEntry, load_fixture
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+
 from homeassistant.components.fronius.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
-
-from tests.common import MockConfigEntry, load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 MOCK_HOST = "http://fronius"
 MOCK_UID = "123.4567890"
@@ -22,6 +22,7 @@ async def setup_fronius_integration(
     is_logger: bool = True,
     unique_id: str = MOCK_UID,
     modbus_port: int | None = None,
+    auto_revert_power_limit: bool = False,
 ) -> ConfigEntry:
     """Create the Fronius integration.
 
@@ -36,6 +37,7 @@ async def setup_fronius_integration(
             CONF_HOST: MOCK_HOST,
             "is_logger": is_logger,
             **({"modbus_port": modbus_port} if modbus_port is not None else {}),
+            **({"auto_revert_power_limit": True} if auto_revert_power_limit else {}),
         },
         minor_version=1 if modbus_port is None else 2,
     )

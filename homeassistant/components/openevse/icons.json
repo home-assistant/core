@@ -9,6 +9,14 @@
       },
       "shaper_active": {
         "default": "mdi:tune-variant"
+      },
+      "station_status": {
+        "default": "mdi:ev-station"
+      }
+    },
+    "select": {
+      "override_state": {
+        "default": "mdi:tune-variant"
       }
     },
     "sensor": {
@@ -41,6 +49,11 @@
       "stuck_relay_trip_count": {
         "default": "mdi:counter"
       }
+    }
+  },
+  "services": {
+    "set_override": {
+      "service": "mdi:tune-variant"
     }
   }
 }

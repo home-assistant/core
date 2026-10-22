@@ -2,14 +2,23 @@
 
 from unittest.mock import Mock, patch
 
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, Platform
+from pytest_homeassistant.common import MockConfigEntry
+
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
+)
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import init_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_light_setup(
@@ -58,6 +67,46 @@ async def test_light_brightness(
         assert state.state == "on"
 
 
+async def test_fgd212_light_brightness_without_setvalue_action(
+    hass: HomeAssistant,
+    mock_fibaro_client: Mock,
+    mock_config_entry: MockConfigEntry,
+    mock_fgd212_light: Mock,
+    mock_room: Mock,
+) -> None:
+    """Test FGD212 dimmers with levelChange but no setValue action."""
+
+    mock_fibaro_client.read_rooms.return_value = [mock_room]
+    mock_fibaro_client.read_devices.return_value = [mock_fgd212_light]
+
+    with patch("homeassistant.components.fibaro.PLATFORMS", [Platform.LIGHT]):
+        await init_integration(hass, mock_config_entry)
+        state = hass.states.get("light.room_1_8_spots_116")
+        assert state.attributes[ATTR_BRIGHTNESS] == 127
+        assert state.attributes["color_mode"] == ColorMode.BRIGHTNESS
+        assert state.state == "on"
+
+
+async def test_dimming_via_multilevel_base_type_without_level_change(
+    hass: HomeAssistant,
+    mock_fibaro_client: Mock,
+    mock_config_entry: MockConfigEntry,
+    mock_multilevel_base_type_light: Mock,
+    mock_room: Mock,
+) -> None:
+    """Test dimming via multilevelSwitch base_type when levelChange is absent."""
+
+    mock_fibaro_client.read_rooms.return_value = [mock_room]
+    mock_fibaro_client.read_devices.return_value = [mock_multilevel_base_type_light]
+
+    with patch("homeassistant.components.fibaro.PLATFORMS", [Platform.LIGHT]):
+        await init_integration(hass, mock_config_entry)
+        state = hass.states.get("light.room_1_base_type_dimmer_42")
+        assert state.attributes[ATTR_BRIGHTNESS] == 51
+        assert state.attributes["color_mode"] == ColorMode.BRIGHTNESS
+        assert state.state == "on"
+
+
 async def test_zigbee_light_brightness(
     hass: HomeAssistant,
     mock_fibaro_client: Mock,
@@ -103,3 +152,30 @@ async def test_light_turn_off(
         )
         # Assert
         assert mock_light.execute_action.call_count == 1
+
+
+async def test_light_set_brightness(
+    hass: HomeAssistant,
+    mock_fibaro_client: Mock,
+    mock_config_entry: MockConfigEntry,
+    mock_light: Mock,
+    mock_room: Mock,
+) -> None:
+    """Test activate scene is called."""
+    # Arrange
+    mock_fibaro_client.read_rooms.return_value = [mock_room]
+    mock_fibaro_client.read_devices.return_value = [mock_light]
+
+    with patch("homeassistant.components.fibaro.PLATFORMS", [Platform.LIGHT]):
+        await init_integration(hass, mock_config_entry)
+        # Act
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_BRIGHTNESS: 98, ATTR_ENTITY_ID: "light.room_1_test_light_3"},
+            blocking=True,
+        )
+        # Assert
+        assert mock_light.execute_action.call_count == 1
+        # Assert that the brightness value is scaled to 0-99 for Fibaro
+        assert mock_light.execute_action.call_args[0] == ("setValue", [38])

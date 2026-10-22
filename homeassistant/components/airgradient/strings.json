@@ -2,9 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "invalid_version": "This firmware version is unsupported. Please upgrade the firmware of the device to at least version 3.1.1.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "Please ensure you reconfigure against the same device."
     },
     "error": {
@@ -41,9 +39,19 @@
       },
       "led_bar_brightness": {
         "name": "LED bar brightness"
+      },
+      "measurement_interval": {
+        "name": "Measurement interval"
       }
     },
     "select": {
+      "altitude_unit": {
+        "name": "Altitude unit",
+        "state": {
+          "ft": "Feet",
+          "m": "Meters"
+        }
+      },
       "back_led_brightness": {
         "name": "Back LED brightness",
         "state": {
@@ -107,6 +115,7 @@
         "name": "LED bar mode",
         "state": {
           "co2": "[%key:component::sensor::entity_component::carbon_dioxide::name%]",
+          "iaqs": "IAQS",
           "off": "[%key:common::state::off%]",
           "pm": "Particulate matter"
         }
@@ -177,6 +186,7 @@
         "name": "[%key:component::airgradient::entity::select::led_bar_mode::name%]",
         "state": {
           "co2": "[%key:component::sensor::entity_component::carbon_dioxide::name%]",
+          "iaqs": "[%key:component::airgradient::entity::select::led_bar_mode::state::iaqs%]",
           "off": "[%key:common::state::off%]",
           "pm": "[%key:component::airgradient::entity::select::led_bar_mode::state::pm%]"
         }

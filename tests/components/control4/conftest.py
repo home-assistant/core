@@ -1,15 +1,17 @@
 """Common fixtures for the Control4 tests."""
 
 from collections.abc import AsyncGenerator, Generator
-import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.control4.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
-
-from tests.common import MockConfigEntry, load_fixture
 
 MOCK_HOST = "192.168.1.100"
 MOCK_USERNAME = "test-username"
@@ -37,7 +39,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock control4 setup entry."""
     with patch(
-        "homeassistant.components.control4.async_setup_entry", return_value=True
+        "homeassistant.components.control4.async_setup_entry", return_value=None
     ) as mock_setup:
         yield mock_setup
 
@@ -83,10 +85,10 @@ def mock_c4_director() -> Generator[MagicMock]:
         ),
     ):
         mock_director = mock_director_class.return_value
-        all_items = json.loads(load_fixture("director_all_items.json", DOMAIN))
+        all_items = load_json_array_fixture("director_all_items.json", DOMAIN)
         mock_director.get_all_item_info = AsyncMock(return_value=all_items)
         mock_director.get_ui_configuration = AsyncMock(
-            return_value=json.loads(load_fixture("ui_configuration.json", DOMAIN))
+            return_value=load_json_object_fixture("ui_configuration.json", DOMAIN)
         )
         mock_director.get_item_variables = AsyncMock(return_value=[])
         yield mock_director

@@ -9,7 +9,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -18,6 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import setup_mysensors_platform
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
 from .entity import MySensorsChildEntity
+from .models import MySensorsConfigEntry
 
 
 @dataclass(frozen=True)
@@ -67,7 +67,7 @@ SENSORS: dict[str, MySensorsBinarySensorDescription] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MySensorsConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up this platform for a specific ConfigEntry(==Gateway)."""
@@ -76,11 +76,11 @@ async def async_setup_entry(
     def async_discover(discovery_info: DiscoveryInfo) -> None:
         """Discover and add a MySensors binary_sensor."""
         setup_mysensors_platform(
-            hass,
+            config_entry,
             Platform.BINARY_SENSOR,
             discovery_info,
             MySensorsBinarySensor,
-            async_add_entities=async_add_entities,
+            async_add_entities,
         )
 
     config_entry.async_on_unload(

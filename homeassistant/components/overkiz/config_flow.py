@@ -5,6 +5,7 @@ import logging
 from typing import Any, cast, override
 
 from aiohttp import ClientConnectorCertificateError, ClientError
+import probatio
 from pyoverkiz.auth.credentials import (
     LocalTokenCredentials,
     RexelTokenCredentials,
@@ -24,13 +25,13 @@ from pyoverkiz.exceptions import (
     MaintenanceError,
     NoSuchTokenError,
     NotAuthenticatedError,
+    ServiceUnavailableError,
     TooManyAttemptsBannedError,
     TooManyRequestsError,
     UnknownUserError,
 )
 from pyoverkiz.obfuscate import obfuscate_id
 from pyoverkiz.utils import create_local_server_config, is_overkiz_gateway
-import voluptuous as vol
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -166,10 +167,15 @@ class OverkizConfigFlow(
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HUB, default=self._server): vol.In(
-                        {key: hub.name for key, hub in SUPPORTED_SERVERS.items()}
+                    probatio.Required(CONF_HUB, default=self._server): probatio.In(
+                        {
+                            key: hub.name
+                            for key, hub in SUPPORTED_SERVERS.items()
+                            # Needs multi-account site selection, not supported yet
+                            if key != Server.SOMFY
+                        }
                     ),
                 }
             ),
@@ -193,9 +199,9 @@ class OverkizConfigFlow(
 
         return self.async_show_form(
             step_id="local_or_cloud",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_API_TYPE): vol.In(
+                    probatio.Required(CONF_API_TYPE): probatio.In(
                         {
                             APIType.LOCAL: "Local API",
                             APIType.CLOUD: "Cloud API",
@@ -248,10 +254,10 @@ class OverkizConfigFlow(
                     errors["base"] = "unsupported_hardware"
                 else:
                     errors["base"] = "invalid_auth"
-            except TimeoutError, ClientError:
-                errors["base"] = "cannot_connect"
             except MaintenanceError:
                 errors["base"] = "server_in_maintenance"
+            except TimeoutError, ClientError, ServiceUnavailableError:
+                errors["base"] = "cannot_connect"
             except TooManyAttemptsBannedError:
                 errors["base"] = "too_many_attempts"
             except UnknownUserError:
@@ -287,10 +293,10 @@ class OverkizConfigFlow(
 
         return self.async_show_form(
             step_id="cloud",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_USERNAME, default=self._user): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_USERNAME, default=self._user): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             description_placeholders=description_placeholders,
@@ -325,11 +331,11 @@ class OverkizConfigFlow(
             except ClientConnectorCertificateError as exception:
                 errors["base"] = "certificate_verify_failed"
                 LOGGER.debug(exception)
-            except (TimeoutError, ClientError) as exception:
-                errors["base"] = "cannot_connect"
-                LOGGER.debug(exception)
             except MaintenanceError:
                 errors["base"] = "server_in_maintenance"
+            except (TimeoutError, ClientError, ServiceUnavailableError) as exception:
+                errors["base"] = "cannot_connect"
+                LOGGER.debug(exception)
             except TooManyAttemptsBannedError:
                 errors["base"] = "too_many_attempts"
             except UnknownUserError:
@@ -347,11 +353,11 @@ class OverkizConfigFlow(
 
         return self.async_show_form(
             step_id="local",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST, default=self._host): str,
-                    vol.Required(CONF_TOKEN): str,
-                    vol.Required(CONF_VERIFY_SSL, default=self._verify_ssl): bool,
+                    probatio.Required(CONF_HOST, default=self._host): str,
+                    probatio.Required(probatio.Secret(CONF_TOKEN)): str,
+                    probatio.Required(CONF_VERIFY_SSL, default=self._verify_ssl): bool,
                 }
             ),
             description_placeholders=description_placeholders,
@@ -401,9 +407,9 @@ class OverkizConfigFlow(
 
         return self.async_show_form(
             step_id="select_gateway",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_GATEWAY_ID): vol.In(
+                    probatio.Required(CONF_GATEWAY_ID): probatio.In(
                         {
                             candidate.gateway_id: candidate.label
                             or candidate.gateway_id

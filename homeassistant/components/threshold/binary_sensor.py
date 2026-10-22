@@ -4,7 +4,7 @@ from collections.abc import Callable, Mapping
 import logging
 from typing import Any, Final, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
@@ -66,22 +66,22 @@ DEFAULT_NAME: Final = "Threshold"
 def no_missing_threshold(value: dict) -> dict:
     """Validate data point list is greater than polynomial degrees."""
     if value.get(CONF_LOWER) is None and value.get(CONF_UPPER) is None:
-        raise vol.Invalid("Lower or Upper thresholds are not provided")
+        raise probatio.Invalid("Lower or Upper thresholds are not provided")
 
     return value
 
 
-PLATFORM_SCHEMA = vol.All(
+PLATFORM_SCHEMA = probatio.All(
     BINARY_SENSOR_PLATFORM_SCHEMA.extend(
         {
-            vol.Required(CONF_ENTITY_ID): cv.entity_id,
-            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS): vol.Coerce(
-                float
-            ),
-            vol.Optional(CONF_LOWER): vol.Coerce(float),
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_UPPER): vol.Coerce(float),
+            probatio.Required(CONF_ENTITY_ID): cv.entity_id,
+            probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+            probatio.Optional(
+                CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS
+            ): probatio.Coerce(float),
+            probatio.Optional(CONF_LOWER): probatio.Coerce(float),
+            probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            probatio.Optional(CONF_UPPER): probatio.Coerce(float),
         }
     ),
     no_missing_threshold,

@@ -5,7 +5,7 @@ from typing import Any
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
-from . import CentriConnectConfigEntry
+from .coordinator import CentriConnectConfigEntry
 
 TO_REDACT = {"Latitude", "Longitude", "Altitude"}
 

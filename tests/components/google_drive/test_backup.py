@@ -9,6 +9,9 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from aiohttp import ClientResponse
 from google_drive_api.exceptions import GoogleDriveApiError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import mock_stream
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup import (
@@ -22,10 +25,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .conftest import CONFIG_ENTRY_TITLE, TEST_AGENT_ID
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import mock_stream
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 FOLDER_ID = "google-folder-id"
 TEST_AGENT_BACKUP = AgentBackup(
@@ -71,6 +70,23 @@ async def consume_stream(
     stream = await open_stream()
     async for _ in stream:
         pass
+
+
+async def consume_stream_twice(
+    file_metadata: Any,
+    open_stream: Any,
+    *args: Any,
+    **kwargs: Any,
+) -> None:
+    """Consume the stream twice, like a resumable upload that had to retry.
+
+    A retried upload reopens the stream from the beginning and skips whatever
+    the server already received.
+    """
+    for _ in range(2):
+        stream = await open_stream()
+        async for _ in stream:
+            pass
 
 
 @pytest.fixture(autouse=True)
@@ -143,9 +159,88 @@ async def test_agents_list_backups(
     assert [tuple(mock_call) for mock_call in mock_api.mock_calls] == snapshot
 
 
+async def test_agents_list_backups_ignores_unreadable_metadata(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_api: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a backup whose description cannot be read is skipped.
+
+    The description is editable from the Google Drive UI, so one unreadable
+    file must not hide the others.
+    """
+    mock_api.list_files = AsyncMock(
+        return_value={
+            "files": [
+                {"id": "no description at all"},
+                {"id": "not json", "description": "cleared by the user"},
+                {"id": "not backup metadata", "description": '{"foo": "bar"}'},
+                {"description": json.dumps(TEST_AGENT_BACKUP.as_dict())},
+            ]
+        }
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["agent_errors"] == {}
+    assert response["result"]["backups"] == [TEST_AGENT_BACKUP_RESULT]
+    assert "Ignoring backup file no description at all" in caplog.text
+    assert "Ignoring backup file not json" in caplog.text
+    assert "Ignoring backup file not backup metadata" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        # The backup manager calls extra_metadata.get() on every backup.
+        ("extra_metadata", []),
+        # The backup manager uses backup_id as a dict key.
+        ("backup_id", ["not a string"]),
+    ],
+)
+async def test_agents_list_backups_ignores_wrong_typed_metadata(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_api: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+    field: str,
+    value: Any,
+) -> None:
+    """Test that metadata which decodes but has the wrong types is skipped.
+
+    AgentBackup.from_dict does not enforce its annotations, so such a backup is
+    only rejected once the backup manager uses it.
+    """
+    wrong_types = TEST_AGENT_BACKUP.as_dict()
+    wrong_types[field] = value
+    mock_api.list_files = AsyncMock(
+        return_value={
+            "files": [
+                {"id": "wrong types", "description": json.dumps(wrong_types)},
+                {"description": json.dumps(TEST_AGENT_BACKUP.as_dict())},
+            ]
+        }
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["agent_errors"] == {}
+    assert response["result"]["backups"] == [TEST_AGENT_BACKUP_RESULT]
+    assert "Ignoring backup file wrong types" in caplog.text
+    assert f"{field} is not a" in caplog.text
+
+
 async def test_agents_list_backups_fail(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
     mock_api: MagicMock,
 ) -> None:
     """Test agent list backups fails."""
@@ -158,8 +253,9 @@ async def test_agents_list_backups_fail(
     assert response["success"]
     assert response["result"]["backups"] == []
     assert response["result"]["agent_errors"] == {
-        TEST_AGENT_ID: "Failed to list backups: some error"
+        TEST_AGENT_ID: "Failed to list backups"
     }
+    assert "Failed to list backups: some error" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -222,6 +318,7 @@ async def test_agents_download(
 async def test_agents_download_fail(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
     mock_api: MagicMock,
 ) -> None:
     """Test agent download backup fails."""
@@ -242,6 +339,7 @@ async def test_agents_download_fail(
     assert resp.status == 500
     content = await resp.content.read()
     assert "Failed to download backup" in content.decode()
+    assert "Failed to download backup: some error" in caplog.text
 
 
 async def test_agents_download_file_not_found(
@@ -399,6 +497,37 @@ async def test_agents_upload_progress(
     assert progress_calls == [6, 12]
 
 
+async def test_agents_upload_progress_does_not_go_backwards_on_retry(
+    hass: HomeAssistant,
+    mock_api: MagicMock,
+) -> None:
+    """Test agent upload progress is not reported twice when the upload retries."""
+    mock_api.resumable_upload_file = AsyncMock(side_effect=consume_stream_twice)
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    agent = GoogleDriveBackupAgent(entries[0])
+
+    progress_calls = []
+
+    def on_progress(*, bytes_uploaded: int, **kwargs: Any) -> None:
+        progress_calls.append(bytes_uploaded)
+
+    async def open_stream() -> AsyncIterator[bytes]:
+        async def stream() -> AsyncIterator[bytes]:
+            yield b"chunk1"
+            yield b"chunk2"
+
+        return stream()
+
+    await agent.async_upload_backup(
+        open_stream=open_stream,
+        backup=TEST_AGENT_BACKUP,
+        on_progress=on_progress,
+    )
+
+    assert progress_calls == [6, 12]
+
+
 async def test_agents_upload_fail(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -461,7 +590,7 @@ async def test_agents_delete(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
 
     mock_api.delete_file.assert_called_once()
     assert [tuple(mock_call) for mock_call in mock_api.mock_calls] == snapshot
@@ -470,6 +599,7 @@ async def test_agents_delete(
 async def test_agents_delete_fail(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
     mock_api: MagicMock,
 ) -> None:
     """Test agent delete backup fails."""
@@ -487,8 +617,16 @@ async def test_agents_delete_fail(
 
     assert response["success"]
     assert response["result"] == {
-        "agent_errors": {TEST_AGENT_ID: "Failed to delete backup: some error"}
+        "agent_error_translations": {
+            TEST_AGENT_ID: {
+                "translation_domain": "google_drive",
+                "translation_key": "delete_failed",
+                "translation_placeholders": None,
+            }
+        },
+        "agent_errors": {TEST_AGENT_ID: "Failed to delete backup"},
     }
+    assert "Failed to delete backup: some error" in caplog.text
 
 
 async def test_agents_delete_not_found(
@@ -511,6 +649,6 @@ async def test_agents_delete_not_found(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {}}
+    assert response["result"] == {"agent_error_translations": {}, "agent_errors": {}}
 
     mock_api.delete_file.assert_not_called()

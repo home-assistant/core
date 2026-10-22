@@ -4,6 +4,11 @@ import asyncio
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    async_capture_events,
+    get_fixture_path,
+    setup_test_component_platform,
+)
 
 from homeassistant import config as hass_config
 from homeassistant.components.group import DOMAIN, SERVICE_RELOAD, light as group
@@ -43,11 +48,6 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    async_capture_events,
-    get_fixture_path,
-    setup_test_component_platform,
-)
 from tests.components.light.common import MockLight
 
 

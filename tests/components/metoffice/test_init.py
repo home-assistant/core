@@ -1,9 +1,14 @@
 """Tests for metoffice init."""
 
-import datetime
+import datetime as dt
 import json
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
 import requests_mock
 
 from homeassistant.components.metoffice.const import DOMAIN
@@ -13,17 +18,15 @@ from homeassistant.util import utcnow
 
 from .const import METOFFICE_CONFIG_WAVERTREE
 
-from tests.common import MockConfigEntry, async_fire_time_changed, async_load_fixture
 
-
-@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(dt.datetime(2024, 11, 23, 12, tzinfo=dt.UTC))
 async def test_reauth_on_auth_error(
     hass: HomeAssistant,
     requests_mock: requests_mock.Mocker,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test handling authentication errors and reauth flow."""
-    mock_json = json.loads(await async_load_fixture(hass, "metoffice.json", DOMAIN))
+    mock_json = await async_load_json_object_fixture(hass, "metoffice.json", DOMAIN)
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
     requests_mock.get(
@@ -56,7 +59,7 @@ async def test_reauth_on_auth_error(
         status_code=401,
     )
 
-    future_time = utcnow() + datetime.timedelta(minutes=40)
+    future_time = utcnow() + dt.timedelta(minutes=40)
     async_fire_time_changed(hass, future_time)
     await hass.async_block_till_done(wait_background_tasks=True)
 

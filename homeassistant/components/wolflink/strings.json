@@ -15,6 +15,10 @@
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
+        "data_description": {
+          "password": "The password for your Wolf SmartSet account.",
+          "username": "The username for your Wolf SmartSet account."
+        },
         "title": "WOLF SmartSet connection"
       }
     }

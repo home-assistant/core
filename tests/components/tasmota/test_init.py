@@ -5,6 +5,13 @@ import json
 from unittest.mock import call
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    MockModule,
+    async_fire_mqtt_message,
+    mock_integration,
+)
+from pytest_homeassistant.typing import MqttMockHAClient, WebSocketGenerator
 
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX, DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -13,14 +20,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .test_common import DEFAULT_CONFIG, DEFAULT_SENSOR_CONFIG, remove_device
-
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    async_fire_mqtt_message,
-    mock_integration,
-)
-from tests.typing import MqttMockHAClient, WebSocketGenerator
 
 
 async def test_device_remove(

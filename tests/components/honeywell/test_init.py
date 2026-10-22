@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, create_autospec, patch
 from aiohttp.client_exceptions import ClientConnectionError
 import aiosomecomfort
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.honeywell.const import (
     CONF_COOL_AWAY_TEMPERATURE,
@@ -17,8 +18,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import init_integration
-
-from tests.common import MockConfigEntry
 
 MIGRATE_OPTIONS_KEYS = {CONF_COOL_AWAY_TEMPERATURE, CONF_HEAT_AWAY_TEMPERATURE}
 
@@ -149,6 +148,7 @@ async def test_no_devices(
     client.locations_by_id = {}
     await init_integration(hass, config_entry)
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.reason == "No Honeywell devices found"
 
 
 async def test_remove_stale_device(

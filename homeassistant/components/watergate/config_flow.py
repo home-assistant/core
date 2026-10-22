@@ -3,7 +3,7 @@
 import logging
 from typing import override
 
-import voluptuous as vol
+import probatio
 from watergate_local_api.watergate_api import (
     WatergateApiException,
     WatergateLocalApiClient,
@@ -19,9 +19,9 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 SONIC = "Sonic"
-WATERGATE_SCHEMA = vol.Schema(
+WATERGATE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_IP_ADDRESS): str,
+        probatio.Required(CONF_IP_ADDRESS): str,
     }
 )
 

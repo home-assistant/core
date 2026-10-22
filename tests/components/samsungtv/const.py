@@ -1,5 +1,7 @@
 """Constants for the samsungtv tests."""
 
+from pytest_homeassistant.common import load_json_object_fixture
+
 from homeassistant.components.samsungtv.const import (
     CONF_SESSION_ID,
     DOMAIN,
@@ -19,8 +21,6 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
-
-from tests.common import load_json_object_fixture
 
 ENTRYDATA_LEGACY = {
     CONF_HOST: "10.10.12.34",

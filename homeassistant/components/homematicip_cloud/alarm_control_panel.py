@@ -3,6 +3,7 @@
 import logging
 from typing import TYPE_CHECKING, override
 
+from homematicip.async_home import AsyncHome
 from homematicip.functionalHomes import SecurityAndAlarmHome
 
 from homeassistant.components.alarm_control_panel import (
@@ -17,7 +18,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .hap import AsyncHome, HomematicIPConfigEntry, HomematicipHAP
+from .hap import HomematicIPConfigEntry, HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -131,6 +132,9 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self._home.on_update(self._async_device_changed)
+        self.async_on_remove(
+            lambda: self._home.remove_callback(self._async_device_changed)
+        )
 
     @callback
     def _async_device_changed(self, *args, **kwargs) -> None:

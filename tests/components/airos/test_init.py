@@ -9,6 +9,7 @@ from airos.exceptions import (
     AirOSKeyDataMissingError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.airos.const import (
     CONF_LEGACY_SSL,
@@ -35,8 +36,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from tests.common import MockConfigEntry
 
 MOCK_CONFIG_V1 = {
     CONF_HOST: "1.1.1.1",
@@ -181,6 +180,7 @@ async def test_ssl_migrate_entry(
 async def test_uid_migrate_entry(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     sensor_domain: str,
     sensor_name: str,
     mock_id: str,
@@ -188,7 +188,6 @@ async def test_uid_migrate_entry(
     mock_async_get_firmware_data: AsyncMock,
 ) -> None:
     """Test migrate entry unique id."""
-    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     MOCK_MAC = dr.format_mac("01:23:45:67:89:AB")
     MOCK_ID = "device_id_12345"

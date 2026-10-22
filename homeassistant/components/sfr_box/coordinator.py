@@ -7,11 +7,12 @@ import logging
 from typing import Any, override
 
 from sfrbox_api.bridge import SFRBox
-from sfrbox_api.exceptions import SFRBoxError
+from sfrbox_api.exceptions import SFRBoxAuthenticationError, SFRBoxError
 from sfrbox_api.models import DslInfo, FtthInfo, SystemInfo, VoipInfo, WanInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -65,6 +66,11 @@ class SFRDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         try:
             if data := await self._method(self.box):
                 return data
+        except SFRBoxAuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_credentials",
+            ) from err
         except SFRBoxError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
