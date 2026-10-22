@@ -185,9 +185,9 @@ class IssuesRefresh:
             issue_registry.async_delete(domain, issue_id)
 
     @callback
+    @verify_event_loop_thread("issue_registry.IssuesRefresh.async_keep")
     def async_keep(self, issue_ids: Iterable[str]) -> None:
         """Keep issues without creating or updating them."""
-        self._hass.verify_event_loop_thread("issue_registry.IssuesRefresh.async_keep")
         if (state := self._state) not in self._refreshes:
             return
         # Older refreshes don't get to delete an issue a newer one kept
@@ -200,19 +200,19 @@ class IssuesRefresh:
                 self._deferred_deletes.discard(key)
 
     @callback
+    @verify_event_loop_thread("issue_registry.IssuesRefresh.async_finish")
     def async_finish(self) -> None:
         """Delete issues which were not created, updated, deleted or kept."""
-        self._hass.verify_event_loop_thread("issue_registry.IssuesRefresh.async_finish")
         self._async_end(self._state.untouched)
 
     @callback
+    @verify_event_loop_thread("issue_registry.IssuesRefresh.async_cancel")
     def async_cancel(self) -> None:
         """Cancel the refresh.
 
         Only issues whose delete was deferred to the refresh are deleted, other
         issues are left as they are.
         """
-        self._hass.verify_event_loop_thread("issue_registry.IssuesRefresh.async_cancel")
         self._async_end(self._deferred_deletes & self._state.scope)
 
     def __enter__(self) -> Self:
@@ -348,7 +348,6 @@ class IssueRegistry(BaseRegistry):
         self, domain: str, issue_id: str, *, defer_to_refresh: bool = False
     ) -> None:
         """Delete issue, see async_delete_issue."""
-        self.hass.verify_event_loop_thread("issue_registry.async_delete")
         key = (domain, issue_id)
         if (
             defer_to_refresh
@@ -373,9 +372,9 @@ class IssueRegistry(BaseRegistry):
         )
 
     @callback
+    @verify_event_loop_thread("issue_registry.async_keep")
     def async_keep(self, domain: str, issue_id: str) -> None:
         """Keep an issue in active refreshes, see async_keep_issue."""
-        self.hass.verify_event_loop_thread("issue_registry.async_keep")
         self._async_touch((domain, issue_id))
 
     @callback
@@ -449,6 +448,7 @@ class IssueRegistry(BaseRegistry):
         return issue
 
     @callback
+    @verify_event_loop_thread("issue_registry.async_begin_refresh")
     def async_begin_refresh(
         self,
         domain: str,
@@ -458,7 +458,6 @@ class IssueRegistry(BaseRegistry):
         config_entry_id: str | None = None,
     ) -> IssuesRefresh:
         """Begin a refresh of a set of issues, see async_begin_issues_refresh."""
-        self.hass.verify_event_loop_thread("issue_registry.async_begin_refresh")
         if issue_id_pattern is not None and issue_ids is not None:
             raise ValueError("At most one of issue_id_pattern and issue_ids is allowed")
         if issue_ids is not None:
