@@ -428,7 +428,7 @@ async def test_get_logs_filters(
                 "start_time": "2026-10-20T14:00:00+02:00",
                 "end_time": "2026-10-20T13:00:00+02:00",
             },
-            "start_time must be before end_time",
+            "start_time must not be after end_time",
             id="reversed",
         ),
     ],
@@ -679,6 +679,48 @@ async def test_get_logs_pages(
             ]
             assert result.data.get("next_start_time") == expected_next_start_time
             start_time = expected_next_start_time
+
+
+@pytest.mark.usefixtures("frozen_time")
+async def test_get_logs_pages_to_end_time(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    logs_tool: llm.Tool,
+    tmp_path: Path,
+) -> None:
+    """Test the next page can start at the end time to read a record there."""
+    (tmp_path / "home-assistant.log").write_text(
+        "2026-10-20 13:50:00.000+02:00 INFO (MainThread) [core] First\n"
+        "2026-10-20 13:55:00.000+02:00 INFO (MainThread) [core] At the end\n"
+    )
+    end_time = "2026-10-20T13:55:00+02:00"
+
+    first = await logs_tool.async_call(
+        hass,
+        llm.ToolInput(
+            logs_tool.name,
+            {
+                "start_time": "2026-10-20T13:45:00+02:00",
+                "end_time": end_time,
+                "limit": 1,
+            },
+        ),
+        llm_context,
+    )
+    second = await logs_tool.async_call(
+        hass,
+        llm.ToolInput(
+            logs_tool.name,
+            {"start_time": first.data["next_start_time"], "end_time": end_time},
+        ),
+        llm_context,
+    )
+
+    assert first.data["next_start_time"] == "2026-10-20T04:55:00.000-07:00"
+    assert [record["message"] for record in second.data["records"]] == [
+        "INFO (MainThread) [core] At the end"
+    ]
+    assert "next_start_time" not in second.data
 
 
 @pytest.mark.usefixtures("frozen_time")

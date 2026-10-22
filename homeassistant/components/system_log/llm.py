@@ -379,9 +379,9 @@ class SystemLogGetLogsTool(Tool):
         )
         if start_time is None:
             return ToolResult(data={"error": "Invalid start_time"}, error=True)
-        if start_time >= end_time:
+        if start_time > end_time:
             return ToolResult(
-                data={"error": "start_time must be before end_time"}, error=True
+                data={"error": "start_time must not be after end_time"}, error=True
             )
 
         min_level = (
