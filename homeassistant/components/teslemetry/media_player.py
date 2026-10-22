@@ -193,7 +193,7 @@ class TeslemetryStreamingMediaEntity(
         if not self.scoped:
             self._attr_supported_features = MediaPlayerEntityFeature(0)
         self._playback_state: MediaPlayerState | None = None
-        self._display_off = False
+        self._display_state: MediaPlayerState | None = None
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -283,28 +283,29 @@ class TeslemetryStreamingMediaEntity(
             )
         )
 
+    def _async_update_state(self) -> None:
+        """Derive the state from the last display and playback values."""
+        if self._display_state is MediaPlayerState.OFF:
+            self._attr_state = MediaPlayerState.OFF
+        elif self._playback_state is not None:
+            self._attr_state = self._playback_state
+        elif self._display_state is not None:
+            self._attr_state = self._display_state
+        self.async_write_ha_state()
+
     def _async_handle_center_display(self, value: str | None) -> None:
         """Update entity attributes."""
         if value is None:
             return
-        display_state = DISPLAY_STATES.get(value)
-        self._display_off = display_state is MediaPlayerState.OFF
-        if self._display_off:
-            self._attr_state = MediaPlayerState.OFF
-        elif self._playback_state is not None:
-            self._attr_state = self._playback_state
-        elif display_state is not None:
-            self._attr_state = display_state
-        self.async_write_ha_state()
+        self._display_state = DISPLAY_STATES.get(value)
+        self._async_update_state()
 
     def _async_handle_media_playback_status(self, value: str | None) -> None:
         """Update entity attributes."""
         self._playback_state = (
             MediaPlayerState.OFF if value is None else STATES.get(value)
         )
-        if not self._display_off:
-            self._attr_state = self._playback_state
-        self.async_write_ha_state()
+        self._async_update_state()
 
     def _async_handle_media_playback_source(self, value: str | None) -> None:
         """Update entity attributes."""
