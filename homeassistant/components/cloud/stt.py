@@ -39,9 +39,11 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-# STT v2 detects the end of speech itself and works best on untouched audio.
+# STT v2 works best on untouched audio. It detects the end of speech itself, but
+# external VAD stays enabled since unsupported languages fall back to Azure STT,
+# which relies on it, and the language isn't known here.
 STT_V2_AUDIO_PROCESSING = SpeechAudioProcessing(
-    requires_external_vad=False,
+    requires_external_vad=True,
     prefers_auto_gain_enabled=False,
     prefers_noise_reduction_enabled=False,
 )

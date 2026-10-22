@@ -2546,33 +2546,70 @@ async def test_stt_vad_enabled_based_on_audio_processing(
 
 
 @pytest.mark.parametrize(
-    ("is_vad_enabled", "expected_events"),
+    (
+        "requires_external_vad",
+        "is_vad_enabled",
+        "fail_process_audio",
+        "expected_events",
+    ),
     [
         pytest.param(
+            False,
             True,
+            False,
             [
                 PipelineEventType.STT_VAD_START,
                 PipelineEventType.STT_VAD_END,
                 PipelineEventType.STT_END,
             ],
-            id="vad_enabled",
+            id="provider_endpointing",
         ),
-        pytest.param(False, [PipelineEventType.STT_END], id="vad_disabled"),
+        pytest.param(
+            False,
+            False,
+            False,
+            [PipelineEventType.STT_END],
+            id="provider_endpointing_vad_disabled",
+        ),
+        pytest.param(
+            True,
+            True,
+            False,
+            [
+                PipelineEventType.STT_VAD_START,
+                PipelineEventType.STT_VAD_END,
+                PipelineEventType.STT_END,
+            ],
+            id="provider_ends_before_segmenter",
+        ),
+        pytest.param(
+            False,
+            True,
+            True,
+            [
+                PipelineEventType.STT_VAD_START,
+                PipelineEventType.STT_VAD_END,
+                PipelineEventType.ERROR,
+            ],
+            id="provider_error",
+        ),
     ],
 )
-async def test_stt_vad_events_for_self_endpointing_provider(
+async def test_stt_vad_end_sent_after_vad_start(
     hass: HomeAssistant,
     mock_stt_provider: MockSTTProvider,
     init_components,
     pipeline_data: assist_pipeline.pipeline.PipelineData,
     mock_chat_session: chat_session.ChatSession,
+    requires_external_vad: bool,
     is_vad_enabled: bool,
+    fail_process_audio: bool,
     expected_events: list[PipelineEventType],
 ) -> None:
-    """Test VAD events bracket the command when the provider does its own endpointing.
+    """Test STT_VAD_END follows STT_VAD_START when the provider ends the stream.
 
-    Satellites rely on STT_VAD_END to stop recording, so it is sent even though no
-    segmenter runs when requires_external_vad is False.
+    Satellites rely on STT_VAD_END to stop recording, so it must be sent even when
+    the segmenter doesn't run or the provider returns before it detects silence.
     """
 
     async def audio_data():
@@ -2586,15 +2623,25 @@ async def test_stt_vad_events_for_self_endpointing_provider(
 
     events: list[assist_pipeline.PipelineEvent] = []
 
-    with patch(
-        "homeassistant.components.stt.async_get_speech_to_text_engine",
-        return_value=mock_stt_provider,
+    with (
+        patch(
+            "homeassistant.components.assist_pipeline.default_pipeline.VoiceCommandSegmenter"
+        ) as mock_vad,
+        patch(
+            "homeassistant.components.stt.async_get_speech_to_text_engine",
+            return_value=mock_stt_provider,
+        ),
     ):
         mock_stt_provider._audio_processing = stt.SpeechAudioProcessing(
-            requires_external_vad=False,
+            requires_external_vad=requires_external_vad,
             prefers_auto_gain_enabled=False,
             prefers_noise_reduction_enabled=False,
         )
+        mock_stt_provider.fail_process_audio = fail_process_audio
+
+        # Speech is detected but the stream ends before the segmenter detects silence
+        mock_vad.return_value.in_command = True
+        mock_vad.return_value.process.return_value = True
 
         pipeline_input = assist_pipeline.pipeline.PipelineInput(
             session=mock_chat_session,
@@ -2631,6 +2678,7 @@ async def test_stt_vad_events_for_self_endpointing_provider(
             PipelineEventType.STT_VAD_START,
             PipelineEventType.STT_VAD_END,
             PipelineEventType.STT_END,
+            PipelineEventType.ERROR,
         )
     ] == expected_events
 
