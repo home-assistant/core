@@ -4,6 +4,7 @@ import logging
 from unittest.mock import AsyncMock
 
 from flipr_api.exceptions import FliprError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.select import (
     ATTR_OPTION,
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

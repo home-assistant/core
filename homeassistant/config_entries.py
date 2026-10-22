@@ -43,6 +43,7 @@ from .core import (
     HassJobType,
     HomeAssistant,
     callback,
+    verify_event_loop_thread,
 )
 from .data_entry_flow import FLOW_NOT_COMPLETE_STEPS, FlowContext, FlowResult
 from .exceptions import (
@@ -181,7 +182,7 @@ class ConfigEntryState(Enum):
         """Create new ConfigEntryState."""
         obj = object.__new__(cls)
         obj._value_ = value
-        obj._recoverable = recoverable  # noqa: SLF001
+        obj._recoverable = recoverable
         return obj
 
     @property
@@ -2777,6 +2778,7 @@ class ConfigEntries:
         )
 
     @callback
+    @verify_event_loop_thread("hass.config_entries.async_update_entry")
     def _async_update_entry(
         self,
         entry: ConfigEntry,
@@ -2805,7 +2807,6 @@ class ConfigEntries:
         if entry.entry_id not in self._entries:
             raise UnknownEntry(entry.entry_id)
 
-        self.hass.verify_event_loop_thread("hass.config_entries.async_update_entry")
         changed = False
         removed_subentry_ids: set[str] = set()
         _setter = object.__setattr__
@@ -2916,6 +2917,7 @@ class ConfigEntries:
         return self._async_update_entry(entry, subentries=subentries)
 
     @callback
+    @verify_event_loop_thread("hass.config_entries.async_update_subentry")
     def async_update_subentry(
         self,
         entry: ConfigEntry,
@@ -2938,7 +2940,6 @@ class ConfigEntries:
         if subentry.subentry_id not in entry.subentries:
             raise UnknownSubEntry(subentry.subentry_id)
 
-        self.hass.verify_event_loop_thread("hass.config_entries.async_update_subentry")
         changed = False
         _setter = object.__setattr__
 
@@ -3142,77 +3143,66 @@ class ConfigEntries:
     @callback
     def async_update_issues(self) -> None:
         """Update unique id collision issues."""
-        issue_registry = ir.async_get(self.hass)
-        issues: set[str] = set()
+        with ir.async_begin_issues_refresh(
+            self.hass,
+            HOMEASSISTANT_DOMAIN,
+            issue_id_pattern=f"{ISSUE_UNIQUE_ID_COLLISION}_",
+        ):
+            for (
+                domain,
+                unique_ids,
+            ) in self._entries._domain_unique_id_index.items():  # noqa: SLF001
+                for unique_id, entries in unique_ids.items():
+                    # We might mutate the list of entries, so we need a copy to not mess up
+                    # the index
+                    entries = list(entries)
 
-        for issue in issue_registry.issues.values():
-            if (
-                issue.domain != HOMEASSISTANT_DOMAIN
-                or not (issue_data := issue.data)
-                or issue_data.get("issue_type") != ISSUE_UNIQUE_ID_COLLISION
-            ):
-                continue
-            issues.add(issue.issue_id)
+                    # There's no need to raise an issue for ignored entries, we can
+                    # safely remove them once we no longer allow unique id collisions.
+                    # Iterate over a copy of the copy to allow mutating while iterating
+                    for entry in list(entries):
+                        if entry.source == SOURCE_IGNORE:
+                            entries.remove(entry)
 
-        for (
-            domain,
-            unique_ids,
-        ) in self._entries._domain_unique_id_index.items():  # noqa: SLF001
-            for unique_id, entries in unique_ids.items():
-                # We might mutate the list of entries, so we need a copy to not mess up
-                # the index
-                entries = list(entries)
+                    if len(entries) < 2:
+                        continue
+                    issue_id = f"{ISSUE_UNIQUE_ID_COLLISION}_{domain}_{unique_id}"
+                    titles = [f"'{entry.title}'" for entry in entries]
+                    translation_placeholders = {
+                        "domain": domain,
+                        "configure_url": f"/config/integrations/integration/{domain}",
+                        "unique_id": str(unique_id),
+                    }
+                    if len(titles) <= UNIQUE_ID_COLLISION_TITLE_LIMIT:
+                        translation_key = "config_entry_unique_id_collision"
+                        translation_placeholders["titles"] = ", ".join(titles)
+                    else:
+                        translation_key = "config_entry_unique_id_collision_many"
+                        translation_placeholders["number_of_entries"] = str(len(titles))
+                        translation_placeholders["titles"] = ", ".join(
+                            titles[:UNIQUE_ID_COLLISION_TITLE_LIMIT]
+                        )
+                        translation_placeholders["title_limit"] = str(
+                            UNIQUE_ID_COLLISION_TITLE_LIMIT
+                        )
 
-                # There's no need to raise an issue for ignored entries, we can
-                # safely remove them once we no longer allow unique id collisions.
-                # Iterate over a copy of the copy to allow mutating while iterating
-                for entry in list(entries):
-                    if entry.source == SOURCE_IGNORE:
-                        entries.remove(entry)
-
-                if len(entries) < 2:
-                    continue
-                issue_id = f"{ISSUE_UNIQUE_ID_COLLISION}_{domain}_{unique_id}"
-                issues.discard(issue_id)
-                titles = [f"'{entry.title}'" for entry in entries]
-                translation_placeholders = {
-                    "domain": domain,
-                    "configure_url": f"/config/integrations/integration/{domain}",
-                    "unique_id": str(unique_id),
-                }
-                if len(titles) <= UNIQUE_ID_COLLISION_TITLE_LIMIT:
-                    translation_key = "config_entry_unique_id_collision"
-                    translation_placeholders["titles"] = ", ".join(titles)
-                else:
-                    translation_key = "config_entry_unique_id_collision_many"
-                    translation_placeholders["number_of_entries"] = str(len(titles))
-                    translation_placeholders["titles"] = ", ".join(
-                        titles[:UNIQUE_ID_COLLISION_TITLE_LIMIT]
+                    ir.async_create_issue(
+                        self.hass,
+                        HOMEASSISTANT_DOMAIN,
+                        issue_id,
+                        breaks_in_ha_version="2025.11.0",
+                        data={
+                            "issue_type": ISSUE_UNIQUE_ID_COLLISION,
+                            "unique_id": unique_id,
+                        },
+                        is_fixable=False,
+                        issue_domain=domain,
+                        severity=ir.IssueSeverity.ERROR,
+                        translation_key=translation_key,
+                        translation_placeholders=translation_placeholders,
                     )
-                    translation_placeholders["title_limit"] = str(
-                        UNIQUE_ID_COLLISION_TITLE_LIMIT
-                    )
 
-                ir.async_create_issue(
-                    self.hass,
-                    HOMEASSISTANT_DOMAIN,
-                    issue_id,
-                    breaks_in_ha_version="2025.11.0",
-                    data={
-                        "issue_type": ISSUE_UNIQUE_ID_COLLISION,
-                        "unique_id": unique_id,
-                    },
-                    is_fixable=False,
-                    issue_domain=domain,
-                    severity=ir.IssueSeverity.ERROR,
-                    translation_key=translation_key,
-                    translation_placeholders=translation_placeholders,
-                )
-
-                break  # Only create one issue per domain
-
-        for issue_id in issues:
-            ir.async_delete_issue(self.hass, HOMEASSISTANT_DOMAIN, issue_id)
+                    break  # Only create one issue per domain
 
 
 @callback
@@ -3488,7 +3478,6 @@ class ConfigFlow(ConfigEntryBaseFlow):
             if flw["flow_id"] != self.flow_id
         ]
 
-    @data_entry_flow.flow_step
     async def async_step_ignore(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Ignore this config flow.
 
@@ -3508,7 +3497,6 @@ class ConfigFlow(ConfigEntryBaseFlow):
         await self.async_set_unique_id(user_input["unique_id"], raise_on_progress=False)
         return self.async_create_entry(title=user_input["title"], data={})
 
-    @data_entry_flow.flow_step
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -3550,68 +3538,58 @@ class ConfigFlow(ConfigEntryBaseFlow):
         await self._async_handle_discovery_without_unique_id()
         return await self.async_step_user()
 
-    @data_entry_flow.flow_step
     async def async_step_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
         return await self._async_step_discovery_without_unique_id()
 
-    @data_entry_flow.flow_step
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
         """Handle a flow initialized by Bluetooth discovery."""
         return await self._async_step_discovery_without_unique_id()
 
-    @data_entry_flow.flow_step
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by DHCP discovery."""
         return await self._async_step_discovery_without_unique_id()
 
-    @data_entry_flow.flow_step
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by HASS IO discovery."""
         return await self._async_step_discovery_without_unique_id()
 
-    @data_entry_flow.flow_step
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> ConfigFlowResult:
         """Handle a flow initialized by integration specific discovery."""
         return await self._async_step_discovery_without_unique_id()
 
-    @data_entry_flow.flow_step
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by Homekit discovery."""
         return await self._async_step_discovery_without_unique_id()
 
-    @data_entry_flow.flow_step
     async def async_step_mqtt(
         self, discovery_info: MqttServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by MQTT discovery."""
         return await self._async_step_discovery_without_unique_id()
 
-    @data_entry_flow.flow_step
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by SSDP discovery."""
         return await self._async_step_discovery_without_unique_id()
 
-    @data_entry_flow.flow_step
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle a flow initialized by USB discovery."""
         return await self._async_step_discovery_without_unique_id()
 
-    @data_entry_flow.flow_step
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

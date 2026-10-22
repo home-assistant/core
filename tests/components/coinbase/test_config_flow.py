@@ -66,7 +66,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.coinbase.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -151,7 +151,7 @@ async def test_form_invalid_auth(
         _patch_success(),
         patch(
             "homeassistant.components.coinbase.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -188,7 +188,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         _patch_success(),
         patch(
             "homeassistant.components.coinbase.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -225,7 +225,7 @@ async def test_form_catch_all_exception(hass: HomeAssistant) -> None:
         _patch_success(),
         patch(
             "homeassistant.components.coinbase.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(

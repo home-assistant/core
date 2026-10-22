@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from pyhik.constants import SENSOR_MAP
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.hikvision.binary_sensor import (
@@ -40,8 +41,6 @@ from .conftest import (
     TEST_PORT,
     TEST_USERNAME,
 )
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture

@@ -7,14 +7,13 @@ from unittest.mock import ANY, patch
 import uuid
 
 import pytest
+from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.components.lovelace import dashboard, resources
 from homeassistant.components.lovelace.const import DOMAIN, LOVELACE_DATA
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
-
-from tests.typing import WebSocketGenerator
 
 RESOURCE_EXAMPLES = [
     {"type": "js", "url": "/local/bla.js"},

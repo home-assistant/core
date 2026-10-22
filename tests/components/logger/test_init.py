@@ -7,6 +7,11 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockUser,
+    async_call_logger_set_level,
+    async_fire_time_changed,
+)
 
 from homeassistant.components import logger
 from homeassistant.components.logger import DOMAIN, LOGSEVERITY
@@ -16,8 +21,6 @@ from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockUser, async_call_logger_set_level, async_fire_time_changed
 
 HASS_NS = "unused.homeassistant"
 COMPONENTS_NS = f"{HASS_NS}.components"

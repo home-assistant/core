@@ -9,6 +9,13 @@ from unittest.mock import ANY, patch
 import attr
 from freezegun import freeze_time
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.components.recorder.common import (
+    async_block_recorder,
+    async_recorder_block_till_done,
+    async_wait_recording_done,
+)
+from pytest_homeassistant.typing import RecorderInstanceGenerator, WebSocketGenerator
 
 from homeassistant import core
 from homeassistant.components import logbook, recorder
@@ -50,14 +57,6 @@ from .common import (
     setup_thermostat_context_test_entities,
     simulate_thermostat_context_chain,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.recorder.common import (
-    async_block_recorder,
-    async_recorder_block_till_done,
-    async_wait_recording_done,
-)
-from tests.typing import RecorderInstanceGenerator, WebSocketGenerator
 
 
 def listeners_without_writes(listeners: dict[str, int]) -> dict[str, int]:

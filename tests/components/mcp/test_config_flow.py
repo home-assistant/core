@@ -6,6 +6,9 @@ from unittest.mock import AsyncMock, Mock
 
 import httpx2
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 import respx
 
 from homeassistant import config_entries
@@ -31,10 +34,6 @@ from .conftest import (
     OAUTH_TOKEN_URL,
     TEST_API_NAME,
 )
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 MCP_SERVER_BASE_URL = "http://1.1.1.1:8080"
 OAUTH_DISCOVERY_ENDPOINT = (

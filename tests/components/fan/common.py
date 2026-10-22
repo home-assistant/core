@@ -4,6 +4,8 @@ All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
 
+from pytest_homeassistant.common import MockEntity
+
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
     ATTR_OSCILLATING,
@@ -26,8 +28,6 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockEntity
 
 
 async def async_turn_on(

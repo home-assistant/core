@@ -8,6 +8,7 @@ control of Rflink switch devices.
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import mock_restore_cache
 
 from homeassistant.components.rflink import (
     DATA_ENTITY_GROUP_LOOKUP,
@@ -26,8 +27,6 @@ from homeassistant.core import CoreState, HomeAssistant, State, callback
 from homeassistant.helpers import entity_registry as er
 
 from .test_init import mock_rflink
-
-from tests.common import mock_restore_cache
 
 DOMAIN = "switch"
 

@@ -104,6 +104,7 @@ Every check has a code following the
 | `C7414` | [`home-assistant-enforce-utcnow`](#c7414-home-assistant-enforce-utcnow) | Use `homeassistant.util.dt.utcnow` instead of `datetime.now(UTC)` |
 | `C7415` | [`home-assistant-domain-argument`](#c7415-home-assistant-domain-argument) | Domain argument in tests should be a domain constant or variable |
 | `C7416` | [`home-assistant-noqa-f401-with-all`](#c7416-home-assistant-noqa-f401-with-all) | List re-exported names in `__all__` instead of using `# noqa: F401` |
+| `C7417` | [`home-assistant-init-not-first`](#c7417-home-assistant-init-not-first) | `__init__` should be defined before other instance methods and properties |
 | `C7425` | [`home-assistant-enforce-now`](#c7425-home-assistant-enforce-now) | Use `homeassistant.util.dt.now` instead of `datetime.now(<tz>)` |
 | `C7427` | [`home-assistant-enforce-naive-now`](#c7427-home-assistant-enforce-naive-now) | Use `homeassistant.util.dt.naive_now` instead of `datetime.now()` |
 | `E7401` | [`home-assistant-invalid-inheritance`](#e7401-home-assistant-invalid-inheritance) | Invalid entity class inheritance chain |
@@ -233,6 +234,45 @@ listed in `__all__` instead of being kept with a `# noqa: F401` marker.
 Imports of submodules only (e.g. `from . import sensor, switch  # noqa: F401`,
 used to preload platforms) are allowed, as are imports inside functions or
 classes, which cannot be exported through `__all__`.
+
+
+## `home_assistant_init_first` checker
+
+Keeps integration classes readable top-down by placing the constructor
+directly after the class attributes.
+
+### `C7417`: `home-assistant-init-not-first`
+
+An instance method or property is defined before `__init__`. Move
+`__init__` up so it is the first instance method of the class. Class
+attributes, static methods and class methods (including `__new__` and
+`__init_subclass__`) may precede it, since those are commonly alternative
+constructors or factories such as `async_get_options_flow`.
+
+```python
+# Bad
+class MyEntity(Entity):
+    _attr_has_entity_name = True
+
+    @property
+    def available(self) -> bool:
+        return self._available
+
+    def __init__(self, device: Device) -> None:
+        self._device = device
+
+
+# Good
+class MyEntity(Entity):
+    _attr_has_entity_name = True
+
+    def __init__(self, device: Device) -> None:
+        self._device = device
+
+    @property
+    def available(self) -> bool:
+        return self._available
+```
 
 
 ## `home_assistant_enforce_type_hints` checker

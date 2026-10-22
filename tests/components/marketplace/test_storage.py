@@ -6,6 +6,11 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    load_json_object_fixture,
+)
 
 from homeassistant.components.marketplace.const import DOMAIN, STORAGE_VERSION
 from homeassistant.components.marketplace.utils.storage import (
@@ -18,12 +23,6 @@ from homeassistant.core import HomeAssistant
 
 from . import create_install_folders, get_marketplace, setup_integration
 from .const import REPOSITORY_INTEGRATION, REPOSITORY_PLUGIN
-
-from tests.common import (
-    MockConfigEntry,
-    async_load_json_object_fixture,
-    load_json_object_fixture,
-)
 
 HACS_COMMON = {
     "archived_repositories": ["hacs-test-org/archived"],
