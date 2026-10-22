@@ -1,7 +1,7 @@
 """Config flow to configure the BLUETTI Modbus integration."""
 
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from modbus_connection import ModbusError, ModbusTcpParams
 import probatio
@@ -68,7 +68,9 @@ class BluettiModbusFlowHandler(ConfigFlow, domain=DOMAIN):
                 }
             )
             errors, serial = await self._async_validate(user_input)
-            if serial is not None:
+            if not errors:
+                if TYPE_CHECKING:
+                    assert serial is not None
                 # Catches the same device already added under a different
                 # link (moved to a new address, for example).
                 await self.async_set_unique_id(serial)
