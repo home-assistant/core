@@ -18,6 +18,11 @@ from homeassistant.setup import async_setup_component
 from .conftest import LAPTOP, PHONE, MockDevice
 
 
+def _yaml_import_issue_id(host: str) -> str:
+    """Return the YAML import issue ID for a host."""
+    return f"yaml_import_cannot_connect_{host}"
+
+
 @pytest.mark.usefixtures("mock_router")
 async def test_legacy_setup(
     hass: HomeAssistant,
@@ -62,7 +67,7 @@ async def test_legacy_setup_cannot_connect(
 
     assert not hass.config_entries.async_entries(DOMAIN)
 
-    issue = issue_registry.async_get_issue(DOMAIN, "yaml_import_cannot_connect")
+    issue = issue_registry.async_get_issue(DOMAIN, _yaml_import_issue_id(DEFAULT_HOST))
     assert issue is not None
     assert issue.severity is ir.IssueSeverity.ERROR
     assert issue.translation_key == "yaml_import_cannot_connect"
@@ -78,13 +83,68 @@ async def test_legacy_setup_clears_connection_issue(
     mock_router.success_init = False
     await async_setup_scanner(hass, {CONF_HOST: DEFAULT_HOST}, AsyncMock())
     assert (
-        issue_registry.async_get_issue(DOMAIN, "yaml_import_cannot_connect") is not None
+        issue_registry.async_get_issue(DOMAIN, _yaml_import_issue_id(DEFAULT_HOST))
+        is not None
     )
 
     mock_router.success_init = True
     await async_setup_scanner(hass, {CONF_HOST: DEFAULT_HOST}, AsyncMock())
     await hass.async_block_till_done()
-    assert issue_registry.async_get_issue(DOMAIN, "yaml_import_cannot_connect") is None
+    assert (
+        issue_registry.async_get_issue(DOMAIN, _yaml_import_issue_id(DEFAULT_HOST))
+        is None
+    )
+
+
+async def test_legacy_setup_connection_issues_are_host_specific(
+    hass: HomeAssistant,
+    mock_router: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test connection issues are tracked independently per YAML host."""
+    other_host = "192.168.0.1"
+
+    mock_router.success_init = False
+    await async_setup_scanner(hass, {CONF_HOST: DEFAULT_HOST}, AsyncMock())
+    await async_setup_scanner(hass, {CONF_HOST: other_host}, AsyncMock())
+
+    issue_default = issue_registry.async_get_issue(
+        DOMAIN, _yaml_import_issue_id(DEFAULT_HOST)
+    )
+    issue_other = issue_registry.async_get_issue(
+        DOMAIN, _yaml_import_issue_id(other_host)
+    )
+
+    assert issue_default is not None
+    assert issue_default.translation_placeholders == {"host": DEFAULT_HOST}
+    assert issue_other is not None
+    assert issue_other.translation_placeholders == {"host": other_host}
+
+
+async def test_legacy_setup_success_only_clears_matching_host_issue(
+    hass: HomeAssistant,
+    mock_router: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test success for one host does not clear another host's issue."""
+    other_host = "192.168.0.1"
+
+    mock_router.success_init = False
+    await async_setup_scanner(hass, {CONF_HOST: DEFAULT_HOST}, AsyncMock())
+    await async_setup_scanner(hass, {CONF_HOST: other_host}, AsyncMock())
+
+    mock_router.success_init = True
+    await async_setup_scanner(hass, {CONF_HOST: DEFAULT_HOST}, AsyncMock())
+    await hass.async_block_till_done()
+
+    assert (
+        issue_registry.async_get_issue(DOMAIN, _yaml_import_issue_id(DEFAULT_HOST))
+        is None
+    )
+    assert (
+        issue_registry.async_get_issue(DOMAIN, _yaml_import_issue_id(other_host))
+        is not None
+    )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_router")
