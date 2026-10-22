@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 import aiohttp
 from async_upnp_client.exceptions import UpnpError
 import pytest
-from pytest_homeassistant.common import MockConfigEntry
+from tests.common import MockConfigEntry
 from wiim.exceptions import WiimRequestException
 
 from homeassistant.components.select import (
