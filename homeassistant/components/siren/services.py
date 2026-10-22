@@ -89,7 +89,12 @@ async def _async_handle_turn_on_service(siren: SirenEntity, call: ServiceCall) -
     data = {
         k: v
         for k, v in call.data.items()
-        if k in (ATTR_TONE, ATTR_DURATION, ATTR_VOLUME_LEVEL)
+        if k
+        in (
+            SirenServiceArgument.TONE,
+            SirenServiceArgument.DURATION,
+            SirenServiceArgument.VOLUME_LEVEL,
+        )
     }
     await siren.async_turn_on(
         **process_turn_on_params(siren, cast(SirenTurnOnServiceParameters, data))
