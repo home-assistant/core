@@ -1369,7 +1369,7 @@ async def test_ws_step_up_refuses_long_lived_access_token(
     result = await ws_client.receive_json()
     assert not result["success"]
     assert result["error"]["code"] == "invalid_step_up"
-    assert not hass.auth.async_has_step_up(refresh_token.id)
+    assert hass.auth.async_get_step_up_expiry(refresh_token.id) is None
 
     # Its status offers no way to step up either.
     await ws_client.send_json({"id": 6, "type": "auth/step_up/status"})

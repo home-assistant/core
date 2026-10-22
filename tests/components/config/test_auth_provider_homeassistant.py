@@ -10,6 +10,7 @@ from pytest_homeassistant.common import CLIENT_ID, MockUser
 from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.auth import STEP_UP_MAX_ATTEMPTS, STEP_UP_VALIDITY
+from homeassistant.auth.models import TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
 from homeassistant.auth.providers import InvalidStepUpError, homeassistant as prov_ha
 from homeassistant.components.config import auth_provider_homeassistant as auth_ha
 from homeassistant.core import HomeAssistant
@@ -949,3 +950,36 @@ async def test_create_needs_a_step_up(
     assert hass_owner_user.credentials == []
     with pytest.raises(prov_ha.InvalidAuth):
         await auth_provider.async_validate_login("owner", "chosen-pass")
+
+
+async def test_long_lived_access_token_keeps_setting_passwords(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    hass_ws_client: WebSocketGenerator,
+    hass_owner_user: MockUser,
+    hass_admin_user: MockUser,
+    auth_provider: prov_ha.HassAuthProvider,
+) -> None:
+    """Test a long-lived access token keeps setting passwords without a step-up."""
+    refresh_token = await hass.auth.async_create_refresh_token(
+        hass_owner_user,
+        client_name="Script",
+        token_type=TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+    )
+    client = await hass_ws_client(
+        hass, hass.auth.async_create_access_token(refresh_token)
+    )
+    freezer.tick(STEP_UP_VALIDITY)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "config/auth_provider/homeassistant/admin_change_password",
+            "user_id": hass_admin_user.id,
+            "password": "new-pass",
+        }
+    )
+
+    result = await client.receive_json()
+    assert result["success"], result
+    await auth_provider.async_validate_login("test-user", "new-pass")
