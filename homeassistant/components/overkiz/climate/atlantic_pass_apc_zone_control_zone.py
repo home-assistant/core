@@ -276,22 +276,23 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         return device_hvac_mode
 
     @property
-    def program_setpoints(self) -> ProgramSetpoints | None:
-        """Return the program setpoints the zone exposes, if it follows its program.
+    def active_program_setpoints(self) -> ProgramSetpoints | None:
+        """Return the program setpoints of the side the zone control runs."""
 
-        A derogation overrides the program: the zone then exposes the single
+        if self.is_using_derogated_temperature_fallback:
+            return None
+
+        return HVAC_MODE_TO_PROGRAM_SETPOINTS.get(cast(HVACMode, self.active_hvac_mode))
+
+    @property
+    def program_setpoints(self) -> ProgramSetpoints | None:
+        """Return the program setpoints the zone applies, if it follows its program.
+
+        A derogation overrides the program: the zone then applies the single
         derogation setpoint, like in manual mode.
         """
 
-        if (
-            self.is_using_derogated_temperature_fallback
-            or (
-                program_setpoints := HVAC_MODE_TO_PROGRAM_SETPOINTS.get(
-                    cast(HVACMode, self.active_hvac_mode)
-                )
-            )
-            is None
-        ):
+        if (program_setpoints := self.active_program_setpoints) is None:
             return None
 
         states = self.device.states
@@ -316,17 +317,15 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         if self.is_using_derogated_temperature_fallback:
             return supported_features
 
-        # The eco and comfort setpoints of the program
-        if self.program_setpoints is not None:
+        # The range is the program and the single setpoint the manual one. Both
+        # are always accepted: restoring a scene sets the temperatures before
+        # the preset, whatever the mode of the zone is at that time.
+        if self.device_hvac_mode is not None:
             return (
-                supported_features & ~ClimateEntityFeature.TARGET_TEMPERATURE
-            ) | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-
-        # The manual or derogation setpoint of the active side
-        if self.active_hvac_mode in (HVACMode.HEAT, HVACMode.COOL):
-            return (
-                supported_features & ~ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-            ) | ClimateEntityFeature.TARGET_TEMPERATURE
+                supported_features
+                | ClimateEntityFeature.TARGET_TEMPERATURE
+                | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            )
 
         return supported_features
 
@@ -517,7 +516,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
     def native_target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach (cooling)."""
 
-        if (program_setpoints := self.program_setpoints) is not None:
+        if (program_setpoints := self.active_program_setpoints) is not None:
             return cast(
                 float, self.device.states.get_value(program_setpoints.high_state)
             )
@@ -532,7 +531,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
     def native_target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach (heating)."""
 
-        if (program_setpoints := self.program_setpoints) is not None:
+        if (program_setpoints := self.active_program_setpoints) is not None:
             return cast(
                 float, self.device.states.get_value(program_setpoints.low_state)
             )
@@ -599,9 +598,9 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
             await super().async_set_temperature(**kwargs)
             return
 
-        # Following the time program, the range changes the eco and comfort
-        # setpoints of the program and never starts a derogation.
-        if (program_setpoints := self.program_setpoints) is not None:
+        # The range is the eco and comfort setpoints of the program of the side
+        # running. It never starts a derogation, whatever the mode of the zone.
+        if (program_setpoints := self.active_program_setpoints) is not None:
             if program_commands := [
                 Command(name=command, parameters=[target_temp])
                 for command, target_temp in (
@@ -614,7 +613,25 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
                 if target_temp is not None
             ]:
                 await self.async_execute_and_refresh_modes(program_commands)
-            return
+                return
+
+            # While following the program, a single setpoint is only kept as the
+            # manual one, which applies once the zone is switched to manual.
+            if self.program_setpoints is not None:
+                if (target_temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
+                    await self.async_execute_and_refresh_modes(
+                        [
+                            Command(
+                                name=(
+                                    OverkizCommand.SET_HEATING_TARGET_TEMPERATURE
+                                    if self.active_hvac_mode == HVACMode.HEAT
+                                    else OverkizCommand.SET_COOLING_TARGET_TEMPERATURE
+                                ),
+                                parameters=[target_temperature],
+                            )
+                        ]
+                    )
+                return
 
         # With no side running, the program has no setpoint to change and a
         # manual one would start a derogation over it.

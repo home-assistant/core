@@ -20,13 +20,15 @@ from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE, Platform
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.state import async_reproduce_state
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
 from .helpers import (
@@ -419,13 +421,13 @@ async def _async_set_zone_control_operating_mode(
         "max_temp",
     ),
     [
-        pytest.param("heating", "heating", 18.0, None, None, 16.5, 23.0, id="heating"),
-        pytest.param("cooling", "cooling", 23.0, None, None, 19.0, 30.0, id="cooling"),
+        pytest.param("heating", "heating", 18.0, 18.0, 19.5, 16.5, 23.0, id="heating"),
+        pytest.param("cooling", "cooling", 23.0, 25.0, 30.0, 19.0, 30.0, id="cooling"),
         pytest.param(
-            "stop", "cooling", 23.0, None, None, 19.0, 30.0, id="stop_last_cooling"
+            "stop", "cooling", 23.0, 25.0, 30.0, 19.0, 30.0, id="stop_last_cooling"
         ),
         pytest.param(
-            "drying", "heating", 18.0, None, None, 16.5, 23.0, id="drying_last_heating"
+            "drying", "heating", 18.0, 18.0, 19.5, 16.5, 23.0, id="drying_last_heating"
         ),
         # No side known: the heating and cooling setpoints
         pytest.param("stop", "stop", None, 18.0, 23.0, 16.5, 30.0, id="stop"),
@@ -551,9 +553,9 @@ async def _async_set_zone_program(
         pytest.param("heating", "off", None, 18.0, 19.5, id="heating"),
         # Comfort then eco cooling setpoints
         pytest.param("cooling", "off", None, 25.0, 30.0, id="cooling"),
-        # The setpoint the zone applies during a derogation
-        pytest.param("heating", "on", 8.0, None, None, id="heating_derogation"),
-        pytest.param("cooling", "on", 8.0, None, None, id="cooling_derogation"),
+        # The setpoint the zone applies during a derogation, and the program
+        pytest.param("heating", "on", 8.0, 18.0, 19.5, id="heating_derogation"),
+        pytest.param("cooling", "on", 8.0, 25.0, 30.0, id="cooling_derogation"),
     ],
 )
 async def test_zone_control_zone_program_setpoints(
@@ -585,7 +587,7 @@ async def test_zone_control_zone_program_setpoints(
 
 
 @pytest.mark.parametrize(
-    ("operating_mode", "commands"),
+    ("operating_mode", "commands", "manual_command"),
     [
         pytest.param(
             "heating",
@@ -593,6 +595,7 @@ async def test_zone_control_zone_program_setpoints(
                 ("setEcoHeatingTargetTemperature", [19.0]),
                 ("setComfortHeatingTargetTemperature", [21.0]),
             ],
+            "setHeatingTargetTemperature",
             id="heating",
         ),
         pytest.param(
@@ -601,6 +604,7 @@ async def test_zone_control_zone_program_setpoints(
                 ("setComfortCoolingTargetTemperature", [19.0]),
                 ("setEcoCoolingTargetTemperature", [21.0]),
             ],
+            "setCoolingTargetTemperature",
             id="cooling",
         ),
     ],
@@ -612,8 +616,9 @@ async def test_zone_control_zone_set_program_setpoints(
     setup_overkiz_integration: SetupOverkizIntegration,
     operating_mode: str,
     commands: list[tuple[str, list[Any]]],
+    manual_command: str,
 ) -> None:
-    """Test a scheduled zone changes its program setpoints, without a derogation."""
+    """Test a scheduled zone changes its setpoints without a derogation."""
     await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
     await _async_set_zone_control_operating_mode(
         hass, freezer, mock_client, operating_mode
@@ -640,14 +645,21 @@ async def test_zone_control_zone_set_program_setpoints(
         commands=[*commands, *ZONE_CONTROL_ZONE_REFRESH_COMMANDS],
     )
 
-    # A single setpoint would start a derogation.
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            "climate",
-            "set_temperature",
-            {"entity_id": ZONE_CONTROL_ZONE.entity_id, ATTR_TEMPERATURE: 20.0},
-            blocking=True,
-        )
+    # A single setpoint is kept as the manual one, it doesn't start a derogation.
+    mock_client.execute_action_group.reset_mock()
+
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {"entity_id": ZONE_CONTROL_ZONE.entity_id, ATTR_TEMPERATURE: 20.0},
+        blocking=True,
+    )
+
+    assert_commands_call(
+        mock_client,
+        device_url=ZONE_CONTROL_ZONE.device_url,
+        commands=[(manual_command, [20.0]), *ZONE_CONTROL_ZONE_REFRESH_COMMANDS],
+    )
 
 
 async def test_zone_control_zone_set_derogation_setpoint(
@@ -1176,3 +1188,123 @@ async def test_zone_control_zone_set_temperature_without_running_side(
 
     assert exc_info.value.translation_key == "zone_control_side_unknown"
     mock_client.execute_action_group.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    (
+        "saved_program",
+        "saved_derogation",
+        "saved_preset",
+        "saved_attributes",
+        "current_program",
+        "commands",
+    ),
+    [
+        pytest.param(
+            "manu",
+            "off",
+            "manual",
+            {ATTR_TEMPERATURE: 21.0},
+            "internalScheduling",
+            [
+                [
+                    ("setCoolingOnOffState", ["on"]),
+                    ("setHeatingOnOffState", ["on"]),
+                ],
+                # Kept as the manual setpoint while scheduled
+                [("setHeatingTargetTemperature", [21.0])],
+                [
+                    ("setPassAPCHeatingMode", ["manu"]),
+                    ("setPassAPCCoolingMode", ["manu"]),
+                ],
+            ],
+            id="manual_scene_while_scheduled",
+        ),
+        pytest.param(
+            "internalScheduling",
+            "off",
+            "schedule",
+            {ATTR_TARGET_TEMP_LOW: 19.0, ATTR_TARGET_TEMP_HIGH: 21.0},
+            "manu",
+            [
+                [
+                    ("setCoolingOnOffState", ["on"]),
+                    ("setHeatingOnOffState", ["on"]),
+                ],
+                # The range is the program, even while the zone is manual
+                [
+                    ("setEcoHeatingTargetTemperature", [19.0]),
+                    ("setComfortHeatingTargetTemperature", [21.0]),
+                ],
+                [
+                    ("setPassAPCHeatingMode", ["internalScheduling"]),
+                    ("setPassAPCCoolingMode", ["internalScheduling"]),
+                ],
+            ],
+            id="scheduled_scene_while_manual",
+        ),
+    ],
+)
+async def test_zone_control_zone_restore_scene(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    saved_program: str,
+    saved_derogation: str,
+    saved_preset: str,
+    saved_attributes: dict[str, float],
+    current_program: str,
+    commands: list[list[tuple[str, list[Any]]]],
+) -> None:
+    """Test a scene saved in one mode is restored while the zone is in the other."""
+    await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
+    await _async_set_zone_control_operating_mode(hass, freezer, mock_client, "heating")
+    await _async_set_zone_program(hass, freezer, mock_client, current_program, "off")
+    mock_client.execute_action_group.reset_mock()
+
+    await async_reproduce_state(
+        hass,
+        [
+            State(
+                ZONE_CONTROL_ZONE.entity_id,
+                HVACMode.HEAT_COOL,
+                {ATTR_PRESET_MODE: saved_preset, **saved_attributes},
+            )
+        ],
+    )
+
+    sent = [
+        [
+            (command.name, command.parameters)
+            for command in call.kwargs["actions"][0].commands
+            if not command.name.startswith("refresh")
+        ]
+        for call in mock_client.execute_action_group.await_args_list
+    ]
+    assert sent == commands
+
+
+async def test_zone_control_zone_range_while_manual(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test a manual zone exposes the manual setpoint and the program range."""
+    await setup_overkiz_integration(fixture=ZONE_CONTROL_ZONE.fixture)
+    await _async_set_zone_control_operating_mode(hass, freezer, mock_client, "heating")
+    await _async_set_zone_program(hass, freezer, mock_client, "manu", "off")
+
+    state = hass.states.get(ZONE_CONTROL_ZONE.entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] & (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+    ) == (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+    )
+    assert state.attributes[ATTR_TEMPERATURE] == 18.0
+    assert state.attributes[ATTR_TARGET_TEMP_LOW] == 18.0
+    assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 19.5
