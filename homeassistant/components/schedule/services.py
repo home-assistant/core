@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from homeassistant.const import CONF_ID
+from homeassistant.const import CONF_ID, SERVICE_RELOAD
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -12,7 +12,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers.service import async_register_admin_service
 
-from .const import DATA_SCHEDULE, DOMAIN, ScheduleService
+from .const import DATA_SCHEDULE, DOMAIN, SERVICE_GET
 
 if TYPE_CHECKING:
     from .entity import Schedule
@@ -41,12 +41,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_admin_service(
         hass,
         DOMAIN,
-        ScheduleService.RELOAD,
+        SERVICE_RELOAD,
         _async_reload_service,
     )
 
     hass.data[DATA_SCHEDULE].component.async_register_entity_service(
-        ScheduleService.GET_SCHEDULE,
+        SERVICE_GET,
         {},
         _async_get_schedule_service,
         supports_response=SupportsResponse.ONLY,
