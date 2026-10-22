@@ -226,7 +226,7 @@
   },
   "exceptions": {
     "derogation_preset_not_selectable": {
-      "message": "This preset only shows the current state. Set a temperature to start an override."
+      "message": "This preset only shows the current state and cannot be selected. To start an override, switch the zone to manual and set a temperature, or use the remote or the app."
     },
     "unsupported_set_position_and_tilt": {
       "message": "This device does not support setting position and tilt simultaneously."
