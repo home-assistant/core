@@ -159,10 +159,6 @@ MOVED_RADIO_PROXY = (
     "esphome-hass://esphome/01M0EP649N48N88Z52ZG2B21VT"
     "?port_udev_id=usb-Nabu_Casa_ZBT-2_10B41DE589E4-if00"
 )
-SERIAL_LESS_PROXY = (
-    "esphome-hass://esphome/01M0EP649N48N88Z52ZG2B21VT"
-    "?port_udev_id=usb-1a86_USB_Serial-if00-port0"
-)
 
 
 def _zbt2_at(device: str) -> USBDevice:
@@ -173,19 +169,6 @@ def _zbt2_at(device: str) -> USBDevice:
         serial_number="10B41DE589E4",
         manufacturer="Nabu Casa",
         description="ZBT-2",
-        is_unique=True,
-    )
-
-
-def _ch340_at(device: str) -> USBDevice:
-    return USBDevice(
-        device=device,
-        vid="1A86",
-        pid="7523",
-        serial_number=None,
-        manufacturer=None,
-        description="USB Serial",
-        is_unique=False,
     )
 
 
@@ -231,17 +214,6 @@ def _ch340_at(device: str) -> USBDevice:
             ],
             None,
             id="ambiguous",
-        ),
-        # The configured proxy is offline and an identical adapter remains elsewhere
-        pytest.param(
-            SERIAL_LESS_PROXY,
-            [
-                _ch340_at(
-                    SERIAL_LESS_PROXY.replace("01M0EP649N48N88Z52ZG2B21VT", "other")
-                )
-            ],
-            None,
-            id="not_unique",
         ),
         pytest.param(
             "/dev/ttyUSB0", [_zbt2_at(MOVED_RADIO_PROXY)], None, id="raw_path"
@@ -1542,7 +1514,6 @@ async def test_async_scan_serial_ports(hass: HomeAssistant) -> None:
             bcd_device=257,
             interface_description="Nabu Casa ZBT-2",
             interface_num=0,
-            is_unique=True,
         ),
     ]
 

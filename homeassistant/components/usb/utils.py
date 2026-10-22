@@ -31,7 +31,6 @@ def usb_device_from_port(port: SerialPortInfo) -> USBDevice:
         bcd_device=port.bcd_device,
         interface_description=port.interface_description,
         interface_num=port.interface_num,
-        is_unique=port.is_unique,
     )
 
 
@@ -45,7 +44,6 @@ def serial_device_from_port(port: SerialPortInfo) -> SerialDevice:
         description=port.description,
         interface_description=port.interface_description,
         interface_num=port.interface_num,
-        is_unique=port.is_unique,
     )
 
 

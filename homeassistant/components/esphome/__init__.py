@@ -112,8 +112,6 @@ def _async_scan_serial_ports(
                         ),
                         manufacturer=manufacturer,
                         description=f"{model} ({proxy.name})",
-                        # The MAC address differs between otherwise identical devices
-                        is_unique=True,
                     )
                 )
                 continue

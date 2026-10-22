@@ -415,12 +415,9 @@ class USBDiscovery:
         if any(port.device == device_path for port in ports):
             return None
 
-        # Without a unique serial number, a lone match may be an identical device while
-        # the configured one is unplugged
+        # Identical devices without serial numbers share a name and cannot be told apart
         candidates = [
-            port.device
-            for port in ports
-            if port.is_unique and serial_path_udev_id(port.device) == udev_id
+            port.device for port in ports if serial_path_udev_id(port.device) == udev_id
         ]
         if len(candidates) != 1:
             return None

@@ -17,9 +17,6 @@ class SerialDevice:
     interface_description: str | None = None
     interface_num: int | None = None
 
-    # Whether `serial_number` tells this device apart from identical ones
-    is_unique: bool = False
-
 
 @dataclass(slots=True, frozen=True, kw_only=True)
 class USBDevice(SerialDevice):
