@@ -84,9 +84,11 @@ class SupervisorGetLogsTool(SystemLogGetLogsTool):
                     "format": "plain" if source in _PLAIN_SOURCES else "verbose",
                     "no_colors": "",
                 },
+                # The journal has lines received after the record was created,
+                # so read until the next second and filter the rest out later
                 range_header=(
                     f"realtime={_journal_time(start_time)}"
-                    f":{math.ceil(end_time.timestamp())}:{lines}"
+                    f":{math.floor(end_time.timestamp()) + 1}:{lines}"
                 ),
             )
         except HassioAPIError as err:

@@ -100,7 +100,7 @@ async def test_get_logs_default(
             method="get",
             return_text=True,
             params={"format": "plain", "no_colors": ""},
-            range_header="realtime=1792496700.000000:1792497600:2000",
+            range_header="realtime=1792496700.000000:1792497601:2000",
         )
         for source in ("core", "supervisor")
     ]
@@ -114,7 +114,7 @@ async def test_get_logs_default(
                 "start_time": "2026-10-20T02:45:00+02:00",
                 "end_time": "2026-10-20T03:00:00+02:00",
             },
-            "realtime=1792457100.000000:1792458000:2000",
+            "realtime=1792457100.000000:1792458001:2000",
             id="whole_seconds",
         ),
         pytest.param(
@@ -215,6 +215,57 @@ async def test_get_logs_invalid_source(
     send_command.assert_not_called()
 
 
+def _microseconds(time: str) -> int:
+    """Return a time on 2026-10-20 in microseconds since the epoch."""
+    return (
+        datetime.fromisoformat(f"2026-10-20 {time}+02:00")
+        - datetime(1970, 1, 1, tzinfo=UTC)
+    ) // timedelta(microseconds=1)
+
+
+def _mock_journal(hass: HomeAssistant, journal: list[tuple[str, str]]) -> None:
+    """Mock the Supervisor with core lines by the time the journal received them."""
+
+    async def _send_command(
+        command: str, *, range_header: str, **kwargs: object
+    ) -> str:
+        start, end, lines = range_header.removeprefix("realtime=").split(":")
+        return "\n".join(
+            [
+                "2026-10-20 {}+02:00 INFO (MainThread) [core] {}".format(
+                    *line.split(" ", 1)
+                )
+                for received, line in journal
+                if int(start.replace(".", ""))
+                <= _microseconds(received)
+                <= int(end) * 1_000_000
+            ][: int(lines)]
+        )
+
+    hass.data[DATA_COMPONENT] = Mock(send_command=AsyncMock(side_effect=_send_command))
+
+
+async def test_get_logs_received_after_end_time(
+    hass: HomeAssistant, llm_context: llm.LLMContext, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test a record at the end time that the journal received later is read."""
+    freezer.move_to("2026-10-20 12:00:00+00:00")
+    _mock_journal(hass, [("13:55:00.002", "13:55:00.000 At the end")])
+    tool = SupervisorGetLogsTool({})
+
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            tool.name, {"source": ["core"], "end_time": "2026-10-20T13:55:00+02:00"}
+        ),
+        llm_context,
+    )
+
+    assert [record["message"] for record in result.data["records"]] == [
+        "INFO (MainThread) [core] At the end"
+    ]
+
+
 @pytest.mark.parametrize(
     ("journal", "pages"),
     [
@@ -259,30 +310,7 @@ async def test_get_logs_pages(
 ) -> None:
     """Test following next_start_time returns every record once."""
     freezer.move_to("2026-10-20 12:00:00+00:00")
-
-    def _microseconds(time: str) -> int:
-        return (
-            datetime.fromisoformat(f"2026-10-20 {time}+02:00")
-            - datetime(1970, 1, 1, tzinfo=UTC)
-        ) // timedelta(microseconds=1)
-
-    async def _send_command(
-        command: str, *, range_header: str, **kwargs: object
-    ) -> str:
-        """Return the lines received from the start time like the journal."""
-        start, _, lines = range_header.removeprefix("realtime=").split(":")
-        start_microseconds = int(start.replace(".", ""))
-        return "\n".join(
-            [
-                "2026-10-20 {}+02:00 INFO (MainThread) [core] {}".format(
-                    *line.split(" ", 1)
-                )
-                for received, line in journal
-                if _microseconds(received) >= start_microseconds
-            ][: int(lines)]
-        )
-
-    hass.data[DATA_COMPONENT] = Mock(send_command=AsyncMock(side_effect=_send_command))
+    _mock_journal(hass, journal)
     tool = SupervisorGetLogsTool({})
     start_time = "2026-10-20T13:45:00+02:00"
 
