@@ -22,7 +22,7 @@ from .conftest import (
 
 
 def _patch_setup_entry():
-    return patch("homeassistant.components.dlink.async_setup_entry", return_value=True)
+    return patch("homeassistant.components.dlink.async_setup_entry", return_value=None)
 
 
 async def test_flow_user(hass: HomeAssistant, mocked_plug: MagicMock) -> None:

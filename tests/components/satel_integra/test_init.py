@@ -285,6 +285,25 @@ async def test_setup_failure_unsubscribes_connection_status_callbacks(
         unsubscribe_callback.assert_called_once_with()
 
 
+async def test_unload_unsubscribes_monitor_callbacks(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test monitor callbacks are unsubscribed on unload."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    for callback_method in (
+        mock_satel.add_alarm_status_callback,
+        mock_satel.add_zone_changed_callback,
+        mock_satel.add_output_changed_callback,
+    ):
+        callback_method.return_value.assert_called_once_with()
+
+
 @pytest.mark.parametrize(
     ("exception", "expected_state"),
     [

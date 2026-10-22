@@ -643,6 +643,38 @@ async def test_install_version_requiring_a_newer_core(
     assert exc_info.value.translation_key == "requires_newer_home_assistant"
 
 
+@pytest.mark.parametrize("github_token", [None])
+async def test_install_catalog_update_requiring_a_newer_core(
+    hass: HomeAssistant,
+    integration_update_entity: str,
+    response_mocker: MarketplaceResponses,
+) -> None:
+    """Test the update the catalog announces is refused when it needs a newer core."""
+    repository = get_marketplace(hass).repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository.data.last_version = "2.0.0"
+    # The catalog leaves the minimum version out of the manifest it carries
+    assert repository.repository_manifest.homeassistant is None
+    url = f"https://raw.githubusercontent.com/{REPOSITORY_INTEGRATION}/2.0.0/hacs.json"
+    response_mocker.add(
+        url,
+        mocked_response(
+            url, content=json.dumps({"homeassistant": "9999.99.99"}).encode()
+        ),
+        keep=True,
+    )
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: integration_update_entity},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "requires_newer_home_assistant"
+    assert repository.data.installed_version == "1.0.0"
+
+
 async def test_install_download_failure(
     hass: HomeAssistant,
     integration_update_entity: str,

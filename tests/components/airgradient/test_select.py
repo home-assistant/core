@@ -181,6 +181,7 @@ async def test_v1_entities(
 @pytest.mark.parametrize(
     ("entity_id", "option", "method", "expected"),
     [
+        ("select.airgradient_altitude_unit", "ft", "set_altitude_unit", "ft"),
         ("select.airgradient_gps_mode", "always", "set_gps_mode", "always"),
         (
             "select.airgradient_front_led_brightness",

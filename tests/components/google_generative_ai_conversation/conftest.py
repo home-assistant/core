@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from google.genai._api_client import HttpRequest, HttpResponse
 from google.genai.types import HttpOptionsOrDict
+import httpx
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -184,4 +185,32 @@ def mock_genai_transport() -> Generator[AsyncMock]:
 
     mock.side_effect = request
     with patch("google.genai._api_client.BaseApiClient._async_request", mock):
+        yield mock
+
+
+@pytest.fixture
+def mock_genai_interactions_transport() -> Generator[Mock]:
+    """Capture real SDK Interactions request construction, without HTTP requests."""
+    mock = Mock()
+
+    async def send(
+        self: httpx.AsyncClient, request: httpx.Request, **kwargs: object
+    ) -> httpx.Response:
+        mock(request)
+        return httpx.Response(
+            200,
+            json={
+                "id": "interaction-id",
+                "status": "completed",
+                "steps": [
+                    {
+                        "type": "model_output",
+                        "content": [{"type": "text", "text": "Done"}],
+                    }
+                ],
+            },
+            request=request,
+        )
+
+    with patch("httpx.AsyncClient.send", send):
         yield mock

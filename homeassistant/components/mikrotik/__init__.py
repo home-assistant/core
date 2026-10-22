@@ -12,10 +12,11 @@ from homeassistant.util import slugify
 from .const import ATTR_MANUFACTURER, DOMAIN
 from .coordinator import (
     MikrotikConfigEntry,
+    MikrotikData,
     MikrotikDataUpdateCoordinator,
     get_api,
-    mikrotik_config_entry_errors,
 )
+from .utils import mikrotik_config_entry_errors
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -35,14 +36,24 @@ def _call_api(data: dict[str, Any]) -> Api:
         return api
 
 
+def _setup_mikrotik_data(
+    hass: HomeAssistant, config_entry: MikrotikConfigEntry, data: dict[str, Any]
+) -> MikrotikData:
+    """Connect to the Mikrotik API and fetch the hub details."""
+    mk_data = MikrotikData(hass, config_entry, _call_api(data))
+    mk_data.get_hub_details()
+    return mk_data
+
+
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: MikrotikConfigEntry
 ) -> None:
     """Set up the Mikrotik component."""
-    api = await hass.async_add_executor_job(_call_api, dict(config_entry.data))
+    mk_data = await hass.async_add_executor_job(
+        _setup_mikrotik_data, hass, config_entry, dict(config_entry.data)
+    )
 
-    coordinator = MikrotikDataUpdateCoordinator(hass, config_entry, api)
-    await hass.async_add_executor_job(coordinator.api.get_hub_details)
+    coordinator = MikrotikDataUpdateCoordinator(hass, config_entry, mk_data)
     await coordinator.async_config_entry_first_refresh()
 
     config_entry.runtime_data = coordinator

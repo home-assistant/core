@@ -29,7 +29,7 @@ MOCK_CONF_PUB_KEY = (
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.html5.async_setup_entry", return_value=True
+        "homeassistant.components.html5.async_setup_entry", return_value=None
     ) as mock_setup_entry:
         yield mock_setup_entry
 
