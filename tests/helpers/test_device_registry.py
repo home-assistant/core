@@ -9419,8 +9419,8 @@ async def test_key_collision_reconciled_after_config_entry_reload(
         hass,
         MockModule(
             "test",
-            async_setup_entry=AsyncMock(return_value=True),
-            async_unload_entry=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=None),
+            async_unload_entry=AsyncMock(return_value=None),
         ),
     )
     mock_platform(hass, "test.config_flow", None)
@@ -9481,7 +9481,7 @@ async def test_key_collision_reconciled_after_setup_retry(
 
     async def first_attempt(
         hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-    ) -> bool:
+    ) -> None:
         device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
             identifiers={("test", "device_a")},
@@ -9495,20 +9495,19 @@ async def test_key_collision_reconciled_after_setup_retry(
 
     async def second_attempt(
         hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-    ) -> bool:
+    ) -> None:
         device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
             identifiers={("test", "device_b")},
             connections={connection},
         )
-        return True
 
     attempts = [first_attempt, second_attempt]
 
     async def async_setup_entry(
         hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-    ) -> bool:
-        return await attempts.pop(0)(hass, config_entry)
+    ) -> None:
+        await attempts.pop(0)(hass, config_entry)
 
     mock_integration(hass, MockModule("test", async_setup_entry=async_setup_entry))
     mock_platform(hass, "test.config_flow", None)
