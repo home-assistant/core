@@ -3,7 +3,7 @@
 from typing import Any, override
 
 import probatio
-from pyrail import iRail
+from pyrail import IRail, PyRailError
 from pyrail.models import StationDetails
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -29,10 +29,14 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _fetch_stations(self) -> list[StationDetails]:
         """Fetch the stations."""
-        api_client = iRail(session=async_get_clientsession(self.hass))
-        stations_response = await api_client.get_stations()
+        api_client = IRail(session=async_get_clientsession(self.hass))
+        message = "The API is currently unavailable."
+        try:
+            stations_response = await api_client.get_stations()
+        except PyRailError as err:
+            raise CannotConnect(message) from err
         if stations_response is None:
-            raise CannotConnect("The API is currently unavailable.")
+            raise CannotConnect(message)
         return stations_response.stations
 
     async def _fetch_stations_choices(self) -> list[SelectOptionDict]:

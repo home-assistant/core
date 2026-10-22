@@ -649,6 +649,20 @@
       "rms_voltage": {
         "name": "Effective voltage"
       },
+      "setpoint_change_amount": {
+        "name": "Setpoint change amount"
+      },
+      "setpoint_change_source": {
+        "name": "Setpoint change source",
+        "state": {
+          "external": "External",
+          "manual": "Manual",
+          "schedule": "Schedule"
+        }
+      },
+      "setpoint_change_timestamp": {
+        "name": "Last setpoint change"
+      },
       "switch_current_position": {
         "name": "Current switch position"
       },
@@ -723,6 +737,9 @@
       "privacy_mode_button": {
         "name": "Privacy mode button"
       },
+      "reverse_motor_direction": {
+        "name": "Reverse motor direction"
+      },
       "speaker_mute": {
         "name": "Mute"
       },
@@ -761,6 +778,12 @@
     },
     "addon_stop_failed": {
       "message": "Failed to stop the Matter Server app."
+    },
+    "bitmap_write_failed": {
+      "message": "Failed to change {name}: the device returned status {status}."
+    },
+    "bitmap_write_not_supported": {
+      "message": "The device does not support changing {name}."
     },
     "credential_type_not_supported": {
       "message": "The lock does not support credential type `{credential_type}`."

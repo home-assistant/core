@@ -375,9 +375,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     async def _async_browse_audio_files(self, expanded: bool = False) -> BrowseMedia:
         """Return BrowseMedia tree for audio files."""
         if expanded:
-            result: list[
-                dict[str, Any]
-            ] = await self.coordinator.device.media_list_media()
+            result = await self.coordinator.device.media_list_media()
             children: list[BrowseMedia] | None = [
                 BrowseMedia(
                     title=item["title"],
@@ -408,9 +406,7 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     async def _async_browse_radio_stations(self, expanded: bool = False) -> BrowseMedia:
         """Return BrowseMedia tree for radio stations."""
         if expanded:
-            result: list[
-                dict[str, Any]
-            ] = await self.coordinator.device.media_list_radio_stations()
+            result = await self.coordinator.device.media_list_radio_stations()
             children: list[BrowseMedia] | None = [
                 BrowseMedia(
                     title=station["name"],
