@@ -1,6 +1,7 @@
 {
   "domain": "bluetti_modbus",
   "name": "BLUETTI Modbus",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@chpego"],
   "config_flow": true,
   "dependencies": ["modbus"],

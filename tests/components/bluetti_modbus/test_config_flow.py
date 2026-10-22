@@ -12,6 +12,7 @@ from modbus_connection import (
 from modbus_connection.exceptions import IllegalDataAddressError
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.bluetti_modbus.const import CONF_UNIT_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -29,8 +30,6 @@ from .conftest import (
     bluetti_data,
     seed_unit,
 )
-
-from tests.common import MockConfigEntry
 
 TITLE = "Balco 260"
 

@@ -1297,6 +1297,9 @@
     "bluetti_modbus": {
       "name": "BLUETTI Modbus",
       "integration_type": "device",
+      "categories": [
+        "energy.solar_batteries"
+      ],
       "config_flow": true,
       "iot_class": "local_polling"
     },

@@ -22,7 +22,7 @@ PLATFORMS = [Platform.SENSOR]
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: BluettiModbusConfigEntry
-) -> bool:
+) -> None:
     """Set up BLUETTI Modbus from a config entry."""
     params = ModbusTcpParams(host=entry.data[CONF_HOST], port=entry.data[CONF_PORT])
     try:
@@ -63,11 +63,9 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: BluettiModbusConfigEntry
-) -> bool:
+) -> None:
     """Unload a BLUETTI Modbus config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)

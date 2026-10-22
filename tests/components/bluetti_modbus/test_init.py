@@ -11,6 +11,7 @@ from modbus_connection import (
 )
 from modbus_connection.mock import MockModbusUnit
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 
 from homeassistant.components.bluetti_modbus.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
@@ -21,8 +22,6 @@ from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 from .conftest import HOST, SERIAL, SERIAL_ADDRESS
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 VOLTAGE_ENTITY = "sensor.balco_260_battery_voltage"
 

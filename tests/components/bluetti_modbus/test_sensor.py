@@ -3,6 +3,7 @@
 from bluetti_modbus_lib import PvType, get_device
 from modbus_connection.mock import MockModbusUnit
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, snapshot_platform
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_UNKNOWN
@@ -10,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry, snapshot_platform
 
 INVERTER_POWER_ENTITY = "sensor.balco_260_total_inverter_power"
 PV_1_TYPE_ENTITY = "sensor.balco_260_pv_1_input_type"
