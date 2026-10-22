@@ -111,26 +111,30 @@ class CromaIrMediaPlayer(CromaIrEntity, MediaPlayerEntity, RestoreEntity):
         self._attr_is_volume_muted = mute
         self.async_write_ha_state()
 
+    async def _send_playback_command(
+        self, code: CromaTVCode, state: MediaPlayerState
+    ) -> None:
+        """Send a playback command, keeping an assumed off state."""
+        await self._send_command(code.to_command())
+        if self.state == MediaPlayerState.OFF:
+            return
+        self._attr_state = state
+        self.async_write_ha_state()
+
     @override
     async def async_media_play(self) -> None:
         """Send the play command."""
-        await self._send_command(CromaTVCode.PLAY.to_command())
-        self._attr_state = MediaPlayerState.PLAYING
-        self.async_write_ha_state()
+        await self._send_playback_command(CromaTVCode.PLAY, MediaPlayerState.PLAYING)
 
     @override
     async def async_media_pause(self) -> None:
         """Send the pause command."""
-        await self._send_command(CromaTVCode.PAUSE.to_command())
-        self._attr_state = MediaPlayerState.PAUSED
-        self.async_write_ha_state()
+        await self._send_playback_command(CromaTVCode.PAUSE, MediaPlayerState.PAUSED)
 
     @override
     async def async_media_stop(self) -> None:
         """Send the stop command."""
-        await self._send_command(CromaTVCode.STOP.to_command())
-        self._attr_state = MediaPlayerState.ON
-        self.async_write_ha_state()
+        await self._send_playback_command(CromaTVCode.STOP, MediaPlayerState.ON)
 
     @override
     async def async_select_source(self, source: str) -> None:

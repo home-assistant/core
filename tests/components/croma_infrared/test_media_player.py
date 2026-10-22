@@ -237,6 +237,48 @@ async def test_power_skipped_when_already_in_state(
 
 
 @pytest.mark.parametrize(
+    ("service", "expected_code"),
+    [
+        (SERVICE_MEDIA_PLAY, CromaTVCode.PLAY),
+        (SERVICE_MEDIA_PAUSE, CromaTVCode.PAUSE),
+        (SERVICE_MEDIA_STOP, CromaTVCode.STOP),
+    ],
+)
+@pytest.mark.usefixtures("mock_croma_to_command")
+async def test_playback_keeps_off_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    platforms: list[Platform],
+    service: str,
+    expected_code: CromaTVCode,
+) -> None:
+    """Test playback while off keeps the off state so turn_on still powers up."""
+    mock_restore_cache(hass, [State(MEDIA_PLAYER_ENTITY_ID, MediaPlayerState.OFF)])
+
+    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.croma_infrared.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    for action in (service, SERVICE_TURN_ON):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            action,
+            {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+            blocking=True,
+        )
+
+    assert mock_infrared_emitter_entity.send_command_calls == [
+        expected_code,
+        CromaTVCode.POWER,
+    ]
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state
+    assert state.state == MediaPlayerState.ON
+
+
+@pytest.mark.parametrize(
     ("source", "expected_code"),
     [
         ("youtube", CromaTVCode.YOUTUBE),
