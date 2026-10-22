@@ -1,5 +1,6 @@
 """Test the Teltonika integration."""
 
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -9,6 +10,13 @@ from teltasync import TeltonikaAuthenticationError, TeltonikaConnectionError
 
 from homeassistant.components.teltonika.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -73,3 +81,60 @@ async def test_device_registry_creation(
     )
     assert device is not None
     assert device == snapshot
+
+
+@pytest.mark.parametrize(
+    ("host", "expected_data", "expected_base_url"),
+    [
+        (
+            "https://192.168.1.1",
+            {CONF_HOST: "192.168.1.1", CONF_PORT: 443, CONF_SSL: True},
+            "https://192.168.1.1/api",
+        ),
+        (
+            "https://192.168.1.1:8443",
+            {CONF_HOST: "192.168.1.1", CONF_PORT: 8443, CONF_SSL: True},
+            "https://192.168.1.1:8443/api",
+        ),
+        (
+            "http://router.lan:8080",
+            {CONF_HOST: "router.lan", CONF_PORT: 8080, CONF_SSL: False},
+            "http://router.lan:8080/api",
+        ),
+        (
+            "192.168.1.1",
+            {CONF_HOST: "192.168.1.1", CONF_PORT: 443, CONF_SSL: True},
+            "https://192.168.1.1/api",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_modems")
+async def test_migrate_entry_v1(
+    hass: HomeAssistant,
+    mock_teltasync: MagicMock,
+    host: str,
+    expected_data: dict[str, Any],
+    expected_base_url: str,
+) -> None:
+    """Test a version 1 entry has its URL split into host, port and SSL."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="RUTX50 Test",
+        version=1,
+        data={CONF_HOST: host, CONF_USERNAME: "admin", CONF_PASSWORD: "password"},
+        unique_id="1234567890",
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.version == 2
+    assert entry.minor_version == 1
+    assert entry.data == {
+        **expected_data,
+        CONF_USERNAME: "admin",
+        CONF_PASSWORD: "password",
+    }
+    assert mock_teltasync.call_args.kwargs["base_url"] == expected_base_url
