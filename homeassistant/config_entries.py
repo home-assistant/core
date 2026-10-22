@@ -43,6 +43,7 @@ from .core import (
     HassJobType,
     HomeAssistant,
     callback,
+    verify_event_loop_thread,
 )
 from .data_entry_flow import FLOW_NOT_COMPLETE_STEPS, FlowContext, FlowResult
 from .exceptions import (
@@ -2790,6 +2791,7 @@ class ConfigEntries:
         )
 
     @callback
+    @verify_event_loop_thread("hass.config_entries.async_update_entry")
     def _async_update_entry(
         self,
         entry: ConfigEntry,
@@ -2818,7 +2820,6 @@ class ConfigEntries:
         if entry.entry_id not in self._entries:
             raise UnknownEntry(entry.entry_id)
 
-        self.hass.verify_event_loop_thread("hass.config_entries.async_update_entry")
         changed = False
         removed_subentry_ids: set[str] = set()
         _setter = object.__setattr__
@@ -2929,6 +2930,7 @@ class ConfigEntries:
         return self._async_update_entry(entry, subentries=subentries)
 
     @callback
+    @verify_event_loop_thread("hass.config_entries.async_update_subentry")
     def async_update_subentry(
         self,
         entry: ConfigEntry,
@@ -2951,7 +2953,6 @@ class ConfigEntries:
         if subentry.subentry_id not in entry.subentries:
             raise UnknownSubEntry(subentry.subentry_id)
 
-        self.hass.verify_event_loop_thread("hass.config_entries.async_update_subentry")
         changed = False
         _setter = object.__setattr__
 
