@@ -6,8 +6,14 @@ from typing import Any, override
 import probatio
 from pyrail.models import StationDetails
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_SHOW_ON_MAP
+from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -30,6 +36,8 @@ from .coordinator import StationListUnavailableError, async_fetch_stations
 
 class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
     """NMBS config flow."""
+
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize."""
@@ -100,9 +108,12 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
                 station_from, station_to = self._route(user_input)
                 await self.async_set_unique_id(_route_unique_id(user_input))
                 self._abort_if_unique_id_configured()
+                data = dict(user_input)
+                show_on_map = data.pop(CONF_SHOW_ON_MAP, False)
                 return self.async_create_entry(
                     title=_route_title(station_from, station_to),
-                    data=user_input,
+                    data=data,
+                    options={CONF_SHOW_ON_MAP: show_on_map},
                 )
 
         schema = probatio.Schema(
@@ -129,10 +140,17 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(config_entry: ConfigEntry) -> NMBSOptionsFlow:
+        """Return the options flow."""
+        return NMBSOptionsFlow()
+
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle reconfiguration of the connection options."""
+        """Handle reconfiguration of the connection."""
         entry = self._get_reconfigure_entry()
         if user_input is not None:
             unique_id = _route_unique_id({**entry.data, **user_input})
@@ -154,9 +172,28 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_EXCLUDE_VIAS,
                         default=entry.data.get(CONF_EXCLUDE_VIAS, False),
                     ): BooleanSelector(),
+                }
+            ),
+        )
+
+
+class NMBSOptionsFlow(OptionsFlowWithReload):
+    """NMBS options flow."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the display options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=probatio.Schema(
+                {
                     probatio.Optional(
                         CONF_SHOW_ON_MAP,
-                        default=entry.data.get(CONF_SHOW_ON_MAP, False),
+                        default=self.config_entry.options.get(CONF_SHOW_ON_MAP, False),
                     ): BooleanSelector(),
                 }
             ),

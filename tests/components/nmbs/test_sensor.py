@@ -203,8 +203,9 @@ async def test_connection_sensor_show_on_map(
         data={
             CONF_STATION_FROM: STATION_FROM,
             CONF_STATION_TO: STATION_TO,
-            CONF_SHOW_ON_MAP: True,
         },
+        options={CONF_SHOW_ON_MAP: True},
+        minor_version=2,
         unique_id=f"{STATION_FROM}_{STATION_TO}_map",
     )
     await _setup_entry(hass, entry)
@@ -731,8 +732,9 @@ async def test_connection_sensor_keeps_map_location_without_connection(
         data={
             CONF_STATION_FROM: STATION_FROM,
             CONF_STATION_TO: STATION_TO,
-            CONF_SHOW_ON_MAP: True,
         },
+        options={CONF_SHOW_ON_MAP: True},
+        minor_version=2,
         unique_id=f"{STATION_FROM}_{STATION_TO}",
     )
     await _setup_entry(hass, entry)

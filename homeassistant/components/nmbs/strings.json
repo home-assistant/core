@@ -10,12 +10,10 @@
     "step": {
       "reconfigure": {
         "data": {
-          "exclude_vias": "Direct connections only",
-          "show_on_map": "Display on map"
+          "exclude_vias": "[%key:component::nmbs::config::step::user::data::exclude_vias%]"
         },
         "data_description": {
-          "exclude_vias": "Exclude connections with transfers",
-          "show_on_map": "Add the departure station's location to the travel time sensor, so it shows up on the map"
+          "exclude_vias": "[%key:component::nmbs::config::step::user::data_description::exclude_vias%]"
         },
         "title": "Reconfigure NMBS"
       },
@@ -51,6 +49,18 @@
     },
     "station_not_found": {
       "message": "A configured station no longer exists"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "show_on_map": "[%key:component::nmbs::config::step::user::data::show_on_map%]"
+        },
+        "data_description": {
+          "show_on_map": "[%key:component::nmbs::config::step::user::data_description::show_on_map%]"
+        }
+      }
     }
   }
 }

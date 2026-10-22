@@ -78,7 +78,7 @@ class NMBSSensor(NMBSEntity, SensorEntity):
                 EntityStateAttribute.LATITUDE: coordinator.station_from.latitude,
                 EntityStateAttribute.LONGITUDE: coordinator.station_from.longitude,
             }
-            if coordinator.config_entry.data.get(CONF_SHOW_ON_MAP, False)
+            if coordinator.config_entry.options.get(CONF_SHOW_ON_MAP, False)
             else {}
         )
         self._attr_translation_key = "connection"

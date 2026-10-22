@@ -14,9 +14,10 @@ from homeassistant.components.nmbs.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
 
-from .conftest import STATION_TO
+from .conftest import STATION_FROM, STATION_TO
 
 
 async def test_setup_entry(
@@ -137,3 +138,34 @@ async def test_setup_finds_new_station_after_reload(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    ("old_data", "show_on_map"),
+    [
+        pytest.param({CONF_SHOW_ON_MAP: True}, True, id="map_on"),
+        pytest.param({}, False, id="map_not_set"),
+    ],
+)
+async def test_migrate_show_on_map_to_options(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+    old_data: dict[str, bool],
+    show_on_map: bool,
+) -> None:
+    """Test the map setting moves from the entry data to the options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Train from Brussel-Noord/Bruxelles-Nord to Brussel-Zuid/Bruxelles-Midi",
+        data={CONF_STATION_FROM: STATION_FROM, CONF_STATION_TO: STATION_TO, **old_data},
+        unique_id=f"{STATION_FROM}_{STATION_TO}",
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.minor_version == 2
+    assert entry.data == {CONF_STATION_FROM: STATION_FROM, CONF_STATION_TO: STATION_TO}
+    assert entry.options == {CONF_SHOW_ON_MAP: show_on_map}

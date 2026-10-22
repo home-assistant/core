@@ -47,6 +47,7 @@ async def test_full_flow(hass: HomeAssistant, mock_nmbs_client: AsyncMock) -> No
         {
             CONF_STATION_FROM: DUMMY_DATA["STAT_BRUSSELS_NORTH"],
             CONF_STATION_TO: DUMMY_DATA["STAT_BRUSSELS_SOUTH"],
+            CONF_SHOW_ON_MAP: True,
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -58,6 +59,7 @@ async def test_full_flow(hass: HomeAssistant, mock_nmbs_client: AsyncMock) -> No
         CONF_STATION_FROM: DUMMY_DATA["STAT_BRUSSELS_NORTH"],
         CONF_STATION_TO: DUMMY_DATA["STAT_BRUSSELS_SOUTH"],
     }
+    assert result["result"].options == {CONF_SHOW_ON_MAP: True}
     assert (
         result["result"].unique_id
         == f"{DUMMY_DATA['STAT_BRUSSELS_NORTH']}_{DUMMY_DATA['STAT_BRUSSELS_SOUTH']}"
@@ -188,27 +190,24 @@ async def test_unavailable_api_errors(
     assert result["result"].unique_id == f"{STATION_FROM}_{STATION_TO}"
 
 
-async def test_reconfigure_options(
+async def test_reconfigure(
     hass: HomeAssistant,
     mock_nmbs_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the reconfigure flow only changes the options and works offline."""
+    """Test the reconfigure flow only changes Direct connections only and works offline."""
     mock_config_entry.add_to_hass(hass)
     mock_nmbs_client.get_stations.side_effect = ApiUnavailableError("API unavailable")
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert {str(key) for key in result["data_schema"].schema} == {
-        CONF_EXCLUDE_VIAS,
-        CONF_SHOW_ON_MAP,
-    }
+    assert {str(key) for key in result["data_schema"].schema} == {CONF_EXCLUDE_VIAS}
 
     mock_nmbs_client.get_stations.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_EXCLUDE_VIAS: True, CONF_SHOW_ON_MAP: True},
+        {CONF_EXCLUDE_VIAS: True},
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -218,7 +217,6 @@ async def test_reconfigure_options(
         CONF_STATION_FROM: STATION_FROM,
         CONF_STATION_TO: STATION_TO,
         CONF_EXCLUDE_VIAS: True,
-        CONF_SHOW_ON_MAP: True,
     }
 
 
@@ -387,3 +385,33 @@ async def test_reconfigure_skips_taken_unique_id(
         entity_registry.async_get_entity_id("sensor", DOMAIN, new_liveboard_unique_id)
         == taken.entity_id
     )
+
+
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the options flow turns the map location on and reloads the entry."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_SHOW_ON_MAP: True}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options == {CONF_SHOW_ON_MAP: True}
+    connection_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{CONNECTION_UNIQUE_ID_PREFIX}{mock_config_entry.unique_id}"
+    )
+    assert connection_id is not None
+    state = hass.states.get(connection_id)
+    assert state is not None
+    assert "latitude" in state.attributes

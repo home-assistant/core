@@ -67,4 +67,5 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_STATION_TO: STATION_TO,
         },
         unique_id=f"{STATION_FROM}_{STATION_TO}",
+        minor_version=2,
     )
