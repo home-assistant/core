@@ -56,6 +56,13 @@ def revocable_connection(
     ("exc", "code", "err", "log"),
     [
         (
+            exceptions.StepUpRequired(),
+            websocket_api.ERR_STEP_UP_REQUIRED,
+            "Verify your identity again first",
+            "Error handling message: Verify your identity again first"
+            " (step_up_required) Mock User from 127.0.0.42 (Browser)",
+        ),
+        (
             exceptions.Unauthorized(),
             websocket_api.ERR_UNAUTHORIZED,
             "Unauthorized",

@@ -24,6 +24,8 @@ from homeassistant.data_entry_flow import (
     FlowResultType,
     UnknownHandler,
 )
+from homeassistant.exceptions import StepUpRequired
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
@@ -415,6 +417,33 @@ class AuthManager:
     def async_has_step_up(self, refresh_token_id: str | None) -> bool:
         """Return if the session may make sensitive changes right now."""
         return self.async_get_step_up_expiry(refresh_token_id) is not None
+
+    @callback
+    def async_require_step_up(self, refresh_token_id: str | None, action: str) -> None:
+        """Raise if the session may not make the sensitive change named by action."""
+        if self.async_has_step_up(refresh_token_id):
+            return
+        if (
+            refresh_token_id is None
+            or (refresh_token := self.async_get_refresh_token(refresh_token_id)) is None
+            or refresh_token.token_type == models.TOKEN_TYPE_NORMAL
+        ):
+            raise StepUpRequired
+        # Long-lived access tokens and add-ons through the Supervisor can't step
+        # up. Deprecated in 2026.11.
+        ir.async_create_issue(
+            self.hass,
+            "auth",
+            f"deprecated_token_step_up_{refresh_token.id}",
+            breaks_in_ha_version="2027.5.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_token_step_up",
+            translation_placeholders={
+                "name": refresh_token.client_name or refresh_token.user.name or "",
+                "action": action,
+            },
+        )
 
     async def async_get_or_create_user(
         self, credentials: models.Credentials

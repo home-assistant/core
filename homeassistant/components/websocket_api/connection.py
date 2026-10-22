@@ -12,7 +12,7 @@ from probatio.humanize import humanize_error
 
 from homeassistant.auth.models import RefreshToken, User
 from homeassistant.core import Context, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.exceptions import HomeAssistantError, StepUpRequired, Unauthorized
 from homeassistant.helpers.http import current_request
 from homeassistant.helpers.redact import async_redact_data
 from homeassistant.util.json import JsonValueType
@@ -372,7 +372,12 @@ class ActiveConnection:
 
         msg = async_redact_data(msg, REDACT_KEYS)
 
-        if isinstance(err, Unauthorized):
+        if isinstance(err, StepUpRequired):
+            code = const.ERR_STEP_UP_REQUIRED
+            err_message = "Verify your identity again first"
+            # Expected while the frontend asks the user to confirm.
+            log_handler = self.logger.debug
+        elif isinstance(err, Unauthorized):
             code = const.ERR_UNAUTHORIZED
             err_message = "Unauthorized"
         elif isinstance(err, probatio.Invalid):

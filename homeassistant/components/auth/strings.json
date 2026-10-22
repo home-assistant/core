@@ -14,6 +14,10 @@
     "deprecated_long_lived_access_token_without_step_up": {
       "description": "\"{client}\" created a long-lived access token without a recent sign-in or a confirmation of your identity. From Home Assistant 2027.5, creating a long-lived access token needs one of them.\n\nIf a tool created this token, check if it supports signing in right before creating it. In **Profile** > **Security**, Home Assistant asks you to confirm your identity when needed.",
       "title": "Creating long-lived access tokens will need a recent sign-in"
+    },
+    "deprecated_token_step_up": {
+      "description": "\"{name}\" was used for `{action}`. Changes like this need a recent sign-in or a confirmation of your identity, which a long-lived access token or an add-on can't give. From Home Assistant 2027.5, they will be refused.\n\nIf a tool or add-on uses this to manage users or passwords, check if it supports signing in instead, or make these changes in **Settings** > **People**.",
+      "title": "\"{name}\" needs to stop making sensitive changes"
     }
   },
   "mfa_setup": {

@@ -424,6 +424,10 @@ class UnknownUser(Unauthorized):
     """When call is made with user ID that doesn't exist."""
 
 
+class StepUpRequired(Unauthorized):
+    """When the session has to verify its user again first."""
+
+
 class ServiceNotFound(ServiceValidationError):
     """Raised when a service is not found."""
 

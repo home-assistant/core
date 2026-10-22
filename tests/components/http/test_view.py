@@ -10,6 +10,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from aiohttp import hdrs
 from aiohttp.web_exceptions import (
     HTTPBadRequest,
+    HTTPForbidden,
     HTTPInternalServerError,
     HTTPUnauthorized,
 )
@@ -23,7 +24,7 @@ from homeassistant.components.http.view import (
     request_handler_factory,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceNotFound, Unauthorized
+from homeassistant.exceptions import ServiceNotFound, StepUpRequired, Unauthorized
 from homeassistant.helpers.network import NoURLAvailableError
 
 
@@ -64,6 +65,21 @@ async def test_handling_unauthorized(mock_request: Mock) -> None:
             Mock(requires_auth=False),
             AsyncMock(side_effect=Unauthorized),
         )(mock_request)
+
+
+async def test_handling_step_up_required(mock_request: Mock) -> None:
+    """Test a missing step up is told apart from a missing sign in."""
+    with pytest.raises(HTTPForbidden) as exc_info:
+        await request_handler_factory(
+            mock_request.app[KEY_HASS],
+            Mock(requires_auth=False),
+            AsyncMock(side_effect=StepUpRequired),
+        )(mock_request)
+
+    assert json.loads(exc_info.value.text) == {
+        "message": "Verify your identity again first",
+        "code": "step_up_required",
+    }
 
 
 async def test_handling_invalid_data(mock_request: Mock) -> None:

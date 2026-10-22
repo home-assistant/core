@@ -10,7 +10,11 @@ from pytest_homeassistant.common import CLIENT_ID, MockUser
 from pytest_homeassistant.typing import WebSocketGenerator
 
 from homeassistant.auth import STEP_UP_MAX_ATTEMPTS, STEP_UP_VALIDITY
-from homeassistant.auth.models import TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
+from homeassistant.auth.const import GROUP_ID_ADMIN
+from homeassistant.auth.models import (
+    TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+    TOKEN_TYPE_SYSTEM,
+)
 from homeassistant.auth.providers import InvalidStepUpError, homeassistant as prov_ha
 from homeassistant.components.config import auth_provider_homeassistant as auth_ha
 from homeassistant.core import HomeAssistant
@@ -953,48 +957,75 @@ async def test_create_needs_a_step_up(
         await auth_provider.async_validate_login("owner", "chosen-pass")
 
 
-async def test_long_lived_access_token_setting_passwords_is_deprecated(
+@pytest.mark.parametrize(
+    ("system_generated", "client_name", "token_type", "name"),
+    [
+        pytest.param(
+            False,
+            "Script",
+            TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+            "Script",
+            id="long-lived-access-token",
+        ),
+        pytest.param(
+            True,
+            None,
+            TOKEN_TYPE_SYSTEM,
+            "Supervisor",
+            id="supervisor",
+        ),
+    ],
+)
+async def test_tokens_adding_passwords_is_deprecated(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     hass_ws_client: WebSocketGenerator,
-    hass_owner_user: MockUser,
-    hass_admin_user: MockUser,
     auth_provider: prov_ha.HassAuthProvider,
     issue_registry: ir.IssueRegistry,
+    system_generated: bool,
+    client_name: str | None,
+    token_type: str,
+    name: str,
 ) -> None:
-    """Test a long-lived access token still sets passwords, raising a repair issue."""
+    """Test tokens that can't step up still add passwords, raising a repair issue."""
+    user = MockUser(
+        name="Supervisor",
+        system_generated=system_generated,
+        groups=[await hass.auth.async_get_group(GROUP_ID_ADMIN)],
+    ).add_to_hass(hass)
     refresh_token = await hass.auth.async_create_refresh_token(
-        hass_owner_user,
-        client_name="Script",
-        token_type=TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+        user,
+        client_name=client_name,
+        token_type=token_type,
     )
     client = await hass_ws_client(
         hass, hass.auth.async_create_access_token(refresh_token)
     )
+    target = MockUser().add_to_hass(hass)
     freezer.tick(STEP_UP_VALIDITY)
 
     await client.send_json(
         {
             "id": 5,
-            "type": "config/auth_provider/homeassistant/admin_change_password",
-            "user_id": hass_admin_user.id,
+            "type": "config/auth_provider/homeassistant/create",
+            "user_id": target.id,
+            "username": "new-user",
             "password": "new-pass",
         }
     )
 
     result = await client.receive_json()
     assert result["success"], result
-    await auth_provider.async_validate_login("test-user", "new-pass")
+    await auth_provider.async_validate_login("new-user", "new-pass")
 
     issue = issue_registry.async_get_issue(
-        "websocket_api",
-        f"deprecated_long_lived_access_token_step_up_{refresh_token.id}",
+        "auth", f"deprecated_token_step_up_{refresh_token.id}"
     )
     assert issue is not None
     assert issue.breaks_in_ha_version == "2027.5.0"
     assert issue.translation_placeholders == {
-        "client_name": "Script",
-        "command": "config/auth_provider/homeassistant/admin_change_password",
+        "name": name,
+        "action": "config/auth_provider/homeassistant/create",
     }
 
 

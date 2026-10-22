@@ -12,6 +12,7 @@ from aiohttp.typedefs import LooseHeaders
 from aiohttp.web import AppKey, Request
 from aiohttp.web_exceptions import (
     HTTPBadRequest,
+    HTTPForbidden,
     HTTPInternalServerError,
     HTTPUnauthorized,
 )
@@ -96,6 +97,17 @@ def request_handler_factory(
             raise HTTPBadRequest from err
         except exceptions.ServiceNotFound as err:
             raise HTTPInternalServerError from err
+        except exceptions.StepUpRequired as err:
+            # Not a 401, which makes the frontend sign in again.
+            raise HTTPForbidden(
+                text=json_dumps(
+                    {
+                        "message": "Verify your identity again first",
+                        "code": "step_up_required",
+                    }
+                ),
+                content_type=CONTENT_TYPE_JSON,
+            ) from err
         except exceptions.Unauthorized as err:
             raise HTTPUnauthorized from err
 

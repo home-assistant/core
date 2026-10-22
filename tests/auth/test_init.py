@@ -37,6 +37,8 @@ from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import InvalidStepUpError
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import StepUpRequired
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
 
 INVALID_SIGNING_KEY = b"invalid-signing-key-for-testing0"
@@ -1894,3 +1896,61 @@ async def test_step_up_refuses_long_lived_access_token(
         )
     # Not even as a recent sign in for a user nothing can re-verify.
     assert not hass.auth.async_has_step_up(refresh_token.id)
+
+
+async def test_require_step_up(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_admin_user: MockUser
+) -> None:
+    """Test a signed in session is refused once its window closed."""
+    refresh_token = await hass.auth.async_create_refresh_token(
+        hass_admin_user, CLIENT_ID
+    )
+    hass.auth.async_require_step_up(refresh_token.id, "test/command")
+
+    freezer.tick(auth.STEP_UP_VALIDITY)
+
+    with pytest.raises(StepUpRequired):
+        hass.auth.async_require_step_up(refresh_token.id, "test/command")
+    with pytest.raises(StepUpRequired):
+        hass.auth.async_require_step_up(None, "test/command")
+
+
+@pytest.mark.parametrize(
+    ("system_generated", "token_type", "client_name", "name"),
+    [
+        pytest.param(
+            False,
+            auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+            "Script",
+            "Script",
+            id="long-lived-access-token",
+        ),
+        pytest.param(
+            True, auth_models.TOKEN_TYPE_SYSTEM, None, "Supervisor", id="supervisor"
+        ),
+    ],
+)
+async def test_require_step_up_is_deprecated_for_tokens(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    system_generated: bool,
+    token_type: str,
+    client_name: str | None,
+    name: str,
+) -> None:
+    """Test tokens that can't step up still pass, raising a repair issue."""
+    user = MockUser(name="Supervisor", system_generated=system_generated).add_to_hass(
+        hass
+    )
+    refresh_token = await hass.auth.async_create_refresh_token(
+        user, client_name=client_name, token_type=token_type
+    )
+
+    hass.auth.async_require_step_up(refresh_token.id, "test/command")
+
+    issue = issue_registry.async_get_issue(
+        "auth", f"deprecated_token_step_up_{refresh_token.id}"
+    )
+    assert issue is not None
+    assert issue.breaks_in_ha_version == "2027.5.0"
+    assert issue.translation_placeholders == {"name": name, "action": "test/command"}
