@@ -7,6 +7,7 @@ from typing import Any, cast, override
 import openai
 import probatio
 
+from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigEntryState,
@@ -19,6 +20,7 @@ from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_PROMPT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
+from homeassistant.helpers.field_visibility import FieldCondition
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -240,7 +242,6 @@ class LlamaCppConfigFlow(ConfigFlow, domain=DOMAIN):
 class ConversationSubentryFlowHandler(ConfigSubentryFlow):
     """Flow for managing conversation subentries."""
 
-    last_rendered_recommended = False
     options: dict[str, Any] | None = None
     models: list[str] | None = None
 
@@ -271,9 +272,6 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
             CONF_CHAT_MODEL: recommended_model(models),
         }
-        self.last_rendered_recommended = cast(
-            bool, self.options.get(CONF_RECOMMENDED, False)
-        )
         return await self.async_step_init()
 
     async def async_step_reconfigure(
@@ -292,9 +290,6 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
 
         if self.options is None:
             self.options = self._get_reconfigure_subentry().data.copy()
-            self.last_rendered_recommended = cast(
-                bool, self.options.get(CONF_RECOMMENDED, False)
-            )
 
         try:
             models = await self._get_models()
@@ -324,27 +319,17 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     errors={"base": err.translation_key or "unknown"},
                 )
 
-            if user_input[CONF_RECOMMENDED] == self.last_rendered_recommended:
-                if self.source == "user":
-                    return self.async_create_entry(
-                        title=model_name_to_title(user_input[CONF_CHAT_MODEL]),
-                        data=user_input,
-                    )
-                return self.async_update_and_abort(
-                    self._get_entry(),
-                    self._get_reconfigure_subentry(),
-                    data=user_input,
+            if self.source == "user":
+                return self.async_create_entry(
                     title=model_name_to_title(user_input[CONF_CHAT_MODEL]),
+                    data=user_input,
                 )
-
-            self.last_rendered_recommended = user_input[CONF_RECOMMENDED]
-
-            options = {
-                CONF_RECOMMENDED: user_input[CONF_RECOMMENDED],
-                CONF_PROMPT: user_input[CONF_PROMPT],
-                CONF_CHAT_MODEL: user_input[CONF_CHAT_MODEL],
-                CONF_LLM_HASS_API: user_input.get(CONF_LLM_HASS_API, []),
-            }
+            return self.async_update_and_abort(
+                self._get_entry(),
+                self._get_reconfigure_subentry(),
+                data=user_input,
+                title=model_name_to_title(user_input[CONF_CHAT_MODEL]),
+            )
 
         schema = llama_cpp_config_option_schema(self.hass, options, models)
         return self.async_show_form(
@@ -407,25 +392,29 @@ def llama_cpp_config_option_schema(
         }
     )
 
-    if options.get(CONF_RECOMMENDED):
-        return schema
-
+    not_recommended: FieldCondition = {
+        "field": CONF_RECOMMENDED,
+        "value": False,
+    }
     schema.update(
         {
-            probatio.Optional(
+            data_entry_flow.Optional(
                 CONF_MAX_TOKENS,
                 description={"suggested_value": options.get(CONF_MAX_TOKENS)},
                 default=RECOMMENDED_MAX_TOKENS,
+                visible=not_recommended,
             ): int,
-            probatio.Optional(
+            data_entry_flow.Optional(
                 CONF_TOP_P,
                 description={"suggested_value": options.get(CONF_TOP_P)},
                 default=RECOMMENDED_TOP_P,
+                visible=not_recommended,
             ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            probatio.Optional(
+            data_entry_flow.Optional(
                 CONF_TEMPERATURE,
                 description={"suggested_value": options.get(CONF_TEMPERATURE)},
                 default=RECOMMENDED_TEMPERATURE,
+                visible=not_recommended,
             ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
         }
     )
