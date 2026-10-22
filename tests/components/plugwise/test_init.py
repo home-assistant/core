@@ -137,6 +137,10 @@ async def test_device_in_dr(
     device_entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, "a455b61e52394b2db5081ce025a430f3"), mock_config_entry.entry_id
     )
+    assert device_entry.connections == {
+        (dr.CONNECTION_NETWORK_MAC, "01:23:45:67:00:01"),
+        (dr.CONNECTION_NETWORK_MAC, "01:23:45:67:00:02"),
+    }
     assert device_entry.hw_version == "AME Smile 2.0 board"
     assert device_entry.manufacturer == "Plugwise"
     assert device_entry.model == "Gateway"
@@ -167,6 +171,7 @@ async def test_device_via_device_links(
     assert child_device.via_device_id == gateway_device.id
 
 
+@pytest.mark.usefixtures("mock_smile_anna")
 @pytest.mark.parametrize("chosen_env", ["anna_heatpump_heating"], indirect=True)
 @pytest.mark.parametrize("cooling_present", [True], indirect=True)
 @pytest.mark.parametrize(
@@ -189,7 +194,6 @@ async def test_migrate_unique_id_temperature(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_smile_anna: MagicMock,
     entitydata: dict,
     old_unique_id: str,
     new_unique_id: str,
@@ -210,6 +214,7 @@ async def test_migrate_unique_id_temperature(
     assert entity_migrated.unique_id == new_unique_id
 
 
+@pytest.mark.usefixtures("mock_smile_adam")
 @pytest.mark.parametrize(
     ("entitydata", "old_unique_id", "new_unique_id"),
     [
@@ -241,7 +246,6 @@ async def test_migrate_unique_id_relay(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_smile_adam: MagicMock,
     entitydata: dict,
     old_unique_id: str,
     new_unique_id: str,

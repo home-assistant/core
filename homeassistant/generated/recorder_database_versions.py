@@ -21,7 +21,7 @@ class DatabaseVersions(TypedDict):
 SUPPORTED_DATABASE_VERSIONS: dict[str, DatabaseVersions] = {
     "mariadb": {
         "supported_lts": ["10.11", "11.4", "11.8", "12.3"],
-        "latest_non_lts": "12.2",
+        "latest_non_lts": "13.0",
     },
     "mysql": {
         "supported_lts": ["8.4", "9.7"],

@@ -3,7 +3,7 @@
 import logging
 from typing import Any, Final
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.event import (
     DOMAIN as EVENT_DOMAIN,
@@ -24,7 +24,8 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator, validators as tcv
+from . import validators as tcv
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -45,13 +46,15 @@ DEFAULT_NAME = "Template Event"
 CONF_EVENT_TYPE = "event_type"
 CONF_EVENT_TYPES = "event_types"
 
-DEVICE_CLASS_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(EventDeviceClass))
+DEVICE_CLASS_SCHEMA: Final = probatio.All(
+    probatio.Lower, probatio.Coerce(EventDeviceClass)
+)
 
-EVENT_COMMON_SCHEMA = vol.Schema(
+EVENT_COMMON_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASS_SCHEMA,
-        vol.Required(CONF_EVENT_TYPE): cv.template,
-        vol.Required(CONF_EVENT_TYPES): cv.template,
+        probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASS_SCHEMA,
+        probatio.Required(CONF_EVENT_TYPE): cv.template,
+        probatio.Required(CONF_EVENT_TYPES): cv.template,
     }
 )
 

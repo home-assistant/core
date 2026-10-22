@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, override
 
 from aiohttp.client_exceptions import ClientConnectorError
 from gios import ApiError, Gios, InvalidSensorsDataError, NoStationError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME
@@ -74,9 +74,9 @@ class GiosFlowHandler(ConfigFlow, domain=DOMAIN):
             for station in gios.measurement_stations.values()
         ]
 
-        schema: vol.Schema = vol.Schema(
+        schema: probatio.Schema = probatio.Schema(
             {
-                vol.Required(CONF_STATION_ID): SelectSelector(
+                probatio.Required(CONF_STATION_ID): SelectSelector(
                     SelectSelectorConfig(
                         options=options,
                         sort=True,

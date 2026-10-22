@@ -36,7 +36,7 @@ async def async_send_command(
     """Send an RF command to the specified radio_frequency entity.
 
     Raises:
-        vol.Invalid: If `entity_id_or_uuid` is not a valid entity ID or known entity
+        probatio.Invalid: If `entity_id_or_uuid` is not a valid entity ID or known entity
             registry UUID.
         HomeAssistantError: If the radio_frequency component is not loaded or the
             resolved entity is not found.
@@ -84,6 +84,7 @@ async def async_send_command(
     await entity.async_send_command_internal(command)
 
 
+# pylint: disable-next=home-assistant-enforce-class-module
 class RadioFrequencyTransmitterConsumerEntity(Entity):
     """Base entity for integrations that send commands via an RF transmitter.
 

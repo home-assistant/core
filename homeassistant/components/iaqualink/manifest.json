@@ -1,6 +1,7 @@
 {
   "domain": "iaqualink",
   "name": "Jandy iAquaLink",
+  "categories": ["water.pools_spas"],
   "codeowners": ["@flz"],
   "config_flow": true,
   "dhcp": [{ "hostname": "iaqualink-*" }],
@@ -9,6 +10,6 @@
   "iot_class": "cloud_polling",
   "loggers": ["iaqualink"],
   "quality_scale": "silver",
-  "requirements": ["iaqualink==0.7.0", "h2==4.3.0"],
+  "requirements": ["iaqualink==0.7.0", "h2==4.4.1"],
   "single_config_entry": true
 }

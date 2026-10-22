@@ -5,6 +5,7 @@ import logging
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.device_registry import AnyDeviceEntry, DeviceEntry
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -17,7 +18,7 @@ from .models import MySensorsConfigEntry, MySensorsData
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: MySensorsConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MySensorsConfigEntry) -> None:
     """Set up an instance of the MySensors integration.
 
     Every instance has a connection to exactly one Gateway.
@@ -25,25 +26,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: MySensorsConfigEntry) ->
     gateway = await setup_gateway(hass, entry)
 
     if not gateway:
-        _LOGGER.error("Gateway setup failed for %s", entry.data)
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="gateway_setup_failed",
+        )
 
     entry.runtime_data = MySensorsData(gateway=gateway)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await finish_setup(hass, entry)
 
-    return True
 
-
-async def async_unload_entry(hass: HomeAssistant, entry: MySensorsConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MySensorsConfigEntry) -> None:
     """Remove an instance of the MySensors integration."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if not unload_ok:
-        return False
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
     await gw_stop(entry)
-    return True
 
 
 async def async_remove_config_entry_device(

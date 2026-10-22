@@ -149,6 +149,7 @@ async def test_no_devices(
     client.locations_by_id = {}
     await init_integration(hass, config_entry)
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.reason == "No Honeywell devices found"
 
 
 async def test_remove_stale_device(

@@ -59,7 +59,13 @@ async def async_setup_platform(
     )
     value_template: ValueTemplate | None = binary_sensor_config.get(CONF_VALUE_TEMPLATE)
 
-    data = CommandSensorData(hass, command, command_timeout)
+    data = CommandSensorData(
+        hass,
+        command,
+        command_timeout,
+        BINARY_SENSOR_DOMAIN,
+        binary_sensor_config.get(CONF_NAME, DEFAULT_NAME),
+    )
 
     trigger_entity_config = {
         CONF_NAME: Template(binary_sensor_config.get(CONF_NAME, DEFAULT_NAME), hass),

@@ -2,8 +2,8 @@
 
 from typing import Any, override
 
+import probatio
 from samsung_exlink import MODELS, SamsungTV, SamsungTVError, TVModel
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_MODEL
@@ -17,10 +17,10 @@ from homeassistant.helpers.selector import (
 
 from .const import DOMAIN, LOGGER
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_DEVICE): SerialPortSelector(),
-        vol.Optional(CONF_MODEL): SelectSelector(
+        probatio.Required(CONF_DEVICE): SerialPortSelector(),
+        probatio.Optional(CONF_MODEL): SelectSelector(
             SelectSelectorConfig(
                 options=[
                     SelectOptionDict(value=key, label=model.name)

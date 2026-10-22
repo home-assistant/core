@@ -2,6 +2,8 @@
 
 from datetime import timedelta
 
+from pytest_homeassistant.components.recorder.common import async_wait_recording_done
+
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.components.sun import DOMAIN
@@ -22,7 +24,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
-from tests.components.recorder.common import async_wait_recording_done
 
 
 async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) -> None:

@@ -8,7 +8,7 @@ from typing import Any, override
 from urllib.parse import urlparse
 
 from hyperion import client, const
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -243,10 +243,10 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Optional(CONF_PORT, default=const.DEFAULT_PORT_JSON): int,
+                    probatio.Required(CONF_HOST): str,
+                    probatio.Optional(CONF_PORT, default=const.DEFAULT_PORT_JSON): int,
                 }
             ),
             errors=errors,
@@ -318,10 +318,10 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="auth",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_CREATE_TOKEN): bool,
-                    vol.Optional(CONF_TOKEN): str,
+                    probatio.Required(CONF_CREATE_TOKEN): bool,
+                    probatio.Optional(probatio.Secret(CONF_TOKEN)): str,
                 }
             ),
             errors=errors,
@@ -349,6 +349,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
         self._request_token_task = self.hass.async_create_task(
             self._request_token_task_func(self._auth_id), eager_start=False
         )
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_external_step(
             step_id="create_token_external", url=self._get_hyperion_url()
         )
@@ -475,15 +476,15 @@ class HyperionOptionsFlow(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_PRIORITY,
                         default=self.config_entry.options.get(
                             CONF_PRIORITY, DEFAULT_PRIORITY
                         ),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
-                    vol.Optional(
+                    ): probatio.All(probatio.Coerce(int), probatio.Byte()),
+                    probatio.Optional(
                         CONF_EFFECT_SHOW_LIST,
                         default=default_effect_show_list,
                     ): cv.multi_select(effects),

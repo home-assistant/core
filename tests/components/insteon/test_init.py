@@ -5,9 +5,14 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components import insteon
-from homeassistant.components.insteon.const import CONF_DEV_PATH, DOMAIN
+from homeassistant.components.insteon.const import (
+    CONF_DEV_PATH,
+    DOMAIN,
+    SRV_PRINT_IM_ALDB,
+)
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 from .const import MOCK_USER_INPUT_PLM
@@ -93,3 +98,11 @@ async def test_import_frontend_dev_url(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert insteon.devices.async_save.call_count == 1
         assert mock_close.called
+
+
+async def test_action_not_loaded(hass: HomeAssistant) -> None:
+    """Test calling an action when the config entry is not loaded."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    with pytest.raises(ServiceValidationError, match="Insteon is not loaded"):
+        await hass.services.async_call(DOMAIN, SRV_PRINT_IM_ALDB, {}, blocking=True)

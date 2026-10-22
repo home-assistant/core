@@ -5,7 +5,7 @@ from typing import Any, override
 
 from matter_server.client import MatterClient
 from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.hassio import (
     AddonError,
@@ -37,13 +37,15 @@ ADDON_SETUP_TIMEOUT = 5
 ADDON_SETUP_TIMEOUT_ROUNDS = 40
 DEFAULT_URL = "ws://localhost:5580/ws"
 DEFAULT_TITLE = "Matter"
-ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
+ON_SUPERVISOR_SCHEMA = probatio.Schema(
+    {probatio.Optional(CONF_USE_ADDON, default=True): bool}
+)
 
 
-def get_manual_schema(user_input: dict[str, Any]) -> vol.Schema:
+def get_manual_schema(user_input: dict[str, Any]) -> probatio.Schema:
     """Return a schema for the manual step."""
     default_url = user_input.get(CONF_URL, DEFAULT_URL)
-    return vol.Schema({vol.Required(CONF_URL, default=default_url): str})
+    return probatio.Schema({probatio.Required(CONF_URL, default=default_url): str})
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:

@@ -1,0 +1,54 @@
+# serializer version: 1
+# name: test_repository_info
+  dict({
+    'additional_info': '''
+      ## Example readme file (1.0.0)
+      
+      <disabled width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+         <circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill="yellow" />
+         Sorry, your browser does not support inline SVG.
+      </disabled>
+    ''',
+    'authors': list([
+    ]),
+    'available_version': '1.0.0',
+    'beta': False,
+    'can_install': True,
+    'category': 'integration',
+    'config_flow': True,
+    'custom': False,
+    'default_branch': 'main',
+    'description': 'This your first repo!',
+    'domain': 'example',
+    'downloads': 42,
+    'file_name': '',
+    'full_name': 'hacs-test-org/integration-basic',
+    'hide': False,
+    'hide_default_branch': False,
+    'homeassistant': None,
+    'id': '1296269',
+    'installed': False,
+    'installed_version': '',
+    'issues': 0,
+    'last_updated': '2011-01-26T19:06:43Z',
+    'name': 'Proxy manifest',
+    'new': False,
+    'pending_upgrade': False,
+    'ref': '1.0.0',
+    'releases': list([
+      '1.0.0',
+    ]),
+    'replaces_built_in': False,
+    'selected_tag': None,
+    'stars': 80,
+    'status': 'default',
+    'topics': list([
+      'octocat',
+      'atom',
+      'electron',
+      'api',
+    ]),
+    'update_entity_id': None,
+    'version_or_commit': 'version',
+  })
+# ---

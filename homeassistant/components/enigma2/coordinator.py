@@ -9,8 +9,6 @@ from yarl import URL
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_CONNECTIONS,
-    ATTR_IDENTIFIERS,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -86,22 +84,22 @@ class Enigma2UpdateCoordinator(DataUpdateCoordinator[OpenWebIfStatus]):
 
         about = await asyncio.wait_for(self.device.get_about(), timeout=SETUP_TIMEOUT)
         self.device.mac_address = about["info"]["ifaces"][0]["mac"]
-        self.device_info["model"] = about["info"]["model"]
-        self.device_info["manufacturer"] = about["info"]["brand"]
+        self.device_info.model = about["info"]["model"]
+        self.device_info.manufacturer = about["info"]["brand"]
         if self.device.mac_address is not None:
-            self.device_info[ATTR_IDENTIFIERS] = {
+            self.device_info.identifiers = {
                 (DOMAIN, format_mac(iface["mac"]))
                 for iface in about["info"]["ifaces"]
                 if "mac" in iface and iface["mac"] is not None
             }
-            self.device_info[ATTR_CONNECTIONS] = {
+            self.device_info.connections = {
                 (CONNECTION_NETWORK_MAC, iface["mac"])
                 for iface in about["info"]["ifaces"]
                 if "mac" in iface and iface["mac"] is not None
             }
             self.unique_id = self.device.mac_address
         elif self.unique_id is not None:
-            self.device_info[ATTR_IDENTIFIERS] = {(DOMAIN, self.unique_id)}
+            self.device_info.identifiers = {(DOMAIN, self.unique_id)}
 
     @override
     async def _async_update_data(self) -> OpenWebIfStatus:

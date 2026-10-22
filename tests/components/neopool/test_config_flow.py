@@ -1,12 +1,8 @@
 """Test the NeoPool config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
-from neopool_modbus.exceptions import (
-    NeoPoolConnectionError,
-    NeoPoolModbusError,
-    NeoPoolTimeoutError,
-)
+from neopool_modbus.exceptions import NeoPoolModbusError, NeoPoolTimeoutError
 import pytest
 
 from homeassistant.components.neopool.const import (
@@ -18,6 +14,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_integration
 from .conftest import MOCK_HOST, MOCK_PORT, MOCK_SERIAL
@@ -60,8 +57,8 @@ async def test_user_flow(
 @pytest.mark.parametrize(
     ("exc_cls", "error_key"),
     [
-        (NeoPoolConnectionError, "cannot_connect"),
         (NeoPoolTimeoutError, "cannot_connect"),
+        (HomeAssistantError, "cannot_connect"),
         (NeoPoolModbusError, "cannot_read_modbus"),
     ],
 )
@@ -86,6 +83,31 @@ async def test_user_flow_probe_errors_recover(
     assert result["errors"] == {CONF_HOST: error_key}
 
     mock_socket_connection.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_neopool_client")
+async def test_user_flow_link_conflict(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """A link conflict from the shared connection surfaces as cannot_connect."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    with patch(
+        "homeassistant.components.neopool.config_flow.async_get_temporary_unit",
+        side_effect=HomeAssistantError("already in use over different settings"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_HOST: "cannot_connect"}
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
     )
@@ -138,8 +160,8 @@ async def test_reconfigure_flow(
 @pytest.mark.parametrize(
     ("exc_cls", "error_key"),
     [
-        (NeoPoolConnectionError, "cannot_connect"),
         (NeoPoolTimeoutError, "cannot_connect"),
+        (HomeAssistantError, "cannot_connect"),
         (NeoPoolModbusError, "cannot_read_modbus"),
     ],
 )

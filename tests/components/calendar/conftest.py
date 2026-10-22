@@ -1,7 +1,7 @@
 """Test fixtures for calendar sensor platforms."""
 
 from collections.abc import Generator
-import datetime
+import datetime as dt
 import secrets
 from typing import Any
 from unittest.mock import AsyncMock
@@ -72,8 +72,8 @@ class MockCalendarEntity(CalendarEntity):
 
     def create_event(
         self,
-        start: datetime.datetime,
-        end: datetime.datetime,
+        start: dt.datetime,
+        end: dt.datetime,
         summary: str | None = None,
         description: str | None = None,
         location: str | None = None,
@@ -92,8 +92,8 @@ class MockCalendarEntity(CalendarEntity):
     async def async_get_events(
         self,
         hass: HomeAssistant,
-        start_date: datetime.datetime,
-        end_date: datetime.datetime,
+        start_date: dt.datetime,
+        end_date: dt.datetime,
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
         assert start_date < end_date
@@ -186,13 +186,13 @@ def mock_test_entities() -> list[MockCalendarEntity]:
 
 def create_test_entities() -> list[MockCalendarEntity]:
     """Create test entities used during the test."""
-    half_hour_from_now = dt_util.now() + datetime.timedelta(minutes=30)
+    half_hour_from_now = dt_util.now() + dt.timedelta(minutes=30)
     entity1 = MockCalendarEntity(
         "Calendar 1",
         [
             CalendarEvent(
                 start=half_hour_from_now,
-                end=half_hour_from_now + datetime.timedelta(minutes=60),
+                end=half_hour_from_now + dt.timedelta(minutes=60),
                 summary="Future Event",
                 description="Future Description",
                 location="Future Location",
@@ -205,13 +205,13 @@ def create_test_entities() -> list[MockCalendarEntity]:
     )
     entity1.async_get_events = AsyncMock(wraps=entity1.async_get_events)
 
-    middle_of_event = dt_util.now() - datetime.timedelta(minutes=30)
+    middle_of_event = dt_util.now() - dt.timedelta(minutes=30)
     entity2 = MockCalendarEntity(
         "Calendar 2",
         [
             CalendarEvent(
                 start=middle_of_event,
-                end=middle_of_event + datetime.timedelta(minutes=60),
+                end=middle_of_event + dt.timedelta(minutes=60),
                 summary="Current Event",
             )
         ],
