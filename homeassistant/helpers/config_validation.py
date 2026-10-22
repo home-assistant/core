@@ -833,8 +833,10 @@ def url(
         raise probatio.Invalid("invalid url")
     parsed = urlparse(url_in)
 
-    # HTTP clients encode spaces in the path and query, but not in the host
-    if parsed.scheme not in _schema_list or _URL_WHITESPACE.search(parsed.netloc):
+    # HTTP clients encode spaces in the userinfo, path and query, but not the host
+    if parsed.scheme not in _schema_list or _URL_WHITESPACE.search(
+        parsed.hostname or ""
+    ):
         raise probatio.Invalid("invalid url")
 
     try:
