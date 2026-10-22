@@ -36,7 +36,7 @@ from homeassistant.components.smartthings.const import (
     SCOPES,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import (
@@ -397,15 +397,27 @@ async def test_stale_subscription_id(
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
-@pytest.mark.parametrize("call", ["delete_subscription", "create_subscription"])
 @pytest.mark.parametrize(
-    ("error", "translation_key"),
+    ("call", "error", "translation_key"),
     [
-        (
+        pytest.param(
+            "delete_subscription",
             SmartThingsAuthenticationFailedError("Authentication failed"),
             "authentication_failed",
+            id="delete_authentication_failed",
         ),
-        (SmartThingsForbiddenError("Forbidden"), "entitlement_required"),
+        pytest.param(
+            "create_subscription",
+            SmartThingsAuthenticationFailedError("Authentication failed"),
+            "authentication_failed",
+            id="create_authentication_failed",
+        ),
+        pytest.param(
+            "create_subscription",
+            SmartThingsForbiddenError("Forbidden"),
+            "entitlement_required",
+            id="create_forbidden",
+        ),
     ],
 )
 async def test_subscription_authorization_error(
@@ -430,6 +442,32 @@ async def test_subscription_authorization_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     assert mock_config_entry.error_reason_translation_key == translation_key
     assert len(hass.config_entries.flow.async_progress()) == 1
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize(
+    "error",
+    [
+        SmartThingsAuthenticationFailedError("Authentication failed"),
+        SmartThingsForbiddenError("Forbidden"),
+    ],
+)
+async def test_subscribe_authorization_error_starts_reauth(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    error: Exception,
+) -> None:
+    """Test an authorization error while resubscribing starts reauth."""
+    devices.subscribe.side_effect = error
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
