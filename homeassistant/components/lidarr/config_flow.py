@@ -78,7 +78,7 @@ class LidarrConfigFlow(ConfigFlow, domain=DOMAIN):
                     probatio.Required(
                         CONF_URL, default=user_input.get(CONF_URL, "")
                     ): str,
-                    probatio.Optional(CONF_API_KEY): str,
+                    probatio.Optional(probatio.Secret(CONF_API_KEY)): str,
                     probatio.Optional(
                         CONF_VERIFY_SSL,
                         default=user_input.get(CONF_VERIFY_SSL, False),

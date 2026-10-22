@@ -79,7 +79,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         # once every hours get all lock details, otherwise use the sync endpoint
         if self._next_get_locks <= time.time():
             _LOGGER.debug("Updating through /my/lock endpoint")
-            await self._async_update(self.tedee_client.get_locks)
+            await self._async_update(self._async_get_locks)
             self._next_get_locks = time.time() + GET_LOCKS_INTERVAL_SECONDS
         else:
             _LOGGER.debug("Updating through /sync endpoint")
@@ -92,6 +92,18 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
 
         self._async_add_remove_locks()
         return self.tedee_client.locks_dict
+
+    async def _async_get_locks(self) -> None:
+        """Get all locks paired with the bridge."""
+        try:
+            await self.tedee_client.get_locks()
+        except TedeeClientException as ex:
+            if self.tedee_client.locks_dict:
+                raise
+            # aiotedee raises a generic exception when the bridge reports no locks
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="no_locks"
+            ) from ex
 
     async def _async_update(self, update_fn: Callable[[], Awaitable[None]]) -> None:
         """Update locks based on update function."""

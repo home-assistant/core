@@ -1,25 +1,30 @@
 """Helper and coordinator for refoss."""
 
 from datetime import timedelta
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from refoss_ha.controller.device import BaseDevice
 from refoss_ha.exceptions import DeviceTimeoutError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, LOGGER, MAX_ERRORS
 
+if TYPE_CHECKING:
+    from .bridge import RefossConfigEntry
+
 
 class RefossDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Manages polling for state changes from the device."""
 
-    config_entry: ConfigEntry
+    config_entry: RefossConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, device: BaseDevice
+        self,
+        hass: HomeAssistant,
+        config_entry: RefossConfigEntry,
+        device: BaseDevice,
     ) -> None:
         """Initialize the data update coordinator."""
         super().__init__(

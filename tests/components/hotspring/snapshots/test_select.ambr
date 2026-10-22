@@ -1,0 +1,186 @@
+# serializer version: 1
+# name: test_select_state[select.connectedspa_ddeeff_heating_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'heat_saver',
+        'heat_with_boost',
+        'auto_saver',
+        'auto_with_boost',
+        'chill',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.connectedspa_ddeeff_heating_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Heating mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Heating mode',
+    'platform': 'hotspring',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'heating_mode',
+    'unique_id': 'AA:BB:CC:DD:EE:FF_heating_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_state[select.connectedspa_ddeeff_heating_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ConnectedSpa_DDEEFF Heating mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'heat_saver',
+        'heat_with_boost',
+        'auto_saver',
+        'auto_with_boost',
+        'chill',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.connectedspa_ddeeff_heating_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_saver',
+  })
+# ---
+# name: test_select_state[select.connectedspa_ddeeff_jet_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'low',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.connectedspa_ddeeff_jet_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Jet 1',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Jet 1',
+    'platform': 'hotspring',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'jet',
+    'unique_id': 'AA:BB:CC:DD:EE:FF_jet_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_state[select.connectedspa_ddeeff_jet_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ConnectedSpa_DDEEFF Jet 1',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'low',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.connectedspa_ddeeff_jet_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'low',
+  })
+# ---
+# name: test_select_state[select.connectedspa_ddeeff_jet_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.connectedspa_ddeeff_jet_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Jet 2',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Jet 2',
+    'platform': 'hotspring',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'jet',
+    'unique_id': 'AA:BB:CC:DD:EE:FF_jet_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_state[select.connectedspa_ddeeff_jet_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ConnectedSpa_DDEEFF Jet 2',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.connectedspa_ddeeff_jet_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'high',
+  })
+# ---

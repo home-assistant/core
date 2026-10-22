@@ -41,16 +41,16 @@ KAITERRA_DEVICE_SCHEMA = probatio.Schema(
 
 KAITERRA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
         probatio.Required(CONF_DEVICES): probatio.All(
-            cv.ensure_list, [KAITERRA_DEVICE_SCHEMA]
+            probatio.EnsureList(), [KAITERRA_DEVICE_SCHEMA]
         ),
         probatio.Optional(CONF_AQI_STANDARD, default=DEFAULT_AQI_STANDARD): probatio.In(
             AVAILABLE_AQI_STANDARDS
         ),
         probatio.Optional(
             CONF_PREFERRED_UNITS, default=DEFAULT_PREFERRED_UNIT
-        ): probatio.All(cv.ensure_list, [probatio.In(AVAILABLE_UNITS)]),
+        ): probatio.All(probatio.EnsureList(), [probatio.In(AVAILABLE_UNITS)]),
         probatio.Optional(
             CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
         ): cv.time_period,

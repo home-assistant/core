@@ -60,15 +60,22 @@ rules:
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices: done
-  entity-category: todo
+  entity-category: done
   entity-device-class: done
-  entity-disabled-by-default: todo
+  entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
-  repair-issues: todo
-  stale-devices: todo
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: |
+      Rejected App ID or App secret uses the reauthentication flow.
+      A used-up Open Platform monthly quota is not fixable inside Home Assistant.
+      Setup shows it on the config entry. Diagnostics report it after the entry has loaded.
+  stale-devices:
+    status: done
+    comment: Devices that leave the account can be deleted from the device page. Devices the cloud still reports cannot.
 
   # Platinum
   async-dependency: todo

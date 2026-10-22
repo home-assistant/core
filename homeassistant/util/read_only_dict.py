@@ -1,7 +1,7 @@
 """Read only dictionary."""
 
 from copy import deepcopy
-from typing import Any, final
+from typing import Any, final, override
 
 
 def _readonly(*args: Any, **kwargs: Any) -> Any:
@@ -20,6 +20,12 @@ class ReadOnlyDict[_KT, _VT](dict[_KT, _VT]):
     clear = _readonly
     update = _readonly
     setdefault = _readonly
+    __ior__ = _readonly
+
+    @override
+    def __reduce__(self) -> tuple[type[ReadOnlyDict[_KT, _VT]], tuple[dict[_KT, _VT]]]:
+        """Pickle as a constructor call, since unpickling cannot use __setitem__."""
+        return (ReadOnlyDict, (dict(self),))
 
     def __copy__(self) -> dict[_KT, _VT]:
         """Create a shallow copy."""

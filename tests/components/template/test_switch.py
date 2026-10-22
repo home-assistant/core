@@ -3,6 +3,13 @@
 from typing import Any
 
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    assert_setup_component,
+    mock_component,
+    mock_restore_cache,
+)
+from pytest_homeassistant.typing import WebSocketGenerator
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import switch, template
@@ -38,14 +45,6 @@ from .conftest import (
     setup_and_test_unique_id,
     setup_entity,
 )
-
-from tests.common import (
-    MockConfigEntry,
-    assert_setup_component,
-    mock_component,
-    mock_restore_cache,
-)
-from tests.typing import WebSocketGenerator
 
 TEST_OBJECT_ID = "test_template_switch"
 TEST_STATE_ENTITY_ID = "switch.test_state"

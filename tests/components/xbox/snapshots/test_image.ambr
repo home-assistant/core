@@ -51,6 +51,162 @@
     'state': '2013-12-13T12:13:12+00:00',
   })
 # ---
+# name: test_image_platform[image.erics273_box_art-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.erics273_box_art',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Box art',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Box art',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxImage.BOX_ART: 'box_art'>,
+    'unique_id': '2533274913657542_box_art',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image_platform[image.erics273_box_art-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.erics273_box_art?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273 Box art',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.erics273_box_art',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2013-12-13T12:13:12+00:00',
+  })
+# ---
+# name: test_image_platform[image.erics273_branded_key_art-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.erics273_branded_key_art',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Branded key art',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Branded key art',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxImage.BRANDED_KEY_ART: 'branded_key_art'>,
+    'unique_id': '2533274913657542_branded_key_art',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image_platform[image.erics273_branded_key_art-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.erics273_branded_key_art?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273 Branded key art',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.erics273_branded_key_art',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2013-12-13T12:13:12+00:00',
+  })
+# ---
+# name: test_image_platform[image.erics273_feature_promotional_square_art-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.erics273_feature_promotional_square_art',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Feature promotional square art',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Feature promotional square art',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxImage.FEATURE_PROMOTIONAL_SQUARE_ART: 'feature_promotional_square_art'>,
+    'unique_id': '2533274913657542_feature_promotional_square_art',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image_platform[image.erics273_feature_promotional_square_art-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.erics273_feature_promotional_square_art?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273 Feature promotional square art',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.erics273_feature_promotional_square_art',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2013-12-13T12:13:12+00:00',
+  })
+# ---
 # name: test_image_platform[image.erics273_gamerpic-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -155,6 +311,162 @@
     'state': '2013-12-13T12:13:12+00:00',
   })
 # ---
+# name: test_image_platform[image.erics273_poster-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.erics273_poster',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Poster',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Poster',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxImage.POSTER: 'poster'>,
+    'unique_id': '2533274913657542_poster',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image_platform[image.erics273_poster-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.erics273_poster?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273 Poster',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.erics273_poster',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2013-12-13T12:13:12+00:00',
+  })
+# ---
+# name: test_image_platform[image.erics273_superhero_art-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.erics273_superhero_art',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Superhero art',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Superhero art',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxImage.SUPER_HERO_ART: 'super_hero_art'>,
+    'unique_id': '2533274913657542_super_hero_art',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image_platform[image.erics273_superhero_art-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.erics273_superhero_art?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273 Superhero art',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.erics273_superhero_art',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2013-12-13T12:13:12+00:00',
+  })
+# ---
+# name: test_image_platform[image.erics273_titled_hero_art-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.erics273_titled_hero_art',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Titled hero art',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Titled hero art',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxImage.TITLED_HERO_ART: 'titled_hero_art'>,
+    'unique_id': '2533274913657542_titled_hero_art',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image_platform[image.erics273_titled_hero_art-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.erics273_titled_hero_art?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273 Titled hero art',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.erics273_titled_hero_art',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2013-12-13T12:13:12+00:00',
+  })
+# ---
 # name: test_image_platform[image.gsr_ae_avatar-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -201,6 +513,162 @@
     }),
     'context': <ANY>,
     'entity_id': 'image.gsr_ae_avatar',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2013-12-13T12:13:12+00:00',
+  })
+# ---
+# name: test_image_platform[image.gsr_ae_box_art-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.gsr_ae_box_art',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Box art',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Box art',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxImage.BOX_ART: 'box_art'>,
+    'unique_id': '271958441785640_box_art',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image_platform[image.gsr_ae_box_art-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.gsr_ae_box_art?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Box art',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.gsr_ae_box_art',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2013-12-13T12:13:12+00:00',
+  })
+# ---
+# name: test_image_platform[image.gsr_ae_branded_key_art-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.gsr_ae_branded_key_art',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Branded key art',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Branded key art',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxImage.BRANDED_KEY_ART: 'branded_key_art'>,
+    'unique_id': '271958441785640_branded_key_art',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image_platform[image.gsr_ae_branded_key_art-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.gsr_ae_branded_key_art?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Branded key art',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.gsr_ae_branded_key_art',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2013-12-13T12:13:12+00:00',
+  })
+# ---
+# name: test_image_platform[image.gsr_ae_feature_promotional_square_art-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.gsr_ae_feature_promotional_square_art',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Feature promotional square art',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Feature promotional square art',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxImage.FEATURE_PROMOTIONAL_SQUARE_ART: 'feature_promotional_square_art'>,
+    'unique_id': '271958441785640_feature_promotional_square_art',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image_platform[image.gsr_ae_feature_promotional_square_art-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.gsr_ae_feature_promotional_square_art?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Feature promotional square art',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.gsr_ae_feature_promotional_square_art',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -311,6 +779,162 @@
     'state': '2013-12-13T12:13:12+00:00',
   })
 # ---
+# name: test_image_platform[image.gsr_ae_poster-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.gsr_ae_poster',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Poster',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Poster',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxImage.POSTER: 'poster'>,
+    'unique_id': '271958441785640_poster',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image_platform[image.gsr_ae_poster-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.gsr_ae_poster?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Poster',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.gsr_ae_poster',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2013-12-13T12:13:12+00:00',
+  })
+# ---
+# name: test_image_platform[image.gsr_ae_superhero_art-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.gsr_ae_superhero_art',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Superhero art',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Superhero art',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxImage.SUPER_HERO_ART: 'super_hero_art'>,
+    'unique_id': '271958441785640_super_hero_art',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image_platform[image.gsr_ae_superhero_art-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.gsr_ae_superhero_art?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Superhero art',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.gsr_ae_superhero_art',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2013-12-13T12:13:12+00:00',
+  })
+# ---
+# name: test_image_platform[image.gsr_ae_titled_hero_art-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.gsr_ae_titled_hero_art',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Titled hero art',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Titled hero art',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxImage.TITLED_HERO_ART: 'titled_hero_art'>,
+    'unique_id': '271958441785640_titled_hero_art',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image_platform[image.gsr_ae_titled_hero_art-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.gsr_ae_titled_hero_art?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Titled hero art',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.gsr_ae_titled_hero_art',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2013-12-13T12:13:12+00:00',
+  })
+# ---
 # name: test_image_platform[image.ikken_hissatsuu_avatar-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -357,6 +981,162 @@
     }),
     'context': <ANY>,
     'entity_id': 'image.ikken_hissatsuu_avatar',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2013-12-13T12:13:12+00:00',
+  })
+# ---
+# name: test_image_platform[image.ikken_hissatsuu_box_art-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.ikken_hissatsuu_box_art',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Box art',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Box art',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxImage.BOX_ART: 'box_art'>,
+    'unique_id': '2533274838782903_box_art',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image_platform[image.ikken_hissatsuu_box_art-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.ikken_hissatsuu_box_art?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ikken Hissatsuu Box art',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.ikken_hissatsuu_box_art',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2013-12-13T12:13:12+00:00',
+  })
+# ---
+# name: test_image_platform[image.ikken_hissatsuu_branded_key_art-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.ikken_hissatsuu_branded_key_art',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Branded key art',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Branded key art',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxImage.BRANDED_KEY_ART: 'branded_key_art'>,
+    'unique_id': '2533274838782903_branded_key_art',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image_platform[image.ikken_hissatsuu_branded_key_art-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.ikken_hissatsuu_branded_key_art?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ikken Hissatsuu Branded key art',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.ikken_hissatsuu_branded_key_art',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2013-12-13T12:13:12+00:00',
+  })
+# ---
+# name: test_image_platform[image.ikken_hissatsuu_feature_promotional_square_art-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.ikken_hissatsuu_feature_promotional_square_art',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Feature promotional square art',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Feature promotional square art',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxImage.FEATURE_PROMOTIONAL_SQUARE_ART: 'feature_promotional_square_art'>,
+    'unique_id': '2533274838782903_feature_promotional_square_art',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image_platform[image.ikken_hissatsuu_feature_promotional_square_art-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.ikken_hissatsuu_feature_promotional_square_art?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ikken Hissatsuu Feature promotional square art',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.ikken_hissatsuu_feature_promotional_square_art',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -461,6 +1241,162 @@
     }),
     'context': <ANY>,
     'entity_id': 'image.ikken_hissatsuu_now_playing',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2013-12-13T12:13:12+00:00',
+  })
+# ---
+# name: test_image_platform[image.ikken_hissatsuu_poster-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.ikken_hissatsuu_poster',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Poster',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Poster',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxImage.POSTER: 'poster'>,
+    'unique_id': '2533274838782903_poster',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image_platform[image.ikken_hissatsuu_poster-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.ikken_hissatsuu_poster?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ikken Hissatsuu Poster',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.ikken_hissatsuu_poster',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2013-12-13T12:13:12+00:00',
+  })
+# ---
+# name: test_image_platform[image.ikken_hissatsuu_superhero_art-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.ikken_hissatsuu_superhero_art',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Superhero art',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Superhero art',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxImage.SUPER_HERO_ART: 'super_hero_art'>,
+    'unique_id': '2533274838782903_super_hero_art',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image_platform[image.ikken_hissatsuu_superhero_art-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.ikken_hissatsuu_superhero_art?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ikken Hissatsuu Superhero art',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.ikken_hissatsuu_superhero_art',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2013-12-13T12:13:12+00:00',
+  })
+# ---
+# name: test_image_platform[image.ikken_hissatsuu_titled_hero_art-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.ikken_hissatsuu_titled_hero_art',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Titled hero art',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Titled hero art',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxImage.TITLED_HERO_ART: 'titled_hero_art'>,
+    'unique_id': '2533274838782903_titled_hero_art',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image_platform[image.ikken_hissatsuu_titled_hero_art-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.ikken_hissatsuu_titled_hero_art?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ikken Hissatsuu Titled hero art',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.ikken_hissatsuu_titled_hero_art',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

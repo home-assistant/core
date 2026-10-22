@@ -10,8 +10,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
-
 TEST_HOST = "1.2.3.4"
 TEST_DATA = {CONF_HOST: TEST_HOST}
 TEST_UNIQUE_ID = "controller-1"

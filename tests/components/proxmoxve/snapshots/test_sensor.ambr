@@ -626,7 +626,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'container_uptime',
+    'translation_key': None,
     'unique_id': '1234_201_container_uptime',
     'unit_of_measurement': None,
   })
@@ -1272,7 +1272,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'container_uptime',
+    'translation_key': None,
     'unique_id': '1234_200_container_uptime',
     'unit_of_measurement': None,
   })
@@ -1824,6 +1824,7 @@
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'online',
         'offline',
+        'unknown',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1864,6 +1865,7 @@
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'online',
         'offline',
+        'unknown',
       ]),
     }),
     'context': <ANY>,
@@ -1906,7 +1908,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'node_uptime',
+    'translation_key': None,
     'unique_id': '1234_node/pve1_node_uptime',
     'unit_of_measurement': None,
   })
@@ -3026,7 +3028,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'vm_uptime',
+    'translation_key': None,
     'unique_id': '1234_101_vm_uptime',
     'unit_of_measurement': None,
   })
@@ -3672,7 +3674,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'vm_uptime',
+    'translation_key': None,
     'unique_id': '1234_100_vm_uptime',
     'unit_of_measurement': None,
   })

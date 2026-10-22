@@ -6,6 +6,7 @@ from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import snapshot_platform
 from ring_doorbell import Ring
 from syrupy.assertion import SnapshotAssertion
 
@@ -18,8 +19,6 @@ from homeassistant.helpers import entity_registry as er
 
 from .common import MockConfigEntry, setup_platform
 from .device_mocks import FRONT_DOOR_DEVICE_ID, INGRESS_DEVICE_ID
-
-from tests.common import snapshot_platform
 
 
 async def test_states(

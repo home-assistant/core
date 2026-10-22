@@ -37,3 +37,32 @@
     ]),
   })
 # ---
+# name: test_get_precipitation_forecast
+  dict({
+    'hourly': list([
+      dict({
+        'amount': 1.726,
+        'conditional_amount': 0.909,
+        'expected_amount': 0.518,
+        'label': '0.5 - 1 mm',
+        'precip_type': 'Rain',
+        'probability': 57,
+        'timestamp': '2022-10-04T13:00:00+00:00',
+      }),
+    ]),
+    'metadata': dict({
+      'attribution': 'Data provided by Environment Canada',
+      'timestamp': '2022-10-04T12:00:00+00:00',
+    }),
+    'nowcast': list([
+      dict({
+        'forecast': False,
+        'label': '1.0 - 2.0 (mm/h)',
+        'precip_type': 'rain',
+        'rate': 1.2391,
+        'timestamp': '2022-10-04T12:00:00+00:00',
+        'unit': 'mm/h',
+      }),
+    ]),
+  })
+# ---

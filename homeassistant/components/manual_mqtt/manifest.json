@@ -1,6 +1,7 @@
 {
   "domain": "manual_mqtt",
   "name": "Manual MQTT alarm control panel",
+  "categories": ["security_safety.alarm_systems", "diy_makers"],
   "codeowners": [],
   "dependencies": ["mqtt"],
   "documentation": "https://www.home-assistant.io/integrations/manual_mqtt",
