@@ -747,6 +747,7 @@ FLOWS = {
         "simplepush",
         "simplisafe",
         "skoda",
+        "sky_hub",
         "sky_remote",
         "skybell",
         "slack",
