@@ -13,7 +13,12 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentryData
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, PERCENTAGE, EntityCategory
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    EVENT_HOMEASSISTANT_STARTED,
+    PERCENTAGE,
+    EntityCategory,
+)
 from homeassistant.core import (
     CoreState,
     Event,
@@ -1403,6 +1408,8 @@ async def test_entity_registry_updates_invalid_entity_id(hass: HomeAssistant) ->
     await hass.async_block_till_done()
 
     assert hass.states.get("test_domain.world") is not None
+    assert hass.states.get("invalid_entity_id") is None
+    assert hass.states.get("diff_domain.world") is None
 
 
 def _run_in_event_dispatch(hass: HomeAssistant, func: Callable[[], None]) -> None:
@@ -1511,8 +1518,106 @@ async def test_entity_registry_queued_update_and_remove_removes_once(
 
     assert hass.states.get("test_domain.world") is None
     assert removed_from_registry == 1
-    assert hass.states.get("invalid_entity_id") is None
-    assert hass.states.get("diff_domain.world") is None
+
+
+@pytest.mark.parametrize(
+    (
+        "name",
+        "device_identifier",
+        "renamed_device_identifier",
+        "expected_friendly_name",
+        "expected_friendly_name_after_device_rename",
+    ),
+    [
+        pytest.param(
+            "Renamed",
+            "old",
+            "old",
+            "Old Device Renamed",
+            "Old renamed Renamed",
+            id="name",
+        ),
+        pytest.param(
+            None,
+            "new",
+            "new",
+            "New Device Entity",
+            "New renamed Entity",
+            id="device_id",
+        ),
+    ],
+)
+async def test_entity_registry_queued_update_after_capabilities_written(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    name: str | None,
+    device_identifier: str,
+    renamed_device_identifier: str,
+    expected_friendly_name: str,
+    expected_friendly_name_after_device_rename: str,
+) -> None:
+    """Test a queued update applied after the entity wrote new capabilities.
+
+    Writing the capabilities replaces the entity's registry entry with the
+    current one before the queued update is handled.
+    """
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+    devices = {
+        identifier: device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={("test", identifier)},
+            name=f"{identifier.capitalize()} Device",
+        )
+        for identifier in ("old", "new")
+    }
+    entity = MockEntity(
+        unique_id="1234",
+        has_entity_name=True,
+        name="Entity",
+        device_info={"identifiers": {("test", "old")}},
+    )
+
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setup entry method."""
+        async_add_entities([entity])
+
+    platform = MockEntityPlatform(
+        hass,
+        platform_name=config_entry.domain,
+        platform=MockPlatform(async_setup_entry=async_setup_entry),
+    )
+    assert await platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    def _update_then_write_capabilities() -> None:
+        entity_registry.async_update_entity(
+            entity.entity_id, device_id=devices[device_identifier].id, name=name
+        )
+        entity._values["supported_features"] = 1
+        entity.async_write_ha_state()
+
+    _run_in_event_dispatch(hass, _update_then_write_capabilities)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity.entity_id)
+    assert state.attributes[ATTR_FRIENDLY_NAME] == expected_friendly_name
+
+    # The entity listens to updates of its current device
+    device_registry.async_update_device(
+        devices[renamed_device_identifier].id,
+        name_by_user=f"{renamed_device_identifier.capitalize()} renamed",
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(entity.entity_id)
+    assert state.attributes[ATTR_FRIENDLY_NAME] == (
+        expected_friendly_name_after_device_rename
+    )
 
 
 async def test_add_entity_with_invalid_id(

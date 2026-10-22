@@ -1754,11 +1754,20 @@ class Entity(
         assert old is not None
         self.registry_entry = registry_entry
 
-        # Compare entries instead of using the event's changes, the entry may have
-        # been changed again by events which will not reach this entity
-        device_changed = registry_entry.device_id != old.device_id
+        # Compare entries since the entry may have been changed again by events
+        # which will not reach this entity, and check the event's changes since
+        # writing capabilities may have already replaced self.registry_entry
+        data = event.data
+        if TYPE_CHECKING:
+            assert data["action"] == "update"
+        changes = data["changes"]
+        device_changed = (
+            "device_id" in changes or registry_entry.device_id != old.device_id
+        )
         if (
             device_changed
+            or "name" in changes
+            or "has_entity_name" in changes
             or registry_entry.name != old.name
             or registry_entry.has_entity_name != old.has_entity_name
         ):
