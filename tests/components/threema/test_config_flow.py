@@ -35,7 +35,7 @@ from .conftest import MOCK_API_SECRET, MOCK_GATEWAY_ID, MOCK_RECIPIENT_ID
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Patch async_setup_entry to avoid full setup during flow tests."""
     with patch(
-        "homeassistant.components.threema.async_setup_entry", return_value=True
+        "homeassistant.components.threema.async_setup_entry", return_value=None
     ) as mock:
         yield mock
 

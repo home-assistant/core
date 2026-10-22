@@ -343,6 +343,7 @@ async def test_form_missing_credentials_failure(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_successful(
     hass: HomeAssistant,
     mock_indi_allsky_client: AsyncMock,
@@ -377,6 +378,7 @@ async def test_reauth_successful(
     assert mock_config_entry.data[CONF_PASSWORD] == "updated_password"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
     ("side_effect", "error_key"),
     [
@@ -428,6 +430,7 @@ async def test_reauth_failures(
     assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
     "credentials_input",
     [

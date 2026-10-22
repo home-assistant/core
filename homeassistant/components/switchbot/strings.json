@@ -143,6 +143,9 @@
       "previous_image": {
         "name": "Previous image"
       },
+      "reset_filter_usage": {
+        "name": "Reset filter usage"
+      },
       "sync_datetime": {
         "name": "Sync date and time"
       }
@@ -417,6 +420,9 @@
       },
       "bluetooth_signal": {
         "name": "Bluetooth signal"
+      },
+      "filter_usage": {
+        "name": "Filter usage"
       },
       "light_level": {
         "name": "Light level"

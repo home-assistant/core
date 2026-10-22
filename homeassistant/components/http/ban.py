@@ -26,10 +26,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.hassio import get_supervisor_ip, is_hassio
+from homeassistant.helpers.http import KEY_HASS, HomeAssistantView
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 
-from .const import KEY_HASS, is_supervisor_unix_socket_request
-from .view import HomeAssistantView
+from .const import is_supervisor_unix_socket_request
 
 _LOGGER: Final = logging.getLogger(__name__)
 

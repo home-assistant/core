@@ -4,6 +4,7 @@ from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+from aiohttp import ClientConnectionError
 from freezegun.api import FrozenDateTimeFactory
 from pydactyl.responses import PaginatedResponse
 import pytest
@@ -13,7 +14,6 @@ from pytest_homeassistant.common import (
     async_load_json_object_fixture,
     snapshot_platform,
 )
-from requests.exceptions import ConnectionError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
@@ -190,7 +190,7 @@ async def test_binary_sensor_update_failure(
     """Test failed binary sensor update."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_pterodactyl.client.servers.get_server.side_effect = ConnectionError(
+    mock_pterodactyl.client.servers.get_server.side_effect = ClientConnectionError(
         "Simulated connection error"
     )
 

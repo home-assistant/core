@@ -605,6 +605,7 @@ def make_public_light(
         ),
     )
     public.last_motion_dt = PublicLight.last_motion_dt.fget(public)
+    type(public).light_mode_preset = PublicLight.light_mode_preset
     return public
 
 
