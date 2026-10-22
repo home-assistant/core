@@ -51,11 +51,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "ding": {
-        "name": "Ding"
-      }
-    },
     "button": {
       "open_door": {
         "name": "Open door"
