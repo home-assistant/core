@@ -416,6 +416,7 @@ async def test_const_control_zone_current_temperature_unknown(
     mock_create_discovery: AsyncMock,
     mock_controller: Mock,
     caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """CONST CtrlZone is unexpected: current unknown, source still set, log once."""
     bypass = create_mock_zone(
@@ -445,11 +446,10 @@ async def test_const_control_zone_current_temperature_unknown(
     assert "attach diagnostics" in caplog.text
     assert caplog.text.count("Unexpected iZone control zone") == 1
 
-    # Property reads again without re-logging.
-    climate = hass.data[CLIMATE_DOMAIN].get_entity(CONTROLLER_ENTITY)
-    assert climate is not None
     with caplog.at_level(logging.WARNING):
-        assert climate.native_current_temperature is None
+        freezer.tick(UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
     assert caplog.text.count("Unexpected iZone control zone") == 1
 
 
