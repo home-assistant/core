@@ -241,6 +241,26 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         fetched = self._schedules_fetched.get(child.id)
         return fetched is None or dt_util.utcnow() - fetched >= SCHEDULE_MAX_AGE
 
+    async def _update_v2_schedules(self) -> None:
+        """Fetch any stale schedules, logging (rather than raising) any failures."""
+
+        children: list[ec2.HotWater | ec2.Zone] = list(self.tcs.zones)
+        if self.tcs.hotwater:
+            children.append(self.tcs.hotwater)
+
+        for child in children:
+            if self._schedule_is_stale(child):
+                await self.async_get_schedule(child, raise_on_error=False)
+
+    async def async_ensure_schedule(self, child: ec2.HotWater | ec2.Zone) -> None:
+        """Fetch the schedule of a DHW/zone if it is stale, for an action that needs it.
+
+        Raise HomeAssistantError if the GET fails, as the action would.
+        """
+
+        if self._schedule_is_stale(child):
+            await self.async_get_schedule(child)
+
     async def async_get_schedule(
         self, child: ec2.HotWater | ec2.Zone, *, raise_on_error: bool = True
     ) -> None:
@@ -264,26 +284,8 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             if schedule is None:  # the GET failed, so retry it at the next poll
                 return
             self.logger.debug("%s: Schedule = %s", child, schedule)
+
         self._schedules_fetched[child.id] = dt_util.utcnow()
-
-    async def async_ensure_schedule(self, child: ec2.HotWater | ec2.Zone) -> None:
-        """Fetch the schedule of a DHW/zone if it is stale, for an action that needs it.
-
-        Raise HomeAssistantError if the GET fails, as the action would.
-        """
-        if self._schedule_is_stale(child):
-            await self.async_get_schedule(child)
-
-    async def _update_v2_schedules(self) -> None:
-        """Fetch any stale schedules, logging (rather than raising) any failures."""
-
-        children: list[ec2.HotWater | ec2.Zone] = list(self.tcs.zones)
-        if self.tcs.hotwater:
-            children.append(self.tcs.hotwater)
-
-        for child in children:
-            if self._schedule_is_stale(child):
-                await self.async_get_schedule(child, raise_on_error=False)
 
     @override
     async def _async_update_data(self) -> EvoLocStatusT:  # type: ignore[override]
