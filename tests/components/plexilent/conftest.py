@@ -66,7 +66,6 @@ def client() -> Generator[MagicMock]:
             by_id[i], **{k: v for k, v in kw.items() if k != "stop"}
         )
     )
-    c.unlink = AsyncMock()
     with (
         patch("homeassistant.components.plexilent.Plexilent", return_value=c),
         patch(

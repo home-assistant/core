@@ -15,10 +15,10 @@ from . import setup_integration
 from .conftest import DEVICES
 
 
-async def test_setup_retry_unload_remove(
+async def test_setup_retry_unload(
     hass: HomeAssistant, client: MagicMock, entry: MockConfigEntry
 ) -> None:
-    """Setup retries while the cloud is down; removing the entry revokes the link."""
+    """Setup retries while the cloud is down, then the entry unloads cleanly."""
     client.devices.side_effect = PlexilentError
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -30,8 +30,6 @@ async def test_setup_retry_unload_remove(
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     assert entry.state is ConfigEntryState.NOT_LOADED
-    await hass.config_entries.async_remove(entry.entry_id)
-    client.unlink.assert_awaited_once()
 
 
 async def test_setup_auth_failed(

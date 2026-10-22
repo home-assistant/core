@@ -120,6 +120,25 @@ async def test_color_temp_limits_refresh(
     assert attrs["max_color_temp_kelvin"] == 4000
 
 
+async def test_light_unavailable_when_device_drops(
+    hass: HomeAssistant,
+    client: MagicMock,
+    entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A colour-temp light goes unavailable, not error, if a poll drops it."""
+    await setup_integration(hass, entry)
+    kitchen = _entity_id(hass, "m:2")
+    assert hass.states.get(kitchen).state == STATE_ON
+
+    client.devices.return_value = [d for d in DEVICES if d.id != "m:2"]
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(kitchen).state == STATE_UNAVAILABLE
+
+
 async def test_command_keeps_poll_schedule(
     hass: HomeAssistant,
     client: MagicMock,

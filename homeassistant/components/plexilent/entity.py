@@ -24,20 +24,22 @@ class PlexilentEntity(CoordinatorEntity[PlexilentCoordinator]):
         """Initialize the entity for one device."""
         super().__init__(coordinator)
         self._id = device_id
-        device = self.device
+        self._device = coordinator.data[device_id]
         self._attr_unique_id = device_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
-            name=device.name,
+            name=self._device.name,
             manufacturer="Plexilent",
-            model=device.type,
-            suggested_area=device.room,
+            model=self._device.type,
+            suggested_area=self._device.room,
         )
 
     @property
     def device(self) -> Device:
-        """Return the device's last known state."""
-        return self.coordinator.data[self._id]
+        """Return the last polled state, kept if the device drops from a poll."""
+        if (device := self.coordinator.data.get(self._id)) is not None:
+            self._device = device
+        return self._device
 
     @property
     @override

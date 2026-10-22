@@ -1,8 +1,6 @@
 """The Plexilent integration."""
 
-import contextlib
-
-from pyplexilent import Plexilent, PlexilentError
+from pyplexilent import Plexilent
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -26,10 +24,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: PlexilentConfigEntry) ->
 async def async_unload_entry(hass: HomeAssistant, entry: PlexilentConfigEntry) -> None:
     """Unload a config entry."""
     await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
-
-
-async def async_remove_entry(hass: HomeAssistant, entry: PlexilentConfigEntry) -> None:
-    """Revoke the cloud link when the integration is deleted (best effort)."""
-    client = Plexilent(async_get_clientsession(hass), entry.data[CONF_REFRESH_TOKEN])
-    with contextlib.suppress(PlexilentError):
-        await client.unlink()
