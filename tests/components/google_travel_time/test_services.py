@@ -163,6 +163,10 @@ async def test_service_get_travel_times_uses_referrer(
             {"status": 500, "json": {"error": {"message": "Internal error."}}},
             "Google API error: Internal error.",
         ),
+        (
+            {"exc": TimeoutError()},
+            "Google API error: Timeout connecting to the Google Routes API",
+        ),
     ],
 )
 async def test_service_get_travel_times_errors(
@@ -277,6 +281,10 @@ async def test_service_get_transit_times_with_all_options(
         (
             {"status": 500, "json": {"error": {"message": "Internal error."}}},
             "Google API error: Internal error.",
+        ),
+        (
+            {"exc": TimeoutError()},
+            "Google API error: Timeout connecting to the Google Routes API",
         ),
     ],
 )

@@ -35,7 +35,6 @@ from .const import (
 )
 from .helpers import (
     ComputeRoutesResponse,
-    GoogleAPIError,
     PermissionDenied,
     RoutesClient,
     async_compute_routes,
@@ -70,19 +69,19 @@ def _raise_service_error(
     hass: HomeAssistant, entry: ConfigEntry, exc: Exception
 ) -> None:
     """Raise a HomeAssistantError based on the exception."""
+    if isinstance(exc, HomeAssistantError):
+        raise exc
     if isinstance(exc, PermissionDenied):
         create_routes_api_disabled_issue(hass, entry)
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="permission_denied",
         ) from exc
-    if isinstance(exc, GoogleAPIError):
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="api_error",
-            translation_placeholders={"error": str(exc)},
-        ) from exc
-    raise exc
+    raise HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="api_error",
+        translation_placeholders={"error": str(exc) or type(exc).__name__},
+    ) from exc
 
 
 @callback
