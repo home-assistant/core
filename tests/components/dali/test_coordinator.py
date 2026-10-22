@@ -9,14 +9,13 @@ from dali.gear.led import QueryDimmingCurve
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
-from homeassistant.components.dali.const import CONF_BUS_POWER, DOMAIN
+from homeassistant.components.dali.const import DOMAIN
 from homeassistant.components.dali.coordinator import (
     DaliCoordinator,
     DaliGearData,
     _brightness_to_dali_level,
     _dali_level_to_brightness,
 )
-from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -213,22 +212,41 @@ async def test_communication_failure_raises_update_failed(
         await coordinator._query_gear(0)
 
 
-async def test_update_transmission_error_fails_update(
-    hass: HomeAssistant,
-    fake_dali_driver: FakeDaliDriver,
+async def test_scan_isolates_single_gear_transmission_error(
+    coordinator: DaliCoordinator, fake_dali_driver: FakeDaliDriver
 ) -> None:
-    """Test an interface transmission error mid-scan fails the update."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_DEVICE: "/dev/ttyACM0", CONF_BUS_POWER: True}
-    )
-    entry.add_to_hass(hass)
-    coordinator = DaliCoordinator(hass, fake_dali_driver, entry)
+    """Test one gear rejecting a frame does not abort discovery of the rest.
 
-    with (
-        patch.object(fake_dali_driver, "send", side_effect=TransmissionError(1)),
-        pytest.raises(UpdateFailed),
-    ):
-        await coordinator._async_update_data()
+    A transmission error on the lowest address must not stop the scan before it
+    reaches the higher-addressed gear, so the bus is not left with only the
+    first gear discovered.
+    """
+    original_send = fake_dali_driver.send
+
+    async def send(msg: object, **kwargs: object) -> object:
+        if isinstance(msg, QueryControlGearPresent) and msg.destination.address == 0:
+            raise TransmissionError(1)
+        return await original_send(msg, **kwargs)
+
+    with patch.object(fake_dali_driver, "send", side_effect=send):
+        data = await coordinator._async_update_data()
+
+    assert 0 not in data
+    assert 2 in data
+
+
+async def test_scan_bus_wide_transmission_error_yields_no_gear(
+    coordinator: DaliCoordinator, fake_dali_driver: FakeDaliDriver
+) -> None:
+    """Test a bus-wide transmission error takes every gear unavailable, not fatal.
+
+    When every frame is rejected the scan completes with no gear rather than
+    raising, so the lights go unavailable and recover on the next good scan.
+    """
+    with patch.object(fake_dali_driver, "send", side_effect=TransmissionError(1)):
+        data = await coordinator._async_update_data()
+
+    assert data == {}
 
 
 async def test_async_update_gear_touches_single_entry(
