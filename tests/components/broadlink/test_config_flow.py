@@ -26,7 +26,7 @@ def broadlink_setup_fixture():
     with (
         patch("homeassistant.components.broadlink.async_setup", return_value=True),
         patch(
-            "homeassistant.components.broadlink.async_setup_entry", return_value=True
+            "homeassistant.components.broadlink.async_setup_entry", return_value=None
         ),
     ):
         yield

@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
-from .const import (  # noqa: F401
+from .const import (
     CONF_INITIAL,
     CONF_RESTORE,
     CONF_STEP,
@@ -28,7 +28,6 @@ from .const import (  # noqa: F401
     SERVICE_INCREMENT,
     SERVICE_RESET,
     SERVICE_SET_VALUE,
-    VALUE,
     CounterEntityStateAttribute,
 )
 from .entity import Counter
@@ -61,6 +60,16 @@ STORAGE_FIELDS: VolDictType = {
     probatio.Optional(CONF_RESTORE, default=True): cv.boolean,
     probatio.Optional(CONF_STEP, default=DEFAULT_STEP): cv.positive_int,
 }
+
+__all__ = [
+    "DOMAIN",
+    "SERVICE_DECREMENT",
+    "SERVICE_INCREMENT",
+    "SERVICE_RESET",
+    "SERVICE_SET_VALUE",
+    "STORAGE_FIELDS",
+    "CounterEntityStateAttribute",
+]
 
 
 def _none_to_empty_dict[_T](value: _T | None) -> _T | dict[str, Any]:

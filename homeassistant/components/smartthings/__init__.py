@@ -35,14 +35,6 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_CONNECTIONS,
-    ATTR_HW_VERSION,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_MODEL_ID,
-    ATTR_SERIAL_NUMBER,
-    ATTR_SUGGESTED_AREA,
-    ATTR_SW_VERSION,
     CONF_ACCESS_TOKEN,
     CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
@@ -57,6 +49,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
 )
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
+from homeassistant.helpers.typing import UNDEFINED
 
 from .const import (
     BINARY_SENSOR_ATTRIBUTES_TO_CAPABILITIES,
@@ -511,18 +504,20 @@ def create_devices(
     """Create devices in the device registry."""
     created_devices: dict[str, dr.DeviceEntry] = {}
     for device in devices.values():
-        kwargs: dict[str, Any] = {}
+        device_info = dr.DeviceInfo(
+            identifiers={(DOMAIN, device.device.device_id)},
+            configuration_url="https://account.smartthings.com",
+            name=device.device.label,
+        )
+        connections: set[tuple[str, str]] = set()
         if device.device.hub is not None:
-            kwargs = {
-                ATTR_SW_VERSION: device.device.hub.firmware_version,
-                ATTR_MODEL: device.device.hub.hardware_type,
-            }
+            device_info.sw_version = device.device.hub.firmware_version
+            device_info.model = device.device.hub.hardware_type
             if device.device.hub.mac_address:
-                kwargs[ATTR_CONNECTIONS] = {
+                connections.add(
                     (dr.CONNECTION_NETWORK_MAC, device.device.hub.mac_address)
-                }
+                )
             if device.device.hub.hub_eui:
-                connections = kwargs.setdefault(ATTR_CONNECTIONS, set())
                 connections.add(
                     (
                         dr.CONNECTION_ZIGBEE,
@@ -530,92 +525,67 @@ def create_devices(
                     )
                 )
         if (ocf := device.device.ocf) is not None:
-            kwargs.update(
-                {
-                    ATTR_MANUFACTURER: ocf.manufacturer_name,
-                    ATTR_MODEL_ID: ocf.model_code,
-                    ATTR_MODEL: (
-                        (ocf.model_number.split("|")[0]) if ocf.model_number else None
-                    ),
-                    ATTR_HW_VERSION: ocf.hardware_version,
-                    ATTR_SW_VERSION: ocf.firmware_version,
-                }
+            device_info.manufacturer = ocf.manufacturer_name
+            device_info.model_id = ocf.model_code
+            device_info.model = (
+                (ocf.model_number.split("|")[0]) if ocf.model_number else None
             )
+            device_info.hw_version = ocf.hardware_version
+            device_info.sw_version = ocf.firmware_version
         if (viper := device.device.viper) is not None:
-            kwargs.update(
-                {
-                    ATTR_MANUFACTURER: viper.manufacturer_name,
-                    ATTR_MODEL: viper.model_name,
-                    ATTR_HW_VERSION: viper.hardware_version,
-                    ATTR_SW_VERSION: viper.software_version,
-                }
-            )
+            device_info.manufacturer = viper.manufacturer_name
+            device_info.model = viper.model_name
+            device_info.hw_version = viper.hardware_version
+            device_info.sw_version = viper.software_version
         if (zigbee := device.device.zigbee) is not None:
-            kwargs[ATTR_CONNECTIONS] = {
-                (dr.CONNECTION_ZIGBEE, format_zigbee_address(zigbee.eui))
-            }
-            if device.device.device_manufacturer_code:
-                kwargs.setdefault(
-                    ATTR_MANUFACTURER, device.device.device_manufacturer_code
-                )
+            connections = {(dr.CONNECTION_ZIGBEE, format_zigbee_address(zigbee.eui))}
+            if (
+                device.device.device_manufacturer_code
+                and device_info.manufacturer is UNDEFINED
+            ):
+                device_info.manufacturer = device.device.device_manufacturer_code
         if (matter := device.device.matter) is not None:
-            kwargs.update(
-                {
-                    ATTR_HW_VERSION: matter.hardware_version,
-                    ATTR_SW_VERSION: matter.software_version,
-                    ATTR_SERIAL_NUMBER: matter.serial_number,
-                }
-            )
+            device_info.hw_version = matter.hardware_version
+            device_info.sw_version = matter.software_version
+            device_info.serial_number = matter.serial_number
         if (main_component := device.status.get(MAIN)) is not None:
             if (
                 device_identification := main_component.get(
                     Capability.SAMSUNG_CE_DEVICE_IDENTIFICATION
                 )
             ) is not None:
-                new_kwargs = {
-                    ATTR_SERIAL_NUMBER: device_identification[
-                        Attribute.SERIAL_NUMBER
-                    ].value
-                }
-                if ATTR_MODEL_ID not in kwargs:
-                    new_kwargs[ATTR_MODEL_ID] = device_identification[
-                        Attribute.MODEL_NAME
-                    ].value
-                kwargs.update(new_kwargs)
+                device_info.serial_number = cast(
+                    str | None, device_identification[Attribute.SERIAL_NUMBER].value
+                )
+                if device_info.model_id is UNDEFINED:
+                    device_info.model_id = cast(
+                        str | None, device_identification[Attribute.MODEL_NAME].value
+                    )
             if (
                 device_status := main_component.get(Capability.SAMSUNG_IM_DEVICESTATUS)
             ) is not None:
-                mac_connections: set[tuple[str, str]] = set()
                 status = cast(dict[str, str], device_status[Attribute.STATUS].value)
                 if wifi_mac := status.get("wifiMac"):
-                    mac_connections.add((dr.CONNECTION_NETWORK_MAC, wifi_mac))
+                    connections.add((dr.CONNECTION_NETWORK_MAC, wifi_mac))
                 if bluetooth_address := status.get("btAddr"):
-                    mac_connections.add(
+                    connections.add(
                         (dr.CONNECTION_BLUETOOTH, bluetooth_address.lower())
                     )
-                if mac_connections:
-                    kwargs.setdefault(ATTR_CONNECTIONS, set()).update(mac_connections)
+        if connections:
+            device_info.connections = connections
         if (
             device_registry.async_get_device_by_identifier(
                 (DOMAIN, device.device.device_id), entry.entry_id
             )
             is None
         ):
-            kwargs.update(
-                {
-                    ATTR_SUGGESTED_AREA: (
-                        rooms.get(device.device.room_id)
-                        if device.device.room_id
-                        else None
-                    )
-                }
+            device_info.suggested_area = (
+                rooms.get(device.device.room_id) if device.device.room_id else None
             )
-        created_devices[device.device.device_id] = device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, device.device.device_id)},
-            configuration_url="https://account.smartthings.com",
-            name=device.device.label,
-            **kwargs,
+        created_devices[device.device.device_id] = (
+            device_registry.async_get_or_create_from_info(
+                config_entry_id=entry.entry_id, device_info=device_info
+            )
         )
 
     # Link child devices to their parent in a second pass, so registration is

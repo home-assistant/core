@@ -14,7 +14,7 @@ from homeassistant.const import CONF_API_TOKEN
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Patch the setup of a config entry."""
     with patch(
-        "homeassistant.components.simplepush.async_setup_entry", return_value=True
+        "homeassistant.components.simplepush.async_setup_entry", return_value=None
     ) as mock:
         yield mock
 

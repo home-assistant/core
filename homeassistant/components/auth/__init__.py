@@ -196,6 +196,8 @@ type RetrieveResultType = Callable[[str, str], AuthCodeEntry | None]
 DATA_STORE: HassKey[StoreResultType] = HassKey(DOMAIN)
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
+AUTH_CODE_EXPIRATION = timedelta(minutes=10)
+
 
 def create_auth_code(
     hass: HomeAssistant, client_id: str, credential: Credentials
@@ -555,9 +557,14 @@ def _create_auth_code_store() -> tuple[StoreResultType, RetrieveResultType]:
         if not isinstance(result, Credentials):
             raise TypeError("result has to be a Credentials instance")
 
+        now = dt_util.utcnow()
+        for key, entry in list(temp_results.items()):
+            if now - entry.created >= AUTH_CODE_EXPIRATION:
+                del temp_results[key]
+
         code = uuid.uuid4().hex
         temp_results[(client_id, code)] = AuthCodeEntry(
-            created=dt_util.utcnow(),
+            created=now,
             credentials=result,
             code_challenge=code_challenge,
             code_challenge_method=code_challenge_method,
@@ -578,7 +585,7 @@ def _create_auth_code_store() -> tuple[StoreResultType, RetrieveResultType]:
         # The authorization code MUST expire shortly after it is issued to
         # mitigate the risk of leaks.  A maximum authorization code lifetime of
         # 10 minutes is RECOMMENDED.
-        if dt_util.utcnow() - entry.created < timedelta(minutes=10):
+        if dt_util.utcnow() - entry.created < AUTH_CODE_EXPIRATION:
             return entry
 
         return None
