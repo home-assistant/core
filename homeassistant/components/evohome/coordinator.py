@@ -24,10 +24,11 @@ from evohomeasync2.typedefs import EvoLocStatusT, EvoTcsConfigResponseT
 
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import SCHEDULE_MAX_AGE
+from .const import DOMAIN, SCHEDULE_MAX_AGE
 
 
 class EvoDataUpdateCoordinator(DataUpdateCoordinator):
@@ -139,9 +140,15 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
     async def call_client_api[_T](
         self,
         client_api: Awaitable[_T],
+        *,
         request_refresh: bool = True,
+        raise_on_error: bool = True,
     ) -> _T | None:
-        """Call a client API and update the Coordinator state if required."""
+        """Call a client API and update the Coordinator state if required.
+
+        If the call fails, raise HomeAssistantError (e.g. for an action), unless
+        raise_on_error is False (e.g. for a background GET), when log it and return None.
+        """
 
         try:
             result = await client_api
@@ -150,8 +157,14 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             raise
 
         except ec2.ApiCallFailedError as err:
-            self.logger.error(err)
-            return None
+            if not raise_on_error:
+                self.logger.warning(err)
+                return None
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_call_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         if request_refresh:  # wait a moment for system to quiesce before updating state
             await self.async_request_refresh()  # hass.async_create_task() won't help
@@ -226,18 +239,28 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             if not self._schedule_is_stale(zone):
                 continue
             try:
-                await zone.get_schedule()
+                schedule = await self.call_client_api(
+                    zone.get_schedule(), request_refresh=False, raise_on_error=False
+                )
             except ec2.InvalidScheduleError as err:
                 self.logger.warning(
                     "Zone '%s' has an invalid/missing schedule: %r", zone.name, err
                 )
+            else:
+                if schedule is None:  # the GET failed, so retry it at the next poll
+                    continue
             self._schedules_fetched[zone.id] = dt_util.utcnow()
 
         if (dhw := self.tcs.hotwater) and self._schedule_is_stale(dhw):
             try:
-                await dhw.get_schedule()
+                dhw_schedule = await self.call_client_api(
+                    dhw.get_schedule(), request_refresh=False, raise_on_error=False
+                )
             except ec2.InvalidScheduleError as err:
                 self.logger.warning("DHW has an invalid/missing schedule: %r", err)
+            else:
+                if dhw_schedule is None:  # the GET failed, so retry it at the next poll
+                    return
             self._schedules_fetched[dhw.id] = dt_util.utcnow()
 
     @override
