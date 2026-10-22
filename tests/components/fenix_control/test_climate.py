@@ -7,6 +7,11 @@ from unittest.mock import MagicMock
 from freezegun.api import FrozenDateTimeFactory
 from pyfenixcontrol import Device, FenixControlConnectionError, PresetMode
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    snapshot_platform,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -40,8 +45,6 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import DEVICE, DEVICE_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "climate.home_living_room"
 

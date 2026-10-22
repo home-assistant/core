@@ -8,6 +8,7 @@ from pyfenixcontrol import (
     FenixControlResponseError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.fenix_control.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
@@ -16,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import EMAIL, PASSWORD, USER_ID
-
-from tests.common import MockConfigEntry
 
 ERRORS = [
     pytest.param(FenixControlAuthError("rejected"), "invalid_auth", id="invalid_auth"),

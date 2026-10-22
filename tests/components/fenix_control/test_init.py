@@ -10,6 +10,7 @@ from pyfenixcontrol import (
     FenixControlResponseError,
 )
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fenix_control.const import DOMAIN, SCAN_INTERVAL
@@ -19,8 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import DEVICE, DEVICE_ID, INSTALLATION_ID
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = "climate.home_living_room"
 

@@ -5,12 +5,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyfenixcontrol import Device, Installation, PresetMode, Room
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.fenix_control.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 USER_ID = "8f1c2d3e-4a5b-4c6d-8e9f-0a1b2c3d4e5f"
 EMAIL = "user@example.com"
