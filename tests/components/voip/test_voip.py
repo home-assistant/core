@@ -823,13 +823,25 @@ async def test_cancelled_pipeline_keeps_next_call_pipeline(
     assert await async_setup_component(hass, DOMAIN, {})
 
     pipeline_runs = 0
-    pipeline_running = asyncio.Event()
+    first_pipeline_running = asyncio.Event()
+    second_pipeline_running = asyncio.Event()
+    second_pipeline_received_audio = asyncio.Event()
 
     async def async_pipeline_from_audio_stream(*args, **kwargs):
         nonlocal pipeline_runs
         pipeline_runs += 1
-        pipeline_running.set()
-        await asyncio.Event().wait()
+        run_number = pipeline_runs
+
+        stt_stream = kwargs["stt_stream"]
+
+        if run_number == 1:
+            first_pipeline_running.set()
+        if run_number == 2:
+            second_pipeline_running.set()
+
+        async for chunk in stt_stream:
+            if run_number == 2 and chunk:
+                second_pipeline_received_audio.set()
 
     with patch(
         "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
@@ -841,14 +853,13 @@ async def test_cancelled_pipeline_keeps_next_call_pipeline(
         satellite.connection_made(Mock())
         satellite.on_chunk(bytes(_ONE_SECOND))
         async with asyncio.timeout(1):
-            await pipeline_running.wait()
+            await first_pipeline_running.wait()
 
         first_task = satellite._run_pipeline_task
         assert first_task is not None
         satellite.disconnect()
 
         # Next call starts before the first pipeline has run its cleanup
-        pipeline_running.clear()
         satellite.connection_made(Mock())
         satellite.on_chunk(bytes(_ONE_SECOND))
         second_task = satellite._run_pipeline_task
@@ -864,11 +875,14 @@ async def test_cancelled_pipeline_keeps_next_call_pipeline(
             assert satellite._run_pipeline_task is second_task
 
             async with asyncio.timeout(1):
-                await pipeline_running.wait()
+                await second_pipeline_running.wait()
 
             # More audio on the same call must not start another pipeline
             satellite.on_chunk(bytes(_ONE_SECOND))
-            await asyncio.sleep(0)
+
+            async with asyncio.timeout(1):
+                await second_pipeline_received_audio.wait()
+
             assert pipeline_runs == 2
         finally:
             second_task.cancel()
