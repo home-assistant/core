@@ -14,8 +14,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import IRON_OS_KEY, IronOSConfigEntry, IronOSLiveDataCoordinator
-from .coordinator import IronOSFirmwareUpdateCoordinator
+from . import IRON_OS_KEY
+from .coordinator import (
+    IronOSConfigEntry,
+    IronOSFirmwareUpdateCoordinator,
+    IronOSLiveDataCoordinator,
+)
 from .entity import IronOSBaseEntity
 
 PARALLEL_UPDATES = 0

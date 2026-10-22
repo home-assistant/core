@@ -7,10 +7,9 @@ from typing import Final
 from unittest.mock import MagicMock, patch
 
 from aioonkyo import ReceiverInfo, Status
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 RECEIVER_INFO = ReceiverInfo(
     host="192.168.0.101",

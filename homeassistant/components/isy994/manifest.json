@@ -1,6 +1,7 @@
 {
   "domain": "isy994",
   "name": "Universal Devices ISY/IoX",
+  "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@bdraco", "@shbatm"],
   "config_flow": true,
   "dhcp": [
@@ -24,7 +25,7 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["pyisy"],
-  "requirements": ["pyisy==3.7.0"],
+  "requirements": ["pyisy==3.8.0"],
   "ssdp": [
     {
       "deviceType": "urn:udi-com:device:X_Insteon_Lighting_Device:1",

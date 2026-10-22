@@ -7,7 +7,9 @@ from functools import partial
 from typing import Any
 from unittest.mock import AsyncMock, Mock
 
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from uiprotect import EventChange, ProtectApiClient, ProtectEvent
+from uiprotect.anonymize import random_hex
 from uiprotect.api import RTSPSStreams
 from uiprotect.data import (
     Bootstrap,
@@ -58,7 +60,6 @@ from uiprotect.data.public_devices import (
     PublicWirelessConnectionState,
     SensorFeatureCapability,
 )
-from uiprotect.test_util.anonymize import random_hex
 from uiprotect.utils import to_js_time
 from uiprotect.websocket import WebsocketState
 
@@ -67,8 +68,6 @@ from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er, translation
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.util import dt as dt_util
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @dataclass
@@ -321,7 +320,13 @@ def make_public_bootstrap(**attrs: Any) -> Mock:
     may replace a whole map after setup (``pb.lights = {...}``).
     """
     pb = Mock(spec=PublicBootstrap)
-    for attr in (*_PUBLIC_STORE_ATTRS.values(), "arm_profiles"):
+    for attr in (
+        *_PUBLIC_STORE_ATTRS.values(),
+        "arm_profiles",
+        "speakers",
+        "link_stations",
+        "bridges",
+    ):
         setattr(pb, attr, {})
     pb.arm_mode = None
     pb.nvr = None
@@ -600,6 +605,7 @@ def make_public_light(
         ),
     )
     public.last_motion_dt = PublicLight.last_motion_dt.fget(public)
+    type(public).light_mode_preset = PublicLight.light_mode_preset
     return public
 
 
@@ -642,6 +648,7 @@ def make_public_camera(
     object_types: list[SmartDetectObjectType] | None = None,
     audio_types: list[SmartDetectAudioType] | None = None,
     mic_volume: int | None = None,
+    is_mic_enabled: bool = True,
     hdr_type: PublicHdrMode | None = None,
     lcd_message: PublicLcdMessage | None = None,
     active_patrol_slot: int | None = None,
@@ -678,6 +685,7 @@ def make_public_camera(
     )
     public.video_mode = camera.video_mode if video_mode is None else video_mode
     public.mic_volume = camera.mic_volume if mic_volume is None else mic_volume
+    public.is_mic_enabled = is_mic_enabled
     public.lcd_message = lcd_message
     public.lcd_message_text = PublicCamera.lcd_message_text.fget(public)
     # The doorbell text falls back to the default message of the private NVR.

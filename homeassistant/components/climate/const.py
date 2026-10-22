@@ -9,11 +9,16 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import ClimateEntity
+    from .entity import ClimateEntity
 
 DOMAIN: Final = "climate"
 
 DATA_COMPONENT: HassKey[EntityComponent[ClimateEntity]] = HassKey(DOMAIN)
+
+DEFAULT_MIN_TEMP = 7
+DEFAULT_MAX_TEMP = 35
+DEFAULT_MIN_HUMIDITY = 30
+DEFAULT_MAX_HUMIDITY = 99
 
 
 class HVACMode(StrEnum):
@@ -204,3 +209,32 @@ class ClimateEntityFeature(IntFlag):
     TURN_OFF = 128
     TURN_ON = 256
     SWING_HORIZONTAL_MODE = 512
+
+
+class ClimateService(StrEnum):
+    """Store keys for climate services."""
+
+    SET_FAN_MODE = "set_fan_mode"
+    SET_HUMIDITY = "set_humidity"
+    SET_HVAC_MODE = "set_hvac_mode"
+    SET_PRESET_MODE = "set_preset_mode"
+    SET_SWING_HORIZONTAL_MODE = "set_swing_horizontal_mode"
+    SET_SWING_MODE = "set_swing_mode"
+    SET_TEMPERATURE = "set_temperature"
+    TOGGLE = "toggle"
+    TURN_OFF = "turn_off"
+    TURN_ON = "turn_on"
+
+
+class ClimateServiceArgument(StrEnum):
+    """Store keys for climate service arguments."""
+
+    FAN_MODE = "fan_mode"
+    HUMIDITY = "humidity"
+    HVAC_MODE = "hvac_mode"
+    PRESET_MODE = "preset_mode"
+    SWING_HORIZONTAL_MODE = "swing_horizontal_mode"
+    SWING_MODE = "swing_mode"
+    TARGET_TEMP_HIGH = "target_temp_high"
+    TARGET_TEMP_LOW = "target_temp_low"
+    TEMPERATURE = "temperature"

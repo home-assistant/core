@@ -8,6 +8,7 @@
     },
     "error": {
       "faulty_credentials": "[%key:common::config_flow::error::invalid_auth%]",
+      "mfa_required": "This account requires multi-factor authentication, which is not supported. Use a local account without multi-factor authentication.",
       "service_unavailable": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown_client_mac": "No client available on that MAC address"
     },
@@ -199,6 +200,9 @@
     },
     "remove_clients_request_failed": {
       "message": "Failed to remove clients from UniFi Network"
+    },
+    "site_not_found": {
+      "message": "The configured UniFi Network site no longer exists"
     },
     "unload_failed": {
       "message": "Failed to unload UniFi Network"

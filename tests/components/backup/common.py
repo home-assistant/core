@@ -5,6 +5,8 @@ from pathlib import Path
 from typing import Any, cast
 from unittest.mock import AsyncMock, Mock, patch
 
+from pytest_homeassistant.common import mock_platform
+
 from homeassistant.components.backup import (
     DOMAIN,
     AddonInfo,
@@ -18,8 +20,6 @@ from homeassistant.components.backup.backup import CoreLocalBackupAgent
 from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-
-from tests.common import mock_platform
 
 LOCAL_AGENT_ID = f"{DOMAIN}.local"
 

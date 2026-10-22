@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_ENABLED,
     CONF_ENTITY_ID,
+    CONF_EXCLUDE,
     CONF_FOR,
     CONF_ID,
     CONF_MATCH,
@@ -772,10 +773,11 @@ def _get_targets_from_condition_config(
     config: ConfigType,
     target: Literal["entity_id", "device_id", "area_id", "floor_id", "label_id"],
 ) -> list[str]:
-    """Extract targets from a condition target config."""
+    """Extract targets from a condition target config, including the exclude block."""
     if not (target_conf := config.get(CONF_TARGET)):
         return []
-    if not (targets := target_conf.get(target)):
-        return []
-
-    return [targets] if isinstance(targets, str) else targets
+    found: list[str] = []
+    for conf in (target_conf, target_conf.get(CONF_EXCLUDE, {})):
+        if targets := conf.get(target):
+            found.extend([targets] if isinstance(targets, str) else targets)
+    return found

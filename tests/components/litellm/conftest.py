@@ -8,6 +8,7 @@ from openai.types import CompletionUsage, Model
 from openai.types.chat import ChatCompletion, ChatCompletionMessage
 from openai.types.chat.chat_completion import Choice
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.litellm.const import CONF_PROMPT, DOMAIN
 from homeassistant.config_entries import ConfigSubentryData
@@ -15,8 +16,6 @@ from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL, CON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
-
-from tests.common import MockConfigEntry
 
 TEST_URL = "http://localhost:4000/v1"
 
@@ -32,7 +31,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.litellm.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         yield mock_setup_entry
 

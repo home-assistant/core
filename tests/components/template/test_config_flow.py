@@ -5,6 +5,8 @@ from unittest.mock import patch
 
 import probatio
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, get_schema_suggested_value
+from pytest_homeassistant.typing import WebSocketGenerator
 from pytest_unordered import unordered
 
 from homeassistant import config_entries
@@ -18,9 +20,6 @@ from homeassistant.helpers import (
     device_registry as dr,
     selector,
 )
-
-from tests.common import MockConfigEntry, get_schema_suggested_value
-from tests.typing import WebSocketGenerator
 
 SWITCH_BEFORE_OPTIONS = {
     "name": "test_template_switch",
@@ -86,6 +85,16 @@ NUMBER_OPTIONS = {
             {},
             {"code_arm_required": True, "code_format": "number"},
             {},
+        ),
+        (
+            "alarm_control_panel",
+            {},
+            "unknown",
+            {"one": "armed_away", "two": "disarmed"},
+            {},
+            {},
+            {"code_arm_required": True, "code_format": "number"},
+            {"assumed_state": True},
         ),
         (
             "binary_sensor",
@@ -189,6 +198,34 @@ NUMBER_OPTIONS = {
             {},
         ),
         (
+            "cover",
+            {},
+            "unknown",
+            {"one": "open", "two": "closed"},
+            {},
+            {
+                "device_class": "garage",
+                "set_cover_position": [
+                    {
+                        "action": "input_number.set_value",
+                        "target": {"entity_id": "input_number.test"},
+                        "data": {"position": "{{ position }}"},
+                    }
+                ],
+            },
+            {
+                "device_class": "garage",
+                "set_cover_position": [
+                    {
+                        "action": "input_number.set_value",
+                        "target": {"entity_id": "input_number.test"},
+                        "data": {"position": "{{ position }}"},
+                    }
+                ],
+            },
+            {"assumed_state": True},
+        ),
+        (
             "event",
             {"event_type": "{{ states('event.one') }}"},
             "2024-07-09T00:00:00.000+00:00",
@@ -207,6 +244,16 @@ NUMBER_OPTIONS = {
             {"turn_on": [], "turn_off": []},
             {"turn_on": [], "turn_off": []},
             {},
+        ),
+        (
+            "fan",
+            {},
+            "unknown",
+            {"one": "on", "two": "off"},
+            {},
+            {"turn_on": [], "turn_off": []},
+            {"turn_on": [], "turn_off": []},
+            {"assumed_state": True},
         ),
         (
             "image",
@@ -229,6 +276,16 @@ NUMBER_OPTIONS = {
             {},
         ),
         (
+            "light",
+            {},
+            "unknown",
+            {"one": "on", "two": "off"},
+            {},
+            {"turn_on": [], "turn_off": []},
+            {"turn_on": [], "turn_off": []},
+            {"assumed_state": True},
+        ),
+        (
             "lock",
             {"state": "{{ states('lock.one') }}"},
             "locked",
@@ -237,6 +294,16 @@ NUMBER_OPTIONS = {
             {"lock": [], "unlock": []},
             {"lock": [], "unlock": []},
             {},
+        ),
+        (
+            "lock",
+            {},
+            "unknown",
+            {"one": "locked", "two": "unlocked"},
+            {},
+            {"lock": [], "unlock": []},
+            {"lock": [], "unlock": []},
+            {"assumed_state": True},
         ),
         (
             "number",
@@ -269,6 +336,36 @@ NUMBER_OPTIONS = {
             {},
         ),
         (
+            "number",
+            {},
+            "unknown",
+            {"one": "30.0", "two": "20.0"},
+            {},
+            {
+                "min": "0",
+                "max": "100",
+                "step": "0.1",
+                "unit_of_measurement": "cm",
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
+            },
+            {
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
+                "unit_of_measurement": "cm",
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
+            },
+            {"assumed_state": True},
+        ),
+        (
             "select",
             {"state": "{{ states('select.one') }}"},
             "on",
@@ -279,6 +376,16 @@ NUMBER_OPTIONS = {
             {},
         ),
         (
+            "select",
+            {},
+            "unknown",
+            {"one": "on", "two": "off"},
+            {},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
+            {"assumed_state": True},
+        ),
+        (
             "switch",
             {"value_template": "{{ states('switch.one') }}"},
             "on",
@@ -287,6 +394,16 @@ NUMBER_OPTIONS = {
             {},
             {},
             {},
+        ),
+        (
+            "switch",
+            {},
+            "unknown",
+            {"one": "on", "two": "off"},
+            {},
+            {},
+            {},
+            {"assumed_state": True},
         ),
         (
             "update",
@@ -306,6 +423,32 @@ NUMBER_OPTIONS = {
             {},
             {"start": []},
             {"start": []},
+            {},
+        ),
+        (
+            "vacuum",
+            {},
+            "unknown",
+            {"one": "docked", "two": "cleaning"},
+            {},
+            {"start": []},
+            {"start": []},
+            {"assumed_state": True},
+        ),
+        (
+            "water_heater",
+            {"operation_mode": "{{ states('water_heater.one') }}"},
+            "eco",
+            {"one": "eco", "two": "electric"},
+            {},
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
             {},
         ),
         (
@@ -391,6 +534,44 @@ async def test_config_flow(
     assert state.state == template_state
     for key, value in extra_attrs.items():
         assert state.attributes[key] == value
+
+
+async def test_config_flow_sensor_unit_of_measurement_context(
+    hass: HomeAssistant,
+) -> None:
+    """Test the unit of measurement field context refers to fields in the form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "sensor"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "sensor"
+
+    # Serialize the form the way it is sent to the frontend
+    fields = {
+        field["name"]: field
+        for field in probatio.to_field_list(
+            result["data_schema"], custom_serializer=cv.custom_serializer
+        )
+    }
+    expected_context = {
+        "filter_device_class": "device_class",
+        "filter_state_class": "state_class",
+    }
+    assert (
+        fields["unit_of_measurement"]["selector"]["unit_of_measurement"]["context"]
+        == expected_context
+    )
+    # The frontend reads the context values from sibling fields in the same form
+    allowed_context_keys = selector.UnitOfMeasurementSelector().allowed_context_keys
+    for context_key, field_name in expected_context.items():
+        assert (
+            next(iter(fields[field_name]["selector"]))
+            in allowed_context_keys[context_key]
+        )
 
 
 @pytest.mark.parametrize(
@@ -522,6 +703,18 @@ async def test_config_flow(
             {"state": "{{ states('vacuum.one') }}"},
             {"start": []},
             {"start": []},
+        ),
+        (
+            "water_heater",
+            {"operation_mode": "{{ 'eco' }}"},
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
         ),
         (
             "weather",
@@ -863,6 +1056,23 @@ async def test_config_flow_device(
             {"start": []},
             {"start": []},
             "state",
+            None,
+        ),
+        (
+            "water_heater",
+            {"operation_mode": "{{ states('water_heater.one') }}"},
+            {"operation_mode": "{{ states('water_heater.two') }}"},
+            ["eco", "electric"],
+            {"one": "eco", "two": "electric"},
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
+            "operation_mode",
             None,
         ),
         (
@@ -1999,6 +2209,18 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             {"state": "{{ states('vacuum.one') }}"},
             {"start": []},
             {"start": []},
+        ),
+        (
+            "water_heater",
+            {"operation_mode": "{{ 'eco' }}"},
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
+            {
+                "operation_list": "{{ ['off', 'eco', 'electric'] }}",
+                "set_operation_mode": [],
+            },
         ),
         (
             "weather",

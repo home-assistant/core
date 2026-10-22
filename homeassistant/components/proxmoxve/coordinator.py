@@ -81,6 +81,11 @@ def proxmox_base_url(coordinator: ProxmoxCoordinator) -> URL:
     )
 
 
+def proxmox_node_url(coordinator: ProxmoxCoordinator, node: str) -> URL:
+    """Return the URL of a Proxmox VE node."""
+    return proxmox_base_url(coordinator).with_fragment(f"v1:0:=node/{node}")
+
+
 def node_device_info(
     coordinator: ProxmoxCoordinator, node_data: ProxmoxNodeData
 ) -> dr.DeviceInfo:
@@ -91,9 +96,7 @@ def node_device_info(
         },
         name=node_data.node.get("node", str(node_data.node["id"])),
         model="Node",
-        configuration_url=proxmox_base_url(coordinator).with_fragment(
-            f"v1:0:=node/{node_data.node['node']}"
-        ),
+        configuration_url=proxmox_node_url(coordinator, node_data.node["node"]),
     )
 
 
@@ -326,9 +329,9 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             new_node_data = [data[node_name] for node_name in new_nodes]
             device_registry = dr.async_get(self.hass)
             for node_data in new_node_data:
-                device_registry.async_get_or_create(
+                device_registry.async_get_or_create_from_info(
                     config_entry_id=self.config_entry.entry_id,
-                    **node_device_info(self, node_data),
+                    device_info=node_device_info(self, node_data),
                 )
             for nodes_callback in self.new_nodes_callbacks:
                 nodes_callback(new_node_data)

@@ -10,8 +10,10 @@ from google_health_api.exceptions import (
 )
 from google_health_api.model import Identity
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
+from pytest_homeassistant.typing import ClientSessionGenerator
 
-from homeassistant import config_entries
 from homeassistant.components.google_health.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
@@ -24,10 +26,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .conftest import HEALTH_USER_ID
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
 
 API_BASE_URL = "https://health.googleapis.com/v4/users/me"
 IDENTITY_URL = f"{API_BASE_URL}/identity"
@@ -434,14 +432,7 @@ async def test_reauth_flow(
     )
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
+    result = await config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -491,7 +482,7 @@ async def test_reauth_flow(
     )
 
     with patch(
-        "homeassistant.components.google_health.async_setup_entry", return_value=True
+        "homeassistant.components.google_health.async_setup_entry", return_value=None
     ) as mock_setup:
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -525,13 +516,7 @@ async def test_reconfigure_flow(
     )
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": config_entry.entry_id,
-        },
-    )
+    result = await config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
 
@@ -574,7 +559,7 @@ async def test_reconfigure_flow(
     )
 
     with patch(
-        "homeassistant.components.google_health.async_setup_entry", return_value=True
+        "homeassistant.components.google_health.async_setup_entry", return_value=None
     ) as mock_setup:
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -609,13 +594,7 @@ async def test_reconfigure_flow_wrong_account(
     )
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": config_entry.entry_id,
-        },
-    )
+    result = await config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
 
