@@ -200,3 +200,29 @@ async def test_update_entity(
 
     queries = [w for w in writes if isinstance(w, query.Tone)]
     assert len(queries) == 1
+
+
+async def test_update_entity_failed(
+    hass: HomeAssistant,
+    mock_receiver: AsyncMock,
+    read_queue: asyncio.Queue,
+) -> None:
+    """Test entities are unavailable after a failed manual update."""
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+
+    mock_receiver.write = AsyncMock(side_effect=OSError)
+
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: BASS_ENTITY_ID},
+        blocking=True,
+    )
+
+    assert (state := hass.states.get(BASS_ENTITY_ID)) is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    await receive_messages(read_queue, _tone_status(-3, 2))
+
+    assert (state := hass.states.get(BASS_ENTITY_ID)) is not None
+    assert state.state == "-3"

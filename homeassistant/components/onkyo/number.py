@@ -78,7 +78,8 @@ class OnkyoToneNumber(CoordinatorEntity[ToneCoordinator], NumberEntity):
         The receiver ignores tone commands while the main zone is off.
         """
         return (
-            self.coordinator.manager.connected
+            super().available
+            and self.coordinator.manager.connected
             and self.coordinator.power_on
             and self._control in self.coordinator.data
         )
