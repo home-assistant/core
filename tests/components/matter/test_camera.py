@@ -6,6 +6,7 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock, call, patch
 
+from chip.clusters.Objects import CameraAvStreamManagement
 from matter_server.client.exceptions import NotConnected
 from matter_server.client.models.node import MatterNode
 from matter_server.common.errors import CameraPrivacyMode, MatterError
@@ -23,11 +24,14 @@ from syrupy.assertion import SnapshotAssertion
 from webrtc_models import RTCIceServer
 
 from homeassistant.components.camera import (
+    DOMAIN as CAMERA_DOMAIN,
     CameraState,
     StreamType,
     async_get_image,
     get_camera_from_entity_id,
 )
+from homeassistant.components.camera.const import PREVIEW_FEATURE_TWO_WAY_AUDIO  # pylint: disable=home-assistant-component-root-import
+from homeassistant.components.labs import async_update_preview_feature
 from homeassistant.components.matter.camera import (
     CAMERA_SCHEMA_VERSION,
     MAX_ICE_SERVERS,
@@ -38,12 +42,17 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from .common import (
     set_node_attribute,
+    set_node_attribute_and_notify,
     snapshot_matter_entities,
     trigger_subscription_callback,
 )
+
+CAMERA_AV_STREAM_MANAGEMENT_CLUSTER_ID = 1361
+FEATURE_MAP_ATTRIBUTE_ID = 65532
 
 ENTITY_ID = "camera.mock_camera"
 MATTER_SESSION_ID = 5
@@ -220,6 +229,103 @@ async def test_camera_capabilities(hass: HomeAssistant) -> None:
     """Test that the camera advertises native WebRTC support."""
     camera = get_camera_from_entity_id(hass, ENTITY_ID)
     assert camera.camera_capabilities.frontend_stream_types == {StreamType.WEB_RTC}
+
+
+@pytest.mark.parametrize(
+    ("feature_map", "expected_two_way_audio"),
+    [
+        pytest.param(11, False, id="no_speaker"),
+        pytest.param(
+            11 & ~int(CameraAvStreamManagement.Bitmaps.Feature.kAudio) | 16,
+            False,
+            id="speaker_without_audio",
+        ),
+        pytest.param(11 | 16, True, id="audio_and_speaker"),
+    ],
+)
+@pytest.mark.parametrize("node_fixture", ["mock_camera"])
+async def test_camera_two_way_audio_capability(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    feature_map: int,
+    expected_two_way_audio: bool,
+) -> None:
+    """Test two way audio capability follows the Audio and Speaker feature bits."""
+    camera = get_camera_from_entity_id(hass, ENTITY_ID)
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=1,
+        cluster_id=CAMERA_AV_STREAM_MANAGEMENT_CLUSTER_ID,
+        attribute_id=FEATURE_MAP_ATTRIBUTE_ID,
+        value=feature_map,
+    )
+    assert camera.camera_entity_capabilities.two_way_audio is expected_two_way_audio
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_camera"])
+async def test_camera_webrtc_talkback(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the offer requests talkback once two-way audio is enabled."""
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=1,
+        cluster_id=CAMERA_AV_STREAM_MANAGEMENT_CLUSTER_ID,
+        attribute_id=FEATURE_MAP_ATTRIBUTE_ID,
+        value=11 | 16,
+    )
+    assert await async_setup_component(hass, "labs", {})
+    await async_update_preview_feature(
+        hass, CAMERA_DOMAIN, PREVIEW_FEATURE_TWO_WAY_AUDIO, True
+    )
+
+    client = await hass_ws_client(hass)
+    await _start_session(client, matter_client)
+    assert matter_client.camera_start_stream.call_args.kwargs["talkback"] is True
+
+
+@pytest.mark.parametrize(
+    ("preview_feature_enabled", "feature_map"),
+    [
+        pytest.param(False, 11 | 16, id="preview_feature_disabled"),
+        pytest.param(True, 11, id="device_without_speaker"),
+    ],
+)
+@pytest.mark.parametrize("node_fixture", ["mock_camera"])
+async def test_camera_webrtc_no_talkback(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    hass_ws_client: WebSocketGenerator,
+    preview_feature_enabled: bool,
+    feature_map: int,
+) -> None:
+    """Test the offer omits talkback without both the feature and the preview flag."""
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=1,
+        cluster_id=CAMERA_AV_STREAM_MANAGEMENT_CLUSTER_ID,
+        attribute_id=FEATURE_MAP_ATTRIBUTE_ID,
+        value=feature_map,
+    )
+    assert await async_setup_component(hass, "labs", {})
+    await async_update_preview_feature(
+        hass, CAMERA_DOMAIN, PREVIEW_FEATURE_TWO_WAY_AUDIO, preview_feature_enabled
+    )
+
+    client = await hass_ws_client(hass)
+    await _start_session(client, matter_client)
+    assert matter_client.camera_start_stream.call_args.kwargs.get("talkback") is None
 
 
 @pytest.mark.parametrize("server_schema_version", [CAMERA_SCHEMA_VERSION - 1])

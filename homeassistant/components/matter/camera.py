@@ -19,6 +19,7 @@ from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components.camera import (
     Camera,
+    CameraEntityCapabilities,
     CameraEntityDescription,
     CameraEntityFeature,
     WebRTCAnswer,
@@ -127,6 +128,17 @@ class MatterCamera(MatterEntity, Camera):
         )
         self._attr_is_streaming = bool(current_sessions)
 
+        feature_map = int(
+            self.get_matter_attribute_value(
+                CameraAvStreamManagement.Attributes.FeatureMap
+            )
+        )
+        feature = CameraAvStreamManagement.Bitmaps.Feature
+        self._attr_camera_entity_capabilities = CameraEntityCapabilities(
+            two_way_audio=bool(feature_map & feature.kAudio)
+            and bool(feature_map & feature.kSpeaker)
+        )
+
     @override
     async def async_handle_async_webrtc_offer(
         self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
@@ -144,15 +156,20 @@ class MatterCamera(MatterEntity, Camera):
                 ice_server["credential"] = server.credential
             ice_servers.append(ice_server)
 
+        start_stream_kwargs: dict[str, Any] = {
+            "node_id": self._endpoint.node.node_id,
+            "endpoint_id": self._endpoint.endpoint_id,
+            "stream_usage": STREAM_USAGE_LIVE_VIEW,
+            "sdp": offer_sdp,
+            "ice_servers": ice_servers or None,
+            "client_session_key": session_id,
+        }
+        if self.camera_capabilities.two_way_audio:
+            # Without talkback the server mutes the offer's audio sections.
+            start_stream_kwargs["talkback"] = True
+
         try:
-            result = await self.matter_client.camera_start_stream(
-                node_id=self._endpoint.node.node_id,
-                endpoint_id=self._endpoint.endpoint_id,
-                stream_usage=STREAM_USAGE_LIVE_VIEW,
-                sdp=offer_sdp,
-                ice_servers=ice_servers or None,
-                client_session_key=session_id,
-            )
+            result = await self.matter_client.camera_start_stream(**start_stream_kwargs)
         except (MatterError, MatterClientException) as err:
             # Closing the session while the offer is in flight cancels it.
             if self._sessions.pop(session_id, None) is None:
