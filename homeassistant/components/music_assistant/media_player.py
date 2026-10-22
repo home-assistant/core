@@ -7,7 +7,6 @@ import os
 from typing import TYPE_CHECKING, Any, override
 
 from music_assistant_client.helpers import LinkedUser
-from music_assistant_models.auth import AuthProviderType
 from music_assistant_models.constants import PLAYER_CONTROL_NONE
 from music_assistant_models.enums import (
     DashboardType,
@@ -70,6 +69,7 @@ from .helpers import (
     catch_musicassistant_error,
     catch_user_not_found,
     dashboard_identifier,
+    linked_user,
 )
 from .media_browser import async_browse_media, async_search_media
 from .schemas import QUEUE_DETAILS_SCHEMA, queue_item_dict_from_mass_item
@@ -549,7 +549,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         # unknown name). When omitted, default playback to the Home Assistant user that made
         # the call.
         user: str | LinkedUser | None = (
-            username if username is not None else self._linked_user()
+            username if username is not None else linked_user(self._context)
         )
 
         media_uris: list[str] = []
@@ -733,21 +733,10 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             media_content_type,
         )
 
-    def _linked_user(self) -> LinkedUser | None:
-        """Return the Music Assistant user to act as for the current call."""
-        ha_user_id = self._context.user_id if self._context is not None else None
-        if ha_user_id is None:
-            return None
-        return LinkedUser(
-            provider=AuthProviderType.HOME_ASSISTANT,
-            user_id=ha_user_id,
-            required=False,
-        )
-
     @override
     async def async_search_media(self, query: SearchMediaQuery) -> SearchMedia:
         """Search media."""
-        return await async_search_media(self.mass, query, self._linked_user())
+        return await async_search_media(self.mass, query, linked_user(self._context))
 
     def _update_media_image_url(self, player: Player) -> None:
         """Update image URL."""
