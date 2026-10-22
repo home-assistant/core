@@ -44,6 +44,9 @@ if TYPE_CHECKING:
 # The camera commands of the Matter server API require this schema version.
 CAMERA_SCHEMA_VERSION = 14
 
+CameraFeature = CameraAvStreamManagement.Bitmaps.Feature
+TwoWayTalkSupportType = CameraAvStreamManagement.Enums.TwoWayTalkSupportTypeEnum
+
 STREAM_USAGE_LIVE_VIEW = "LiveView"
 MAX_ICE_SERVERS = 10
 
@@ -133,10 +136,13 @@ class MatterCamera(MatterEntity, Camera):
                 CameraAvStreamManagement.Attributes.FeatureMap
             )
         )
-        feature = CameraAvStreamManagement.Bitmaps.Feature
+        two_way_talk_support = self.get_matter_attribute_value(
+            CameraAvStreamManagement.Attributes.TwoWayTalkSupport
+        )
         self._attr_camera_entity_capabilities = CameraEntityCapabilities(
-            two_way_audio=bool(feature_map & feature.kAudio)
-            and bool(feature_map & feature.kSpeaker)
+            two_way_audio=bool(feature_map & CameraFeature.kSpeaker)
+            and two_way_talk_support
+            in (TwoWayTalkSupportType.kHalfDuplex, TwoWayTalkSupportType.kFullDuplex)
         )
 
     @override
@@ -156,20 +162,19 @@ class MatterCamera(MatterEntity, Camera):
                 ice_server["credential"] = server.credential
             ice_servers.append(ice_server)
 
-        start_stream_kwargs: dict[str, Any] = {
-            "node_id": self._endpoint.node.node_id,
-            "endpoint_id": self._endpoint.endpoint_id,
-            "stream_usage": STREAM_USAGE_LIVE_VIEW,
-            "sdp": offer_sdp,
-            "ice_servers": ice_servers or None,
-            "client_session_key": session_id,
-        }
-        if self.camera_capabilities.two_way_audio:
-            # Without talkback the server mutes the offer's audio sections.
-            start_stream_kwargs["talkback"] = True
-
         try:
-            result = await self.matter_client.camera_start_stream(**start_stream_kwargs)
+            result = await self.matter_client.camera_start_stream(
+                node_id=self._endpoint.node.node_id,
+                endpoint_id=self._endpoint.endpoint_id,
+                stream_usage=STREAM_USAGE_LIVE_VIEW,
+                sdp=offer_sdp,
+                ice_servers=ice_servers or None,
+                client_session_key=session_id,
+                # The frontend only offers to send audio when the microphone is
+                # on, so the offer is forwarded unchanged instead of letting the
+                # server rewrite its audio sections to receive only.
+                talkback=True,
+            )
         except (MatterError, MatterClientException) as err:
             # Closing the session while the offer is in flight cancels it.
             if self._sessions.pop(session_id, None) is None:
@@ -301,6 +306,7 @@ DISCOVERY_SCHEMAS = [
         optional_attributes=(
             CameraAvStreamManagement.Attributes.SoftLivestreamPrivacyModeEnabled,
             CameraAvStreamManagement.Attributes.HardPrivacyModeOn,
+            CameraAvStreamManagement.Attributes.TwoWayTalkSupport,
         ),
         device_type=(device_types.Camera,),
         server_schema_min=CAMERA_SCHEMA_VERSION,
