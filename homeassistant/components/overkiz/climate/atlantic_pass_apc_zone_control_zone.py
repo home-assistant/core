@@ -136,6 +136,33 @@ def effective_profile(
     return profile, False
 
 
+PROGRAM_SETPOINT_REFRESH_COMMANDS: dict[str, OverkizCommand] = {
+    OverkizCommand.SET_ECO_HEATING_TARGET_TEMPERATURE: (
+        OverkizCommand.REFRESH_ECO_HEATING_TARGET_TEMPERATURE
+    ),
+    OverkizCommand.SET_COMFORT_HEATING_TARGET_TEMPERATURE: (
+        OverkizCommand.REFRESH_COMFORT_HEATING_TARGET_TEMPERATURE
+    ),
+    OverkizCommand.SET_ECO_COOLING_TARGET_TEMPERATURE: (
+        OverkizCommand.REFRESH_ECO_COOLING_TARGET_TEMPERATURE
+    ),
+    OverkizCommand.SET_COMFORT_COOLING_TARGET_TEMPERATURE: (
+        OverkizCommand.REFRESH_COMFORT_COOLING_TARGET_TEMPERATURE
+    ),
+}
+
+
+def _program_refresh_commands(
+    commands: list[Command],
+) -> tuple[OverkizCommand, ...]:
+    """Return the refreshes of the program setpoints written, and the applied one."""
+
+    return (
+        *(PROGRAM_SETPOINT_REFRESH_COMMANDS[command.name] for command in commands),
+        OverkizCommand.REFRESH_TARGET_TEMPERATURE,
+    )
+
+
 @dataclass(frozen=True, kw_only=True)
 class ProgramSetpoints:
     """Eco and comfort setpoints of the time program of one side."""
@@ -591,10 +618,15 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         if device_hvac_mode == HVACMode.HEAT_COOL or self.program_setpoints is not None:
             return None
 
-        # A derogation started from a remote or the app can apply the setpoint
-        # of the other profile, which only the applied setpoint reports.
+        # A derogation over the program, started from a remote or the app, can
+        # apply the setpoint of the other profile, which only the applied
+        # setpoint reports. In manual mode the manual setpoint applies, and it
+        # is up to date right after it is set, unlike the applied one.
         if (
-            self.device.states.get_value(OverkizState.CORE_DEROGATION_ON_OFF)
+            (program_setpoints := self.active_program_setpoints) is not None
+            and self.device.states.get_value(program_setpoints.mode_state)
+            == OverkizCommandParam.INTERNAL_SCHEDULING
+            and self.device.states.get_value(OverkizState.CORE_DEROGATION_ON_OFF)
             == OverkizCommandParam.ON
             and (
                 applied_target_temperature := self.device.states.get_value(
@@ -716,7 +748,9 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
                 )
                 if target_temp is not None
             ]:
-                await self.async_execute_and_refresh_modes(program_commands)
+                await self.async_execute_and_refresh_modes(
+                    program_commands, _program_refresh_commands(program_commands)
+                )
                 return
 
             # While following the program, a single setpoint is only kept as the
@@ -733,7 +767,8 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
                                 ),
                                 parameters=[target_temperature],
                             )
-                        ]
+                        ],
+                        (),
                     )
                 return
 
@@ -810,6 +845,16 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
                     )
                 )
 
+        # The derogation only has to be started once: sending it again with
+        # every step of the slider and refreshing the modes makes each step
+        # slower, and a long queue of steps loses commands.
+        if (
+            self.device.states.get_value(OverkizState.CORE_DEROGATION_ON_OFF)
+            == OverkizCommandParam.ON
+        ):
+            await self.async_execute_and_refresh_modes(commands, ())
+            return
+
         commands.append(
             Command(
                 name=OverkizCommand.SET_DEROGATION_ON_OFF_STATE,
@@ -819,13 +864,18 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
 
         await self.async_execute_and_refresh_modes(commands)
 
-    async def async_execute_and_refresh_modes(self, commands: list[Command]) -> None:
-        """Execute commands, then refresh the device modes to have new states."""
+    async def async_execute_and_refresh_modes(
+        self,
+        commands: list[Command],
+        refresh: tuple[OverkizCommand, ...] = REFRESH_MODES_COMMANDS,
+    ) -> None:
+        """Execute commands, then refresh the states they change."""
 
         # Commands of one execution run in order, so the refreshes only start
-        # once the device has applied the previous commands.
+        # once the device has applied the previous commands. Each command takes
+        # seconds on the device, and a long queue makes it drop commands.
         await self.executor.async_execute_commands(
-            [*commands, *(Command(name=name) for name in REFRESH_MODES_COMMANDS)]
+            [*commands, *(Command(name=name) for name in refresh)]
         )
 
     @property
