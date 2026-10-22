@@ -5,6 +5,7 @@ from collections.abc import Callable, Sequence
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from universal_silabs_flasher.common import Version as FlasherVersion
 from universal_silabs_flasher.const import ApplicationType as FlasherApplicationType
 from universal_silabs_flasher.firmware import GBLImage
@@ -45,8 +46,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from .test_config_flow import create_mock_owner
-
-from tests.common import MockConfigEntry
 
 ZHA_CONFIG_ENTRY = MockConfigEntry(
     domain="zha",

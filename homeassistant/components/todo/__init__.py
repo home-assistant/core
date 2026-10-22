@@ -11,8 +11,8 @@ from homeassistant.components import frontend, websocket_api
 from homeassistant.components.websocket_api import ERR_NOT_FOUND, ERR_NOT_SUPPORTED
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -29,6 +29,7 @@ from .const import (
     DOMAIN,
     TodoItemStatus,
     TodoListEntityFeature,
+    TodoServiceArgument,
     TodoServices,
 )
 from .entity import TodoItem, TodoListEntity, api_items_factory, serialize_todo_item
@@ -57,6 +58,7 @@ __all__ = [
     "TodoItemStatus",
     "TodoListEntity",
     "TodoListEntityFeature",
+    "TodoServiceArgument",
     "TodoServices",
 ]
 
@@ -79,14 +81,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up a config entry."""
-    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
+    if not await hass.data[DATA_COMPONENT].async_setup_entry(entry):
+        raise ConfigEntryError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="platform_setup_failed",
+            translation_placeholders={"platform": entry.domain, "domain": DOMAIN},
+        )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Unload a config entry."""
-    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
+    await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 @websocket_api.websocket_command(

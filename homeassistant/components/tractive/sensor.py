@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     PERCENTAGE,
     EntityCategory,
+    UnitOfMass,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
@@ -133,6 +134,14 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL,
+    ),
+    TractiveSensorEntityDescription(
+        key="weight",
+        native_unit_of_measurement=UnitOfMass.GRAMS,
+        suggested_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        suggested_display_precision=1,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 

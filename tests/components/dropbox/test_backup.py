@@ -6,9 +6,13 @@ from dataclasses import replace
 from io import StringIO
 import json
 from types import SimpleNamespace
+from typing import Any
 from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import mock_stream
+from pytest_homeassistant.typing import ClientSessionGenerator, WebSocketGenerator
 from python_dropbox_api import DropboxAuthException
 
 from homeassistant.components.backup import (
@@ -30,10 +34,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .conftest import CONFIG_ENTRY_TITLE, TEST_AGENT_ID
-
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import mock_stream
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 TEST_AGENT_BACKUP = AgentBackup(
     addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
@@ -507,7 +507,9 @@ async def test_agents_upload_fail(
 
     call_count = 0
 
-    async def upload_side_effect(path: str, stream: AsyncIterator[bytes]) -> None:
+    async def upload_side_effect(
+        path: str, stream: AsyncIterator[bytes], **kwargs: Any
+    ) -> None:
         nonlocal call_count
         call_count += 1
         async for _ in stream:
@@ -547,20 +549,8 @@ async def test_agents_upload_progress(
     hass: HomeAssistant,
     mock_dropbox_client: Mock,
 ) -> None:
-    """Test that upload progress is reported as the backup stream is consumed."""
-    uploaded: dict[str, bytes] = {}
-
-    async def upload_side_effect(path: str, stream: AsyncIterator[bytes]) -> None:
-        uploaded[path] = b"".join([chunk async for chunk in stream])
-
-    async def backup_stream() -> AsyncIterator[bytes]:
-        yield b"abc"
-        yield b"defgh"
-
-    async def open_stream() -> AsyncIterator[bytes]:
-        return backup_stream()
-
-    mock_dropbox_client.upload_file = AsyncMock(side_effect=upload_side_effect)
+    """Test that upload progress reported by the client is forwarded."""
+    open_stream = AsyncMock()
     on_progress = Mock()
     (agent,) = await async_get_backup_agents(hass)
 
@@ -571,7 +561,12 @@ async def test_agents_upload_progress(
     )
 
     backup_filename = suggested_filename(TEST_AGENT_BACKUP).rsplit(".", 1)[0]
-    assert uploaded[f"/{backup_filename}.tar"] == b"abcdefgh"
+    upload_call = mock_dropbox_client.upload_file.call_args_list[0]
+    assert upload_call.args == (f"/{backup_filename}.tar", open_stream.return_value)
+    # The client calls the callback after each chunk it sends
+    progress_callback = upload_call.kwargs["progress_callback"]
+    progress_callback(3)
+    progress_callback(8)
     assert on_progress.call_args_list == [
         call(bytes_uploaded=3),
         call(bytes_uploaded=8),

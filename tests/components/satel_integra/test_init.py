@@ -1,9 +1,10 @@
 """Test init of Satel Integra integration."""
 
 from copy import deepcopy
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from satel_integra import (
     SatelConnectFailedError,
     SatelConnectionInitializationError,
@@ -46,8 +47,6 @@ from . import (
     MOCK_ZONE_SUBENTRY,
     setup_integration,
 )
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -245,6 +244,44 @@ async def test_panel_info_read_error(
     assert device_entry is not None
     assert device_entry.model is None
     assert device_entry.sw_version is None
+
+
+async def test_unload_unsubscribes_connection_status_callbacks(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test connection status callbacks are unsubscribed on unload."""
+    unsubscribe_callbacks = [MagicMock(return_value=None) for _ in range(4)]
+    mock_satel.add_connection_status_callback.side_effect = unsubscribe_callbacks
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    for unsubscribe_callback in unsubscribe_callbacks:
+        unsubscribe_callback.assert_called_once_with()
+
+
+async def test_unload_unsubscribes_monitor_callbacks(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test monitor callbacks are unsubscribed on unload."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    for callback_method in (
+        mock_satel.add_alarm_status_callback,
+        mock_satel.add_zone_changed_callback,
+        mock_satel.add_output_changed_callback,
+    ):
+        callback_method.return_value.assert_called_once_with()
 
 
 @pytest.mark.parametrize(

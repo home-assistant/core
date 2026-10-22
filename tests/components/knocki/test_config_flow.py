@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from knocki import KnockiConnectionError, KnockiInvalidAuthError
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.knocki.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
@@ -14,8 +15,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 DEVICE_ID = "KNC1-W-00000214"
 FORMATTED_MAC = "aa:bb:cc:dd:ee:ff"

@@ -2,14 +2,14 @@
 
 from unittest.mock import patch
 
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.typing import WebSocketGenerator
+
 from homeassistant import setup
 from homeassistant.components import dynalite, frontend
 from homeassistant.components.cover import DEVICE_CLASSES
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-from tests.typing import WebSocketGenerator
 
 
 async def test_get_config(

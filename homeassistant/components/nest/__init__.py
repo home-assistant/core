@@ -25,8 +25,7 @@ import probatio
 
 from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components.camera import Image, img_util
-from homeassistant.components.http import KEY_HASS_USER
-from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.components.http import KEY_HASS_USER, HomeAssistantView
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_CLIENT_ID,
@@ -355,18 +354,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: NestConfigEntry) -> Non
         access_token=entry.data["token"]["access_token"],
         cloud_project_id=entry.data[CONF_CLOUD_PROJECT_ID],
     )
-    _LOGGER.debug("Deleting subscription '%s'", subscription_name)
-    try:
-        await admin_client.delete_subscription(subscription_name)
-    except ApiException as err:
-        _LOGGER.warning(
-            (
-                "Unable to delete subscription '%s'; Will be automatically cleaned up"
-                " by cloud console: %s"
-            ),
-            subscription_name,
-            err,
-        )
+    await api.async_delete_subscription(admin_client, subscription_name)
 
 
 class NestEventViewBase(HomeAssistantView, ABC):

@@ -1,6 +1,7 @@
 {
   "domain": "wiim",
   "name": "WiiM",
+  "categories": ["media_entertainment.speakers_audio"],
   "codeowners": ["@Linkplay2020"],
   "config_flow": true,
   "dependencies": ["network"],

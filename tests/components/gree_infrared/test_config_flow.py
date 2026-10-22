@@ -1,6 +1,12 @@
 """Tests for the Gree Infrared config flow."""
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.components.infrared import (
+    EMITTER_ENTITY_ID as mock_infrared_emitter_entity_id,
+    RECEIVER_ENTITY_ID as mock_infrared_receiver_entity_id,
+)
+from pytest_homeassistant.components.infrared.common import MockInfraredEmitterEntity
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.gree_infrared.const import (
@@ -14,13 +20,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from homeassistant.helpers import entity_registry as er
-
-from tests.common import MockConfigEntry
-from tests.components.infrared import (
-    EMITTER_ENTITY_ID as mock_infrared_emitter_entity_id,
-    RECEIVER_ENTITY_ID as mock_infrared_receiver_entity_id,
-)
-from tests.components.infrared.common import MockInfraredEmitterEntity
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")

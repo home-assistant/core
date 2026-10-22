@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_load_json_object_fixture
 from syrupy.assertion import SnapshotAssertion
 from yt_dlp import DownloadError
 
@@ -21,8 +22,6 @@ from homeassistant.setup import async_setup_component
 
 from . import YOUTUBE_EMPTY_PLAYLIST, YOUTUBE_PLAYLIST, YOUTUBE_VIDEO, MockYoutubeDL
 from .const import NO_FORMATS_RESPONSE, SOUNDCLOUD_TRACK
-
-from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 async def test_play_media_service_is_registered(hass: HomeAssistant) -> None:

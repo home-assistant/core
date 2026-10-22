@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from flipr_api.exceptions import FliprError
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, UnitOfTemperature
@@ -10,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-
-from tests.common import MockConfigEntry
 
 
 async def test_sensors(

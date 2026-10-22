@@ -1,6 +1,7 @@
 {
   "domain": "livisi",
   "name": "LIVISI Smart Home",
+  "categories": ["hubs_protocols.smart_home_hubs"],
   "codeowners": ["@StefanIacobLivisi", "@planbnet"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/livisi",

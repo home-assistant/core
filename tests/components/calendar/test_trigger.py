@@ -18,6 +18,13 @@ import zoneinfo
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_homeassistant.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_mock_service,
+    mock_device_registry,
+)
+from pytest_homeassistant.components.common import assert_trigger_options_supported
 
 from homeassistant.components import automation, calendar
 from homeassistant.components.calendar.trigger import (
@@ -49,14 +56,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .conftest import MockCalendarEntity
-
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    async_mock_service,
-    mock_device_registry,
-)
-from tests.components.common import assert_trigger_options_supported
 
 _LOGGER = logging.getLogger(__name__)
 

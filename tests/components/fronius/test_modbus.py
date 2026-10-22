@@ -11,6 +11,8 @@ from fronius_modbus.testing import MpptModuleSpec, build_sunspec_map
 from modbus_connection import ModbusConnectionError
 from modbus_connection.mock import MockModbusConnection, WriteEvent
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.fronius.const import (
     AUTO_REVERT_SECONDS,
@@ -41,9 +43,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import MOCK_HOST, mock_responses, setup_fronius_integration
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 # module names as reported by real GEN24 hybrid inverters
 GEN24_HYBRID_MODULES = [

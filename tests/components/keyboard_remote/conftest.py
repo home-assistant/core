@@ -14,6 +14,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from asyncinotify import Mask
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.keyboard_remote.const import (
     CONF_DEVICE_NAME,
@@ -33,8 +34,6 @@ from homeassistant.components.keyboard_remote.const import (
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 # Stable evdev constants for tests (must match the constants used in event mocks
 # so that mocked events behave consistently with the integration under test)
@@ -95,11 +94,11 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     with (
         patch(
             "homeassistant.components.keyboard_remote.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ) as mock,
         patch(
             "homeassistant.components.keyboard_remote.async_unload_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         yield mock

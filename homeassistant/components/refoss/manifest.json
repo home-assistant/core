@@ -1,6 +1,7 @@
 {
   "domain": "refoss",
   "name": "Refoss",
+  "categories": ["plugs_switches", "energy.meters_monitoring"],
   "codeowners": ["@ashionky"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/refoss",

@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
 from syrupy.assertion import SnapshotAssertion
 from yeelight import (
     BulbException,
@@ -122,8 +123,6 @@ from . import (
     _patch_discovery,
     _patch_discovery_interval,
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
 
 CONFIG_ENTRY_DATA = {
     CONF_HOST: IP_ADDRESS,

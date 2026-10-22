@@ -1,6 +1,7 @@
 {
   "domain": "victron_remote_monitoring",
   "name": "Victron Remote Monitoring",
+  "categories": ["energy.solar_batteries"],
   "codeowners": ["@AndyTempel"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/victron_remote_monitoring",

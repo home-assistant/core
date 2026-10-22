@@ -60,7 +60,7 @@ CHARGING_STATES: Final = {
     "Finish Charging": "finish_charging",
     "Waiting": "waiting",
     "Finished": "finished",
-    "Cancel": "canceled",
+    "Scheduled": "scheduled",
     "Connect": "connect",
     "Fault": "fault",
 }

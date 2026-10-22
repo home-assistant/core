@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from homematicip.connection.connection_context import ConnectionContext
 from homematicip.connection.rest_connection import RestResult
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.components.homematicip_cloud.const import (
@@ -15,8 +16,6 @@ from homeassistant.components.homematicip_cloud.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from tests.common import MockConfigEntry
 
 DEFAULT_CONFIG = {HMIPC_HAPID: "ABC123", HMIPC_PIN: "123", HMIPC_NAME: "hmip"}
 
@@ -121,7 +120,7 @@ async def test_flow_init_connection_error(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.homematicip_cloud.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -181,7 +180,7 @@ async def test_flow_init_rejected_pin(
         ),
         patch(
             "homeassistant.components.homematicip_cloud.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -260,7 +259,7 @@ async def test_flow_link_press_button(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.homematicip_cloud.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -378,11 +377,11 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.homematicip_cloud.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.homematicip_cloud.async_unload_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -453,11 +452,11 @@ async def test_reauth_flow_register_failure(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.homematicip_cloud.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.homematicip_cloud.async_unload_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -511,11 +510,11 @@ async def test_reauth_flow_connection_error(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.homematicip_cloud.async_setup_entry",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.homematicip_cloud.async_unload_entry",
-            return_value=True,
+            return_value=None,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(

@@ -7,6 +7,7 @@
       "local_name": "ACP#*"
     }
   ],
+  "categories": ["energy.ev_charging"],
   "codeowners": ["@moryoav"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],
@@ -14,5 +15,5 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "quality_scale": "platinum",
-  "requirements": ["besen==0.4.11"]
+  "requirements": ["besen==0.6.1"]
 }

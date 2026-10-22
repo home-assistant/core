@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 from zinvolt.exceptions import ZinvoltAuthenticationError, ZinvoltError
 
 from homeassistant.components.zinvolt.const import DOMAIN
@@ -12,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import TOKEN
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_zinvolt_client")
