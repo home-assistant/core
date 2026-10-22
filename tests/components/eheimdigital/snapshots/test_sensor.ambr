@@ -47,7 +47,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '75',
   })
 # ---
 # name: test_setup[sensor.mock_aquarium_mock_classicvario_error_code-entry]
@@ -109,7 +109,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'no_error',
   })
 # ---
 # name: test_setup[sensor.mock_aquarium_mock_classicvario_remaining_hours_until_service-entry]
@@ -167,7 +167,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '15.0',
   })
 # ---
 # name: test_setup[sensor.mock_aquarium_mock_filter_current_speed-entry]
@@ -222,7 +222,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '72.0',
   })
 # ---
 # name: test_setup[sensor.mock_aquarium_mock_filter_remaining_hours_until_service-entry]
@@ -280,6 +280,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1532.25',
   })
 # ---

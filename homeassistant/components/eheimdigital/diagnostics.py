@@ -15,5 +15,15 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     return async_redact_data(
-        {"entry": entry.as_dict(), "data": entry.runtime_data.data}, TO_REDACT
+        {
+            "entry": entry.as_dict(),
+            "data": {
+                addr: {
+                    title.lower(): coordinator.data.as_dict()[title.lower()]
+                    for title, coordinator in item.items()
+                }
+                for addr, item in entry.runtime_data.device_coordinators.items()
+            },
+        },
+        TO_REDACT,
     )

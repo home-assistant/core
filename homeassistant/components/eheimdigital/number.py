@@ -22,13 +22,16 @@ from homeassistant.const import (
     PRECISION_TENTHS,
     PRECISION_WHOLE,
     EntityCategory,
+    Platform,
     UnitOfTemperature,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+import homeassistant.helpers.entity_registry as er
 
-from .coordinator import EheimDigitalConfigEntry, EheimDigitalUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import EheimDigitalConfigEntry, EheimDigitalDeviceUpdateCoordinator
 from .entity import EheimDigitalEntity, exception_handler
 
 PARALLEL_UPDATES = 0
@@ -183,8 +186,8 @@ HEATER_DESCRIPTIONS: tuple[EheimDigitalNumberDescription[EheimDigitalHeater], ..
 
 GENERAL_DESCRIPTIONS: tuple[EheimDigitalNumberDescription[EheimDigitalDevice], ...] = (
     EheimDigitalNumberDescription[EheimDigitalDevice](
-        key="system_led",
-        translation_key="system_led",
+        key="sys_led",
+        translation_key="sys_led",
         entity_category=EntityCategory.CONFIG,
         native_min_value=0,
         native_max_value=100,
@@ -196,6 +199,16 @@ GENERAL_DESCRIPTIONS: tuple[EheimDigitalNumberDescription[EheimDigitalDevice], .
 )
 
 
+def _async_migrate_entities(hass: HomeAssistant, device_address: str) -> None:
+    registry = er.async_get(hass)
+    if (
+        old_id := registry.async_get_entity_id(
+            Platform.NUMBER, DOMAIN, f"{device_address}_system_led"
+        )
+    ) is not None:
+        registry.async_update_entity(old_id, new_unique_id=f"{device_address}_sys_led")
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EheimDigitalConfigEntry,
@@ -205,48 +218,53 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     def async_setup_device_entities(
-        device_address: dict[str, EheimDigitalDevice],
+        device_coordinator: EheimDigitalDeviceUpdateCoordinator[Any],
     ) -> None:
         """Set up the number entities for one or multiple devices."""
         entities: list[EheimDigitalNumber[Any]] = []
-        for device in device_address.values():
-            if isinstance(device, EheimDigitalClassicVario):
-                entities.extend(
-                    EheimDigitalNumber[EheimDigitalClassicVario](
-                        coordinator, device, description
-                    )
-                    for description in CLASSICVARIO_DESCRIPTIONS
-                )
-            if isinstance(device, EheimDigitalFilter):
-                entities.extend(
-                    EheimDigitalNumber[EheimDigitalFilter](
-                        coordinator, device, description
-                    )
-                    for description in FILTER_DESCRIPTIONS
-                )
-            if isinstance(device, EheimDigitalHeater):
-                entities.extend(
-                    EheimDigitalNumber[EheimDigitalHeater](
-                        coordinator, device, description
-                    )
-                    for description in HEATER_DESCRIPTIONS
-                )
-            if isinstance(device, EheimDigitalReeflexUV):
-                entities.extend(
-                    EheimDigitalNumber[EheimDigitalReeflexUV](
-                        coordinator, device, description
-                    )
-                    for description in REEFLEX_DESCRIPTIONS
-                )
+        _async_migrate_entities(hass, device_coordinator.data.mac_address)
+        if isinstance(device_coordinator.data, EheimDigitalClassicVario):
             entities.extend(
-                EheimDigitalNumber[EheimDigitalDevice](coordinator, device, description)
-                for description in GENERAL_DESCRIPTIONS
+                EheimDigitalNumber[EheimDigitalClassicVario](
+                    device_coordinator, description
+                )
+                for description in CLASSICVARIO_DESCRIPTIONS
+                if description.key
+                in device_coordinator.data.packet_mapping[device_coordinator.msg_title]
             )
+        if isinstance(device_coordinator.data, EheimDigitalFilter):
+            entities.extend(
+                EheimDigitalNumber[EheimDigitalFilter](device_coordinator, description)
+                for description in FILTER_DESCRIPTIONS
+                if description.key
+                in device_coordinator.data.packet_mapping[device_coordinator.msg_title]
+            )
+        if isinstance(device_coordinator.data, EheimDigitalHeater):
+            entities.extend(
+                EheimDigitalNumber[EheimDigitalHeater](device_coordinator, description)
+                for description in HEATER_DESCRIPTIONS
+                if description.key
+                in device_coordinator.data.packet_mapping[device_coordinator.msg_title]
+            )
+        if isinstance(device_coordinator.data, EheimDigitalReeflexUV):
+            entities.extend(
+                EheimDigitalNumber[EheimDigitalReeflexUV](
+                    device_coordinator, description
+                )
+                for description in REEFLEX_DESCRIPTIONS
+                if description.key
+                in device_coordinator.data.packet_mapping[device_coordinator.msg_title]
+            )
+        entities.extend(
+            EheimDigitalNumber[EheimDigitalDevice](device_coordinator, description)
+            for description in GENERAL_DESCRIPTIONS
+            if description.key
+            in device_coordinator.data.packet_mapping[device_coordinator.msg_title]
+        )
 
         async_add_entities(entities)
 
     coordinator.add_platform_callback(async_setup_device_entities)
-    async_setup_device_entities(coordinator.hub.devices)
 
 
 class EheimDigitalNumber[_DeviceT: EheimDigitalDevice](
@@ -258,12 +276,11 @@ class EheimDigitalNumber[_DeviceT: EheimDigitalDevice](
 
     def __init__(
         self,
-        coordinator: EheimDigitalUpdateCoordinator,
-        device: _DeviceT,
+        coordinator: EheimDigitalDeviceUpdateCoordinator[_DeviceT],
         description: EheimDigitalNumberDescription[_DeviceT],
     ) -> None:
         """Initialize an EHEIM Digital number entity."""
-        super().__init__(coordinator, device)
+        super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{self._device_address}_{description.key}"
 
