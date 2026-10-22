@@ -36,11 +36,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         hass.async_create_task(data.heartbeat.async_setup())
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Migrate an old config entry."""
-    if entry.version > 1:
-        return False
-
     if entry.minor_version < 2:
         # Hysen thermostats no longer provide time and select entities.
         entity_registry = er.async_get(hass)
@@ -50,8 +47,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if entity_entry.domain in (Platform.SELECT, Platform.TIME):
                 entity_registry.async_remove(entity_entry.entity_id)
         hass.config_entries.async_update_entry(entry, minor_version=2)
-
-    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
