@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ubus.const import CONF_DHCP_SOFTWARE, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
@@ -11,8 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import MOCK_CONFIG, MOCK_HOST
-
-from tests.common import MockConfigEntry
 
 USER_INPUT = {
     CONF_HOST: MOCK_HOST,
@@ -152,20 +151,6 @@ async def test_import_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
-async def test_import_flow_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_ubus: MagicMock
-) -> None:
-    """Test the import flow aborts on a connection error."""
-    mock_ubus.return_value.connect.side_effect = TypeError
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_CONFIG
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
-
-
 async def test_import_flow_preserves_dhcp_software(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_ubus: MagicMock
 ) -> None:
@@ -180,48 +165,26 @@ async def test_import_flow_preserves_dhcp_software(
     assert result["data"][CONF_DHCP_SOFTWARE] == "odhcpd"
 
 
-async def test_import_flow_invalid_auth(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_ubus: MagicMock
+@pytest.mark.parametrize(
+    ("side_effect", "reason"),
+    [
+        pytest.param(TypeError, "cannot_connect", id="cannot_connect"),
+        pytest.param(PermissionError, "invalid_auth", id="invalid_auth"),
+    ],
+)
+async def test_import_flow_errors(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_ubus: MagicMock,
+    side_effect: type[Exception],
+    reason: str,
 ) -> None:
-    """Test the import flow aborts on rejected credentials."""
-    mock_ubus.return_value.connect.side_effect = PermissionError
+    """Test the import flow aborts when the router can't be logged in to."""
+    mock_ubus.return_value.connect.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_CONFIG
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "invalid_auth"
-
-
-async def test_reauth_flow(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_ubus: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test reauth reports bad credentials, then updates the entry on success."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await mock_config_entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    mock_ubus.return_value.connect.side_effect = PermissionError
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_USERNAME: "root", CONF_PASSWORD: "wrong"},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
-
-    mock_ubus.return_value.connect.side_effect = None
-    mock_ubus.return_value.connect.return_value = "session-id"
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_USERNAME: "admin", CONF_PASSWORD: "newpass"},
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert mock_config_entry.data[CONF_USERNAME] == "admin"
-    assert mock_config_entry.data[CONF_PASSWORD] == "newpass"
+    assert result["reason"] == reason

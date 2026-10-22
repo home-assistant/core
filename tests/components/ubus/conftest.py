@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ubus.const import (
     CONF_DHCP_SOFTWARE,
@@ -11,8 +12,6 @@ from homeassistant.components.ubus.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-
-from tests.common import MockConfigEntry
 
 MOCK_HOST = "192.168.1.1"
 
@@ -38,9 +37,9 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def dhcp_software(request: pytest.FixtureRequest) -> str:
+def dhcp_software() -> str:
     """Return the DHCP software the mock config entry is created with."""
-    return getattr(request, "param", DEFAULT_DHCP_SOFTWARE)
+    return DEFAULT_DHCP_SOFTWARE
 
 
 @pytest.fixture

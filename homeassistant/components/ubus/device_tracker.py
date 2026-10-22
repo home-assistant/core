@@ -70,6 +70,7 @@ async def async_setup_scanner(
         hass,
         HOMEASSISTANT_DOMAIN,
         f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.5.0",
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,

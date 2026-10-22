@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant.common import MockConfigEntry
 
 from homeassistant.components.ubus.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -13,8 +14,6 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import MAC_GUEST, MAC_LAPTOP, MAC_PHONE, MOCK_CONFIG, MOCK_HOST
 
-from tests.common import MockConfigEntry
-
 
 @pytest.mark.parametrize(
     ("dhcp_software", "expected_names"),
@@ -23,7 +22,6 @@ from tests.common import MockConfigEntry
         pytest.param("odhcpd", {"my-phone", "my-laptop"}, id="odhcpd"),
         pytest.param("none", {MAC_PHONE, MAC_LAPTOP}, id="none"),
     ],
-    indirect=["dhcp_software"],
 )
 async def test_only_authorized_clients_are_tracked(
     hass: HomeAssistant,
