@@ -1,7 +1,5 @@
 """Satel Integra client."""
 
-from collections.abc import Callable
-
 from satel_integra import AsyncSatel
 from satel_integra.exceptions import (
     SatelConnectFailedError,
@@ -77,12 +75,7 @@ class SatelClient:
             integration_key=entry.data[CONF_ENCRYPTION_KEY],
         )
 
-    async def async_connect(
-        self,
-        zones_update_callback: Callable[[dict[int, int]], None],
-        outputs_update_callback: Callable[[dict[int, int]], None],
-        partitions_update_callback: Callable[[], None],
-    ) -> None:
+    async def async_connect(self) -> None:
         """Start controller connection."""
         try:
             await self.controller.connect(raise_exceptions=True)
@@ -101,12 +94,6 @@ class SatelClient:
                 translation_domain=DOMAIN,
                 translation_key="connection_initialization_failed",
             ) from ex
-
-        self.controller.register_callbacks(
-            alarm_status_callback=partitions_update_callback,
-            zone_changed_callback=zones_update_callback,
-            output_changed_callback=outputs_update_callback,
-        )
 
         try:
             await self.controller.start(enable_monitoring=True)
