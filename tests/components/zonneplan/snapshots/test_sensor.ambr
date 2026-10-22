@@ -8,6 +8,9 @@
 # ---
 # name: test_entities_not_created_for_missing_market_segment[missing_gas]
   list([
+    'binary_sensor.laadpaal_automatic_charging_paused',
+    'binary_sensor.laadpaal_connectivity',
+    'binary_sensor.laadpaal_overload_protection',
     'binary_sensor.thuisbatterij_backup_power_active',
     'binary_sensor.thuisbatterij_grid_congestion',
     'binary_sensor.thuisbatterij_home_optimization_active',

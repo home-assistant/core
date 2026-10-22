@@ -177,7 +177,7 @@ class Hub:
             device_info.via_device_id = self._ensure_device_registered(
                 device.parent_device, installation_id
             )
-        device_entry = self._device_registry.async_get_or_create_device(
+        device_entry = self._device_registry.async_get_or_create_from_info(
             config_entry_id=self._config_entry_id,
             device_info=device_info,
         )

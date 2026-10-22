@@ -253,7 +253,7 @@ class FroniusSolarNet:
             solar_net_device.sw_version = _logger_info["software_version"]["value"]
 
         device_registry = dr.async_get(self.hass)
-        device_registry.async_get_or_create_device(
+        device_registry.async_get_or_create_from_info(
             config_entry_id=self.config_entry.entry_id,
             device_info=solar_net_device,
         )
