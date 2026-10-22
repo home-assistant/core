@@ -78,7 +78,7 @@ async def async_setup_devices(bridge: HueBridge):
             if mac_owner == hue_resource.id:
                 device_info.connections = {(dr.CONNECTION_ZIGBEE, zigbee.mac_address)}
 
-        return dev_reg.async_get_or_create_device(
+        return dev_reg.async_get_or_create_from_info(
             config_entry_id=entry.entry_id, device_info=device_info
         )
 
