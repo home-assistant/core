@@ -300,7 +300,8 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 step_id="reauth_confirm",
             )
         entry = self._get_reauth_entry()
-        if "auth_implementation" in entry.data:
+        # Cloud entries get the picker, so they can move to a PAT app.
+        if entry.data.get("auth_implementation") not in (None, "cloud"):
             try:
                 self.flow_impl = await async_get_config_entry_implementation(
                     self.hass, entry

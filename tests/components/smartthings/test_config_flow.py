@@ -577,6 +577,79 @@ async def test_reauthentication(
     }
 
 
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+async def test_reauthentication_cloud_entry_offers_picker(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_smartthings: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauthenticating a cloud entry can move it to a stored credential."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={**mock_config_entry.data, "auth_implementation": "cloud"},
+    )
+    implementations = await config_entry_oauth2_flow.async_get_implementations(
+        hass, DOMAIN
+    )
+    cloud_implementation = SimpleNamespace(domain="cloud", name="Nabu Casa Cloud")
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["step_id"] == "reauth_confirm"
+
+    # The cloud implementation stays available for existing cloud entries.
+    with (
+        patch(
+            "homeassistant.components.smartthings.config_flow.async_get_implementations",
+            return_value={"cloud": cloud_implementation, **implementations},
+        ),
+        patch(
+            "homeassistant.components.smartthings.config_flow.async_get_config_entry_implementation",
+            return_value=cloud_implementation,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "pick_implementation"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"implementation": "pat"}
+        )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert "client_id=CLIENT_ID" in result["url"]
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass, {"flow_id": result["flow_id"], "redirect_uri": REDIRECT_URI}
+    )
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.post(
+        "https://auth-global.api.smartthings.com/oauth/token",
+        json={
+            "refresh_token": "new-refresh-token",
+            "access_token": "new-access-token",
+            "token_type": "Bearer",
+            "expires_in": 82806,
+            "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
+            "r:locations:* w:locations:* x:locations:* "
+            "r:scenes:* x:scenes:* r:rules:* sse w:rules:*",
+            "access_tier": 0,
+            "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data["auth_implementation"] == DOMAIN
+
+
 @pytest.mark.usefixtures("current_request_with_host", "use_cloud", "mock_setup_entry")
 async def test_reauthentication_wrong_scopes(
     hass: HomeAssistant,
