@@ -59,18 +59,16 @@ async def async_setup_entry(
     registry = dr.async_get(hass)
     for access_point in aps:
         _LOGGER.debug("AP [%s] %s", access_point[API_AP_MAC], entry.entry_id)
-        registry.async_get_or_create_device(
+        registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            device_info=dr.DeviceInfo(
-                connections={(dr.CONNECTION_NETWORK_MAC, access_point[API_AP_MAC])},
-                identifiers={(DOMAIN, access_point[API_AP_MAC])},
-                manufacturer=MANUFACTURER,
-                name=access_point[API_AP_DEVNAME],
-                model=access_point[API_AP_MODEL],
-                sw_version=access_point.get(
-                    API_AP_FIRMWAREVERSION,
-                    system_info[API_SYS_SYSINFO][API_SYS_SYSINFO_VERSION],
-                ),
+            connections={(dr.CONNECTION_NETWORK_MAC, access_point[API_AP_MAC])},
+            identifiers={(DOMAIN, access_point[API_AP_MAC])},
+            manufacturer=MANUFACTURER,
+            name=access_point[API_AP_DEVNAME],
+            model=access_point[API_AP_MODEL],
+            sw_version=access_point.get(
+                API_AP_FIRMWAREVERSION,
+                system_info[API_SYS_SYSINFO][API_SYS_SYSINFO_VERSION],
             ),
         )
 
