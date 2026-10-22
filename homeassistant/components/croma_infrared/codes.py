@@ -35,22 +35,24 @@ class CromaTVCode(IntEnum):
     HOME = 0x51
 
     # System
+    MENU = 0x5B
     SETTINGS = 0x72
     APPS = 0x5E
-    INPUT = 0x14
+    SOURCE = 0x14
     INFO = 0x16
-    PROFILE = 0x71
-    ASSISTANT = 0x61
+    ACCOUNT = 0x71
+    VOICE = 0x61
     SUBTITLES = 0x17
-    CHANNEL_UP = 0x1B
-    CHANNEL_DOWN = 0x1F
+    EPG = 0x0B
+    PROGRAM_UP = 0x1B
+    PROGRAM_DOWN = 0x1F
 
     # Apps
     YOUTUBE = 0x55
     NETFLIX = 0x58
     PRIME_VIDEO = 0x50
     LIVE_TV = 0x8C
-    TV = 0x0B
+    FREE_HOTKEY = 0x7E
 
     # Media
     PLAY = 0x57
