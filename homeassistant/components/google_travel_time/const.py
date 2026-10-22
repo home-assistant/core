@@ -1,12 +1,5 @@
 """Constants for Google Travel Time."""
 
-from google.maps.routing_v2 import (
-    RouteTravelMode,
-    TrafficModel,
-    TransitPreferences,
-    Units,
-)
-
 DOMAIN = "google_travel_time"
 
 ATTRIBUTION = "Powered by Google"
@@ -22,6 +15,8 @@ CONF_TRANSIT_MODE = "transit_mode"
 CONF_TRANSIT_ROUTING_PREFERENCE = "transit_routing_preference"
 CONF_TIME_TYPE = "time_type"
 CONF_TIME = "time"
+CONF_REFERRER = "referrer"
+SECTION_API_KEY_OPTIONS = "api_key_options"
 
 ARRIVAL_TIME = "Arrival Time"
 DEPARTURE_TIME = "Departure Time"
@@ -84,38 +79,37 @@ ALL_LANGUAGES = [
 
 AVOID_OPTIONS = ["tolls", "highways", "ferries", "indoor"]
 TRANSIT_PREFS = ["less_walking", "fewer_transfers"]
-TRANSIT_PREFS_TO_GOOGLE_SDK_ENUM = {
-    "less_walking": TransitPreferences.TransitRoutingPreference.LESS_WALKING,
-    "fewer_transfers": TransitPreferences.TransitRoutingPreference.FEWER_TRANSFERS,
+TRANSIT_PREFS_TO_API = {
+    "less_walking": "LESS_WALKING",
+    "fewer_transfers": "FEWER_TRANSFERS",
 }
 TRANSPORT_TYPES = ["bus", "subway", "train", "tram", "rail"]
-TRANSPORT_TYPES_TO_GOOGLE_SDK_ENUM = {
-    "bus": TransitPreferences.TransitTravelMode.BUS,
-    "subway": TransitPreferences.TransitTravelMode.SUBWAY,
-    "train": TransitPreferences.TransitTravelMode.TRAIN,
-    "tram": TransitPreferences.TransitTravelMode.LIGHT_RAIL,
-    "rail": TransitPreferences.TransitTravelMode.RAIL,
+TRANSPORT_TYPES_TO_API = {
+    "bus": "BUS",
+    "subway": "SUBWAY",
+    "train": "TRAIN",
+    "tram": "LIGHT_RAIL",
+    "rail": "RAIL",
 }
 TRAVEL_MODES = ["driving", "walking", "bicycling", "transit"]
 TRAVEL_MODES_WITHOUT_TRANSIT = ["driving", "walking", "bicycling"]
-TRAVEL_MODES_TO_GOOGLE_SDK_ENUM = {
-    "driving": RouteTravelMode.DRIVE,
-    "walking": RouteTravelMode.WALK,
-    "bicycling": RouteTravelMode.BICYCLE,
-    "transit": RouteTravelMode.TRANSIT,
+TRAVEL_MODES_TO_API = {
+    "driving": "DRIVE",
+    "walking": "WALK",
+    "bicycling": "BICYCLE",
+    "transit": "TRANSIT",
 }
 TRAFFIC_MODELS = ["best_guess", "pessimistic", "optimistic"]
-TRAFFIC_MODELS_TO_GOOGLE_SDK_ENUM = {
-    "best_guess": TrafficModel.BEST_GUESS,
-    "pessimistic": TrafficModel.PESSIMISTIC,
-    "optimistic": TrafficModel.OPTIMISTIC,
+TRAFFIC_MODELS_TO_API = {
+    "best_guess": "BEST_GUESS",
+    "pessimistic": "PESSIMISTIC",
+    "optimistic": "OPTIMISTIC",
 }
 
-# googlemaps library uses "metric" or "imperial" terminology in distance_matrix
 UNITS_METRIC = "metric"
 UNITS_IMPERIAL = "imperial"
 UNITS = [UNITS_METRIC, UNITS_IMPERIAL]
-UNITS_TO_GOOGLE_SDK_ENUM = {
-    UNITS_METRIC: Units.METRIC,
-    UNITS_IMPERIAL: Units.IMPERIAL,
+UNITS_TO_API = {
+    UNITS_METRIC: "METRIC",
+    UNITS_IMPERIAL: "IMPERIAL",
 }

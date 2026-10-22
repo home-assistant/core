@@ -1,12 +1,9 @@
 """Test the Google Maps Travel Time sensors."""
 
-from unittest.mock import AsyncMock
-
 from freezegun.api import FrozenDateTimeFactory
-from google.api_core.exceptions import GoogleAPIError, PermissionDenied
-from google.maps.routing_v2 import Units
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, async_fire_time_changed
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.google_travel_time.config_flow import default_options
 from homeassistant.components.google_travel_time.const import (
@@ -28,14 +25,14 @@ from homeassistant.util.unit_system import (
     UnitSystem,
 )
 
+from . import ROUTES_RESPONSE, mock_compute_routes
 from .const import DEFAULT_OPTIONS, MOCK_CONFIG
 
 
 @pytest.fixture(name="mock_update_empty")
-def mock_update_empty_fixture(routes_mock: AsyncMock) -> AsyncMock:
+def mock_update_empty_fixture(routes_mock: AiohttpClientMocker) -> None:
     """Mock an update to the sensor with an empty response."""
-    routes_mock.compute_routes.return_value = None
-    return routes_mock
+    mock_compute_routes(routes_mock, json={})
 
 
 @pytest.mark.parametrize(
@@ -142,19 +139,19 @@ async def test_sensor_arrival_time(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("unit_system", "expected_unit_option"),
+    ("unit_system", "expected_units"),
     [
-        (METRIC_SYSTEM, Units.METRIC),
-        (US_CUSTOMARY_SYSTEM, Units.IMPERIAL),
+        (METRIC_SYSTEM, "METRIC"),
+        (US_CUSTOMARY_SYSTEM, "IMPERIAL"),
     ],
 )
 async def test_sensor_unit_system(
     hass: HomeAssistant,
-    routes_mock: AsyncMock,
+    routes_mock: AiohttpClientMocker,
     unit_system: UnitSystem,
-    expected_unit_option: str,
+    expected_units: str,
 ) -> None:
-    """Test that sensor works."""
+    """Test that the unit system is passed to the API."""
     hass.config.units = unit_system
 
     config_entry = MockConfigEntry(
@@ -167,8 +164,8 @@ async def test_sensor_unit_system(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    routes_mock.compute_routes.assert_called_once()
-    assert routes_mock.compute_routes.call_args.args[0].units == expected_unit_option
+    assert len(routes_mock.mock_calls) == 1
+    assert routes_mock.mock_calls[0][2]["units"] == expected_units
 
 
 @pytest.mark.parametrize(
@@ -178,12 +175,14 @@ async def test_sensor_unit_system(
 async def test_sensor_exception(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    routes_mock: AsyncMock,
+    routes_mock: AiohttpClientMocker,
     mock_config: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that exception gets caught."""
-    routes_mock.compute_routes.side_effect = GoogleAPIError("Errormessage")
+    mock_compute_routes(
+        routes_mock, status=500, json={"error": {"message": "Errormessage"}}
+    )
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -198,13 +197,22 @@ async def test_sensor_exception(
 async def test_sensor_routes_api_disabled(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    routes_mock: AsyncMock,
+    routes_mock: AiohttpClientMocker,
     mock_config: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test that exception gets caught and issue created."""
-    routes_mock.compute_routes.side_effect = PermissionDenied("Errormessage")
+    mock_compute_routes(
+        routes_mock,
+        status=403,
+        json={
+            "error": {
+                "message": "Routes API has not been used in project.",
+                "details": [{"reason": "SERVICE_DISABLED"}],
+            }
+        },
+    )
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -220,3 +228,91 @@ async def test_sensor_routes_api_disabled(
     await hass.config_entries.async_remove(mock_config.entry_id)
     await hass.async_block_till_done()
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+@pytest.mark.parametrize(
+    ("data", "options"),
+    [
+        (
+            {**MOCK_CONFIG, "referrer": "https://example.com/"},
+            DEFAULT_OPTIONS,
+        )
+    ],
+)
+@pytest.mark.usefixtures("mock_config")
+async def test_sensor_referrer(
+    hass: HomeAssistant, routes_mock: AiohttpClientMocker
+) -> None:
+    """Test that the referrer is passed to the API."""
+    assert hass.states.get("sensor.google_travel_time").state == "27.0"
+    assert routes_mock.mock_calls[0][3]["Referer"] == "https://example.com/"
+
+
+@pytest.mark.parametrize(
+    ("data", "options"),
+    [(MOCK_CONFIG, DEFAULT_OPTIONS)],
+)
+async def test_sensor_invalid_referrer_no_issue(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    routes_mock: AiohttpClientMocker,
+    mock_config: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that a blocked referrer does not create the disabled API issue."""
+    mock_compute_routes(
+        routes_mock,
+        status=403,
+        json={
+            "error": {
+                "message": "Requests from referer are blocked.",
+                "details": [{"reason": "API_KEY_HTTP_REFERRER_BLOCKED"}],
+            }
+        },
+    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.google_travel_time").state == STATE_UNKNOWN
+    assert "Requests from referer are blocked." in caplog.text
+    assert not issue_registry.issues
+
+
+@pytest.mark.parametrize(
+    ("data", "options"),
+    [(MOCK_CONFIG, DEFAULT_OPTIONS)],
+)
+@pytest.mark.usefixtures("mock_config")
+async def test_sensor_valid_response_removes_issue(
+    hass: HomeAssistant,
+    routes_mock: AiohttpClientMocker,
+    mock_config: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a successful update deletes the disabled API issue."""
+    mock_compute_routes(
+        routes_mock,
+        status=403,
+        json={
+            "error": {
+                "message": "Routes API has not been used in project.",
+                "details": [{"reason": "SERVICE_DISABLED"}],
+            }
+        },
+    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    issue_id = f"routes_api_disabled_{mock_config.entry_id}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    mock_compute_routes(routes_mock, json=ROUTES_RESPONSE)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.google_travel_time").state == "27.0"
+    assert not issue_registry.issues

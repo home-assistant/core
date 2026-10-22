@@ -1,34 +1,16 @@
-"""Helpers for Google Time Travel integration."""
+"""Helpers for Google Travel Time integration."""
 
+from dataclasses import dataclass
 import datetime as dt
-import logging
+from typing import Any, NoReturn
 
-from google.api_core.client_options import ClientOptions
-from google.api_core.exceptions import (
-    Forbidden,
-    GatewayTimeout,
-    GoogleAPIError,
-    PermissionDenied,
-    Unauthorized,
-)
-from google.maps.routing_v2 import (
-    ComputeRoutesRequest,
-    ComputeRoutesResponse,
-    Location,
-    RouteModifiers,
-    RoutesAsyncClient,
-    RouteTravelMode,
-    RoutingPreference,
-    TransitPreferences,
-    Waypoint,
-)
-from google.protobuf import timestamp_pb2
-from google.type import latlng_pb2
+import aiohttp
 import probatio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
@@ -36,20 +18,167 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.location import find_coordinates
 from homeassistant.util import dt as dt_util
+from homeassistant.util.json import json_loads
 
 from .const import (
     DOMAIN,
-    TRAFFIC_MODELS_TO_GOOGLE_SDK_ENUM,
-    TRANSIT_PREFS_TO_GOOGLE_SDK_ENUM,
-    TRANSPORT_TYPES_TO_GOOGLE_SDK_ENUM,
-    UNITS_TO_GOOGLE_SDK_ENUM,
+    TRAFFIC_MODELS_TO_API,
+    TRANSIT_PREFS_TO_API,
+    TRANSPORT_TYPES_TO_API,
+    UNITS_TO_API,
 )
 
-_LOGGER = logging.getLogger(__name__)
+COMPUTE_ROUTES_URL = "https://routes.googleapis.com/directions/v2:computeRoutes"
+CLIENT_TIMEOUT = aiohttp.ClientTimeout(total=30)
 
 
-def convert_time(time_str: str) -> timestamp_pb2.Timestamp:
-    """Convert a string like '08:00' to a google pb2 Timestamp.
+class GoogleAPIError(Exception):
+    """Error returned by the Google Routes API."""
+
+
+class PermissionDenied(GoogleAPIError):
+    """The API key is not allowed to use the Routes API."""
+
+
+class InvalidApiKeyException(GoogleAPIError):
+    """The API key is invalid."""
+
+
+class InvalidReferrerException(GoogleAPIError):
+    """The HTTP referrer is not allowed for the API key."""
+
+
+@dataclass(slots=True)
+class Route:
+    """A route returned by the Compute Routes API."""
+
+    duration_seconds: int
+    distance_meters: int
+    duration_text: str
+    static_duration_text: str
+    distance_text: str
+
+
+@dataclass(slots=True)
+class ComputeRoutesResponse:
+    """Response of the Compute Routes API."""
+
+    routes: list[Route]
+
+
+def _parse_duration_seconds(duration: str | None) -> int:
+    """Convert a duration such as 534s to seconds."""
+    if not duration:
+        return 0
+    return int(float(duration.removesuffix("s")))
+
+
+def _parse_routes_response(data: dict[str, Any]) -> ComputeRoutesResponse:
+    """Convert a Compute Routes API response to a typed response."""
+    routes = []
+    for route in data.get("routes", []):
+        localized_values = route.get("localizedValues", {})
+        routes.append(
+            Route(
+                duration_seconds=_parse_duration_seconds(route.get("duration")),
+                distance_meters=route.get("distanceMeters", 0),
+                duration_text=localized_values.get("duration", {}).get("text", ""),
+                static_duration_text=localized_values.get("staticDuration", {}).get(
+                    "text", ""
+                ),
+                distance_text=localized_values.get("distance", {}).get("text", ""),
+            )
+        )
+    return ComputeRoutesResponse(routes=routes)
+
+
+def _get_error_reason(error: dict[str, Any]) -> str | None:
+    """Return the reason of a Google API error."""
+    for detail in error.get("details", []):
+        if reason := detail.get("reason"):
+            return reason
+    return None
+
+
+def _raise_api_error(status: int, body: str) -> NoReturn:
+    """Raise an exception for an unsuccessful API response."""
+    error: dict[str, Any] = {}
+    try:
+        parsed = json_loads(body)
+    except ValueError:
+        parsed = None
+    error_data = parsed.get("error") if isinstance(parsed, dict) else None
+    if isinstance(error_data, dict):
+        error = error_data
+    message = error.get("message") or body
+    reason = _get_error_reason(error)
+    if status == 401 or reason == "API_KEY_INVALID":
+        raise InvalidApiKeyException(message)
+    if reason == "API_KEY_HTTP_REFERRER_BLOCKED":
+        raise InvalidReferrerException(message)
+    if status == 403:
+        raise PermissionDenied(message)
+    if status == 504:
+        raise TimeoutError(message)
+    raise GoogleAPIError(message)
+
+
+class RoutesClient:
+    """Client for the Google Routes API."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        api_key: str,
+        referrer: str | None = None,
+    ) -> None:
+        """Initialize the client."""
+        self._session = async_get_clientsession(hass)
+        self._api_key = api_key
+        self._referrer = referrer
+
+    async def compute_routes(
+        self, payload: dict[str, Any], field_mask: str
+    ) -> ComputeRoutesResponse:
+        """Compute routes."""
+        headers: dict[str, str] = {
+            "X-Goog-Api-Key": self._api_key,
+            "X-Goog-FieldMask": field_mask,
+        }
+        if self._referrer:
+            headers["Referer"] = self._referrer
+
+        try:
+            async with self._session.post(
+                COMPUTE_ROUTES_URL,
+                json=payload,
+                headers=headers,
+                timeout=CLIENT_TIMEOUT,
+            ) as response:
+                status = response.status
+                body = await response.text()
+        except TimeoutError as err:
+            raise TimeoutError("Timeout connecting to the Google Routes API") from err
+        except aiohttp.ClientError as err:
+            raise GoogleAPIError(str(err)) from err
+
+        if status >= 400:
+            _raise_api_error(status, body)
+
+        if not body:
+            return ComputeRoutesResponse(routes=[])
+
+        try:
+            data = json_loads(body)
+        except ValueError as err:
+            raise GoogleAPIError("Invalid response from the Google Routes API") from err
+        if not isinstance(data, dict):
+            raise GoogleAPIError("Invalid response from the Google Routes API")
+        return _parse_routes_response(data)
+
+
+def convert_time(time_str: str) -> str:
+    """Convert a string like '08:00' to an RFC 3339 timestamp.
 
     If the time is in the past, it will be shifted to the next day.
     """
@@ -64,13 +193,11 @@ def convert_time(time_str: str) -> timestamp_pb2.Timestamp:
     )
     if combined < dt_util.now():
         combined = combined + dt.timedelta(days=1)
-    timestamp = timestamp_pb2.Timestamp()
-    timestamp.FromDatetime(dt=combined)
-    return timestamp
+    return dt_util.as_utc(combined).isoformat().replace("+00:00", "Z")
 
 
-def convert_to_waypoint(hass: HomeAssistant, location: str) -> Waypoint | None:
-    """Convert a location to a Waypoint.
+def convert_to_waypoint(hass: HomeAssistant, location: str) -> dict[str, Any] | None:
+    """Convert a location to a waypoint.
 
     Will either use coordinates or if none are found, use the location as an address.
     """
@@ -81,59 +208,34 @@ def convert_to_waypoint(hass: HomeAssistant, location: str) -> Waypoint | None:
         formatted_coordinates = coordinates.split(",")
         probatio.Schema(cv.gps(formatted_coordinates))
     except AttributeError, probatio.Invalid:
-        return Waypoint(address=location)
-    return Waypoint(
-        location=Location(
-            lat_lng=latlng_pb2.LatLng(
-                latitude=float(formatted_coordinates[0]),
-                longitude=float(formatted_coordinates[1]),
-            )
-        )
-    )
+        return {"address": location}
+    return {
+        "location": {
+            "latLng": {
+                "latitude": float(formatted_coordinates[0]),
+                "longitude": float(formatted_coordinates[1]),
+            }
+        }
+    }
 
 
 async def validate_config_entry(
-    hass: HomeAssistant, api_key: str, origin: str, destination: str
+    hass: HomeAssistant,
+    api_key: str,
+    origin: str,
+    destination: str,
+    referrer: str | None = None,
 ) -> None:
     """Return whether the config entry data is valid."""
-    resolved_origin = convert_to_waypoint(hass, origin)
-    resolved_destination = convert_to_waypoint(hass, destination)
-    client_options = ClientOptions(api_key=api_key)
-    client = RoutesAsyncClient(client_options=client_options)
-    field_mask = "routes.duration"
-    request = ComputeRoutesRequest(
-        origin=resolved_origin,
-        destination=resolved_destination,
-        travel_mode=RouteTravelMode.DRIVE,
+    client = RoutesClient(hass, api_key, referrer)
+    await client.compute_routes(
+        {
+            "origin": convert_to_waypoint(hass, origin),
+            "destination": convert_to_waypoint(hass, destination),
+            "travelMode": "DRIVE",
+        },
+        field_mask="routes.duration",
     )
-    try:
-        await client.compute_routes(
-            request, metadata=[("x-goog-fieldmask", field_mask)]
-        )
-    except PermissionDenied as permission_error:
-        _LOGGER.error("Permission denied: %s", permission_error.message)
-        raise PermissionDeniedException from permission_error
-    except (Unauthorized, Forbidden) as unauthorized_error:
-        _LOGGER.error("Request denied: %s", unauthorized_error.message)
-        raise InvalidApiKeyException from unauthorized_error
-    except GatewayTimeout as timeout_error:
-        _LOGGER.error("Timeout error")
-        raise TimeoutError from timeout_error
-    except GoogleAPIError as unknown_error:
-        _LOGGER.error("Unknown error: %s", unknown_error)
-        raise UnknownException from unknown_error
-
-
-class InvalidApiKeyException(Exception):
-    """Invalid API Key Error."""
-
-
-class UnknownException(Exception):
-    """Unknown API Error."""
-
-
-class PermissionDeniedException(Exception):
-    """Permission Denied Error."""
 
 
 def create_routes_api_disabled_issue(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -161,11 +263,11 @@ def delete_routes_api_disabled_issue(hass: HomeAssistant, entry: ConfigEntry) ->
 
 
 async def async_compute_routes(
-    client: RoutesAsyncClient,
+    client: RoutesClient,
     origin: str,
     destination: str,
     hass: HomeAssistant,
-    travel_mode: int,
+    travel_mode: str,
     units: str,
     language: str | None = None,
     avoid: str | None = None,
@@ -174,7 +276,7 @@ async def async_compute_routes(
     transit_routing_preference: str | None = None,
     departure_time: str | None = None,
     arrival_time: str | None = None,
-    field_mask: str = "routes.duration,routes.distanceMeters,routes.localized_values",
+    field_mask: str = "routes.duration,routes.distanceMeters,routes.localizedValues",
 ) -> ComputeRoutesResponse | None:
     """Compute routes using Google Routes API."""
     origin_waypoint = convert_to_waypoint(hass, origin)
@@ -183,53 +285,41 @@ async def async_compute_routes(
     if origin_waypoint is None or destination_waypoint is None:
         return None
 
-    route_modifiers = None
-    routing_preference = None
-    if travel_mode == RouteTravelMode.DRIVE:
-        routing_preference = RoutingPreference.TRAFFIC_AWARE_OPTIMAL
-        route_modifiers = RouteModifiers(
-            avoid_tolls=avoid == "tolls",
-            avoid_ferries=avoid == "ferries",
-            avoid_highways=avoid == "highways",
-            avoid_indoor=avoid == "indoor",
-        )
+    payload: dict[str, Any] = {
+        "origin": origin_waypoint,
+        "destination": destination_waypoint,
+        "travelMode": travel_mode,
+        "units": UNITS_TO_API[units],
+    }
 
-    transit_preferences = None
-    if travel_mode == RouteTravelMode.TRANSIT:
-        transit_routing_pref = None
-        transit_travel_mode = (
-            TransitPreferences.TransitTravelMode.TRANSIT_TRAVEL_MODE_UNSPECIFIED
-        )
+    if travel_mode == "DRIVE":
+        payload["routingPreference"] = "TRAFFIC_AWARE_OPTIMAL"
+        payload["routeModifiers"] = {
+            "avoidTolls": avoid == "tolls",
+            "avoidFerries": avoid == "ferries",
+            "avoidHighways": avoid == "highways",
+            "avoidIndoor": avoid == "indoor",
+        }
+    elif travel_mode == "TRANSIT":
+        transit_preferences: dict[str, Any] = {}
         if transit_routing_preference is not None:
-            transit_routing_pref = TRANSIT_PREFS_TO_GOOGLE_SDK_ENUM[
+            transit_preferences["routingPreference"] = TRANSIT_PREFS_TO_API[
                 transit_routing_preference
             ]
         if transit_mode is not None:
-            transit_travel_mode = TRANSPORT_TYPES_TO_GOOGLE_SDK_ENUM[transit_mode]
-        transit_preferences = TransitPreferences(
-            routing_preference=transit_routing_pref,
-            allowed_travel_modes=[transit_travel_mode],
-        )
+            transit_preferences["allowedTravelModes"] = [
+                TRANSPORT_TYPES_TO_API[transit_mode]
+            ]
+        if transit_preferences:
+            payload["transitPreferences"] = transit_preferences
 
-    departure_timestamp = convert_time(departure_time) if departure_time else None
-    arrival_timestamp = convert_time(arrival_time) if arrival_time else None
+    if departure_time:
+        payload["departureTime"] = convert_time(departure_time)
+    if arrival_time:
+        payload["arrivalTime"] = convert_time(arrival_time)
+    if language:
+        payload["languageCode"] = language
+    if traffic_model:
+        payload["trafficModel"] = TRAFFIC_MODELS_TO_API[traffic_model]
 
-    request = ComputeRoutesRequest(
-        origin=origin_waypoint,
-        destination=destination_waypoint,
-        travel_mode=travel_mode,
-        routing_preference=routing_preference,
-        departure_time=departure_timestamp,
-        arrival_time=arrival_timestamp,
-        route_modifiers=route_modifiers,
-        language_code=language,
-        units=UNITS_TO_GOOGLE_SDK_ENUM[units],
-        traffic_model=TRAFFIC_MODELS_TO_GOOGLE_SDK_ENUM[traffic_model]
-        if traffic_model
-        else None,
-        transit_preferences=transit_preferences,
-    )
-
-    return await client.compute_routes(
-        request, metadata=[("x-goog-fieldmask", field_mask)]
-    )
+    return await client.compute_routes(payload, field_mask=field_mask)

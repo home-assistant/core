@@ -1,15 +1,8 @@
 """Test the Google Maps Travel Time config flow."""
 
-from unittest.mock import AsyncMock, patch
-
-from google.api_core.exceptions import (
-    GatewayTimeout,
-    GoogleAPIError,
-    PermissionDenied,
-    Unauthorized,
-)
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.google_travel_time.const import (
     ARRIVAL_TIME,
@@ -18,6 +11,7 @@ from homeassistant.components.google_travel_time.const import (
     CONF_DEPARTURE_TIME,
     CONF_DESTINATION,
     CONF_ORIGIN,
+    CONF_REFERRER,
     CONF_TIME,
     CONF_TIME_TYPE,
     CONF_TRAFFIC_MODEL,
@@ -27,6 +21,7 @@ from homeassistant.components.google_travel_time.const import (
     DEFAULT_NAME,
     DEPARTURE_TIME,
     DOMAIN,
+    SECTION_API_KEY_OPTIONS,
     UNITS_IMPERIAL,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
@@ -34,36 +29,62 @@ from homeassistant.const import CONF_API_KEY, CONF_LANGUAGE, CONF_MODE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import ROUTES_RESPONSE, mock_compute_routes
 from .const import DEFAULT_OPTIONS, MOCK_CONFIG, RECONFIGURE_CONFIG
+
+REFERRER = "https://example.com/"
+
+ERROR_RESPONSES = {
+    "cannot_connect": {
+        "status": 500,
+        "json": {"error": {"message": "Internal error."}},
+    },
+    "timeout_connect": {"exc": TimeoutError()},
+    "invalid_auth": {
+        "status": 400,
+        "json": {
+            "error": {
+                "message": "API key not valid.",
+                "details": [{"reason": "API_KEY_INVALID"}],
+            }
+        },
+    },
+    "permission_denied": {
+        "status": 403,
+        "json": {
+            "error": {
+                "message": "Routes API has not been used in project.",
+                "details": [{"reason": "SERVICE_DISABLED"}],
+            }
+        },
+    },
+    "invalid_referrer": {
+        "status": 403,
+        "json": {
+            "error": {
+                "message": "Requests from referer are blocked.",
+                "details": [{"reason": "API_KEY_HTTP_REFERRER_BLOCKED"}],
+            }
+        },
+    },
+}
 
 
 async def assert_common_reconfigure_steps(
     hass: HomeAssistant, reconfigure_result: ConfigFlowResult
 ) -> None:
     """Step through and assert the happy case reconfigure flow."""
-    client_mock = AsyncMock()
-    with (
-        patch(
-            "homeassistant.components.google_travel_time.helpers.RoutesAsyncClient",
-            return_value=client_mock,
-        ),
-        patch(
-            "homeassistant.components.google_travel_time.sensor.RoutesAsyncClient",
-            return_value=client_mock,
-        ),
-    ):
-        client_mock.compute_routes.return_value = None
-        reconfigure_successful_result = await hass.config_entries.flow.async_configure(
-            reconfigure_result["flow_id"],
-            RECONFIGURE_CONFIG,
-        )
-        assert reconfigure_successful_result["type"] is FlowResultType.ABORT
-        assert reconfigure_successful_result["reason"] == "reconfigure_successful"
-        await hass.async_block_till_done()
+    reconfigure_successful_result = await hass.config_entries.flow.async_configure(
+        reconfigure_result["flow_id"],
+        RECONFIGURE_CONFIG,
+    )
+    assert reconfigure_successful_result["type"] is FlowResultType.ABORT
+    assert reconfigure_successful_result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
 
-        entry = hass.config_entries.async_entries(DOMAIN)[0]
-        assert entry.title == DEFAULT_NAME
-        assert entry.data == RECONFIGURE_CONFIG
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.title == DEFAULT_NAME
+    assert entry.data == RECONFIGURE_CONFIG
 
 
 async def assert_common_create_steps(
@@ -96,27 +117,39 @@ async def test_minimum_fields(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+async def test_referrer(hass: HomeAssistant, routes_mock: AiohttpClientMocker) -> None:
+    """Test creating an entry with a referrer."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            **MOCK_CONFIG,
+            SECTION_API_KEY_OPTIONS: {CONF_REFERRER: REFERRER},
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {**MOCK_CONFIG, CONF_REFERRER: REFERRER}
+    assert routes_mock.mock_calls[0][3]["Referer"] == REFERRER
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
-    ("exception", "error"),
-    [
-        (GoogleAPIError("test"), "cannot_connect"),
-        (GatewayTimeout("Timeout error."), "timeout_connect"),
-        (Unauthorized("Invalid API key."), "invalid_auth"),
-        (
-            PermissionDenied(
-                "Requests to this API routes.googleapis.com method"
-                " google.maps.routing.v2.Routes.ComputeRoutes"
-                " are blocked."
-            ),
-            "permission_denied",
-        ),
-    ],
+    ("mock_kwargs", "error"),
+    [(kwargs, error) for error, kwargs in ERROR_RESPONSES.items()],
 )
 async def test_errors(
-    hass: HomeAssistant, routes_mock: AsyncMock, exception: Exception, error: str
+    hass: HomeAssistant,
+    routes_mock: AiohttpClientMocker,
+    mock_kwargs: dict,
+    error: str,
 ) -> None:
     """Test errors in the flow."""
-    routes_mock.compute_routes.side_effect = exception
+    mock_compute_routes(routes_mock, **mock_kwargs)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -131,7 +164,7 @@ async def test_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    routes_mock.compute_routes.side_effect = None
+    mock_compute_routes(routes_mock, json=ROUTES_RESPONSE)
     await assert_common_create_steps(hass, result)
 
 
@@ -149,24 +182,50 @@ async def test_reconfigure(hass: HomeAssistant, mock_config: MockConfigEntry) ->
     await assert_common_reconfigure_steps(hass, result)
 
 
+@pytest.mark.parametrize(
+    ("data", "options"),
+    [(MOCK_CONFIG, DEFAULT_OPTIONS)],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_referrer(
+    hass: HomeAssistant,
+    routes_mock: AiohttpClientMocker,
+    mock_config: MockConfigEntry,
+) -> None:
+    """Test reconfiguring an entry with a referrer."""
+    result = await mock_config.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            **RECONFIGURE_CONFIG,
+            SECTION_API_KEY_OPTIONS: {CONF_REFERRER: REFERRER},
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.data == {**RECONFIGURE_CONFIG, CONF_REFERRER: REFERRER}
+    assert routes_mock.mock_calls[-1][3]["Referer"] == REFERRER
+
+
 @pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
     ("data", "options"),
     [(MOCK_CONFIG, DEFAULT_OPTIONS)],
 )
 @pytest.mark.parametrize(
-    ("exception", "error"),
-    [
-        (GoogleAPIError("test"), "cannot_connect"),
-        (GatewayTimeout("Timeout error."), "timeout_connect"),
-        (Unauthorized("Invalid API key."), "invalid_auth"),
-    ],
+    ("mock_kwargs", "error"),
+    [(kwargs, error) for error, kwargs in ERROR_RESPONSES.items()],
 )
 async def test_reconfigure_invalid_config_entry(
     hass: HomeAssistant,
     mock_config: MockConfigEntry,
-    routes_mock: AsyncMock,
-    exception: Exception,
+    routes_mock: AiohttpClientMocker,
+    mock_kwargs: dict,
     error: str,
 ) -> None:
     """Test we get the form."""
@@ -175,7 +234,7 @@ async def test_reconfigure_invalid_config_entry(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
-    routes_mock.compute_routes.side_effect = exception
+    mock_compute_routes(routes_mock, **mock_kwargs)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -185,7 +244,7 @@ async def test_reconfigure_invalid_config_entry(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    routes_mock.compute_routes.side_effect = None
+    mock_compute_routes(routes_mock, json=ROUTES_RESPONSE)
 
     await assert_common_reconfigure_steps(hass, result)
 

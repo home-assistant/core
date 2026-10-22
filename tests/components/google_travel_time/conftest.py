@@ -1,22 +1,25 @@
-"""Fixtures for Google Time Travel tests."""
+"""Fixtures for Google Maps Travel Time tests."""
 
 from collections.abc import Generator
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
-from google.maps.routing_v2 import ComputeRoutesResponse, Route
-from google.protobuf import duration_pb2
-from google.type import localized_text_pb2
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
+from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
 
 from homeassistant.components.google_travel_time.const import DEFAULT_NAME, DOMAIN
 from homeassistant.core import HomeAssistant
 
+from . import COMPUTE_ROUTES_URL, ROUTES_RESPONSE
+
 
 @pytest.fixture(name="mock_config")
 async def mock_config_fixture(
-    hass: HomeAssistant, data: dict[str, Any], options: dict[str, Any]
+    hass: HomeAssistant,
+    routes_mock: AiohttpClientMocker,
+    data: dict[str, Any],
+    options: dict[str, Any],
 ) -> MockConfigEntry:
     """Mock a Google Travel Time config entry."""
     config_entry = MockConfigEntry(
@@ -42,47 +45,8 @@ def mock_setup_entry() -> Generator[None]:
         yield
 
 
-@pytest.fixture
-def routes_mock() -> Generator[AsyncMock]:
-    """Return valid API result."""
-    with (
-        patch(
-            "homeassistant.components.google_travel_time.helpers.RoutesAsyncClient",
-            autospec=True,
-        ) as mock_client,
-        patch(
-            "homeassistant.components.google_travel_time.sensor.RoutesAsyncClient",
-            new=mock_client,
-        ),
-        patch(
-            "homeassistant.components.google_travel_time.services.RoutesAsyncClient",
-            new=mock_client,
-        ),
-    ):
-        client_mock = mock_client.return_value
-        client_mock.compute_routes.return_value = ComputeRoutesResponse(
-            mapping={
-                "routes": [
-                    Route(
-                        mapping={
-                            "localized_values": Route.RouteLocalizedValues(
-                                mapping={
-                                    "distance": localized_text_pb2.LocalizedText(
-                                        text="21.3 km"
-                                    ),
-                                    "duration": localized_text_pb2.LocalizedText(
-                                        text="27 mins"
-                                    ),
-                                    "static_duration": localized_text_pb2.LocalizedText(
-                                        text="26 mins"
-                                    ),
-                                }
-                            ),
-                            "duration": duration_pb2.Duration(seconds=1620),
-                            "distance_meters": 21300,
-                        }
-                    )
-                ]
-            }
-        )
-        yield client_mock
+@pytest.fixture(name="routes_mock")
+def routes_mock_fixture(aioclient_mock: AiohttpClientMocker) -> AiohttpClientMocker:
+    """Mock the Routes API with a valid response."""
+    aioclient_mock.post(COMPUTE_ROUTES_URL, json=ROUTES_RESPONSE)
+    return aioclient_mock
