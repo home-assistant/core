@@ -378,17 +378,15 @@ async def test_update_errors(
     side_effect: Exception | Callable[[Iterable[Installation]], ThermostatsResult],
     has_reauth_flow: bool,
 ) -> None:
-    """Test errors during a regular update keep the last known state."""
+    """Test errors during a regular update make the entities unavailable."""
     await setup_integration(hass, mock_config_entry)
     mock_gkp_client.get_thermostats.side_effect = side_effect
 
     await advance_time(hass, freezer, UPDATE_INTERVAL)
 
-    # The entities keep their last known state when the hub update fails
     state = hass.states.get(LIVING_ROOM_ENTITY_ID)
     assert state is not None
-    assert state.state != STATE_UNAVAILABLE
-    assert state.attributes["current_temperature"] == 21.1
+    assert state.state == STATE_UNAVAILABLE
     assert (
         any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
         == has_reauth_flow
@@ -489,6 +487,7 @@ async def test_rate_limited(
     """Test the next update waits for the delay requested by the API."""
     await setup_integration(hass, mock_config_entry)
     await advance_time(hass, freezer, USER_CONNECTED_REPORT_DELAY)
+    get_thermostats = mock_gkp_client.get_thermostats.side_effect
     mock_gkp_client.get_thermostats.side_effect = GkpRateLimitError(
         "limited", RETRY_AFTER
     )
@@ -497,11 +496,16 @@ async def test_rate_limited(
 
     state = hass.states.get(LIVING_ROOM_ENTITY_ID)
     assert state is not None
-    assert state.state != STATE_UNAVAILABLE
+    assert state.state == STATE_UNAVAILABLE
     mock_gkp_client.get_thermostats.reset_mock()
 
     await advance_time(hass, freezer, timedelta(seconds=RETRY_AFTER - 1))
     mock_gkp_client.get_thermostats.assert_not_called()
 
+    mock_gkp_client.get_thermostats.side_effect = get_thermostats
     await advance_time(hass, freezer, timedelta(seconds=1))
     assert mock_gkp_client.get_thermostats.called
+
+    state = hass.states.get(LIVING_ROOM_ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE

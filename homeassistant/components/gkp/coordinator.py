@@ -225,11 +225,10 @@ class GkpDeviceCoordinator(DataUpdateCoordinator[GkpDeviceData]):
         Update data and notify listeners without rescheduling the refresh
         interval, so an in-flight fast-polling cycle is not interrupted.
         """
-        if (
-            self.hub_coordinator.last_update_success
-            and self.hub_coordinator.data
-            and self.device_id in self.hub_coordinator.data
-        ):
+        if not self.hub_coordinator.last_update_success:
+            self.last_update_success = False
+            self.async_update_listeners()
+        elif self.hub_coordinator.data and self.device_id in self.hub_coordinator.data:
             self.data = GkpDeviceData(
                 thermostat=self.hub_coordinator.data[self.device_id]
             )
