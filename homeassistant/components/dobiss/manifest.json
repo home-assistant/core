@@ -1,0 +1,10 @@
+{
+  "domain": "dobiss",
+  "name": "Dobiss",
+  "codeowners": ["@koen-fermax"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/dobiss",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "requirements": ["dobiss-nxt-client==0.1.1"]
+}
