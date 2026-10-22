@@ -23,11 +23,13 @@ from syrupy.assertion import SnapshotAssertion
 from webrtc_models import RTCIceServer
 
 from homeassistant.components.camera import (
+    DOMAIN as CAMERA_DOMAIN,
     CameraState,
     StreamType,
     async_get_image,
     get_camera_from_entity_id,
 )
+from homeassistant.components.labs import async_update_preview_feature
 from homeassistant.components.matter.camera import (
     CAMERA_SCHEMA_VERSION,
     MAX_ICE_SERVERS,
@@ -38,9 +40,11 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from .common import (
     set_node_attribute,
+    setup_integration_with_node_fixture,
     snapshot_matter_entities,
     trigger_subscription_callback,
 )
@@ -214,12 +218,55 @@ async def test_cameras(
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.CAMERA)
 
 
-@pytest.mark.parametrize("node_fixture", ["mock_camera"])
-@pytest.mark.usefixtures("matter_node")
-async def test_camera_capabilities(hass: HomeAssistant) -> None:
-    """Test that the camera advertises native WebRTC support."""
+@pytest.mark.parametrize(
+    ("override_attributes", "two_way_audio"),
+    [
+        pytest.param({}, True, id="full_duplex"),
+        pytest.param({"1/1361/9": 1}, True, id="half_duplex"),
+        pytest.param({"1/1361/9": 0}, False, id="talk_not_supported"),
+        pytest.param({"1/1361/65532": 0b1011}, False, id="no_speaker_feature"),
+    ],
+)
+async def test_camera_capabilities(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    override_attributes: dict[str, Any],
+    two_way_audio: bool,
+) -> None:
+    """Test that the camera advertises native WebRTC and two way audio support."""
+    # Two way audio is only offered with the labs feature enabled
+    assert await async_setup_component(hass, "labs", {})
+    await async_update_preview_feature(hass, CAMERA_DOMAIN, "two_way_audio", True)
+    await setup_integration_with_node_fixture(
+        hass, "mock_camera", matter_client, override_attributes
+    )
     camera = get_camera_from_entity_id(hass, ENTITY_ID)
     assert camera.camera_capabilities.frontend_stream_types == {StreamType.WEB_RTC}
+    assert camera.camera_capabilities.two_way_audio is two_way_audio
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_camera"])
+async def test_camera_capabilities_updated(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test two way audio support follows attribute updates of a loaded camera."""
+    assert await async_setup_component(hass, "labs", {})
+    await async_update_preview_feature(hass, CAMERA_DOMAIN, "two_way_audio", True)
+    camera = get_camera_from_entity_id(hass, ENTITY_ID)
+    assert camera.camera_capabilities.two_way_audio is True
+
+    # Dropping the speaker feature disables two way audio.
+    set_node_attribute(matter_node, 1, 1361, 65532, 0b1011)
+    await trigger_subscription_callback(hass, matter_client)
+    assert camera.camera_capabilities.two_way_audio is False
+
+    # So does the camera reporting that talk is not supported.
+    set_node_attribute(matter_node, 1, 1361, 65532, 27)
+    set_node_attribute(matter_node, 1, 1361, 9, 0)
+    await trigger_subscription_callback(hass, matter_client)
+    assert camera.camera_capabilities.two_way_audio is False
 
 
 @pytest.mark.parametrize("server_schema_version", [CAMERA_SCHEMA_VERSION - 1])
@@ -256,6 +303,7 @@ async def test_camera_webrtc(
             }
         ],
         client_session_key=session_id,
+        talkback=True,
     )
 
     # Events of other sessions, and the camera's "end", which is reported
