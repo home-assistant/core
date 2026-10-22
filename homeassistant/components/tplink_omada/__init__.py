@@ -83,22 +83,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> Non
     entry.runtime_data = controller
 
     _cleanup_task: asyncio.Task[None] | None = None
-    _first_cleanup_call = True
 
     async def _async_cleanup_task() -> None:
-        nonlocal _first_cleanup_call
-        if _first_cleanup_call:
-            # Data is already fresh from initialize_first_refresh(), so this run
-            # is not skipped when polling is disabled: setup always refreshes,
-            # and the preference only stops the scheduled polling.
-            _first_cleanup_call = False
-        elif entry.pref_disable_polling:
+        if entry.pref_disable_polling:
             # Cleanup decisions need fresh data, so skip the run entirely
             # instead of polling the controller while polling is disabled.
             return
-        else:
-            # Refresh the coordinator so cleanup doesn't use stale data.
-            await controller.devices_coordinator.async_refresh()
+        # Refresh the coordinator so cleanup doesn't use stale data.
+        await controller.devices_coordinator.async_refresh()
         await async_cleanup_devices(hass, controller)
 
     @callback
@@ -114,6 +106,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> Non
 
     await controller.initialize_first_refresh()
 
+    # Sweep before platforms create entities, so a device that was replaced
+    # while Home Assistant was stopped does not push the new entities onto
+    # suffixed entity IDs that the stale entries still occupy.
+    await async_cleanup_devices(hass, controller)
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     @callback
@@ -121,7 +118,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> Non
         if _cleanup_task is not None and not _cleanup_task.done():
             _cleanup_task.cancel()
 
-    _schedule_cleanup()
     entry.async_on_unload(_cancel_cleanup)
     entry.async_on_unload(
         async_track_time_interval(hass, _schedule_cleanup, timedelta(hours=1))

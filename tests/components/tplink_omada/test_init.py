@@ -212,6 +212,44 @@ async def test_cleanup_preserves_controller_device(
     )
 
 
+async def test_startup_cleanup_runs_before_platform_setup(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test stale entries release entity IDs before platforms are set up."""
+    mock_config_entry.add_to_hass(hass)
+
+    stale_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "99:99:99:99:99:99")},
+        manufacturer="TP-Link",
+        model="Test",
+        name="Test PoE Switch",
+    )
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "stale_device_status",
+        config_entry=mock_config_entry,
+        device_id=stale_device.id,
+        suggested_object_id="test_poe_switch_device_status",
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert device_registry.async_get(stale_device.id) is None
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, "54-AF-97-00-00-01_device_status"
+        )
+        == "sensor.test_poe_switch_device_status"
+    )
+
+
 async def test_cleanup_task_guard_prevents_redundant_tasks(
     hass: HomeAssistant,
     mock_omada_clients_only_client: MagicMock,
@@ -225,6 +263,9 @@ async def test_cleanup_task_guard_prevents_redundant_tasks(
     async def blocking_cleanup(h: HomeAssistant, c: OmadaSiteController) -> None:
         nonlocal cleanup_call_count
         cleanup_call_count += 1
+        if cleanup_call_count == 1:
+            # The startup sweep runs during setup, before platforms are added
+            return
         cleanup_started.set()
         await cleanup_proceed.wait()
 
@@ -236,20 +277,20 @@ async def test_cleanup_task_guard_prevents_redundant_tasks(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        # With eager_start=True the background task runs synchronously until its
-        # first await, so cleanup_started is set before async_setup_entry returns.
-        assert cleanup_started.is_set()
-
-        # In-flight task guard is now active — the 1-hour interval should be a no-op
+        # The first scheduled run starts a cleanup background task
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
         await hass.async_block_till_done()
+        assert cleanup_started.is_set()
 
-        # Release the first cleanup
+        # The in-flight guard makes the next interval a no-op
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=2, seconds=1))
+        await hass.async_block_till_done()
+
+        # Release the in-flight cleanup
         cleanup_proceed.set()
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    # The second _schedule_cleanup call returned early due to the in-flight task guard
-    assert cleanup_call_count == 1
+    assert cleanup_call_count == 2
 
 
 async def _get_devices_without(
@@ -573,9 +614,14 @@ async def test_unload_cancels_cleanup_and_interval(
     """Test entry unload cancels in-flight cleanup task and removes interval."""
     cleanup_started = asyncio.Event()
     cleanup_cancelled = False
+    cleanup_calls = 0
 
     async def blocking_cleanup(h: HomeAssistant, c: OmadaSiteController) -> None:
-        nonlocal cleanup_cancelled
+        nonlocal cleanup_cancelled, cleanup_calls
+        cleanup_calls += 1
+        if cleanup_calls == 1:
+            # The startup sweep runs during setup, before platforms are added
+            return
         cleanup_started.set()
         try:
             await asyncio.Event().wait()  # block forever until cancelled
@@ -591,6 +637,9 @@ async def test_unload_cancels_cleanup_and_interval(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
+        # Start the hourly cleanup task and leave it in flight
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
+        await hass.async_block_till_done()
         assert cleanup_started.is_set()
 
         assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
@@ -602,7 +651,7 @@ async def test_unload_cancels_cleanup_and_interval(
         # Firing the interval after unload must not start a new cleanup task.
         # This stays inside the patch, so a leaked interval would be visible.
         cleanup_started.clear()
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=2, seconds=1))
         await hass.async_block_till_done(wait_background_tasks=True)
         assert not cleanup_started.is_set()
 
