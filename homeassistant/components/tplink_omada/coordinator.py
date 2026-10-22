@@ -219,12 +219,12 @@ class OmadaDevicesCoordinator(OmadaCoordinator[OmadaListDevice]):
         self.consecutive_empty_updates = 0
 
     @override
-    async def poll_update(self) -> dict[str, OmadaListDevice]:
-        """Poll the site's current registered Omada devices."""
+    async def _async_update_data(self) -> dict[str, OmadaListDevice]:
+        """Fetch the device list and track consecutive empty responses."""
         try:
-            devices = {d.mac: d for d in await self.omada_client.get_devices()}
-        except OmadaClientException:
-            # A failed poll says nothing about the devices, so the empty
+            devices = await super()._async_update_data()
+        except Exception:
+            # Any failed poll says nothing about the devices, so the empty
             # counter must not accumulate across it.
             self.consecutive_empty_updates = 0
             raise
@@ -233,6 +233,11 @@ class OmadaDevicesCoordinator(OmadaCoordinator[OmadaListDevice]):
         else:
             self.consecutive_empty_updates += 1
         return devices
+
+    @override
+    async def poll_update(self) -> dict[str, OmadaListDevice]:
+        """Poll the site's current registered Omada devices."""
+        return {d.mac: d for d in await self.omada_client.get_devices()}
 
 
 class OmadaClientsCoordinator(OmadaCoordinator[OmadaWirelessClient]):
