@@ -16,6 +16,7 @@ from freezegun.api import FrozenDateTimeFactory
 import probatio
 import pytest
 from pytest_homeassistant.common import (
+    MockConfigEntry,
     MockModule,
     MockPlatform,
     mock_integration,
@@ -63,7 +64,9 @@ from homeassistant.helpers import (
     area_registry as ar,
     condition,
     config_validation as cv,
+    device_registry as dr,
     entity_registry as er,
+    floor_registry as fr,
     label_registry as lr,
     recorder as recorder_helper,
     trace,
@@ -7232,6 +7235,168 @@ async def test_track_changes_target_registry_update(
 
     entity_registry.async_update_entity(hallway.entity_id, area_id=area.id)
     await hass.async_block_till_done()
+    action.assert_called_once()
+
+    unsub()
+
+
+def _add_night_label(hass: HomeAssistant, entity_id: str) -> None:
+    er.async_get(hass).async_update_entity(entity_id, labels={"night"})
+
+
+def _remove_night_label(hass: HomeAssistant, entity_id: str) -> None:
+    er.async_get(hass).async_update_entity(entity_id, labels=set())
+
+
+def _move_entity_to_bedroom(hass: HomeAssistant, entity_id: str) -> None:
+    # An entity of a device needs a name of its own to have an area of its own
+    er.async_get(hass).async_update_entity(
+        entity_id, area_id="bedroom", name="Bedroom light"
+    )
+
+
+def _move_device_to_bedroom(hass: HomeAssistant, entity_id: str) -> None:
+    device_id = er.async_get(hass).entities[entity_id].device_id
+    assert device_id is not None
+    dr.async_get(hass).async_update_device(device_id, area_id="bedroom")
+
+
+def _unlink_device(hass: HomeAssistant, entity_id: str) -> None:
+    er.async_get(hass).async_update_entity(entity_id, device_id=None)
+
+
+def _move_kitchen_upstairs(hass: HomeAssistant, entity_id: str) -> None:
+    ar.async_get(hass).async_update("kitchen", floor_id="upstairs")
+
+
+@pytest.mark.parametrize(
+    ("exclude", "initial_labels", "registry_update"),
+    [
+        pytest.param(
+            lambda device_id: {"label_id": "night"},
+            set(),
+            _add_night_label,
+            id="label_added",
+        ),
+        pytest.param(
+            lambda device_id: {"label_id": "night"},
+            {"night"},
+            _remove_night_label,
+            id="label_removed",
+        ),
+        pytest.param(
+            lambda device_id: {"area_id": "bedroom"},
+            set(),
+            _move_entity_to_bedroom,
+            id="area_entity",
+        ),
+        pytest.param(
+            lambda device_id: {"area_id": "bedroom"},
+            set(),
+            _move_device_to_bedroom,
+            id="area_device",
+        ),
+        pytest.param(
+            lambda device_id: {"device_id": device_id},
+            set(),
+            _unlink_device,
+            id="device",
+        ),
+        pytest.param(
+            lambda device_id: {"floor_id": "upstairs"},
+            set(),
+            _move_kitchen_upstairs,
+            id="floor",
+        ),
+    ],
+)
+async def test_track_changes_target_exclude_registry_update(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    floor_registry: fr.FloorRegistry,
+    label_registry: lr.LabelRegistry,
+    exclude: Callable[[str], dict[str, Any]],
+    initial_labels: set[str],
+    registry_update: Callable[[HomeAssistant, str], None],
+) -> None:
+    """Test a registry change of an excluded entity id target is reported."""
+    floor_registry.async_create("Upstairs")
+    area_registry.async_create("Kitchen")
+    area_registry.async_create("Bedroom")
+    label_registry.async_create("Night")
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "kitchen")},
+    )
+    device_registry.async_update_device(device.id, area_id="kitchen")
+    light = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "kitchen",
+        device_id=device.id,
+        suggested_object_id="kitchen",
+    )
+    entity_registry.async_update_entity(light.entity_id, labels=initial_labels)
+    hass.states.async_set(light.entity_id, "on")
+    config = await async_validate_condition_config(
+        hass,
+        cv.CONDITION_SCHEMA(
+            {
+                "condition": "light.is_on",
+                "target": {
+                    "entity_id": light.entity_id,
+                    "exclude": exclude(device.id),
+                },
+                "options": {"behavior": "all"},
+            }
+        ),
+    )
+    test = await condition.async_from_config(hass, config)
+    action = Mock()
+    unsub = await test.async_track_changes(action)
+    action.assert_not_called()
+
+    registry_update(hass, light.entity_id)
+    await hass.async_block_till_done()
+    action.assert_called_once()
+
+    unsub()
+
+
+async def test_track_changes_target_exclude_entity_id(
+    hass: HomeAssistant,
+) -> None:
+    """Test excluded entity ids are not tracked and need no registry tracking."""
+    init_count = hass.bus.async_listeners().get(er.EVENT_ENTITY_REGISTRY_UPDATED, 0)
+    config = await async_validate_condition_config(
+        hass,
+        cv.CONDITION_SCHEMA(
+            {
+                "condition": "light.is_on",
+                "target": {
+                    "entity_id": ["light.kitchen", "light.hallway"],
+                    "exclude": {"entity_id": "light.hallway"},
+                },
+            }
+        ),
+    )
+    test = await condition.async_from_config(hass, config)
+    action = Mock()
+    unsub = await test.async_track_changes(action)
+
+    assert (
+        hass.bus.async_listeners().get(er.EVENT_ENTITY_REGISTRY_UPDATED, 0)
+        == init_count
+    )
+
+    hass.states.async_set("light.hallway", "on")
+    action.assert_not_called()
+
+    hass.states.async_set("light.kitchen", "on")
     action.assert_called_once()
 
     unsub()
