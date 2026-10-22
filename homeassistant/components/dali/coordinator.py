@@ -158,13 +158,20 @@ class DaliCoordinator(DataUpdateCoordinator[dict[int, DaliGearData]]):
             # unavailable and leave the collision to the dedicated repair.
             if present.raw_value is not None and present.raw_value.error:
                 return None
-            device_types = tuple(
-                device_type
-                for device_type in await self.driver.send(
-                    QueryDeviceTypes(gear_address)
+            # Device types are a static property of the gear, so a known gear
+            # reuses the value from the last scan instead of re-querying it on
+            # every single-gear refresh after a command.
+            cached = self.data.get(address) if self.data else None
+            if cached is not None:
+                device_types = cached.device_types
+            else:
+                device_types = tuple(
+                    device_type
+                    for device_type in await self.driver.send(
+                        QueryDeviceTypes(gear_address)
+                    )
+                    if device_type in SUPPORTED_GEAR_DEVICE_TYPES
                 )
-                if device_type in SUPPORTED_GEAR_DEVICE_TYPES
-            )
             if not device_types:
                 return None
             level = await self.driver.send(QueryActualLevel(gear_address))
@@ -175,7 +182,6 @@ class DaliCoordinator(DataUpdateCoordinator[dict[int, DaliGearData]]):
                 # A dropped minimum-level reply would otherwise reset a known
                 # minimum to 1 and skew the conversion; keep the cached minimum
                 # for gear already seen, defaulting only for newly found gear.
-                cached = self.data.get(address) if self.data else None
                 min_level = cached.min_level if cached is not None else 1
             max_level = _response_value(
                 await self.driver.send(QueryMaxLevel(gear_address))
@@ -185,7 +191,6 @@ class DaliCoordinator(DataUpdateCoordinator[dict[int, DaliGearData]]):
                 # clear a known maximum and lift the command clamp to full power;
                 # keep the cached maximum for gear already seen, defaulting to no
                 # cap only for newly found gear.
-                cached = self.data.get(address) if self.data else None
                 max_level = cached.max_level if cached is not None else None
             linear_dimming = False
             if DEVICE_TYPE_LED in device_types:

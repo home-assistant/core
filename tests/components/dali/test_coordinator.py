@@ -1,6 +1,6 @@
 """Test the Tridonic DALI coordinator."""
 
-from types import SimpleNamespace
+from types import GeneratorType, SimpleNamespace
 from unittest.mock import patch
 
 from dali.exceptions import TransmissionError
@@ -281,7 +281,7 @@ async def test_known_gear_survives_transient_presence_miss(
     coordinator: DaliCoordinator, fake_dali_driver: FakeDaliDriver
 ) -> None:
     """Test a known gear is re-queried after a dropped presence response."""
-    coordinator.data = {0: SimpleNamespace()}
+    coordinator.data = {0: DaliGearData(device_types=(6,))}
     original_send = fake_dali_driver.send
     attempts = 0
 
@@ -301,6 +301,28 @@ async def test_known_gear_survives_transient_presence_miss(
 
     assert attempts == 2
     assert gear is not None
+
+
+async def test_known_gear_reuses_cached_device_types(
+    coordinator: DaliCoordinator, fake_dali_driver: FakeDaliDriver
+) -> None:
+    """Test a known gear's refresh does not re-query its static device types."""
+    coordinator.data = {0: DaliGearData(device_types=(6,))}
+    original_send = fake_dali_driver.send
+    sequence_sends = 0
+
+    async def send(command: object, **kwargs: object) -> object:
+        nonlocal sequence_sends
+        if isinstance(command, GeneratorType):
+            sequence_sends += 1
+        return await original_send(command, **kwargs)
+
+    with patch.object(fake_dali_driver, "send", side_effect=send):
+        gear = await coordinator._query_gear(0)
+
+    assert sequence_sends == 0
+    assert gear is not None
+    assert gear.device_types == (6,)
 
 
 async def test_absent_address_is_not_retried(
