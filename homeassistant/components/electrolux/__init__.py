@@ -129,7 +129,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) 
     except CancelledError:
         _LOGGER.info("SSE stream cancelled for entry %s", entry.entry_id)
 
-    await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_unload_platforms_or_raise(entry, PLATFORMS)
 
 
 def create_token_manager(
