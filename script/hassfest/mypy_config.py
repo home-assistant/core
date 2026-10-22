@@ -81,7 +81,6 @@ STRICT_SETTINGS: Final[list[str]] = [
     "warn_unreachable",
     # TODO: turn these on, address issues
     # "disallow_any_generics",
-    # "no_implicit_reexport",  # Also applies to external libraries
 ]
 
 # Strict settings are already applied for core files.
@@ -190,7 +189,9 @@ def _generate_and_validate_mypy_config(config: Config) -> str:
         for key, value in plugin_config.items():
             mypy_config.set(plugin_name, key, value)
 
-    # Enable no_implicit_reexport for homeassistant.*, including all components
+    # Enable no_implicit_reexport for homeassistant.*, including all components.
+    # It is deliberately not in STRICT_SETTINGS: those are disabled for components,
+    # and also apply globally, which would include external libraries.
     components_section = "mypy-homeassistant.*"
     mypy_config.add_section(components_section)
     mypy_config.set(components_section, "no_implicit_reexport", "true")
