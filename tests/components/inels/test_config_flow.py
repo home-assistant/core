@@ -46,7 +46,7 @@ async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> N
 
     with patch(
         "homeassistant.components.inels.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
@@ -130,7 +130,7 @@ async def test_user_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> N
     assert result["type"] is FlowResultType.FORM
     with patch(
         "homeassistant.components.inels.async_setup_entry",
-        return_value=True,
+        return_value=None,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 

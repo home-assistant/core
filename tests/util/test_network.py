@@ -105,6 +105,9 @@ def test_is_valid_host() -> None:
     assert not network_util.is_host_valid("example.com:8080")
     assert not network_util.is_host_valid("verylonghostname" * 4)
     assert not network_util.is_host_valid("verydeepdomain." * 18)
+    assert not network_util.is_host_valid("example.com\n")
+    assert not network_util.is_host_valid("1.2.3.4\n")
+    assert not network_util.is_host_valid("example\u0661.com")
 
 
 def test_normalize_url() -> None:

@@ -818,15 +818,25 @@ def socket_timeout(value: Any | None) -> object:
     raise probatio.Invalid("Invalid socket timeout value. float > 0.0 required.")
 
 
+_URL_CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f]")
+_URL_WHITESPACE = re.compile(r"\s")
+
+
 def url(
     value: Any,
     _schema_list: frozenset[UrlProtocolSchema] = EXTERNAL_URL_PROTOCOL_SCHEMA_LIST,
 ) -> str:
     """Validate a URL."""
-    url_in = str(value)
+    url_in = str(value).strip()
+    # urlparse silently drops tabs/newlines, so check the raw string
+    if _URL_CONTROL_CHARS.search(url_in):
+        raise probatio.Invalid("invalid url")
     parsed = urlparse(url_in)
 
-    if parsed.scheme not in _schema_list:
+    # HTTP clients encode spaces in the userinfo, path and query, but not the host
+    if parsed.scheme not in _schema_list or _URL_WHITESPACE.search(
+        parsed.hostname or ""
+    ):
         raise probatio.Invalid("invalid url")
 
     try:

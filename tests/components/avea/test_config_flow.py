@@ -60,7 +60,7 @@ async def test_user_step_success(hass: HomeAssistant) -> None:
             "homeassistant.components.avea.config_flow.avea.Bulb",
             return_value=_mock_bulb("Living Room", 0),
         ),
-        patch("homeassistant.components.avea.async_setup_entry", return_value=True),
+        patch("homeassistant.components.avea.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -168,7 +168,7 @@ async def test_user_step_cannot_connect_recovers(hass: HomeAssistant) -> None:
             "homeassistant.components.avea.config_flow.avea.Bulb",
             return_value=_mock_bulb("Bedroom", 0),
         ),
-        patch("homeassistant.components.avea.async_setup_entry", return_value=True),
+        patch("homeassistant.components.avea.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -210,7 +210,7 @@ async def test_user_step_unknown_error_recovers(hass: HomeAssistant) -> None:
             "homeassistant.components.avea.config_flow.avea.Bulb",
             return_value=_mock_bulb("Bedroom", 0),
         ),
-        patch("homeassistant.components.avea.async_setup_entry", return_value=True),
+        patch("homeassistant.components.avea.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -236,7 +236,7 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
             "homeassistant.components.avea.config_flow.avea.Bulb",
             return_value=_mock_bulb(RuntimeError("name"), 0),
         ),
-        patch("homeassistant.components.avea.async_setup_entry", return_value=True),
+        patch("homeassistant.components.avea.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -264,7 +264,7 @@ async def test_bluetooth_step_uses_discovery_name_for_unknown_bulb_name(
             "homeassistant.components.avea.config_flow.avea.Bulb",
             return_value=_mock_bulb("Unknown", 0),
         ),
-        patch("homeassistant.components.avea.async_setup_entry", return_value=True),
+        patch("homeassistant.components.avea.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             progress["flow_id"],
@@ -305,7 +305,7 @@ async def test_bluetooth_step_cannot_connect_recovers(hass: HomeAssistant) -> No
             "homeassistant.components.avea.config_flow.avea.Bulb",
             return_value=_mock_bulb("Avea Bulb", 0),
         ),
-        patch("homeassistant.components.avea.async_setup_entry", return_value=True),
+        patch("homeassistant.components.avea.async_setup_entry", return_value=None),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -319,7 +319,7 @@ async def test_bluetooth_step_cannot_connect_recovers(hass: HomeAssistant) -> No
 
 async def test_import_step_success(hass: HomeAssistant) -> None:
     """Test the YAML import step."""
-    with patch("homeassistant.components.avea.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.avea.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
@@ -350,7 +350,7 @@ async def test_import_step_aborts_bluetooth_flow_in_progress(
     assert result["step_id"] == "bluetooth_confirm"
     assert hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
-    with patch("homeassistant.components.avea.async_setup_entry", return_value=True):
+    with patch("homeassistant.components.avea.async_setup_entry", return_value=None):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},

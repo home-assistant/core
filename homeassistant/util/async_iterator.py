@@ -68,9 +68,12 @@ class AsyncIteratorReader:
                 # The stream is exhausted
                 self._exhausted = True
                 break
-            chunk = self._buffer[self._pos : self._pos + n]
+            if n < 0:
+                chunk = self._buffer[self._pos :]
+            else:
+                chunk = self._buffer[self._pos : self._pos + n]
+                n -= len(chunk)
             result.extend(chunk)
-            n -= len(chunk)
             self._pos += len(chunk)
             if self._pos == len(self._buffer):
                 self._buffer = None

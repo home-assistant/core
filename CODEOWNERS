@@ -312,6 +312,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/chef_iq/ @Invader444
 /homeassistant/components/chess_com/ @joostlek
 /tests/components/chess_com/ @joostlek
+/homeassistant/components/chirpstack/ @balloob
+/tests/components/chirpstack/ @balloob
 /homeassistant/components/cielo_home/ @ihsan-cielo @mudasar-cielo
 /tests/components/cielo_home/ @ihsan-cielo @mudasar-cielo
 /homeassistant/components/cisco_ios/ @fbradyirl
@@ -1960,6 +1962,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/thermopro/ @bdraco @h3ss
 /homeassistant/components/thethingsnetwork/ @angelnu
 /tests/components/thethingsnetwork/ @angelnu
+/homeassistant/components/thethingsnetwork_lorawan/ @balloob
+/tests/components/thethingsnetwork_lorawan/ @balloob
 /homeassistant/components/thread/ @home-assistant/core
 /tests/components/thread/ @home-assistant/core
 /homeassistant/components/threema/ @LukasQ

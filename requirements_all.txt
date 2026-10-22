@@ -358,7 +358,7 @@ aiolookin==1.0.0
 aiolyric==2.2.1
 
 # homeassistant.components.mealie
-aiomealie==2.1.2
+aiomealie==2.1.3
 
 # homeassistant.components.melcloud_home
 aiomelcloudhome==0.3.1
@@ -481,7 +481,7 @@ aiotedee==0.3.0
 aiothreema==0.2.0
 
 # homeassistant.components.tractive
-aiotractive==1.3.0
+aiotractive==1.3.1
 
 # homeassistant.components.unifi
 aiounifi==97
@@ -493,7 +493,7 @@ aiousbwatcher==1.1.2
 aiovitesy==1.4.4
 
 # homeassistant.components.vlc_telnet
-aiovlc==0.5.1
+aiovlc==0.8.0
 
 # homeassistant.components.vodafone_station
 aiovodafone==3.3.5
@@ -787,6 +787,9 @@ chefiq-ble==1.0.1
 
 # homeassistant.components.chess_com
 chess-com-api==1.1.0
+
+# homeassistant.components.chirpstack
+chirpstack-api==4.19.0
 
 # homeassistant.components.cielo_home
 cielo-connect-api==1.0.6
@@ -1293,7 +1296,7 @@ hanna-cloud==0.0.7
 harbor-python==1.5.0
 
 # homeassistant.components.cloud
-hass-nabucasa==2.7.0
+hass-nabucasa==2.8.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.4
@@ -1592,8 +1595,10 @@ london-tube-status==0.7
 # homeassistant.components.loqed
 loqedAPI==2.1.16
 
+# homeassistant.components.chirpstack
 # homeassistant.components.lorawan
-lorawan-connection==1.2.0
+# homeassistant.components.thethingsnetwork_lorawan
+lorawan-connection[chirpstack,tts]==1.3.0
 
 # homeassistant.components.luftdaten
 luftdaten==0.7.4
@@ -1623,7 +1628,7 @@ matrix-nio==0.26.0
 matter-ble-proxy==0.7.1
 
 # homeassistant.components.matter
-matter-python-client==1.4.0
+matter-python-client==1.5.2
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
@@ -1687,7 +1692,7 @@ mitsubishi-comfort==0.6.0
 moat-ble==0.1.1
 
 # homeassistant.components.modbus
-modbus-connection[tmodbus]==4.12.4
+modbus-connection[tmodbus]==4.12.6
 
 # homeassistant.components.moehlenhoff_alpha2
 moehlenhoff-alpha2==1.4.0
@@ -2060,7 +2065,7 @@ py-sucks==0.9.11
 py-synologydsm-api==2.11.0
 
 # homeassistant.components.unifi_access
-py-unifi-access==1.6.1
+py-unifi-access==1.6.2
 
 # homeassistant.components.atome
 pyAtome==0.1.2
@@ -2148,7 +2153,7 @@ pyatv==0.18.0
 pyaussiebb==0.1.5
 
 # homeassistant.components.myneomitis
-pyaxencoapi==1.0.7
+pyaxencoapi==1.0.7.post1
 
 # homeassistant.components.balboa
 pybalboa==1.1.3
@@ -2335,13 +2340,13 @@ pyhaversion==22.8.0
 pyhelty==0.2.0
 
 # homeassistant.components.helty_cloud
-pyheltycloud==0.2.0
+pyheltycloud==0.2.1
 
 # homeassistant.components.heos
 pyheos==1.0.6
 
 # homeassistant.components.hive
-pyhive-integration==1.0.9
+pyhive-integration==1.0.10
 
 # homeassistant.components.homematic
 pyhomematic==0.1.78
@@ -2494,7 +2499,7 @@ pynetgear==0.10.10
 pynetio==0.1.9.1
 
 # homeassistant.components.nina
-pynina==1.0.3
+pynina==1.0.4
 
 # homeassistant.components.nintendo_parental_controls
 pynintendoauth==1.0.3
@@ -2688,7 +2693,7 @@ pysmarty2==0.10.3
 pysmartyplants==0.2.1
 
 # homeassistant.components.smhi
-pysmhi==2.0.0
+pysmhi==2.1.0
 
 # homeassistant.components.edl21
 pysml==0.1.8
@@ -2748,7 +2753,7 @@ python-awair==0.2.5
 python-blockchain-api==0.0.2
 
 # homeassistant.components.bsblan
-python-bsblan==6.1.10
+python-bsblan==6.1.11
 
 # homeassistant.components.citybikes
 python-citybikes==0.3.3
