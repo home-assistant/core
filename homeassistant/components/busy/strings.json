@@ -1,0 +1,47 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "http_api_disabled": "Enable the HTTP API under SETTINGS > Wi-Fi on your bar, then try again.",
+      "wrong_device": "The device at this address does not match the discovered BUSY Bar."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "step": {
+      "key": {
+        "data": {
+          "password": "API key"
+        },
+        "data_description": {
+          "password": "The HTTP API key configured on the bar."
+        },
+        "description": "Enter the Wi-Fi access key shown under SETTINGS > Wi-Fi on your bar."
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The local hostname or IP address of your BUSY Bar."
+        },
+        "title": "Connect to BUSY Bar"
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to add {name}?"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "wifi_signal": {
+        "name": "Wi-Fi signal"
+      },
+      "wifi_ssid": {
+        "name": "Wi-Fi network"
+      }
+    }
+  }
+}
